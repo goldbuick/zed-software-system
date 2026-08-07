@@ -6,20 +6,13 @@ import { storagewritevar } from 'zss/feature/storage'
 import { createfirmware } from 'zss/firmware'
 import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import {
-  INPUT,
-  INPUT_ALT,
-  INPUT_CTRL,
-  INPUT_SHIFT,
-} from 'zss/gadget/data/types'
+  INPUT_FLAG_NAMES,
+  type PLAYER_INPUT_FLAGS,
+  applyinputqueue,
+} from 'zss/firmware/elementinput'
 import { pick } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
-import {
-  MAYBE,
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
   memoryreadelement,
@@ -58,16 +51,6 @@ import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
 import { ARG_TYPE, COLOR, NAME, PT, WORD } from 'zss/words/types'
-
-const INPUT_FLAG_NAMES = new Set([
-  'inputmove',
-  'inputalt',
-  'inputctrl',
-  'inputshift',
-  'inputok',
-  'inputcancel',
-  'inputmenu',
-])
 
 const STANDARD_STAT_NAMES = new Set([
   // display
@@ -109,135 +92,13 @@ const STANDARD_STAT_NAMES = new Set([
   'arg',
 ])
 
-const readinputmap = ['NORTH', 'SOUTH', 'WEST', 'EAST']
-
 function readinput(
   player: string,
   graphics: MAYBE<string>,
   facing: MAYBE<number>,
 ) {
-  const flags = memoryreadflags(player)
-
-  // ensure we have the proper flags on player data
-  if (!isnumber(flags.inputcurrent)) {
-    flags.inputcurrent = 0
-  }
-  if (!isarray(flags.inputqueue)) {
-    flags.inputqueue = []
-  }
-
-  // we've already processed input for this tick
-  if (flags.inputcurrent > 0) {
-    return flags
-  }
-
-  // pull from front of queue
-  const [head] = flags.inputqueue as [INPUT, number][]
-  const [input = INPUT.NONE, mods = 0] = head ?? [INPUT.NONE, 0]
-
-  // clear input flags
-  flags.inputmove = []
-  flags.inputok = 0
-  flags.inputcancel = 0
-  flags.inputmenu = 0
-
-  // set active input flag
-  flags.inputalt = mods & INPUT_ALT ? 1 : 0
-  flags.inputctrl = mods & INPUT_CTRL ? 1 : 0
-  flags.inputshift = mods & INPUT_SHIFT ? 1 : 0
-  switch (input) {
-    case INPUT.MOVE_UP:
-    case INPUT.MOVE_DOWN:
-    case INPUT.MOVE_LEFT:
-    case INPUT.MOVE_RIGHT: {
-      const inputdir = readinputmap[input - INPUT.MOVE_UP]
-      if (isstring(graphics) && graphics === 'fpv' && isnumber(facing)) {
-        const mappedfacing = Math.round(facing / 90)
-        switch (mappedfacing) {
-          default:
-          case 0: // north
-            // no-op
-            flags.inputmove = [inputdir]
-            break
-          case 1: // east
-            switch (inputdir) {
-              default:
-              case 'NORTH': // forward
-                flags.inputmove = ['EAST']
-                break
-              case 'EAST': // step right
-                flags.inputmove = ['SOUTH']
-                break
-              case 'SOUTH': // backward
-                flags.inputmove = ['WEST']
-                break
-              case 'WEST': // step left
-                flags.inputmove = ['NORTH']
-                break
-            }
-            break
-          case 2: // south
-            switch (inputdir) {
-              default:
-              case 'NORTH': // forward
-                flags.inputmove = ['SOUTH']
-                break
-              case 'EAST': // step right
-                flags.inputmove = ['WEST']
-                break
-              case 'SOUTH': // backward
-                flags.inputmove = ['NORTH']
-                break
-              case 'WEST': // step left
-                flags.inputmove = ['EAST']
-                break
-            }
-            break
-          case 3: // west
-            switch (inputdir) {
-              default:
-              case 'NORTH': // forward
-                flags.inputmove = ['WEST']
-                break
-              case 'EAST': // step right
-                flags.inputmove = ['NORTH']
-                break
-              case 'SOUTH': // backward
-                flags.inputmove = ['EAST']
-                break
-              case 'WEST': // step left
-                flags.inputmove = ['SOUTH']
-                break
-            }
-            break
-        }
-      } else {
-        flags.inputmove = [inputdir]
-      }
-      break
-    }
-
-    case INPUT.OK_BUTTON:
-      flags.inputok = 1
-      break
-    case INPUT.CANCEL_BUTTON:
-      flags.inputcancel = 1
-      break
-    case INPUT.MENU_BUTTON:
-      flags.inputmenu = 1
-      break
-  }
-
-  // set active input
-  flags.inputcurrent = input
-
-  // clear used input
-  flags.inputqueue = flags.inputqueue.filter((item: [INPUT, number]) => {
-    const [check] = item
-    return check !== INPUT.NONE && check !== input
-  })
-
-  return flags
+  const flags = memoryreadflags(player) as PLAYER_INPUT_FLAGS
+  return applyinputqueue(flags, graphics, facing)
 }
 
 function maptoconst(value: string) {

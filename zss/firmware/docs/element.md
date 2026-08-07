@@ -18,7 +18,7 @@ title: element.ts
 Provides stat/variable access for the chip:
 
 - **Constants** — Maps category, collision, color, dir names to const values
-- **Input flags** — For players: `inputmove`, `inputok`, `inputcancel`, `inputmenu`, `inputalt`, `inputctrl`, `inputshift` (from input queue, with FPV rotation)
+- **Input flags** — For players: `inputmove`, `inputshoot`, `inputok`, `inputcancel`, `inputmenu`, `inputa`/`inputb`/`inputx`/`inputy`, `inputl1`/`inputl2`, `inputr1`/`inputr2`, `inputalt`, `inputctrl`, `inputshift` (from input queue; `inputmove`/`inputshoot` may list two dirs for diagonals; FPV remaps dirs)
 - **Board stats** — `isdark`, `startx`, `starty`, `over`, `under`, `palette`, `charset`, exits, `timelimit`, `restartonzap`, `maxplayershots`, `b1`–`b10`, `camera`, `graphics`, `facing`
 - **Env** — `currenttick`, `boardid`, `playerid`, `playerx`, `playery`, `thisid`, `thisx`, `thisy`, `senderid`, `senderx`, `sendery`
 - **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p10, cycle, stepx/y, shootx/y, light, lightdir, arg
@@ -100,4 +100,4 @@ Writes stats:
 
 ## Input Handling
 
-`readinput` pulls from the player’s input queue, maps movement for FPV (first-person view) based on facing, and sets `inputmove`, `inputok`, `inputcancel`, `inputmenu`, modifier flags.
+`readinput` / `applyinputqueue` drains the player’s input queue each tick: coalesces all `MOVE_*` / `SHOOT_*` into `inputmove` / `inputshoot` (up to two dirs for diagonals, with FPV remap), and applies one button/action (`inputok`, `inputa`, sided ctrl, etc.).

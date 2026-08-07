@@ -11,6 +11,14 @@ export const USERINPUT_ACTIONS = [
   'shootright',
   'ok',
   'cancel',
+  'a',
+  'b',
+  'x',
+  'y',
+  'l1',
+  'l2',
+  'r1',
+  'r2',
 ] as const
 
 export const PERMISSION_CONFIG_KEYWORDS = [

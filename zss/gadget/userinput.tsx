@@ -29,9 +29,8 @@ import { UserInputContext, user } from 'zss/gadget/userinputcontext'
 import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
-import { dirfromdelta } from 'zss/words/dir'
 import { ismac } from 'zss/words/system'
-import { DIR, NAME } from 'zss/words/types'
+import { NAME } from 'zss/words/types'
 
 import { type Mobiletextfield, getmobiletextelement } from './mobiletext'
 
@@ -58,10 +57,30 @@ const INPUT_OPS = [
   INPUT.MOVE_DOWN,
   INPUT.MOVE_LEFT,
   INPUT.MOVE_RIGHT,
+  INPUT.SHOOT_UP,
+  INPUT.SHOOT_DOWN,
+  INPUT.SHOOT_LEFT,
+  INPUT.SHOOT_RIGHT,
   INPUT.OK_BUTTON,
   INPUT.CANCEL_BUTTON,
   INPUT.MENU_BUTTON,
+  INPUT.BUTTON_A,
+  INPUT.BUTTON_B,
+  INPUT.BUTTON_X,
+  INPUT.BUTTON_Y,
+  INPUT.BUTTON_L1,
+  INPUT.BUTTON_L2,
+  INPUT.BUTTON_R1,
+  INPUT.BUTTON_R2,
 ]
+
+function modsfrominputstate(inputstate: INPUT_STATE): UserInputMods {
+  return {
+    alt: !!inputstate[INPUT.ALT],
+    ctrl: !!inputstate[INPUT.CTRL],
+    shift: !!inputstate[INPUT.SHIFT],
+  }
+}
 
 function pollinput() {
   const now = performance.now()
@@ -75,12 +94,7 @@ function pollinput() {
     if (acc[index] >= INPUT_RATE) {
       acc[index] -= INPUT_RATE
       const inputstate = inputstates[index]
-      // signal input state
-      const mods: UserInputMods = {
-        alt: !!inputstate[INPUT.ALT],
-        ctrl: !!inputstate[INPUT.CTRL],
-        shift: !!inputstate[INPUT.SHIFT],
-      }
+      const mods = modsfrominputstate(inputstate)
       for (let ii = 0; ii < INPUT_OPS.length; ++ii) {
         const input = INPUT_OPS[ii]
         if (inputstate[input]) {
@@ -107,8 +121,8 @@ function pollinput() {
 }
 pollinput()
 
-function readinput(index: number): INPUT_STATE {
-  inputstates[index] = inputstates[index] ?? {
+function emptyinputstate(): INPUT_STATE {
+  return {
     [INPUT.NONE]: false,
     [INPUT.ALT]: false,
     [INPUT.CTRL]: false,
@@ -120,7 +134,23 @@ function readinput(index: number): INPUT_STATE {
     [INPUT.OK_BUTTON]: false,
     [INPUT.CANCEL_BUTTON]: false,
     [INPUT.MENU_BUTTON]: false,
+    [INPUT.BUTTON_A]: false,
+    [INPUT.BUTTON_B]: false,
+    [INPUT.BUTTON_X]: false,
+    [INPUT.BUTTON_Y]: false,
+    [INPUT.BUTTON_L1]: false,
+    [INPUT.BUTTON_L2]: false,
+    [INPUT.BUTTON_R1]: false,
+    [INPUT.BUTTON_R2]: false,
+    [INPUT.SHOOT_UP]: false,
+    [INPUT.SHOOT_DOWN]: false,
+    [INPUT.SHOOT_LEFT]: false,
+    [INPUT.SHOOT_RIGHT]: false,
   }
+}
+
+function readinput(index: number): INPUT_STATE {
+  inputstates[index] = inputstates[index] ?? emptyinputstate()
   return inputstates[index]
 }
 
@@ -132,11 +162,7 @@ export function inputdown(index: number, input: INPUT) {
     // reset input repeat
     acc[index] = INPUT_RATE * -2
     // emit input event
-    userinputinvoke(index, input, {
-      alt: inputstate[INPUT.ALT],
-      ctrl: inputstate[INPUT.CTRL],
-      shift: inputstate[INPUT.SHIFT],
-    })
+    userinputinvoke(index, input, modsfrominputstate(inputstate))
   }
   // track state change
   inputstate[input] = true
@@ -239,10 +265,16 @@ function handlekeydown(event: KeyboardEvent) {
   } else {
     inputup(0, INPUT.ALT)
   }
-  if (mods.ctrl) {
+  if (event.code === 'ControlLeft') {
+    inputdown(0, INPUT.BUTTON_L2)
+  } else if (event.code === 'ControlRight') {
+    inputdown(0, INPUT.BUTTON_R2)
+  } else if (mods.ctrl) {
     inputdown(0, INPUT.CTRL)
   } else {
     inputup(0, INPUT.CTRL)
+    inputup(0, INPUT.BUTTON_L2)
+    inputup(0, INPUT.BUTTON_R2)
   }
   if (mods.shift) {
     inputdown(0, INPUT.SHIFT)
@@ -253,27 +285,55 @@ function handlekeydown(event: KeyboardEvent) {
   // keyboard built-in player inputs
   switch (key) {
     case 'arrowleft':
-      inputdown(0, INPUT.MOVE_LEFT)
+      if (mods.shift) {
+        inputdown(0, INPUT.SHOOT_LEFT)
+        inputup(0, INPUT.MOVE_LEFT)
+      } else {
+        inputdown(0, INPUT.MOVE_LEFT)
+        inputup(0, INPUT.SHOOT_LEFT)
+      }
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_LEFT)
+        inputup(0, INPUT.SHOOT_LEFT)
       }
       break
     case 'arrowright':
-      inputdown(0, INPUT.MOVE_RIGHT)
+      if (mods.shift) {
+        inputdown(0, INPUT.SHOOT_RIGHT)
+        inputup(0, INPUT.MOVE_RIGHT)
+      } else {
+        inputdown(0, INPUT.MOVE_RIGHT)
+        inputup(0, INPUT.SHOOT_RIGHT)
+      }
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_RIGHT)
+        inputup(0, INPUT.SHOOT_RIGHT)
       }
       break
     case 'arrowup':
-      inputdown(0, INPUT.MOVE_UP)
+      if (mods.shift) {
+        inputdown(0, INPUT.SHOOT_UP)
+        inputup(0, INPUT.MOVE_UP)
+      } else {
+        inputdown(0, INPUT.MOVE_UP)
+        inputup(0, INPUT.SHOOT_UP)
+      }
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_UP)
+        inputup(0, INPUT.SHOOT_UP)
       }
       break
     case 'arrowdown':
-      inputdown(0, INPUT.MOVE_DOWN)
+      if (mods.shift) {
+        inputdown(0, INPUT.SHOOT_DOWN)
+        inputup(0, INPUT.MOVE_DOWN)
+      } else {
+        inputdown(0, INPUT.MOVE_DOWN)
+        inputup(0, INPUT.SHOOT_DOWN)
+      }
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_DOWN)
+        inputup(0, INPUT.SHOOT_DOWN)
       }
       break
     case 'enter':
@@ -285,6 +345,36 @@ function handlekeydown(event: KeyboardEvent) {
       break
     case 'tab':
       inputdown(0, INPUT.MENU_BUTTON)
+      break
+    case 'z':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.BUTTON_A)
+      }
+      break
+    case 'x':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.BUTTON_B)
+      }
+      break
+    case 'c':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.BUTTON_X)
+      }
+      break
+    case 'v':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.BUTTON_Y)
+      }
+      break
+    case 'q':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.BUTTON_L1)
+      }
+      break
+    case 'e':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.BUTTON_R1)
+      }
       break
     case 's':
       if (mods.ctrl) {
@@ -349,10 +439,15 @@ function handlekeyup(event: KeyboardEvent) {
   } else {
     inputup(0, INPUT.ALT)
   }
-  if (mods.ctrl) {
-    inputdown(0, INPUT.CTRL)
-  } else {
+  if (event.code === 'ControlLeft') {
+    inputup(0, INPUT.BUTTON_L2)
+  } else if (event.code === 'ControlRight') {
+    inputup(0, INPUT.BUTTON_R2)
+  }
+  if (!mods.ctrl) {
     inputup(0, INPUT.CTRL)
+    inputup(0, INPUT.BUTTON_L2)
+    inputup(0, INPUT.BUTTON_R2)
   }
   if (mods.shift) {
     inputdown(0, INPUT.SHIFT)
@@ -368,18 +463,26 @@ function handlekeyup(event: KeyboardEvent) {
       inputup(0, INPUT.MOVE_RIGHT)
       inputup(0, INPUT.MOVE_UP)
       inputup(0, INPUT.MOVE_DOWN)
+      inputup(0, INPUT.SHOOT_LEFT)
+      inputup(0, INPUT.SHOOT_RIGHT)
+      inputup(0, INPUT.SHOOT_UP)
+      inputup(0, INPUT.SHOOT_DOWN)
       break
     case 'arrowleft':
       inputup(0, INPUT.MOVE_LEFT)
+      inputup(0, INPUT.SHOOT_LEFT)
       break
     case 'arrowright':
       inputup(0, INPUT.MOVE_RIGHT)
+      inputup(0, INPUT.SHOOT_RIGHT)
       break
     case 'arrowup':
       inputup(0, INPUT.MOVE_UP)
+      inputup(0, INPUT.SHOOT_UP)
       break
     case 'arrowdown':
       inputup(0, INPUT.MOVE_DOWN)
+      inputup(0, INPUT.SHOOT_DOWN)
       break
     case 'enter':
       inputup(0, INPUT.OK_BUTTON)
@@ -390,6 +493,24 @@ function handlekeyup(event: KeyboardEvent) {
       break
     case 'tab':
       inputup(0, INPUT.MENU_BUTTON)
+      break
+    case 'z':
+      inputup(0, INPUT.BUTTON_A)
+      break
+    case 'x':
+      inputup(0, INPUT.BUTTON_B)
+      break
+    case 'c':
+      inputup(0, INPUT.BUTTON_X)
+      break
+    case 'v':
+      inputup(0, INPUT.BUTTON_Y)
+      break
+    case 'q':
+      inputup(0, INPUT.BUTTON_L1)
+      break
+    case 'e':
+      inputup(0, INPUT.BUTTON_R1)
       break
   }
 }
@@ -491,9 +612,21 @@ if (typeof window !== 'undefined') {
     inputup(0, INPUT.MOVE_DOWN)
     inputup(0, INPUT.MOVE_LEFT)
     inputup(0, INPUT.MOVE_RIGHT)
+    inputup(0, INPUT.SHOOT_UP)
+    inputup(0, INPUT.SHOOT_DOWN)
+    inputup(0, INPUT.SHOOT_LEFT)
+    inputup(0, INPUT.SHOOT_RIGHT)
     inputup(0, INPUT.OK_BUTTON)
     inputup(0, INPUT.CANCEL_BUTTON)
     inputup(0, INPUT.MENU_BUTTON)
+    inputup(0, INPUT.BUTTON_A)
+    inputup(0, INPUT.BUTTON_B)
+    inputup(0, INPUT.BUTTON_X)
+    inputup(0, INPUT.BUTTON_Y)
+    inputup(0, INPUT.BUTTON_L1)
+    inputup(0, INPUT.BUTTON_L2)
+    inputup(0, INPUT.BUTTON_R1)
+    inputup(0, INPUT.BUTTON_R2)
   })
 }
 
@@ -532,15 +665,17 @@ const BUTTON_DOWN = 13
 const BUTTON_LEFT = 14
 const BUTTON_RIGHT = 15
 
+const STICK_DEADZONE = 0.3
+
 const buttonlookup: Record<number, INPUT> = {
-  [BUTTON_Y]: INPUT.MOVE_UP,
-  [BUTTON_A]: INPUT.MOVE_DOWN,
-  [BUTTON_X]: INPUT.MOVE_LEFT,
-  [BUTTON_B]: INPUT.MOVE_RIGHT,
-  [BUTTON_LEFT_SHOULDER]: INPUT.CANCEL_BUTTON,
-  [BUTTON_RIGHT_SHOULDER]: INPUT.OK_BUTTON,
-  [BUTTON_LEFT_TRIGGER]: INPUT.ALT,
-  [BUTTON_RIGHT_TRIGGER]: INPUT.CTRL,
+  [BUTTON_A]: INPUT.BUTTON_A,
+  [BUTTON_B]: INPUT.BUTTON_B,
+  [BUTTON_X]: INPUT.BUTTON_X,
+  [BUTTON_Y]: INPUT.BUTTON_Y,
+  [BUTTON_LEFT_SHOULDER]: INPUT.BUTTON_L1,
+  [BUTTON_LEFT_TRIGGER]: INPUT.BUTTON_L2,
+  [BUTTON_RIGHT_SHOULDER]: INPUT.BUTTON_R1,
+  [BUTTON_RIGHT_TRIGGER]: INPUT.BUTTON_R2,
   [BUTTON_MENU]: INPUT.MENU_BUTTON,
   [BUTTON_UP]: INPUT.MOVE_UP,
   [BUTTON_DOWN]: INPUT.MOVE_DOWN,
@@ -553,63 +688,37 @@ function readaxis(index: number) {
   axisstate[index] = axisstate[index] ?? {}
   return axisstate[index]
 }
-function writeaxis(index: number, axis: number, value: number) {
-  const axisstate = readaxis(index)
-  const prevleft = dirfromdelta(axisstate[0] ?? 0, axisstate[1] ?? 0)
-  const prevright = dirfromdelta(axisstate[2] ?? 0, axisstate[3] ?? 0)
-  axisstate[axis] = value
-  const nextleft = dirfromdelta(axisstate[0] ?? 0, axisstate[1] ?? 0)
-  const nextright = dirfromdelta(axisstate[2] ?? 0, axisstate[3] ?? 0)
-  if (prevleft !== nextleft) {
-    inputup(index, INPUT.MOVE_LEFT)
-    inputup(index, INPUT.MOVE_RIGHT)
-    inputup(index, INPUT.MOVE_UP)
-    inputup(index, INPUT.MOVE_DOWN)
-    switch (nextleft) {
-      case DIR.NORTH:
-        inputdown(index, INPUT.MOVE_UP)
-        break
-      case DIR.SOUTH:
-        inputdown(index, INPUT.MOVE_DOWN)
-        break
-      case DIR.WEST:
-        inputdown(index, INPUT.MOVE_LEFT)
-        break
-      case DIR.EAST:
-        inputdown(index, INPUT.MOVE_RIGHT)
-        break
-    }
+
+function syncstickaxis(index: number, neg: INPUT, pos: INPUT, value: number) {
+  if (value <= -STICK_DEADZONE) {
+    inputdown(index, neg)
+    inputup(index, pos)
+  } else if (value >= STICK_DEADZONE) {
+    inputdown(index, pos)
+    inputup(index, neg)
+  } else {
+    inputup(index, neg)
+    inputup(index, pos)
   }
-  if (prevright !== nextright) {
-    if (nextright === DIR.IDLE) {
-      inputup(index, INPUT.SHIFT)
-    } else {
-      inputdown(index, INPUT.SHIFT)
-    }
-    inputup(index, INPUT.MOVE_LEFT)
-    inputup(index, INPUT.MOVE_RIGHT)
-    inputup(index, INPUT.MOVE_UP)
-    inputup(index, INPUT.MOVE_DOWN)
-    switch (nextright) {
-      case DIR.NORTH:
-        inputdown(index, INPUT.MOVE_UP)
-        break
-      case DIR.SOUTH:
-        inputdown(index, INPUT.MOVE_DOWN)
-        break
-      case DIR.WEST:
-        inputdown(index, INPUT.MOVE_LEFT)
-        break
-      case DIR.EAST:
-        inputdown(index, INPUT.MOVE_RIGHT)
-        break
-    }
+}
+
+function writeaxis(index: number, axis: number, value: number) {
+  const state = readaxis(index)
+  state[axis] = value
+  // left stick: axes 0 (x), 1 (y) -> MOVE_*
+  // right stick: axes 2 (x), 3 (y) -> SHOOT_*
+  if (axis === 0 || axis === 1) {
+    syncstickaxis(index, INPUT.MOVE_LEFT, INPUT.MOVE_RIGHT, state[0] ?? 0)
+    syncstickaxis(index, INPUT.MOVE_UP, INPUT.MOVE_DOWN, state[1] ?? 0)
+  } else if (axis === 2 || axis === 3) {
+    syncstickaxis(index, INPUT.SHOOT_LEFT, INPUT.SHOOT_RIGHT, state[2] ?? 0)
+    syncstickaxis(index, INPUT.SHOOT_UP, INPUT.SHOOT_DOWN, state[3] ?? 0)
   }
 }
 
 const gamepads = new GamepadListener({
   analog: false,
-  deadZone: 0.3,
+  deadZone: STICK_DEADZONE,
 })
 gamepads.on('gamepad:connected', (event: any) => {
   const player = registerreadplayer()
@@ -629,34 +738,14 @@ gamepads.on('gamepad:axis', (event: any) => {
 })
 gamepads.on('gamepad:button', (event: any) => {
   const index = event.detail.index
-  switch (event.detail.button) {
-    case BUTTON_X:
-    case BUTTON_B:
-    case BUTTON_Y:
-    case BUTTON_A:
-      inputup(index, INPUT.MOVE_UP)
-      inputup(index, INPUT.MOVE_DOWN)
-      inputup(index, INPUT.MOVE_LEFT)
-      inputup(index, INPUT.MOVE_RIGHT)
-      if (event.detail.value) {
-        inputdown(index, INPUT.SHIFT)
-        inputdown(index, buttonlookup[event.detail.button])
-      } else {
-        inputup(index, INPUT.SHIFT)
-      }
-      break
-    default: {
-      const mapped = buttonlookup[event.detail.button]
-      if (mapped === undefined) {
-        break
-      }
-      if (event.detail.value) {
-        inputdown(index, mapped)
-      } else {
-        inputup(index, mapped)
-      }
-      break
-    }
+  const mapped = buttonlookup[event.detail.button]
+  if (mapped === undefined) {
+    return
+  }
+  if (event.detail.value) {
+    inputdown(index, mapped)
+  } else {
+    inputup(index, mapped)
   }
 })
 gamepads.start()

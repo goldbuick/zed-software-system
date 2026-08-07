@@ -82,9 +82,21 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
           MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
           MOVE_UP={(mods) => sendinput(player, INPUT.MOVE_UP, mods)}
           MOVE_DOWN={(mods) => sendinput(player, INPUT.MOVE_DOWN, mods)}
+          SHOOT_LEFT={(mods) => sendinput(player, INPUT.SHOOT_LEFT, mods)}
+          SHOOT_RIGHT={(mods) => sendinput(player, INPUT.SHOOT_RIGHT, mods)}
+          SHOOT_UP={(mods) => sendinput(player, INPUT.SHOOT_UP, mods)}
+          SHOOT_DOWN={(mods) => sendinput(player, INPUT.SHOOT_DOWN, mods)}
           OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
           CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
           MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
+          BUTTON_A={(mods) => sendinput(player, INPUT.BUTTON_A, mods)}
+          BUTTON_B={(mods) => sendinput(player, INPUT.BUTTON_B, mods)}
+          BUTTON_X={(mods) => sendinput(player, INPUT.BUTTON_X, mods)}
+          BUTTON_Y={(mods) => sendinput(player, INPUT.BUTTON_Y, mods)}
+          BUTTON_L1={(mods) => sendinput(player, INPUT.BUTTON_L1, mods)}
+          BUTTON_L2={(mods) => sendinput(player, INPUT.BUTTON_L2, mods)}
+          BUTTON_R1={(mods) => sendinput(player, INPUT.BUTTON_R1, mods)}
+          BUTTON_R2={(mods) => sendinput(player, INPUT.BUTTON_R2, mods)}
           keydown={(event) => {
             const key = NAME(event.key)
             const mods = modsfromevent(event)

@@ -247,16 +247,40 @@ export const LOADER_FIRMWARE = createfirmware({
           registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, false)
           break
         case 'shootup':
-          registerinput(SOFTWARE, player, INPUT.MOVE_UP, true)
+          registerinput(SOFTWARE, player, INPUT.SHOOT_UP, false)
           break
         case 'shootdown':
-          registerinput(SOFTWARE, player, INPUT.MOVE_DOWN, true)
+          registerinput(SOFTWARE, player, INPUT.SHOOT_DOWN, false)
           break
         case 'shootleft':
-          registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
+          registerinput(SOFTWARE, player, INPUT.SHOOT_LEFT, false)
           break
         case 'shootright':
-          registerinput(SOFTWARE, player, INPUT.MOVE_RIGHT, true)
+          registerinput(SOFTWARE, player, INPUT.SHOOT_RIGHT, false)
+          break
+        case 'a':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_A, false)
+          break
+        case 'b':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_B, false)
+          break
+        case 'x':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_X, false)
+          break
+        case 'y':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_Y, false)
+          break
+        case 'l1':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_L1, false)
+          break
+        case 'l2':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_L2, false)
+          break
+        case 'r1':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_R1, false)
+          break
+        case 'r2':
+          registerinput(SOFTWARE, player, INPUT.BUTTON_R2, false)
           break
         case 'ok':
           registerinput(SOFTWARE, player, INPUT.OK_BUTTON, false)
