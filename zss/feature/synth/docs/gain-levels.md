@@ -66,7 +66,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 |----------|-------|----------|
 | `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (default `#vol 50` ~2.22 linear) |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
-| `kDrumBusGain` | **2.440** | Drum stem (calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| `kDrumBusGain` | **0.596** | Drum stem (was 2.440; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
 | `kScMakeupDb` | **12** | Sidechain makeup (calibrate: `ops:daisy:sidechain:parity:calibrate`) |
 | `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
