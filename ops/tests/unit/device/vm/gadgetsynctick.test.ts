@@ -59,7 +59,8 @@ jest.mock('zss/gadget/graphics/layerz', () => ({
 }))
 
 jest.mock('zss/mapping/guid', () => ({
-  creategadgetid: jest.fn((p) => `gadget-${p}`),
+  ...jest.requireActual<typeof import('zss/mapping/guid')>('zss/mapping/guid'),
+  creategadgetid: jest.fn((p: string) => `gadget-${p}`),
   ispid: jest.fn(() => true),
 }))
 
