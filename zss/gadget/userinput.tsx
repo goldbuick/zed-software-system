@@ -285,55 +285,27 @@ function handlekeydown(event: KeyboardEvent) {
   // keyboard built-in player inputs
   switch (key) {
     case 'arrowleft':
-      if (mods.shift) {
-        inputdown(0, INPUT.SHOOT_LEFT)
-        inputup(0, INPUT.MOVE_LEFT)
-      } else {
-        inputdown(0, INPUT.MOVE_LEFT)
-        inputup(0, INPUT.SHOOT_LEFT)
-      }
+      inputdown(0, INPUT.MOVE_LEFT)
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_LEFT)
-        inputup(0, INPUT.SHOOT_LEFT)
       }
       break
     case 'arrowright':
-      if (mods.shift) {
-        inputdown(0, INPUT.SHOOT_RIGHT)
-        inputup(0, INPUT.MOVE_RIGHT)
-      } else {
-        inputdown(0, INPUT.MOVE_RIGHT)
-        inputup(0, INPUT.SHOOT_RIGHT)
-      }
+      inputdown(0, INPUT.MOVE_RIGHT)
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_RIGHT)
-        inputup(0, INPUT.SHOOT_RIGHT)
       }
       break
     case 'arrowup':
-      if (mods.shift) {
-        inputdown(0, INPUT.SHOOT_UP)
-        inputup(0, INPUT.MOVE_UP)
-      } else {
-        inputdown(0, INPUT.MOVE_UP)
-        inputup(0, INPUT.SHOOT_UP)
-      }
+      inputdown(0, INPUT.MOVE_UP)
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_UP)
-        inputup(0, INPUT.SHOOT_UP)
       }
       break
     case 'arrowdown':
-      if (mods.shift) {
-        inputdown(0, INPUT.SHOOT_DOWN)
-        inputup(0, INPUT.MOVE_DOWN)
-      } else {
-        inputdown(0, INPUT.MOVE_DOWN)
-        inputup(0, INPUT.SHOOT_DOWN)
-      }
+      inputdown(0, INPUT.MOVE_DOWN)
       if (event.metaKey) {
         inputup(0, INPUT.MOVE_DOWN)
-        inputup(0, INPUT.SHOOT_DOWN)
       }
       break
     case 'enter':
@@ -463,26 +435,18 @@ function handlekeyup(event: KeyboardEvent) {
       inputup(0, INPUT.MOVE_RIGHT)
       inputup(0, INPUT.MOVE_UP)
       inputup(0, INPUT.MOVE_DOWN)
-      inputup(0, INPUT.SHOOT_LEFT)
-      inputup(0, INPUT.SHOOT_RIGHT)
-      inputup(0, INPUT.SHOOT_UP)
-      inputup(0, INPUT.SHOOT_DOWN)
       break
     case 'arrowleft':
       inputup(0, INPUT.MOVE_LEFT)
-      inputup(0, INPUT.SHOOT_LEFT)
       break
     case 'arrowright':
       inputup(0, INPUT.MOVE_RIGHT)
-      inputup(0, INPUT.SHOOT_RIGHT)
       break
     case 'arrowup':
       inputup(0, INPUT.MOVE_UP)
-      inputup(0, INPUT.SHOOT_UP)
       break
     case 'arrowdown':
       inputup(0, INPUT.MOVE_DOWN)
-      inputup(0, INPUT.SHOOT_DOWN)
       break
     case 'enter':
       inputup(0, INPUT.OK_BUTTON)
