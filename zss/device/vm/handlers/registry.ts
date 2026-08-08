@@ -10,7 +10,10 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
-import { handlebookmarkscroll } from './bookmarkscroll'
+import {
+  handlebookmarkdeleteprompt,
+  handlebookmarkscroll,
+} from './bookmarkscroll'
 import { handlebooks } from './books'
 import { handlecli, handleclirepeatlast } from './cli'
 import { handlecoderelease, handlecodewatch } from './codewatch'
@@ -85,6 +88,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   publish: handlepublish,
   flush: handleflush,
   bookmarkscroll: handlebookmarkscroll,
+  bookmarkdeleteprompt: handlebookmarkdeleteprompt,
   editorbookmarkscroll: handleeditorbookmarkscroll,
   cli: handlecli,
   clirepeatlast: handleclirepeatlast,

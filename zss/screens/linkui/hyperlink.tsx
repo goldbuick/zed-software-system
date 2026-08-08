@@ -3,15 +3,23 @@ import { parseterminalmodemprefix } from 'zss/gadget/data/api'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { maptovalue } from 'zss/mapping/value'
 import { inputcolor } from 'zss/screens/panel/common'
+import { NAME } from 'zss/words/types'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { linkactionprefix, linkafterinvoke, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
+/**
+ * Panel hyperlinks call sendclose after invoke unless the first data word is
+ * `next` (same keep-open flag as LinkHotkey). Use when the chip action writes
+ * a replacement scroll — otherwise vm:clearscroll races and wipes it.
+ */
 export function LinkHyperlink({ surface }: LinkWidgetProps) {
   linkbegin(surface)
   const words = surface.words.map((v) => maptovalue(v, ''))
-  const [target, ...data] = words
+  const [target, ...rawdata] = words
+  const keepopen = NAME(`${rawdata[0] ?? ''}`) === 'next'
+  const data = keepopen ? rawdata.slice(1) : rawdata
   const tcolor = inputcolor(!!surface.active)
   const modem = useMemo(
     () => parseterminalmodemprefix(surface.modemprefix),
@@ -30,7 +38,9 @@ export function LinkHyperlink({ surface }: LinkWidgetProps) {
         surface.sendmessage(modem?.chip ?? '', target, data)
       } else {
         surface.sendmessage(surface.chip, target, data)
-        linkafterinvoke(surface)
+        if (!keepopen) {
+          linkafterinvoke(surface)
+        }
       }
     }
     if (surface.layout === 'terminal') {
@@ -38,7 +48,7 @@ export function LinkHyperlink({ surface }: LinkWidgetProps) {
     } else {
       run()
     }
-  }, [surface, modem?.chip, target, data])
+  }, [surface, modem?.chip, target, data, keepopen])
 
   return surface.active ? <UserInput OK_BUTTON={invoke} /> : null
 }

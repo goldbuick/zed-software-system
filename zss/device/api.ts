@@ -281,6 +281,16 @@ export function registerbookmarkdelete(
   device.emit(player, 'register:bookmark:delete', id)
 }
 
+/** Open gadget confirm scroll before deleting (sim-side). */
+export function vmbookmarkdeleteprompt(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+  label: string,
+) {
+  device.emit(player, 'vm:bookmarkdeleteprompt', [id, label])
+}
+
 export function registerbookmarkscroll(
   device: DEVICELIKE,
   player: string,

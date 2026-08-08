@@ -10,8 +10,15 @@ import {
   handleeditorbookmarkscrollpanel,
 } from 'zss/device/vm/handlers/editorbookmarkscroll'
 import type { ZssEditorBookmark } from 'zss/feature/bookmarks'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
+import { memorybookmarkdeleteprompt } from 'zss/memory/bookmarkdeleteconfirm'
+import {
+  memoryreadbookbysoftware,
+  memoryresetbooks,
+} from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
 
 jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')
@@ -20,6 +27,7 @@ jest.mock('zss/device/api', () => {
     registerbookmarkcodepagesave: jest.fn(),
     registerbookmarkcodepagesaveover: jest.fn(),
     registerbookmarkdelete: jest.fn(),
+    apilog: jest.fn(),
   }
 })
 
@@ -30,6 +38,26 @@ jest.mock('zss/memory/editorbookmarkscroll', () => {
     memoryeditorbookmarkscroll: jest.fn(),
   }
 })
+
+jest.mock('zss/memory/bookmarkdeleteconfirm', () => ({
+  memorybookmarkdeleteprompt: jest.fn(() => true),
+  memoryreadbookmarklistcache: jest.fn(() => ({
+    source: 'editorbookmarkscroll',
+    editorlist: [],
+    codepagename: 'page-name',
+    codepagepath: ['x'],
+  })),
+  memorycacheeditorbookmarkscrolllist: jest.fn(),
+}))
+
+jest.mock('zss/gadget/data/api', () => ({
+  gadgetclearscroll: jest.fn(),
+}))
+
+jest.mock('zss/memory/bookmarkscroll', () => ({
+  memorybookmarkscroll: jest.fn(),
+  memorymainbookisempty: jest.fn(() => false),
+}))
 
 jest.mock('zss/memory/codepages', () => ({
   memoryreadcodepagebyaddress: jest.fn(),
@@ -64,13 +92,17 @@ describe('handleeditorbookmarkscroll', () => {
 
   beforeEach(() => {
     jest.mocked(memoryeditorbookmarkscroll).mockClear()
+    memoryboundariesclear()
+    memoryresetbooks([])
   })
 
-  it('passes normalized editor list and path to memory and caches', () => {
+  it('without MAIN creates the book then opens editor bookmark scroll', () => {
+    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeUndefined()
     handleeditorbookmarkscroll(vm, {
       ...base,
       data: [[editbookmark], 'page-name', ['a', 'b']],
     })
+    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeDefined()
     expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(
       player,
       expect.arrayContaining([
@@ -109,32 +141,38 @@ describe('handleeditorbookmarkscrollpanel delete flow', () => {
     })
   })
 
-  it('editorbookmarkdel calls registerbookmarkdelete', () => {
+  it('editorbookmarkdel opens confirm prompt instead of deleting', () => {
+    jest.mocked(memorybookmarkdeleteprompt).mockClear()
     handleeditorbookmarkscrollpanel(
       vm,
       { ...base, data: ['bid1'] },
       'editorbookmarkdel',
     )
-    expect(registerbookmarkdelete).toHaveBeenCalledWith(vm, player, 'bid1')
+    expect(memorybookmarkdeleteprompt).toHaveBeenCalledWith(
+      player,
+      'bid1',
+      'editorbookmarkscroll',
+    )
+    expect(registerbookmarkdelete).not.toHaveBeenCalled()
   })
 
-  it('editorbookmarkdelconfirm does not call registerbookmarkdelete', () => {
+  it('editorbookmarkdelconfirm calls registerbookmarkdelete', () => {
     handleeditorbookmarkscrollpanel(
       vm,
       { ...base, data: ['bid1'] },
       'editorbookmarkdelconfirm',
     )
-    expect(registerbookmarkdelete).not.toHaveBeenCalled()
+    expect(registerbookmarkdelete).toHaveBeenCalledWith(vm, player, 'bid1')
   })
 
-  it('editorbookmarkdelcancel does not call memoryeditorbookmarkscroll', () => {
+  it('editorbookmarkdelcancel restores editor bookmark list', () => {
     jest.mocked(memoryeditorbookmarkscroll).mockClear()
     handleeditorbookmarkscrollpanel(
       vm,
       { ...base, data: ['-'] },
       'editorbookmarkdelcancel',
     )
-    expect(memoryeditorbookmarkscroll).not.toHaveBeenCalled()
+    expect(memoryeditorbookmarkscroll).toHaveBeenCalled()
   })
 })
 
