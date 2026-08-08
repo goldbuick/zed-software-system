@@ -131,7 +131,8 @@ constexpr float kEnvReleaseTauScale = 0.060f;
  * overpower drums; drum stem unchanged.
  */
 constexpr float kPlayBusGain = 0.168f;
-/** Stem-balanced vs play (~+3 dB); was 2.440 (drums ~+15 dB, heavy maincomp). */
+/** Stem-balanced vs play (~+3 dB); was 2.440 (drums ~+15 dB, heavy maincomp).
+ */
 constexpr float kDrumBusGain = 0.596f;
 /** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
 /** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs

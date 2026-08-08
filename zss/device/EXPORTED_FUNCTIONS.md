@@ -73,7 +73,7 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vmsearch(device, player)` - Search for player
 
 ### Input & CLI
-- `vminput(device, player, input, mods)` - Send keyboard/gamepad input to sim VM (`vm:input`); primary path from [`userinput`](../../gadget/userinput.tsx)
+- `vminput(device, player, input, mods)` - Send keyboard/gamepad input to sim VM (`vm:input`); primary path from [`userinput`](../gadget/userinput.tsx)
 - `vmcli(device, player, input)` - Execute CLI command
 - `vmclirepeatlast(device, player)` - Repeat last CLI command
 
@@ -87,7 +87,7 @@ Core virtual machine operations for managing game state, memory, code execution,
 - `vmpilotstop(device, player)` - Stop pilot
 - `vmpullvarresult(device, player, data)` - Forward a queued read-flag result back to the VM
 - `vmlastinputtouch(device, player, targetplayer)` - Refresh "last input" timestamp for a player
-- `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Thin main-thread bridge to authoritative [`memorymoveplayertoboard`](../../memory/playermanagement.ts) on the sim
+- `vmplayermovetoboard(device, player, targetplayer, board, dest)` - Thin main-thread bridge to authoritative [`memorymoveplayertoboard`](../memory/playermanagement.ts) on the sim
 - `vmgadgetdesync(device, player)` - Ask the sim VM to repaint this player's gadget state
 
 ### VM sync (handlers / tick)
