@@ -247,7 +247,7 @@ Chip `send` uses `chipmessage` → `SOFTWARE.emit` on the sim hub (same realm as
 
 [`shouldforwardclienttoserver`](../forward.ts): `vm:*`, `chip:*`, `modem:*`, plus path suffixes `sync`, `desync`, `joinack`.
 
-[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
+[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth` (except peer-blocked `synth:tts` / `synth:ttsqueue` — joins play `synth:audiobytes` instead), `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
 
 TTS/STT workers are reached via main `postMessage` when [`platform.ts`](../../platform.ts) routes matching targets.
 
@@ -1589,7 +1589,7 @@ Source: https://zed.cafe/docs/feature/tts
 
 - `@henrygd/queue` — newQueue
 - `zss/device` — createdevice
-- `zss/device/api` — ttsinfo, ttsrequest, synthaudiobuffer
+- `zss/device/api` — ttsinfo, ttsrequest, synthaudiobytes
 - `zss/device/session` — SOFTWARE
 - `zss/feature/tts/engine` — normalizettsengine, TTS_ENGINE
 - `zss/mapping/guid` — createsid
@@ -1613,7 +1613,7 @@ Main thread does **not** import `fishaudio.ts`. Engine-specific behavior lives i
 | `selectttsengine` | `engine`, `config`, `model?` | Update in-memory engine slots |
 | `applyttsengineconfig` | `player`, `engine`, `config`, `model?` | Unified setup: persist engine, validate+store config, or show config |
 | `ttsinfo` | `player`, `info` | Worker info request |
-| `ttsplay` / `ttsqueue` | … | Playback via worker fetch + decode |
+| `ttsplay` / `ttsqueue` | … | Worker fetch encoded bytes → `synth:audiobytes` (synth decodes + plays) |
 
 ## Unified `#ttsengine` flow
 
@@ -3193,7 +3193,7 @@ Registered in [`zss/device/vm/handlers/registry.ts`](../../device/vm/handlers/re
 | `editorbookmarkscroll` | [`handleeditorbookmarkscroll`](../../device/vm/handlers/editorbookmarkscroll.ts) | [`memoryeditorbookmarkscroll`](../../memory/editorbookmarkscroll.ts): snapshot link + `gadgetbbar`, then `scrollwritelines` for entries. |
 | `readzipfilelist` | [`handlereadzipfilelist`](../../device/vm/handlers/zipfile.ts) | Title `zipfilelist`; Zed `!` lines via `scrollwritelines`, chip `zipfilelist`. |
 
-Panel-only actions for editor bookmarks go through [`handledefault`](../../device/vm/handlers/default.ts) as `editorbookmarkscroll:<path>` (e.g. `snapshotcurrent`, `copytogame`, `editorbookmarkdel` → prompt scroll, `editorbookmarkdelconfirm` → `register:editorbookmark:delete` and refreshed list, `editorbookmarkdelcancel` → restore list from cache).
+Panel-only actions for editor bookmarks go through [`handledefault`](../../device/vm/handlers/default.ts) as `editorbookmarkscroll:<path>` (e.g. `snapshotcurrent`, `copytogame`, `editorbookmarkdel` → confirm scroll, `editorbookmarkdelconfirm` → `register:bookmark:delete`, `editorbookmarkdelcancel` → restore list from cache). URL bookmark deletes on `bookmarkscroll` use the same confirm / cancel pattern (`bookmarkdel` → prompt, `bookmarkdelconfirm` / `bookmarkdelcancel`). Terminal pin delete (`vm:bookmarkdeleteprompt`) opens the same confirm scroll. DELETE / cancel links use plain `hyperlink` with a leading `next` data word so [`LinkHyperlink`](../../screens/linkui/hyperlink.tsx) skips `sendclose` (same keep-open flag as hotkey `next`) — otherwise `vm:clearscroll` races the replacement scroll and wipes it.
 
 **Tape editor close:** On [`register.ts`](../../device/register.ts) `editor:close`, the UI clears local editor state and calls [`vmtapeeditorclose`](../../device/api.ts), which emits `vm:tapeeditorclose` into the sim worker. There is no dedicated row for that target in [`vmhandlers`](../../device/vm/handlers/registry.ts); it falls through [`handledefault`](../../device/vm/handlers/default.ts) like other unmatched VM subtargets.
 

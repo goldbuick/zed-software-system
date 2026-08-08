@@ -38,7 +38,7 @@
 <ul>
 <li><code>@henrygd/queue</code> — newQueue</li>
 <li><code>zss/device</code> — createdevice</li>
-<li><code>zss/device/api</code> — ttsinfo, ttsrequest, synthaudiobuffer</li>
+<li><code>zss/device/api</code> — ttsinfo, ttsrequest, synthaudiobytes</li>
 <li><code>zss/device/session</code> — SOFTWARE</li>
 <li><code>zss/feature/tts/engine</code> — normalizettsengine, TTS_ENGINE</li>
 <li><code>zss/mapping/guid</code> — createsid</li>
@@ -101,7 +101,7 @@
 <tr>
 <td><code>ttsplay</code> / <code>ttsqueue</code></td>
 <td>…</td>
-<td>Playback via worker fetch + decode</td>
+<td>Worker fetch encoded bytes → <code>synth:audiobytes</code> (synth decodes + plays)</td>
 </tr>
 </tbody>
 </table></div>
