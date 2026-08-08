@@ -3,7 +3,7 @@ import {
   pushdir,
   type PLAYER_INPUT_FLAGS,
 } from 'zss/firmware/elementinput'
-import { INPUT } from 'zss/gadget/data/types'
+import { INPUT, INPUT_SHIFT } from 'zss/gadget/data/types'
 
 function emptyflags(queue: [INPUT, number][] = []): PLAYER_INPUT_FLAGS {
   return {
@@ -71,6 +71,17 @@ describe('applyinputqueue', () => {
     )
     expect(flags.inputshoot).toEqual(['NORTH', 'EAST'])
     expect(flags.inputmove).toEqual([])
+  })
+
+  it('sets inputmove and inputshift for MOVE_* with INPUT_SHIFT', () => {
+    const flags = applyinputqueue(
+      emptyflags([[INPUT.MOVE_UP, INPUT_SHIFT]]),
+      undefined,
+      undefined,
+    )
+    expect(flags.inputmove).toEqual(['NORTH'])
+    expect(flags.inputshift).toBe(1)
+    expect(flags.inputshoot).toEqual([])
   })
 
   it('sets inputl2 for BUTTON_L2 without setting inputctrl', () => {

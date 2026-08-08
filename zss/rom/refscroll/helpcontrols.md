@@ -1,7 +1,8 @@
 ## keyboard input
 
 - arrow keys - $greenmove
-- shift + arrow keys - $greeneditor / terminal select; in-game shoot (`inputshoot`)
+- shift + arrow keys - $greeneditor / terminal select; in-game shoot (`inputmove` + `inputshift`)
+- w / a / s / d - $greenshoot (`inputshoot`)
 - z / x / c / v - $greenA / B / X / Y buttons
 - q / e - $greenL1 / R1
 - left / right ctrl - $greenL2 / R2 (`inputl2` / `inputr2`)
@@ -12,7 +13,7 @@
 ## controller input
 
 - left stick - $greenmove (diagonals hold both dirs)
-- right stick - $greenshoot (diagonals hold both dirs)
+- right stick - $greenshoot (`inputshoot`, diagonals hold both dirs)
 - d-pad - $greenmove
 - a / b / x / y - face buttons (`inputa` / `inputb` / `inputx` / `inputy`)
 - left / right shoulder - $greenL1 / R1

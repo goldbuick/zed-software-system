@@ -44,31 +44,8 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   if (mods.shift) {
     bits |= INPUT_SHIFT
   }
-  // Keyboard shift+arrow is MOVE with shift (UI selection). Game maps that to shoot.
-  // Shift is consumed by the remap so inputshift is not left set with an empty inputmove.
-  let resolved = input
-  if (mods.shift) {
-    switch (input) {
-      case INPUT.MOVE_LEFT:
-        resolved = INPUT.SHOOT_LEFT
-        bits &= ~INPUT_SHIFT
-        break
-      case INPUT.MOVE_RIGHT:
-        resolved = INPUT.SHOOT_RIGHT
-        bits &= ~INPUT_SHIFT
-        break
-      case INPUT.MOVE_UP:
-        resolved = INPUT.SHOOT_UP
-        bits &= ~INPUT_SHIFT
-        break
-      case INPUT.MOVE_DOWN:
-        resolved = INPUT.SHOOT_DOWN
-        bits &= ~INPUT_SHIFT
-        break
-    }
-  }
   if (ispid(player)) {
-    vminput(SOFTWARE, player, resolved, bits)
+    vminput(SOFTWARE, player, input, bits)
   }
 }
 
