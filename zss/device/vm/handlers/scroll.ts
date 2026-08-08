@@ -4,9 +4,11 @@ import type { MESSAGE } from 'zss/device/types'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
+import { memoryensuresoftwarebook } from 'zss/memory/books'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryunlockscroll } from 'zss/memory/runtime'
+import { MEMORY_LABEL } from 'zss/memory/types'
 import { romread } from 'zss/rom'
 
 export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
@@ -30,6 +32,12 @@ export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
+  // Ctrl+H / vm:refscroll skips memoryruncli; gadget state + gadgetsynctick need MAIN.
+  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    apitoast(vm, message.player, 'gadget scroll: need main book')
+    return
+  }
   const content = romread('refscroll:menu') ?? ''
   if (!content.trim()) {
     apitoast(vm, message.player, 'gadget scroll: need content')

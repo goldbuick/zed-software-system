@@ -1,10 +1,3 @@
-import type { DEVICE } from 'zss/device'
-import type { MESSAGE } from 'zss/device/api'
-import { apitoast } from 'zss/device/api'
-import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
-import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { romread } from 'zss/rom'
-
 jest.mock('zss/config', () => ({
   RUNTIME: {
     YIELD_AT_COUNT: 512,
@@ -25,6 +18,7 @@ jest.mock('zss/rom', () => ({
 
 jest.mock('zss/device/api', () => ({
   apitoast: jest.fn(),
+  apilog: jest.fn(),
 }))
 
 jest.mock('zss/gadget/data/scrollwritelines', () => ({
@@ -44,6 +38,19 @@ jest.mock('zss/memory/runtime', () => ({
   memoryunlockscroll: jest.fn(),
 }))
 
+import type { DEVICE } from 'zss/device'
+import type { MESSAGE } from 'zss/device/api'
+import { apitoast } from 'zss/device/api'
+import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
+import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
+import {
+  memoryreadbookbysoftware,
+  memoryresetbooks,
+} from 'zss/memory/session'
+import { MEMORY_LABEL } from 'zss/memory/types'
+import { romread } from 'zss/rom'
+
 describe('handlerefscroll', () => {
   const vm = {} as DEVICE
   const message: MESSAGE = {
@@ -59,15 +66,21 @@ describe('handlerefscroll', () => {
     jest.mocked(romread).mockReset()
     jest.mocked(scrollwritelines).mockClear()
     jest.mocked(apitoast).mockClear()
+    memoryboundariesclear()
+    memoryresetbooks([])
   })
 
-  it('applies ROM refscroll:menu via scrollwritelines', () => {
+  it('without MAIN creates the book then applies refscroll:menu', () => {
+    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeUndefined()
     jest
       .mocked(romread)
       .mockImplementation((key: string) =>
         key === 'refscroll:menu' ? '!x y;$lbl\n' : undefined,
       )
+
     handlerefscroll(vm, message)
+
+    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeDefined()
     expect(scrollwritelines).toHaveBeenCalledWith(
       'p1',
       '#help or $meta+h',

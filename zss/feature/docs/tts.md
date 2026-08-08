@@ -19,7 +19,7 @@ title: tts/
 
 - `@henrygd/queue` — newQueue
 - `zss/device` — createdevice
-- `zss/device/api` — ttsinfo, ttsrequest, synthaudiobuffer
+- `zss/device/api` — ttsinfo, ttsrequest, synthaudiobytes
 - `zss/device/session` — SOFTWARE
 - `zss/feature/tts/engine` — normalizettsengine, TTS_ENGINE
 - `zss/mapping/guid` — createsid
@@ -43,7 +43,7 @@ Main thread does **not** import `fishaudio.ts`. Engine-specific behavior lives i
 | `selectttsengine` | `engine`, `config`, `model?` | Update in-memory engine slots |
 | `applyttsengineconfig` | `player`, `engine`, `config`, `model?` | Unified setup: persist engine, validate+store config, or show config |
 | `ttsinfo` | `player`, `info` | Worker info request |
-| `ttsplay` / `ttsqueue` | … | Playback via worker fetch + decode |
+| `ttsplay` / `ttsqueue` | … | Worker fetch encoded bytes → `synth:audiobytes` (synth decodes + plays) |
 
 ## Unified `#ttsengine` flow
 

@@ -18,6 +18,7 @@ jest.mock('zss/feature/synth/frontend/applyboardstate', () => ({
 const unlockaudiocontext = jest.fn()
 jest.mock('zss/feature/synth/backend/wasm/audiocontextunlock', () => ({
   unlockaudiocontext: (...args: unknown[]) => unlockaudiocontext(...args),
+  getliveaudiocontext: jest.fn(),
 }))
 
 jest.mock('zss/feature/tts/client', () => ({

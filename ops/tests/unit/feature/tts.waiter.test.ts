@@ -2,7 +2,7 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
   ttsinfo: jest.fn(),
   ttsrequest: jest.fn(),
-  synthaudiobuffer: jest.fn(),
+  synthaudiobytes: jest.fn(),
 }))
 
 jest.mock('zss/device/session', () => ({
@@ -29,7 +29,7 @@ jest.mock('zss/device', () => ({
   }),
 }))
 
-import { synthaudiobuffer, ttsrequest } from 'zss/device/api'
+import { synthaudiobytes, ttsrequest } from 'zss/device/api'
 import { ttsqueue, ttsclearqueue } from 'zss/feature/tts/client'
 
 describe('tts worker waiter', () => {
@@ -46,6 +46,6 @@ describe('tts worker waiter', () => {
     ttsqueue('player1', '', '0', 'hello')
     await new Promise((resolve) => setTimeout(resolve, 100))
     expect(ttsrequest).toHaveBeenCalled()
-    expect(synthaudiobuffer).not.toHaveBeenCalled()
+    expect(synthaudiobytes).not.toHaveBeenCalled()
   })
 })

@@ -50,6 +50,25 @@ describe('forward peer predicates', () => {
     ).toBe(true)
   })
 
+  it('shouldforwardservertoclient allows synth audiobytes but not tts paths', () => {
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'synth:audiobytes'),
+      ),
+    ).toBe(true)
+    expect(
+      shouldforwardservertoclient(createmessage('s', 'p', 'x', 'synth:play')),
+    ).toBe(true)
+    expect(
+      shouldforwardservertoclient(createmessage('s', 'p', 'x', 'synth:tts')),
+    ).toBe(false)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'synth:ttsqueue'),
+      ),
+    ).toBe(false)
+  })
+
   it('shouldforwardclienttoserver allows vm and modem', () => {
     expect(
       shouldforwardclienttoserver(createmessage('s', 'p', 'x', 'vm:cli')),
