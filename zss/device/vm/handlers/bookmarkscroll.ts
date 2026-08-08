@@ -6,14 +6,9 @@ import {
   registerbookmarkurlnavigate,
   registerbookmarkurlsave,
   registerbookmarkurlsaveover,
-  vmclearscroll,
 } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
-import {
-  BOOKMARK_SCROLL_CHIP,
-  normalizebookmarks,
-} from 'zss/feature/bookmarks'
+import { BOOKMARK_SCROLL_CHIP, normalizebookmarks } from 'zss/feature/bookmarks'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
@@ -79,10 +74,7 @@ export function handlebookmarkscroll(vm: DEVICE, message: MESSAGE): void {
 }
 
 /** Terminal pin delete: open confirm scroll (label from main thread). */
-export function handlebookmarkdeleteprompt(
-  vm: DEVICE,
-  message: MESSAGE,
-): void {
+export function handlebookmarkdeleteprompt(vm: DEVICE, message: MESSAGE): void {
   if (!isarray(message.data)) {
     return
   }

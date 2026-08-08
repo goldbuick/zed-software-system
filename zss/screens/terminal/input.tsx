@@ -723,14 +723,8 @@ export function TerminalInput({
                     ) {
                       const id = pinids[rowi - sessioncount]
                       if (id) {
-                        const label =
-                          pinlines[rowi - sessioncount] ?? id
-                        vmbookmarkdeleteprompt(
-                          SOFTWARE,
-                          player,
-                          id,
-                          label,
-                        )
+                        const label = pinlines[rowi - sessioncount] ?? id
+                        vmbookmarkdeleteprompt(SOFTWARE, player, id, label)
                       }
                       break
                     }

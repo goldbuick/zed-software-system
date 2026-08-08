@@ -14,8 +14,8 @@ import {
   memorybookmarkdeleteprompt,
   memoryreadbookmarklistcache,
 } from 'zss/memory/bookmarkdeleteconfirm'
-import { memoryensuresoftwarebook } from 'zss/memory/books'
 import { memorybookmarkscroll } from 'zss/memory/bookmarkscroll'
+import { memoryensuresoftwarebook } from 'zss/memory/books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
@@ -25,10 +25,7 @@ import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
-export function handleeditorbookmarkscroll(
-  vm: DEVICE,
-  message: MESSAGE,
-): void {
+export function handleeditorbookmarkscroll(vm: DEVICE, message: MESSAGE): void {
   // register:editorbookmarkscroll skips memoryruncli; gadget state + gadgetsynctick need MAIN.
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {

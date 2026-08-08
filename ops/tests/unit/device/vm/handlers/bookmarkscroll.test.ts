@@ -9,7 +9,6 @@ import {
   registerbookmarkurlsaveover,
   vmclearscroll,
 } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import {
   handlebookmarkscroll,
   handlebookmarkscrollpanel,
@@ -35,9 +34,6 @@ jest.mock('zss/device/api', () => ({
   registerbookmarkurlsave: jest.fn(),
   registerbookmarkurlsaveover: jest.fn(),
   registerbookmarkcodepagecopytogame: jest.fn(),
-}))
-jest.mock('zss/device/session', () => ({
-  SOFTWARE: { __brand: 'SOFTWARE' },
 }))
 jest.mock('zss/memory/bookmarkscroll', () => ({
   memorybookmarkscroll: jest.fn(),
