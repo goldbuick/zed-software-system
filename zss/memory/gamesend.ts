@@ -175,8 +175,8 @@ export function memorysendtoelement(
         BOARD_WIDTH,
       )}`
     }
-    // Board object chips live on the elected boardrunner. Local os.message is a
-    // no-op on the sim VM (CLI), so forward via chip: when the chip is absent.
+    // Local os.message is a no-op on the sim VM (CLI), so forward via chip:
+    // when the chip is not booted yet.
     if (!memorychipispresent(toelement.id)) {
       const routeplayer =
         withplayer !== ''

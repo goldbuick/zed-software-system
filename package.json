@@ -110,7 +110,6 @@
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-mkcert": "^1.17.8",
     "vite-plugin-node-polyfills": "^0.24.0",
-    "wabt": "^1.0.36",
     "wavefunctioncollapse": "^2.1.0",
     "wrangler": "^4.99.0",
     "y-protocols": "^1.0.7",

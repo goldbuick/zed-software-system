@@ -4,7 +4,6 @@ import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { storagewritevar } from 'zss/feature/storage'
 import { createfirmware } from 'zss/firmware'
-import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import {
   INPUT_FLAG_NAMES,
   type PLAYER_INPUT_FLAGS,
@@ -732,9 +731,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
         // read board by eval dir
         const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
-        if (firmwarewaitforboard(board?.id)) {
-          return 1
-        }
 
         // handle multi-target dirs
         if (dest.targets.length) {
@@ -780,9 +776,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
         // read board by eval dir
         const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
-        if (firmwarewaitforboard(board?.id)) {
-          return 1
-        }
 
         // handle multi-target dirs
         if (dest.targets.length) {

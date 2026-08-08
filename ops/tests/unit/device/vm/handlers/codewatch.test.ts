@@ -15,7 +15,6 @@ jest.mock('zss/config', () => ({
 jest.mock('zss/device/api', () => ({
   vmcodeaddress: (book: string, path: unknown) =>
     `${book}:${JSON.stringify(path)}`,
-  boardrunnerhaltchip: jest.fn(),
 }))
 
 const observecallbacks = new Map<string, (value: string) => void>()
@@ -29,10 +28,6 @@ jest.mock('zss/device/modem', () => ({
       }
     },
   ),
-}))
-
-jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
-  boardrunnerpushupdates: jest.fn(),
 }))
 
 jest.mock('zss/memory/boardaccess', () => ({
@@ -60,15 +55,14 @@ jest.mock('zss/memory/session', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { boardrunnerhaltchip, vmcodeaddress } from 'zss/device/api'
+import { vmcodeaddress } from 'zss/device/api'
 import { modemobservevaluestring } from 'zss/device/modem'
 import type { MESSAGE } from 'zss/device/types'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
   handlecoderelease,
   handlecodewatch,
 } from 'zss/device/vm/handlers/codewatch'
-import { boardrunners, observers, watching } from 'zss/device/vm/state'
+import { observers, watching } from 'zss/device/vm/state'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
@@ -118,14 +112,8 @@ describe('codewatch handlers', () => {
     for (const key of Object.keys(observers)) {
       delete observers[key]
     }
-    for (const key of Object.keys(boardrunners)) {
-      delete boardrunners[key]
-    }
     observecallbacks.clear()
-    boardrunners['board-page'] = 'runner-1'
     jest.mocked(modemobservevaluestring).mockClear()
-    jest.mocked(boardrunnerpushupdates).mockClear()
-    jest.mocked(boardrunnerhaltchip).mockClear()
     jest.mocked(memoryhaltchip).mockClear()
     jest.mocked(memoryapplyelementstats).mockClear()
     jest.mocked(memoryresetcodepagestats).mockClear()
@@ -156,8 +144,6 @@ describe('codewatch handlers', () => {
       expect(object.code).toBe('@obj\n#end')
       expect(memoryapplyelementstats).toHaveBeenCalled()
       expect(memoryhaltchip).toHaveBeenCalledWith('obj-1')
-      expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
-      expect(boardrunnerhaltchip).toHaveBeenCalledWith(vm, 'runner-1', 'obj-1')
     })
 
     it('waits until the last watcher leaves', () => {
@@ -209,7 +195,6 @@ describe('codewatch handlers', () => {
       handlecoderelease(vm, releasemsg('p1', pagepath, 'ignored-payload'))
       expect(page.code).toBe('synced')
       expect(observers[address]).toBeUndefined()
-      expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
     })
   })
 })

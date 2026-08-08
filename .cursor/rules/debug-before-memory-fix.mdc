@@ -16,16 +16,16 @@ Broader prove-gate / human-checkpoint rules (camera, framing, “implement the p
    - an automated spec / fixture (`ops/fixtures/e2e/*`), or
    - a headed Playwright validator under `tasks/groups/`.
 2. **Log-pinned diagnosis** — capture runtime evidence and identify **which memory is wrong**:
-   - **host sim** — `memoryboundaryget`, board terrain in main worker
-   - **join boardrunner worker** — worker-local boundary / board state
+   - **host sim** — authoritative board terrain and boundary store in sim worker
+   - **join tab (thin client)** — gadgetclient zustand projection only; host owns MEMORY
    - **main-thread gadget** — `gadgetclient` / zustand projection from paint/patch
-3. **Hypothesis tied to logs** — state what event produces the stale write (e.g. `boundary:patch:ok` on `/flat/layers/0/char/*` with `terrainops:0`) before editing code.
+3. **Hypothesis tied to logs** — state what event produces the stale write before editing code.
 
 ## Prohibited without the above
 
-- Host-side guess mitigations: notify listeners, extra `gadgetsynctick` / `boardrunnerpaint` / `boardrunnerpushupdates` calls after unrelated edits.
-- Skipping or filtering patches (e.g. ignore flat char paths) without logs proving that path is the sole corrupting source.
-- Rebuilding layer caches on the host as a band-aid when join worker cache is the stale emitter.
+- Host-side guess mitigations: notify listeners, extra `gadgetsynctick` calls after unrelated edits.
+- Skipping or filtering patches without logs proving that path is the sole corrupting source.
+- Rebuilding layer caches outside `handleticktock` as a band-aid when the tick owner skipped invalidation.
 - “Likely fixes” or speculative sync wiring with no repro.
 
 ## Allowed workflow

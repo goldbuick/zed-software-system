@@ -4,7 +4,7 @@ title: Device Message Flow Diagram
 
 The **hub** is a pub/sub fan-out: every `emit` is delivered to every connected device. Each device filters by **topics** (broadcast) or **directed target** (e.g. `vm:operator`).
 
-**See also:** [devices-and-messaging.mdx](devices-and-messaging.mdx) — inventory of every device, realm topology (main + sim + boardrunner + on-demand tts/stt), and cross-realm forwarding.
+**See also:** [devices-and-messaging.mdx](devices-and-messaging.mdx) — inventory of every device, realm topology (main + sim + on-demand tts/stt), and cross-realm forwarding.
 
 ## Mermaid diagram
 
@@ -28,10 +28,6 @@ flowchart TB
         GadgetClient["gadgetclient (paint, patch)"]
     end
 
-    subgraph Sim["Per-board sim"]
-        BoardRunner["boardrunner (paint, patch, tick, input, idle, thud, start)"]
-    end
-
     subgraph TTS["On-demand TTS"]
         Synth["synth (main)"]
         TTSDev["tts (ttsspace)"]
@@ -48,18 +44,15 @@ flowchart TB
     invoke --> VM2
     invoke --> Register
     invoke --> GadgetClient
-    invoke --> BoardRunner
 
     Register -->|vm:operator, vm:login, vm:loader...| VM2
+    userinput["userinput"] -->|vm:input| VM2
     VM2 -->|replynext ackoperator, acklogin...| Register
     Synth -->|tts:info, tts:request| TTSDev
     STTDev -->|stt:transcribe| STTDev
 
     VM2 -->|gadgetclient:paint/patch| GadgetClient
     GadgetClient -->|reply vm:gadgetdesync| VM2
-
-    VM2 -->|boardrunner:paint/patch/tick/input| BoardRunner
-    BoardRunner -->|vm:boardrunnerack/patch, vm:playermovetoboard| VM2
 ```
 
 ## Main message flows
@@ -73,7 +66,7 @@ flowchart TB
 | register  | vm           | `vm:login`                  | Player login                               |
 | register  | vm           | `vm:loader`                 | Load books/content                         |
 | register  | vm           | `vm:cli`                    | CLI command                                |
-| register  | vm           | `vm:input`                  | Keyboard/gamepad input                     |
+| userinput | vm           | `vm:input`                  | Keyboard/gamepad input                     |
 | vm        | register     | `register:ackoperator`      | Operator set ack                           |
 | vm        | register     | `register:loginready`       | Login result / logout ack                  |
 | vm        | register     | `register:acklogin`         | Login success/failure                      |
@@ -84,29 +77,16 @@ flowchart TB
 | vm        | gadgetclient | `gadgetclient:patch`        | Per-player jsonpipe patch                  |
 | gadgetclient | vm        | `vm:gadgetdesync` (reply)   | Patch could not apply; ask for paint       |
 | register  | vm           | `vm:gadgetdesync`           | Force a fresh paint (e.g. after acklogin)  |
-| vm        | boardrunner  | `boardrunner:paint`         | Memory or per-boundary jsonpipe full sync  |
-| vm        | boardrunner  | `boardrunner:patch`         | Memory or per-boundary jsonpipe patch      |
-| vm        | boardrunner  | `boardrunner:tick`          | Run one board tick (board + ts + boundaries) |
-| userinput | boardrunner  | `boardrunner:input`         | Keyboard/gamepad input for the runner      |
-| boardrunner | vm         | `vm:boardrunneraccess`   | Runner asks sim to include a board codepage in tick boundary list until hydrated |
-| boardrunner | vm         | `vm:boardrunnerack`         | Tick acknowledged; refresh runner budget   |
-| boardrunner | vm         | `vm:boardrunnerpaint`       | Full boundary doc from runner → sim (pipe shadow reset) |
-| boardrunner | vm         | `vm:boardrunnerpatch`       | Boundary diff back to authoritative memory |
-| boardrunner | vm         | `vm:playermovetoboard`      | Boardrunner asks for player teleport       |
-| boardrunner | vm         | `vm:playergotoboard`        | Boardrunner asks host to resolve + teleport |
-| boardrunner | vm         | `vm:buildboard`             | Boardrunner asks host to create/clone board and link exits/stats |
-| boardrunner | vm         | `vm:boardsnapshot`          | Boardrunner asks host to create MAIN `zss_snapshot_*` codepage and copy board |
-| boardrunner | vm         | `vm:boardrevert`            | Boardrunner asks host to restore board from snapshot codepage |
+| main-thread callers | vm | `vm:playermovetoboard`      | Thin bridge to authoritative player move   |
 
 ## Device summary
 
 | Device       | Topics                          | Receives (directed)             | Role                                  |
 |--------------|---------------------------------|---------------------------------|---------------------------------------|
 | clock        | (none)                          | —                               | Emits ticktock, second                |
-| vm           | ticktock, second                | vm:*                            | Game logic, login, CLI, loader; per-tick gadget projection and boardrunner orchestration |
+| vm           | ticktock, second                | vm:*                            | Game logic, login, CLI, loader; memorytickmain + gadget projection each tick |
 | register     | ready, second, log, chat, toast | register:*                       | UI state, storage, bootstrap          |
 | gadgetclient | (none)                          | gadgetclient:*                   | Receives paint/patch from sim VM      |
-| boardrunner  | vm                              | boardrunner:*, vm:*              | Per-board chip sim on a dedicated worker |
 | bridge       | (none)                          | bridge:*                         | Multiplayer / ZNS                     |
 | modem        | second                          | modem:*                          | CRDT sync, presence                   |
 | synth        | (none)                          | synth:*                          | Audio playback                        |

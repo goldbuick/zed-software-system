@@ -6,13 +6,11 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { DEVICE } from 'zss/device'
-import { boardrunnerlinkdead, registerloginready } from 'zss/device/api'
+import { registerloginready } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { handlelogout } from 'zss/device/vm/handlers/auth'
-import { handleboardrunnerpatch } from 'zss/device/vm/handlers/boardrunnerpatch'
-import { boardrunners, SECOND_TIMEOUT, tracking } from 'zss/device/vm/state'
+import { SECOND_TIMEOUT, tracking } from 'zss/device/vm/state'
 import { extractpidsfromopspaths } from 'zss/debugingest'
-import { encodepatchwire } from 'zss/feature/jsonpipe/wire'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import {
@@ -42,20 +40,10 @@ import { CATEGORY } from 'zss/words/types'
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(() => false),
   apilog: jest.fn(),
-  boardrunnerlinkdead: jest.fn(),
   gadgetclientgotofade: jest.fn(),
   registerinspector: jest.fn(),
   registerloginready: jest.fn(),
   vmloader: jest.fn(),
-}))
-
-jest.mock('zss/device/vm/boardrunnermanagement', () => ({
-  boardrunnerassignmentvalid: jest.fn(() => false),
-  boardrunnerelect: jest.fn(),
-}))
-
-jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
-  boardrunnerpushupdates: jest.fn(),
 }))
 
 jest.mock('zss/device/vm/gadgetsynctick', () => ({
@@ -134,9 +122,6 @@ describe('player orphan evidence (no fix)', () => {
     book.name = 'main'
     memoryresetbooks([book])
     jest.clearAllMocks()
-    for (const key of Object.keys(boardrunners)) {
-      delete boardrunners[key]
-    }
   })
 
   afterEach(() => {
@@ -202,11 +187,10 @@ describe('player orphan evidence (no fix)', () => {
     expect(after.count).toBe(0)
   })
 
-  it('R3: logout with no elected runner deletes on host (H3)', () => {
+  it('R3: logout deletes player on host (H3)', () => {
     const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
     placeplayer(boarda, player, 5, 5)
     memorywritebookplayerboard(mainbook, player, boarda)
-    delete boardrunners[boarda]
     tracking[player] = SECOND_TIMEOUT
 
     const vm = { emit: jest.fn(), replynext: jest.fn() } as unknown as DEVICE
@@ -226,7 +210,7 @@ describe('player orphan evidence (no fix)', () => {
       hypothesis: 'H3',
       before,
       after,
-      linkdeadcalled: jest.mocked(boardrunnerlinkdead).mock.calls.length,
+      linkdeadcalled: 0,
       trackingcleared: tracking[player] === undefined,
       verdict:
         after.count === 0 && tracking[player] === undefined
@@ -234,7 +218,6 @@ describe('player orphan evidence (no fix)', () => {
           : 'REGRESSION',
     })
 
-    expect(boardrunnerlinkdead).not.toHaveBeenCalled()
     expect(after.count).toBe(0)
     expect(tracking[player]).toBeUndefined()
   })
@@ -262,7 +245,6 @@ describe('player orphan evidence (no fix)', () => {
     })
 
     expect(tracking[player]).toBeUndefined()
-    expect(boardrunnerlinkdead).not.toHaveBeenCalled()
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
   })
 
@@ -287,64 +269,6 @@ describe('player orphan evidence (no fix)', () => {
 
     expect(ok).toBe(true)
     expect(after.count).toBeGreaterThan(1)
-  })
-
-  it('R5: stale source objects/pid patch after host move resurrects copy (H-C)', () => {
-    const src = placeplayer(boarda, player, 5, 5)
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-    memorywritebookplayerboard(mainbook, player, boarda)
-    memorywritebookflag(mainbook, player, 'enterx', 5)
-    memorywritebookflag(mainbook, player, 'entery', 5)
-
-    const moved = memorymoveplayertoboard(mainbook, player, boardb, {
-      x: 3,
-      y: 3,
-    })
-    const aftermove = memorydebugcountplayerboards(player)
-    expect(moved).toBe(true)
-    expect(aftermove.count).toBe(1)
-    expect(src.objects[player]).toBeUndefined()
-
-    const ghost = {
-      id: player,
-      x: 5,
-      y: 5,
-      kind: MEMORY_LABEL.PLAYER,
-      category: CATEGORY.ISOBJECT,
-      player,
-    }
-    const patch = encodepatchwire([
-      { op: 'add' as const, path: `/board/objects/${player}`, value: ghost },
-    ])
-    const vm = { emit: jest.fn() } as unknown as DEVICE
-    handleboardrunnerpatch(vm, {
-      session: '',
-      player: 'runner-a',
-      id: 'm-patch',
-      sender: '',
-      target: 'boardrunner:patch',
-      data: [patch, boarda],
-    } as MESSAGE)
-
-    const afterpatch = memorydebugcountplayerboards(player)
-    evidencelog({
-      scenario: 'R5_stale_source_patch',
-      hypothesis: 'H-C',
-      aftermove,
-      afterpatch,
-      sourcehasobject: !!src.objects[player],
-      flagsboard: afterpatch.flagsboard,
-      boardids: afterpatch.boardids,
-      verdict:
-        afterpatch.count > 1
-          ? 'CONFIRMED_h_c_patch_resurrects'
-          : 'REJECTED_h_c_patch_no_orphan',
-    })
-
-    expect(afterpatch.count).toBeGreaterThan(1)
-    expect(afterpatch.boardids).toEqual(
-      expect.arrayContaining([boarda, boardb]),
-    )
   })
 })
 

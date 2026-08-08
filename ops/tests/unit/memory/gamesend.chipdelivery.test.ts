@@ -87,7 +87,7 @@ describe('memorysendtoelement chip delivery', () => {
     expect(mockedmemorymessagechip).not.toHaveBeenCalled()
   })
 
-  it('uses local memorymessagechip when chip is present (boardrunner path)', () => {
+  it('uses local memorymessagechip when chip is present', () => {
     mockedmemorychipispresent.mockReturnValue(true)
     memorysendtoelement(player, gate, 'open')
     expect(mockedchipmessage).not.toHaveBeenCalled()

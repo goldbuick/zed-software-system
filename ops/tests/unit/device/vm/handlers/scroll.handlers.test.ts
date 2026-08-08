@@ -24,10 +24,6 @@ jest.mock('zss/gadget/data/scrollwritelines', () => ({
   scrollwritelines: jest.fn(),
 }))
 
-jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
-  boardrunnerpushupdates: jest.fn(),
-}))
-
 jest.mock('zss/memory/inspectionmakeit', () => ({
   memorymakeitscroll: jest.fn(),
 }))
@@ -43,7 +39,6 @@ jest.mock('zss/memory/runtime', () => ({
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import {
   handleclearscroll,
   handlegadgetscroll,
@@ -69,7 +64,6 @@ describe('scroll handlers', () => {
 
   beforeEach(() => {
     jest.mocked(gadgetclearscroll).mockClear()
-    jest.mocked(boardrunnerpushupdates).mockClear()
     jest.mocked(scrollwritelines).mockClear()
     jest.mocked(apitoast).mockClear()
     jest.mocked(memorymakeitscroll).mockClear()
@@ -86,7 +80,6 @@ describe('scroll handlers', () => {
     handleclearscroll(vm, message)
     expect(gadgetclearscroll).toHaveBeenCalledWith('p1')
     expect(memoryunlockscroll).toHaveBeenCalledWith('obj1', 'p1')
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
   })
 
   it('handlemakeitscroll forwards string data', () => {

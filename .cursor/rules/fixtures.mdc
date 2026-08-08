@@ -14,11 +14,9 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 
 | Domain | Path under `ops/fixtures/` |
 |--------|------------------------|
-| Lang parity | `lang/parity/` + `manifest.json` |
 | Lang integration sources | `lang/scripts/` |
 | Lang integration goldens | `lang/integration/` |
 | Book corpus | `lang/coolregionsbow/` |
-| Memory WASM | `memory/wasm/` |
 | Synth | `synth/wasm/`, `synth/daisy/`, `synth/maxi/` |
 | Dev-served static | `../public/` under `ops/` (served at `/fixtures/` in dev only) |
 | Offline renders | `../public/renders/` under `ops/` (served at `/renders/` in dev only) |
@@ -29,8 +27,8 @@ All test fixture **assets** live under repo-root [`ops/fixtures/`](ops/fixtures/
 
 ```typescript
 // ✅ GOOD
-import { LANG_PARITY_DIR } from 'ops/lib/fixturepaths'
-path.join(LANG_PARITY_DIR, `${id}.zss`)
+import { LANG_INTEGRATION_GOLDENS_DIR } from 'ops/lib/fixturepaths'
+path.join(LANG_INTEGRATION_GOLDENS_DIR, `${id}.js`)
 
 // ❌ BAD — co-located fixture trees
 path.join(__dirname, '__fixtures__/parity')
@@ -42,7 +40,7 @@ path.join(__dirname, '__fixtures__/parity')
 ## Generated vs committed
 
 - Regenerate `ops/fixtures/generated/training/` via existing tasks/scripts.
-- Lang/memory/synth goldens: regen via parity/regen tests — do not hand-edit unless fixing the generator.
+- Synth goldens: regen via parity/regen tests — do not hand-edit unless fixing the generator.
 
 ## Ops layout
 

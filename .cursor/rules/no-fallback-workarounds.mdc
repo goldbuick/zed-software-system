@@ -30,7 +30,6 @@ onedit(() => {
   try {
     sync()
   } catch {
-    boardrunnerpushupdates()
     gadgetsynctick()
   }
 })

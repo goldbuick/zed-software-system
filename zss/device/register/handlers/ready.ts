@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { apilog, boardrunnerstart, vmoperator } from 'zss/device/api'
+import { apilog, vmoperator } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { syncterminalbookmarkpins } from 'zss/device/register/helpers/bootstrap'
 import { registerreadplayer } from 'zss/device/registerplayer'
@@ -17,7 +17,6 @@ import { ispresent } from 'zss/mapping/types'
 
 export function handleready(device: DEVICE, message: MESSAGE): void {
   doasync(device, message.player, async () => {
-    boardrunnerstart(device, registerreadplayer())
     storagewatchcontent(registerreadplayer())
     const historybuffer = await storagereadhistorybuffer()
     if (ispresent(historybuffer)) {

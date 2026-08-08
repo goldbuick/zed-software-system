@@ -17,7 +17,7 @@ description: >-
 **Not for:**
 
 - Template authoring under `ops/fixtures/content/templates/` -- use skill `book-content`
-- jsonpipe / boardrunner worker sync -- that is not disk projection
+- jsonpipe gadget projection -- that is not disk projection
 - Implementing cafe FSA internals unless the user asks for feature work (see code owners below)
 
 ## Attach and sync (must follow)

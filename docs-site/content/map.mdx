@@ -21,7 +21,6 @@ flowchart TB
   engine["Engine"]
   register["register device"]
   simvm["Sim VM worker"]
-  boardrunner["Boardrunner worker"]
   memory["MEMORY"]
   chips["CHIPs"]
   firmware["Firmware"]
@@ -35,9 +34,7 @@ flowchart TB
   display --> engine
   engine --> register
   register --> simvm
-  register --> boardrunner
   simvm --> memory
-  boardrunner --> memory
   memory --> chips
   chips --> firmware
 ```
@@ -51,8 +48,7 @@ flowchart TB
 | **R3F display** | Three.js orthographic renderer for tile layers, sprites, dither, and CRT effects. | `zss/gadget/display/` |
 | **Engine** | Bootstraps createplatform(), mounts the render loop and tape UI. | `zss/gadget/engine.tsx` |
 | **register device** | Main-thread UI edge: storage, zustand stores, emits vm:* messages for user actions. | `zss/device/register.ts` |
-| **Sim VM worker** | Authoritative game logic: owns MEMORY, runs ticktock, elects boardrunners. | `zss/device/vm.ts` |
-| **Boardrunner worker** | Per-board chip simulation for the elected player on each active board. | `zss/device/boardrunner.ts` |
+| **Sim VM worker** | Authoritative game logic: owns MEMORY, runs ticktock and memorytickmain. | `zss/device/vm.ts` |
 | **MEMORY** | Singleton authoritative world state: books, boards, elements, session, operator. | `zss/memory/session.ts` |
 | **CHIPs** | Per-element script VMs that execute compiled codepage logic each tick. | `zss/chip.ts` |
 | **Firmware** | #command vocabulary composed into CLI, LOADER, and RUNTIME drivers. | `zss/firmware/runner.ts` |
@@ -70,25 +66,21 @@ flowchart LR
   mmodem["modem (main)"]
   mhub["hub (main)"]
   mforward["forward (main)"]
-  svm["vm (sim or stub)"]
-  sstub["joinvm"]
+  svm["vm (sim)"]
+  sjoin["joinvm"]
   sclock["clock"]
   smodem["modem (sim)"]
   shub["hub (sim)"]
   sforward["forward (sim)"]
-  brunner["boardrunner"]
   htts["tts (lazy)"]
   hstt["stt (lazy)"]
   mhub --> mforward
   mforward --> shub
-  mforward --> sstub
-  mforward --> brunner
+  mforward --> sjoin
   mforward --> htts
   mforward --> hstt
   shub --> svm
   shub --> sclock
-  sstub --> brunner
-  svm --> brunner
   mregister --> mhub
   mgadget --> mhub
   mbridge --> mhub
@@ -105,13 +97,12 @@ flowchart LR
 | **modem (main)** | Yjs collaborative editing sync and awareness on main thread. | `zss/device/modem.ts` |
 | **hub (main)** | Fan-out message bus; every device receives every message. | `zss/hub.ts` |
 | **forward (main)** | Bridges realms via postMessage; dedupes by message.id. | `zss/device/forward.ts` |
-| **vm (sim or stub)** | Sim worker game device: ticktock, cli, books, boardrunner orchestration; joinvm replaces sim on /join/. | `zss/device/vm.ts` |
-| **joinvm** | Join-mode stub VM on main thread (no clock/tick); replaces sim when /join/ URL; boardrunner still eager. | `zss/device/joinvm.ts` |
+| **vm (sim)** | Sim worker game device: ticktock, cli, books, memorytickmain; authoritative MEMORY. | `zss/device/vm.ts` |
+| **joinvm** | Join-mode thin VM on main thread (no clock/tick); replaces sim when /join/ URL. | `zss/device/joinvm.ts` |
 | **clock** | Emits ticktock and second messages to drive simulation timing. | `zss/device/clock.ts` |
 | **modem (sim)** | Networking/sync message handling on sim worker side. | `zss/device/modem.ts` |
 | **hub (sim)** | Separate hub instance in sim worker global scope. | `zss/hub.ts` |
 | **forward (sim)** | Forwards messages between sim worker and main/other workers. | `zss/device/forward.ts` |
-| **boardrunner** | Runs memorytickmain for elected board; jsonpipe boundary sync. | `zss/device/boardrunner.ts` |
 | **tts (lazy)** | On-demand Piper, Supertonic, or Fish TTS inference; spawned on first tts:* message. | `zss/device/ttsworker.ts` |
 | **stt (lazy)** | On-demand Moonshine speech-to-text; spawned on first stt:* message. | `zss/device/sttworker.ts` |
 
@@ -123,37 +114,31 @@ flowchart LR
 flowchart TB
   clock["clock:ticktock"]
   vmtick["vm:ticktock"]
-  loaders["loaders"]
+  loaders["memorytickloaders"]
+  mtick["memorytickmain"]
+  glayers["rebuildgadgetlayers"]
   gsync["gadgetsynctick"]
   gclient["gadgetclient:paint|patch"]
-  elect["boardrunnerelect"]
-  brtick["boardrunner:tick"]
-  mtick["memorytickmain"]
-  brpatch["boardrunnerpatch"]
-  vmpatch["vm:boardrunnerpatch"]
+  mfs["memoryfs tick check"]
   clock --> vmtick
   vmtick --> loaders
-  vmtick --> gsync
+  vmtick --> mtick
+  vmtick --> glayers
+  glayers --> gsync
   gsync --> gclient
-  vmtick --> elect
-  elect --> brtick
-  brtick --> mtick
-  mtick --> brpatch
-  brpatch --> vmpatch
+  vmtick --> mfs
 ```
 
 | Node | Definition | Path |
 |------|------------|------|
 | **clock:ticktock** | Clock device fires ticktock at simulation frame rate. | `zss/device/clock.ts` |
 | **vm:ticktock** | VM handler orchestrates one simulation frame. | `zss/device/vm/handlers/ticktock.ts` |
-| **loaders** | Loader codepage execution each tick. | `zss/memory/runtime.ts` |
+| **memorytickloaders** | Loader codepage execution each tick. | `zss/memory/runtime.ts` |
+| **memorytickmain** | Runs all element CHIP ticks on boards with active players. | `zss/memory/runtime.ts` |
+| **rebuildgadgetlayers** | Refreshes per-board gadget layer caches before projection. | `zss/device/vm/handlers/ticktock.ts` |
 | **gadgetsynctick** | Projects per-player gadget layers; emits gadgetclient:paint/patch. | `zss/device/vm/gadgetsynctick.ts` |
-| **gadgetclient:paint|patch** | Main thread replays jsonpipe sync into zustand render state. | `zss/device/gadgetclient.ts` |
-| **boardrunnerelect** | Elects one player per active board as runner; enforces ack budget. | `zss/device/vm/boardrunnermanagement.ts` |
-| **boardrunner:tick** | Worker receives tick with board id and boundary ids needed. | `zss/device/boardrunner/handlers/tick.ts` |
-| **memorytickmain** | Runs all element CHIP ticks on the board for this frame. | `zss/memory/runtime.ts` |
-| **boardrunnerpatch** | Worker pushes boundary diffs back to sim VM. | `zss/device/vm/handlers/boardrunnerpatch.ts` |
-| **vm:boardrunnerpatch** | Sim applies patches to authoritative MEMORY boundaries. | `zss/device/vm/handlers/boardrunnerpatch.ts` |
+| **gadgetclient:paint\|patch** | Main thread replays jsonpipe sync into zustand render state. | `zss/device/gadgetclient.ts` |
+| **memoryfs tick check** | Optional disk projection sync when memoryfs is attached. | `zss/device/vm/handlers/memoryfs.ts` |
 
 ## Script pipeline
 
@@ -182,4 +167,3 @@ flowchart TB
 | **Firmware #commands** | Runtime driver dispatches #go, #put, #play, etc. to memory/gadget APIs. | `zss/firmware/runner.ts` |
 | **MEMORY mutation** | Board elements, flags, player state updated authoritatively in sim. | `zss/memory/` |
 | **Gadget projection** | Next ticktock projects mutated memory into render layers for display. | `zss/device/vm/gadgetsynctick.ts` |
-

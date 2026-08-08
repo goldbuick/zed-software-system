@@ -3,7 +3,6 @@
   "entry": [
     "cafe/index.tsx",
     "zss/simspace.ts",
-    "zss/boardrunnerspace.ts",
     "zss/sttspace.ts",
     "zss/ttsspace.ts",
     "headless/src/commands/run.ts",

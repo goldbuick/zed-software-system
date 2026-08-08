@@ -1,6 +1,5 @@
 import { createmessage } from 'zss/device'
 import {
-  shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
   shouldforwardonpeerclient,
   shouldforwardonpeerserver,
@@ -58,26 +57,5 @@ describe('forward peer predicates', () => {
     expect(
       shouldforwardclienttoserver(createmessage('s', 'p', 'x', 'modem:sync')),
     ).toBe(true)
-  })
-
-  it('shouldforwardclienttoboardrunner allows boardrunner and chip', () => {
-    expect(
-      shouldforwardclienttoboardrunner(
-        createmessage('s', 'p', 'x', 'boardrunner:paint'),
-      ),
-    ).toBe(true)
-    expect(
-      shouldforwardclienttoboardrunner(
-        createmessage('s', 'p', 'x', 'chip:scroll:label'),
-      ),
-    ).toBe(true)
-    expect(
-      shouldforwardclienttoboardrunner(createmessage('s', 'p', 'x', 'vm:cli')),
-    ).toBe(false)
-    expect(
-      shouldforwardclienttoboardrunner(
-        createmessage('s', 'p', 'x', 'ticktock'),
-      ),
-    ).toBe(false)
   })
 })

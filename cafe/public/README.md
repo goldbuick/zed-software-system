@@ -10,9 +10,6 @@ Static assets served at site root by Vite (`public/`). Do not add ad-hoc trees h
 | `models/` | Optional on-disk speech models (large downloads) |
 | `coep/` | COOP/COEP helper scripts for threaded WASM |
 | `daisy/` | Built Daisy synth WASM + worklet (`yarn task run ops:daisy:build`) |
-| `memory/` | Built memory WASM |
-| `lang/` | Lang compiler WASM (when built) |
-| `runtime/` | Planned full sim WASM (see `ops/docs/wasm-sim-port.mdx`) |
 
 ## Not here
 

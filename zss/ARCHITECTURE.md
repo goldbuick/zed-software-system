@@ -6,8 +6,6 @@ From the [root README](../README.md): a **ZZT-inspired, web-based fantasy termin
 
 **Shipped today:** **Daisy synth WASM** in the AudioWorklet; chip scripts compile via the **TypeScript lang backend**. See [`zss/feature/lang/`](feature/lang/) and [`zss/feature/synth/`](feature/synth/).
 
-**Planned (design only):** port the **full game sim** and firmware execution to **`zss_runtime.wasm`** (C++ bytecode VM). Lang WASM covers script compile/run; full sim WASM is a separate migration. See [docs/wasm-sim-port.mdx](../ops/docs/wasm-sim-port.mdx) and [docs/multiplayer-wasm-architecture.mdx](../ops/docs/multiplayer-wasm-architecture.mdx).
-
 ---
 
 ## Repository layout
@@ -62,15 +60,13 @@ zss/feature/lang/       Script compiler (TS backend + native parity target)
 Boot flow:
 
 1. [`cafe/index.tsx`](../cafe/index.tsx) loads [`zss/userspace.ts`](userspace.ts) (side-effect imports of main-thread devices), then renders [`cafe/app.tsx`](../cafe/cafeapp.tsx) → [`zss/gadget/engine.tsx`](gadget/engine.tsx).
-2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns **boardrunnerspace** (per-board sim) and either **simspace** (authoritative VM worker) or **joinvm** on the main thread for `/join/` tabs ([`device/joinvm.ts`](device/joinvm.ts)). **ttsspace** / **sttspace** workers start on demand for TTS/STT.
+2. `Engine` calls [`createplatform()`](platform.ts): `sessionreset` on [`SOFTWARE`](device/session.ts), spawns either **simspace** (authoritative VM worker) or **joinvm** on the main thread for `/join/` tabs ([`device/joinvm.ts`](device/joinvm.ts)). **ttsspace** / **sttspace** workers start on demand for TTS/STT.
 
-[`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
-
-[`zss/boardrunnerspace.ts`](boardrunnerspace.ts) runs **inside the boardrunner worker**: imports [`device/boardrunner`](device/boardrunner.ts) (thin entry; logic in [`device/boardrunner/`](device/boardrunner/)), which receives jsonpipe paint/patch slices of memory ("boundaries") for the board it has been elected to run, executes [`memorytickmain`](memory/runtime.ts) for that board, and emits boundary patches back to the sim VM.
+[`zss/simspace.ts`](simspace.ts) runs **inside the sim worker**: imports `clock` and `modem`, wires `createforward` so messages that must reach the browser UI are `postMessage`’d out, then calls `started()` from [`zss/device/vm.ts`](device/vm.ts) which dispatches per-tick handlers (including [`memorytickmain`](memory/runtime.ts) for active boards and the per-player gadget projection in [`gadgetsynctick`](device/vm/gadgetsynctick.ts)).
 
 [`zss/userspace.ts`](userspace.ts) registers **main-thread** devices: `gadgetclient`, `modem`, `bridge`, `register`, `synth`.
 
-**Important detail:** each realm (main window vs each worker) has its **own** [`hub`](hub.ts) instance (separate JS globals). [`zss/device/forward.ts`](device/forward.ts) bridges realms: a `forward` device subscribes to topic `all`, dedupes by `message.id`, and either invokes the local `hub` or `postMessage`s to the parent/worker per `shouldforward*` helpers in that file. [`zss/platform.ts`](platform.ts) wires sim ↔ main, boardrunner ↔ main, and on-demand tts/stt ↔ main, and also re-routes worker-originated messages between workers via main when their target prefix matches the destination realm.
+**Important detail:** each realm (main window vs each worker) has its **own** [`hub`](hub.ts) instance (separate JS globals). [`zss/device/forward.ts`](device/forward.ts) bridges realms: a `forward` device subscribes to topic `all`, dedupes by `message.id`, and either invokes the local `hub` or `postMessage`s to the parent/worker per `shouldforward*` helpers in that file. [`zss/platform.ts`](platform.ts) wires sim ↔ main and on-demand tts/stt ↔ main.
 
 ```mermaid
 flowchart LR
@@ -95,21 +91,15 @@ flowchart LR
   subgraph stt [stt worker lazy]
     STTDev[stt]
   end
-  subgraph br [boardrunner worker]
-    BoardRunner[boardrunner]
-  end
   ForwardMain <-->|postMessage| ForwardSim
   ForwardMain <-->|postMessage| TTSDev
   ForwardMain <-->|postMessage| STTDev
-  ForwardMain <-->|postMessage| BoardRunner
   HubMain --> Register
   HubMain --> GadgetClient
   HubSim --> VM
 ```
 
 CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips Canvas and calls `createplatform(..., true)` so Playwright drives the same stack without WebGL.
-
-**Planned worker layout:** one **wasm worker** (sim + synth coordinator + `zss_runtime`); retire sim, boardrunner, and stub workers. TTS/STT stay as on-demand workers. Multiplayer stays PeerJS on main; host MAIN book memory authoritative. Details: [docs/multiplayer-wasm-architecture.mdx](../ops/docs/multiplayer-wasm-architecture.mdx).
 
 ---
 
@@ -124,20 +114,22 @@ CLI / headless mode ([`cafe/index.tsx`](../cafe/index.tsx) `bootheadless`) skips
 - Devices match if: subscribed **topic** equals the message target (e.g. `ticktock`, `tock`, `second`), **or** message is addressed to device id / name / `all`.
 - **`reply` / `replynext`:** convenience for responses along `sender:subtarget`.
 
-Authoritative diagrams: [`zss/device/docs/message-flow.mdx`](device/docs/message-flow.mdx) (mermaid + ASCII) and [`zss/device/docs/devices-and-messaging.mdx`](device/docs/devices-and-messaging.mdx) (all devices, three realms, forwarding).
+Authoritative diagrams: [`zss/device/docs/message-flow.mdx`](device/docs/message-flow.mdx) (mermaid + ASCII) and [`zss/device/docs/devices-and-messaging.mdx`](device/docs/devices-and-messaging.mdx) (all devices, realms, forwarding).
 
 ---
 
 ## VM and handlers (game / OS logic)
 
-[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts) (including the **boardrunner election** maps: `boardrunners` board → player, `playerrunners` player → board, `boardrunneracks` ack budget, `boardrunnerblocked`).
+[`zss/device/vm.ts`](device/vm.ts) creates the `vm` device (topics `ticktock`, `second`). Each message is dispatched via [`zss/device/vm/handlers/registry.ts`](device/vm/handlers/registry.ts) by `message.target` (e.g. `operator`, `cli`, `input`, `loader`, `books`, `ticktock`, …). Shared mutable VM state lives in [`zss/device/vm/state.ts`](device/vm/state.ts).
 
-Each [`ticktock`](device/vm/handlers/ticktock.ts) the VM:
+Each [`ticktock`](device/vm/handlers/ticktock.ts) the sim VM:
 
-1. Drives the `pilot` system and ticks loaders ([`memorytickloaders`](memory/runtime.ts)).
-2. Builds per-player gadget projections (paint/patch to `gadgetclient`) via [`gadgetsynctick`](device/vm/gadgetsynctick.ts).
-3. Re-elects a runner per active board (`boardrunnerelect` / `boardrunnerevict`), enforces an ack budget, and emits `boardrunner:tick` to each elected runner with the board id, timestamp, and the list of [boundary ids](memory/boundaryrouting.ts) needed to run that board.
-4. Streams memory and boundary diffs to the boardrunner worker through [`boardrunnermemorysync`](device/vm/boardrunnermemorysync.ts) and [`boardrunnerboundarymemorysync`](device/vm/boardrunnerboundarysync.ts) (jsonpipe full sync + patches).
+1. Runs [`memorytickloaders`](memory/runtime.ts).
+2. Calls [`memorytickmain`](memory/runtime.ts) for every board with active players.
+3. Rebuilds per-board gadget layer caches, then projects per-player gadget state via [`gadgetsynctick`](device/vm/gadgetsynctick.ts).
+4. Runs [`memoryfs`](feature/memoryfs/) disk projection checks when attached.
+
+Input from the UI arrives as [`vminput`](device/api.ts) → `vm:input`. Cross-board moves use [`memorymoveplayertoboard`](memory/playermanagement.ts) directly on the sim (firmware `#goto`, edge exits) or via thin [`vmplayermovetoboard`](device/api.ts) for main-thread callers.
 
 The **`register`** device ([`zss/device/register.ts`](device/register.ts)) is the **UI-facing edge**: storage, session, tape/terminal/editor zustand stores, and it **emits** `vm:*` calls (via [`zss/device/api.ts`](device/api.ts)) so user actions become VM work.
 
@@ -172,6 +164,8 @@ Memory APIs are consumed by the chip runtime, firmware (`send`, movement, etc.),
 
 Shared stdlib: `audio`, `board`, `network`, `transform`, `element`. Example runtime commands in [`zss/firmware/runtime.ts`](firmware/runtime.ts) (`send`, `text`, `hyperlink`, `help`, …) bridge script to **gadget** APIs and **memory** (`memorysendtoelements`, etc.).
 
+Board transforms (`#snapshot`, `#revert`, `#build`, `#goto`) call feature modules directly on the sim — [`boardsnapshot`](feature/docs/boardsnapshot.md), [`boardbuild`](feature/boardbuild.ts), and [`memorymoveplayertoboard`](memory/playermanagement.ts).
+
 ---
 
 ## Gadget: simulation state → pixels
@@ -182,7 +176,7 @@ Rough pipeline:
 2. **`gadgetclient`** (main, [`device/gadgetclient.ts`](device/gadgetclient.ts)): replays the jsonpipe paint/patch into the **zustand** store in [`zss/gadget/data/zustandstores.ts`](gadget/data/zustandstores.ts) (`useGadgetClient`, tape/editor/inspector stores). Bad patches reply `gadgetdesync` to the sim VM.
 3. **`Engine`** / [`zss/screens/`](screens/) / [`zss/gadget/display/`](gadget/display/): R3F orthographic scene, tiles/sprites, CRT-style effects, tape UI.
 
-Note that the previous `gadgetserver` device has been removed: the same paint/patch messages are now produced **inside the VM tick** (no separate device or `tock` topic), and the `boardrunner` worker handles the per-board chip simulation that used to share that hub.
+Note that the previous `gadgetserver` device has been removed: the same paint/patch messages are now produced **inside the VM tick** (no separate device or `tock` topic). Chip simulation runs in the sim worker via `memorytickmain` — there is no separate boardrunner worker.
 
 **Tape editor / terminal input:** [`zss/screens/tape/autocomplete.ts`](screens/tape/autocomplete.ts) computes `#` command and word-list suggestions from lexer tokens and firmware word tables; [`zss/screens/tape/commandarghints.ts`](screens/tape/commandarghints.ts) loads optional long-form help from ROM keys `editor:commands:<name>` (Markdown with YAML `hint:` or legacy `desc;…` lines), cached per command. [`zss/screens/tape/autocompleteui.ts`](screens/tape/autocompleteui.ts) shares suggestion-apply and terminal hint placement. See [`zss/screens/tape/README.md`](screens/tape/README.md).
 
@@ -198,6 +192,8 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 **`bridge`**: external-world actions (fetch, streams, chat bridges); see [`zss/device/docs/message-flow.mdx`](device/docs/message-flow.mdx).
 
+**jsonpipe** syncs gadget projection and optional memoryfs disk export — not a separate board sim worker.
+
 ---
 
 ## CLI packaging
@@ -206,12 +202,10 @@ Scattered under [`zss/feature/`](feature/): storage (idb), TTS/STT, URL/multipla
 
 **Production Linux tarball:** `yarn task run headless:build:linux` runs a **production** Vite build (`NODE_ENV=production`), compiles the CLI, installs Playwright’s headless shell for the pack target, then `oclif pack tarballs` (which runs `npm pack` and bundles production `node_modules`).
 
-**Embedding static content in the shipped CLI:** oclif’s pack step uses **`npm pack`**, which only includes paths listed under [`package.json` `files`](../package.json) (plus a few npm defaults). The built cafe UI must be listed there as **`cafe/dist`** (output of `yarn task run cafe:build`). Add other paths the same way if the CLI must ship extra assets; keep large or secret paths out of `files` so they are not published in the tarball.
+**Embedding static content in the shipped CLI:** oclif’s pack step uses **`npm pack`**, which only includes paths listed under [`package.json` `files`](../package.json) (plus a few npm defaults). The built cafe UI must be listed there as **`cafe/dist`** (output of `yarn task run cafe:build`). Add other paths the CLI must ship extra assets; keep large or secret paths out of `files` so they are not published in the tarball.
 
 ---
 
 ## Mental model (one paragraph)
 
-**ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (sim worker)**, the **boardrunner worker** (per-board chip ticks), on-demand **TTS/STT workers**, and the **React UI (main)** stay loosely coupled: UI sends `vm:*` messages, the VM mutates memory and elects a player on each active board to be its **boardrunner** (jsonpipe-synced board + boundary slices), each tick the VM also projects the per-player gadget state into **`gadgetclient:patch`** messages, and the **gadgetclient** store feeds the Three.js terminal aesthetic.
-
-**Planned:** same hub pattern, but sim ticks and firmware run inside **`zss_runtime.wasm`** in a single wasm worker; PeerJS carries **`vm:memorypatch`** (renamed from boardrunner patch targets) from host to joins. See [docs/wasm-sim-port.mdx](../ops/docs/wasm-sim-port.mdx).
+**ZSS** keeps **game and engine state in memory**, runs **script as compiled code on chips** with **firmware** defining the command vocabulary, and uses a **session-scoped message hub** so the **VM (sim worker)**, on-demand **TTS/STT workers**, and the **React UI (main)** stay loosely coupled: UI sends `vm:*` messages (including `vm:input` from userinput), the sim VM mutates memory and runs [`memorytickmain`](memory/runtime.ts) each tick, projects per-player gadget state into **`gadgetclient:patch`** messages, and the **gadgetclient** store feeds the Three.js terminal aesthetic. Join tabs (`/join/`) use a thin **joinvm** stub on main instead of a local sim worker; the host owns authoritative memory.

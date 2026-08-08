@@ -1,6 +1,4 @@
-import type { DEVICE } from 'zss/device'
-import { handleboardrevert } from 'zss/device/vm/handlers/boardrevert'
-import { handleboardsnapshot } from 'zss/device/vm/handlers/boardsnapshot'
+import { boardsnapshot, boardrevert } from 'zss/feature/boardsnapshot'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -12,22 +10,6 @@ import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { BOARD_SIZE, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { CATEGORY, NAME } from 'zss/words/types'
-
-const boardrunnerpushupdates = jest.fn()
-const apierror = jest.fn()
-
-jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
-  boardrunnerpushupdates: (...args: unknown[]) =>
-    boardrunnerpushupdates(...args),
-}))
-
-jest.mock('zss/device/api', () => {
-  const actual = jest.requireActual('zss/device/api')
-  return {
-    ...actual,
-    apierror: (...args: unknown[]) => apierror(...args),
-  }
-})
 
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
@@ -86,12 +68,10 @@ function snapshotpagename(boardid: string) {
   return NAME(`zss_snapshot_${boardid}`)
 }
 
-describe('handleboardsnapshot / handleboardrevert', () => {
+describe('boardsnapshot / boardrevert', () => {
   afterEach(() => {
     memoryresetbooks([])
     READ_CONTEXT.book = undefined
-    boardrunnerpushupdates.mockClear()
-    apierror.mockClear()
   })
 
   it('creates MAIN snapshot page and copies terrain', () => {
@@ -106,14 +86,7 @@ describe('handleboardsnapshot / handleboardrevert', () => {
     const book = setupbooks([wallcp, currentcp])
     const pagecountbefore = book.pages.length
 
-    const vm = { emit: jest.fn() } as unknown as DEVICE
-    handleboardsnapshot(vm, {
-      player: 'pid_snap',
-      data: [currentcp.id],
-    } as never)
-
-    expect(apierror).not.toHaveBeenCalled()
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
+    expect(boardsnapshot(currentcp.id)).toBeTruthy()
     expect(book.pages.length).toBe(pagecountbefore + 1)
 
     const snapname = snapshotpagename(currentcp.id)
@@ -137,39 +110,22 @@ describe('handleboardsnapshot / handleboardrevert', () => {
     })
     const book = setupbooks([wallcp, currentcp])
 
-    const vm = { emit: jest.fn() } as unknown as DEVICE
-    handleboardsnapshot(vm, {
-      player: 'pid_snap',
-      data: [currentcp.id],
-    } as never)
+    boardsnapshot(currentcp.id)
     const countafterfirst = book.pages.length
 
-    // mutate live board after first snapshot
     currentboard.terrain[0] = undefined
 
-    handleboardsnapshot(vm, {
-      player: 'pid_snap',
-      data: [currentcp.id],
-    } as never)
+    boardsnapshot(currentcp.id)
 
-    expect(apierror).not.toHaveBeenCalled()
     expect(book.pages.length).toBe(countafterfirst)
 
     const snapboard = memoryreadboardbyaddress(snapshotpagename(currentcp.id))
-    // second snapshot must not retain the wall from the first
     expect(snapboard?.terrain[0]?.char).not.toBe(219)
   })
 
-  it('fails loud when board is missing', () => {
+  it('returns undefined when board is missing', () => {
     setupbooks([])
-    const vm = { emit: jest.fn() } as unknown as DEVICE
-    handleboardsnapshot(vm, {
-      player: 'pid_snap',
-      data: ['missingboard'],
-    } as never)
-
-    expect(apierror).toHaveBeenCalled()
-    expect(boardrunnerpushupdates).not.toHaveBeenCalled()
+    expect(boardsnapshot('missingboard')).toBeUndefined()
   })
 
   it('revert restores prior content onto target', () => {
@@ -183,39 +139,20 @@ describe('handleboardsnapshot / handleboardrevert', () => {
     })
     setupbooks([wallcp, currentcp])
 
-    const vm = { emit: jest.fn() } as unknown as DEVICE
-    handleboardsnapshot(vm, {
-      player: 'pid_snap',
-      data: [currentcp.id],
-    } as never)
-    boardrunnerpushupdates.mockClear()
-
+    boardsnapshot(currentcp.id)
     currentboard.terrain[0] = undefined
 
-    handleboardrevert(vm, {
-      player: 'pid_snap',
-      data: [currentcp.id],
-    } as never)
-
-    expect(apierror).not.toHaveBeenCalled()
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
+    expect(boardrevert(currentcp.id)).toBeTruthy()
     expect(currentboard.terrain[0]?.char).toBe(219)
   })
 
-  it('fails loud when snapshot is missing', () => {
+  it('returns undefined when snapshot is missing', () => {
     const currentboard = makeboard('here')
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,
     })
     setupbooks([currentcp])
 
-    const vm = { emit: jest.fn() } as unknown as DEVICE
-    handleboardrevert(vm, {
-      player: 'pid_snap',
-      data: [currentcp.id],
-    } as never)
-
-    expect(apierror).toHaveBeenCalled()
-    expect(boardrunnerpushupdates).not.toHaveBeenCalled()
+    expect(boardrevert(currentcp.id)).toBeUndefined()
   })
 })

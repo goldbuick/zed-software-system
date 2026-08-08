@@ -39,7 +39,7 @@ module.exports = {
       comment:
         'Workers must use registerplayer.ts for player id, not the full register device.',
       from: {
-        path: '^zss/(simspace|boardrunnerspace|sttspace|ttsspace)\\.ts',
+        path: '^zss/(simspace|sttspace|ttsspace)\\.ts',
       },
       to: { path: '^zss/device/register\\.ts$' },
     },

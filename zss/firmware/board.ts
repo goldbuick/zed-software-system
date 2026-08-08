@@ -1,12 +1,13 @@
 import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
-import { vmbuildboard, vmplayergotoboard } from 'zss/device/api'
+import { gadgetclientgotofade } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { resolveplayergotodestpt } from 'zss/device/vm/handlers/playergotoboard'
+import { boardbuild } from 'zss/feature/boardbuild'
 import { mapelementcopy } from 'zss/feature/boardcopy'
 import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
 import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { createfirmware } from 'zss/firmware'
-import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
@@ -36,12 +37,17 @@ import {
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
+import {
+  memorymoveplayertoboard,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
+import { memoryreadbookbysoftware } from 'zss/memory/session'
 import {
   memorylistboardelementsbykind,
   memorylistboardptsbyempty,
 } from 'zss/memory/spatialqueries'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { BOARD_HEIGHT, BOARD_WIDTH, MEMORY_LABEL } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import {
@@ -116,9 +122,6 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-  if (firmwarewaitforboard(board?.id)) {
-    return 1
-  }
 
   // write new element
   const bulletkind = kind ?? ['bullet']
@@ -231,9 +234,6 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
 
   // read board by eval dir
   const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-  if (firmwarewaitforboard(board?.id)) {
-    return 1
-  }
 
   // get kind we're putting
   const [kindname] = kind
@@ -319,12 +319,6 @@ function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // read board by eval dir
   const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
   const dupedirboard = memoryreadboardbyevaldir(dupedir, READ_CONTEXT.board)
-  if (firmwarewaitforboard(dirboard?.id)) {
-    return 1
-  }
-  if (firmwarewaitforboard(dupedirboard?.id)) {
-    return 1
-  }
 
   const maybetarget = memoryreadelement(dirboard, dir.destpt)
   if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
@@ -391,7 +385,7 @@ export const BOARD_FIRMWARE = createfirmware()
         ARG_TYPE.NAME,
         ARG_TYPE.MAYBE_STRING,
       ])
-      vmbuildboard(
+      boardbuild(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         READ_CONTEXT.board.id,
@@ -445,14 +439,26 @@ export const BOARD_FIRMWARE = createfirmware()
             }
           : undefined
 
-      vmplayergotoboard(
-        SOFTWARE,
+      const resolved = resolveplayergotodestpt(stat, maybex, maybey, match)
+      if (!ispresent(resolved)) {
+        return 0
+      }
+
+      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      if (!ispresent(mainbook)) {
+        return 0
+      }
+
+      const currentboard = memoryreadplayerboard(READ_CONTEXT.elementfocus)
+      if (!ispresent(currentboard) || currentboard.id !== resolved.boardid) {
+        gadgetclientgotofade(SOFTWARE, READ_CONTEXT.elementfocus)
+      }
+
+      memorymoveplayertoboard(
+        mainbook,
         READ_CONTEXT.elementfocus,
-        READ_CONTEXT.elementfocus,
-        stat,
-        maybex,
-        maybey,
-        match,
+        resolved.boardid,
+        resolved.destpt,
       )
 
       return 0
@@ -544,9 +550,6 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      if (firmwarewaitforboard(targetboard?.id)) {
-        return 1
-      }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (memoryboardelementisobject(maybetarget)) {
         // temp override context
@@ -582,9 +585,6 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      if (firmwarewaitforboard(targetboard?.id)) {
-        return 1
-      }
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (
         memoryboardelementisobject(maybetarget) &&
@@ -652,9 +652,6 @@ export const BOARD_FIRMWARE = createfirmware()
 
       // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      if (firmwarewaitforboard(board?.id)) {
-        return 1
-      }
 
       const [textwords] = readargsuntilend(words, ii, ARG_TYPE.NUMBER_OR_NAME)
       const text = textwords.join(' ')

@@ -9,7 +9,6 @@ import {
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { parsezipfilelist } from 'zss/feature/parse/file'
@@ -158,13 +157,11 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'batch':
       doasync(vm, message.player, async () => {
         await memoryinspectbatchcommand(path, message.player)
-        boardrunnerpushupdates(vm)
       })
       break
     case 'remix':
       doasync(vm, message.player, async () => {
         await memoryinspectremixcommand(path, message.player)
-        boardrunnerpushupdates(vm)
       })
       break
     case 'empty': {
@@ -178,7 +175,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     }
     case 'inspect':
       memoryinspectcommand(path, message.player)
-      boardrunnerpushupdates(vm)
       break
     case 'gadget':
       if (isarray(message.data)) {
@@ -193,7 +189,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'makeit':
       memorymakeitcommand(path, message.data ?? '', message.player)
-      boardrunnerpushupdates(vm)
       break
     case 'zztbridge':
       handlezztbridge(vm, message)

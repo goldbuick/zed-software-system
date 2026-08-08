@@ -1,32 +1,20 @@
 import type { DEVICE } from 'zss/device'
 import {
   apilog,
-  boardrunnerlinkdead,
   gadgetclientgotofade,
   registerinspector,
   registerloginready,
 } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
-import {
-  boardrunnerassignmentvalid,
-  boardrunnerelect,
-} from 'zss/device/vm/boardrunnermanagement'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 import {
   emitchatconnectplayer,
   emitchatdisconnectplayer,
   maybeemitplayerchatroster,
 } from 'zss/device/vm/playerchatroster'
-import {
-  boardrunnerblocked,
-  boardrunners,
-  lastinputtime,
-  tracking,
-} from 'zss/device/vm/state'
+import { lastinputtime, tracking } from 'zss/device/vm/state'
 import { sanitizeloginflags } from 'zss/feature/loginflags'
-import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadboardbyaddress } from 'zss/memory/boards'
+import { isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
   memorysetcommandpermissions,
@@ -35,7 +23,6 @@ import {
 import {
   memoryloginplayer,
   memorylogoutplayer,
-  memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import {
   memoryisoperator,
@@ -51,59 +38,19 @@ export function handlesearch(vm: DEVICE, message: MESSAGE): void {
 
 export function handlelogout(vm: DEVICE, message: MESSAGE): void {
   const player = message.player
-  let currentboard = memoryreadplayerboard(player)
 
-  // Same dither as #goto; resetorigin snaps camera grid after re-login.
   gadgetclientgotofade(vm, player, true)
 
   function clearlogouttracking() {
     delete tracking[player]
     delete lastinputtime[player]
-    boardrunnerblocked[player] = true
     maybeemitplayerchatroster(vm, player, true)
   }
 
-  // Emit before logout clears flags / activelist.
   emitchatdisconnectplayer(vm, player)
-
-  // not on any board
-  if (!ispresent(currentboard)) {
-    // aslo scan for player in boardrunners return board id if found else undefined
-    // this is to handle the #restart -> #endgame flow
-    const maybeboardrunner = Object.keys(boardrunners).find(
-      (maybeboardid) => boardrunners[maybeboardid] === player,
-    )
-    if (ispresent(maybeboardrunner)) {
-      currentboard = memoryreadboardbyaddress(maybeboardrunner)
-    }
-  }
-
-  // still not on any board
-  if (!ispresent(currentboard)) {
-    memorylogoutplayer(player)
-    boardrunnerpushupdates(vm)
-    registerloginready(vm, player)
-    clearlogouttracking()
-    return
-  }
-
-  const priorelectionrunner = boardrunners[currentboard.id]
-  const hasrunner = isstring(priorelectionrunner) && !!priorelectionrunner
-
-  if (hasrunner) {
-    boardrunnerlinkdead(vm, priorelectionrunner, player)
-  } else {
-    // No elected runner to run linkdead -- host deletes and syncs.
-    memorylogoutplayer(player)
-    boardrunnerpushupdates(vm)
-    registerloginready(vm, player)
-  }
-
+  memorylogoutplayer(player)
+  registerloginready(vm, player)
   clearlogouttracking()
-
-  if (boardrunnerassignmentvalid(currentboard.id)) {
-    boardrunnerelect(currentboard.id)
-  }
 }
 
 function configlog(
@@ -174,7 +121,6 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     }
   }
 
-  // token check
   if (isstring(token)) {
     if (memoryistokenbanned(token)) {
       vm.replynext(message, 'acklogin', false)
@@ -183,40 +129,21 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
     memorysetplayertotoken(message.player, token)
   }
 
-  // attempt to login player
   if (
     memoryloginplayer(message.player, sanitizeloginflags(flags) as BOOK_FLAGS)
   ) {
-    // start tracking
     tracking[message.player] = 0
     lastinputtime[message.player] = Date.now()
 
-    // unblock the player from being elected as a runner
-    delete boardrunnerblocked[message.player]
-
-    // elect a new runner for the login board if necessary
-    const currentboard = memoryreadplayerboard(message.player)
-    if (
-      ispresent(currentboard) &&
-      !boardrunnerassignmentvalid(currentboard.id)
-    ) {
-      boardrunnerelect(currentboard.id)
-    }
-
-    // signal success
     apilog(vm, memoryreadoperator(), `login from ${message.player}`)
     vm.replynext(message, 'acklogin', true)
 
     emitchatconnectplayer(vm, message.player)
 
-    // always desync the gadget
     handlegadgetdesync(vm, message)
   } else {
     vm.replynext(message, 'acklogin', false)
   }
-
-  // push jsonpipe changes
-  boardrunnerpushupdates(vm)
 }
 
 export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {

@@ -60,70 +60,13 @@ export function apitoast(device: DEVICELIKE, player: string, toast: string) {
   device.emit(player, 'toast', toast)
 }
 
-export function boardrunneridle(
-  device: DEVICELIKE,
-  player: string,
-  idleonboard: string,
-) {
-  device.emit(player, 'boardrunner:idle', idleonboard)
-}
-
-/** Drop a cached chip on the runner that owns it so the next tick rebuilds from synced code. */
-export function boardrunnerhaltchip(
-  device: DEVICELIKE,
-  player: string,
-  id: string,
-) {
-  device.emit(player, 'boardrunner:haltchip', id)
-}
-
-export function boardrunnerinput(
+export function vminput(
   device: DEVICELIKE,
   player: string,
   input: INPUT,
   mods: number,
 ) {
-  device.emit(player, 'boardrunner:input', [input, mods])
-}
-
-export function boardrunnerlinkdead(
-  device: DEVICELIKE,
-  player: string,
-  linkdead: string,
-) {
-  device.emit(player, 'boardrunner:linkdead', linkdead)
-}
-
-export function boardrunnerpaint(
-  device: DEVICELIKE,
-  player: string,
-  doc: any,
-  boundary?: string,
-) {
-  device.emit(player, 'boardrunner:paint', [doc, boundary])
-}
-
-export function boardrunnerstart(device: DEVICELIKE, player: string) {
-  device.emit(player, 'boardrunner:start')
-}
-
-export function boardrunnerthud(
-  device: DEVICELIKE,
-  player: string,
-  thudplayer: string,
-) {
-  // player in this context is the board runner
-  device.emit(player, 'boardrunner:thud', thudplayer)
-}
-
-export function boardrunnertick(
-  device: DEVICELIKE,
-  player: string,
-  board: string,
-  timestamp: number,
-  boundaries: string[],
-) {
-  device.emit(player, 'boardrunner:tick', [board, timestamp, boundaries])
+  device.emit(player, 'vm:input', [input, mods])
 }
 
 export function bridgechatstart(
@@ -185,16 +128,6 @@ export function netterminalpeerroster(
   entries: { player: string; peerid: string }[],
 ) {
   device.emit(player, 'netterminal:peerroster', entries)
-}
-
-/** Host sim -> peers: board runner election + player board map. */
-export function netterminalrunnmap(
-  device: DEVICELIKE,
-  player: string,
-  runners: Record<string, string>,
-  playerboards: Record<string, string>,
-) {
-  device.emit(player, 'netterminal:runnmap', [runners, playerboards])
 }
 
 export function bridgestreamstart(
@@ -753,29 +686,6 @@ export function vmadmin(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:admin')
 }
 
-export function vmboardrunneraccess(
-  device: DEVICELIKE,
-  player: string,
-  currentboard: string,
-  accessboard: string,
-) {
-  device.emit(player, 'vm:boardrunneraccess', [currentboard, accessboard])
-}
-
-export function vmboardrunnerack(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:boardrunnerack')
-}
-
-/** Full boundary document from runner → sim (boundary id required). */
-export function vmboardrunnerpaint(
-  device: DEVICELIKE,
-  player: string,
-  doc: any,
-  boundary: string,
-) {
-  device.emit(player, 'vm:boardrunnerpaint', [doc, boundary])
-}
-
 export function vmbookmarkscroll(
   device: DEVICELIKE,
   player: string,
@@ -956,51 +866,6 @@ export function vmplayermovetoboard(
   dest: PT,
 ) {
   device.emit(player, 'vm:playermovetoboard', [targetplayer, board, dest])
-}
-
-export function vmplayergotoboard(
-  device: DEVICELIKE,
-  player: string,
-  targetplayer: string,
-  address: string,
-  maybex?: number,
-  maybey?: number,
-  match?: { name: string; color: string[] },
-) {
-  device.emit(player, 'vm:playergotoboard', [
-    targetplayer,
-    address,
-    maybex,
-    maybey,
-    match,
-  ])
-}
-
-export function vmbuildboard(
-  device: DEVICELIKE,
-  player: string,
-  boardid: string,
-  elementid: string,
-  stat: string,
-  maybesource?: string,
-) {
-  device.emit(player, 'vm:buildboard', [boardid, elementid, stat, maybesource])
-}
-
-export function vmboardsnapshot(
-  device: DEVICELIKE,
-  player: string,
-  boardid: string,
-) {
-  device.emit(player, 'vm:boardsnapshot', [boardid])
-}
-
-export function vmboardrevert(
-  device: DEVICELIKE,
-  player: string,
-  boardid: string,
-) {
-  device.emit(player, 'vm:boardrevert', [boardid])
 }
 
 export function vmplayertoken(

@@ -2,7 +2,7 @@
 name: no-hanging-scripts
 description: >-
   Extended examples and checklists for rule no-hanging-scripts.mdc.
-  Use when authoring WASM tests, Playwright validators, or debugging hung processes.
+  Use when authoring Playwright validators, or debugging hung processes.
 ---
 
 # No hanging scripts
@@ -16,7 +16,7 @@ This skill adds detail, examples, and checklists. Hanging commands waste time. *
 1. **Classify the command**
    - **Fast** (<30s): lint, single test file, small script → run foreground, default timeout OK
    - **Medium** (30s–3m): full `ops:test`, `ops:fixtures:lang:regression:test`, builds → set `block_until_ms` with buffer
-   - **Risky**: WASM `loadscriptsync`, dev servers, loops, e2e → extra guards below
+   - **Risky**: sync CPU-bound loops, dev servers, e2e → extra guards below
 
 2. **Never assume Jest will save you**
    - `testTimeout` only applies to **async** work
@@ -37,50 +37,16 @@ This skill adds detail, examples, and checklists. Hanging commands waste time. *
 
 | Pattern | Risk | Fix |
 |---------|------|-----|
-| `loadscriptsync(...).run()` with hand-rolled stub chip | Sync infinite `while(true)` | Use `createwasmstubchip()` from `ops/lib/test/lang/wasmruntestutil.ts` |
-| `getcase: () => 1` without advancing `nextcase` | Stuck on one case forever | Advance `ec` in `nextcase`, or use `createwasmstubchip()` |
-| `sy: () => false` with no loop counter | Never yields | Mirror real chip: yield after `RUNTIME.YIELD_AT_COUNT` polls |
-| `command` returning `1` without yield path | `continue` loops forever | Return `0`, or stub `yield` / `sy` like production |
+| Unbounded `while (true)` / poll with no deadline | Blocks forever | Wall-clock deadline; exit non-zero on timeout |
+| Playwright `waitFor*` with no script timeout | Open-ended hang | Wrap with `withscripttimeout(label, ms, fn)` |
 | Emscripten / native compile in test with no cache | Slow first run, looks hung | Wait for first `g++` build; use `--no-coverage` |
-
-## This repo: WASM lang tests
-
-Compiled WASM scripts use a **synchronous** top-level loop:
-
-```text
-while (true) {
-  if (api.sy()) return 1;
-  switch (api.getcase()) { ... }
-  api.nextcase();
-}
-```
-
-**Required for direct `loadscriptsync` tests:**
-
-```typescript
-import {
-  createwasmstubchip,
-  runwasmscriptfortest,
-} from 'ops/lib/test/lang/wasmruntestutil'
-
-const chip = createwasmstubchip({
-  command(...words) { /* ... */ return 0 },
-})
-runwasmscriptfortest(wasmbytes, chip)
-```
-
-**Automatic safety net:** In Jest workers, `loadscriptsync` applies a default **16_384** `sy()` poll budget (`zss/feature/lang/wasmloader.ts`). Stuck loops throw instead of hanging.
-
-- Override budget: `loadscriptsync(bytes, chip, { runbudget: 512 })`
-- Disable in worker: `ZSS_WASM_RUN_BUDGET=0`
-- Regression test: `ops/tests/unit/feature/lang/backend/wasm/wasmrunbudget.test.ts`
 
 ## When a command runs too long
 
 1. **Check terminal output** — PASS line may be pending; look for compile step (`g++`, emscripten)
 2. **If no output progress** for 2× expected duration → treat as hung
 3. **Kill the process** (`kill <pid>`) — do not wait indefinitely
-4. **Diagnose root cause** (bad stub, sync loop, open handle) — do not retry blindly
+4. **Diagnose root cause** (sync loop, open handle) — do not retry blindly
 5. **Re-run targeted** after fix, not full suite
 
 ## Jest exit hygiene
@@ -114,13 +80,12 @@ kill <pid>
 
 Set `block_until_ms` **above** expected runtime. If sent to background, poll terminal file — do not assume completion.
 
-## Adding new tests that call WASM run
+## Adding new tests with loops or async waits
 
 Checklist:
 
-- [ ] Uses `createwasmstubchip()` or real `createchip()` (real chip yields via `sy()`)
-- [ ] Script terminates (`#die`, default case `return 0`, or yield)
-- [ ] Not relying on Jest timeout to catch sync loops
+- [ ] Poll / wait has a wall-clock deadline (not open-ended)
+- [ ] Not relying on Jest timeout alone to catch sync loops
 - [ ] Run single file first: `yarn jest <new-file> --no-coverage`
 
 ## Examples

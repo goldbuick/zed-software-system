@@ -227,7 +227,6 @@ module.exports = {
     {
       files: [
         'zss/simspace.ts',
-        'zss/boardrunnerspace.ts',
         'zss/sttspace.ts',
         'zss/ttsspace.ts',
       ],
@@ -336,7 +335,6 @@ module.exports = {
       excludedFiles: [
         'zss/feature/durable.ts',
         'zss/simspace.ts',
-        'zss/boardrunnerspace.ts',
         'zss/sttspace.ts',
         'zss/ttsspace.ts',
       ],

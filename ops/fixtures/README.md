@@ -8,11 +8,9 @@ add co-located `__fixtures__` trees beside implementation code.
 
 | Path | Contents |
 |------|----------|
-| `lang/parity/` | Lang WASM parity `.zss` sources + `.js`/`.json` goldens + `manifest.json` |
 | `lang/integration/` | Integration oracle outputs (e.g. `simple_chat_player.*`) + `manifest.json` |
 | `lang/scripts/` | Integration-tier `.zss` sources (edge-case scripts) |
 | `lang/coolregionsbow/` | 53-chip book corpus + `manifest.json` |
-| `memory/wasm/` | Memory WASM step fixtures (`*.json`) |
 | `synth/wasm/` | Synth parity metrics JSON |
 | `synth/daisy/` | Daisy voice fixtures JSON |
 | `synth/maxi/` | Legacy Maxi parity JSON |
@@ -26,8 +24,7 @@ add co-located `__fixtures__` trees beside implementation code.
 | Domain | Task / script |
 |--------|----------------|
 | **All build + fixture regen** | `yarn task run ops:build` |
-| Lang parity goldens | `yarn task run ops:fixtures:lang:regression:test` (Jest parity suite; regen via native g++ harness if goldens drift) |
-| Memory parity | `yarn task run ops:fixtures:memory:parity:test` |
+| Lang regression | `yarn task run ops:fixtures:lang:regression:test` |
 | ZZT OOP corpus | `yarn task run ops:fixtures:zzt:corpus:build` |
 | ZZT board screenshots | `yarn task run ops:fixtures:zzt:corpus:screenshots` |
 | Content books | `yarn task run ops:fixtures:content:book:build` / `ops:fixtures:content:book:validate` |

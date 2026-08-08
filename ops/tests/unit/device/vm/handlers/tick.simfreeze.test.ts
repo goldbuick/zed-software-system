@@ -7,16 +7,28 @@ import type { BOOK } from 'zss/memory/types'
 
 jest.mock('zss/memory/runtime', () => ({
   memorytickloaders: jest.fn(),
+  memorytickmain: jest.fn(),
 }))
 
-jest.mock('zss/device/vm/boardrunnermemorysync', () => ({
-  boardrunnermemorysync: jest.fn(),
-}))
-jest.mock('zss/device/vm/boardrunnerboundarysync', () => ({
-  boardrunnerboundarysync: jest.fn(),
-}))
 jest.mock('zss/device/vm/gadgetsynctick', () => ({
   gadgetsynctick: jest.fn(),
+}))
+
+jest.mock('zss/memory/playermanagement', () => ({
+  memoryreadbookplayerboards: jest.fn(() => []),
+}))
+
+jest.mock('zss/memory/boardaccess', () => ({
+  memoryreadplayersonboard: jest.fn(() => []),
+}))
+
+jest.mock('zss/memory/gadgetlayersflags', () => ({
+  memoryreadbookgadgetlayersforboard: jest.fn(() => ({})),
+}))
+
+jest.mock('zss/memory/rendering', () => ({
+  memoryreadgadgetlayers: jest.fn(),
+  memoryreadgraphics: jest.fn(),
 }))
 
 const stubmainbook: BOOK = {

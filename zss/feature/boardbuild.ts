@@ -1,7 +1,5 @@
-import type { DEVICE } from 'zss/device'
 import { apierror } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/types'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
+import type { DEVICELIKE } from 'zss/device/types'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -27,7 +25,6 @@ const COPY_P1 = { x: 0, y: 0 }
 const COPY_P2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const COPY_TARGETSET = 'all'
 
-// mirrors ELEMENT_FIRMWARE STANDARD_STAT_NAMES (element write path)
 const STANDARD_ELEMENT_STAT_NAMES = new Set([
   'char',
   'color',
@@ -130,7 +127,7 @@ function copyboardstats(created: BOARD, source: BOARD) {
 }
 
 function writebuildstat(
-  vm: DEVICE,
+  device: DEVICELIKE,
   player: string,
   currentboard: BOARD,
   elementid: string,
@@ -145,41 +142,38 @@ function writebuildstat(
   if (isstandardelementstat(stat)) {
     const element = memoryreadobject(currentboard, elementid)
     if (!ispresent(element)) {
-      apierror(vm, player, 'build', `build: element not found ${elementid}`)
+      apierror(device, player, 'build', `build: element not found ${elementid}`)
       return false
     }
     element[NAME(stat) as keyof BOARD_ELEMENT] = createdboard.id as never
     return true
   }
 
-  // arbitrary names: player flags (same as runner chip.set fallback)
   const flags = memoryreadflags(player)
   flags[stat] = createdboard.id
   return true
 }
 
-export function handlebuildboard(vm: DEVICE, message: MESSAGE): void {
-  const [boardid, elementid, stat, maybesource] = message.data as [
-    string,
-    string,
-    string,
-    string | undefined,
-  ]
-  const player = message.player
-
+export function boardbuild(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+  elementid: string,
+  stat: string,
+  maybesource?: string,
+): void {
   const currentboard = memoryreadboardbyaddress(boardid)
   if (!ispresent(currentboard)) {
-    apierror(vm, player, 'build', `build: board not found ${boardid}`)
+    apierror(device, player, 'build', `build: board not found ${boardid}`)
     return
   }
 
-  // fail before create when a standard element stat cannot be written
   if (
     !isexitstat(stat) &&
     isstandardelementstat(stat) &&
     !ispresent(memoryreadobject(currentboard, elementid))
   ) {
-    apierror(vm, player, 'build', `build: element not found ${elementid}`)
+    apierror(device, player, 'build', `build: element not found ${elementid}`)
     return
   }
 
@@ -190,12 +184,12 @@ export function handlebuildboard(vm: DEVICE, message: MESSAGE): void {
       maybesource,
     )
     if (!ispresent(sourcepage)) {
-      apierror(vm, player, 'build', `build: board not found ${maybesource}`)
+      apierror(device, player, 'build', `build: board not found ${maybesource}`)
       return
     }
     sourceboard = memoryreadboardbyaddress(maybesource)
     if (!ispresent(sourceboard)) {
-      apierror(vm, player, 'build', `build: board not found ${maybesource}`)
+      apierror(device, player, 'build', `build: board not found ${maybesource}`)
       return
     }
   }
@@ -206,13 +200,13 @@ export function handlebuildboard(vm: DEVICE, message: MESSAGE): void {
     CODE_PAGE_TYPE.BOARD,
   )
   if (!ispresent(codepage)) {
-    apierror(vm, player, 'build', 'build: failed to create board')
+    apierror(device, player, 'build', 'build: failed to create board')
     return
   }
 
   const createdboard = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
   if (!ispresent(createdboard)) {
-    apierror(vm, player, 'build', 'build: failed to create board')
+    apierror(device, player, 'build', 'build: failed to create board')
     return
   }
 
@@ -229,17 +223,15 @@ export function handlebuildboard(vm: DEVICE, message: MESSAGE): void {
     )
     READ_CONTEXT.book = prevbook
     if (!copied) {
-      apierror(vm, player, 'build', `build: copy failed ${maybesource}`)
+      apierror(device, player, 'build', `build: copy failed ${maybesource}`)
       return
     }
     copyboardstats(createdboard, sourceboard)
   }
 
   if (
-    !writebuildstat(vm, player, currentboard, elementid, stat, createdboard)
+    !writebuildstat(device, player, currentboard, elementid, stat, createdboard)
   ) {
     return
   }
-
-  boardrunnerpushupdates(vm)
 }

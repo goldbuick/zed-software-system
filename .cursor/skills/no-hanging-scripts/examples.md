@@ -1,51 +1,33 @@
 # Hang prevention examples
 
-## Bad — hangs Jest forever
+## Bad — unbounded poll
 
 ```typescript
-const chip = {
-  sy: () => false,
-  getcase: () => 1,        // never advances
-  nextcase: () => undefined,
-  command: () => 0,
-} as unknown as CHIP
-
-loadscriptsync(wasmbytes, chip).run() // blocks event loop; testTimeout useless
+while (!ready) {
+  await page.waitForTimeout(100)
+}
 ```
 
-## Good — shared stub
+## Good — wall-clock deadline
 
 ```typescript
-import {
-  createwasmstubchip,
-  runwasmscriptfortest,
-} from 'ops/lib/test/lang/wasmruntestutil'
-
-const chip = createwasmstubchip({
-  command(...words: WORD[]) {
-    invoked.push([...words])
-    return 0
-  },
-})
-runwasmscriptfortest(wasmbytes, chip)
-```
-
-## Good — explicit small budget for negative test
-
-```typescript
-expect(() =>
-  loadscriptsync(wasmbytes, stuckchip, { runbudget: 64 }).run(),
-).toThrow(/run budget/)
+const deadline = Date.now() + 30_000
+while (!ready) {
+  if (Date.now() > deadline) {
+    throw new Error('guest ready timed out')
+  }
+  await page.waitForTimeout(100)
+}
 ```
 
 ## Iterating on a fix
 
 ```bash
 # 1. One file, no coverage
-yarn jest ops/tests/unit/feature/lang/backend/wasm/lexerparity.test.ts --no-coverage
+yarn jest ops/tests/unit/feature/lang/backend/typescript/ --no-coverage
 
 # 2. After pass, broader
-yarn jest ops/tests/unit/feature/lang/backend/wasm/ --no-coverage
+yarn jest ops/tests/unit/feature/lang/ --no-coverage
 
 # 3. Full suite last
 yarn task run ops:test
@@ -65,7 +47,7 @@ kill <pid>
 yarn task run cafe:build:strict
 yarn task run cafe:preview &          # background
 sleep 2
-curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/lang/zss_lang.wasm
+curl -sk -o /dev/null -w "%{http_code}\n" https://127.0.0.1:7777/
 kill %1                     # or kill <pid>
 ```
 
