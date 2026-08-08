@@ -181,8 +181,8 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 - `synthrestart(device, player, board)` - Restart audio system
 - `synthflush(device, player, board)` - Flush audio buffers
 
-### Audio Buffers
-- `synthaudiobuffer(device, player, board, audiobuffer)` - Add audio buffer to synth
+### Audio bytes
+- `synthaudiobytes(device, player, board, bytes)` - Emit encoded TTS/audio bytes (`ArrayBuffer`) for synth to decode and play
 
 ### Playback
 - `synthplay(device, player, board, buffer)` - Play audio buffer on board
@@ -279,7 +279,7 @@ Functions for managing message forwarding between peers, server, client, and wor
 ### Forwarding Rules
 - `shouldforwardonpeerserver(message)` - Peer host outbound filter
 - `shouldforwardonpeerclient(message)` - Peer join outbound filter
-- `shouldforwardservertoclient(message)` - sim→main (`tts`, `stt`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus broadcast topics and ack path suffixes)
+- `shouldforwardservertoclient(message)` - sim→main (`tts`, `stt`, `synth` except `synth:tts`/`synth:ttsqueue`, `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus broadcast topics and ack path suffixes)
 - `shouldforwardclienttoserver(message)` - main→sim (`vm:*`, `chip:*`, `modem:*`, and `sync` / `desync` / `joinack` path suffixes)
 
 ---

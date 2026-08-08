@@ -47,6 +47,12 @@ export function memorybookmarkscroll(
       zsszedlinkline(`bookmarkurl hyperlink ${b.href}`, `$CYANload ${b.name}`),
     )
     lines.push(
+      zsszedlinkline(
+        `bookmarksaveover hyperlink ${b.id}`,
+        '$192$196 save over',
+      ),
+    )
+    lines.push(
       zsszedlinkline(`bookmarkdel hyperlink ${b.id}`, '$RED$192$196 DELETE'),
     )
     lines.push('$32')

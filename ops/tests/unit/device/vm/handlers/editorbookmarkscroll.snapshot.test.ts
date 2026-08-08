@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
   registerbookmarkcodepagesave,
+  registerbookmarkcodepagesaveover,
   registerbookmarkdelete,
 } from 'zss/device/api'
 import {
@@ -17,6 +18,7 @@ jest.mock('zss/device/api', () => {
   return {
     ...actual,
     registerbookmarkcodepagesave: jest.fn(),
+    registerbookmarkcodepagesaveover: jest.fn(),
     registerbookmarkdelete: jest.fn(),
   }
 })
@@ -32,6 +34,11 @@ jest.mock('zss/memory/editorbookmarkscroll', () => {
 jest.mock('zss/memory/codepages', () => ({
   memoryreadcodepagebyaddress: jest.fn(),
   memoryreadcodepagebyid: jest.fn(),
+}))
+
+jest.mock('zss/memory/codepageoperations', () => ({
+  memoryreadcodepagename: jest.fn(() => 'page-name'),
+  memoryreadcodepagetypeasstring: jest.fn(() => 'board'),
 }))
 
 const editbookmark: ZssEditorBookmark = {
@@ -170,5 +177,54 @@ describe('handleeditorbookmarkscrollpanel snapshotcurrent', () => {
       'snapshotcurrent',
     )
     expect(registerbookmarkcodepagesave).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleeditorbookmarkscrollpanel editorsaveover', () => {
+  const vm = {} as DEVICE
+  const player = 'p1'
+  const base: MESSAGE = {
+    session: 's',
+    player,
+    id: 'id',
+    sender: 'vm',
+    target: 'default',
+    data: undefined,
+  }
+
+  const fakecodepage = { id: 'cp1', code: 'say hi' }
+
+  beforeEach(() => {
+    jest.mocked(registerbookmarkcodepagesaveover).mockClear()
+    jest.mocked(memoryreadcodepagebyaddress).mockReset()
+  })
+
+  it('registerbookmarkcodepagesaveover with bookmark id and current page', () => {
+    jest
+      .mocked(memoryreadcodepagebyaddress)
+      .mockReturnValue(fakecodepage as any)
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['bid1', 'cp1'] },
+      'editorsaveover',
+    )
+    expect(registerbookmarkcodepagesaveover).toHaveBeenCalledWith(
+      vm,
+      player,
+      'bid1',
+      'board',
+      'page-name',
+      fakecodepage,
+    )
+  })
+
+  it('no-ops when codepage missing', () => {
+    jest.mocked(memoryreadcodepagebyaddress).mockReturnValue(undefined)
+    handleeditorbookmarkscrollpanel(
+      vm,
+      { ...base, data: ['bid1', 'missing'] },
+      'editorsaveover',
+    )
+    expect(registerbookmarkcodepagesaveover).not.toHaveBeenCalled()
   })
 })

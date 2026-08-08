@@ -2,6 +2,7 @@ import type { DEVICE } from 'zss/device'
 import {
   registerbookmarkcodepagecopytogame,
   registerbookmarkcodepagesave,
+  registerbookmarkcodepagesaveover,
   registerbookmarkdelete,
 } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
@@ -35,6 +36,20 @@ export function handleeditorbookmarkscroll(
   }
 }
 
+function readcodepageaddress(data: unknown): string | undefined {
+  if (!isarray(data)) {
+    return undefined
+  }
+  const words = data as unknown[]
+  for (let i = 0; i < words.length; ++i) {
+    const word = words[i]
+    if (isstring(word) && word.length > 0) {
+      return word
+    }
+  }
+  return undefined
+}
+
 export function handleeditorbookmarkscrollpanel(
   vm: DEVICE,
   message: MESSAGE,
@@ -65,6 +80,30 @@ export function handleeditorbookmarkscrollpanel(
         const [id] = message.data
         if (isstring(id)) {
           registerbookmarkcodepagecopytogame(vm, message.player, id)
+        }
+      }
+      break
+    }
+    case 'editorsaveover': {
+      if (isarray(message.data)) {
+        const [id, ...rest] = message.data as unknown[]
+        if (!isstring(id)) {
+          break
+        }
+        const address = readcodepageaddress(rest)
+        if (!address) {
+          break
+        }
+        const maybecodepage = memoryreadcodepagebyaddress(address)
+        if (ispresent(maybecodepage)) {
+          registerbookmarkcodepagesaveover(
+            vm,
+            message.player,
+            id,
+            memoryreadcodepagetypeasstring(maybecodepage),
+            memoryreadcodepagename(maybecodepage),
+            maybecodepage,
+          )
         }
       }
       break

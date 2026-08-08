@@ -206,6 +206,56 @@ export async function appendeditorbookmark(args: {
   return entry
 }
 
+export async function updateurlbookmarkbyid(
+  id: string,
+  href: string,
+): Promise<ZssUrlBookmark | undefined> {
+  let updated: ZssUrlBookmark | undefined
+  await mergebookmarksintostorage((prev) => {
+    const url = prev.url.map((b) => {
+      if (b.id !== id) {
+        return b
+      }
+      updated = {
+        ...b,
+        href,
+        createdat: Date.now(),
+      }
+      return updated
+    })
+    return { ...prev, url }
+  })
+  return updated
+}
+
+export async function updateeditorbookmarkbyid(
+  id: string,
+  args: {
+    type: string
+    title: string
+    codepage: any
+  },
+): Promise<ZssEditorBookmark | undefined> {
+  let updated: ZssEditorBookmark | undefined
+  await mergebookmarksintostorage((prev) => {
+    const editor = prev.editor.map((b) => {
+      if (b.id !== id) {
+        return b
+      }
+      updated = {
+        ...b,
+        type: args.type,
+        title: args.title,
+        codepage: deepcopy(args.codepage),
+        createdat: Date.now(),
+      }
+      return updated
+    })
+    return { ...prev, editor }
+  })
+  return updated
+}
+
 export async function removebookmarkbyid(id: string): Promise<boolean> {
   let found = false
   await mergebookmarksintostorage((prev) => {

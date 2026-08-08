@@ -29,6 +29,7 @@ export function memoryeditorbookmarkscroll(
     DIVIDER,
   ]
 
+  const codepagepathargs = codepagepath.filter(isstring).join(' ')
   for (let i = 0; i < editorlist.length; ++i) {
     const bookmark = editorlist[i]
     const shorttitle = memoryeditorbookmarkshorttitle(bookmark)
@@ -36,6 +37,12 @@ export function memoryeditorbookmarkscroll(
       zsszedlinkline(
         `copytogame hyperlink ${bookmark.id}`,
         `load @${bookmark.type} ${shorttitle}`,
+      ),
+    )
+    lines.push(
+      zsszedlinkline(
+        `editorsaveover hyperlink ${bookmark.id} ${codepagepathargs}`,
+        '$192$196 save over',
       ),
     )
     lines.push(

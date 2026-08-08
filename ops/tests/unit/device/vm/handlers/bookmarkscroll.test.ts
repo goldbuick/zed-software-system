@@ -1,8 +1,10 @@
 import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/api'
 import {
+  registerbookmarkcodepagecopytogame,
   registerbookmarkdelete,
   registerbookmarkurlnavigate,
+  registerbookmarkurlsaveover,
   vmclearscroll,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -13,6 +15,8 @@ jest.mock('zss/device/api', () => ({
   vmclearscroll: jest.fn(),
   registerbookmarkurlnavigate: jest.fn(),
   registerbookmarkurlsave: jest.fn(),
+  registerbookmarkurlsaveover: jest.fn(),
+  registerbookmarkcodepagecopytogame: jest.fn(),
 }))
 jest.mock('zss/device/session', () => ({
   SOFTWARE: { __brand: 'SOFTWARE' },
@@ -31,6 +35,8 @@ describe('handlebookmarkscrollpanel', () => {
     jest.mocked(registerbookmarkurlnavigate).mockClear()
     jest.mocked(registerbookmarkdelete).mockClear()
     jest.mocked(vmclearscroll).mockClear()
+    jest.mocked(registerbookmarkurlsaveover).mockClear()
+    jest.mocked(registerbookmarkcodepagecopytogame).mockClear()
   })
 
   it('bookmarkurl forwards href via registerbookmarkurlnavigate from message.data[0]', () => {
@@ -120,5 +126,49 @@ describe('handlebookmarkscrollpanel', () => {
     handlebookmarkscrollpanel(vm, message, 'bookmarkdel')
     expect(registerbookmarkdelete).not.toHaveBeenCalled()
     expect(vmclearscroll).not.toHaveBeenCalled()
+  })
+
+  it('bookmarksaveover calls registerbookmarkurlsaveover', () => {
+    const message: MESSAGE = {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: '',
+      data: ['url-id'],
+    }
+    handlebookmarkscrollpanel(vm, message, 'bookmarksaveover')
+    expect(registerbookmarkurlsaveover).toHaveBeenCalledWith(vm, 'p1', 'url-id')
+  })
+
+  it('editorbookmarkdel calls registerbookmarkdelete', () => {
+    const message: MESSAGE = {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: '',
+      data: ['ed-id'],
+    }
+    handlebookmarkscrollpanel(vm, message, 'editorbookmarkdel')
+    expect(registerbookmarkdelete).toHaveBeenCalledWith(vm, 'p1', 'ed-id')
+    expect(vmclearscroll).toHaveBeenCalledWith(SOFTWARE, 'p1')
+  })
+
+  it('editorbookmarkurl calls registerbookmarkcodepagecopytogame', () => {
+    const message: MESSAGE = {
+      session: '',
+      player: 'p1',
+      id: 'id',
+      sender: '',
+      target: '',
+      data: ['ed-id'],
+    }
+    handlebookmarkscrollpanel(vm, message, 'editorbookmarkurl')
+    expect(registerbookmarkcodepagecopytogame).toHaveBeenCalledWith(
+      vm,
+      'p1',
+      'ed-id',
+    )
   })
 })

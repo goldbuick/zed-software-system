@@ -22,7 +22,7 @@ export type DEVICE = {
   session: (check?: MESSAGE) => string
   topics: () => string[]
   emit: (player: string, target: string, data?: any) => void
-  /** Same-realm only; does not publish on BroadcastChannel. */
+  /** Same-realm only; skips BroadcastChannel. For non-cloneable handles only (e.g. FileSystemDirectoryHandle). */
   emitlocal: (player: string, target: string, data?: any) => void
   reply: (to: MESSAGE, target: string, data?: any) => void
   replynext: (to: MESSAGE, target: string, data?: any) => void

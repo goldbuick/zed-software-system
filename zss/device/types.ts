@@ -2,7 +2,7 @@ import { isstring } from 'zss/mapping/types'
 
 export type DEVICELIKE = {
   emit: (player: string, target: string, data?: any) => void
-  /** Same-realm only; does not publish on BroadcastChannel. */
+  /** Same-realm only; skips BroadcastChannel. For non-cloneable handles only (e.g. FileSystemDirectoryHandle). */
   emitlocal: (player: string, target: string, data?: any) => void
 }
 

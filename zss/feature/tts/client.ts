@@ -5,7 +5,7 @@ import {
   apilog,
   ttsinfo as emitttsinfo,
   ttsrequest as emitttsrequest,
-  synthaudiobuffer,
+  synthaudiobytes,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import type { DEVICELIKE } from 'zss/device/types'
@@ -207,11 +207,11 @@ function convertarraybytes(bytes: ArrayBuffer) {
   return getaudiocontext().decodeAudioData(bytes)
 }
 
-async function requestaudiobuffer(
+async function requestaudiobytes(
   player: string,
   voice: string,
   input: string,
-): Promise<MAYBE<AudioBuffer>> {
+): Promise<MAYBE<ArrayBuffer>> {
   const bytes = await awaitworkerreply<ArrayBuffer>(
     player,
     'tts:request',
@@ -220,17 +220,7 @@ async function requestaudiobuffer(
   if (!ispresent(bytes)) {
     return undefined
   }
-  try {
-    return await convertarraybytes(bytes)
-  } catch (err) {
-    apierror(
-      SOFTWARE,
-      player,
-      'tts decode',
-      err instanceof Error ? err.message : String(err),
-    )
-    return undefined
-  }
+  return bytes
 }
 
 export function ttsinfo(player: string, info: string) {
@@ -253,9 +243,9 @@ export async function ttsplay(
   if (input.trim() === '') {
     return
   }
-  const audiobuffer = await requestaudiobuffer(player, voice, input)
-  if (ispresent(audiobuffer)) {
-    synthaudiobuffer(SOFTWARE, player, board, audiobuffer)
+  const bytes = await requestaudiobytes(player, voice, input)
+  if (ispresent(bytes)) {
+    synthaudiobytes(SOFTWARE, player, board, bytes)
   }
 }
 
@@ -265,10 +255,23 @@ const audioplayqueue = newQueue(1)
 async function audioplaytask(
   player: string,
   board: string,
-  audiobuffer: AudioBuffer,
+  bytes: ArrayBuffer,
 ): Promise<void> {
-  synthaudiobuffer(SOFTWARE, player, board, audiobuffer)
-  const waittime = Math.max(1000, Math.round(audiobuffer.duration * 1000))
+  synthaudiobytes(SOFTWARE, player, board, bytes)
+  // Local decode for queue spacing only; synth decodes again for playback.
+  let waittime = 1000
+  try {
+    const copy = bytes.slice(0)
+    const audiobuffer = await convertarraybytes(copy)
+    waittime = Math.max(1000, Math.round(audiobuffer.duration * 1000))
+  } catch (err) {
+    apierror(
+      SOFTWARE,
+      player,
+      'tts decode',
+      err instanceof Error ? err.message : String(err),
+    )
+  }
   await waitfor(waittime)
 }
 
@@ -281,11 +284,11 @@ async function audiobuffertask(
   voice: string,
   input: string,
 ): Promise<void> {
-  const audiobuffer = await requestaudiobuffer(player, voice, input)
+  const bytes = await requestaudiobytes(player, voice, input)
   audioplayqueue
     .add(async () => {
-      if (ispresent(audiobuffer)) {
-        await audioplaytask(player, board, audiobuffer)
+      if (ispresent(bytes)) {
+        await audioplaytask(player, board, bytes)
       }
     })
     .catch(console.error)

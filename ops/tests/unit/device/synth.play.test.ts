@@ -8,6 +8,7 @@ jest.mock('zss/feature/synth/frontend/applyboardstate', () => ({
 
 jest.mock('zss/feature/synth/backend/wasm/audiocontextunlock', () => ({
   unlockaudiocontext: jest.fn(),
+  getliveaudiocontext: jest.fn(),
 }))
 
 jest.mock('zss/feature/tts/client', () => ({

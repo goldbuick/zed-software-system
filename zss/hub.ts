@@ -20,7 +20,7 @@ export type HUB = {
     data?: any,
   ) => void
   invoke: (message: MESSAGE) => void
-  /** Deliver to local devices only; do not publish on BroadcastChannel. */
+  /** Deliver to local devices only; skip BroadcastChannel. For non-cloneable handles only. */
   invokelocal: (message: MESSAGE) => void
   join: (session: string) => void
   leave: () => void

@@ -257,6 +257,22 @@ export function registerbookmarkcodepagesave(
   device.emit(player, 'register:bookmark:codepagesave', [type, title, codepage])
 }
 
+export function registerbookmarkcodepagesaveover(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+  type: string,
+  title: string,
+  codepage: any,
+) {
+  device.emit(player, 'register:bookmark:codepagesaveover', [
+    id,
+    type,
+    title,
+    codepage,
+  ])
+}
+
 export function registerbookmarkdelete(
   device: DEVICELIKE,
   player: string,
@@ -299,6 +315,14 @@ export function registercontentcrosslogin(
 
 export function registerbookmarkurlsave(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:bookmark:urlsave', true)
+}
+
+export function registerbookmarkurlsaveover(
+  device: DEVICELIKE,
+  player: string,
+  id: string,
+) {
+  device.emit(player, 'register:bookmark:urlsaveover', id)
 }
 
 export function registerbookmarkcontentsave(
@@ -507,14 +531,13 @@ export function sessionreset(device: DEVICELIKE) {
   device.emit('', 'sessionreset')
 }
 
-export function synthaudiobuffer(
+export function synthaudiobytes(
   device: DEVICELIKE,
   player: string,
   board: MAYBE<string>,
-  audiobuffer: AudioBuffer,
+  bytes: ArrayBuffer,
 ) {
-  // AudioBuffer is not structured-cloneable; keep on this hub only
-  device.emitlocal(player, 'synth:audiobuffer', [board, audiobuffer])
+  device.emit(player, 'synth:audiobytes', [board, bytes])
 }
 
 export function synthaudioenabled(device: DEVICELIKE, player: string) {
