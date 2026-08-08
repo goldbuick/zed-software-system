@@ -8,11 +8,11 @@ import { objectKeys } from 'ts-extras'
 import { createdevice } from 'zss/device'
 import {
   apilog,
-  boardrunnerinput,
   registerbookmarkclirun,
   registerperfmonitor,
   vmcli,
   vmdoot,
+  vminput,
   vmlocal,
   vmrefscroll,
 } from 'zss/device/api'
@@ -205,7 +205,7 @@ function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
       if (mods.shift) {
         bits |= INPUT_SHIFT
       }
-      boardrunnerinput(SOFTWARE, player, input, bits)
+      vminput(SOFTWARE, player, input, bits)
     }
   })
 }
@@ -348,9 +348,26 @@ function handlekeydown(event: KeyboardEvent) {
         inputdown(0, INPUT.BUTTON_R1)
       }
       break
+    case 'w':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.SHOOT_UP)
+      }
+      break
+    case 'a':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.SHOOT_LEFT)
+      }
+      break
     case 's':
       if (mods.ctrl) {
         vmcli(SOFTWARE, player, '#save')
+      } else if (!mods.alt) {
+        inputdown(0, INPUT.SHOOT_DOWN)
+      }
+      break
+    case 'd':
+      if (!mods.ctrl && !mods.alt) {
+        inputdown(0, INPUT.SHOOT_RIGHT)
       }
       break
     case 'j':
@@ -475,6 +492,18 @@ function handlekeyup(event: KeyboardEvent) {
       break
     case 'e':
       inputup(0, INPUT.BUTTON_R1)
+      break
+    case 'w':
+      inputup(0, INPUT.SHOOT_UP)
+      break
+    case 'a':
+      inputup(0, INPUT.SHOOT_LEFT)
+      break
+    case 's':
+      inputup(0, INPUT.SHOOT_DOWN)
+      break
+    case 'd':
+      inputup(0, INPUT.SHOOT_RIGHT)
       break
   }
 }

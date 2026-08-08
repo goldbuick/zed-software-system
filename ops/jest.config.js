@@ -57,10 +57,7 @@ var config = {
         'node_modules/(?!(nanoid|nanoid-dictionary|human-id|alea|ts-extras|fast-json-patch|react-fast-compare|uqr|maath|@react-three|three|mime|uint8-util|@tonejs/midi|midi-file|chevrotain|lodash-es|@chevrotain|marked|json-joy|@jsonjoy.com)/)',
     ],
     globalTeardown: '<rootDir>/ops/tests/setup/globalteardown.cjs',
-    testPathIgnorePatterns: __spreadArray([
-        '<rootDir>/ops/tests/unit/memory/wasm/wasmparity.test.ts',
-        '<rootDir>/ops/tests/unit/memory/wasm/regenfixtures.test.ts'
-    ], (process.env.ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS === '1'
+    testPathIgnorePatterns: __spreadArray([], (process.env.ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS === '1'
         ? []
         : [CORPUS_SCREENSHOTS_TEST]), true),
     testMatch: [
@@ -88,8 +85,7 @@ var config = {
         },
         './zss/device/vm/gadgetsynctick.ts': { lines: 70, functions: 70 },
         './zss/device/vm/handlers/scroll.ts': { lines: 60 },
-        './zss/device/vm/handlers/ticktock.ts': { lines: 50 },
-        './zss/device/boardrunner/handlers/linkdead.ts': { lines: 70 },
-    },
+    './zss/device/vm/handlers/ticktock.ts': { lines: 50 },
+  },
 };
 export default config;

@@ -2,7 +2,7 @@
 title: boardsnapshot.ts
 ---
 
-**Purpose**: Exports `boardsnapshot` and `boardrevert` — create and restore board state snapshots. Called from host VM handlers (`vm:boardsnapshot` / `vm:boardrevert`), not from boardrunner firmware directly.
+**Purpose**: Exports `boardsnapshot` and `boardrevert` — create and restore board state snapshots. Called directly from transform firmware (`#snapshot` / `#revert`) on the sim VM.
 
 ## Dependencies
 

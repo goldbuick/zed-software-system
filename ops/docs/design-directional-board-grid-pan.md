@@ -13,7 +13,7 @@ neighbors at their grid slots relative to the same origin
 
 On east edge exit: `boardgridx += 1`. Live content swaps to the new board **at the new slot**. During pan, render the **union** of the departure 3×3 (from stashed `exitsnap`) + live 3×3 + depth-2 ahead. Settle drops trail + depth-2 down to the live 3×3 only.
 
-**Sync:** Live offset and exit-preview grid share `boardgridx/y` ([`panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts) `readboardgridforrender` includes pending edge bump before useFrame). Depth-2 via `panphase` + bias. **Never `flushSync` mid-`useFrame`**. No settle focus remap.
+**Sync:** Live offset and exit-preview grid share `boardgridx/y` ([`panviewsync.ts`](../../zss/gadget/graphics/panviewsync.ts) `readboardgridforrender` includes pending edge bump before useFrame). Depth-2 via `panphase` + bias. **Never `flushSync` mid-`useFrame`**. **Never move the live board in `useFrame`** — wait for React commit + `useLayoutEffect` (otherwise one-frame void at the dest slot). No settle focus remap.
 
 **DOF:** Focus distance must use `setdofplayerworld` on the **live board** group (local control focus), not corner-local coords. After global slots, corner tracks world focus while the player mesh lives on the offset live board — mixing those spaces blows out bloom/DOF.
 

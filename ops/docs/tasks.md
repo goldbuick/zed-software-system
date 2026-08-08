@@ -67,7 +67,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:build` | Build ops native artifacts (daisy, memory) and regen committed fixtures | `slow` | `ops:daisy:build`, `ops:fixtures:memory:build`, `ops:fixtures:content:book:build:all`, `ops:fixtures:synth:regen:all` | — |
+| `yarn task run ops:build` | Build ops native artifacts (daisy) and regen committed fixtures | `slow` | `ops:daisy:build`, `ops:fixtures:content:book:build:all`, `ops:fixtures:synth:regen:all` | — |
 
 
 ### ci
@@ -180,17 +180,6 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run ops:fixtures:lang:book:oracle:extract` | Extract book JSON into lang integration oracle files | — | — | — |
 | `yarn task run ops:fixtures:lang:regression:test` | TypeScript lang parser regression tests | `ci` | — | — |
 | `yarn task run ops:fixtures:lang:zztoop:corpus:analyze` | Analyze Museum ZZT corpus with the vanilla zss/feature/zztoop parser; write ops/fixtures/lang/zztoop/failure-report.json. Flags: raw-only, write-fixtures, limit N, full | `slow` | — | — |
-
-
-#### fixtures/memory
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run ops:fixtures:memory:build` | Build memory WASM via emscripten | — | — | — |
-| `yarn task run ops:fixtures:memory:parity:check-coverage` | Check memory parity fixture coverage | — | — | — |
-| `yarn task run ops:fixtures:memory:parity:regen` | Regenerate memory parity fixtures | — | — | `REGEN_MEMORY_FIXTURES=1` |
-| `yarn task run ops:fixtures:memory:parity:test` | Memory wasm parity test suite | — | — | — |
-| `yarn task run ops:fixtures:memory:test:native` | Memory parity native-only run | — | — | — |
 
 
 #### fixtures/synth

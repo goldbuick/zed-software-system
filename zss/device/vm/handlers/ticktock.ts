@@ -1,34 +1,43 @@
 import type { DEVICE } from 'zss/device'
-import { boardrunnertick, netterminalrunnmap } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
-import {
-  boardrunneraccessfor,
-  boardrunnerassignmentvalid,
-  boardrunnerblock,
-  boardrunnerbudgetdec,
-  boardrunnerelect,
-  boardrunnerevict,
-} from 'zss/device/vm/boardrunnermanagement'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
 import { memoryfsvmcheckontick } from 'zss/device/vm/handlers/memoryfs'
-import { boardrunners } from 'zss/device/vm/state'
+import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { ispresent } from 'zss/mapping/types'
-import { memorycollecttickboundaries } from 'zss/memory/boardwait'
+import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
+import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
+import { memoryreadbookplayerboards } from 'zss/memory/playermanagement'
 import {
-  memoryreadbookplayerboards,
-  memoryreadplayerboard,
-} from 'zss/memory/playermanagement'
-import { memorytickloaders } from 'zss/memory/runtime'
+  memoryreadgadgetlayers,
+  memoryreadgraphics,
+} from 'zss/memory/rendering'
+import { memorytickloaders, memorytickmain } from 'zss/memory/runtime'
 import {
   memoryreadbookbysoftware,
   memoryreadfrozen,
-  memoryreadoperator,
+  memoryreadhalt,
 } from 'zss/memory/session'
+import type { BOARD, BOOK } from 'zss/memory/types'
 import { MEMORY_LABEL } from 'zss/memory/types'
 import { perfmeasure } from 'zss/perf/ui'
 
-let lastrunnmapwire = ''
+/** Rebuild per-board gadget layer caches before gadgetsynctick reads them. */
+function rebuildgadgetlayers(mainbook: BOOK, boards: BOARD[]) {
+  const didrender: Record<string, boolean> = {}
+  for (let b = 0; b < boards.length; ++b) {
+    const board = boards[b]
+    const store = memoryreadbookgadgetlayersforboard(mainbook, board.id)
+    const players = memoryreadplayersonboard(board)
+    for (let p = 0; p < players.length; ++p) {
+      const { graphics } = memoryreadgraphics(players[p], board)
+      const mode = normalizelayerzvariant(graphics)
+      if (!ispresent(didrender[`${board.id}:${mode}`])) {
+        didrender[`${board.id}:${mode}`] = true
+        store[mode] = memoryreadgadgetlayers(mode, board)
+      }
+    }
+  }
+}
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
@@ -37,66 +46,16 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     perfmeasure('vm:memorytickloaders', () => {
       memorytickloaders()
     })
-    // boardrunner management
-    perfmeasure('vm:boardrunner', () => {
-      const activeboards = memoryreadbookplayerboards(mainbook)
-      for (let i = 0; i < activeboards.length; ++i) {
-        const board = activeboards[i]
-        const boardid = board.id
-
-        // validate the current runner
-        const currentrunner = boardrunners[boardid]
-        if (boardrunnerassignmentvalid(boardid)) {
-          // current runner is still on the board, check if we hit ack timeout
-          if (boardrunnerbudgetdec(currentrunner)) {
-            // we hit ack timeout
-            boardrunnerblock(currentrunner)
-            boardrunnerevict(boardid)
-          }
-        } else {
-          // the current runner is no longer on the board
-          boardrunnerevict(boardid)
-        }
-
-        // if no runner is assigned, elect a new one
-        if (!boardrunners[boardid]) {
-          boardrunnerelect(boardid)
-        }
-      }
-      const runners = { ...boardrunners }
-      const playerboards: Record<string, string> = {}
-      const activelist = mainbook.activelist ?? []
-      for (let i = 0; i < activelist.length; ++i) {
-        const pid = activelist[i]
-        const pboard = memoryreadplayerboard(pid)
-        if (ispresent(pboard?.id)) {
-          playerboards[pid] = pboard.id
-        }
-      }
-      const runnmapwire = JSON.stringify([runners, playerboards])
-      if (runnmapwire !== lastrunnmapwire) {
-        lastrunnmapwire = runnmapwire
-        const operator = memoryreadoperator()
-        if (operator) {
-          netterminalrunnmap(vm, operator, runners, playerboards)
-        }
-      }
+    // Pre-tick boards drive sim; mid-tick #goto / edge exits can move players.
+    const boards = memoryreadbookplayerboards(mainbook)
+    // Pass halt into playeronly (name/usage drift preserved from boardrunner path).
+    perfmeasure('vm:memorytickmain', () => {
+      memorytickmain(mainbook.timestamp, boards, memoryreadhalt())
     })
-    perfmeasure('vm:boardrunnerpushupdates', () => {
-      boardrunnerpushupdates(vm)
-    })
-    perfmeasure('vm:boardrunnersendtick', () => {
-      // signal tick to the boardrunners
-      const ids = Object.keys(boardrunners)
-      for (let i = 0; i < ids.length; ++i) {
-        const board = ids[i]
-        const player = boardrunners[board]
-        const boardboundaries = memorycollecttickboundaries(
-          mainbook,
-          boardrunneraccessfor(board),
-        )
-        boardrunnertick(vm, player, board, mainbook.timestamp, boardboundaries)
-      }
+    // Rebuild from post-tick boards so dest boards get layers before gadgetsynctick
+    // (pre-tick snapshot misses dest and triggers void-fallback flashes of old content).
+    perfmeasure('vm:gadgetlayerscache', () => {
+      rebuildgadgetlayers(mainbook, memoryreadbookplayerboards(mainbook))
     })
     perfmeasure('vm:gadgetsynctick', () => {
       gadgetsynctick(vm)

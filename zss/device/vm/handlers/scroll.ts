@@ -1,7 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
-import { boardrunnerpushupdates } from 'zss/device/vm/boardrunnerpushupdates'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -10,7 +9,7 @@ import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryunlockscroll } from 'zss/memory/runtime'
 import { romread } from 'zss/rom'
 
-export function handleclearscroll(vm: DEVICE, message: MESSAGE): void {
+export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
   // clear the scroll on the player
   gadgetclearscroll(message.player)
 
@@ -22,9 +21,6 @@ export function handleclearscroll(vm: DEVICE, message: MESSAGE): void {
       memoryunlockscroll(objids[i], message.player)
     }
   }
-
-  // push updates to the boardrunner
-  boardrunnerpushupdates(vm)
 }
 
 export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {

@@ -2,7 +2,7 @@
 title: Devices and messaging
 ---
 
-How **devices** talk to each other in ZSS: **main thread**, **simulation worker**, **boardrunner worker**, and on-demand **TTS/STT workers**, each with its own **`hub`**, plus **`forward`** bridging over `postMessage`, and the `SOFTWARE` emit surface.
+How **devices** talk to each other in ZSS: **main thread**, **simulation worker**, and on-demand **TTS/STT workers**, each with its own **`hub`**, plus **`forward`** bridging over `postMessage`, and the `SOFTWARE` emit surface.
 
 **Context:** [zss/ARCHITECTURE.md](../../ARCHITECTURE.md) (full stack: cafe → Engine → platform → workers).
 
@@ -17,21 +17,20 @@ How **devices** talk to each other in ZSS: **main thread**, **simulation worker*
 - [Client → worker forwarding (reference)](#client--worker-forwarding-reference)
 - [Unified routing: workers, PEER, and blocked traffic](#unified-routing-workers-peer-and-blocked-traffic)
 - [Discovering message targets](#discovering-message-targets)
-- [Related: MIDI → `#play` import](../../feature/parse/docs/midi-import.mdx) (file loader → `parsemidi`, diagrams)
 
 ## Rules of the road
 
 1. **`hub.invoke(message)`** delivers every message to **every** connected device; each device ignores or handles based on [routing rules](message-flow.mdx#routing-rules-devicehandle) ([`createdevice`](../../device.ts) in `zss/device.ts`).
-2. **Topics** — e.g. `ticktock`, `tock`, `second`, `ready`, `log` — match broadcast-style targets so multiple devices can observe the same clock or log line.
+2. **Topics** — e.g. `ticktock`, `second`, `ready`, `log` — match broadcast-style targets so multiple devices can observe the same clock or log line.
 3. **Directed** targets use `deviceName:path` (e.g. `vm:cli` → the `vm` device sees `target === 'cli'`).
 4. **Multiple hubs** — The browser runs **main-thread** code plus **Web Workers** (see [what creates each realm](#what-creates-each-thread-or-worker)). Each realm has its **own** `hub` singleton; `postMessage` + **`forward`** sync selected traffic ([`forward.ts`](../forward.ts), [`platform.ts`](../../platform.ts)).
-5. **`SOFTWARE`** ([`session.ts`](../session.ts)) — A minimal `createdevice('SOFTWARE')` used as a **convenient `emit` sender** (session id from first `ready`). UI and chip code often call `SOFTWARE.emit(...)` so messages enter the **caller’s** hub with the right session.
-6. **`MESSAGE`** ([`api.ts`](../api.ts)) — Shape: `session`, `player`, `id`, `sender`, `target`, `data`. **`reply(to, subtarget)`** / **`replynext`** emit a new message whose `target` is **`to.sender:subtarget`**, so the original sender’s device handles `subtarget` as `message.target` after routing.
-7. **POD emit surface vs patch encoding** — [`api.ts`](../api.ts) is the **worker-safe** set of `device.emit(...)` helpers: runtime imports are limited to [`types.ts`](../types.ts) and [`mapping/types`](../../mapping/types.ts); domain signatures use **`import type` only**. **Jsonpipe patch wire encoding** (`encodepatchwire`) lives in [`patchapi.ts`](../patchapi.ts) (`boardrunnerpatch`, `gadgetclientpatch`, `vmboardrunnerpatch`); call sites that emit patches import `patchapi` explicitly. ESLint enforces the import boundary on `api.ts`.
-8. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs (avoids ping-pong loops).
-9. **`registerplayer` vs `register`** — [`registerplayer.ts`](../registerplayer.ts) holds the current player id string only (worker-safe). [`register.ts`](../register.ts) is the thin main-thread device entry; handlers live under [`register/handlers/`](../register/handlers/registry.ts) (storage, UI, bookmarks). Workers and device modules that only need `registerreadplayer()` must import `registerplayer`, not `register`.
+5. **`SOFTWARE`** ([`session.ts`](../session.ts)) — A minimal `createdevice('SOFTWARE')` used as a **convenient `emit` sender** (session id from first `ready`). UI and chip code often call `SOFTWARE.emit(...)` so messages enter the **caller's** hub with the right session.
+6. **`MESSAGE`** ([`api.ts`](../api.ts)) — Shape: `session`, `player`, `id`, `sender`, `target`, `data`. **`reply(to, subtarget)`** / **`replynext`** emit a new message whose `target` is **`to.sender:subtarget`**, so the original sender's device handles `subtarget` as `message.target` after routing.
+7. **POD emit surface vs patch encoding** — [`api.ts`](../api.ts) is the **worker-safe** set of `device.emit(...)` helpers. **Jsonpipe patch wire encoding** lives in [`patchapi.ts`](../patchapi.ts) (`gadgetclientpatch`); call sites that emit patches import `patchapi` explicitly.
+8. **`message.id` deduplication** — [`createforward`](../forward.ts) records each `message.id` in a `syncids` set so the same message is not applied repeatedly when it crosses hubs.
+9. **`registerplayer` vs `register`** — [`registerplayer.ts`](../registerplayer.ts) holds the current player id string only (worker-safe). [`register.ts`](../register.ts) is the thin main-thread device entry; handlers live under [`register/handlers/`](../register/handlers/registry.ts).
 
-See also: [message-flow.mdx](message-flow.mdx) (ASCII + first mermaid, boot sequence, flow table).
+See also: [message-flow.mdx](message-flow.mdx) (ASCII + mermaid, boot sequence, flow table).
 
 ---
 
@@ -43,29 +42,19 @@ ZSS does not spawn OS threads; it uses the **browser main thread** and **dedicat
 
 | Piece | Role |
 |--------|------|
-| **Entry** | Vite loads [`cafe/index.tsx`](../../../cafe/index.tsx) as the SPA shell (normal UI) or runs the **`bootheadless`** path when [`isclimode()`](../../feature/detect.ts) (Playwright / CLI-driven session, no Canvas). |
-| **Main-hub devices** | `import('zss/userspace')` runs side effects that register **`register`**, **`gadgetclient`**, **`modem`**, **`bridge`**, **`synth`** ([`userspace.ts`](../../userspace.ts)). |
-| **Worker construction** | [`createplatform(isstub, climode)`](../../platform.ts) runs **only here**. It always starts **boardrunnerspace**; for a normal host it starts **simspace**, and for `/join/` it starts [`startjoinvm`](../joinvm.ts) on the **main thread** (no sim worker). It installs `message` listeners and wraps [`createforward`](../forward.ts) so the main hub and workers exchange `MESSAGE`s. **ttsspace** / **sttspace** start on demand via `ensurettsworker()` / `ensuresttworker()`. |
-| **Who calls `createplatform`** | [`zss/gadget/engine.tsx`](../../gadget/engine.tsx) — `useEffect` on mount (browser UI, passes `isjoin()` and `isclimode()`). [`cafe/index.tsx`](../../../cafe/index.tsx) — `bootheadless()` after `userspace` (CLI). |
-| **Teardown** | [`haltplatform()`](../../platform.ts) disconnects joinvm (if any), terminates sim, boardrunner, and any TTS/STT workers, removes listeners, and disconnects the main-thread forward device (Engine `useEffect` cleanup). |
+| **Entry** | Vite loads [`cafe/index.tsx`](../../../cafe/index.tsx) as the SPA shell (normal UI) or runs **`bootheadless`** when [`isclimode()`](../../feature/detect.ts). |
+| **Main-hub devices** | `import('zss/userspace')` registers **`register`**, **`gadgetclient`**, **`modem`**, **`bridge`**, **`synth`** ([`userspace.ts`](../../userspace.ts)). |
+| **Worker construction** | [`createplatform(isstub, climode)`](../../platform.ts) runs **only here**. Normal host starts **simspace**; `/join/` starts [`startjoinvm`](../joinvm.ts) on main (no sim worker). **ttsspace** / **sttspace** start on demand. |
+| **Who calls `createplatform`** | [`zss/gadget/engine.tsx`](../../gadget/engine.tsx) — `useEffect` on mount. [`cafe/index.tsx`](../../../cafe/index.tsx) — `bootheadless()`. |
+| **Teardown** | [`haltplatform()`](../../platform.ts) disconnects joinvm (if any), terminates sim and any TTS/STT workers, removes listeners. |
 
 ### Simulation worker (`simspace`) vs join VM (`joinvm`)
 
 | Piece | Role |
 |--------|------|
 | **Instantiation** | [`platform.ts`](../../platform.ts): if `isstub`, `joinvmdevice = startjoinvm(session)` on the main hub; else `platform = new simspace()`. |
-| **`isstub` (1st arg to `createplatform`)** | **`isjoin()`** ([`feature/url.ts`](../../feature/url.ts)): if the page URL contains **`/join/`**, **joinvm** runs on main; otherwise the full **sim** worker. |
-| **Bundler** | Vite worker entry for sim only: `./simspace??worker` → [`simspace.ts`](../../simspace.ts). Join path is not a worker — [`joinvm.ts`](../joinvm.ts) registers a minimal `vm`-named device on the main hub. |
-| **Boot** | **simspace** imports `clock`, `modem`, [`forward`](../forward.ts), and (via `started`) the real **`vm`** — the VM tick is what produces gadget paint/patch through [`gadgetsynctick`](../vm/gadgetsynctick.ts). **joinvm** only acks `vm:operator` so register can bridge; host owns the real sim. |
-| **Post-start config** | Main sends `platform.postMessage({ target: 'config', data: climode })` to the **sim** worker when present. **simspace** handles it and calls [`setclimode`](../../feature/detect.ts). Join mode has no sim worker to configure. |
-
-### Boardrunner worker (`boardrunnerspace`)
-
-| Piece | Role |
-|--------|------|
-| **Instantiation** | [`platform.ts`](../../platform.ts): `boardrunner = new boardrunnerspace()` whenever `createplatform` runs—**always**, alongside sim or joinvm. |
-| **Bundler** | `./boardrunnerspace??worker` → [`boardrunnerspace.ts`](../../boardrunnerspace.ts). |
-| **Boot inside worker** | Imports [`device/boardrunner`](../boardrunner.ts) (creates the **`boardrunner`** device on **this** hub only; handlers in [`boardrunner/`](../boardrunner/handlers/)), then `createforward` + `onmessage` per [`shouldforwardboardrunnertoclient`](../forward.ts). The boardrunner device receives **memory + boundary jsonpipe** snapshots/patches (`boardrunner:paint` / `boardrunner:patch`), runs [`memorytickmain`](../../memory/runtime.ts) for whichever board it is currently elected on, and emits boundary patches back to the sim VM as `vm:boardrunnerack` / `vm:boardrunnerpatch`. |
+| **`isstub`** | **`isjoin()`** ([`feature/url.ts`](../../feature/url.ts)): URL contains **`/join/`** → joinvm on main; otherwise full **sim** worker. |
+| **Boot** | **simspace** imports `clock`, `modem`, `forward`, and (via `started`) the real **`vm`**. Each `ticktock` runs `memorytickloaders`, `memorytickmain`, gadget layer rebuild, `gadgetsynctick`, and optional memoryfs. **joinvm** only acks `vm:operator` so register can bridge; host owns the real sim. |
 
 ### Order of operations (typical browser UI)
 
@@ -76,18 +65,14 @@ sequenceDiagram
   participant US as userspace
   participant CP as createplatform
   participant Sim as sim_Worker_or_joinvm
-  participant Br as boardrunner_Worker
   Vite->>Main: load bundle
   Main->>US: dynamic import
   US->>Main: register_gadgetclient_etc
   Main->>CP: Engine_useEffect
   CP->>Sim: new_sim_Worker_or_startjoinvm
-  CP->>Br: new_Worker
   CP->>Main: createforward_listeners
   CP->>Sim: postMessage_config_if_sim
 ```
-
-CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canvas but still runs **`userspace`** then **`createplatform`** the same way; only the **`Engine` `useEffect`** trigger is replaced.
 
 ---
 
@@ -95,32 +80,22 @@ CLI **`bootheadless`** ([`cafe/index.tsx`](../../../cafe/index.tsx)) skips Canva
 
 | Device | Hub / realm | Subscribes (topics) | Role |
 |--------|----------------|---------------------|------|
-| `forward` | main + each worker (one `createforward` instance per realm) | `all` | Copies messages across `postMessage`; dedupes by `message.id` |
+| `forward` | main + each worker | `all` | Copies messages across `postMessage`; dedupes by `message.id` |
 | `clock` | sim worker only | — | Emits `ticktock`, `second` |
-| `vm` | sim worker (real sim) | `ticktock`, `second` | Game VM. Handlers in [`vm/handlers/`](../vm/handlers/) (registry: [`registry.ts`](../vm/handlers/registry.ts)). On every `ticktock` it runs the player gadget projection ([`gadgetsynctick`](../vm/gadgetsynctick.ts)), elects/evicts boardrunners, jsonpipe-syncs memory + boundaries to the boardrunner worker ([`boardrunnermemorysync`](../vm/boardrunnermemorysync.ts), [`boardrunnerboundarysync`](../vm/boardrunnerboundarysync.ts)), and emits `boardrunner:tick` to each runner. |
-| `vm` (join) | **main** hub when `/join/` | — | Minimal stand-in from [`startjoinvm`](../joinvm.ts): ready + `vm:operator` ack so register can bridge; host owns the real sim |
-| `modem` | **both** hubs (imported in sim + userspace) | `second` | Sync / presence (per-realm instance) |
-| `register` | main | `ready`, `second`, `log`, `chat`, `toast` | UI edge: storage, tape, VM calls via `api`; on `acklogin` triggers a `vm:gadgetdesync` so the worker repaints. |
-| `gadgetclient` | main | — | Applies `gadgetclient:paint` / `patch` (jsonpipe) to zustand state ([`gadget/data/state.ts`](../../gadget/data/zustandstores.ts)); replies `desync` on bad patches |
-| `userinput` | main | — | Keyboard/gamepad → `vm:*` / `register:*`. Device is **not** loaded from [`userspace.ts`](../../userspace.ts); it is created as a **side effect** of importing [`userinput.tsx`](../../gadget/userinput.tsx) when the UI mounts (e.g. [`Engine`](../../gadget/engine.tsx) → `UserFocus`, tape/terminal/editor imports). |
+| `vm` | sim worker | `ticktock`, `second` | Authoritative MEMORY; `handleticktock` runs loaders + `memorytickmain` + gadget projection |
+| `vm` (join) | **main** hub when `/join/` | — | Thin stand-in from [`startjoinvm`](../joinvm.ts) |
+| `modem` | **both** hubs | `second` | Sync / presence (per-realm instance) |
+| `register` | main | `ready`, `second`, `log`, `chat`, `toast` | UI edge: storage, tape, VM calls |
+| `gadgetclient` | main | — | Applies `gadgetclient:paint` / `patch` to zustand |
+| `userinput` | main | — | Keyboard/gamepad → `vm:input` / `register:*` (side effect of UI mount) |
 | `bridge` | main | — | `bridge:*` multiplayer / fetch / streams |
 | `synth` | main | — | `synth:*` audio |
-| `tts` / `stt` | **tts** / **stt** worker hubs ([`ttsspace.ts`](../../ttsspace.ts), [`sttspace.ts`](../../sttspace.ts)) | — | On-demand ONNX inference; reached via main `forward` → `postMessage` |
-| `boardrunner` | **boardrunner worker** hub ([`boardrunnerspace.ts`](../../boardrunnerspace.ts)) | `vm` | Real per-board sim ([`boardrunner.ts`](../boardrunner.ts), [`boardrunner/`](../boardrunner/)); receives `boardrunner:paint` / `patch` (memory + per-boundary jsonpipe), `boardrunner:tick` (board id + timestamp + boundary list), and `boardrunner:input`; runs [`memorytickmain`](../../memory/runtime.ts) for the assigned board and emits boundary patches back as `vm:boardrunnerack` / `vm:boardrunnerpatch`. Also subscribes to topic `vm` so chip / scroll / sidebar messages (`vm:CHIP:LABEL`) reach `memorymessagechip` on the worker that actually runs the chips. Forwarded by [`shouldforwardclienttoboardrunner`](../forward.ts). |
+| `tts` / `stt` | lazy worker hubs | — | On-demand inference via main `forward` |
 | `SOFTWARE` | whichever hub loaded it | — | Session holder + `emit` helper |
-| **Ephemeral** `createdevice` | varies | — | e.g. one-off TTS in [`feature/tts.ts`](../../feature/tts/client.ts) |
-
-**joinvm** ([`joinvm.ts`](../joinvm.ts)) runs on the **main** hub for `/join/` tabs (no sim worker, no clock / sim modem). **simspace** ([`simspace.ts`](../../simspace.ts)) boots clock, modem, vm, and forward — gadget paint/patch is produced by the VM tick directly (no `gadgetserver` device any more).
-
-> **Join mode** — When the URL matches [`isjoin()`](../../feature/url.ts) (`/join/`), **`startjoinvm`** runs on main instead of spawning **`simspace`**: there is **no** local `clock` or sim **`modem`**, and joinvm only handles operator ack. The threaded diagrams below are **sim-first**; in join mode rely on this table and [what creates each thread or worker](#what-creates-each-thread-or-worker).
 
 ---
 
 ## Diagram: hubs and forward bridges
-
-Solid arrows = **same hub** (`hub.invoke`). Each JavaScript realm has its own `hub` and a **`forward`** device from [`createforward`](../forward.ts); [`platform.ts`](../../platform.ts) wires **sim worker ↔ main**, **main ↔ boardrunner worker**, and **main ↔ tts/stt workers** (on demand) with `postMessage`.
-
-Mermaid subgraph labels use **`Sim_worker`**, **`Main_thread`**, **`Boardrunner_worker`** consistently across diagrams in this doc.
 
 ```mermaid
 flowchart TB
@@ -142,34 +117,17 @@ flowchart TB
     Brm[bridge]
     Sy[synth]
     MdM[modem]
-    SW[SOFTWARE]
-  end
-  subgraph Boardrunner_worker [Boardrunner_worker]
-    direction TB
-    Fb[forward]
-    Brd[boardrunner]
   end
   Fw <-->|postMessage| Fm
-  Fm <-->|postMessage| Fb
-  Fb --> Brd
 ```
 
-**What crosses which bridge**
+**What crosses sim ↔ main** — `vm:*`, `modem:*`, `gadgetclient:*` paint/patch (sim → main), and `desync` / `sync` / `joinack` paths per [`shouldforwardclienttoserver`](../forward.ts) / [`shouldforwardservertoclient`](../forward.ts).
 
-- **Sim ↔ main** — `vm:*`, `modem:*`, `gadgetclient:*` paint/patch (sim → main), and `desync` / `sync` / `joinack` paths per [`shouldforwardclienttoserver`](../forward.ts) / [`shouldforwardservertoclient`](../forward.ts).
-- **Main ↔ boardrunner** — `boardrunner:*`, `vm:*`, `second`, `ready` per [`shouldforwardclienttoboardrunner`](../forward.ts). `vm:*` is forwarded so scroll / sidebar / chip-routed messages reach the chip OS on the boardrunner (which subscribes to topic `vm` and hands them to [`memorymessagechip`](../../memory/runtime.ts)) — they continue to reach the sim VM as well.
-- **Main ↔ tts/stt** — `tts:*` / `stt:*` when workers are started on demand.
-- **Boardrunner ↔ sim** — Both directions are routed via main: [`platform.ts`](../../platform.ts) inspects each cross-realm message and, if it matches the destination's `shouldforward*` predicate, also `postMessage`s it to that worker. So a boardrunner-emitted `vm:boardrunnerpatch` reaches the sim VM without ever entering main's hub.
-
-**`vm:*`, `register:*`, `synth:*`** — Many entrypoints are listed in [`api.ts`](../api.ts).
+**Main ↔ tts/stt** — `tts:*` / `stt:*` when workers are started on demand.
 
 ---
 
 ## Diagram: logical request paths (compact)
-
-**Role:** small **mental-model** graph (major flows only). For **full** emitter/handler detail, **`second`** splits, and **`modem`** sim vs main, see [Directed graph (full handler edges)](#directed-graph-who-handles-which-target).
-
-**Subgraphs = JavaScript realm.** Arrows that **cross** a boundary imply **`forward` + `postMessage`** (main ↔ sim / boardrunner / on-demand tts / stt), except where both endpoints sit in one realm.
 
 ```mermaid
 flowchart LR
@@ -177,373 +135,61 @@ flowchart LR
     UI[userinput]
     RegIn[register]
     GC[gadgetclient]
-    RegOut[register]
     Sy[synth]
   end
   subgraph Sim_worker [Sim_worker]
     VM[vm]
   end
-  subgraph Boardrunner_worker [Boardrunner_worker]
-    Brd[boardrunner]
-  end
   subgraph TTS_worker [TTS_worker lazy]
     TTS[tts]
   end
-  subgraph STT_worker [STT_worker lazy]
-    STT[stt]
-  end
-  UI -->|vminput| VM
-  RegIn -->|vmoperator_vmlogin_vmloader_vmcli| VM
-  VM -->|register_acks_loginready| RegOut
+  UI -->|vm:input| VM
+  RegIn -->|vm:*| VM
+  VM -->|register:*| RegIn
   VM -->|gadgetclient_paint_patch| GC
   GC -->|vm_gadgetdesync| VM
-  VM -->|boardrunner_paint_patch_tick_input| Brd
-  Brd -->|vm_boardrunnerack_patch_playermovetoboard| VM
-  Sy -->|tts_colon_star| TTS
-  Sy -->|stt_colon_star| STT
+  Sy -->|tts:*| TTS
 ```
 
 ---
 
 ## Directed graph (who handles which `target`)
 
-The hub still delivers every message to every device; this section is the **intended routing**: an edge **Emitter → Handler** labeled **`prefix`** means traffic is usually emitted from the **emitter side** (or its firmware/chips) with `message.target` equal to **`prefix`** or **`prefix:…`** (first path segment names the handler device). **Subgraphs below are browser threads / workers**; an arrow that **crosses** a subgraph border uses **`forward`** + `postMessage` (same rules as [topology](#diagram-hubs-and-forward-bridges)).
+See [message-flow.mdx](message-flow.mdx) for the full flow table. Primary edges:
 
-**Role:** **full** graph including **`second`** fan-out and two **`modem`** instances. For a smaller picture, see [Diagram: logical request paths (compact)](#diagram-logical-request-paths-compact).
+- **clock** → **vm** (`ticktock`, `second`)
+- **register** / **userinput** → **vm** (`vm:*`, including `vm:input`)
+- **vm** → **gadgetclient** (`gadgetclient:paint`, `gadgetclient:patch`)
+- **gadgetclient** → **vm** (`vm:gadgetdesync` reply)
+- **synth** → **tts** worker (`tts:info`, `tts:request`)
 
-### Mermaid: primary handler edges (by thread)
-
-```mermaid
-flowchart TB
-  subgraph Sim_worker [Sim_worker]
-    direction TB
-    clock
-    vm
-    modemSim["modem sim instance"]
-    clock -->|ticktock| vm
-    clock -->|second| vm
-    clock -->|second| modemSim
-    vm -->|gadgetsynctick_internal| vm
-  end
-  subgraph Main_thread [Main_thread]
-    direction TB
-    register
-    userinput
-    gadgetclient
-    bridge
-    synth
-    modemMain["modem main instance"]
-    apihelpers[api_log_chat_toast]
-    register -->|vm_colon| vm
-    userinput -->|vm_colon| vm
-    vm -->|register_colon| register
-    vm -->|reply_register_paths| register
-    vm -->|synth_colon| synth
-    vm -->|gadgetclient_paint_patch| gadgetclient
-    gadgetclient -->|reply_vm_gadgetdesync| vm
-    register -->|bridge_colon| bridge
-    register -->|vm_gadgetdesync| vm
-    apihelpers -->|log_chat_toast| register
-    clock -->|second| register
-    clock -->|second| modemMain
-  end
-  subgraph Boardrunner_worker [Boardrunner_worker]
-    boardrunnerDev[boardrunner]
-    boardrunnerDev -->|vm_boardrunnerack_vm_boardrunnerpatch| vm
-    boardrunnerDev -->|vm_playermovetoboard| vm
-  end
-  subgraph TTS_worker [TTS_worker lazy]
-    ttsDev[tts]
-    synth -->|tts_colon| ttsDev
-  end
-  subgraph STT_worker [STT_worker lazy]
-    sttDev[stt]
-  end
-  clock -->|second| boardrunnerDev
-  vm -->|boardrunner_paint_patch_tick_input| boardrunnerDev
-```
-
-**Readout**
-
-- **Sim worker** — `clock`, `vm`, one **`modem`** instance ([`simspace.ts`](../../simspace.ts)). Gadget paint/patch is produced **inside** the VM tick by [`gadgetsynctick`](../vm/gadgetsynctick.ts) and emitted as `gadgetclient:paint` / `gadgetclient:patch`; there is no separate `gadgetserver` device any more.
-- **Main thread** — `register`, `gadgetclient`, `userinput`, `bridge`, `synth`, second **`modem`** instance ([`userspace.ts`](../../userspace.ts)), and `api`-driven emits (**`apihelpers`**); chips/UI often use **`SOFTWARE`** on whichever hub loaded them (sim for game logic).
-- **TTS worker** — `tts` device ([`ttsspace.ts`](../../ttsspace.ts), [`ttsworker.ts`](../ttsworker.ts)); lazy spawn via `ensurettsworker()` on first `tts:info` / `tts:request`.
-- **STT worker** — `stt` device ([`sttspace.ts`](../../sttspace.ts), [`sttworker.ts`](../sttworker.ts)); lazy spawn via `ensuresttworker()` on first `stt:*`.
-- **Boardrunner worker** — `boardrunner` device ([`boardrunnerspace.ts`](../../boardrunnerspace.ts), [`boardrunner.ts`](../boardrunner.ts), [`boardrunner/handlers/`](../boardrunner/handlers/)). The sim VM elects one player per active board to be its runner each tick ([`boardrunnermanagement.ts`](../vm/boardrunnermanagement.ts)). The runner receives memory + per-boundary jsonpipe paint/patch plus `boardrunner:tick`, runs [`memorytickmain`](../../memory/runtime.ts) for that board, and replies with `vm:boardrunnerack` and one `vm:boardrunnerpatch` per dirty boundary.
-- **`second`** — `clock` runs on sim; **`register`**, **main `modem`**, **`boardrunner`**, and on-demand **tts/stt** workers receive **`second`** after **sim → main** forward (and main → worker where applicable), same tick as sim-local `vm` / `modemSim`.
-
-Notes:
-
-- **`reply_register_paths`** — `vm.reply` / `vm.replynext` send to `register:ackoperator`, `register:acklogin`, `register:ackzsswords`, `register:acklook`, etc. (see [`vm/handlers/`](../vm/handlers/)).
-- **`apihelpers`** — [`api.ts`](../api.ts) `apilog` → `log`, `apichat` → `chat`, `apitoast` → `toast` (**`register`** subscribes to those topics). Call sites can be sim or main; **`emit`** always hits the **caller's** hub first.
-- **`ready`** — [`vm`](../vm.ts) or [`stub`](../joinvm.ts) (device name `vm`) emits via [`platformready`](../api.ts); all devices may capture session on first `ready` (not shown as edges to every node).
-- **`SOFTWARE.emit`** from chips / UI uses targets like `{chipId}:message`; routing is per-device id, not the `vm` node (see [`chip.ts`](../../chip.ts), [`gamesend.ts`](../../memory/gamesend.ts)).
-
-### Table: `target` prefix → handler device + thread
-
-| First segment of `target` | Handler device | Handler thread | Mostly emitted from (typical) | Emitter thread |
-|---------------------------|----------------|----------------|-------------------------------|----------------|
-| `ticktock` | `vm` | Sim worker | `clock` | Sim worker |
-| `second` | `vm` | Sim worker | `clock` | Sim worker |
-| `second` | `modem` | Sim **or** main (two instances) | `clock` | Sim → forward → main |
-| `second` | `register` | Main thread | `clock` (forwarded) | Sim → main |
-| `second` | `boardrunner` | Boardrunner worker | `clock` / main forward | Sim / main → boardrunner |
-| `second` | `tts` | TTS worker (lazy) | `clock` / main forward | Main → ttsspace |
-| `second` | `stt` | STT worker (lazy) | `clock` / main forward | Main → sttspace |
-| `boardrunner` | `boardrunner` | Boardrunner worker | `vm` (`boardrunner:paint`, `boardrunner:patch`, `boardrunner:tick`, `boardrunner:idle`, `boardrunner:thud`, `boardrunner:start`), `userinput` (`boardrunner:input`) | Sim / main → boardrunner |
-| `ready` | all devices | per hub | `vm` / stub, [`platformready`](../api.ts) | Sim (or stub worker) |
-| `sessionreset` | all devices | per hub | [`sessionreset`](../api.ts) | usually main (`SOFTWARE`) |
-| `vm` | `vm` | Sim worker | `register`, `userinput`, `api`, `boardrunner` (`vm:boardrunnerack`, `vm:boardrunnerpatch`, `vm:playermovetoboard`), `gadgetclient` (`vm:gadgetdesync` reply), `SOFTWARE` | Main / sim / boardrunner → sim |
-| `register` | `register` | Main thread | `vm` (replies), `userinput`, `api` | Sim → main / main |
-| `gadgetclient` | `gadgetclient` | Main thread | `vm` ([`gadgetsynctick`](../vm/gadgetsynctick.ts) → `gadgetclient:paint` / `gadgetclient:patch`), `api` | Sim → main / main |
-| `tts` | `tts` | TTS worker (lazy) | `synth` / [`feature/tts/client.ts`](../../feature/tts/client.ts) via **`tts:info`**, **`tts:request`** | Main → ttsspace |
-| `stt` | `stt` | STT worker (lazy) | terminal mic / [`sttclient.ts`](../../feature/stt/sttclient.ts) via **`stt:*`** | Main → sttspace |
-| `synth` | `synth` | Main thread | `api` / firmware | Sim → main / main |
-| `bridge` | `bridge` | Main thread | `api` | Main |
-| `log` | `register` (topic) | Main thread | `api` `apilog`, firmware | any hub → often main |
-| `chat` | `register` (topic) | Main thread | `api` `apichat` | any hub → often main |
-| `toast` | `register` (topic) | Main thread | `api` `apitoast` | any hub → often main |
-| `{chipId}` | matching device id | **same hub as that chip** | `SOFTWARE.emit` from [`gamesend`](../../memory/gamesend.ts) / [`chip`](../../chip.ts) | Sim / boardrunner (typical) |
-
-**Topic vs directed for `register`:** `log`, `chat`, and `toast` use targets with **no** `:` — they match **`register`’s subscribed topics**, not `register:something` directed paths. Other `register:*` messages (e.g. `register:terminal:open`) are directed; see [Rules of the road](#rules-of-the-road) and [`device.ts`](../../device.ts) `parsetarget`.
-
-Nested paths (`register:terminal:open`, `gadgetclient:paint`) still belong to the device named in the **first** segment; `register`’s handler sees the remainder as `message.target` after routing ([`device.ts`](../../device.ts) `parsetarget`).
-
-### Machine-readable source
-
-Stable names for **`vm:*`**, **`register:*`**, **`synth:*`**, **`bridge:*`**, **`tts:*`**, **`stt:*`**, **`gadgetclient:*`**, **`boardrunner:*`** are the string literals passed to `device.emit` in [`device/api.ts`](../api.ts). `vm` subtargets are dispatched in [`vm/handlers/registry.ts`](../vm/handlers/registry.ts).
+Chip `send` uses `chipmessage` → `SOFTWARE.emit` on the sim hub (same realm as `memorytickmain`).
 
 ---
 
 ## Client → worker forwarding (reference)
 
-[`shouldforwardclienttoserver`](../forward.ts) routes these **target prefixes** from the main thread toward the sim worker (not exhaustive for every subpath):
+[`shouldforwardclienttoserver`](../forward.ts): `vm:*`, `chip:*`, `modem:*`, plus path suffixes `sync`, `desync`, `joinack`.
 
-- `vm:*`
-- `modem:*`
-- plus the path suffixes `sync`, `desync`, `joinack` on composite targets
+[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth`, `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
 
-**Server → client** ([`shouldforwardservertoclient`](../forward.ts)) covers `tts`, `synth`, `modem`, `bridge`, `register`, `boardrunner`, `gadgetclient`, `perfreport`, plus topics `log`, `chat`, `ready`, `toast`, `second`, and the composite path suffixes `sync`, `joinack`, `acklook`, `acklogin`, `ackoperator`, `ackzsswords`, `boardrunner`, `gadgetclient`.
-
-**TTS/STT** and **second** / **ready** follow [`shouldforwardclienttotts`](../forward.ts), [`shouldforwardclienttostt`](../forward.ts). `ticktock` is **not** forwarded to inference workers.
-
-**Boardrunner** follows [`shouldforwardclienttoboardrunner`](../forward.ts) (`boardrunner:*`, `second`, `ready`; not `ticktock`). [`platform.ts`](../../platform.ts) additionally re-applies the `shouldforwardclienttoserver` / `shouldforwardclienttotts` / `shouldforwardclienttostt` / `shouldforwardclienttoboardrunner` predicates to messages **received from** workers, so worker → worker traffic (e.g. boardrunner → sim VM) is relayed through main without entering main's hub.
+TTS/STT workers are reached via main `postMessage` when [`platform.ts`](../../platform.ts) routes matching targets.
 
 ---
 
 ## Unified routing: workers, PEER, and blocked traffic
 
-Authoritative allow-lists live in [`forward.ts`](../forward.ts). For each **directed** edge below, **blocked** means every other `message.target` does not get `postMessage` on that edge (some paths log `server blocked` / `client blocked` for PeerJS).
+Authoritative allow-lists live in [`forward.ts`](../forward.ts). Peer networking ([`netterminal.ts`](../../feature/netterminal.ts)) wraps **`createforward`** and applies stricter compound filters for PeerJS wire traffic.
 
-[`createforward`](../forward.ts) also skips **`ticktock`** when invoking the **local** hub from an inbound worker payload (`message.target !== 'ticktock'` in `forward()`), so high-frequency clock ticks do not fan out through cross-realm delivery even when other predicates pass.
-
-### Diagram: devices by realm
-
-Each subgraph is one JavaScript **realm** (one `hub`). **`forward`** exists in each realm and bridges over `postMessage`. **`SOFTWARE`** may exist on multiple hubs depending on imports; it is shown under main where [`userspace`](../../userspace.ts) runs. **`userinput`** is created when UI imports [`userinput.tsx`](../../gadget/userinput.tsx), not from `userspace` alone.
-
-```mermaid
-flowchart TB
-  subgraph Main_thread [Main_thread]
-    direction TB
-    Fm[forward]
-    Reg[register]
-    GC[gadgetclient]
-    MdM[modem]
-    Brg[bridge]
-    Syn[synth]
-    UI[userinput]
-    SW[SOFTWARE]
-    EpMain[ephemeral_createdevice]
-  end
-  subgraph Sim_worker [Sim_worker]
-    direction TB
-    Fs[forward]
-    Clk[clock_sim_only]
-    VM[vm_or_stub]
-    MdW[modem_sim_only]
-  end
-  subgraph TTS_worker [TTS_worker lazy]
-    direction TB
-    Ft[forward]
-    Tts[tts]
-  end
-  subgraph STT_worker [STT_worker lazy]
-    direction TB
-    Fs2[forward]
-    Stt[stt]
-  end
-  subgraph Boardrunner_worker [Boardrunner_worker]
-    direction TB
-    Fb[forward]
-    Brd[boardrunner]
-  end
-```
-
-**Realm notes**
-
-- **Sim vs join** — Host sessions spawn [`simspace`](../../simspace.ts) (boots **`clock`**, sim **`modem`**, and **`vm`**). Join tabs (`/join/`) call [`startjoinvm`](../joinvm.ts) on the **main** hub instead — no sim worker, no local **`clock`** / sim **`modem`**. Labels **`clock_sim_only`** / **`modem_sim_only`** apply only when **`simspace`** is active.
-- **TTS/STT** — On-demand workers ([`ttsspace`](../../ttsspace.ts), [`sttspace`](../../sttspace.ts)).
-
-### Diagram: `postMessage` bridges and predicates
-
-Solid arrows are **`postMessage`** between workers and the main thread. [`platform.ts`](../../platform.ts) installs listeners on **sim** (when present), **boardrunner**, and on-demand **tts/stt** workers; each listener **fan-outs** using the listed predicates (a single inbound message may satisfy multiple and hit multiple workers). Worker → worker routes **relay through main** and never enter main’s hub.
-
-```mermaid
-flowchart LR
-  subgraph Main_thread [Main_thread]
-    Fm[forward]
-  end
-  subgraph Sim_or_stub [Sim_worker]
-    Fs[forward]
-  end
-  subgraph TTS_worker [TTS_worker lazy]
-    Ft[forward]
-  end
-  subgraph STT_worker [STT_worker lazy]
-    Fs2[forward]
-  end
-  subgraph Boardrunner_worker [Boardrunner_worker]
-    Fb[forward]
-  end
-  Fs -->|"shouldforwardservertoclient_sim_only"| Fm
-  Fm -->|"shouldforwardclienttoserver"| Fs
-  Fm -->|"shouldforwardclienttotts"| Ft
-  Ft -->|"shouldforwardttstoclient_true"| Fm
-  Fm -->|"shouldforwardclienttostt"| Fs2
-  Fs2 -->|"shouldforwardstttoclient_true"| Fm
-  Fm -->|"shouldforwardclienttoboardrunner"| Fb
-  Fb -->|"shouldforwardboardrunnertoclient_true"| Fm
-```
-
-**Sim outbound** — **[`simspace`](../../simspace.ts)** posts when [`shouldforwardservertoclient`](../forward.ts) returns true. Join mode has no sim worker hub; joinvm lives on main and does not use that postMessage edge. The edge label **`shouldforwardservertoclient_sim_only`** applies only when the platform worker is **simspace**.
-
-**Inbound on main** — When main’s `createforward` receives a message from any worker, it may forward to **other** workers using **`shouldforwardclienttoserver`**, **`shouldforwardclienttotts`**, **`shouldforwardclienttostt`**, and **`shouldforwardclienttoboardrunner`** together ([`platform.ts`](../../platform.ts)), enabling paths such as boardrunner → sim **`vm:*`** without the message being handled on the main hub first.
-
-### Diagram: PeerJS net-terminal overlay
-
-Peer networking ([`netterminal.ts`](../../feature/netterminal.ts)) is **not** a separate hub; it wraps **`createforward`** and sends compressed payloads over PeerJS **`DataConnection`**. Traffic must pass **both** the Peer-specific predicate **and** the same worker-bridge predicate used for local forwarding—so the wire is **stricter** than sim ↔ main alone.
-
-```mermaid
-flowchart LR
-  subgraph Main_thread [Main_thread]
-    Fm[forward]
-  end
-  subgraph Peer_lane [PeerJS_net_terminal]
-    HostToGuest[host_outbound]
-    GuestToHost[guest_outbound]
-  end
-  Fm <-->|"compound_filters_below"| HostToGuest
-  Fm <-->|"compound_filters_below"| GuestToHost
-```
-
-| Direction | Send when (all must be true) |
-|-----------|-------------------------------|
-| Host → remote peer | [`shouldforwardonpeerserver`](../forward.ts)(`message`) **∧** [`shouldforwardservertoclient`](../forward.ts)(`message`) |
-| Join client → remote peer | [`shouldforwardonpeerclient`](../forward.ts)(`message`) **∧** [`shouldforwardclienttoserver`](../forward.ts)(`message`) |
-
-Decoded payloads from the peer are merged into the local hub through the same **`createforward`** path as other cross-realm traffic.
-
-### Forward vs blocked (tables)
-
-Predicates use [`parsetarget`](../../device.ts): first `:` segment is **`route.target`**, remainder is **`route.path`** (may contain further `:`).
-
-#### Main → sim/stub (`shouldforwardclienttoserver`)
-
-| Allowed | Details |
-|---------|---------|
-| `route.target` | **`vm`**, **`modem`** |
-| `route.path` exactly | **`sync`**, **`desync`**, **`joinack`** (works for any first segment, e.g. composite targets whose remainder matches) |
-
-**Blocked:** all other targets on this edge (e.g. bare **`log`**, **`register:*`**, **`bridge:*`**, **`gadgetclient:*`** unless carried via matching composite paths above).
-
-#### Sim → main (`shouldforwardservertoclient`) — **simspace only**
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`log`**, **`chat`**, **`ready`**, **`toast`**, **`second`**, **`ticktock`** |
-| `route.target` | **`tts`**, **`synth`**, **`modem`**, **`bridge`**, **`register`**, **`boardrunner`**, **`gadgetclient`**, **`perfreport`** |
-| `route.path` | **`sync`**, **`joinack`**, **`acklook`**, **`acklogin`**, **`ackoperator`**, **`ackzsswords`**, **`boardrunner`**, **`gadgetclient`** |
-
-**Blocked:** everything else (silent `return false`; no console log).
-
-#### Main → tts (`shouldforwardclienttotts`)
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`second`**, **`ready`** (**`ticktock`** explicitly false) |
-| `route.target` | **`tts`** |
-
-**Blocked:** **`ticktock`** and all other targets.
-
-#### Main → stt (`shouldforwardclienttostt`)
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`second`**, **`ready`** (**`ticktock`** explicitly false) |
-| `route.target` | **`stt`** |
-
-**Blocked:** **`ticktock`** and all other targets.
-
-#### Main → boardrunner (`shouldforwardclienttoboardrunner`)
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`second`**, **`ready`** (**`ticktock`** explicitly false) |
-| `route.target` | **`boardrunner`** |
-
-**Blocked:** **`ticktock`**, **`vm:*`**, and all other targets.
-
-#### TTS → main (`shouldforwardttstoclient`)
-
-Always **`true`** — no per-target filter at postMessage; further routing to sim/boardrunner uses main’s outbound predicates when the message arrives.
-
-#### STT → main (`shouldforwardstttoclient`)
-
-Always **`true`** — same pattern as tts → main.
-
-#### Boardrunner → main (`shouldforwardboardrunnertoclient`)
-
-Always **`true`** — no per-target filter at postMessage.
-
-#### Peer host outbound (`shouldforwardonpeerserver`)
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`log`**, **`chat`**, **`toast`**, **`second`** |
-| `route.target` | **`synth`**, **`modem`**, **`register`**, **`boardrunner`**, **`gadgetclient`** |
-| `route.path` | **`sync`**, **`desync`**, **`joinack`**, **`acklook`**, **`acklogin`**, **`ackzsswords`** |
-
-**Blocked:** everything else → logs **`server blocked`** with `message.target`.
-
-#### Peer join outbound (`shouldforwardonpeerclient`)
-
-| Allowed | Details |
-|---------|---------|
-| Whole-target | **`log`**, **`chat`**, **`toast`** |
-| `route.target` | **`vm`**, **`modem`** |
-| `route.path` | **`sync`**, **`desync`**, **`joinack`**, **`acklook`**, **`acklogin`**, **`ackzsswords`** |
-
-**Blocked:** everything else → logs **`client blocked`** with `message.target`.
-
-### Peer vs local sim ↔ main (narrower on the wire)
-
-Examples of targets allowed **sim → main** by [`shouldforwardservertoclient`](../forward.ts) but **not** by [`shouldforwardonpeerserver`](../forward.ts) alone for host send (host also requires `shouldforwardservertoclient`, but this table highlights Peer-specific gaps):
-
-| Target pattern | `shouldforwardservertoclient` | `shouldforwardonpeerserver` |
-|----------------|------------------------------|----------------------------|
-| **`ready`**, **`ticktock`** | yes | no |
-| **`tts:*`** / **`stt:*`** | yes (`route.target`) | no |
-| **`bridge:*`** | yes (`route.target`) | no |
-
-Join-side Peer outbound already intersects with **`shouldforwardclienttoserver`**, which only allows **`vm`**, **`modem`**, and paths **`sync`** / **`desync`** / **`joinack`**—so many main-thread emits never qualify for guest → peer send.
+[`createforward`](../forward.ts) skips local hub delivery of inbound **`ticktock`** messages to avoid clock fan-out loops.
 
 ---
 
 ## Discovering message targets
 
 - **Tables** — [message-flow.mdx § Main message flows](message-flow.mdx#main-message-flows)
-- **API helpers** — [`device/api.ts`](../api.ts) (`vmcli`, `gadgetclientpaint`, `ttsrequest`, …); patch emit helpers in [`device/patchapi.ts`](../patchapi.ts)
-- **Handlers** — [`vm/handlers/registry.ts`](../vm/handlers/registry.ts) maps `vm` subtargets to implementations
-- **Tests** — [`device/__tests__/device.test.ts`](../../../ops/tests/unit/device/device.test.ts) (`createdevice`, session, topics); [`device/__tests__/forward.boardrunner.test.ts`](../../../ops/tests/unit/device/forward.peer.test.ts) (`shouldforwardclienttoboardrunner`)
+- **API helpers** — [`device/api.ts`](../api.ts); patch emit in [`device/patchapi.ts`](../patchapi.ts)
+- **Handlers** — [`vm/handlers/registry.ts`](../vm/handlers/registry.ts)
+- **Tests** — [`ops/tests/unit/device/device.test.ts`](../../../ops/tests/unit/device/device.test.ts); [`ops/tests/unit/device/forward.peer.test.ts`](../../../ops/tests/unit/device/forward.peer.test.ts)
 
-**Maintenance** — When you change cross-realm routing, update [`forward.ts`](../forward.ts) `shouldforward*` helpers and keep this doc (and optionally [message-flow.mdx](message-flow.mdx)) in sync.
+**Maintenance** — When you change cross-realm routing, update [`forward.ts`](../forward.ts) `shouldforward*` helpers and keep this doc in sync.

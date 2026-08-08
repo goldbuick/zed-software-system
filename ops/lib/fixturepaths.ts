@@ -8,12 +8,9 @@ function fixturepath(...rel: string[]): string {
 
 export const FIXTURES_ROOT = fixturepath()
 
-export const LANG_PARITY_DIR = fixturepath('lang', 'parity')
 export const LANG_INTEGRATION_GOLDENS_DIR = fixturepath('lang', 'integration')
 export const LANG_SCRIPTS_DIR = fixturepath('lang', 'scripts')
 export const LANG_COOLREGIONSBOW_DIR = fixturepath('lang', 'coolregionsbow')
-
-export const MEMORY_WASM_FIXTURES_DIR = fixturepath('memory', 'wasm')
 
 export const SYNTH_WASM_FIXTURES_DIR = fixturepath('synth', 'wasm')
 export const SYNTH_DAISY_FIXTURES_DIR = fixturepath('synth', 'daisy')
@@ -48,11 +45,6 @@ export const COOLREGIONSBOW_BOOK_JSON_PATH = fixturepath(
   'example-coolregionsbow.book.json',
 )
 
-export const LANG_PARITY_MANIFEST_PATH = fixturepath(
-  'lang',
-  'parity',
-  'manifest.json',
-)
 export const LANG_INTEGRATION_MANIFEST_PATH = fixturepath(
   'lang',
   'integration',

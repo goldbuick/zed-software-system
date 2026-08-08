@@ -1,5 +1,3 @@
-import { vmboardrevert, vmboardsnapshot } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { boarderase } from 'zss/feature/boarderase'
 import { boardpivot } from 'zss/feature/boardpivot'
@@ -8,10 +6,10 @@ import {
   pivotdiscfromkeyword,
 } from 'zss/feature/boardpivotmath'
 import { boardremix } from 'zss/feature/boardremix'
+import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { PIVOT_SHEAR_KEYWORDS } from 'zss/firmware/autocompleteconstants'
-import { firmwarewaitforboard } from 'zss/firmware/boardwaitsync'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
@@ -118,20 +116,18 @@ export function readpivotsheardiscandfilterstart(
 }
 
 export const TRANSFORM_FIRMWARE = createfirmware()
-  .command('snapshot', ['board snapshot'], () => {
+  .command('snapshot', ['board snapshot'], (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    // create snapshot codepage on the VM (host), not the board runner
-    vmboardsnapshot(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board.id)
+    chip.set('didfail', ispresent(boardsnapshot(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
-  .command('revert', ['board to snapshot state'], () => {
+  .command('revert', ['board to snapshot state'], (chip) => {
     if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
       return 0
     }
-    // restore from snapshot on the VM (host), not the board runner
-    vmboardrevert(SOFTWARE, READ_CONTEXT.elementfocus, READ_CONTEXT.board.id)
+    chip.set('didfail', ispresent(boardrevert(READ_CONTEXT.board.id)) ? 0 : 1)
     return 0
   })
   .command(
@@ -150,9 +146,6 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       if (!ispresent(sourceboard)) {
         chip.set('didfail', 1)
         return 0
-      }
-      if (firmwarewaitforboard(sourceboard.id)) {
-        return 1
       }
       const filter = readfilter(words, ii)
       chip.set(
@@ -196,9 +189,6 @@ export const TRANSFORM_FIRMWARE = createfirmware()
       if (!ispresent(sourceboard)) {
         chip.set('didfail', 1)
         return 0
-      }
-      if (firmwarewaitforboard(sourceboard.id)) {
-        return 1
       }
       const filter = readfilter(words, ii)
       chip.set(
@@ -256,12 +246,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         y: dir.destpt.y - (READ_CONTEXT.element?.y ?? 0),
       }
 
-      // read board by eval dir
       const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
-      if (firmwarewaitforboard(board?.id)) {
-        return 1
-      }
-
       const filter = readfilter(words, ii)
       chip.set(
         'didfail',

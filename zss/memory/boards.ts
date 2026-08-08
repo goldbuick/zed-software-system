@@ -56,7 +56,7 @@ export function memoryreadelementkind(
   )
   if (ispresent(maybeobject)) {
     // Reuse cache only when page.code still matches; make-it stub then editor
-    // edit used to leave boardrunner stuck on empty kinddata forever.
+    // edit used to leave kinddata stuck on empty forever.
     if (
       ispresent(runtimedata.kinddata) &&
       runtimedata.kinddata.code === maybeobject.code

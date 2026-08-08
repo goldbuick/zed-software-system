@@ -21,11 +21,6 @@ const MEMORY = {
   loaders: {} as Record<string, string>,
 }
 
-const MEMORY_RUNNER = {
-  boardrunner: '',
-  assignedboard: '',
-}
-
 export function memoryreadloaders() {
   return MEMORY.loaders
 }
@@ -52,22 +47,6 @@ export function memoryisoperator(player: string) {
 
 export function memorywriteoperator(operator: string) {
   MEMORY.operator = operator
-}
-
-export function memoryreadboardrunner() {
-  return MEMORY_RUNNER.boardrunner
-}
-
-export function memorywriteboardrunner(player: string) {
-  MEMORY_RUNNER.boardrunner = player
-}
-
-export function memoryreadassignedboard() {
-  return MEMORY_RUNNER.assignedboard
-}
-
-export function memorywriteassignedboard(board: string) {
-  MEMORY_RUNNER.assignedboard = board
 }
 
 export function memoryreadtopic() {

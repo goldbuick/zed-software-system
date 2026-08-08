@@ -87,7 +87,7 @@ function runapplint(ctx: TaskContext): number {
       '-c',
       [
         'fail=0',
-        'depcruise zss/simspace.ts zss/boardrunnerspace.ts zss/sttspace.ts zss/ttsspace.ts --validate --config ops/depcruise.cjs &',
+        'depcruise zss/simspace.ts zss/sttspace.ts zss/ttsspace.ts --validate --config ops/depcruise.cjs &',
         'p1=$!',
         "( eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && eslint 'ops/infra/net-*-worker.js' --report-unused-disable-directives --max-warnings 0 ) &",
         'p2=$!',
@@ -194,7 +194,7 @@ export const OPS_TEST_TASKS: TaskDef[] = [
   def('ops:test:coverage', {
     description: 'Jest with coverage on selected VM/gadget modules',
     run: shell(
-      "yarn jest --config ops/jest.config.ts --coverage --collectCoverageFrom='zss/device/vm/gadgetsynctick.ts' --collectCoverageFrom='zss/device/vm/handlers/scroll.ts' --collectCoverageFrom='zss/device/vm/handlers/ticktock.ts' --collectCoverageFrom='zss/device/boardrunner/handlers/linkdead.ts' --collectCoverageFrom='zss/device/gadgetclient.ts'",
+      "yarn jest --config ops/jest.config.ts --coverage --collectCoverageFrom='zss/device/vm/gadgetsynctick.ts' --collectCoverageFrom='zss/device/vm/handlers/scroll.ts' --collectCoverageFrom='zss/device/vm/handlers/ticktock.ts' --collectCoverageFrom='zss/device/gadgetclient.ts'",
     ),
   }),
   def('ops:audit:deadcode', {

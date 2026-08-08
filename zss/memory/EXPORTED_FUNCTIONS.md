@@ -8,11 +8,9 @@ The previous monolithic `index.ts` has been split into smaller modules. Per-modu
 
 The MEMORY singleton plus its book/loader/operator/topic accessors.
 
-- **memoryreadroot()** / **MEMORY_ROOT** (type) - Reads the live MEMORY object (used by jsonpipe sync to the boardrunner)
+- **memoryreadroot()** / **MEMORY_ROOT** (type) - Reads the live MEMORY object
 - **memoryreadsession()** - Returns the session ID
 - **memoryreadoperator()**, **memoryisoperator(player)**, **memorywriteoperator(operator)** - Operator player accessors
-- **memoryreadboardrunner()**, **memorywriteboardrunner(player)** - Boardrunner worker client player id (worker-local; omitted from jsonpipe root sync)
-- **memoryreadassignedboard()**, **memorywriteassignedboard(board)** - Elected board codepage id on the boardrunner worker (worker-local; omitted from jsonpipe root sync)
 - **memoryreadtopic()**, **memorywritetopic(topic)** - Multiplayer topic accessors
 - **memoryreadhalt()**, **memorywritehalt(halt)** - Dev/halt mode accessors
 - **memoryreadsimfreeze()**, **memorywritesimfreeze(frozen)** - Sim freeze gate (skips the VM tick when true)
@@ -39,20 +37,20 @@ Per-id flag bag (boundary-backed in `MEMORY.books[*].flags`).
 
 ## boundaries.ts
 
-Boundary store: opaque jsonpipe slices keyed by id (board, codepage runtime, chip, gadget, synth, layers, tracking, player). Used to ship slices to the boardrunner.
+Boundary store: opaque keyed slices (board runtime, chip, gadget, synth, layers, tracking, player).
 
 - **memoryboundaryget(id)**, **memoryboundaryset(id, payload)**, **memoryboundarydelete(id)**, **memoryboundaryalloc(payload, maybeid?)**, **memoryboundariesclear()**
 
 ## boundaryrouting.ts
 
-- **memorycollectboundaryidsforboard(book, board)** - Returns the set of boundary ids that must be jsonpiped to a board's runner each tick (board id + synth/layers/tracking flags + each object's chip/player/gadget ids)
+- **memorycollectboundaryidsforboard(book, board)** - Returns boundary ids associated with a board (runtime caches, chips, players, gadget layers)
 
 ## boardwait.ts
 
-Boardrunner hydration helpers: detect hydrated `CODE_PAGE_RUNTIME.board` and collect tick boundary ids from a board codepage list (pending access ids live in `zss/device/vm/state.ts` as `boardrunneraccess`).
+Board runtime readiness helpers for tests and boundary collection.
 
-- **memoryisboardruntimehydrated(boardid)**, **memoryboardidforwait(board, fallbackid?)**
-- **memorycollecttickboundaries(book, boards)** - Union of listed codepage ids and each hydrated board's `memorycollectboundaryidsforboard` result
+- **memoryisboardready(boardid)**
+- **memorycollecttickboundaries(book, boards)** - Union of boundary ids for hydrated boards in the list
 
 ## jsonpipefilter.ts
 
@@ -124,7 +122,7 @@ Lookup tables (object id → pt, named indices).
 
 ## boardtransitions.ts
 
-Edge / corner-exit detection used by `boardrunner` board hops.
+Edge / corner-exit detection used by cross-board player moves.
 
 ## boardvisuals.ts
 
@@ -200,7 +198,7 @@ Chip OS / tick loop.
 - **memorygc()**, **memoryhaltchip(id)**, **memoryrestartallchipsandflags()**, **memorymessagechip(message)**
 - **memoryrepeatclilast(player)**, **memoryruncli(player, cli, tracking?)**
 - **memorytickloaders()** - Runs all queued loaders (sim VM only)
-- **memorytickmain(timestamp, boards, playeronly?)** - Runs one tick across the supplied boards (called by both the sim VM and the boardrunner)
+- **memorytickmain(timestamp, boards, playeronly?)** - Runs one tick across the supplied boards (sim VM only, via handleticktock)
 - **memorytickobject(book, board, object, code)**, **memorytickonce(book, board, element, code, id, label)**
 - **memoryruncodepage(address, label)**
 - **memoryunlockscroll(id, player)**

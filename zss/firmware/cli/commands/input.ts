@@ -1,4 +1,4 @@
-import { boardrunnerinput } from 'zss/device/api'
+import { vminput } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { FIRMWARE } from 'zss/firmware'
 import { USERINPUT_ACTIONS } from 'zss/firmware/autocompleteconstants'
@@ -36,7 +36,7 @@ export function registerinputcommands(fw: FIRMWARE): FIRMWARE {
       const [action] = readargs(words, 0, [ARG_TYPE.NAME])
       const entry = USERINPUT_MAP[NAME(action)]
       if (entry) {
-        boardrunnerinput(SOFTWARE, player, entry[0], entry[1])
+        vminput(SOFTWARE, player, entry[0], entry[1])
       }
       return 0
     },

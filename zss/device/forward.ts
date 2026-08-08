@@ -33,18 +33,15 @@ export function createforward(handler: (message: MESSAGE) => void) {
   return { forward, disconnect }
 }
 
-// outbound message server -> client (peer host)
 export function shouldforwardonpeerserver(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
     case 'ticktock':
       return false
   }
-  // todo, don't forward player scoped messages to peers that will block them
   return true
 }
 
-// outbound message client -> server (peer join)
 export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'ready':
@@ -55,7 +52,6 @@ export function shouldforwardonpeerclient(message: MESSAGE): boolean {
   return true
 }
 
-// create server -> client forward (peer host wire)
 export function shouldforwardservertoclient(message: MESSAGE): boolean {
   switch (message.target) {
     case 'log':
@@ -74,7 +70,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'modem':
         case 'bridge':
         case 'register':
-        case 'boardrunner':
         case 'gadgetclient':
         case 'perfreport':
         case 'netterminal':
@@ -87,7 +82,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
         case 'acklogin':
         case 'ackoperator':
         case 'ackzsswords':
-        case 'boardrunner':
         case 'gadgetclient':
           return true
       }
@@ -97,7 +91,6 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
   return false
 }
 
-// create client -> server forward (peer join wire)
 export function shouldforwardclienttoserver(message: MESSAGE): boolean {
   const route = parsetarget(message.target)
   switch (route.target) {
@@ -111,27 +104,6 @@ export function shouldforwardclienttoserver(message: MESSAGE): boolean {
     case 'desync':
     case 'joinack':
       return true
-  }
-  return false
-}
-
-// create client -> boardrunner forward (peer join wire)
-export function shouldforwardclienttoboardrunner(message: MESSAGE): boolean {
-  switch (message.target) {
-    case 'ticktock':
-      return false
-    case 'second':
-    case 'ready':
-      return true
-    default: {
-      const route = parsetarget(message.target)
-      switch (route.target) {
-        case 'chip':
-        case 'boardrunner':
-          return true
-      }
-      break
-    }
   }
   return false
 }

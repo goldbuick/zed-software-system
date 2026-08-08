@@ -1,5 +1,3 @@
-import { vmplayermovetoboard } from 'zss/device/api'
-import { SOFTWARE } from 'zss/device/session'
 import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
 import { memorytryjoindestination } from 'zss/feature/joinurlflow'
 import { ptwithin } from 'zss/mapping/2d'
@@ -9,7 +7,16 @@ import { PT } from 'zss/words/types'
 import { memorymoveboardobject } from './boardmovement'
 import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
-import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
+import { memorymoveplayertoboard } from './playermanagement'
+import { memoryreadbookbysoftware } from './session'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  MEMORY_LABEL,
+} from './types'
 
 function memorytryexitaddress(
   elementid: string,
@@ -26,7 +33,11 @@ function memorytryexitaddress(
   if (!ispresent(destboard)) {
     return false
   }
-  vmplayermovetoboard(SOFTWARE, elementid, elementid, destboard.id, destpt)
+  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  if (!ispresent(mainbook)) {
+    return false
+  }
+  memorymoveplayertoboard(mainbook, elementid, destboard.id, destpt)
   return true
 }
 

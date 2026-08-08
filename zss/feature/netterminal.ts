@@ -1,5 +1,5 @@
 import Peer, { DataConnection } from 'peerjs'
-import { createdevice, createmessage } from 'zss/device'
+import { createdevice, createmessage, parsetarget } from 'zss/device'
 import {
   apierror,
   apilog,
@@ -11,7 +11,6 @@ import {
 import { doasync } from 'zss/device/doasync'
 import {
   createforward,
-  shouldforwardclienttoboardrunner,
   shouldforwardclienttoserver,
   shouldforwardonpeerclient,
   shouldforwardonpeerserver,
@@ -20,13 +19,6 @@ import {
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
-import {
-  NETTERMINAL_MAX_JOINS,
-  type PEER_ROSTER_ENTRY,
-  resolvejoinroute,
-  shoulddialpeer,
-  shouldforwardonjoinedge,
-} from 'zss/feature/netterminalpeerclique'
 import {
   decodepeerwire,
   encodepeerwire,
@@ -79,14 +71,28 @@ let signalreconnectverifytimer: ReturnType<typeof setTimeout> | undefined
 let signalretrytimer: ReturnType<typeof setTimeout> | undefined
 let netterminalunloadregistered = false
 
+const NETTERMINAL_MAX_JOINS = 10
+
+type PEER_ROSTER_ENTRY = {
+  player: string
+  peerid: string
+}
+
+function shoulddialpeer(selfpeerid: string, otherpeerid: string): boolean {
+  if (!selfpeerid || !otherpeerid || selfpeerid === otherpeerid) {
+    return false
+  }
+  return selfpeerid < otherpeerid
+}
+
+function shouldforwardchiponjoinedge(message: MESSAGE): boolean {
+  return parsetarget(message.target).target === 'chip'
+}
+
 /** peerid -> player (roster) */
 const playerbypeer: Record<string, string> = {}
 /** player -> peerid */
 const peerbyplayer: Record<string, string> = {}
-/** board -> runner player */
-const boardtorunner: Record<string, string> = {}
-/** player -> board */
-const playertoboard: Record<string, string> = {}
 /** open join-join (and host-tracked join) connections by remote peer id */
 const peerconnections = new Map<string, DataConnection>()
 /** peers we already dialed this session (avoid repeat connect storms) */
@@ -98,12 +104,6 @@ function clearpeercliquestate() {
   }
   for (const key of Object.keys(peerbyplayer)) {
     delete peerbyplayer[key]
-  }
-  for (const key of Object.keys(boardtorunner)) {
-    delete boardtorunner[key]
-  }
-  for (const key of Object.keys(playertoboard)) {
-    delete playertoboard[key]
   }
   peerconnections.clear()
   dialedinpeers.clear()
@@ -178,16 +178,6 @@ function peersessionforsessionrewrite(): string {
   return SOFTWARE.session() || readplatformsessionsid()
 }
 
-function openjoinpeerset(): Set<string> {
-  const open = new Set<string>()
-  for (const [peerid, conn] of peerconnections) {
-    if (peerid !== subscribetopic && conn.open) {
-      open.add(peerid)
-    }
-  }
-  return open
-}
-
 function countopenjoins(): number {
   let n = 0
   for (const [peerid, conn] of peerconnections) {
@@ -226,24 +216,6 @@ function applyrosterentries(entries: PEER_ROSTER_ENTRY[]) {
     }
     playerbypeer[entry.peerid] = entry.player
     peerbyplayer[entry.player] = entry.peerid
-  }
-}
-
-function applyrunnmap(
-  runners: Record<string, string>,
-  playerboards: Record<string, string>,
-) {
-  for (const key of Object.keys(boardtorunner)) {
-    delete boardtorunner[key]
-  }
-  for (const key of Object.keys(playertoboard)) {
-    delete playertoboard[key]
-  }
-  for (const board of Object.keys(runners)) {
-    boardtorunner[board] = runners[board]
-  }
-  for (const pid of Object.keys(playerboards)) {
-    playertoboard[pid] = playerboards[pid]
   }
 }
 
@@ -360,30 +332,9 @@ function handledataconnection(dataconnection: DataConnection) {
       if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
         return
       }
-      const selfpeerid = networkpeer.id ?? ''
-      if (shouldforwardonjoinedge(message)) {
-        const route = resolvejoinroute({
-          message,
-          selfpeerid,
-          hostpeerid: subscribetopic,
-          playertopeer: peerbyplayer,
-          boardtorunner,
-          playertoboard,
-          openjoinpeers: openjoinpeerset(),
-        })
-        if (route.kind === 'local') {
-          return
-        }
-        if (route.kind === 'direct') {
-          // join-join bridge on that edge sends; XOR skip star
-          return
-        }
-        sendpeer(dataconnection, message)
-        return
-      }
       if (
-        shouldforwardclienttoserver(message) ||
-        shouldforwardclienttoboardrunner(message)
+        shouldforwardchiponjoinedge(message) ||
+        shouldforwardclienttoserver(message)
       ) {
         sendpeer(dataconnection, message)
       }
@@ -410,22 +361,10 @@ function handledataconnection(dataconnection: DataConnection) {
       if (!ispresent(networkpeer) || !shouldforwardonpeerclient(message)) {
         return
       }
-      if (!shouldforwardonjoinedge(message)) {
+      if (!shouldforwardchiponjoinedge(message)) {
         return
       }
-      const selfpeerid = networkpeer.id ?? ''
-      const route = resolvejoinroute({
-        message,
-        selfpeerid,
-        hostpeerid: subscribetopic,
-        playertopeer: peerbyplayer,
-        boardtorunner,
-        playertoboard,
-        openjoinpeers: openjoinpeerset(),
-      })
-      if (route.kind === 'direct' && route.peerid === remotepeer) {
-        sendpeer(dataconnection, message)
-      }
+      sendpeer(dataconnection, message)
     })
   }
 
@@ -583,24 +522,6 @@ createdevice('netterminal', [], (message) => {
         `peer roster ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`,
       )
       ensurejoinclique()
-      break
-    }
-    case 'runnmap': {
-      const data = message.data
-      if (!isarray(data) || data.length < 2) {
-        return
-      }
-      const runners = data[0] as Record<string, string>
-      const playerboards = data[1] as Record<string, string>
-      if (
-        !runners ||
-        typeof runners !== 'object' ||
-        !playerboards ||
-        typeof playerboards !== 'object'
-      ) {
-        return
-      }
-      applyrunnmap(runners, playerboards)
       break
     }
     case 'peerhello':

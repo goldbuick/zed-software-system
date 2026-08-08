@@ -60,8 +60,6 @@ const config: Config = {
   ],
   globalTeardown: '<rootDir>/ops/tests/setup/globalteardown.cjs',
   testPathIgnorePatterns: [
-    '<rootDir>/ops/tests/unit/memory/wasm/wasmparity.test.ts',
-    '<rootDir>/ops/tests/unit/memory/wasm/regenfixtures.test.ts',
     ...(process.env.ZSS_JEST_INCLUDE_CORPUS_SCREENSHOTS === '1'
       ? []
       : [CORPUS_SCREENSHOTS_TEST]),
@@ -92,7 +90,6 @@ const config: Config = {
     './zss/device/vm/gadgetsynctick.ts': { lines: 70, functions: 70 },
     './zss/device/vm/handlers/scroll.ts': { lines: 60 },
     './zss/device/vm/handlers/ticktock.ts': { lines: 50 },
-    './zss/device/boardrunner/handlers/linkdead.ts': { lines: 70 },
   },
 }
 

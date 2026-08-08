@@ -6,14 +6,12 @@ import { hub } from 'zss/hub'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import boardrunnerspace from './boardrunnerspace??worker'
 import simspace from './simspace??worker'
 import sttspace from './sttspace??worker'
 import ttsspace from './ttsspace??worker'
 
 const WORKER_CONFIG_ACK_TIMEOUT_MS = 10_000
 
-let boardrunner: MAYBE<Worker>
 let platform: MAYBE<Worker>
 let stt: MAYBE<Worker>
 let tts: MAYBE<Worker>
@@ -51,7 +49,6 @@ function waitworkerconfigack(worker: Worker, label: string): Promise<void> {
   })
 }
 
-/** Forward worker debugingest payloads to the page console. */
 function attachworkerdebugforward(worker: Worker, label: string) {
   worker.addEventListener('message', (event: MessageEvent) => {
     if (event.data?.target !== 'debug') {
@@ -77,7 +74,6 @@ function ensureworkerbootdevice() {
     if (route.target === 'tts') {
       const existed = ispresent(tts)
       const worker = ensurettsworker()
-      // First message may race hub.join on the new worker; deliver once via port.
       if (!existed && worker) {
         worker.postMessage(message)
       }
@@ -127,22 +123,15 @@ export function createplatform(isstub = false, climode = false) {
   hub.join(platformsession)
   ensureworkerbootdevice()
 
-  boardrunner = new boardrunnerspace({ name: 'boardrunner' })
-  attachworkerdebugforward(boardrunner, 'boardrunner')
-  postworkercfg(boardrunner, { session: platformsession })
-
   void (async () => {
     try {
-      if (!ispresent(boardrunner)) {
-        return
-      }
-      await waitworkerconfigack(boardrunner, 'boardrunner')
       if (isstub) {
         joinvmdevice = startjoinvm(platformsession)
       } else {
         platform = new simspace({ name: 'sim' })
         attachworkerdebugforward(platform, 'sim')
         postworkercfg(platform, { climode, session: platformsession })
+        await waitworkerconfigack(platform, 'sim')
       }
     } catch (err) {
       platformbooting = false
@@ -165,10 +154,6 @@ export function createplatform(isstub = false, climode = false) {
       workerbootdevice.disconnect()
     }
     workerbootdevice = undefined
-    if (ispresent(boardrunner)) {
-      boardrunner.terminate()
-    }
-    boardrunner = undefined
     if (ispresent(platform)) {
       platform.terminate()
     }

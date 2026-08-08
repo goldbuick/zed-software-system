@@ -10,16 +10,8 @@ import {
   handleplayertoken,
   handlesearch,
 } from './auth'
-import { handleboardrevert } from './boardrevert'
-import { handleboardrunneraccess } from './boardrunneraccess'
-import { handleboardrunnerack } from './boardrunnerack'
-import { handleboardrunnerdesync } from './boardrunnerdesync'
-import { handleboardrunnerpaint } from './boardrunnerpaint'
-import { handleboardrunnerpatch } from './boardrunnerpatch'
-import { handleboardsnapshot } from './boardsnapshot'
 import { handlebookmarkscroll } from './bookmarkscroll'
 import { handlebooks } from './books'
-import { handlebuildboard } from './buildboard'
 import { handlecli, handleclirepeatlast } from './cli'
 import { handlecoderelease, handlecodewatch } from './codewatch'
 import { handledoot } from './doot'
@@ -79,16 +71,8 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   gadgetdesync: handlegadgetdesync,
   halt: handlehalt,
   ticktock: handleticktock,
-  boardrunnerack: handleboardrunnerack,
-  boardrunneraccess: handleboardrunneraccess,
-  boardrunnerpaint: handleboardrunnerpaint,
-  boardrunnerpatch: handleboardrunnerpatch,
   playermovetoboard: handleplayermovetoboard,
   playergotoboard: handleplayergotoboard,
-  buildboard: handlebuildboard,
-  boardsnapshot: handleboardsnapshot,
-  boardrevert: handleboardrevert,
-  desync: handleboardrunnerdesync,
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,

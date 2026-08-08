@@ -10,7 +10,7 @@ Understand the **root cause** in the existing architecture before changing behav
 ## Required before fixing a bug
 
 1. **Root cause** — explain *why* the bug happens (stale read, wrong emitter, missing invalidation, race), not just *what* looks broken.
-2. **Existing owner** — name the module/function that should own the fix (e.g. join worker tick, boundary pipe emit, charedit write path).
+2. **Existing owner** — name the module/function that should own the fix (e.g. handleticktock, charedit write path, gadget layer cache rebuild).
 3. **Smallest in-place change** — prefer correcting logic in that owner over routing around it.
 
 ## Prohibited as bug fixes
@@ -31,10 +31,10 @@ Understand the **root cause** in the existing architecture before changing behav
 
 ```typescript
 // ❌ BAD — new notify system to force host resync after charedit
-memoryregisterboardsyncnotify(() => { boardrunnerpushupdates(); gadgetsynctick() })
+memoryregisterboardsyncnotify(() => { gadgetsynctick() })
 
-// ✅ GOOD — fix join worker so layer cache rebuilds before pushworkerupdates()
-// (in the existing tick handler that already owns push timing)
+// ✅ GOOD — fix handleticktock so layer cache rebuilds before gadgetsynctick
+// (in the existing tick handler that already owns projection timing)
 ```
 
 If root cause is unknown, stop at diagnosis (repro + logs). Do not add architecture to compensate.

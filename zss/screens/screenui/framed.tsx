@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 import {
-  boardrunnerinput,
   registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
   synthupdate,
   vmclirepeatlast,
   vmfindany,
+  vminput,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
@@ -44,26 +44,8 @@ function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   if (mods.shift) {
     bits |= INPUT_SHIFT
   }
-  // Keyboard shift+arrow is MOVE with shift (UI selection). Game maps that to shoot.
-  let resolved = input
-  if (mods.shift) {
-    switch (input) {
-      case INPUT.MOVE_LEFT:
-        resolved = INPUT.SHOOT_LEFT
-        break
-      case INPUT.MOVE_RIGHT:
-        resolved = INPUT.SHOOT_RIGHT
-        break
-      case INPUT.MOVE_UP:
-        resolved = INPUT.SHOOT_UP
-        break
-      case INPUT.MOVE_DOWN:
-        resolved = INPUT.SHOOT_DOWN
-        break
-    }
-  }
   if (ispid(player)) {
-    boardrunnerinput(SOFTWARE, player, resolved, bits)
+    vminput(SOFTWARE, player, input, bits)
   }
 }
 

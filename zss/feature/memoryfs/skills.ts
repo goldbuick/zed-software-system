@@ -40,7 +40,7 @@ description: >-
 **Not for:**
 
 - Template authoring under \`ops/fixtures/content/templates/\` -- use skill \`book-content\` when available
-- jsonpipe / boardrunner worker sync -- that is not disk projection
+- jsonpipe / gadget sync -- that is not disk projection
 
 ## Attach and sync (must follow)
 

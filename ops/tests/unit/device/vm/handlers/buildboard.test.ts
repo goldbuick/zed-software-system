@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { handlebuildboard } from 'zss/device/vm/handlers/buildboard'
+import { boardbuild } from 'zss/feature/boardbuild'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -15,13 +15,7 @@ import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { CATEGORY } from 'zss/words/types'
 
-const boardrunnerpushupdates = jest.fn()
 const apierror = jest.fn()
-
-jest.mock('zss/device/vm/boardrunnerpushupdates', () => ({
-  boardrunnerpushupdates: (...args: unknown[]) =>
-    boardrunnerpushupdates(...args),
-}))
 
 jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')
@@ -84,11 +78,10 @@ function setupbooks(pages: ReturnType<typeof memorycreatecodepage>[]) {
   return book
 }
 
-describe('handlebuildboard', () => {
+describe('boardbuild', () => {
   afterEach(() => {
     memoryresetbooks([])
     READ_CONTEXT.book = undefined
-    boardrunnerpushupdates.mockClear()
     apierror.mockClear()
   })
 
@@ -109,13 +102,16 @@ describe('handlebuildboard', () => {
     const pagecountbefore = book.pages.length
 
     const vm = { emit: jest.fn() } as unknown as DEVICE
-    handlebuildboard(vm, {
-      player: 'pid_builder',
-      data: [currentcp.id, 'el1', 'exitsouth', 'hubboard'],
-    } as never)
+    boardbuild(
+      vm,
+      'pid_builder',
+      currentcp.id,
+      'el1',
+      'exitsouth',
+      'hubboard',
+    )
 
     expect(apierror).not.toHaveBeenCalled()
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
     expect(book.pages.length).toBe(pagecountbefore + 1)
 
     const newid = currentboard.exitsouth
@@ -138,10 +134,7 @@ describe('handlebuildboard', () => {
     setupbooks([currentcp])
 
     const vm = { emit: jest.fn() } as unknown as DEVICE
-    handlebuildboard(vm, {
-      player: 'pid_builder',
-      data: [currentcp.id, 'el1', 'exitsouth', undefined],
-    } as never)
+    boardbuild(vm, 'pid_builder', currentcp.id, 'el1', 'exitsouth')
 
     expect(apierror).not.toHaveBeenCalled()
     const newid = currentboard.exitsouth
@@ -149,7 +142,6 @@ describe('handlebuildboard', () => {
 
     const resolved = memoryreadboardbyaddress(newid!)
     expect(resolved?.exitnorth).toBe(currentcp.id)
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
   })
 
   it('fails loud when source board is missing', () => {
@@ -161,15 +153,18 @@ describe('handlebuildboard', () => {
     const pagecountbefore = book.pages.length
 
     const vm = { emit: jest.fn() } as unknown as DEVICE
-    handlebuildboard(vm, {
-      player: 'pid_builder',
-      data: [currentcp.id, 'el1', 'exitsouth', 'missingboard'],
-    } as never)
+    boardbuild(
+      vm,
+      'pid_builder',
+      currentcp.id,
+      'el1',
+      'exitsouth',
+      'missingboard',
+    )
 
     expect(apierror).toHaveBeenCalled()
     expect(currentboard.exitsouth).toBeUndefined()
     expect(book.pages.length).toBe(pagecountbefore)
-    expect(boardrunnerpushupdates).not.toHaveBeenCalled()
   })
 
   it('stores new board id in player flags for non-exit stats', () => {
@@ -184,10 +179,7 @@ describe('handlebuildboard', () => {
     setupbooks([hubcp, currentcp])
 
     const vm = { emit: jest.fn() } as unknown as DEVICE
-    handlebuildboard(vm, {
-      player: 'pid_builder',
-      data: [currentcp.id, 'el1', 'myroom', 'hubboard'],
-    } as never)
+    boardbuild(vm, 'pid_builder', currentcp.id, 'el1', 'myroom', 'hubboard')
 
     expect(apierror).not.toHaveBeenCalled()
     expect(currentboard.exitsouth).toBeUndefined()
@@ -217,16 +209,12 @@ describe('handlebuildboard', () => {
     setupbooks([hubcp, currentcp])
 
     const vm = { emit: jest.fn() } as unknown as DEVICE
-    handlebuildboard(vm, {
-      player: 'pid_builder',
-      data: [currentcp.id, 'el1', 'p1', 'hubboard'],
-    } as never)
+    boardbuild(vm, 'pid_builder', currentcp.id, 'el1', 'p1', 'hubboard')
 
     expect(apierror).not.toHaveBeenCalled()
     expect(currentboard.objects.el1.p1).toBeTruthy()
     expect(currentboard.objects.el1.p1).not.toBe(hubcp.id)
     expect(memoryreadflags('pid_builder').p1).toBeUndefined()
-    expect(boardrunnerpushupdates).toHaveBeenCalledWith(vm)
   })
 
   it('fails loud when standard element stat has missing element', () => {
@@ -242,14 +230,10 @@ describe('handlebuildboard', () => {
     const pagecountbefore = book.pages.length
 
     const vm = { emit: jest.fn() } as unknown as DEVICE
-    handlebuildboard(vm, {
-      player: 'pid_builder',
-      data: [currentcp.id, 'missingel', 'p1', 'hubboard'],
-    } as never)
+    boardbuild(vm, 'pid_builder', currentcp.id, 'missingel', 'p1', 'hubboard')
 
     expect(apierror).toHaveBeenCalled()
     expect(book.pages.length).toBe(pagecountbefore)
     expect(memoryreadflags('pid_builder').p1).toBeUndefined()
-    expect(boardrunnerpushupdates).not.toHaveBeenCalled()
   })
 })

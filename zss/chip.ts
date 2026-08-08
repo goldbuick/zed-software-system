@@ -713,9 +713,6 @@ export function createchip(
       return !!flags.ys || chip.checkcount()
     },
     send(player, chipid, message, data) {
-      // need two emits here one for vm: one for boardrunner:
-      // or do we have one prefix that gets forwarded to both?
-      // SOFTWARE.emit(player, `${chipid}:${message}`, data)
       chipmessage(SOFTWARE, player, chipid, message, data)
     },
     lock(allowed) {
@@ -1121,7 +1118,8 @@ export function createchip(
       for (let i = 0; i < words.length; ) {
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
-        if (lastvalue) {
+        // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
+        if (maptoresult(lastvalue)) {
           break // or returns the first truthy value
         }
         i = next
@@ -1133,7 +1131,8 @@ export function createchip(
       for (let i = 0; i < words.length; ) {
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
-        if (!lastvalue) {
+        // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
+        if (!maptoresult(lastvalue)) {
           break // and returns the first falsy value, or the last value
         }
         i = next
