@@ -126,14 +126,7 @@ export const FlatGraphics = memo(function FlatGraphics({
       tfocusy,
       delta,
     )
-    // Keep mesh on the same clock as focus/grid (useLayoutEffect alone races endgame).
-    syncliveboardworldoffset(
-      liveboardref.current,
-      userdata,
-      currentboard,
-      drawwidth,
-      drawheight,
-    )
+    // Live board world offset: useLayoutEffect only (useFrame ahead of React remount = void).
     stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
 
     const bias = readgridbias(userdata)
@@ -272,7 +265,7 @@ export const FlatGraphics = memo(function FlatGraphics({
   const boardid = gadget.board ?? ''
   const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
   const rendergrid = readboardgridforrender(camuserdata, boardid)
-  // Live board always at path-relative world slot (no settle snap / bias offset).
+  // Wait-before-start: offset live board only after exit-preview strip commits.
   useLayoutEffect(() => {
     syncliveboardworldoffset(
       liveboardref.current,

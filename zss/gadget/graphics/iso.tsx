@@ -174,14 +174,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       tfocusy,
       delta,
     )
-    // Keep mesh on the same clock as focus/grid (useLayoutEffect alone races endgame).
-    syncliveboardworldoffset(
-      liveboardref.current,
-      userdata,
-      currentboard,
-      drawwidth,
-      drawheight,
-    )
+    // Live board world offset: useLayoutEffect only (useFrame ahead of React remount = void).
     const gadgetforstash = useGadgetClient.getState().gadget
     stashfocusexitsnap(userdata, gadgettoexitsnap(gadgetforstash))
 
@@ -310,6 +303,7 @@ export const IsoGraphics = memo(function IsoGraphics({
   const boardid = gadget.board ?? ''
   const visualpan = resolvepanviewforrender(panview, camuserdata, boardid)
   const rendergrid = readboardgridforrender(camuserdata, boardid)
+  // Wait-before-start: offset live board only after exit-preview strip commits.
   useLayoutEffect(() => {
     syncliveboardworldoffset(
       liveboardref.current,
