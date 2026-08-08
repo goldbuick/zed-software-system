@@ -40,4 +40,4 @@ Enable path samples and jsonpipe diff lines with `#admin` config **`memoryfslogg
 
 On attach/full sync, cafe emits multi-agent skills next to `memoryfs/`. Source of truth: [`skills.ts`](../skills.ts). Narrative / in-repo copies: [agent-skill.md](agent-skill.md).
 
-Related: jsonpipe syncs MEMORY to boardrunner workers -- not this disk projection.
+Related: jsonpipe syncs gadget projection (and memoryfs uses it for disk export) -- not this folder attach path.

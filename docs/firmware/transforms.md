@@ -6,11 +6,11 @@ title: transforms.ts
 
 ## Dependencies
 
-- `zss/device/api` — vmboardsnapshot, vmboardrevert
 - `zss/feature/boardcopy` — boardcopy
 - `zss/feature/boarderase` — boarderase
 - `zss/feature/boardpivot` — boardpivot
 - `zss/feature/boardremix` — boardremix
+- `zss/feature/boardsnapshot` — boardsnapshot, boardrevert
 - `zss/feature/boardweave` — boardweave
 - `zss/memory/*` — book/codepage lookups
 
@@ -18,8 +18,8 @@ title: transforms.ts
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `snapshot` | — | Thin emit to `vm:boardsnapshot`. Host creates MAIN `zss_snapshot_*` codepage and copies current board |
-| `revert` | — | Thin emit to `vm:boardrevert`. Host restores current board from snapshot codepage |
+| `snapshot` | — | Calls [`boardsnapshot`](../../feature/boardsnapshot.ts) on the sim — creates MAIN `zss_snapshot_*` codepage and copies current board |
+| `revert` | — | Calls [`boardrevert`](../../feature/boardsnapshot.ts) on the sim — restores current board from snapshot codepage |
 | `copy` | `stat` [filter…] | Copy region from board at stat to current board |
 | `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
 | `erase` | [filter…] | Erase matching elements (targetset / region); group names supported |
@@ -42,7 +42,7 @@ Helper that searches all books for a codepage of given type and stat/address. Us
 
 ## Implementation Notes
 
-- `snapshot` / `revert` do not create codepages on the boardrunner; they emit to the host VM (same pattern as `#build` → `vm:buildboard`)
+- `snapshot` / `revert` call feature modules directly on the sim (same pattern as `#build` → `boardbuild`)
 - `weave` uses `READ_CONTEXT.element` position for delta
 - `pivot` uses degrees converted to radians
 - All commands require READ_CONTEXT.book and READ_CONTEXT.board

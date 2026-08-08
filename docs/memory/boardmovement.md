@@ -19,7 +19,7 @@ title: boardmovement.ts
 - `./runtimeboundary` — memoryreadboardruntime (for the cached `lookup` table)
 - `./spatialqueries` — memorycheckcollision
 
-> **Cross-board moves** are not in this module any more. The boardrunner asks the sim VM via `vm:playermovetoboard` ([`vmplayermovetoboard`](../../device/api.ts)), which calls [`memorymoveplayertoboard`](../playermanagement.ts).
+> **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`.
 
 ## Exports
 

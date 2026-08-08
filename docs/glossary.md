@@ -165,7 +165,7 @@ CRDT library powering real-time collaborative tape editor sync.
 
 **Audience:** Dev · **Related:** bridge, join
 
-Join-mode stub VM on the main thread (`/join/` URL) without clock/tick; replaces sim only — boardrunner still spawns eagerly. (Older docs called this stubspace.)
+Join-mode thin VM on the main thread (`/join/` URL) without clock/tick; replaces the local sim worker only. Host owns authoritative MEMORY and ticks. (Older docs called this stubspace.)
 
 Source: [`zss/device/joinvm.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device/joinvm.ts)
 
@@ -259,7 +259,7 @@ Source: [`zss/hub.ts`](https://github.com/goldbuick/zed-software-system/blob/mai
 
 **Audience:** Dev · **Related:** hub, message
 
-Message handler registered on a hub: vm, register, boardrunner, synth, etc.
+Message handler registered on a hub: vm, register, gadgetclient, synth, etc.
 
 Source: [`zss/device.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device.ts)
 
@@ -281,19 +281,11 @@ Source: [`zss/device/forward.ts`](https://github.com/goldbuick/zed-software-syst
 
 ### VM
 
-**Audience:** Dev · **Related:** boardrunner, ticktock
+**Audience:** Dev · **Related:** ticktock, memorytickmain
 
 Sim-worker vm device — authoritative owner of MEMORY and game tick loop.
 
 Source: [`zss/device/vm.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device/vm.ts)
-
-### boardrunner
-
-**Audience:** Dev · **Related:** election, boundary
-
-Elected player whose worker runs chip ticks for one active board.
-
-Source: [`zss/device/boardrunner.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device/boardrunner.ts)
 
 ### boundary
 
@@ -321,7 +313,7 @@ Incremental RFC 6902 jsonpipe diff applied to prior snapshot state.
 
 **Audience:** Dev · **Related:** paint, patch
 
-Snapshot + patch protocol used for gadget, boardrunner, and boundary sync.
+Snapshot + patch protocol used for gadgetclient projection and memoryfs disk export.
 
 Source: [`zss/feature/jsonpipe/`](https://github.com/goldbuick/zed-software-system/blob/main/zss/feature/jsonpipe/)
 
@@ -429,17 +421,9 @@ Primary simulation clock message; one frame of game logic per tick.
 
 Source: [`zss/device/vm/handlers/ticktock.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device/vm/handlers/ticktock.ts)
 
-### election
-
-**Audience:** Dev · **Related:** boardrunner
-
-VM picks eligible player on each board as boardrunner; evicts on ack timeout.
-
-Source: [`zss/device/vm/boardrunnermanagement.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device/vm/boardrunnermanagement.ts)
-
 ### memorytickmain
 
-**Audience:** Dev · **Related:** CHIP, boardrunner
+**Audience:** Dev · **Related:** CHIP, ticktock
 
 Runs all element CHIP generators on a board for one simulation frame.
 

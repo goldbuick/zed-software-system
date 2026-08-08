@@ -8,10 +8,8 @@ title: board.ts
 
 - `zss/chip` — CHIP type
 - `zss/feature/boardcopy` — boardcopy, mapelementcopy
+- `zss/feature/boardbuild` — boardbuild
 - `zss/memory/*` — board/element ops, movement, spatial queries, etc.
-- `zss/memory/boardwait.ts` — hydration checks and `memorycollecttickboundaries` for boardrunner ticks
-- `zss/device/vm/state.ts` — `boardrunneraccess` pending board codepage ids per elected board
-- `zss/firmware/boardwaitsync.ts` — `firmwarewaitforboard` (signals sim VM via `vmboardrunneraccess` when a command must wait for boundary hydration)
 - `zss/words/*` — argument parsing, kind/color/dir parsing, text formatting
 
 ## Command Categories
@@ -20,10 +18,10 @@ title: board.ts
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `build` | `stat` [, `source`] | Thin emit to `vm:buildboard`. Host creates a new TEMP board (optionally clones from source). Exit\* stats set bidirectional board exits. Other standard element stats (`p1`, `group`, …) write the new id on the invoking object; arbitrary names write player flags. Missing source or element fails loud (no create/link). |
-| `goto` | `stat` [, x, y] | Thin emit to `vm:playergotoboard`. Host resolves destination (passage match / x,y / start) and teleports the player. Cross-board `#goto` dither-dissolves to black then in on the local client; same-board position moves and edge exits are unchanged (edge exits keep camera pan). |
+| `build` | `stat` [, `source`] | Calls [`boardbuild`](../../feature/boardbuild.ts) on the sim. Creates a new TEMP board (optionally clones from source). Exit\* stats set bidirectional board exits. Other standard element stats (`p1`, `group`, …) write the new id on the invoking object; arbitrary names write player flags. Missing source or element fails loud (no create/link). |
+| `goto` | `stat` [, x, y] | Resolves destination (passage match / x,y / start) and calls [`memorymoveplayertoboard`](../../memory/playermanagement.ts). Cross-board `#goto` dither-dissolves to black then in on the local client; same-board position moves and edge exits are unchanged (edge exits keep camera pan). |
 
-Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) automatically wait one tick at a time until the other board’s runtime is synced from the sim VM. `build` and `goto` run on the host VM instead of waiting on the boardrunner.
+Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with over/under dirs, etc.) run on the sim against live MEMORY — no worker hydration waits.
 
 ### Element Placement
 

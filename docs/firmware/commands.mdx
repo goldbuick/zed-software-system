@@ -103,8 +103,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `set` | Variable to value |
 | `become` | Element into specified kind |
 | `bind` | Code from named element |
-| `char` | Character (self or at direction); cross-board dirs wait for target board hydration |
-| `color` | Color (self or at direction); cross-board dirs wait for target board hydration |
+| `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
+| `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `go` | Element in direction |
 | `walk` | Cause element to move in direction each tick |
 | `idle` | Execution until next tick |
@@ -128,8 +128,8 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `build` | Create board on host VM and link to stat. Optional source board; exit\* bidirectional; standard element stats on object, else player flags. Missing source/element fails loud. |
-| `goto` | Player to board by name or address with optional x, y (resolved on host VM) |
+| `build` | Create board via `boardbuild` on the sim and link to stat. Optional source board; exit\* bidirectional; standard element stats on object, else player flags. Missing source/element fails loud. |
+| `goto` | Teleport player via `memorymoveplayertoboard` — board by name or address with optional x, y |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
 | `push` | Target object in direction ONLY if pushable |
@@ -154,11 +154,11 @@ All firmware commands and their descriptions. Commands are available depending o
 
 | Command | Description |
 |---------|-------------|
-| `snapshot` | Board snapshot (host VM: `vm:boardsnapshot`) |
-| `revert` | Board to snapshot state (host VM: `vm:boardrevert`) |
+| `snapshot` | Board snapshot via `boardsnapshot` on the sim |
+| `revert` | Board to snapshot state via `boardrevert` on the sim |
 | `weave` | Board elements in direction |
-| `copy` | Region from source to current board (waits for source board hydration when different from current) |
-| `remix` | From source with pattern size and mirror to current board (same wait behavior as `copy`) |
+| `copy` | Region from source to current board |
+| `remix` | From source with pattern size and mirror to current board |
 | `pivot` | Board elements by degrees |
 
 ---

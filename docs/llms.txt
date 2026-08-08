@@ -85,14 +85,12 @@
 ## Lang
 
 - [ast.ts](https://zed.cafe/docs/lang/ast)
-- [C++ lang compiler modules](https://zed.cafe/docs/lang/native-module-map)
 - [formatlangerror.ts](https://zed.cafe/docs/lang/formatlangerror): Rewrites Chevrotain lexer and parser errors into short, ASCII messages for the editor and compile tape.
 - [generator.ts](https://zed.cafe/docs/lang/generator)
 - [Lang architecture](https://zed.cafe/docs/lang/architecture)
 - [Lang Documentation](https://zed.cafe/docs/lang/README)
 - [lexer.ts](https://zed.cafe/docs/lang/lexer)
 - [parser.ts](https://zed.cafe/docs/lang/parser)
-- [Per-script WASM module format](https://zed.cafe/docs/lang/wasm-module)
 - [transformer.ts](https://zed.cafe/docs/lang/transformer)
 - [visitor.ts](https://zed.cafe/docs/lang/visitor)
 - [visitortypes.ts](https://zed.cafe/docs/lang/visitortypes)
@@ -151,11 +149,8 @@
 
 - [Built-in scroll validation](https://zed.cafe/docs/ops/scroll-validation)
 - [Design: directional board-grid pan (global board space)](https://zed.cafe/docs/ops/design-directional-board-grid-pan)
-- [Design: join↔join PeerJS clique (prefer 1 hop)](https://zed.cafe/docs/ops/design-join-join-peer-clique)
 - [Firmware commands summary](https://zed.cafe/docs/ops/commands-summary)
 - [LiveKit Ingress (WHIP) → YouTube Live](https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live)
-- [Multiplayer, workers, PeerJS, and WASM runtime](https://zed.cafe/docs/ops/multiplayer-wasm-architecture)
-- [WASM C++ port: game sim and execution](https://zed.cafe/docs/ops/wasm-sim-port)
 - [Web broadcast → LiveKit migration (ZSS)](https://zed.cafe/docs/ops/web-broadcast-livekit)
 
 ## Parse

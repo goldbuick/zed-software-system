@@ -182,8 +182,6 @@ kind; **BUG** = argument-order defect.
 | [bookmarks.ts](../../feature/bookmarks.ts) | 2 `apitoast` (`pin not found`, `bookmark run ...`) | OK-ish | `pin not found` is a soft error shown transiently; acceptable but note if scrollback is preferred. |
 | [bookmark/*.ts](../register/handlers/bookmark/) (`contentsave`, `urlsave`, `delete`, `codepagesave`, `clisave`) | `apitoast` | OK | confirmations (`bookmarked $green...`, `bookmark removed`, `nothing to bookmark`). |
 | [element.ts](../../firmware/element.ts), [runtime.ts](../../firmware/runtime.ts), [loader.ts](../../firmware/loader.ts) | `apitoast` (`READ_CONTEXT.elementfocus`) | OK | element-focused notices. |
-| [boardrunner/handlers/idle.ts](../boardrunner/handlers/idle.ts), [tick.ts](../boardrunner/handlers/tick.ts) | `workstatus('idle ...'/'run ...')` | OK | progress. |
-| [boardrunner/handlers/linkdead.ts](../boardrunner/handlers/linkdead.ts) | `apilog` | OK | |
 
 ---
 

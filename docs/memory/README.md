@@ -31,7 +31,7 @@ The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`,
 | [gamesend.md](gamesend.md) | Send to element/boards |
 | [loader.md](loader.md) | Loader matching and dispatch |
 | [playermanagement.md](playermanagement.md) | Move player, spawn, boards |
-| [runtime.md](runtime.md) | Chip OS, tick, CLI, run (consumed by both the sim VM and the boardrunner) |
+| [runtime.md](runtime.md) | Chip OS, tick, CLI, run (sim VM via handleticktock) |
 | [spatialqueries.md](spatialqueries.md) | Collision, any, countof, path |
 | [rendering.md](rendering.md) | Gadget layer conversion, display |
 | [board-lighting.md](board-lighting.md) | Dark-board lighting (geometry, occlusion, shading) |

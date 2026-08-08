@@ -2,7 +2,7 @@
 title: Device documentation
 ---
 
-Devices are the message-oriented edges of ZSS: register (UI), vm (sim), boardrunner, bridge, synth, modem, clock, forward, and lazy TTS/STT workers.
+Devices are the message-oriented edges of ZSS: register (UI), vm (sim), bridge, synth, modem, clock, forward, and lazy TTS/STT workers.
 
 ## Module index
 

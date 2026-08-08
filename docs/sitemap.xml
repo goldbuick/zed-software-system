@@ -66,12 +66,10 @@
   <url><loc>https://zed.cafe/docs/lang/formatlangerror</loc></url>
   <url><loc>https://zed.cafe/docs/lang/generator</loc></url>
   <url><loc>https://zed.cafe/docs/lang/lexer</loc></url>
-  <url><loc>https://zed.cafe/docs/lang/native-module-map</loc></url>
   <url><loc>https://zed.cafe/docs/lang/parser</loc></url>
   <url><loc>https://zed.cafe/docs/lang/transformer</loc></url>
   <url><loc>https://zed.cafe/docs/lang/visitor</loc></url>
   <url><loc>https://zed.cafe/docs/lang/visitortypes</loc></url>
-  <url><loc>https://zed.cafe/docs/lang/wasm-module</loc></url>
   <url><loc>https://zed.cafe/docs/map</loc></url>
   <url><loc>https://zed.cafe/docs/mapping/2d</loc></url>
   <url><loc>https://zed.cafe/docs/mapping/README</loc></url>
@@ -116,11 +114,8 @@
   <url><loc>https://zed.cafe/docs/memoryfs</loc></url>
   <url><loc>https://zed.cafe/docs/ops/commands-summary</loc></url>
   <url><loc>https://zed.cafe/docs/ops/design-directional-board-grid-pan</loc></url>
-  <url><loc>https://zed.cafe/docs/ops/design-join-join-peer-clique</loc></url>
   <url><loc>https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live</loc></url>
-  <url><loc>https://zed.cafe/docs/ops/multiplayer-wasm-architecture</loc></url>
   <url><loc>https://zed.cafe/docs/ops/scroll-validation</loc></url>
-  <url><loc>https://zed.cafe/docs/ops/wasm-sim-port</loc></url>
   <url><loc>https://zed.cafe/docs/ops/web-broadcast-livekit</loc></url>
   <url><loc>https://zed.cafe/docs/parse/midi-import</loc></url>
   <url><loc>https://zed.cafe/docs/synth/README</loc></url>
