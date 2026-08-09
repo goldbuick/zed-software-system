@@ -16,6 +16,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **ROM** — Embedded help/documentation content
 - **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.md))
 - **memoryfs** — Projected MEMORY tree via folder drop ([memoryfs/docs](../memoryfs/docs/index.md))
+- **airshare** — Optical MEMORY transfer via fountain QR ([airshare/protocol](../airshare/protocol.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index

@@ -54,6 +54,42 @@ Opens Blume with `docs-site/` as cwd (repo-root `yarn blume` looks for the wrong
 
 ---
 
+# Airshare wire protocol
+Source: https://zed.cafe/docs/airshare/protocol
+
+# Airshare wire protocol
+
+Clean-room optical transfer for a single `Uint8Array` (compressed MEMORY). Not compatible with Decimen / decimen.app.
+
+## Frame layout
+
+| Offset | Size | Field |
+|--------|------|-------|
+| 0 | 1 | magic `0xA2` |
+| 1 | 1 | version `1` |
+| 2 | 4 | session id (BE) |
+| 6 | 4 | sequence (BE) |
+| 10 | 2 | block count K (BE) |
+| 12 | 2 | block size (BE) |
+| 14 | 4 | total payload length (BE) |
+| 18 | 32 | SHA-256 of full payload |
+| 50 | block size | coded block |
+
+Header size is 50 bytes. QR ECC L; payload bytes are raw binary (not base64).
+
+## Systematic carousel
+
+- For `seq < K`: frame payload is source block `seq` (zero-padded to block size).
+- For `seq >= K`: payload is XOR of a mid-degree subset of blocks. Degree and indices come from mulberry32 seeded by `(session, seq)` (integer-only; no `Math.log`).
+
+Receiver locks on stream identity (magic, version, session, K, block size, total length, hash). Any change resets the decoder. Peeling recovers all K blocks; trailing padding is trimmed via `totallen`. SHA-256 must match before `vm:books` apply.
+
+## Capacity
+
+Default target QR version 27 ECC L (~1465 byte capacity) so block size ≈ 1415. Sender loops forever; receiver needs any covering set of frames (full systematic sweep at zero loss).
+
+---
+
 # Architecture
 Source: https://zed.cafe/docs/architecture
 
@@ -1386,6 +1422,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **ROM** — Embedded help/documentation content
 - **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.md))
 - **memoryfs** — Projected MEMORY tree via folder drop ([memoryfs/docs](../memoryfs/docs/index.md))
+- **airshare** — Optical MEMORY transfer via fountain QR ([airshare/protocol](../airshare/protocol.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index
@@ -1796,9 +1833,9 @@ Source: https://zed.cafe/docs/features/cli-headless
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
-| zss oclif binary | Dev | Run cafe SPA in Playwright with Ink terminal overlay. | `headless/src/commands/run.ts` |
+| zss oclif binary | Dev | Run cafe SPA in Playwright with Ink terminal overlay. | `ops/headless/src/commands/run.ts` |
 | Headless boot | Dev | bootheadless() skips Canvas; same message stack. | `cafe/index.tsx` |
-| Node storage hooks | Dev | CLI injects __nodeStorageReadPlayer for persistence. | `headless/src/lib/app.tsx` |
+| Node storage hooks | Dev | CLI injects __nodeStorageReadPlayer for persistence. | `ops/headless/src/lib/app.tsx` |
 | Dev server mode | Dev | Attach to existing Vite dev server instead of cafe/dist. | `zss run --dev` |
 
 ---
@@ -2231,6 +2268,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `trash` | Books/codepages to delete (operator only) |
 | `dev` | Dev mode / halt execution (operator only) |
 | `share` | Share url (operator only) |
+| `airshare` | Optical MEMORY transfer: invite QR then stream; `receive` opens camera decode; `stop` cancels |
 | `save` | And persist current state |
 | `fork` | Tab with copy of state |
 | `nuke` | A countdown and reloads into an empty state (operator only) |
@@ -2251,7 +2289,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
-| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip youtube <local-bearer>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
 | `access` | Set base preset: `lockdown`, `creative`, or `open` (overrides preserved) |
 | `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |

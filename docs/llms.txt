@@ -26,6 +26,10 @@
 - [Storage & session](https://zed.cafe/docs/features/storage-session): Storage & session features in Zed Cafe / ZSS.
 - [Terminal & CLI](https://zed.cafe/docs/features/terminal-cli): Terminal & CLI features in Zed Cafe / ZSS.
 
+## Airshare
+
+- [Airshare wire protocol](https://zed.cafe/docs/airshare/protocol): Zed-owned fountain QR format for optical MEMORY transfer
+
 ## Device
 
 - [Device documentation](https://zed.cafe/docs/device/README)
