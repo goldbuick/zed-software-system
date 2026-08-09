@@ -7,7 +7,7 @@ jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
   ttsinfo: jest.fn(),
   ttsrequest: jest.fn(),
-  synthaudiobuffer: jest.fn(),
+  synthaudiobytes: jest.fn(),
 }))
 
 jest.mock('zss/device/session', () => ({

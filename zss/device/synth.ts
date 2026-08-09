@@ -1,7 +1,10 @@
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/device/doasync'
 import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
-import { unlockaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextunlock'
+import {
+  getliveaudiocontext,
+  unlockaudiocontext,
+} from 'zss/feature/synth/backend/wasm/audiocontextunlock'
 import { applyboardstate } from 'zss/feature/synth/frontend/applyboardstate'
 import {
   type FXNAME,
@@ -184,12 +187,29 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
       }
       break
-    case 'audiobuffer':
-      if (isarray(message.data)) {
-        const [, audiobuffer] = message.data as [string, AudioBuffer]
-        if (ispresent(audiobuffer) && backend) {
-          backend.playaudiobuffer(audiobuffer)
+    case 'audiobytes':
+      if (isarray(message.data) && backend) {
+        const [, bytes] = message.data as [string, ArrayBuffer]
+        if (!ispresent(bytes) || !(bytes instanceof ArrayBuffer)) {
+          break
         }
+        doasync(synthdevice, message.player, async () => {
+          try {
+            // decodeAudioData detaches its input; hub may still need the original
+            // for BroadcastChannel / peer pack in the same turn.
+            const copy = bytes.slice(0)
+            const ctx = getliveaudiocontext() ?? unlockaudiocontext()
+            const audiobuffer = await ctx.decodeAudioData(copy)
+            backend?.playaudiobuffer(audiobuffer)
+          } catch (err) {
+            apierror(
+              synthdevice,
+              message.player,
+              'synth audiobytes',
+              err instanceof Error ? err.message : String(err),
+            )
+          }
+        })
       }
       break
     case 'update':

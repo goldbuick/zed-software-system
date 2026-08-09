@@ -3,10 +3,10 @@ import {
   apierror,
   apitoast,
   registerbookmarkclisave,
-  registerbookmarkdelete,
   registerbookmarkscroll,
   registerterminalclose,
   registerterminalinclayout,
+  vmbookmarkdeleteprompt,
   vmcli,
   vmclirepeatlast,
   vmloader,
@@ -723,7 +723,8 @@ export function TerminalInput({
                     ) {
                       const id = pinids[rowi - sessioncount]
                       if (id) {
-                        registerbookmarkdelete(SOFTWARE, player, id)
+                        const label = pinlines[rowi - sessioncount] ?? id
+                        vmbookmarkdeleteprompt(SOFTWARE, player, id, label)
                       }
                       break
                     }

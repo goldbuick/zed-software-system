@@ -19,12 +19,14 @@ import { handlebookmarkclirun } from './bookmark/clirun'
 import { handlebookmarkclisave } from './bookmark/clisave'
 import { handlebookmarkcodepagecopytogame } from './bookmark/codepagecopytogame'
 import { handlebookmarkcodepagesave } from './bookmark/codepagesave'
+import { handlebookmarkcodepagesaveover } from './bookmark/codepagesaveover'
 import { handlebookmarkcontentsave } from './bookmark/contentsave'
 import { handlebookmarkdelete } from './bookmark/delete'
 import { handleeditorbookmarkscroll } from './bookmark/editorscroll'
 import { handlebookmarkscroll } from './bookmark/scroll'
 import { handlebookmarkurlnavigate } from './bookmark/urlnavigate'
 import { handlebookmarkurlsave } from './bookmark/urlsave'
+import { handlebookmarkurlsaveover } from './bookmark/urlsaveover'
 import { handlecontentcrosslogin } from './contentcrosslogin'
 import { handleeditorclose, handleeditoropen } from './editor'
 import {
@@ -76,8 +78,10 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   'bookmark:clisave': handlebookmarkclisave,
   'bookmark:clirun': handlebookmarkclirun,
   'bookmark:codepagesave': handlebookmarkcodepagesave,
+  'bookmark:codepagesaveover': handlebookmarkcodepagesaveover,
   'bookmark:codepagecopytogame': handlebookmarkcodepagecopytogame,
   'bookmark:urlsave': handlebookmarkurlsave,
+  'bookmark:urlsaveover': handlebookmarkurlsaveover,
   'bookmark:contentsave': handlebookmarkcontentsave,
   'bookmark:urlnavigate': handlebookmarkurlnavigate,
   'bookmark:delete': handlebookmarkdelete,

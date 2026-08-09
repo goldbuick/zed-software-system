@@ -66,7 +66,14 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
       switch (route.target) {
         case 'tts':
         case 'stt':
+          return true
         case 'synth':
+          // Host synthesizes once; joins play synth:audiobytes. Re-forwarding
+          // tts/ttsqueue would double-play on join.
+          if (route.path === 'tts' || route.path === 'ttsqueue') {
+            return false
+          }
+          return true
         case 'modem':
         case 'bridge':
         case 'register':

@@ -6,6 +6,7 @@ import {
 import { DIVIDER, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { isstring } from 'zss/mapping/types'
+import { memorycacheeditorbookmarkscrolllist } from 'zss/memory/bookmarkdeleteconfirm'
 
 export function memoryeditorbookmarkshorttitle(
   bookmark: ZssEditorBookmark,
@@ -21,6 +22,12 @@ export function memoryeditorbookmarkscroll(
   codepagename: string,
   codepagepath: string[],
 ): void {
+  memorycacheeditorbookmarkscrolllist(
+    player,
+    editorlist,
+    codepagename,
+    codepagepath,
+  )
   const lines: string[] = [
     zsszedlinkline(
       `snapshotcurrent hk s " S " 1 ${codepagepath.filter(isstring).join(' ')}`,
@@ -29,6 +36,7 @@ export function memoryeditorbookmarkscroll(
     DIVIDER,
   ]
 
+  const codepagepathargs = codepagepath.filter(isstring).join(' ')
   for (let i = 0; i < editorlist.length; ++i) {
     const bookmark = editorlist[i]
     const shorttitle = memoryeditorbookmarkshorttitle(bookmark)
@@ -40,7 +48,13 @@ export function memoryeditorbookmarkscroll(
     )
     lines.push(
       zsszedlinkline(
-        `editorbookmarkdel hyperlink ${bookmark.id}`,
+        `editorsaveover hyperlink ${bookmark.id} ${codepagepathargs}`,
+        '$192$196 save over',
+      ),
+    )
+    lines.push(
+      zsszedlinkline(
+        `editorbookmarkdel hyperlink next ${bookmark.id}`,
         '$RED$192$196 DELETE',
       ),
     )

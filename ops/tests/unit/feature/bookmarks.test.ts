@@ -2,9 +2,12 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
 import {
   ZSS_BOOKMARKS_KEY,
+  removebookmarkbyid,
   runterminalbookmarkclibyid,
+  updateeditorbookmarkbyid,
+  updateurlbookmarkbyid,
 } from 'zss/feature/bookmarks'
-import { storagereadvars } from 'zss/feature/storage'
+import { storagereadvars, storagewritevar } from 'zss/feature/storage'
 import { terminalbookmarkpindisplaylabel } from 'zss/feature/terminalbookmarkline'
 import { useTape } from 'zss/gadget/data/zustandstores'
 
@@ -29,6 +32,140 @@ describe('terminalbookmarkpindisplaylabel', () => {
     expect(
       terminalbookmarkpindisplaylabel('!hyperlink chip x;$GREENmy title'),
     ).toBe('$GREENmy title')
+  })
+})
+
+describe('updateurlbookmarkbyid', () => {
+  const blob = {
+    version: 1,
+    url: [
+      {
+        kind: 'url' as const,
+        id: 'u1',
+        name: 'my room',
+        href: 'https://old.example/',
+        createdat: 10,
+      },
+    ],
+    terminal: [],
+    editor: [],
+  }
+
+  beforeEach(() => {
+    jest.mocked(storagereadvars).mockResolvedValue({
+      [ZSS_BOOKMARKS_KEY]: structuredClone(blob),
+    })
+    jest.mocked(storagewritevar).mockClear()
+  })
+
+  it('replaces href and keeps name and id', async () => {
+    const entry = await updateurlbookmarkbyid('u1', 'https://new.example/')
+    expect(entry).toEqual(
+      expect.objectContaining({
+        id: 'u1',
+        name: 'my room',
+        href: 'https://new.example/',
+      }),
+    )
+    expect(entry?.createdat).toBeGreaterThan(10)
+    expect(storagewritevar).toHaveBeenCalledWith(
+      ZSS_BOOKMARKS_KEY,
+      expect.objectContaining({
+        url: [
+          expect.objectContaining({
+            id: 'u1',
+            name: 'my room',
+            href: 'https://new.example/',
+          }),
+        ],
+      }),
+    )
+  })
+
+  it('returns undefined when id missing', async () => {
+    const entry = await updateurlbookmarkbyid('missing', 'https://x/')
+    expect(entry).toBeUndefined()
+  })
+})
+
+describe('updateeditorbookmarkbyid', () => {
+  const blob = {
+    version: 1,
+    url: [],
+    terminal: [],
+    editor: [
+      {
+        kind: 'editor' as const,
+        id: 'e1',
+        type: 'board',
+        title: 'old title',
+        codepage: { id: 'cp-old', code: 'old' },
+        createdat: 5,
+      },
+    ],
+  }
+
+  beforeEach(() => {
+    jest.mocked(storagereadvars).mockResolvedValue({
+      [ZSS_BOOKMARKS_KEY]: structuredClone(blob),
+    })
+    jest.mocked(storagewritevar).mockClear()
+  })
+
+  it('replaces snapshot and keeps id', async () => {
+    const entry = await updateeditorbookmarkbyid('e1', {
+      type: 'object',
+      title: 'new title',
+      codepage: { id: 'cp-new', code: 'new' },
+    })
+    expect(entry).toEqual(
+      expect.objectContaining({
+        id: 'e1',
+        type: 'object',
+        title: 'new title',
+        codepage: { id: 'cp-new', code: 'new' },
+      }),
+    )
+  })
+
+  it('returns undefined when id missing', async () => {
+    const entry = await updateeditorbookmarkbyid('missing', {
+      type: 'board',
+      title: 'x',
+      codepage: {},
+    })
+    expect(entry).toBeUndefined()
+  })
+})
+
+describe('removebookmarkbyid', () => {
+  beforeEach(() => {
+    jest.mocked(storagereadvars).mockResolvedValue({
+      [ZSS_BOOKMARKS_KEY]: {
+        version: 1,
+        url: [
+          {
+            kind: 'url',
+            id: 'u1',
+            name: 'n',
+            href: 'https://a/',
+            createdat: 1,
+          },
+        ],
+        terminal: [],
+        editor: [],
+      },
+    })
+    jest.mocked(storagewritevar).mockClear()
+  })
+
+  it('removes matching url bookmark', async () => {
+    const ok = await removebookmarkbyid('u1')
+    expect(ok).toBe(true)
+    expect(storagewritevar).toHaveBeenCalledWith(
+      ZSS_BOOKMARKS_KEY,
+      expect.objectContaining({ url: [] }),
+    )
   })
 })
 
