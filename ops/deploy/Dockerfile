@@ -21,7 +21,7 @@ ENV ZSS_SERVER_PORT=4175 \
 
 VOLUME ["/data"]
 
-COPY headless/start.sh ./
+COPY ops/headless/start.sh ./
 RUN chmod +x start.sh
 
 CMD ["./start.sh"]

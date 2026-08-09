@@ -1,0 +1,75 @@
+{
+  "name": "zss-youtube-relay",
+  "productName": "Zed Cafe YouTube Relay",
+  "version": "1.11.60",
+  "private": true,
+  "description": "Local WHIP to YouTube RTMPS relay for zed.cafe",
+  "main": "src/main.cjs",
+  "author": "zed.cafe",
+  "license": "MIT",
+  "scripts": {
+    "start": "node scripts/run-electron.mjs",
+    "fetch-binaries": "node scripts/fetch-binaries.mjs",
+    "dist": "node scripts/fetch-binaries.mjs && node scripts/run-builder.mjs --publish never",
+    "dist:mac": "node scripts/fetch-binaries.mjs && node scripts/run-builder.mjs --mac --publish never",
+    "dist:win": "node scripts/fetch-binaries.mjs && node scripts/run-builder.mjs --win --publish never"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^35.1.2",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "cafe.zed.youtube-relay",
+    "productName": "Zed Cafe YouTube Relay",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "src/**/*",
+      "resources/fonts/**/*",
+      "resources/zns-dot-tile.svg",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "vendor/${os}-${arch}",
+        "to": "bin",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "resources/fonts",
+        "to": "fonts"
+      },
+      {
+        "from": "resources/zns-dot-tile.svg",
+        "to": "zns-dot-tile.svg"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ],
+      "icon": "resources/icons/icon.png",
+      "identity": null
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "resources/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

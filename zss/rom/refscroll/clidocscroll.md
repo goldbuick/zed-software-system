@@ -7,7 +7,7 @@ $whitemultiplayer and ZNS, editing tools. Most commands are operator-only.
 
 $ltgreycommand categories and args for:
 $whitebooks / pages / boards
-$whitesave, share, fork, export
+$whitesave, share, airshare, fork, export
 $whitemultiplayer, ZNS, editing tools
 
 $ltgreyFull reference lives on zed.cafe/docs (browser), not in this scroll.

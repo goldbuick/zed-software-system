@@ -471,6 +471,35 @@ export function registershare(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:share', undefined)
 }
 
+export function registerairsharesend(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:airsharesend')
+}
+
+export function registerairsharereceive(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:airsharereceive')
+}
+
+export function registerairsharestop(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:airsharestop')
+}
+
+/** Invite confirmed: flush + compress MEMORY for optical stream. */
+export function registerairsharestream(device: DEVICELIKE, player: string) {
+  device.emit(player, 'register:airsharestream')
+}
+
+export function registerairsharepayload(
+  device: DEVICELIKE,
+  player: string,
+  compressed: string,
+) {
+  device.emit(player, 'register:airsharepayload', compressed)
+}
+
+export function vmairshare(device: DEVICELIKE, player: string) {
+  device.emit(player, 'vm:airshare')
+}
+
 export function registerterminalclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:close')
 }

@@ -5,7 +5,7 @@
     "zss/simspace.ts",
     "zss/sttspace.ts",
     "zss/ttsspace.ts",
-    "headless/src/commands/run.ts",
+    "ops/headless/src/commands/run.ts",
     "tasks/cli.ts",
     "tasks/lib/daisy/parity-loop.ts",
     "ops/jest.config.ts"
@@ -13,7 +13,7 @@
   "project": [
     "zss/**/*.{ts,tsx}",
     "cafe/**/*.{ts,tsx}",
-    "headless/src/**/*.{ts,tsx}",
+    "ops/headless/src/**/*.{ts,tsx}",
     "tasks/**/*.{ts,tsx,mjs}"
   ],
   "ignoreExportsUsedInFile": true,

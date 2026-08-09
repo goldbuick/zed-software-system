@@ -21,3 +21,59 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           body: ${{steps.github_release.outputs.changelog}}
+
+  relay-macos:
+    name: Build YouTube relay (macOS)
+    needs: release
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install root dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build macOS installers
+        run: yarn task run relay:build:desktop:mac
+
+      - name: Upload macOS artifacts to release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            ops/youtube-rtmp-relay/dist/*.dmg
+            ops/youtube-rtmp-relay/dist/*.zip
+
+  relay-windows:
+    name: Build YouTube relay (Windows)
+    needs: release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install root dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build Windows installer
+        run: yarn task run relay:build:desktop:win
+
+      - name: Upload Windows artifacts to release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            ops/youtube-rtmp-relay/dist/*.exe
+            ops/youtube-rtmp-relay/dist/*.yml

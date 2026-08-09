@@ -4,7 +4,7 @@ import type { TaskDef } from '../types'
 export const HEADLESS_TASKS: TaskDef[] = [
   def('headless:build', {
     description: 'Compile CLI and refresh oclif manifest',
-    run: shell('tsc -p headless/tsconfig.json && oclif manifest'),
+    run: shell('tsc -p ops/headless/tsconfig.json && oclif manifest'),
   }),
   def('headless:build:all', {
     description: 'Production app + CLI build and pack tarballs',
@@ -61,7 +61,7 @@ export const HEADLESS_TASKS: TaskDef[] = [
     tags: ['dev'],
     env: { ZSS_NO_HTTPS: '1' },
     run: shell(
-      'npx concurrently -k "yarn task run cafe:vite:dev" "sleep 8 && ./headless/bin/dev.js --dev"',
+      'npx concurrently -k "yarn task run cafe:vite:dev" "sleep 8 && ./ops/headless/bin/dev.js --dev"',
     ),
   }),
   tasksonly(
@@ -76,6 +76,6 @@ export const HEADLESS_TASKS: TaskDef[] = [
     description: 'Production build, CLI build, run zss server',
     deps: ['cafe:build', 'headless:build'],
     tags: ['dev'],
-    run: exec(['./headless/bin/dev.js']),
+    run: exec(['./ops/headless/bin/dev.js']),
   }),
 ]

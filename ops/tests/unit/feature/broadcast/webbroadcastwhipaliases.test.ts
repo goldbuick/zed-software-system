@@ -1,5 +1,6 @@
 import {
   TWITCH_WHIP_ENDPOINT,
+  YOUTUBE_WHIP_ENDPOINT,
   listwhipendpointaliases,
   resolvewhipendpoint,
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
@@ -10,6 +11,13 @@ describe('resolvewhipendpoint', () => {
   it('resolves twitch alias', () => {
     expect(resolvewhipendpoint('twitch')).toBe(TWITCH_WHIP_ENDPOINT)
     expect(resolvewhipendpoint('TWITCH')).toBe(TWITCH_WHIP_ENDPOINT)
+  })
+
+  it('resolves youtube alias to local WHIP URL', () => {
+    expect(resolvewhipendpoint('youtube')).toBe(YOUTUBE_WHIP_ENDPOINT)
+    expect(resolvewhipendpoint('YOUTUBE')).toBe(
+      'https://127.0.0.1:8889/cafe/whip',
+    )
   })
 
   it('resolves ivs alias', () => {
@@ -28,9 +36,9 @@ describe('resolvewhipendpoint', () => {
 })
 
 describe('listwhipendpointaliases', () => {
-  it('includes twitch and ivs', () => {
+  it('includes twitch youtube and ivs', () => {
     expect(listwhipendpointaliases()).toEqual(
-      expect.arrayContaining(['twitch', 'ivs']),
+      expect.arrayContaining(['twitch', 'youtube', 'ivs']),
     )
   })
 })
@@ -47,6 +55,20 @@ describe('parsebroadcaststartpayload whip aliases', () => {
       kind: 'whip',
       endpoint: TWITCH_WHIP_ENDPOINT,
       bearer: 'sk_test',
+    })
+  })
+
+  it('resolves youtube alias in whip payload', () => {
+    expect(
+      parsebroadcaststartpayload({
+        kind: 'whip',
+        endpoint: 'youtube',
+        bearer: 'local-bearer',
+      }),
+    ).toEqual({
+      kind: 'whip',
+      endpoint: YOUTUBE_WHIP_ENDPOINT,
+      bearer: 'local-bearer',
     })
   })
 })

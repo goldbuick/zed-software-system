@@ -22,6 +22,7 @@ import { ScreenUIScrollLayer } from 'zss/screens/screenui/scrolllayer'
 import { ScreenUIScrollProvider } from 'zss/screens/screenui/scrollprovider'
 import { TapeComponent } from 'zss/screens/tape/component'
 
+import { AirshareView } from './airshareview'
 import { BoardFadeOverlay } from './boardfadeoverlay'
 import { Scanlines } from './fx/scanlines'
 import { useMedia } from './media'
@@ -172,6 +173,7 @@ export function Engine() {
             <TapeToastConnected />
             <WorkStatusBadgeConnected />
             <TapeViewImage />
+            <AirshareView />
             <ScreenUIScrollLayer />
             <BoardFadeOverlay />
           </ScreenUIScrollProvider>

@@ -257,7 +257,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
 
   const bookpath = path.join(
     root,
-    'fixtures/books/example-coolregionsbow.book.json',
+    'ops/fixtures/books/example-coolregionsbow.book.json',
   )
   const bookexport = JSON.parse(fs.readFileSync(bookpath, 'utf8')) as {
     data: unknown

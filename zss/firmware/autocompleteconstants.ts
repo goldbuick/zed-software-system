@@ -111,7 +111,7 @@ export const TTS_FISH_MODEL_KEYWORDS = [
 
 export const BROADCAST_HEAD_KEYWORDS = ['stop', 'whip'] as const
 
-export const BROADCAST_WHIP_ALIASES = ['twitch', 'ivs'] as const
+export const BROADCAST_WHIP_ALIASES = ['twitch', 'youtube', 'ivs'] as const
 
 export const PIVOT_SHEAR_KEYWORDS = [
   'taper_floor',

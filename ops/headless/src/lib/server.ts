@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-/** Repo / package root (works from headless/src and headless/dist). */
+/** Repo / package root (works from ops/headless/src and ops/headless/dist). */
 export function getroot(): string {
   let dir = __dirname
   for (let i = 0; i < 8; i++) {

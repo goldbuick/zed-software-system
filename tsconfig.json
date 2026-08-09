@@ -54,7 +54,7 @@
   "include": [
     "zss",
     "cafe",
-    "headless",
+    "ops/headless",
     "ops/fixtures",
     "ops/lib",
     "ops/lib/test",

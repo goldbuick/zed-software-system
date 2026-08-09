@@ -2,6 +2,7 @@ import { BLUME_TASKS } from './groups/blume'
 import { CAFE_TASKS } from './groups/cafe'
 import { HEADLESS_TASKS } from './groups/headless'
 import { OPS_TASKS } from './groups/ops'
+import { RELAY_TASKS } from './groups/relay'
 import type { TaskDef } from './types'
 
 const ALL_TASK_LIST: TaskDef[] = [
@@ -9,6 +10,7 @@ const ALL_TASK_LIST: TaskDef[] = [
   ...BLUME_TASKS,
   ...HEADLESS_TASKS,
   ...OPS_TASKS,
+  ...RELAY_TASKS,
 ]
 
 let taskmap: Record<string, TaskDef> | undefined

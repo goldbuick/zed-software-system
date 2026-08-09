@@ -56,7 +56,7 @@ export const CAFE_TASKS: TaskDef[] = [
   def('cafe:clear', {
     description: 'Remove build artifacts and Vite cache',
     run: shell(
-      'rimraf tmp && rimraf dist && rimraf headless/dist && rimraf cafe/dist && rimraf docs-site/dist && rimraf docs-site/.blume && rimraf node_modules/.vite',
+      'rimraf tmp && rimraf dist && rimraf ops/headless/dist && rimraf cafe/dist && rimraf docs-site/dist && rimraf docs-site/.blume && rimraf node_modules/.vite',
     ),
   }),
   def('cafe:preview', {
