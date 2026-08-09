@@ -125,7 +125,7 @@ export async function runheadlessserverdev(ctx: TaskContext): Promise<number> {
       `[vite] ready on http://127.0.0.1:${VITE_DEV_PORT} (logs quiet; Ctrl+C stops both)\n`,
     )
 
-    const headlessbin = path.join(ctx.root, 'ops/headless/bin/dev.js')
+    const headlessbin = path.join(ctx.root, 'bin/dev.js')
     const headless = spawn(headlessbin, ['--dev', ...ctx.args], {
       cwd: ctx.root,
       env,
