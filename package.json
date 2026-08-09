@@ -1,10 +1,10 @@
 {
   "name": "zed-software-system",
   "private": true,
-  "version": "1.12.1",
+  "version": "1.12.2",
   "type": "module",
   "files": [
-    "ops/headless/bin",
+    "bin",
     "ops/headless/dist",
     "cafe/dist",
     "dist",
@@ -129,7 +129,7 @@
     "zxing-wasm": "^2.2.4"
   },
   "bin": {
-    "zss": "./ops/headless/bin/run.js"
+    "zss": "./bin/run.js"
   },
   "oclif": {
     "bin": "zss",

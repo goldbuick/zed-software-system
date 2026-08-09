@@ -78,6 +78,6 @@ export const HEADLESS_TASKS: TaskDef[] = [
     description: 'Production build, CLI build, run zss server',
     deps: ['cafe:build', 'headless:build'],
     tags: ['dev'],
-    run: exec(['./ops/headless/bin/dev.js']),
+    run: exec(['./bin/dev.js']),
   }),
 ]
