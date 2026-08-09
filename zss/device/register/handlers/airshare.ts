@@ -4,10 +4,7 @@ import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { airshareinviteurl } from 'zss/feature/airshare/bytes'
 import { airshareclearfocus } from 'zss/feature/airshare/focus'
-import {
-  airsharereset,
-  useAirshare,
-} from 'zss/feature/airshare/state'
+import { airsharereset, useAirshare } from 'zss/feature/airshare/state'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { isstring } from 'zss/mapping/types'
 import { memoryreadoperator } from 'zss/memory/session'
@@ -71,9 +68,8 @@ export function handleairsharepayload(device: DEVICE, message: MESSAGE): void {
     return
   }
   doasync(device, message.player, async () => {
-    const { airsharebase64urltobytes } = await import(
-      'zss/feature/airshare/bytes'
-    )
+    const { airsharebase64urltobytes } =
+      await import('zss/feature/airshare/bytes')
     const payload = airsharebase64urltobytes(message.data as string)
     airshareclearfocus(device, message.player)
     useAirshare.setState({

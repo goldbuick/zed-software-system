@@ -42,7 +42,9 @@ export function airshareinviteurl(origin = location.origin): string {
 export function readairsharereceivefromurl(): boolean {
   try {
     const url = new URL(location.href)
-    return url.searchParams.get(AIRSHARE_RECEIVE_PARAM) === AIRSHARE_RECEIVE_VALUE
+    return (
+      url.searchParams.get(AIRSHARE_RECEIVE_PARAM) === AIRSHARE_RECEIVE_VALUE
+    )
   } catch {
     return false
   }

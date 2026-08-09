@@ -1,27 +1,22 @@
-import {
-  prepareZXingModule,
-  readBarcodes,
-} from 'zxing-wasm/reader'
+import { prepareZXingModule, readBarcodes } from 'zxing-wasm/reader'
 import zxingwasmurl from 'zxing-wasm/reader/zxing_reader.wasm?url'
 
 let zxingready: Promise<void> | undefined
 
 export async function ensureairsharezxing(): Promise<void> {
-  if (!zxingready) {
-    zxingready = (async () => {
-      await prepareZXingModule({
-        fireImmediately: true,
-        overrides: {
-          locateFile: (path: string, prefix: string) => {
-            if (path.endsWith('.wasm')) {
-              return zxingwasmurl
-            }
-            return `${prefix}${path}`
-          },
+  zxingready ??= (async () => {
+    await prepareZXingModule({
+      fireImmediately: true,
+      overrides: {
+        locateFile: (path: string, prefix: string) => {
+          if (path.endsWith('.wasm')) {
+            return zxingwasmurl
+          }
+          return `${prefix}${path}`
         },
-      })
-    })()
-  }
+      },
+    })
+  })()
   await zxingready
 }
 

@@ -1,9 +1,10 @@
 import { encode } from 'uqr'
 
 /** Encode binary frame into a QR module matrix (ECC L, pinned mask). */
-export function airshareencodemodulematrix(
-  frame: Uint8Array,
-): { size: number; data: boolean[][] } {
+export function airshareencodemodulematrix(frame: Uint8Array): {
+  size: number
+  data: boolean[][]
+} {
   const result = encode(Array.from(frame), {
     ecc: 'L',
     maskPattern: 0,

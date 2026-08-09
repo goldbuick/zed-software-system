@@ -218,10 +218,7 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
   for (let i = 0; i < names.length; ++i) {
     const name = names[i]
     const bag = book.flags[name]
-    flagsout[name] = memoryboundaryalloc(
-      isplainobject(bag) ? bag : {},
-      name,
-    )
+    flagsout[name] = memoryboundaryalloc(isplainobject(bag) ? bag : {}, name)
   }
 
   // return book

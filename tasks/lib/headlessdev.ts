@@ -2,7 +2,7 @@
  * headless:server:dev — Vite in background, Ink CLI in foreground with a real TTY.
  * concurrently pipes stdin (no raw mode); this keeps process.stdin.isTTY for Ink.
  */
-import { spawn, type ChildProcess } from 'node:child_process'
+import { type ChildProcess, spawn } from 'node:child_process'
 import net from 'node:net'
 import path from 'node:path'
 

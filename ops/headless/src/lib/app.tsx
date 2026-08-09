@@ -298,13 +298,8 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
 
   await page.exposeFunction(
     '__nodeStorageWriteContent',
-    async (
-      player: string,
-      _label: string,
-      longcontent: string,
-      _compressed: string,
-      _books: unknown,
-    ) => {
+    async (player: string, _label: string, longcontent: string) => {
+      void _label
       // longcontent is already memorycompressbooks export JSON (expanded flag
       // bags). Do not persist the in-memory books arg: its flags map holds
       // boundary ids, which poisons reload via memoryimportbookfromjson.

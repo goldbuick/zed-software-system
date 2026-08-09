@@ -1,6 +1,4 @@
-import {
-  registerterminalclose,
-} from 'zss/device/api'
+import { registerterminalclose } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
 import { mobiletextblur } from 'zss/gadget/mobiletext'
 

@@ -58,12 +58,8 @@ export function repairindices(
   blockcount: number,
 ): number[] {
   const rng = airsharerng(seedfrom(session, seq))
-  const span = Math.min(
-    blockcount,
-    REPAIR_DEGREE_MAX - REPAIR_DEGREE_MIN + 1,
-  )
-  const degree =
-    REPAIR_DEGREE_MIN + Math.floor(rng() * span)
+  const span = Math.min(blockcount, REPAIR_DEGREE_MAX - REPAIR_DEGREE_MIN + 1)
+  const degree = REPAIR_DEGREE_MIN + Math.floor(rng() * span)
   const capped = Math.max(1, Math.min(blockcount, degree))
   const indices: number[] = []
   const used = new Set<number>()

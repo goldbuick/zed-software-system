@@ -1,5 +1,5 @@
-import { create } from 'zustand'
 import { qrlines } from 'zss/mapping/qr'
+import { create } from 'zustand'
 
 export type AIRSHARE_MODE = 'off' | 'invite' | 'stream' | 'receive'
 

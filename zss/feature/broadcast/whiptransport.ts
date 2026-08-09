@@ -19,9 +19,7 @@ async function applyvideocaps(
       continue
     }
     const params = sender.getParameters()
-    const encodings = params.encodings?.length
-      ? [...params.encodings]
-      : [{}]
+    const encodings = params.encodings?.length ? [...params.encodings] : [{}]
     encodings[0] = {
       ...encodings[0],
       maxBitrate: maxbitratebps,

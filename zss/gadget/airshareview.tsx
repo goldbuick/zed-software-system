@@ -14,12 +14,12 @@ import { airsharebytestobase64url } from 'zss/feature/airshare/bytes'
 import { airsharereadqrbytes } from 'zss/feature/airshare/decode'
 import { airshareclearfocus } from 'zss/feature/airshare/focus'
 import {
+  type AIRSHARE_DECODER,
   airshareingestframe,
   airsharerecoverpayload,
   createairsharedecoder,
   createairshareencoder,
   encodeairshareframe,
-  type AIRSHARE_DECODER,
 } from 'zss/feature/airshare/fountain'
 import { sha256bytes, sha256equal } from 'zss/feature/airshare/hash'
 import {
@@ -45,9 +45,9 @@ import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
 import { ToggleKey } from 'zss/screens/touchui/togglekey'
 import {
+  WRITE_TEXT_CONTEXT,
   createwritetextcontext,
   tokenizeandwritetextformat,
-  WRITE_TEXT_CONTEXT,
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -94,7 +94,12 @@ function AirshareChrome({
       <WriteTextContext.Provider value={context}>
         <ToggleKey x={escx} y={keyy} letters="esc" onToggle={stopairshare} />
         {showok && (
-          <ToggleKey x={okx} y={keyy} letters="ok" onToggle={transmitairshare} />
+          <ToggleKey
+            x={okx}
+            y={keyy}
+            letters="ok"
+            onToggle={transmitairshare}
+          />
         )}
       </WriteTextContext.Provider>
       <TilesRender label="airshare" width={cols} height={rows} />
@@ -166,7 +171,7 @@ function AirshareVideoPlane({
   )
 }
 
-function useinviteqr(inviteurl: string) {
+function useInviteQr(inviteurl: string) {
   const canvas = useMemo(() => document.createElement('canvas'), [])
   useEffect(() => {
     if (!inviteurl) {
@@ -178,7 +183,7 @@ function useinviteqr(inviteurl: string) {
   return canvas
 }
 
-function usestreamqr(payload: Uint8Array | null) {
+function useStreamQr(payload: Uint8Array | null) {
   const canvas = useMemo(() => document.createElement('canvas'), [])
   useEffect(() => {
     if (!payload) {
@@ -223,7 +228,7 @@ function usestreamqr(payload: Uint8Array | null) {
   return canvas
 }
 
-function usereceivevideo(enabled: boolean) {
+function useReceiveVideo(enabled: boolean) {
   const video = useMemo(() => {
     const el = document.createElement('video')
     el.muted = true
@@ -265,7 +270,9 @@ function usereceivevideo(enabled: boolean) {
       if (cancelled) {
         return
       }
-      raf = requestAnimationFrame(loop)
+      raf = requestAnimationFrame((t) => {
+        void loop(t)
+      })
       if (!ctx || video.readyState < 2) {
         return
       }
@@ -294,7 +301,7 @@ function usereceivevideo(enabled: boolean) {
           continue
         }
         const identity = airsharestreamidentity(parsed.header)
-        if (!decoder || decoder.identity !== identity) {
+        if (decoder?.identity !== identity) {
           decoder = createairsharedecoder(parsed.header, identity)
           useAirshare.setState({
             blockcount: parsed.header.blockcount,
@@ -338,7 +345,9 @@ function usereceivevideo(enabled: boolean) {
         }
         video.srcObject = mediastream
         await video.play()
-        raf = requestAnimationFrame(loop)
+        raf = requestAnimationFrame((t) => {
+          void loop(t)
+        })
       } catch (err) {
         useAirshare.setState({
           error: err instanceof Error ? err.message : 'camera failed',
@@ -370,9 +379,9 @@ export function AirshareView() {
   const progress = useAirshare((s) => s.progress)
   const blockcount = useAirshare((s) => s.blockcount)
 
-  const invitecanvas = useinviteqr(mode === 'invite' ? inviteurl : '')
-  const streamcanvas = usestreamqr(mode === 'stream' ? payload : null)
-  const receivevideo = usereceivevideo(mode === 'receive')
+  const invitecanvas = useInviteQr(mode === 'invite' ? inviteurl : '')
+  const streamcanvas = useStreamQr(mode === 'stream' ? payload : null)
+  const receivevideo = useReceiveVideo(mode === 'receive')
 
   useEffect(() => {
     if (mode === 'off') {
@@ -393,9 +402,7 @@ export function AirshareView() {
   const centerheight = screensize.rows * RUNTIME.DRAW_CHAR_HEIGHT() * 0.4
 
   const statusline =
-    error ||
-    status ||
-    (blockcount > 0 ? `frame ${progress}` : '')
+    error || status || (blockcount > 0 ? `frame ${progress}` : '')
 
   return (
     <UserFocus>

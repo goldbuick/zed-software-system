@@ -18,7 +18,9 @@ export function showbroadcastmenu(player: string) {
     '!runit #broadcast whip twitch ;$purpleTwitch $greenWHIP v2 — stream key',
     ...zsssectionlines('YouTube'),
     '!openit https://github.com/goldbuick/zed-software-system/releases/latest;$cyanDownload local relay (macOS / Windows)',
-    zsstextline('$GRAYYouTube key stays in the relay app; cafe uses the local bearer'),
+    zsstextline(
+      '$GRAYYouTube key stays in the relay app; cafe uses the local bearer',
+    ),
     '!runit #broadcast whip youtube ;$purpleYouTube $greenlocal relay - paste local bearer',
     ...zsssectionlines('Amazon IVS'),
     '!runit #broadcast ;$purpleIVS $greenlow-latency — stream key',

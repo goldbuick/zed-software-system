@@ -32,7 +32,9 @@ export function qrbylcapacity(version: number): number {
   return best
 }
 
-export function airshareblocksizeforversion(version = AIRSHARE_DEFAULT_QR_VERSION): number {
+export function airshareblocksizeforversion(
+  version = AIRSHARE_DEFAULT_QR_VERSION,
+): number {
   const capacity = qrbylcapacity(version)
   const blocksize = capacity - AIRSHARE_HEADER_SIZE
   if (blocksize < 64) {

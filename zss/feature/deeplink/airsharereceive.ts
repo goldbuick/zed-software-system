@@ -22,13 +22,13 @@ const airsharereceivehandler: DEEPLINK_HANDLER = {
   fingerprint() {
     return 'receive'
   },
-  async run(ctx: DEEPLINK_CONTEXT) {
+  run(ctx: DEEPLINK_CONTEXT) {
     const device = ctx.device ?? SOFTWARE
     if (ctx.openterminal) {
       registerterminalopen(device, ctx.player)
     }
     vmcli(device, ctx.player, '#airshare receive')
-    return true
+    return Promise.resolve(true)
   },
 }
 
