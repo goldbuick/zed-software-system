@@ -7,7 +7,7 @@
   "include": [
     "zss",
     "cafe",
-    "headless",
+    "ops/headless",
     "ops/infra",
     "ops/lib",
     "ops/tests/setup",

@@ -1,8 +1,35 @@
-import type { ConnectionState } from 'zss/feature/broadcast/webbroadcasttypes'
+import type {
+  ConnectionState,
+  StreamConfig,
+} from 'zss/feature/broadcast/webbroadcasttypes'
 
 export type WhipStart = {
   endpoint: string
   bearer: string
+}
+
+async function applyvideocaps(
+  pc: RTCPeerConnection,
+  streamconfig: StreamConfig,
+) {
+  const maxbitratebps = streamconfig.maxBitrate * 1000
+  const maxframerate = streamconfig.maxFramerate
+  for (const sender of pc.getSenders()) {
+    if (sender.track?.kind !== 'video') {
+      continue
+    }
+    const params = sender.getParameters()
+    const encodings = params.encodings?.length ? [...params.encodings] : [{}]
+    encodings[0] = {
+      ...encodings[0],
+      maxBitrate: maxbitratebps,
+      maxFramerate: maxframerate,
+    }
+    await sender.setParameters({
+      ...params,
+      encodings,
+    })
+  }
 }
 
 function mapconnectionstate(pc: RTCPeerConnection): ConnectionState {
@@ -103,7 +130,11 @@ export class WhipTransport {
     return this.peerconnection
   }
 
-  async start(start: WhipStart, tracks: MediaStreamTrack[]) {
+  async start(
+    start: WhipStart,
+    streamconfig: StreamConfig,
+    tracks: MediaStreamTrack[],
+  ) {
     void this.stop()
     this.bearer = start.bearer
     const pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle' })
@@ -118,6 +149,7 @@ export class WhipTransport {
     for (const track of tracks) {
       pc.addTrack(track)
     }
+    await applyvideocaps(pc, streamconfig)
 
     const offer = await pc.createOffer()
     await pc.setLocalDescription(offer)

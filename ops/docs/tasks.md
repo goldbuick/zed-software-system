@@ -48,8 +48,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run headless:build:linux:app` | Production app build for linux pack (internal) | — | `cafe:build` | `NODE_ENV=production` |
 | `yarn task run headless:build:linux:cli` | Production CLI build for linux pack (internal) | — | `headless:build` | `NODE_ENV=production` |
 | `yarn task run headless:build:linux:pack` | oclif pack linux-x64 tarball (internal) | — | — | — |
-| `yarn task run headless:server:dev` | CLI build + Vite dev + zss dev server | `dev` | `headless:build`, `headless:server:dev:run` | — |
-| `yarn task run headless:server:dev:run` | Concurrent Vite dev and zss dev (internal) | `dev` | — | `ZSS_NO_HTTPS=1` |
+| `yarn task run headless:server:dev` | CLI build + Vite dev + zss headless with TTY stdin | `dev` | `headless:build`, `headless:server:dev:run` | — |
+| `yarn task run headless:server:dev:run` | Vite background + zss headless foreground (TTY stdin for Ink) | `dev` | — | `ZSS_NO_HTTPS=1` |
 | `yarn task run headless:server:run` | Production build, CLI build, run zss server | `dev` | `cafe:build`, `headless:build` | — |
 
 
@@ -252,3 +252,13 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN from shell or cafe/.env.local; --dry-run) | `deploy` | — | — |
+
+
+## relay
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run relay:build` | Install youtube-rtmp-relay deps and fetch MediaMTX/ffmpeg binaries | `deploy` | — | — |
+| `yarn task run relay:build:desktop` | Build YouTube relay Electron installers for current host OS | `deploy` | `relay:build` | — |
+| `yarn task run relay:build:desktop:mac` | Build YouTube relay macOS dmg (arm64 + x64) | `deploy` | `relay:build` | — |
+| `yarn task run relay:build:desktop:win` | Build YouTube relay Windows nsis installer (x64) | `deploy` | `relay:build` | — |

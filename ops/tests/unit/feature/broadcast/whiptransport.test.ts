@@ -1,5 +1,26 @@
 import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 
+class MockSender {
+  track: MediaStreamTrack | null
+  private params: RTCRtpSendParameters
+
+  constructor(track: MediaStreamTrack | null) {
+    this.track = track
+    this.params = {
+      encodings: [{}],
+      transactionId: 'tx-1',
+      codecs: [],
+      headerExtensions: [],
+      rtcp: { cname: '', reducedSize: false },
+    }
+  }
+
+  getParameters = jest.fn(() => this.params)
+  setParameters = jest.fn(async (next: RTCRtpSendParameters) => {
+    this.params = next
+  })
+}
+
 class MockPeerConnection {
   connectionState = 'new'
   iceConnectionState = 'new'
@@ -7,8 +28,14 @@ class MockPeerConnection {
   oniceconnectionstatechange: (() => void) | null = null
   localDescription: RTCSessionDescriptionInit | undefined
   remoteDescription: RTCSessionDescriptionInit | undefined
+  private readonly senders: MockSender[] = []
 
-  addTrack = jest.fn()
+  addTrack = jest.fn((track: MediaStreamTrack) => {
+    const sender = new MockSender(track)
+    this.senders.push(sender)
+    return sender
+  })
+  getSenders = jest.fn(() => this.senders)
   createOffer = jest.fn(async () => ({
     type: 'offer' as RTCSdpType,
     sdp: 'v=0',
@@ -66,6 +93,11 @@ describe('WhipTransport', () => {
     const transport = new WhipTransport()
     await transport.start(
       { bearer: 'tok_test', endpoint: 'https://whip.test' },
+      {
+        maxResolution: { width: 1280, height: 720 },
+        maxFramerate: 60,
+        maxBitrate: 3500,
+      },
       [{ kind: 'video' } as MediaStreamTrack],
     )
 
@@ -103,5 +135,42 @@ describe('WhipTransport', () => {
         }),
       }),
     )
+  })
+
+  it('applies maxBitrate in bps and maxFramerate on video sender', async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      status: 201,
+      text: async () => 'v=0',
+      headers: {
+        get: () => null,
+      },
+    })) as unknown as typeof fetch
+
+    const transport = new WhipTransport()
+    await transport.start(
+      { bearer: 'tok_test', endpoint: 'https://whip.test' },
+      {
+        maxResolution: { width: 1280, height: 720 },
+        maxFramerate: 60,
+        maxBitrate: 3500,
+      },
+      [
+        { kind: 'video' } as MediaStreamTrack,
+        { kind: 'audio' } as MediaStreamTrack,
+      ],
+    )
+
+    const pc = transport.getpeerconnection() as unknown as MockPeerConnection
+    const videosender = pc.getSenders().find((s) => s.track?.kind === 'video')
+    const audiosender = pc.getSenders().find((s) => s.track?.kind === 'audio')
+    expect(videosender?.setParameters).toHaveBeenCalled()
+    expect(videosender?.getParameters().encodings?.[0]).toEqual(
+      expect.objectContaining({
+        maxBitrate: 3_500_000,
+        maxFramerate: 60,
+      }),
+    )
+    expect(audiosender?.setParameters).not.toHaveBeenCalled()
   })
 })

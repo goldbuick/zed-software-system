@@ -2,6 +2,13 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 
 import {
+  handleairsharepayload,
+  handleairsharereceive,
+  handleairsharesend,
+  handleairsharestop,
+  handleairsharestream,
+} from './airshare'
+import {
   handleacklogin,
   handleackoperator,
   handleackzsswords,
@@ -84,6 +91,11 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   downloadjsonfile: handledownloadjsonfile,
   downloadbinaryfile: handledownloadbinaryfile,
   share: handleshare,
+  airsharesend: handleairsharesend,
+  airsharereceive: handleairsharereceive,
+  airsharestop: handleairsharestop,
+  airsharestream: handleairsharestream,
+  airsharepayload: handleairsharepayload,
   screenshot: handlescreenshot,
   nuke: handlenuke,
   savemem: handlesavemem,

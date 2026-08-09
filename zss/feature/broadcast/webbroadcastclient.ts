@@ -144,7 +144,7 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
       )
       this.activetransport = 'low-latency'
     } else {
-      await this.whip.start(towhipstart(payload), tracks)
+      await this.whip.start(towhipstart(payload), this.streamconfig, tracks)
       this.activetransport = 'whip'
     }
 

@@ -15,5 +15,9 @@ $whitelist books and pages from the open book you can delete
 $whiteflush state to register
 #share
 $whitecreate a click-to-copy share url and qr code
+#airshare
+$whiteoptical MEMORY transfer (invite QR, then stream)
+#airshare receive
+$whitepoint camera at a streaming airshare QR
 
 !helpmenu hk b " B " next;$ltgreyBack to help

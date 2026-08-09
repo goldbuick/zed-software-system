@@ -1,6 +1,10 @@
 import { createsynthid, isfilenamesafeid } from 'zss/mapping/guid'
 import { remapbookidsforfilenamesafety } from 'zss/memory/bookidremap'
-import { memoryimportbookfromjson } from 'zss/memory/bookoperations'
+import {
+  memoryimportbookfromjson,
+  memoryreadbookflags,
+  memorywritebookflag,
+} from 'zss/memory/bookoperations'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
@@ -104,5 +108,29 @@ describe('memoryimportbookfromjson remaps dotted ids', () => {
     expect(board?.id).toBe('sid_board_one')
     expect(board?.exitwest).toBe('hub')
     expect(board?.objects.sid_gem_1?.id).toBe('sid_gem_1')
+  })
+})
+
+describe('memoryimportbookfromjson flag bags', () => {
+  it('rejects string flag values from corrupt headless persist', () => {
+    const player = 'pid_corrupt_player'
+    const imported = memoryimportbookfromjson({
+      id: 'sid_flagbag_book',
+      name: 'flagbag',
+      token: 't',
+      timestamp: 0,
+      activelist: [],
+      pages: [],
+      flags: {
+        [player]: player,
+        [`${player}_gadget`]: 'sid_not_a_bag',
+      },
+    })
+    expect(imported).toBeDefined()
+    const flags = memoryreadbookflags(imported, player)
+    expect(typeof flags).toBe('object')
+    expect(flags).not.toBe(player)
+    memorywritebookflag(imported, player, 'enterx', 3)
+    expect(flags.enterx).toBe(3)
   })
 })

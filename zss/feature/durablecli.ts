@@ -136,6 +136,9 @@ async function readlegacysnapshotentries(): Promise<[string, unknown][]> {
   return rows
 }
 
+/** Last successful flush payload; skip unchanged writes on the 2s CLI sync. */
+let lastflushedjson = ''
+
 export async function durablehydratefromdisk(): Promise<void> {
   if (!isclimode()) {
     return
@@ -151,6 +154,7 @@ export async function durablehydratefromdisk(): Promise<void> {
   }
   if (rows.length > 0) {
     await durablesetmany(rows)
+    lastflushedjson = JSON.stringify(filtersnapshotentries(rows))
   }
 }
 
@@ -164,7 +168,12 @@ export async function durableflushtodisk(): Promise<void> {
   }
   const rows = await durableentries()
   const snapshot = filtersnapshotentries(rows)
+  const json = JSON.stringify(snapshot)
+  if (json === lastflushedjson) {
+    return
+  }
   await g.__nodeDurableWriteSnapshot(snapshot)
+  lastflushedjson = json
 }
 
 export function startdurableclisync(): () => void {
@@ -187,3 +196,8 @@ export function startdurableclisync(): () => void {
 }
 
 export { SYSTEM_JSON_FILENAME }
+
+/** Clears last-flushed snapshot (unit tests). */
+export function resetdurablecliflushstate(): void {
+  lastflushedjson = ''
+}

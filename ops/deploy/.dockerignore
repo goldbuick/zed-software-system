@@ -1,7 +1,7 @@
 node_modules
 tmp
 dist
-headless/dist
+ops/headless/dist
 !dist/*.tar.gz
 dist-bin
 dist-server

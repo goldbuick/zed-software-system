@@ -70,6 +70,10 @@ export function mobiletextfocus() {
   mobiletextelement?.focus()
 }
 
+export function mobiletextblur() {
+  mobiletextelement?.blur()
+}
+
 /**
  * Subscribe to hidden input value changes. Skips sync during IME composition;
  * callback runs on `input` when not composing and on `compositionend`.

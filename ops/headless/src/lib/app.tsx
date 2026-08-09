@@ -72,8 +72,53 @@ function readJsonFile<T>(filePath: string, defaultValue: T): T {
 
 function writeJsonFile(filePath: string, data: unknown, dataDir: string): void {
   ensureDataDir(dataDir)
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8')
+  const text = JSON.stringify(data, null, 2)
+  try {
+    if (fs.existsSync(filePath) && fs.readFileSync(filePath, 'utf8') === text) {
+      return
+    }
+  } catch {
+    // fall through and write
+  }
+  fs.writeFileSync(filePath, text, 'utf8')
   addLog(`[JSON write] ${filePath}`)
+}
+
+function HistoryHotkeys({
+  history,
+  setValue,
+  setHistoryIndex,
+}: {
+  history: string[]
+  setValue: (value: string) => void
+  setHistoryIndex: React.Dispatch<React.SetStateAction<number>>
+}): null {
+  useInput((_input, key) => {
+    if (history.length === 0) {
+      return
+    }
+    if (key.upArrow) {
+      setHistoryIndex((prev) => {
+        const idx = prev < 0 ? history.length - 1 : Math.max(0, prev - 1)
+        setValue(history[idx])
+        return idx
+      })
+    } else if (key.downArrow) {
+      setHistoryIndex((prev) => {
+        if (prev < 0) {
+          return -1
+        }
+        const next = prev + 1
+        if (next >= history.length) {
+          setValue('')
+          return -1
+        }
+        setValue(history[next])
+        return next
+      })
+    }
+  })
+  return null
 }
 
 function CliApp({
@@ -115,34 +160,15 @@ function CliApp({
     [onInput],
   )
 
-  useInput((_input, key) => {
-    if (!isRawModeSupported || history.length === 0) {
-      return
-    }
-    if (key.upArrow) {
-      setHistoryIndex((prev) => {
-        const idx = prev < 0 ? history.length - 1 : Math.max(0, prev - 1)
-        setValue(history[idx])
-        return idx
-      })
-    } else if (key.downArrow) {
-      setHistoryIndex((prev) => {
-        if (prev < 0) {
-          return -1
-        }
-        const next = prev + 1
-        if (next >= history.length) {
-          setValue('')
-          return -1
-        }
-        setValue(history[next])
-        return next
-      })
-    }
-  })
-
   return (
     <Box flexDirection="column" gap={0} padding={0}>
+      {isRawModeSupported ? (
+        <HistoryHotkeys
+          history={history}
+          setValue={setValue}
+          setHistoryIndex={setHistoryIndex}
+        />
+      ) : null}
       <Box flexDirection="column" gap={0} padding={0}>
         {logLines.map((line, i) => (
           <Text key={i}>{line}</Text>
@@ -161,7 +187,7 @@ function CliApp({
             showCursor
           />
         ) : (
-          <Text dimColor>(stdin not a TTY — run in a terminal for input)</Text>
+          <Text dimColor>(stdin not a TTY - run in a terminal for input)</Text>
         )}
       </Box>
     </Box>
@@ -257,7 +283,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
 
   const bookpath = path.join(
     root,
-    'fixtures/books/example-coolregionsbow.book.json',
+    'ops/fixtures/books/example-coolregionsbow.book.json',
   )
   const bookexport = JSON.parse(fs.readFileSync(bookpath, 'utf8')) as {
     data: unknown
@@ -272,14 +298,13 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
 
   await page.exposeFunction(
     '__nodeStorageWriteContent',
-    async (
-      player: string,
-      _label: string,
-      _longcontent: string,
-      _compressed: string,
-      books: any[],
-    ) => {
-      writeJsonFile(path.join(dataDir, `${player}.json`), books, dataDir)
+    async (player: string, _label: string, longcontent: string) => {
+      void _label
+      // longcontent is already memorycompressbooks export JSON (expanded flag
+      // bags). Do not persist the in-memory books arg: its flags map holds
+      // boundary ids, which poisons reload via memoryimportbookfromjson.
+      const exported = JSON.parse(longcontent) as unknown
+      writeJsonFile(path.join(dataDir, `${player}.json`), exported, dataDir)
     },
   )
 

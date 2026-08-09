@@ -4,7 +4,7 @@ First-party browser broadcast client under `zss/feature/broadcast/`. Replaces th
 
 ## Capture
 
-- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 30fps**).
+- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 60fps**, ~3.5 Mbps cap).
 - **Audio:** Web Audio graph mixes attached `MediaStream` inputs into one outbound audio track.
 
 Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()`.
@@ -14,7 +14,7 @@ Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination
 | Kind | Auth | Endpoint |
 |------|------|----------|
 | `ivs-low-latency` | IVS / Twitch stream key | `https://g.webrtc.live-video.net:4443/v1/offer` (default) |
-| `whip` | Bearer token (required) | **Any WHIP URL** or alias (`twitch`, `ivs`) |
+| `whip` | Bearer token (required) | **Any WHIP URL** or alias (`twitch`, `youtube`, `ivs`) |
 | `ivs-whip` | IVS Real-Time participant token | `https://global.whip.live-video.net` (default) |
 
 Low-latency signaling follows the JSON `/v1/offer` flow observed from the IVS Web Broadcast SDK. Generic WHIP follows [RFC 9725](https://www.rfc-editor.org/info/rfc9725): `POST` with `Content-Type: application/sdp` and `Authorization: Bearer …`.
@@ -62,7 +62,18 @@ CLI:
 #broadcast <stream-key>                              # IVS low-latency / Twitch
 #broadcast whip <endpoint|alias> <bearer>            # generic WHIP
 #broadcast whip twitch <twitch-stream-key>           # Twitch WebRTC v2 (WHIP)
+#broadcast whip youtube <local-bearer>               # local YouTube RTMP relay app
 #broadcast whip ivs <participant-token>              # IVS Real-Time stage
 ```
 
 Full URL still works: `#broadcast whip https://… <bearer>`.
+
+## YouTube (local relay)
+
+Browsers cannot speak RTMP. Download the **Zed Cafe YouTube Relay** tray app from GitHub Releases (same `v*` tag as headless), set the YouTube stream key in the app, then:
+
+```text
+#broadcast whip youtube <local-bearer>
+```
+
+The alias targets `https://127.0.0.1:8889/cafe/whip`. See [`ops/youtube-rtmp-relay/README.md`](../../../ops/youtube-rtmp-relay/README.md).
