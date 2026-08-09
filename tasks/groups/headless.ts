@@ -1,4 +1,4 @@
-import { def, exec, shell, tasksonly } from '../helpers'
+import { def, exec, handler, shell, tasksonly } from '../helpers'
 import type { TaskDef } from '../types'
 
 export const HEADLESS_TASKS: TaskDef[] = [
@@ -57,16 +57,18 @@ export const HEADLESS_TASKS: TaskDef[] = [
     run: exec(['oclif', 'pack', 'tarballs', '-t', 'linux-x64']),
   }),
   def('headless:server:dev:run', {
-    description: 'Concurrent Vite dev and zss dev (internal)',
+    description:
+      'Vite background + zss headless foreground (TTY stdin for Ink)',
     tags: ['dev'],
     env: { ZSS_NO_HTTPS: '1' },
-    run: shell(
-      'npx concurrently -k "yarn task run cafe:vite:dev" "sleep 8 && ./ops/headless/bin/dev.js --dev"',
-    ),
+    run: handler(async (ctx) => {
+      const { runheadlessserverdev } = await import('tasks/lib/headlessdev')
+      return runheadlessserverdev(ctx)
+    }),
   }),
   tasksonly(
     'headless:server:dev',
-    'CLI build + Vite dev + zss dev server',
+    'CLI build + Vite dev + zss headless with TTY stdin',
     ['headless:build', 'headless:server:dev:run'],
     {
       tags: ['dev'],

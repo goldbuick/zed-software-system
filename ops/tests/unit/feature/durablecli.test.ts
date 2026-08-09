@@ -12,11 +12,13 @@ import {
   durableflushtodisk,
   durablehydratefromdisk,
   isdurableshorturlkey,
+  resetdurablecliflushstate,
 } from 'zss/feature/durablecli'
 
 describe('durablecli', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    resetdurablecliflushstate()
     jest.mocked(durableentries).mockResolvedValue([
       ['storage', { user: 'alice' }],
       ['config_crt', 'on'],
@@ -42,6 +44,14 @@ describe('durablecli', () => {
       storage: { user: 'alice' },
       config_crt: 'on',
     })
+  })
+
+  it('durableflushtodisk skips write when snapshot is unchanged', async () => {
+    const write = jest.fn()
+    ;(globalThis as any).__nodeDurableWriteSnapshot = write
+    await durableflushtodisk()
+    await durableflushtodisk()
+    expect(write).toHaveBeenCalledTimes(1)
   })
 
   it('durablehydratefromdisk prefers system.json snapshot', async () => {

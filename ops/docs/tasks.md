@@ -48,8 +48,8 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run headless:build:linux:app` | Production app build for linux pack (internal) | — | `cafe:build` | `NODE_ENV=production` |
 | `yarn task run headless:build:linux:cli` | Production CLI build for linux pack (internal) | — | `headless:build` | `NODE_ENV=production` |
 | `yarn task run headless:build:linux:pack` | oclif pack linux-x64 tarball (internal) | — | — | — |
-| `yarn task run headless:server:dev` | CLI build + Vite dev + zss dev server | `dev` | `headless:build`, `headless:server:dev:run` | — |
-| `yarn task run headless:server:dev:run` | Concurrent Vite dev and zss dev (internal) | `dev` | — | `ZSS_NO_HTTPS=1` |
+| `yarn task run headless:server:dev` | CLI build + Vite dev + zss headless with TTY stdin | `dev` | `headless:build`, `headless:server:dev:run` | — |
+| `yarn task run headless:server:dev:run` | Vite background + zss headless foreground (TTY stdin for Ink) | `dev` | — | `ZSS_NO_HTTPS=1` |
 | `yarn task run headless:server:run` | Production build, CLI build, run zss server | `dev` | `cafe:build`, `headless:build` | — |
 
 

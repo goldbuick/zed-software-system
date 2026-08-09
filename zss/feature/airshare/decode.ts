@@ -2,7 +2,7 @@ import {
   prepareZXingModule,
   readBarcodes,
 } from 'zxing-wasm/reader'
-import zxingwasmurl from 'zxing-wasm/dist/reader/zxing_reader.wasm?url'
+import zxingwasmurl from 'zxing-wasm/reader/zxing_reader.wasm?url'
 
 let zxingready: Promise<void> | undefined
 

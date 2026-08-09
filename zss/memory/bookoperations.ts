@@ -1,7 +1,7 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
 import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isplainobject, ispresent, isstring } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import { remapbookidsforfilenamesafety } from './bookidremap'
@@ -212,12 +212,16 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
     memoryimportcodepagefromjson(page),
   )
 
-  // import flags
+  // import flags (bags must be plain objects; string ids are corrupt persist)
   const names = Object.keys(book.flags ?? {})
   const flagsout: Record<string, string> = {}
   for (let i = 0; i < names.length; ++i) {
     const name = names[i]
-    flagsout[name] = memoryboundaryalloc(book.flags[name], name)
+    const bag = book.flags[name]
+    flagsout[name] = memoryboundaryalloc(
+      isplainobject(bag) ? bag : {},
+      name,
+    )
   }
 
   // return book
@@ -254,7 +258,8 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
   const flagids = Object.keys(flat.flags ?? {})
   for (let i = 0; i < flagids.length; ++i) {
     const id = flagids[i]
-    flags[id] = memoryboundaryalloc(flat.flags[id])
+    const bag = flat.flags[id]
+    flags[id] = memoryboundaryalloc(isplainobject(bag) ? bag : {})
   }
 
   // return book
@@ -389,15 +394,20 @@ export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
     return {}
   }
 
-  // read boundary
-  const flags = memoryboundaryget<BOOK_FLAGS>(book.flags[id])
-  if (ispresent(flags)) {
+  // read boundary (reject non-object heap values from corrupt persist)
+  const bid = book.flags[id]
+  const flags = memoryboundaryget<BOOK_FLAGS>(bid)
+  if (isplainobject(flags)) {
     return flags
   }
 
-  // create stub if not present
-  const stub = {}
-  book.flags[id] = memoryboundaryalloc(stub)
+  // create stub if not present or replace corrupt bag in place
+  const stub: BOOK_FLAGS = {}
+  if (ispresent(bid) && isstring(bid)) {
+    memoryboundaryset(bid, stub)
+  } else {
+    book.flags[id] = memoryboundaryalloc(stub)
+  }
   return stub
 }
 
