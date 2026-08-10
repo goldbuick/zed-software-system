@@ -106,8 +106,8 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kDrumBusGain</code></td>
-<td><strong>0.596</strong></td>
-<td>Drum stem (was 2.440; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
+<td><strong>0.338</strong></td>
+<td>Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
 </tr>
 <tr>
 <td><code>kVoiceOutGain</code></td>
@@ -146,18 +146,18 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kMainCompKneeDb</code></td>
-<td><strong>30</strong></td>
-<td></td>
+<td><strong>6</strong></td>
+<td>Soft knee (was 30; matches FX return)</td>
 </tr>
 <tr>
 <td><code>kMainCompMix</code></td>
-<td><strong>0.55</strong></td>
-<td>Parallel GR</td>
+<td><strong>1.0</strong></td>
+<td>Full wet GR (was 0.55 parallel)</td>
 </tr>
 <tr>
 <td><code>kMainCompAttackSec</code> / <code>kMainCompReleaseSec</code></td>
 <td>0.003 / 0.08</td>
-<td>faster release vs old 0.15 reduces multi-note GR hang</td>
+<td>RMS detector</td>
 </tr>
 <tr>
 <td><code>kMainCompGainAttackSec</code> / <code>kMainCompGainReleaseSec</code></td>
@@ -294,7 +294,7 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kNoiseVoiceGain</code></td>
-<td>7</td>
+<td>4.5</td>
 <td>Noise (with <code>kNoiseBaseExpr</code> 0.19)</td>
 </tr>
 <tr>
@@ -319,7 +319,7 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kStringMachineGain</code> / <code>kStringPluckGain</code></td>
-<td>1.35 / 6.3</td>
+<td>1.35 / 4.2</td>
 <td>String (<code>tanh(x*gain)</code> crest limit; accent 0.12; pitch-retrigger)</td>
 </tr>
 <tr>
@@ -349,7 +349,7 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kBowedVoiceGain</code> / <code>kGuitarVoiceGain</code></td>
-<td>1.2 / 6.65</td>
+<td>1.2 / 4.4</td>
 <td>Bowed / guitar (<code>tanh</code> after gain; pitch-retrigger)</td>
 </tr>
 <tr>
@@ -379,8 +379,8 @@ not a trim on the play bus into the mix. Play stem level is fixed at <code>kPlay
 </tr>
 <tr>
 <td><code>kDrumGains[12]</code></td>
-<td>0.24-0.42</td>
-<td>Per drum digit</td>
+<td>0.24-1.0</td>
+<td>Per drum digit (cowbell +<code>kDrumCowbellVolumeDb</code>; bass <code>kDrumGains[9]=0.32</code>, <code>kDrumBassVolumeDb=0</code>)</td>
 </tr>
 </tbody>
 </table></div>

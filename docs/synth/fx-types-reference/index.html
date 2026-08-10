@@ -285,7 +285,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>WASM/Daisy: <strong>ReverbSc</strong> (8 modulated delay lines, stereo internal, mono sum); predelay via <code>MaxiCombLine</code> before <code>Process()</code>. <code>decay</code> → <code>SetFeedback(0.75..0.98)</code>.</p>
+<p>WASM/Daisy: <strong>ReverbSc</strong> (8 modulated delay lines, stereo internal, mono sum); predelay via <code>MaxiCombLine</code> before <code>Process()</code>. <code>decay</code> → feedback curve <code>0.58..0.72</code> (Tone/Maxi reference).</p>
 <h3 id="4-autofilter"><a class="blume-heading-anchor" href="#4-autofilter">4. <code>autofilter</code></a></h3>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>
@@ -319,13 +319,13 @@
 <td><code>q</code></td>
 <td><strong>1</strong></td>
 <td><strong>1</strong></td>
-<td></td>
+<td>Direct biquad Q</td>
 </tr>
 <tr>
 <td><code>type</code></td>
 <td>lowpass</td>
 <td><strong>0</strong> = lowpass</td>
-<td>WASM: 8 filter types</td>
+<td>All 8 types honored</td>
 </tr>
 <tr>
 <td><code>basefrequency</code></td>
@@ -341,6 +341,7 @@
 </tr>
 </tbody>
 </table></div>
+<p><strong>Daisy:</strong> sine LFO → selectable biquad (wet delta). Matches Tone AutoFilter topology.</p>
 <h3 id="5-vibrato"><a class="blume-heading-anchor" href="#5-vibrato">5. <code>vibrato</code></a></h3>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>
@@ -454,7 +455,7 @@
 </tbody>
 </table></div>
 <p>Tone: all buses share one <code>FXCHAIN.autowah</code> — param changes affect every bus.</p>
-<p><strong>Daisy WASM:</strong> uses <code>daisysp::Autowah</code> (soundpipe). <code>octaves</code> → <code>SetWah</code>, <code>gain</code> → <code>SetLevel</code>, <code>sensitivity</code> → input pre-gain. <code>basefrequency</code> and <code>follower</code> are no-ops on Daisy (Maximilian keeps full Tone-style biquad follower).</p>
+<p><strong>Daisy WASM:</strong> Tone topology — envelope follower (<code>follower</code>) → ScaleExp(0.5) sweep from <code>basefrequency</code> → cascaded Q=2 bandpasses + peaking (<code>gain</code> dB). All five params are live.</p>
 <hr>
 <h2 id="wasm-sab-param-slots-per-group"><a class="blume-heading-anchor" href="#wasm-sab-param-slots-per-group">WASM SAB param slots (per group)</a></h2>
 <div class="blume-table-scroll" tabindex="0"><table>
