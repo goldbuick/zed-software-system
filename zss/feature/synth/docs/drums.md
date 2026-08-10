@@ -47,7 +47,7 @@ See [implementation-matrix.mdx](implementation-matrix.mdx) Table 4.
 ### bass.ts
 - **MembraneSynth** with 8 octaves, pitch decay 0.125
 - Connects to both `drumvolume` and `drumaction` (sidechain)
-- **Daisy (ID 9):** Membrane pitch envelope + multi-harmonic body (fund/oct/sub) + soft clip; `kDrumBassVolumeDb` makeup
+- **Daisy (ID 9):** Membrane pitch envelope + multi-harmonic body (fund/oct/sub) + soft clip; `kDrumGains[9]` trim (`kDrumBassVolumeDb` currently 0)
 
 ### hihat.ts
 - **NoiseSynth** through biquad highpass filter (8kHz tick, 6kHz open; -12 dB/oct, Tone parity)

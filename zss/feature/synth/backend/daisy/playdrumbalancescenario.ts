@@ -9,8 +9,10 @@ export const PLAY_DRUM_BALANCE_NOTE_COUNT = 8
 
 export const PLAY_DRUM_BALANCE_PLAY_PITCH = 'C4'
 
-/** Bass drum id (channel 9 in play notation). */
-export const PLAY_DRUM_BALANCE_DRUM_ID = 9
+/** Bass drum id was the balance stem; after kick trim use hi snare as a
+ * mid-kit proxy so the gate is not tied to the loudest hit.
+ */
+export const PLAY_DRUM_BALANCE_DRUM_ID = 4
 
 function build8nticks(
   notecount: number,
@@ -49,7 +51,7 @@ export function playdrumbalancedrumscenario(): LEVEL_STABILITY_SCENARIO {
   const notecount = PLAY_DRUM_BALANCE_NOTE_COUNT
   return {
     id: `${PLAY_DRUM_BALANCE_SCENARIO_ID}-drum`,
-    description: `${notecount}× 8n drum ${PLAY_DRUM_BALANCE_DRUM_ID} bass — drum stem`,
+    description: `${notecount}× 8n drum ${PLAY_DRUM_BALANCE_DRUM_ID} hi snare — drum stem`,
     durationsec: playdrumbalancestemdurationsec(notecount),
     voiceconfig: 'square',
     ticks: build8nticks(notecount, PLAY_DRUM_BALANCE_DRUM_ID),

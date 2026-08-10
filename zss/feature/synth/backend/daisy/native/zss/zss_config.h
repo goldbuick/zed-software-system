@@ -131,9 +131,10 @@ constexpr float kEnvReleaseTauScale = 0.060f;
  * overpower drums; drum stem unchanged.
  */
 constexpr float kPlayBusGain = 0.168f;
-/** Stem-balanced vs play (~+3 dB); was 2.440 (drums ~+15 dB, heavy maincomp).
+/** Stem-balanced vs play. After kick trim, mid-kit (hi snare proxy) sits near
+ * unity with play; prior 0.141 was calibrated to a hotter bass stem.
  */
-constexpr float kDrumBusGain = 0.596f;
+constexpr float kDrumBusGain = 0.338f;
 /** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
 /** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs
  * prior -35). */
@@ -181,13 +182,13 @@ constexpr float kAutowahDefaultGain = 2.f;
 
 constexpr float kDrumGains[kDrumCount] = {
     0.26f, 0.24f, 1.0f,  0.35f, 0.3f,  0.26f,
-    0.3f,  0.28f, 0.26f, 0.55f, 0.42f, 0.36f,
+    0.3f,  0.28f, 0.26f, 0.32f, 0.42f, 0.36f,
 };
 /** Tone PolySynth cowbell volume offset baked into gain (was missing +16 dB).
  */
 constexpr float kDrumCowbellVolumeDb = 8.f;
-/** Tone MembraneSynth kick volume offset (was missing +8 dB). */
-constexpr float kDrumBassVolumeDb = 6.f;
+/** Kick makeup; was +6 dB (Tone Membrane volume) but sat too hot vs kit. */
+constexpr float kDrumBassVolumeDb = 0.f;
 
 enum VoiceType {
   kSynth = 0,

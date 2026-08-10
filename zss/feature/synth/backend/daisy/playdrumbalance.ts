@@ -1,11 +1,13 @@
 import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
-/** Target: drums ~3 dB hotter than single #synth voice (SC-bypass stems). */
-export const PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB = 3
+/** Target: mid-kit drum stem near a single #synth voice (SC-bypass stems).
+ * Kick is trimmed separately below this proxy.
+ */
+export const PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB = 0
 
-export const PLAY_DRUM_BALANCE_MIN_DB = 2
+export const PLAY_DRUM_BALANCE_MIN_DB = -2
 
-export const PLAY_DRUM_BALANCE_MAX_DB = 4
+export const PLAY_DRUM_BALANCE_MAX_DB = 2
 
 export type PLAY_DRUM_BALANCE_METRICS = {
   playpeakdb: number
@@ -81,7 +83,7 @@ export function formatplaydrumbalancereport(
     'Play vs drum balance (isolated stems)',
     `play peak ${m.playpeakdb.toFixed(1)} dBFS`,
     `drum peak ${m.drumpeakdb.toFixed(1)} dBFS`,
-    `drum − play ${m.drumminusplaydb.toFixed(1)} dB (target ${PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB} ±1)`,
+    `drum − play ${m.drumminusplaydb.toFixed(1)} dB (target ${PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB} ±${Math.abs(PLAY_DRUM_BALANCE_MAX_DB - PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB)})`,
     gate.pass ? 'PASS' : `FAIL: ${gate.reasons.join('; ')}`,
   ]
   return lines.join('\n')

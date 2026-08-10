@@ -1055,10 +1055,13 @@ export async function rundaisyregensynthparityfixtures(
               MAIN_DYNAMICS_PARITY_PATCHES,
               WASM_PARITY_PATCHES,
             } = await import('/ops/lib/daisy-parity/paritypatches.ts')
-            const tone = await import('/ops/lib/daisy-parity/toneparityrender.ts')
+            const tone =
+              await import('/ops/lib/daisy-parity/toneparityrender.ts')
             let metrics
             if (args.kind === 'drum') {
-              const patch = DRUM_PARITY_PATCHES.find((p) => p.id === args.patchid)
+              const patch = DRUM_PARITY_PATCHES.find(
+                (p) => p.id === args.patchid,
+              )
               if (!patch) {
                 throw new Error(`unknown drum patch ${args.patchid}`)
               }

@@ -19,10 +19,7 @@ import {
 import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
 import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoiceconfig'
-import {
-  invokeplay,
-  parseplay,
-} from 'zss/feature/synth/playnotation'
+import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 import { replaylengthsec } from 'zss/feature/synth/replaylength'
 import {
