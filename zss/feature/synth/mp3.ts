@@ -23,63 +23,63 @@ export function trimaudiobufferdb(buffer: AudioBuffer, db: number): void {
 export async function converttomp3(buffer: AudioBuffer): Promise<Uint8Array> {
   const player = registerreadplayer()
 
-  const numChannels = buffer.numberOfChannels
-  const leftChannel = buffer.getChannelData(0)
-  const rightChannel = numChannels > 1 ? buffer.getChannelData(1) : leftChannel
-  const sampleRate = buffer.sampleRate
-  const numSamples = leftChannel.length
+  const numchannels = buffer.numberOfChannels
+  const leftchannel = buffer.getChannelData(0)
+  const rightchannel = numchannels > 1 ? buffer.getChannelData(1) : leftchannel
+  const samplerate = buffer.sampleRate
+  const numsamples = leftchannel.length
 
-  const mp3encoder = new Mp3Encoder(2, sampleRate, 128)
-  const sampleBlockSize = 1152
+  const mp3encoder = new Mp3Encoder(2, samplerate, 128)
+  const sampleblocksize = 1152
 
-  const mp3Data = []
+  const mp3data = []
 
   workstatus(SOFTWARE, player, 'mp3 encode')
 
-  for (let i = 0; i < numSamples; i += sampleBlockSize) {
-    if (mp3Data.length % 64 === 0) {
-      write(SOFTWARE, player, `encoding chunk (${i}/${numSamples})`)
-      const pct = Math.round((i / Math.max(1, numSamples)) * 100)
+  for (let i = 0; i < numsamples; i += sampleblocksize) {
+    if (mp3data.length % 64 === 0) {
+      write(SOFTWARE, player, `encoding chunk (${i}/${numsamples})`)
+      const pct = Math.round((i / Math.max(1, numsamples)) * 100)
       workstatus(SOFTWARE, player, `mp3 ${pct}%`)
     }
 
-    const leftChunk = new Int16Array(sampleBlockSize)
-    const rightChunk = new Int16Array(sampleBlockSize)
-    for (let j = 0; j < sampleBlockSize; j++) {
-      const sampleIndex = i + j
-      if (sampleIndex < numSamples) {
-        leftChunk[j] =
-          leftChannel[sampleIndex] < 0
-            ? leftChannel[sampleIndex] * 0x8000
-            : leftChannel[sampleIndex] * 0x7fff
-        rightChunk[j] =
-          rightChannel[sampleIndex] < 0
-            ? rightChannel[sampleIndex] * 0x8000
-            : rightChannel[sampleIndex] * 0x7fff
+    const leftchunk = new Int16Array(sampleblocksize)
+    const rightchunk = new Int16Array(sampleblocksize)
+    for (let j = 0; j < sampleblocksize; j++) {
+      const sampleindex = i + j
+      if (sampleindex < numsamples) {
+        leftchunk[j] =
+          leftchannel[sampleindex] < 0
+            ? leftchannel[sampleindex] * 0x8000
+            : leftchannel[sampleindex] * 0x7fff
+        rightchunk[j] =
+          rightchannel[sampleindex] < 0
+            ? rightchannel[sampleindex] * 0x8000
+            : rightchannel[sampleindex] * 0x7fff
       }
     }
 
-    const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk)
+    const mp3buf = mp3encoder.encodeBuffer(leftchunk, rightchunk)
     if (mp3buf.length > 0) {
-      mp3Data.push(mp3buf)
+      mp3data.push(mp3buf)
     }
 
-    if (mp3Data.length % 16 === 0) {
+    if (mp3data.length % 16 === 0) {
       await waitfor(10)
     }
   }
 
-  const finalMp3Buf = mp3encoder.flush()
-  if (finalMp3Buf.length > 0) {
-    mp3Data.push(finalMp3Buf)
+  const finalmp3buf = mp3encoder.flush()
+  if (finalmp3buf.length > 0) {
+    mp3data.push(finalmp3buf)
   }
 
-  write(SOFTWARE, player, `total chunks ${mp3Data.length + 1}`)
+  write(SOFTWARE, player, `total chunks ${mp3data.length + 1}`)
 
   await waitfor(100)
 
   return new Uint8Array(
-    mp3Data.reduce((acc, chunk) => {
+    mp3data.reduce((acc, chunk) => {
       const temp = new Uint8Array(acc.length + chunk.length)
       temp.set(acc, 0)
       temp.set(chunk, acc.length)

@@ -33,6 +33,8 @@ export async function startparityvite(
         'ops/archive': path.join(projectroot, 'ops/archive'),
         'ops/lib/test': path.join(projectroot, 'ops/lib/test'),
       },
+      // Deep tone/build/esm/* imports must share one Tone Context with `tone`.
+      dedupe: ['tone'],
     },
     server: {
       middlewareMode: true,
@@ -44,7 +46,15 @@ export async function startparityvite(
     },
     appType: 'spa',
     optimizeDeps: {
-      include: ['tonal'],
+      // Do not list tone/build/esm/* here -- separate prebundles create a
+      // second Tone Context and Channel.receive throws InvalidAccessError.
+      include: [
+        'tonal',
+        'vite-plugin-node-polyfills/shims/buffer',
+        'vite-plugin-node-polyfills/shims/global',
+        'vite-plugin-node-polyfills/shims/process',
+      ],
+      exclude: ['tone'],
     },
   })
 

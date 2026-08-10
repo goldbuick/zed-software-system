@@ -53,14 +53,7 @@ void initvoice(ZssVoice& v, float sr) {
   v.epfm.Init(sr);
 }
 
-void initdaisydrums(float sr) {
-  g_engine.tom_drum.Init(sr);
-  g_engine.tom_drum.SetFreq(90.f);
-  g_engine.tom_drum.SetDecay(0.35f);
-  g_engine.tom_drum.SetTone(0.5f);
-  g_engine.tom_drum.SetFmEnvelopeAmount(0.6f);
-  g_engine.tom_drum.SetAccent(0.8f);
-}
+void initdaisydrums(float sr) { (void)sr; }
 
 void initengine(float sr) {
   g_engine.sample_rate = sr;
@@ -81,17 +74,16 @@ void initengine(float sr) {
   }
   for (int f = 0; f < kFxGroups; ++f) {
     ZssFxGroup& fx = g_engine.fx[f];
-    fx.decimator.Init();
-    fx.overdrive.Init();
-    fx.autowah.Init(sr);
-    fx.autofilter_svf.Init(sr);
-    fx.autofilter_phasor.Init(sr);
     fx.echo_line.Init();
     initreverbgroup(fx, sr);
     refreshfxderived(f);
   }
-  g_engine.fxvibratolfo.Init(sr);
+  for (int g = 0; g < kVibratoGroups; ++g) {
+    g_engine.fxvibratolfo[g].Init(sr);
+    g_engine.fxvibratolfo_sample[g] = 0.f;
+  }
   g_engine.main_dcblock.Init(sr);
+  g_engine.main_limiter.Init();
   g_engine.ready = true;
 }
 
@@ -200,7 +192,32 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     out = dootvoice(v, freq, gate);
     v.lastenv = std::fabs(out);
   } else if (type == kAlgoSynth) {
+    const float notefreq = freq > 0.f ? freq : 440.f;
+    const float striketag = detune;
+    const bool rising = gate && !v.synthgateprev;
+    const bool notestrike =
+        gate && striketag > 0.5f && striketag != v.synthstriketag;
+    if (rising || notestrike) {
+      for (int oi = 0; oi < 4; ++oi) {
+        v.algoops[oi].Reset(0.f);
+        v.algoenvs[oi].Retrigger(false);
+      }
+      v.algooutenv.Retrigger(false);
+      v.noteonfade = 0.f;
+    }
+    if (gate && striketag > 0.5f) {
+      v.synthstriketag = striketag;
+    }
+    v.synthgateprev = gate;
     out = algovoice(v, vi, freq, gate, algo, vfreq);
+    if (gate && kSynthNoteOnFadeSec > 0.f) {
+      const float fadeinc =
+          1.f / std::max(1.f, kSynthNoteOnFadeSec * g_engine.sample_rate);
+      if (v.noteonfade < 1.f) {
+        v.noteonfade = std::min(1.f, v.noteonfade + fadeinc);
+      }
+      out *= v.noteonfade;
+    }
     v.lastenv = std::fabs(out);
   } else if (type == kStringVoice) {
     const float basehz = freq > 0.f ? freq : 440.f;

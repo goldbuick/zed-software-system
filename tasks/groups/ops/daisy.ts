@@ -779,6 +779,13 @@ export async function rundaisyregendaisydrumparityfixtures(
         page.on('pageerror', (err) => {
           console.error('pageerror:', err.message)
         })
+        // Vite may still be re-optimizing deps on first load; warm the runner
+        // module after a short settle so dynamic import does not 504.
+        await new Promise((resolve) => setTimeout(resolve, 2500))
+        await page.reload({ waitUntil: 'domcontentloaded', timeout: 180000 })
+        await page.evaluate(async () => {
+          await import('/ops/lib/daisy-parity/parity-regen-runner.ts')
+        })
         for (const patch of DRUM_PARITY_PATCHES) {
           const metrics = await renderdrummetrics(page, patch.id)
           if (!metricsusable(metrics)) {
@@ -1036,8 +1043,54 @@ export async function rundaisyregensynthparityfixtures(
       kind: 'voice' | 'drum' | 'fx' | 'main',
     ): Promise<PARITY_AUDIO_METRICS> {
       const backend = USE_TONE ? 'tone' : 'wasm'
+      // Tone Offline must not share a page graph with Daisy WASM imports
+      // (dual AudioContext / Channel.receive InvalidAccessError).
       const parsed = await page.evaluate(
         async (args) => {
+          if (args.backend === 'tone') {
+            const {
+              DRUM_PARITY_PATCHES,
+              ENVELOPE_ADSR_PARITY_PATCHES,
+              FX_PARITY_PATCHES,
+              MAIN_DYNAMICS_PARITY_PATCHES,
+              WASM_PARITY_PATCHES,
+            } = await import('/ops/lib/daisy-parity/paritypatches.ts')
+            const tone =
+              await import('/ops/lib/daisy-parity/toneparityrender.ts')
+            let metrics
+            if (args.kind === 'drum') {
+              const patch = DRUM_PARITY_PATCHES.find(
+                (p) => p.id === args.patchid,
+              )
+              if (!patch) {
+                throw new Error(`unknown drum patch ${args.patchid}`)
+              }
+              metrics = await tone.rendertoneparitydrumpatch(patch)
+            } else if (args.kind === 'fx') {
+              const patch = FX_PARITY_PATCHES.find((p) => p.id === args.patchid)
+              if (!patch) {
+                throw new Error(`unknown fx patch ${args.patchid}`)
+              }
+              metrics = await tone.rendertoneparityfxpatch(patch)
+            } else if (args.kind === 'main') {
+              const patch = MAIN_DYNAMICS_PARITY_PATCHES.find(
+                (p) => p.id === args.patchid,
+              )
+              if (!patch) {
+                throw new Error(`unknown main patch ${args.patchid}`)
+              }
+              metrics = await tone.rendertoneparitymainpatch(patch)
+            } else {
+              const patch =
+                WASM_PARITY_PATCHES.find((p) => p.id === args.patchid) ??
+                ENVELOPE_ADSR_PARITY_PATCHES.find((p) => p.id === args.patchid)
+              if (!patch) {
+                throw new Error(`unknown voice patch ${args.patchid}`)
+              }
+              metrics = await tone.rendertoneparitypatch(patch)
+            }
+            return { [args.patchid]: metrics }
+          }
           const { runparityregen } =
             await import('/ops/lib/daisy-parity/parity-regen-runner.ts')
           return runparityregen(args)
@@ -1072,6 +1125,20 @@ export async function rundaisyregensynthparityfixtures(
         page.on('pageerror', (err) => {
           console.error('pageerror:', err.message)
         })
+        if (!USE_TONE) {
+          // Daisy path: Vite may still be re-optimizing deps on first load.
+          await new Promise((resolve) => setTimeout(resolve, 2500))
+          await page.reload({ waitUntil: 'domcontentloaded', timeout: 180000 })
+          await page.evaluate(async () => {
+            await import('/ops/lib/daisy-parity/parity-regen-runner.ts')
+          })
+        } else {
+          // Tone path: settle polyfill optimize, reload once, then render.
+          // Tone itself is optimizeDeps.exclude so Offline shares one Context.
+          await new Promise((resolve) => setTimeout(resolve, 3000))
+          await page.reload({ waitUntil: 'domcontentloaded', timeout: 180000 })
+          await new Promise((resolve) => setTimeout(resolve, 1500))
+        }
         for (const patch of WASM_PARITY_PATCHES) {
           out[patch.id] = await renderpatchmetrics(page, patch.id, 'voice')
         }

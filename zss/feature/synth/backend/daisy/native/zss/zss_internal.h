@@ -50,6 +50,8 @@ float playtimesec();
 void updateplayvibratodepth(float vstart[kVibratoGroups],
                             float vend[kVibratoGroups],
                             float vpeak[kVibratoGroups]);
+/** Advance one vibrato LFO per group once per sample before processvoice. */
+void advanceplayvibratolfos(float vfreq[kVibratoGroups]);
 float detunedhz(int vi, float freq, float detune, float vfreq[kVibratoGroups]);
 float glidefreq(ZssVoice& v, int vi, float target, int type, float port);
 void applyvoiceenv(ZssVoice& v, int type, float a, float d, float s, float r);

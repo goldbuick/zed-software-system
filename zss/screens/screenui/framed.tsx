@@ -3,6 +3,7 @@ import {
   registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
+  synthplay,
   synthupdate,
   vmclirepeatlast,
   vmfindany,
@@ -68,6 +69,9 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
   // handle synth state switch between boards
   const board = useGadgetClient((state) => state.gadget.board)
   useEffect(() => {
+    // Clear in-flight #play schedules from the previous board before applying
+    // the new board's voice/FX state.
+    synthplay(SOFTWARE, player, board ?? '', '')
     const { synthstate } = useGadgetClient.getState().gadget
     if (ispresent(synthstate)) {
       synthupdate(SOFTWARE, player, board, synthstate)

@@ -30,18 +30,6 @@ import {
   type WASM_WIND_PARAMS,
 } from './wasmvoicecfgsab'
 
-export type {
-  WASM_VOICE_ENVELOPE,
-  WASM_PLUCK_PARAMS,
-  WASM_STRING_ENSEMBLE_PARAMS,
-  WASM_WIND_PARAMS,
-  WASM_PIANO_PARAMS,
-  WASM_TIMPANI_PARAMS,
-  WASM_BOWED_PARAMS,
-  WASM_GUITAR_PARAMS,
-  WASM_ORGAN_PARAMS,
-} from './wasmvoicecfgsab'
-
 export type WASM_VOICE_ENV_SNAP = {
   envelope: WASM_VOICE_ENVELOPE
   portamento: number

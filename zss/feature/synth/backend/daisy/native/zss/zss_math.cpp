@@ -85,6 +85,20 @@ BiquadCoef biquadcoef(const char* type, float freq, float q, float gaindb,
     a0 = 1.f + alpha;
     a1 = -2.f * cosw0;
     a2 = 1.f - alpha;
+  } else if (std::strcmp(type, "notch") == 0) {
+    b0 = 1.f;
+    b1 = -2.f * cosw0;
+    b2 = 1.f;
+    a0 = 1.f + alpha;
+    a1 = -2.f * cosw0;
+    a2 = 1.f - alpha;
+  } else if (std::strcmp(type, "allpass") == 0) {
+    b0 = 1.f - alpha;
+    b1 = -2.f * cosw0;
+    b2 = 1.f + alpha;
+    a0 = 1.f + alpha;
+    a1 = -2.f * cosw0;
+    a2 = 1.f - alpha;
   }
 
   float inv = 1.f / a0;

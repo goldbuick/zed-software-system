@@ -184,6 +184,12 @@ const synthdevice = createdevice('synth', [], (message) => {
         ]
         if (board === '' || board === currentboard) {
           backend.addbgplay(buffer, quantize)
+        } else {
+          synthdebugtrace('C4 dropped addbgplay', {
+            board,
+            currentboard,
+            buffer,
+          })
         }
       }
       break

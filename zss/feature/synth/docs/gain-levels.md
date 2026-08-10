@@ -66,7 +66,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 |----------|-------|----------|
 | `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (default `#vol 50` ~2.22 linear) |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
-| `kDrumBusGain` | **0.596** | Drum stem (was 2.440; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
 | `kScMakeupDb` | **12** | Sidechain makeup (calibrate: `ops:daisy:sidechain:parity:calibrate`) |
 | `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
@@ -74,9 +74,9 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
 | `kMainCompThresholdDb` | **-28** | Main compressor |
 | `kMainCompRatio` | **4** | |
-| `kMainCompKneeDb` | **30** | |
-| `kMainCompMix` | **0.55** | Parallel GR |
-| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.08 | faster release vs old 0.15 reduces multi-note GR hang |
+| `kMainCompKneeDb` | **6** | Soft knee (was 30; matches FX return) |
+| `kMainCompMix` | **1.0** | Full wet GR (was 0.55 parallel) |
+| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.08 | RMS detector |
 | `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
 | `kRazzleChorusWet` | **0.25** | |
@@ -116,24 +116,24 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kFmVoiceGain` | 1.0 | FM (carrier amp 1.0 in `fmcarriersample`) |
 | `kAlgoOpGain` | ~0.316 (-10 dB) | Algo ops |
 | `kAlgoOutGain` | 0.95 | Algo out |
-| `kNoiseVoiceGain` | 7 | Noise (with `kNoiseBaseExpr` 0.19) |
+| `kNoiseVoiceGain` | 4.5 | Noise (with `kNoiseBaseExpr` 0.19) |
 | `kLfsrVoiceBoost` | 1.6 | Non-soft chip |
 | `kNoiseSoftGain` | 1.1 | Hollow / white soft tables |
 | `kMetallicAmp` | 4 | Metallic table build |
 | clang expression | 0.475 | `noisemetafor` (was 0.4) |
-| `kStringMachineGain` / `kStringPluckGain` | 1.35 / 6.3 | String (`tanh(x*gain)` crest limit; accent 0.12; pitch-retrigger) |
+| `kStringMachineGain` / `kStringPluckGain` | 1.35 / 4.2 | String (`tanh(x*gain)` crest limit; accent 0.12; pitch-retrigger) |
 | `kKarplusMaxDamping` | 0.85 | Cap for pluck/guitar (DaisySP >= 0.95 = infinite ring); note-off also via voiceenv |
 | `kWindFluteGain` / `kWindClarinetGain` / `kWindBrassGain` / `kWindPanpipeGain` | 3.11 / 1.79 / 2.5 / 3.41 | Wind algos |
 | `kWind*BreathCont` / `kWind*BreathBurst` | flute/panpipe 0.04/0.42; clarinet 0.02/0.55; brass 0.04/0.60 | Louder short chiff (~45 ms); light sustain air |
 | `kPianoVoiceGain` | 3.15 | Piano / epiano |
 | `kTimpaniVoiceGain` | 0.70 | Timpani |
-| `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 6.65 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
+| `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 4.4 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
 | `kOrganVoiceGain` / `kOrganTonewheelGain` | 0.65 / 1.8 | Drawbar / tonewheel (locked) |
 | `kDripVoiceGain` / `kDootVoiceGain` | 1.32 / 1.15 | Drip / doot |
 | `kDripDettackSec` | 0.35 | DaisySP drip hard-cut window |
 | `kBellsVoiceGain` | 0.49 | Bells mix (was 0.65) |
 | `kDrumTickTrim` / `kDrumTweetTrim` | 1.35 / 1.25 | Hi-hat family |
-| `kDrumGains[12]` | 0.24-0.42 | Per drum digit |
+| `kDrumGains[12]` | 0.24-1.0 | Per drum digit (cowbell +`kDrumCowbellVolumeDb`; bass `kDrumGains[9]=0.32`, `kDrumBassVolumeDb=0`) |
 
 Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOLUME_DB`).
 

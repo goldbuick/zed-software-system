@@ -240,13 +240,24 @@ struct ZssDrumState {
   BiquadState eq[3], bp;
 };
 
-/** Per-bus FX rack: Daisy Decimator, Overdrive, Svf, ReverbSc, Autowah, echo
- * line */
+/** Per-bus FX rack: sample-hold crush, Tone autofilter/autowah, ReverbSc, echo
+ */
 struct ZssFxGroup {
-  Decimator decimator;
-  Overdrive overdrive;
-  Svf autofilter_svf;
-  Phasor autofilter_phasor;
+  int fcrush_counter = 0;
+  float fcrush_held = 0.f;
+  float autofilter_phase = 0.f;
+  BiquadState autofilter_st;
+  BiquadCoef autofilter_coef;
+  float autofilter_coef_cutoff = 0.f;
+  int autofilter_coef_tick = 0;
+  float autowah_follower = 0.f;
+  BiquadState autowah_bp0;
+  BiquadState autowah_bp1;
+  BiquadState autowah_peak;
+  BiquadCoef autowah_bp_coef;
+  BiquadCoef autowah_peak_coef;
+  float autowah_sweep_cache = 0.f;
+  int autowah_coef_tick = 0;
   DelayLine<float, kEchoBufLen> echo_line;
   int echo_delay = 1;
   float echo_feedback = 0.f;
@@ -254,7 +265,6 @@ struct ZssFxGroup {
   ReverbSc reverbsc;
   float rev_predelay_fb = 0.f;
   int rev_predelay_len = 0;
-  Autowah autowah;
   float return_comp_env = 0.f;
 };
 
@@ -263,7 +273,7 @@ struct ZssEngine {
   float sample_rate = 44100.f;
   ZssVoice voices[kVoiceCount];
   ZssDrumState drums[kDrumCount];
-  SyntheticBassDrum tom_drum;
+  Limiter main_limiter;
   ZssFxGroup fx[kFxGroups];
   Oscillator drumoscA[kDrumCount], drumoscB[kDrumCount];
   float drumsidechain = 0.f;
@@ -272,7 +282,8 @@ struct ZssEngine {
   float sc_gainlinear = 1.f;
   float fxvibrato_depth = 0.f;
   WhiteNoise drum_whitenoise;
-  Oscillator fxvibratolfo;
+  Oscillator fxvibratolfo[kVibratoGroups];
+  float fxvibratolfo_sample[kVibratoGroups] = {};
   Oscillator razzlevibratolfo, razzlechoruslfo, razzlehissmod;
   WhiteNoise razzlehiss;
   DcBlock main_dcblock;

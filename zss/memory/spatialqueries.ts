@@ -139,6 +139,17 @@ export function memorylistboardelementsbyidnameorpts(
         if (ispresent(maybebyid)) {
           return maybebyid
         }
+        // Chip / scroll hyperlinks NAME-fold ids (sid_AbC -> sid_abc);
+        // match objects case-insensitively like memoryreadelementbyidorindex.
+        if (idnameorpt.length > 0 && !/^\d+(\.\d+)?$/.test(idnameorpt)) {
+          const folded = NAME(idnameorpt)
+          const ids = Object.keys(board.objects)
+          for (let i = 0; i < ids.length; ++i) {
+            if (NAME(ids[i]) === folded) {
+              return board.objects[ids[i]]
+            }
+          }
+        }
         // check by name
         const maybebyname = memorylistboardnamedelements(
           board,

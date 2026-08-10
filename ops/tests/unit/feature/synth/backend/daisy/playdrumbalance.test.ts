@@ -6,37 +6,37 @@ import {
 } from 'zss/feature/synth/backend/daisy/playdrumbalance'
 
 describe('playdrumbalance', () => {
-  it('passes when drums are ~3 dB hotter than play', () => {
+  it('passes when drums are near play peak', () => {
     const gate = evalplaydrumbalancegate({
       playpeakdb: -6,
-      drumpeakdb: -3,
-      drumminusplaydb: 3,
+      drumpeakdb: -6,
+      drumminusplaydb: 0,
     })
     expect(gate.pass).toBe(true)
   })
 
-  it('fails when play is hotter than drums', () => {
+  it('fails when play is much hotter than drums', () => {
     const gate = evalplaydrumbalancegate({
       playpeakdb: -2,
-      drumpeakdb: -6,
-      drumminusplaydb: -4,
+      drumpeakdb: -8,
+      drumminusplaydb: -6,
     })
     expect(gate.pass).toBe(false)
   })
 
-  it('fails when drum lead is below min band', () => {
+  it('fails when drum lead is above max band', () => {
     const gate = evalplaydrumbalancegate({
       playpeakdb: -4,
-      drumpeakdb: -3,
-      drumminusplaydb: 1,
+      drumpeakdb: 0,
+      drumminusplaydb: 4,
     })
     expect(gate.pass).toBe(false)
-    expect(gate.reasons[0]).toContain(String(PLAY_DRUM_BALANCE_MIN_DB))
+    expect(gate.reasons[0]).toContain(String(PLAY_DRUM_BALANCE_MAX_DB))
   })
 
-  it('uses target 3 dB band 2–4', () => {
-    expect(PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB).toBe(3)
-    expect(PLAY_DRUM_BALANCE_MIN_DB).toBe(2)
-    expect(PLAY_DRUM_BALANCE_MAX_DB).toBe(4)
+  it('uses target 0 dB band -2..+2', () => {
+    expect(PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB).toBe(0)
+    expect(PLAY_DRUM_BALANCE_MIN_DB).toBe(-2)
+    expect(PLAY_DRUM_BALANCE_MAX_DB).toBe(2)
   })
 })

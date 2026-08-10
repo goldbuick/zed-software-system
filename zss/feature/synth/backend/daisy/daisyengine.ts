@@ -116,7 +116,7 @@ function waitforaudiorunning(ctx: AudioContext) {
       ctx.removeEventListener('statechange', onstatechange)
       reject(
         new Error(
-          `audio context not running (${ctx.state}) — interact with the page to unlock audio`,
+          `audio context not running (${ctx.state}) - interact with the page to unlock audio`,
         ),
       )
     }, 3000)
@@ -182,7 +182,7 @@ function waitfordaisyready(
             SOFTWARE,
             '',
             'daisy',
-            'stale wasm — run yarn task run ops:daisy:build then hard refresh',
+            'stale wasm - run yarn task run ops:daisy:build then hard refresh',
           )
         }
         cleanup()
@@ -306,7 +306,7 @@ export async function ensuredaisysynthwasm(): Promise<DaisyEngine> {
       const ctx = getunlockedaudiocontext()
       if (!ctx) {
         throw new Error(
-          'audio context not unlocked — interact with the page to unlock audio',
+          'audio context not unlocked - interact with the page to unlock audio',
         )
       }
       await resumecontext(ctx)
@@ -343,6 +343,15 @@ export function startisolateddaisydsp(
     scbypass,
   )
   initwasmfxsab(engine)
+}
+
+/** Disconnect an OfflineAudioContext Daisy worklet without touching the live engine. */
+export function teardownisolateddaisyengine(engine: DaisyEngine) {
+  try {
+    engine.audioWorkletNode.disconnect()
+  } catch {
+    //
+  }
 }
 
 export function getdaisyengine(): MAYBE<DaisyEngine> {

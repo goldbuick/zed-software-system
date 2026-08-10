@@ -57,7 +57,7 @@ constexpr float kBellsVoiceGain = 0.49f;
 constexpr float kFmHzScale = 1.f;
 constexpr float kAlgoOpGain = 0.31622776601683794f;
 constexpr float kAlgoOutGain = 0.95f;
-constexpr float kNoiseVoiceGain = 7.f;
+constexpr float kNoiseVoiceGain = 4.5f;
 constexpr float kLfsrVoiceBoost = 1.6f;
 constexpr float kNoiseBaseExpr = 0.19f;
 constexpr float kNoiseSoftGain = 1.1f;
@@ -66,7 +66,7 @@ constexpr float kMetallicAmp = 4.f;
 
 /** `#synth string` = detuned saws + PWM FM; pluck = Daisy StringVoice */
 constexpr float kStringMachineGain = 1.35f;
-constexpr float kStringPluckGain = 6.3f;
+constexpr float kStringPluckGain = 4.2f;
 /** DaisySP Karplus: damping >= 0.95 crossfades toward infinite ring. */
 constexpr float kKarplusMaxDamping = 0.85f;
 constexpr float kStringDefaultDetune = 2.f;
@@ -99,7 +99,7 @@ constexpr float kWindPanpipeBreathBurst = 0.42f;
 constexpr float kPianoVoiceGain = 3.15f;
 constexpr float kTimpaniVoiceGain = 0.70f;
 constexpr float kBowedVoiceGain = 1.2f;
-constexpr float kGuitarVoiceGain = 6.65f;
+constexpr float kGuitarVoiceGain = 4.4f;
 constexpr float kOrganVoiceGain = 0.65f;
 /** Tonewheel (algo 0) harmonic stack is quieter than drawbar (algo 1). */
 constexpr float kOrganTonewheelGain = 1.8f;
@@ -131,9 +131,10 @@ constexpr float kEnvReleaseTauScale = 0.060f;
  * overpower drums; drum stem unchanged.
  */
 constexpr float kPlayBusGain = 0.168f;
-/** Stem-balanced vs play (~+3 dB); was 2.440 (drums ~+15 dB, heavy maincomp).
+/** Stem-balanced vs play. After kick trim, mid-kit (hi snare proxy) sits near
+ * unity with play; prior 0.141 was calibrated to a hotter bass stem.
  */
-constexpr float kDrumBusGain = 0.596f;
+constexpr float kDrumBusGain = 0.338f;
 /** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
 /** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs
  * prior -35). */
@@ -153,15 +154,15 @@ constexpr float kRazzleChorusDepthSec = 0.007f;
 
 constexpr float kMainCompThresholdDb = -28.f;
 constexpr float kMainCompRatio = 4.f;
-constexpr float kMainCompKneeDb = 30.f;
+constexpr float kMainCompKneeDb = 6.f;
 constexpr float kMainCompAttackSec = 0.003f;
 constexpr float kMainCompReleaseSec = 0.08f;
 constexpr float kMainCompGainAttackSec = 0.008f;
 constexpr float kMainCompGainReleaseSec = 0.06f;
-constexpr float kMainCompMix = 0.55f;
+constexpr float kMainCompMix = 1.f;
 constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;
-constexpr float kSynthNoteOnFadeSec = 0.f;
+constexpr float kSynthNoteOnFadeSec = 0.003f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
 constexpr float kReverbPostGain = 1.5f;
@@ -180,9 +181,14 @@ constexpr float kAutowahDefaultOct = 6.f;
 constexpr float kAutowahDefaultGain = 2.f;
 
 constexpr float kDrumGains[kDrumCount] = {
-    0.26f, 0.24f, 0.4f,  0.35f, 0.3f,  0.26f,
-    0.3f,  0.28f, 0.26f, 0.26f, 0.42f, 0.36f,
+    0.26f, 0.24f, 1.0f,  0.35f, 0.3f,  0.26f,
+    0.3f,  0.28f, 0.26f, 0.32f, 0.42f, 0.36f,
 };
+/** Tone PolySynth cowbell volume offset baked into gain (was missing +16 dB).
+ */
+constexpr float kDrumCowbellVolumeDb = 8.f;
+/** Kick makeup; was +6 dB (Tone Membrane volume) but sat too hot vs kit. */
+constexpr float kDrumBassVolumeDb = 0.f;
 
 enum VoiceType {
   kSynth = 0,

@@ -3,7 +3,7 @@ import { createsynth } from 'ops/archive/synth/tone/index'
 import { addsidechainmodule } from 'ops/archive/synth/tone/sidechainworkletnode'
 import { synthvoiceconfig } from 'ops/archive/synth/tone/voiceconfig/index'
 import { synthvoicefxconfig } from 'ops/archive/synth/tone/voicefx/index'
-import { Offline } from 'tone'
+import { Channel, Offline } from 'tone'
 import type { LEVEL_STABILITY_SCENARIO } from 'zss/feature/synth/backend/daisy/levelstabilityscenarios'
 import { estimatesequencedurationsec } from 'zss/feature/synth/backend/daisy/scalecrewsong'
 import {
@@ -32,6 +32,19 @@ import { TONE_PARITY_EXCLUDED } from './paritytolerances'
 const PARITY_SAMPLERATE = 44100
 const PARITY_REPLAY_OFFSET_SEC = 0.05
 
+/** Tone Channel.buses is a static Map; stale Offline Gains cause InvalidAccessError. */
+function cleartonechannelbuses() {
+  const buses = (
+    Channel as unknown as { buses?: Map<string, { dispose?: () => void }> }
+  ).buses
+  if (!buses) {
+    return
+  }
+  for (const node of buses.values()) {
+    node.dispose?.()
+  }
+  buses.clear()
+}
 function parityrenderlengthsec(
   durationsec: number,
   ticks: SYNTH_NOTE_ENTRY[],
@@ -67,14 +80,24 @@ async function rendertoneoffline(
   rendersec: number,
   setup: (synth: ReturnType<typeof createsynth>) => void,
 ): Promise<AudioBuffer> {
-  const buffer = await Offline(async ({ transport }) => {
-    await addfcrushmodule()
-    await addsidechainmodule()
-    const synth = createsynth()
-    setup(synth)
-    transport.start(0)
-  }, rendersec)
-  return toneaudiobuffer(buffer)
+  cleartonechannelbuses()
+  try {
+    const buffer = await Offline(
+      async ({ transport }) => {
+        await addfcrushmodule()
+        await addsidechainmodule()
+        const synth = createsynth()
+        setup(synth)
+        transport.start(0)
+      },
+      rendersec,
+      2,
+      PARITY_SAMPLERATE,
+    )
+    return toneaudiobuffer(buffer)
+  } finally {
+    cleartonechannelbuses()
+  }
 }
 
 export async function rendertoneparitypatch(
