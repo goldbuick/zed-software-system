@@ -147,16 +147,22 @@ float maincomptargetgain() {
 }
 
 void maincompdetect(float ax) {
-  if (ax < kMainCompSilenceFloor) {
+  // RMS detector (Tone Compressor style) instead of peak follower.
+  const float power = ax * ax;
+  if (power < kMainCompSilenceFloor * kMainCompSilenceFloor) {
     g_engine.comp_env *= kMainCompSilenceDecay;
     if (g_engine.comp_env < 1e-8f) {
       g_engine.comp_env = 0.f;
     }
     return;
   }
-  float coef = (ax > g_engine.comp_env) ? g_engine.comp_attack_coef
-                                        : g_engine.comp_release_coef;
-  g_engine.comp_env += (ax - g_engine.comp_env) * coef;
+  float coef = (power > g_engine.comp_env * g_engine.comp_env)
+                   ? g_engine.comp_attack_coef
+                   : g_engine.comp_release_coef;
+  // Smooth in linear amplitude space via sqrt of smoothed power.
+  float env_power = g_engine.comp_env * g_engine.comp_env;
+  env_power += (power - env_power) * coef;
+  g_engine.comp_env = std::sqrt(std::max(env_power, 0.f));
 }
 
 float maincompressor(float x) {

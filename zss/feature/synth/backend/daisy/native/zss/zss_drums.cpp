@@ -9,8 +9,7 @@
 
 namespace zss_daisy {
 
-// --- Drums: custom voices + Daisy SyntheticBassDrum (tom); bass =
-// Membrane-style ---
+// --- Drums: custom voices (Maxi/Tone reference bodies) ---
 
 int drumsamp(float sec) {
   return std::max(1, static_cast<int>(sec * g_engine.sample_rate + 0.5f));
@@ -119,9 +118,6 @@ void retriggerdrum(int i, float dursec) {
   for (int q = 0; q < 3; ++q) {
     biquadreset(d.eq[q]);
   }
-  if (i == 7) {
-    g_engine.tom_drum.Trig();
-  }
 }
 
 int drumadvance(int i) {
@@ -222,7 +218,7 @@ float drumcowbell() {
   float sig = drumoscwave(g_engine.drumoscA[2], 0, 800.f) +
               drumoscwave(g_engine.drumoscB[2], 0, 540.f);
   sig = drumbandpass(2, drumdistort(sig * 0.35f * amp, 0.08f), bp);
-  return sig * kDrumGains[2];
+  return sig * kDrumGains[2] * dbtoamp(kDrumCowbellVolumeDb);
 }
 
 float drumclap() {
@@ -329,10 +325,28 @@ float drumwoodblock(bool hi) {
 }
 
 float drumtom() {
-  if (drumadvance(7) < 0) {
+  const int age = drumadvance(7);
+  if (age < 0) {
     return 0.f;
   }
-  return g_engine.tom_drum.Process(false) * kDrumGains[7];
+  const float amp =
+      drumadsr(age, drumsamp(0.01f), drumsamp(0.1f), 0.f, drumsamp(0.08f));
+  const float namp = snarenoiseenv(age);
+  if (amp <= 0.f && namp <= 0.f) {
+    return 0.f;
+  }
+  constexpr float kC4 = 261.63f;
+  constexpr float kC5 = 523.25f;
+  constexpr float kC0 = 16.35f;
+  const int margin = drumsamp(drumnotelen(256));
+  const int tomlen = drumsamp(0.01f + 0.1f + 0.08f);
+  const int ramp = std::max(1, tomlen - margin);
+  const float hz = drumexpramp(age, ramp, kC4, kC0);
+  const float hz2 = drumexpramp(age, ramp, kC5, kC0);
+  const float body = drumoscwave(g_engine.drumoscA[7], 3, hz) +
+                     drumoscwave(g_engine.drumoscB[7], 2, hz2) * 0.5f;
+  const float n = drumnoise() * namp * 0.12f;
+  return (body * amp + n) * kDrumGains[7];
 }
 
 float drumbass() {
@@ -349,8 +363,13 @@ float drumbass() {
       age < pitchdec ? drumexpramp(age, pitchdec, fstart, kRoot) : kRoot;
   const float amp =
       drumadsr(age, drumsamp(0.001f), drumsamp(0.4f), 0.01f, drumsamp(1.4f));
-  const float sig = drumoscwave(g_engine.drumoscA[9], 1, hz);
-  return sig * amp * kDrumGains[9];
+  // Multi-harmonic body from one phase (no shared-osc Process() reuse).
+  const float phase = static_cast<float>(age) * hz / g_engine.sample_rate;
+  const float fund = std::sin(phase * kTwoPi);
+  const float oct = std::sin(phase * 2.f * kTwoPi) * 0.42f;
+  const float sub = std::sin(phase * 0.5f * kTwoPi) * 0.55f;
+  const float body = drumdistort(fund + oct + sub, 0.22f);
+  return body * amp * kDrumGains[9] * dbtoamp(kDrumBassVolumeDb);
 }
 
 float drumcymbalmodal(int idx, int age, int len, const float ratios[6],

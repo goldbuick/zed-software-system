@@ -40,62 +40,100 @@ float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo,
     }
   }
 
-  float raw1 = algopwave(v.algoops[0], cfg.osctype[0], hz * h1) * kAlgoOpGain;
-  float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
-  float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3) * kAlgoOpGain;
-  float raw4 = algopwave(v.algoops[3], cfg.osctype[3], hz) * kAlgoOpGain;
-
   float e0 = v.algoenvs[0].Process(gate);
   float e1 = v.algoenvs[1].Process(gate);
   float e2 = v.algoenvs[2].Process(gate);
   float e3 = v.algoenvs[3].Process(gate);
 
+  // Single Process() per operator per sample (serial FM dependency order).
+  float raw1 = algopwave(v.algoops[0], cfg.osctype[0], hz * h1) * kAlgoOpGain;
   float op1 = raw1 * e0;
-  float op2 = raw2 * e1;
-  float op3 = raw3 * e2;
-  float op4 = raw4 * e3;
+  float op2 = 0.f;
+  float op3 = 0.f;
+  float op4 = 0.f;
 
   if (algo == 0) {
-    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
-    op3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) * e2;
-    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * e3;
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+                 kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) *
+                 kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 =
+        algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * kAlgoOpGain;
+    op4 = raw4 * e3;
   } else if (algo == 1) {
-    op3 = algopwave(v.algoops[2], cfg.osctype[2],
-                    hz * h3 + (raw1 + raw2) * mi2 * 0.5f) *
-          e2;
-    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * e3;
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2],
+                           hz * h3 + (raw1 + raw2) * mi2 * 0.5f) *
+                 kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 =
+        algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * kAlgoOpGain;
+    op4 = raw4 * e3;
   } else if (algo == 2) {
-    op3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) * e2;
-    op4 = algopwave(v.algoops[3], cfg.osctype[3],
-                    hz + (raw1 + raw3) * mi3 * 0.5f) *
-          e3;
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) *
+                 kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 = algopwave(v.algoops[3], cfg.osctype[3],
+                           hz + (raw1 + raw3) * mi3 * 0.5f) *
+                 kAlgoOpGain;
+    op4 = raw4 * e3;
   } else if (algo == 3) {
-    op4 = algopwave(v.algoops[3], cfg.osctype[3],
-                    hz + (raw1 + raw2 + raw3) * mi3 * 0.33f) *
-          e3;
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3) * kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 = algopwave(v.algoops[3], cfg.osctype[3],
+                           hz + (raw1 + raw2 + raw3) * mi3 * 0.33f) *
+                 kAlgoOpGain;
+    op4 = raw4 * e3;
   } else if (algo == 4) {
-    // 1→2, 3→4 → op2 + op4 (algosynth.md)
-    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
-    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * e3;
+    // 1→2, 3→4 → op2 + op4
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+                 kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3) * kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 =
+        algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * kAlgoOpGain;
+    op4 = raw4 * e3;
   } else if (algo == 5) {
-    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
-    op3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw1 * mi2) * e2;
-    op4 = algopwave(v.algoops[3], cfg.osctype[3], hz + raw1 * mi3) * e3;
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+                 kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw1 * mi2) *
+                 kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 =
+        algopwave(v.algoops[3], cfg.osctype[3], hz + raw1 * mi3) * kAlgoOpGain;
+    op4 = raw4 * e3;
   } else if (algo == 6) {
-    op2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) * e1;
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+                 kAlgoOpGain;
+    op2 = raw2 * e1;
+  } else {
+    // algo 7 — additive
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3) * kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 = algopwave(v.algoops[3], cfg.osctype[3], hz) * kAlgoOpGain;
+    op4 = raw4 * e3;
   }
 
   float out = op4;
   if (algo == 4) {
-    // Dual FM carriers — quieter than serial algos
-    out = (op2 + op4) * 2.2f;
+    out = op2 + op4;
   } else if (algo == 5) {
-    // Three summed carriers — louder than single-carrier algos
-    out = (op2 + op3 + op4) * 0.5f;
+    out = (op2 + op3 + op4) * (1.f / 3.f);
   } else if (algo == 6) {
     out = op2;
   } else if (algo == 7) {
-    out = op1 + op2 + op3 + op4;
+    out = (op1 + op2 + op3 + op4) * 0.25f;
   }
   return out * v.algooutenv.Process(gate) * kAlgoOutGain;
 }

@@ -4,6 +4,7 @@ import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 import type {
   LEVEL_STABILITY_FX,
   LEVEL_STABILITY_SCENARIO,
+  LEVEL_STABILITY_VOICE_CONFIG,
 } from './levelstabilitytypes'
 
 const ARPEGGIO_NOTES = ['C4', 'D4', 'E4', 'G4', 'C5', 'G4', 'E4', 'D4']
@@ -116,3 +117,93 @@ export const FX_MATRIX_MIN_SOLO_PEAK_VS_DRY_DB = -4
 
 /** Distortion solo must raise peak at least this much vs dry. */
 export const FX_MATRIX_MIN_SOLO_DISTORT_PEAK_LIFT_DB = 4
+
+const VOICE_LOUDNESS_TYPES = [
+  'square',
+  'sine',
+  'triangle',
+  'sawtooth',
+  'amsawtooth',
+  'fmsine',
+  'fatsawtooth',
+  'bells',
+  'doot',
+  'algo0',
+  'algo4',
+  'algo7',
+  'noise',
+  'hollow',
+  'string',
+  'piano',
+  'guitar',
+  'organ',
+]
+
+/** Fixed-note peak/RMS sweep across voice families (filter: voiceloudness). */
+export const VOICE_LOUDNESS_SCENARIOS: LEVEL_STABILITY_SCENARIO[] =
+  VOICE_LOUDNESS_TYPES.map((voiceconfig) => ({
+    id: `voiceloudness-${voiceconfig}`,
+    description: `${voiceconfig} qC4 loudness`,
+    durationsec: 0.6,
+    voiceconfig,
+    notation: 'qC4',
+    maincompbypass: true,
+    sidechainbypass: true,
+  }))
+
+/** Fixed-hit peak/RMS sweep across all 12 drum ids (filter: drumloudness). */
+export const DRUM_LOUDNESS_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = Array.from(
+  { length: 12 },
+  (_, id) => ({
+    id: `drumloudness-${id}`,
+    description: `drum ${id} loudness`,
+    durationsec: id >= 9 ? 0.75 : 0.4,
+    ticks: [[0.05, [0, '8n', id]]],
+    maincompbypass: true,
+    sidechainbypass: true,
+  }),
+)
+
+/** Pitch accuracy for families that should lock to C4 (filter: pitchaccuracy). */
+export const PITCH_ACCURACY_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
+  'square',
+  'sine',
+  'fatsawtooth',
+  'algo0',
+  'algo4',
+  'algo7',
+  'partials',
+].map((voiceconfig) => ({
+  id: `pitchaccuracy-${voiceconfig}`,
+  description: `${voiceconfig} C4 pitch lock`,
+  durationsec: 0.5,
+  voiceconfig: voiceconfig === 'partials' ? 'sine' : voiceconfig,
+  voiceconfigs:
+    voiceconfig === 'partials'
+      ? ([
+          ['sine', ''],
+          ['partials', [1, 0.5, 0.25, 0.125]],
+        ] as LEVEL_STABILITY_VOICE_CONFIG[])
+      : undefined,
+  notation: 'qC4',
+  maincompbypass: true,
+  sidechainbypass: true,
+}))
+
+/** Main compressor gain-transfer steps (filter: comptransfer). */
+export const COMP_TRANSFER_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = (() => {
+  const scenarios: LEVEL_STABILITY_SCENARIO[] = []
+  for (let db = -60; db <= 0; db += 3) {
+    scenarios.push({
+      id: `comptransfer-${db}`,
+      description: `comp transfer ${db} dBFS sine`,
+      durationsec: 0.4,
+      voiceconfig: 'sine',
+      notation: 'qC4',
+      voiceconfigs: [['vol', db]],
+      sidechainbypass: true,
+      maincompbypass: false,
+    })
+  }
+  return scenarios
+})()

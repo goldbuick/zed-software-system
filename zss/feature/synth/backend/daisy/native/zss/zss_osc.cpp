@@ -181,22 +181,24 @@ static int familywavetobasic(int familywave) {
   }
 }
 
-float oscpartialsynth(Oscillator& o, float hz, int count,
-                      const float* partials) {
+float oscpartialsynth(ZssVoice& v, float hz, int count, const float* partials) {
   int n = count > 0 ? std::min(8, count) : 0;
   if (n <= 0) {
-    return oscbasicwave(o, 1, hz, 1.f);
+    return oscbasicwave(v.synthosc, 1, hz, 1.f);
   }
+  // One phase accumulator — do not Process() the shared osc per partial.
+  v.voicephasestep += hz / g_engine.sample_rate;
   float sum = 0.f, norm = 0.f;
   for (int pi = 0; pi < n; ++pi) {
     float amp = partials[pi];
     if (amp == 0.f) {
       continue;
     }
-    sum += oscbasicwave(o, 1, hz * (pi + 1), 1.f) * amp;
+    sum +=
+        std::sin(v.voicephasestep * static_cast<float>(pi + 1) * kTwoPi) * amp;
     norm += amp < 0.f ? -amp : amp;
   }
-  return norm <= 0.f ? oscbasicwave(o, 1, hz, 1.f) : sum / norm;
+  return norm <= 0.f ? std::sin(v.voicephasestep * kTwoPi) : sum / norm;
 }
 
 static float oscshapemakeup(int shape) {
@@ -269,7 +271,7 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   }
 
   if (pcount > 0) {
-    sig = oscpartialsynth(v.synthosc, hz, pcount, cfg.partials);
+    sig = oscpartialsynth(v, hz, pcount, cfg.partials);
   } else if (osctype == 4) // #synth pulse
   {
     v.synthosc.SetFreq(hz);

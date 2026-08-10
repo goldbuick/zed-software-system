@@ -110,7 +110,7 @@ WASM fallbacks: delay ≤ 0.0001 → **0.22 s**; feedback clamped **0–0.95**.
 | `predelay` | **0.01** | **0.01** |
 | send `on` | 18 | 18 |
 
-WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); predelay via `MaxiCombLine` before `Process()`. `decay` → `SetFeedback(0.75..0.98)`.
+WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); predelay via `MaxiCombLine` before `Process()`. `decay` → feedback curve `0.58..0.72` (Tone/Maxi reference).
 
 ### 4. `autofilter`
 
@@ -119,10 +119,12 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 | `frequency` | **3** | **3** | LFO rate (Hz) |
 | `depth` | **0.5** | **0.5** | |
 | `octaves` | **5** | **5** | |
-| `q` | **1** | **1** | |
-| `type` | lowpass | **0** = lowpass | WASM: 8 filter types |
+| `q` | **1** | **1** | Direct biquad Q |
+| `type` | lowpass | **0** = lowpass | All 8 types honored |
 | `basefrequency` | not in `#synth` API | **200** | **WASM-only** config key |
 | send `on` | **50** | **50** | |
+
+**Daisy:** sine LFO → selectable biquad (wet delta). Matches Tone AutoFilter topology.
 
 ### 5. `vibrato`
 
@@ -157,7 +159,7 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 
 Tone: all buses share one `FXCHAIN.autowah` — param changes affect every bus.
 
-**Daisy WASM:** uses `daisysp::Autowah` (soundpipe). `octaves` → `SetWah`, `gain` → `SetLevel`, `sensitivity` → input pre-gain. `basefrequency` and `follower` are no-ops on Daisy (Maximilian keeps full Tone-style biquad follower).
+**Daisy WASM:** Tone topology — envelope follower (`follower`) → ScaleExp(0.5) sweep from `basefrequency` → cascaded Q=2 bandpasses + peaking (`gain` dB). All five params are live.
 
 ---
 

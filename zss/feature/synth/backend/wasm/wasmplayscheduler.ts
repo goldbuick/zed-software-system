@@ -167,15 +167,21 @@ export function createwasmplayscheduler(engine: AUDIOCTX_ENGINE) {
     for (let i = 0; i < times.length; i++) {
       const when = times[i]
       const runs = bywhen.get(when) ?? []
-      void ctx.suspend(when).then(() => {
-        handlerchain = handlerchain.then(async () => {
-          for (let j = 0; j < runs.length; j++) {
-            runs[j]()
-          }
-          await ctx.resume()
+      void ctx
+        .suspend(when)
+        .then(() => {
+          handlerchain = handlerchain.then(async () => {
+            for (let j = 0; j < runs.length; j++) {
+              runs[j]()
+            }
+            await ctx.resume()
+          })
+          return handlerchain
         })
-        return handlerchain
-      })
+        .catch((err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err)
+          throw new Error(`offline suspend at ${when}s failed: ${message}`)
+        })
     }
   }
 

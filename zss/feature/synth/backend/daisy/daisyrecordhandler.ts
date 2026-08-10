@@ -9,6 +9,7 @@ import {
   trimaudiobufferdb,
 } from 'zss/feature/synth/mp3'
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { replaylengthsec } from 'zss/feature/synth/replaylength'
 import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
 import { write } from 'zss/feature/writeui'
 
@@ -51,13 +52,15 @@ export function createdaisyrecordhandler(
     const times = capturedticks.map((item) => item[0])
     const mintime = Math.min(...times)
     const maxtime = Math.max(...times)
-    const duration = Math.ceil(maxtime - mintime + 5.0)
+    const span = Math.max(0, maxtime - mintime)
 
     const offlineticks: SYNTH_NOTE_ENTRY[] = []
     for (let i = 0; i < capturedticks.length; ++i) {
       const [time, value] = capturedticks[i]
       offlineticks.push([time - mintime + 0.1, value])
     }
+
+    const duration = Math.ceil(replaylengthsec(span + 5.0, offlineticks))
 
     const replay = deps.getreplay()
 

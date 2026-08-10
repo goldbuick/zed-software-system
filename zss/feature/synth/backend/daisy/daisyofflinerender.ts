@@ -6,6 +6,7 @@ import {
   bootisolateddaisyengine,
   getdaisyaudiocontext,
   startisolateddaisydsp,
+  teardownisolateddaisyengine,
 } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
 
@@ -32,27 +33,31 @@ export async function renderdaisyrecord(
   )
 
   const synth = createdaisysynth(engine)
-  synth.applyreplay(replay)
+  try {
+    synth.applyreplay(replay)
 
-  let lastpercent = -1
-  const tickhook = onprogress
-    ? (time: number) => {
-        const percent = Math.min(
-          100,
-          Math.round((time / Math.max(durationsec, 1e-6)) * 100),
-        )
-        if (percent !== lastpercent) {
-          lastpercent = percent
-          onprogress(percent)
+    let lastpercent = -1
+    const tickhook = onprogress
+      ? (time: number) => {
+          const percent = Math.min(
+            100,
+            Math.round((time / Math.max(durationsec, 1e-6)) * 100),
+          )
+          if (percent !== lastpercent) {
+            lastpercent = percent
+            onprogress(percent)
+          }
         }
-      }
-    : undefined
+      : undefined
 
-  // durationsec is the rebased render length (not live AudioContext.currentTime).
-  synth.synthreplay(offlineticks, durationsec, tickhook)
-  synth.prepareofflinerender()
+    // durationsec is the rebased render length (not live AudioContext.currentTime).
+    synth.synthreplay(offlineticks, durationsec, tickhook)
+    synth.prepareofflinerender()
 
-  const buffer = await offlinectx.startRendering()
-  synth.destroy()
-  return buffer
+    const buffer = await offlinectx.startRendering()
+    return buffer
+  } finally {
+    synth.destroy()
+    teardownisolateddaisyengine(engine)
+  }
 }

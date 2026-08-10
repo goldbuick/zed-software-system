@@ -1,7 +1,13 @@
 import { Note } from 'tonal'
+import { apierror } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
-import { playpatternendtime } from 'zss/feature/synth/backend/wasm/playstart'
+import {
+  playpatternendtime,
+  resolveplaystarttime,
+} from 'zss/feature/synth/backend/wasm/playstart'
 import {
   initwasmsabchannels,
   pushwasmsabvalues,
@@ -160,10 +166,10 @@ export function createdaisysynth(
   const vibratosab = defaultwasmvibratosab(maxi.audioContext.currentTime)
   let pacertime = -1
   let pacercount = 0
-  let bgplayindex = SYNTH_SFX_RESET
   let playvolume = 80
   let bgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME
   const beatgridepoch = maxi.audioContext.currentTime
+  const bgplaybusyuntil = new Array(WASM_VOICE_COUNT).fill(0)
   const recording: RECORDING_STATE = {
     recordedticks: [],
     recordlastpercent: 0,
@@ -446,14 +452,38 @@ export function createdaisysynth(
     synthdebugtrace('C6 addplay', { buffer })
     const invokes = parseplay(buffer)
     const now = maxi.audioContext.currentTime
-    if (pacertime === -1) {
-      pacertime = now
+    pacertime = resolveplaystarttime(pacertime, now)
+    pacercount += Math.min(invokes.length, SYNTH_PLAY_VOICE_COUNT)
+    if (invokes.length > SYNTH_PLAY_VOICE_COUNT) {
+      apierror(
+        SOFTWARE,
+        registerreadplayer(),
+        'play',
+        `dropped ${invokes.length - SYNTH_PLAY_VOICE_COUNT} play voice(s) (max ${SYNTH_PLAY_VOICE_COUNT})`,
+      )
     }
-    pacercount += invokes.length
     const starttime = pacertime
     for (let i = 0; i < invokes.length && i < SYNTH_PLAY_VOICE_COUNT; ++i) {
       pacertime = Math.max(pacertime, synthplaystart(i, starttime, invokes[i]))
     }
+  }
+
+  function pickbgplaychannel(starttime: number, endtime: number): number {
+    let best = SYNTH_SFX_RESET
+    let bestfree = Number.POSITIVE_INFINITY
+    for (let ch = SYNTH_SFX_RESET; ch < WASM_VOICE_COUNT; ++ch) {
+      const freeat = bgplaybusyuntil[ch] ?? 0
+      if (freeat <= starttime) {
+        bgplaybusyuntil[ch] = endtime
+        return ch
+      }
+      if (freeat < bestfree) {
+        bestfree = freeat
+        best = ch
+      }
+    }
+    bgplaybusyuntil[best] = endtime
+    return best
   }
 
   function addbgplay(buffer: string, quantize: string) {
@@ -464,10 +494,10 @@ export function createdaisysynth(
         ? now + 0.05
         : resolvebgplayonstart(now, beatgridepoch, quantize)
     for (let i = 0; i < invokes.length; ++i) {
-      synthplaystart(bgplayindex++, starttime, invokes[i], false)
-      if (bgplayindex >= WASM_VOICE_COUNT) {
-        bgplayindex = SYNTH_SFX_RESET
-      }
+      const probe = invokeplay(0, starttime, invokes[i], false)
+      const endtime = playpatternendtime(probe, starttime)
+      const chan = pickbgplaychannel(starttime, endtime)
+      synthplaystart(chan, starttime, invokes[i], false)
     }
   }
 

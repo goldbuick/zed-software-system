@@ -120,7 +120,24 @@ void updateplayvibratodepth(float vstart[kVibratoGroups],
   g_engine.fxvibrato_depth += (target - g_engine.fxvibrato_depth) * rate;
 }
 
+void advanceplayvibratolfos(float vfreq[kVibratoGroups]) {
+  for (int g = 0; g < kVibratoGroups; ++g) {
+    float freq = vfreq[g];
+    if (freq <= 0.f) {
+      freq = fxparam(g, kFxVibratoFreq);
+    }
+    if (freq <= 0.f) {
+      freq = 5.f;
+    }
+    g_engine.fxvibratolfo[g].SetFreq(freq);
+    g_engine.fxvibratolfo[g].SetWaveform(Oscillator::WAVE_SIN);
+    g_engine.fxvibratolfo[g].SetAmp(1.f);
+    g_engine.fxvibratolfo_sample[g] = g_engine.fxvibratolfo[g].Process();
+  }
+}
+
 float playvibratocents(int vi, float vfreq[kVibratoGroups]) {
+  (void)vfreq;
   int group = voicefxgroup(vi);
   float send = fxsendval(group, kFxVibrato);
   if (send <= 0.f || readctrl(off_voices() + vi * kVoiceStride + 1) <= 0.5f) {
@@ -129,21 +146,11 @@ float playvibratocents(int vi, float vfreq[kVibratoGroups]) {
   if (g_engine.fxvibrato_depth <= 0.0001f) {
     return 0.f;
   }
-  float freq = vfreq[group];
-  if (freq <= 0.f) {
-    freq = fxparam(group, kFxVibratoFreq);
-  }
-  if (freq <= 0.f) {
-    freq = 5.f;
-  }
   float maxdelay = fxparam(group, kFxVibratoMaxdelay);
   if (maxdelay <= 0.f) {
     maxdelay = 0.02f;
   }
-  g_engine.fxvibratolfo.SetFreq(freq);
-  g_engine.fxvibratolfo.SetWaveform(Oscillator::WAVE_SIN);
-  g_engine.fxvibratolfo.SetAmp(1.f);
-  float lfo = g_engine.fxvibratolfo.Process();
+  float lfo = g_engine.fxvibratolfo_sample[group];
   return lfo * g_engine.fxvibrato_depth * maxdelay * 3500.f * send;
 }
 

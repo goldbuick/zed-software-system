@@ -22,14 +22,13 @@ import { defaultwasmvoicestate } from 'zss/feature/synth/backend/wasm/wasmvoicec
 import {
   invokeplay,
   parseplay,
-  tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
+import { replaylengthsec } from 'zss/feature/synth/replaylength'
 import {
   SYNTH_PLAY_VOICE_COUNT,
   SYNTH_VOICE_COUNT,
 } from 'zss/feature/synth/synthdefaults'
-import { isstring } from 'zss/mapping/types'
 
 import { bootisolateddaisyengine, startisolateddaisydsp } from './daisyengine'
 import { createdaisysynth } from './daisysynth'
@@ -57,19 +56,7 @@ function parityrenderlengthsec(
   durationsec: number,
   ticks: SYNTH_NOTE_ENTRY[],
 ): number {
-  let latest = durationsec
-  for (let i = 0; i < ticks.length; i++) {
-    const [time, value] = ticks[i]
-    const [, notation] = value
-    let eventend = time + PARITY_REPLAY_OFFSET_SEC
-    if (isstring(notation)) {
-      eventend += tonenotationseconds(notation)
-    }
-    if (eventend > latest) {
-      latest = eventend
-    }
-  }
-  return Math.max(latest + 0.15, durationsec + 1.0)
+  return replaylengthsec(durationsec, ticks, PARITY_REPLAY_OFFSET_SEC)
 }
 
 function buildreplay(scenario: LEVEL_STABILITY_SCENARIO): WASM_REPLAY_STATE {

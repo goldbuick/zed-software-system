@@ -66,8 +66,8 @@ describe('wasm parity fixtures manifest', () => {
   })
 
   it('lists drum, fx, and main dynamics parity patch ids', () => {
-    expect(DRUM_PARITY_PATCHES.length).toBe(10)
-    expect(FX_PARITY_PATCHES.length).toBe(7)
+    expect(DRUM_PARITY_PATCHES.length).toBe(12)
+    expect(FX_PARITY_PATCHES.length).toBe(12)
     expect(MAIN_DYNAMICS_PARITY_PATCHES.length).toBe(5)
   })
 

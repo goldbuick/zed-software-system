@@ -37,7 +37,7 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 
 | Backend | Drum implementation |
 |---------|---------------------|
-| **DaisySP WASM** (active) | Custom Membrane-style bass (ID 9), DaisySP `SyntheticBassDrum` (ID 7); custom C++ for tick, tweet, snares, cowbell, clap, woodblocks |
+| **DaisySP WASM** (active) | Custom Maxi/Tone-parity bodies for all kit drums including tom (saw/tri/noise glide) and multi-harmonic bass; modal cymbals for crash/ride |
 | **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
 
 See [implementation-matrix.mdx](implementation-matrix.mdx) Table 4.
@@ -47,7 +47,7 @@ See [implementation-matrix.mdx](implementation-matrix.mdx) Table 4.
 ### bass.ts
 - **MembraneSynth** with 8 octaves, pitch decay 0.125
 - Connects to both `drumvolume` and `drumaction` (sidechain)
-- **Daisy (ID 9):** Tone-faithful Membrane copy — sine, C1×8→C1 expo over 0.125s, ADSR 0.001/0.4/0.01/1.4 (`drumbass()`)
+- **Daisy (ID 9):** Membrane pitch envelope + multi-harmonic body (fund/oct/sub) + soft clip; `kDrumBassVolumeDb` makeup
 
 ### hihat.ts
 - **NoiseSynth** through biquad highpass filter (8kHz tick, 6kHz open; -12 dB/oct, Tone parity)

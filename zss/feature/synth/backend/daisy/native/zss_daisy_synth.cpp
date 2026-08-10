@@ -17,6 +17,7 @@
 #include "zss/zss_config.h"
 #include "zss/zss_internal.h"
 
+using zss_daisy::advanceplayvibratolfos;
 using zss_daisy::g_control;
 using zss_daisy::g_engine;
 using zss_daisy::initengine;
@@ -30,6 +31,7 @@ using zss_daisy::readctrl;
 using zss_daisy::readmainvolume;
 using zss_daisy::readttsvolume;
 using zss_daisy::readvibratosab;
+using zss_daisy::updateplayvibratodepth;
 
 extern "C" {
 
@@ -86,13 +88,14 @@ void zss_process(float* out, int frames, const float* tts_in) {
   for (int f = 0; f < frames; ++f) {
     ++g_engine.sampleclock;
     updateplayvibratodepth(vstart, vend, vpeak);
+    advanceplayvibratolfos(vfreq);
 
     for (int d = 0; d < kDrumCount; ++d) {
       const uint32_t strike = static_cast<uint32_t>(readctrl(off_drums() + d));
-      if (strike != g_engine.drums[d].prev_strike) {
+      if (strike > g_engine.drums[d].prev_strike) {
         retriggerdrum(d, readctrl(off_drums() + kDrumCount + d));
-        g_engine.drums[d].prev_strike = strike;
       }
+      g_engine.drums[d].prev_strike = strike;
     }
 
     float play0 = 0.f, play1 = 0.f, bg = 0.f;
@@ -139,6 +142,7 @@ void zss_process(float* out, int frames, const float* tts_in) {
     if (!std::isfinite(final)) {
       final = 0.f;
     }
+    g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
     out[f] = clampf(final, -1.f, 1.f);
   }
 }

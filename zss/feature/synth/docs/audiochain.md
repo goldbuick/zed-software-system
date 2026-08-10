@@ -39,10 +39,10 @@ hiss (pink noise) ───────┘
 
 - **Threshold:** -28 dB
 - **Ratio:** 4:1
-- **Attack / release:** 3 ms / 80 ms (peak envelope detector)
+- **Attack / release:** 3 ms / 80 ms (RMS envelope detector)
 - **Applied gain slew:** 8 ms attack / 60 ms release (`comp_gain_smooth`, separate from detector)
-- **Parallel mix:** 55% wet compressed / 45% dry (`kMainCompMix`) — limits level loss vs full wet GR
-- **Knee:** 30 dB (Tone `Compressor`; Daisy `compressorskneedb` in `maincomptargetgain()`)
+- **Parallel mix:** 100% wet (`kMainCompMix = 1`) after knee/RMS fix
+- **Knee:** 6 dB (Tone `Compressor`; Daisy `kMainCompKneeDb` in `maincomptargetgain()`)
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
 - **Tone:** `Tone.Compressor` after `razzlegain` — internal gain smoothing on applied GR

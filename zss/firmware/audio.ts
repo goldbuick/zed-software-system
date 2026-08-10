@@ -276,7 +276,7 @@ export const AUDIO_FIRMWARE = createfirmware()
         write(
           SOFTWARE,
           READ_CONTEXT.elementfocus,
-          'fish: #ttsengine fish (no key) or #tts config — show saved config',
+          'fish: #ttsengine fish (no key) or #tts config - show saved config',
         )
         return 0
       }
@@ -417,7 +417,7 @@ export const AUDIO_FIRMWARE = createfirmware()
     return 0
   })
   .command('bgplayon1n', ['bgplay on 1n'], (chip, words) => {
-    handlebgplay(chip, words, '@1m')
+    handlebgplay(chip, words, '@1n')
     return 0
   })
   .command(
