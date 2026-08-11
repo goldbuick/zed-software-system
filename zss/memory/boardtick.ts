@@ -45,7 +45,7 @@ export function memorytickboard(
       return
     }
     args.push({
-      id: pass === 'draw' ? `draw_${type}_${readid}` : readid,
+      id: pass === 'draw' ? `${readid}_draw` : readid,
       type,
       code,
       object: type === CODE_PAGE_TYPE.OBJECT ? element : undefined,
