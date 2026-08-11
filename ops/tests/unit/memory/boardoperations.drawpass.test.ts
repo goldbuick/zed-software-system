@@ -100,7 +100,9 @@ describe('memorytickboard draw pass', () => {
 
     expect(draw).toHaveLength(2)
     expect(draw[0].type).toBe(CODE_PAGE_TYPE.TERRAIN)
+    expect(draw[0].id).toBe('0_draw')
     expect(draw[1].object?.id).toBe('sid_draw')
+    expect(draw[1].id).toBe('sid_draw_draw')
     expect(draw.every((item) => item.label === 'drawdisplay')).toBe(true)
     expect(tick.map((item) => item.object?.id)).toEqual([
       'sid_draw',
@@ -183,6 +185,7 @@ describe('memorytickboard draw pass', () => {
 
     expect(draw).toHaveLength(1)
     expect(draw[0].object?.id).toBe('sid_draw')
+    expect(draw[0].id).toBe('sid_draw_draw')
   })
 
   it('memoryupdatedrawdirty vacated cell and neighbors after object moves', () => {

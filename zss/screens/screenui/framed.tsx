@@ -82,10 +82,34 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     <>
       {!inputblocked && (
         <UserInput
-          MOVE_LEFT={(mods) => sendinput(player, INPUT.MOVE_LEFT, mods)}
-          MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
-          MOVE_UP={(mods) => sendinput(player, INPUT.MOVE_UP, mods)}
-          MOVE_DOWN={(mods) => sendinput(player, INPUT.MOVE_DOWN, mods)}
+          MOVE_LEFT={(mods) =>
+            sendinput(
+              player,
+              mods.shift ? INPUT.SHOOT_LEFT : INPUT.MOVE_LEFT,
+              mods,
+            )
+          }
+          MOVE_RIGHT={(mods) =>
+            sendinput(
+              player,
+              mods.shift ? INPUT.SHOOT_RIGHT : INPUT.MOVE_RIGHT,
+              mods,
+            )
+          }
+          MOVE_UP={(mods) =>
+            sendinput(
+              player,
+              mods.shift ? INPUT.SHOOT_UP : INPUT.MOVE_UP,
+              mods,
+            )
+          }
+          MOVE_DOWN={(mods) =>
+            sendinput(
+              player,
+              mods.shift ? INPUT.SHOOT_DOWN : INPUT.MOVE_DOWN,
+              mods,
+            )
+          }
           SHOOT_LEFT={(mods) => sendinput(player, INPUT.SHOOT_LEFT, mods)}
           SHOOT_RIGHT={(mods) => sendinput(player, INPUT.SHOOT_RIGHT, mods)}
           SHOOT_UP={(mods) => sendinput(player, INPUT.SHOOT_UP, mods)}

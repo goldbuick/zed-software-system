@@ -1,7 +1,7 @@
 ## keyboard input
 
 - arrow keys - $greenmove
-- shift + arrow keys - $greeneditor / terminal select; in-game shoot (`inputmove` + `inputshift`)
+- shift + arrow keys - $greeneditor / terminal select; in-game shoot (`inputshoot`)
 - w / a / s / d - $greenshoot (`inputshoot`)
 - z / x / c / v - $greenA / B / X / Y buttons
 - q / e - $greenL1 / R1

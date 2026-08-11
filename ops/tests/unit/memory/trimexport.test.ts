@@ -10,6 +10,7 @@ import {
   memoryexportbook,
   memoryexportbookasjson,
   memoryimportbook,
+  memoryreadbookflags,
   memoryreadcodepage,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
@@ -137,9 +138,12 @@ describe('trimexport', () => {
       expect(ispresent(again)).toBe(true)
       expect(again!.pages.length).toBe(1)
 
-      const importedpage = memoryreadcodepage(again, cp.id)
+      const importedpage = memoryreadcodepage(again, 'snap')
       const runtime = memoryreadcodepageruntime(importedpage)
       expect(runtime?.board?.exitnorth).toBe('roomn')
+      expect(memoryreadbookflags(again, 'player-with-stats')).toEqual({
+        deaths: 3,
+      })
     })
 
     it('round-trips trimmed wire book for import', () => {

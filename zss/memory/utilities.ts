@@ -1,9 +1,10 @@
 import { compress, decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
+import { pack, unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
-import { packformat, unpackformat } from 'zss/feature/format'
+import { FORMAT_OBJECT, unpackformat } from 'zss/feature/format'
 import { storagewriteconfig } from 'zss/feature/storage'
 import { CONFIG_KEYS } from 'zss/feature/storagekeys'
 import { isjoin } from 'zss/feature/url'
@@ -11,7 +12,11 @@ import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { base64tobase64url, base64urltobase64 } from 'zss/mapping/encode'
+import {
+  arraybuffertobase64,
+  base64tobase64url,
+  base64urltobase64,
+} from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
 import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -35,7 +40,23 @@ import {
   memorywritehalt,
 } from './session'
 import { trimformatobject, trimmemoryexport } from './trimexport'
-import { BOOK, FIXED_DATE, MEMORY_LABEL } from './types'
+import { BOOK, MEMORY_LABEL } from './types'
+
+/** zstd level for URL book payloads (measured: 19 vs 15 ~0.8%, 22 triples CPU). */
+const BOOK_ZSTD_LEVEL = 19
+
+function base64tobytes(base64: string): Uint8Array {
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; ++i) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes
+}
+
+function iszipbytes(bytes: Uint8Array): boolean {
+  return bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4b
+}
 
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
@@ -226,29 +247,72 @@ export async function memorycompressbooks(books: BOOK[]) {
 
   await ensurezstdwasm()
 
-  const zip = new JSZip()
+  const exported: FORMAT_OBJECT[] = []
   for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    const exportedbook = trimformatobject(memoryexportbook(book))
+    const exportedbook = trimformatobject(memoryexportbook(books[i]))
     if (exportedbook) {
-      // convert to bin
-      const bin = packformat(exportedbook)
-      if (ispresent(bin)) {
-        // NOTE: NOT using dictionary here, it's not worth the extra complexity
-        // AND it did not make a significant difference in size
-        // https://github.com/bokuweb/zstd-wasm?tab=readme-ov-file#using-dictionary
-        const binsquash = compress(bin, 15)
-        zip.file(book.id, binsquash, { date: FIXED_DATE })
+      exported.push(exportedbook)
+    }
+  }
+
+  // Single zstd frame over a msgpack array of books (no JSZip envelope).
+  const bin = pack(exported)
+  const binsquash = compress(bin, BOOK_ZSTD_LEVEL)
+  const bytes =
+    binsquash instanceof Uint8Array
+      ? binsquash
+      : new Uint8Array(binsquash as ArrayBuffer)
+  return base64tobase64url(
+    arraybuffertobase64(
+      bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength,
+      ) as ArrayBuffer,
+    ),
+  )
+}
+
+async function memorydecompressbookszip(content: string): Promise<BOOK[]> {
+  const books: BOOK[] = []
+  const zip = await JSZip.loadAsync(content, { base64: true })
+
+  const files: JSZipObject[] = []
+  zip.forEach((_path, file) => files.push(file))
+
+  for (let i = 0; i < files.length; ++i) {
+    const file = files[i]
+
+    const str = await file.async('string')
+    const maybebookfromstr = unpackformat(str)
+    if (ispresent(maybebookfromstr)) {
+      const book = memoryimportbook(maybebookfromstr)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    const bin = await file.async('uint8array')
+    const maybebookfrombin = unpackformat(bin)
+    if (ispresent(maybebookfrombin)) {
+      const book = memoryimportbook(maybebookfrombin)
+      if (ispresent(book)) {
+        books.push(book)
+        continue
+      }
+    }
+
+    const ubin = decompress(bin)
+    const maybebookfromubin = unpackformat(ubin)
+    if (ispresent(maybebookfromubin)) {
+      const book = memoryimportbook(maybebookfromubin)
+      if (ispresent(book)) {
+        books.push(book)
       }
     }
   }
 
-  // TODO: do we need this still ??
-  const content = await zip.generateAsync({
-    type: 'base64',
-  })
-
-  return base64tobase64url(content)
+  return books
 }
 
 export async function memorydecompressbooks(
@@ -262,50 +326,27 @@ export async function memorydecompressbooks(
 
   await ensurezstdwasm()
 
-  const books: BOOK[] = []
   const content = base64urltobase64(base64bytes)
-  const zip = await JSZip.loadAsync(content, { base64: true })
+  const raw = base64tobytes(content)
 
-  // extract a normal list
-  const files: JSZipObject[] = []
-  zip.forEach((_path, file) => files.push(file))
-
-  // unpack books
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
-
-    // first pass try string
-    const str = await file.async('string')
-    const maybebookfromstr = unpackformat(str)
-    if (ispresent(maybebookfromstr)) {
-      const book = memoryimportbook(maybebookfromstr)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    // second pass uncompressed msgpackr
-    const bin = await file.async('uint8array')
-    const maybebookfrombin = unpackformat(bin)
-    if (ispresent(maybebookfrombin)) {
-      const book = memoryimportbook(maybebookfrombin)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    // second pass compressed msgpackr
-    const ubin = decompress(bin)
-    const maybebookfromubin = unpackformat(ubin)
-    if (ispresent(maybebookfromubin)) {
-      const book = memoryimportbook(maybebookfromubin)
-      if (ispresent(book)) {
-        books.push(book)
-      }
-    }
+  // Legacy: JSZip envelope (PK..) with per-book zstd|msgpack|json entries.
+  if (iszipbytes(raw)) {
+    return memorydecompressbookszip(content)
   }
 
+  // Current: zstd(msgpack(FORMAT_OBJECT[]))
+  const ubin = decompress(raw)
+  const list = unpack(ubin) as unknown
+  if (!Array.isArray(list)) {
+    return []
+  }
+  const books: BOOK[] = []
+  for (let i = 0; i < list.length; ++i) {
+    const entry = list[i] as FORMAT_OBJECT
+    const book = memoryimportbook(entry)
+    if (ispresent(book)) {
+      books.push(book)
+    }
+  }
   return books
 }

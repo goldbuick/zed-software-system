@@ -24,6 +24,12 @@ import {
   memoryreadcodepagetype,
   memoryresetcodepagestats,
 } from './codepageoperations'
+import { memoryexportshouldskipflagowner } from './exportflagcache'
+import {
+  applyexportidremap,
+  buildexportidremap,
+  mintcompressedexportids,
+} from './exportidremap'
 import { memoryreadboardelementruntime } from './runtimeboundary'
 import {
   BOARD_ELEMENT,
@@ -155,6 +161,9 @@ export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
   const names = Object.keys(book.flags)
   for (let i = 0; i < names.length; ++i) {
     const name = names[i]
+    if (memoryexportshouldskipflagowner(name)) {
+      continue
+    }
     flagsout[name] = memoryreadbookflags(book, name)
   }
 
@@ -180,17 +189,25 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
     pages: pagesout,
   })
   // return a single tree
-  return formatobject(wire, BOOK_KEYS, {
+  const formatted = formatobject(wire, BOOK_KEYS, {
     flags: (flags) => {
       const flagsout: Record<string, any> = {}
       const names = Object.keys(flags)
       for (let i = 0; i < names.length; ++i) {
         const name = names[i]
+        if (memoryexportshouldskipflagowner(name)) {
+          continue
+        }
         flagsout[name] = memoryreadbookflags(book, name)
       }
       return flagsout
     },
   })
+  if (!ispresent(formatted)) {
+    return undefined
+  }
+  applyexportidremap(formatted, buildexportidremap(formatted))
+  return formatted
 }
 
 export function memoryhasbookflags(book: MAYBE<BOOK>, id: string) {
@@ -234,6 +251,7 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
 }
 
 export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
+  mintcompressedexportids(bookentry)
   const flat = unformatobject<{
     id: string
     name: string

@@ -10,6 +10,7 @@ import {
   memoryclearbookcodepage,
   memoryclearbookflags,
   memorycreatebook,
+  memoryexportbook,
   memoryexportbookasjson,
   memoryimportbook,
   memoryreadbookflags,
@@ -117,8 +118,8 @@ describe('book opaque boundaries', () => {
 
   it('export trim drops cleared empty flags but keeps carry-over stats', () => {
     const book = memorycreatebook([])
-    const cleared = creategadgetid('cleared-player')
-    const kept = creategadgetid('kept-player')
+    const cleared = 'cleared-player'
+    const kept = 'kept-player'
 
     memorywritebookflag(book, cleared, 'score', 10 as any)
     memoryclearbookflags(book, cleared)
@@ -143,6 +144,31 @@ describe('book opaque boundaries', () => {
       deaths: 2,
       highscore: 99,
     })
+  })
+
+  it('export skips rebuildable _gadget and _layers flag caches', () => {
+    const book = memorycreatebook([])
+    const durable = 'pid_test_player'
+    const gadgetowner = creategadgetid(durable)
+    const layersowner = `${book.id}_layers`
+
+    memorywritebookflag(book, durable, 'score', 7 as any)
+    memorywritebookflag(book, gadgetowner, 'state', { layers: [] } as any)
+    memorywritebookflag(book, layersowner, 'normal', { id: 'x' } as any)
+
+    const json = memoryexportbookasjson(book)
+    expect(json.flags[durable]).toEqual({ score: 7 })
+    expect(json.flags[gadgetowner]).toBeUndefined()
+    expect(json.flags[layersowner]).toBeUndefined()
+
+    const wire = memoryexportbook(book)
+    expect(ispresent(wire)).toBe(true)
+    memoryboundariesclear()
+    const again = memoryimportbook(wire)
+    expect(ispresent(again)).toBe(true)
+    expect(memoryreadbookflags(again, durable)).toEqual({ score: 7 })
+    expect(again!.flags[gadgetowner]).toBeUndefined()
+    expect(again!.flags[layersowner]).toBeUndefined()
   })
 
   it('frees nested runtime boundaries when freeing a whole book', () => {
