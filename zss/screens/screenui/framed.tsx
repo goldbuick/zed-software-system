@@ -97,11 +97,7 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
             )
           }
           MOVE_UP={(mods) =>
-            sendinput(
-              player,
-              mods.shift ? INPUT.SHOOT_UP : INPUT.MOVE_UP,
-              mods,
-            )
+            sendinput(player, mods.shift ? INPUT.SHOOT_UP : INPUT.MOVE_UP, mods)
           }
           MOVE_DOWN={(mods) =>
             sendinput(
