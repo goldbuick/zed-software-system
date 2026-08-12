@@ -28,7 +28,7 @@ jest.mock('zss/device/api', () => {
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
   LANG_TYPES: false,
-  SHOW_CODE: false,
+  DEBUG_SHOW_CODE: false,
   TRACE_CODE: '',
   DEBUG_LOG: false,
   RUNTIME: {

@@ -210,6 +210,7 @@ export function applyinputqueue(
       }
       if (mods & INPUT_SHIFT) {
         flags.inputshift = 1
+        inputshoot = inputmove
       }
       continue
     }
@@ -223,9 +224,9 @@ export function applyinputqueue(
       if (mods & INPUT_CTRL) {
         flags.inputctrl = 1
       }
-      if (mods & INPUT_SHIFT) {
-        flags.inputshift = 1
-      }
+      // inputmove + inputshift
+      flags.inputshift = 1
+      inputmove = inputshoot
       continue
     }
     if (actioninput === INPUT.NONE) {

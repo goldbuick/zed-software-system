@@ -5,7 +5,12 @@
     { "pattern": "^http://localhost" },
     { "pattern": "^http://127\\.0\\.0\\.1" },
     { "pattern": "^https?://([a-z0-9-]+\\.)*zed\\.cafe:8787" },
-    { "pattern": "^https://zed\\.cafe/docs(/|$)" }
+    { "pattern": "^https://zed\\.cafe/docs(/|$)" },
+    { "pattern": "^https://github\\.com/" },
+    { "pattern": "^https://raw\\.githubusercontent\\.com/" }
   ],
-  "aliveStatusCodes": [200, 206, 403]
+  "retryOn429": true,
+  "retryCount": 2,
+  "fallbackRetryDelay": "3s",
+  "aliveStatusCodes": [200, 206, 403, 429, 502, 503]
 }

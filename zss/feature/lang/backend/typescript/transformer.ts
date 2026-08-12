@@ -12,6 +12,7 @@ export type GenContext = {
   lineindex: number
   linelookup: Record<string, number>
   isfirststat: boolean
+  infusedcase: boolean
 }
 
 export const context: GenContext = {
@@ -20,6 +21,7 @@ export const context: GenContext = {
   lineindex: 0,
   linelookup: {},
   isfirststat: false,
+  infusedcase: false,
 }
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -91,6 +93,18 @@ function writeApi(
 
 function transformcompare(ast: CodeNode) {
   if (ast.type === NODE.COMPARE && ast.compare.type === NODE.COMPARE_ITEM) {
+    const folded = foldcomparepair(
+      ast.compare.method,
+      isnumericliteralnode(ast.lhs) ? ast.lhs.value : NaN,
+      isnumericliteralnode(ast.rhs) ? ast.rhs.value : NaN,
+    )
+    if (
+      isnumericliteralnode(ast.lhs) &&
+      isnumericliteralnode(ast.rhs) &&
+      !Number.isNaN(folded)
+    ) {
+      return write(ast, `${folded}`)
+    }
     switch (ast.compare.method) {
       case COMPARE.IS_EQ:
         return writeApi(ast, 'isEq', [
@@ -165,6 +179,10 @@ function transformoperatoritem(ast: CodeNode, operation: SourceNode) {
 
 function transformoperator(ast: CodeNode) {
   if (ast.type === NODE.OPERATOR) {
+    const folded = foldoperator(ast)
+    if (ispresent(folded)) {
+      return write(ast, `${folded}`)
+    }
     const operation = ast.lhs ? transformnode(ast.lhs) : write(ast, '')
     ast.items.forEach((item) => transformoperatoritem(item, operation))
     return operation
@@ -261,8 +279,343 @@ function applyloopbreakcontinue(
     } else if (item.type === NODE.CONTINUE) {
       item.goto = loop
     }
-    source.add(transformnode(item))
   })
+  appendprogramlines(lines, source)
+}
+
+function appendprogramlines(lines: CodeNode[], source: SourceNode) {
+  transformprogramlines(lines).forEach((chunk) => source.add(chunk))
+}
+
+type NumberLiteralNode = Extract<
+  CodeNode,
+  { type: NODE.LITERAL; literal: LITERAL.NUMBER }
+>
+
+function isnumericliteralnode(
+  node: CodeNode | undefined,
+): node is NumberLiteralNode {
+  return (
+    ispresent(node) &&
+    node.type === NODE.LITERAL &&
+    node.literal === LITERAL.NUMBER
+  )
+}
+
+function foldoperator(ast: CodeNode): MAYBE<number> {
+  if (ast.type !== NODE.OPERATOR) {
+    return undefined
+  }
+  let value = isnumericliteralnode(ast.lhs) ? ast.lhs.value : undefined
+  if (value === undefined) {
+    return undefined
+  }
+  for (const item of ast.items) {
+    if (item.type !== NODE.OPERATOR_ITEM || !isnumericliteralnode(item.rhs)) {
+      return undefined
+    }
+    switch (item.operator) {
+      case OPERATOR.PLUS:
+        value += item.rhs.value
+        break
+      case OPERATOR.MINUS:
+        value -= item.rhs.value
+        break
+      case OPERATOR.POWER:
+        value = Math.pow(value, item.rhs.value)
+        break
+      case OPERATOR.MULTIPLY:
+        value *= item.rhs.value
+        break
+      case OPERATOR.DIVIDE:
+        value /= item.rhs.value
+        break
+      case OPERATOR.MOD_DIVIDE:
+        value %= item.rhs.value
+        break
+      case OPERATOR.FLOOR_DIVIDE:
+        value = Math.floor(value / item.rhs.value)
+        break
+      case OPERATOR.UNI_PLUS:
+        value = +item.rhs.value
+        break
+      case OPERATOR.UNI_MINUS:
+        value = -item.rhs.value
+        break
+      default:
+        return undefined
+    }
+  }
+  return value
+}
+
+function foldcomparepair(method: COMPARE, lhs: number, rhs: number): 0 | 1 {
+  switch (method) {
+    case COMPARE.IS_EQ:
+      return lhs === rhs ? 1 : 0
+    case COMPARE.IS_NOT_EQ:
+      return lhs !== rhs ? 1 : 0
+    case COMPARE.IS_LESS_THAN:
+      return lhs < rhs ? 1 : 0
+    case COMPARE.IS_GREATER_THAN:
+      return lhs > rhs ? 1 : 0
+    case COMPARE.IS_LESS_THAN_OR_EQ:
+      return lhs <= rhs ? 1 : 0
+    case COMPARE.IS_GREATER_THAN_OR_EQ:
+      return lhs >= rhs ? 1 : 0
+  }
+}
+
+function linehasactivelabel(line: CodeNode): boolean {
+  if (line.type !== NODE.LINE) {
+    return false
+  }
+  return line.stmts.some((stmt) => stmt.type === NODE.LABEL && stmt.active)
+}
+
+function ifnodeneedsowncase(node: CodeNode): boolean {
+  switch (node.type) {
+    case NODE.GOTO:
+    case NODE.MARK:
+      return false
+    case NODE.LINE:
+    case NODE.WHILE:
+    case NODE.REPEAT:
+    case NODE.FOREACH:
+    case NODE.WAITFOR:
+      return true
+    case NODE.BREAK:
+    case NODE.CONTINUE:
+      return false
+    case NODE.IF:
+      return ispresent(node.block) && !caninlineif(node)
+    case NODE.ELSE_IF:
+    case NODE.ELSE:
+      return node.lines.some(ifnodeneedsowncase)
+    default:
+      return false
+  }
+}
+
+function caninlineif(node: Extract<CodeNode, { type: NODE.IF }>): boolean {
+  const block = node.block?.type === NODE.IF_BLOCK ? node.block : undefined
+  if (!ispresent(block)) {
+    return false
+  }
+  if (ifnodeneedsowncase(node.check)) {
+    return false
+  }
+  for (const item of [...block.lines, ...block.altlines]) {
+    if (ifnodeneedsowncase(item)) {
+      return false
+    }
+  }
+  return true
+}
+
+function appendinlineblocklines(
+  lines: CodeNode[],
+  source: SourceNode,
+  done: number,
+) {
+  lines.forEach((item) => {
+    switch (item.type) {
+      case NODE.GOTO:
+      case NODE.MARK:
+        break
+      case NODE.BREAK:
+        source.add(writegoto(item, done))
+        source.add(`\n`)
+        break
+      case NODE.ELSE_IF: {
+        source.add(`  } else if (`)
+        source.add(transformifcheckcondition(item.lines[0]))
+        source.add(`) {\n`)
+        appendinlineblocklines(item.lines.slice(1), source, done)
+        break
+      }
+      case NODE.ELSE:
+        source.add(`  } else {\n`)
+        appendinlineblocklines(item.lines, source, done)
+        break
+      default:
+        source.add(transformnode(item))
+        break
+    }
+  })
+}
+
+function transformifcheckcondition(node: CodeNode): SourceNode {
+  if (node.type === NODE.LINE) {
+    const check = node.stmts.find((stmt) => stmt.type === NODE.IF_CHECK)
+    if (check?.type === NODE.IF_CHECK) {
+      return writeApi(check, check.method, transformnodes(check.words))
+    }
+  }
+  if (node.type === NODE.IF_CHECK) {
+    return writeApi(node, node.method, transformnodes(node.words))
+  }
+  return transformnode(node)
+}
+
+function transforminlineif(
+  node: Extract<CodeNode, { type: NODE.IF }>,
+): SourceNode {
+  const block = node.block as Extract<CodeNode, { type: NODE.IF_BLOCK }>
+  writelookup([node.check], NODE.IF_CHECK, block.skip)
+  writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
+  const done = readlookup(block.done)
+  const source = write(node, [`  if (`])
+  source.add(transformifcheckcondition(node.check))
+  source.add(`) {\n`)
+  appendinlineblocklines(block.lines, source, done)
+  for (const item of block.altlines) {
+    if (item.type === NODE.ELSE_IF || item.type === NODE.ELSE) {
+      appendinlineblocklines([item], source, done)
+    }
+  }
+  source.add(`  }\n`)
+  return source
+}
+
+function linecanfuse(line: CodeNode): boolean {
+  if (line.type !== NODE.LINE) {
+    return false
+  }
+  for (const stmt of line.stmts) {
+    switch (stmt.type) {
+      case NODE.TEXT:
+      case NODE.COMMAND:
+      case NODE.API:
+      case NODE.HYPERLINK:
+      case NODE.MOVE:
+      case NODE.MARK:
+      case NODE.STAT:
+        break
+      case NODE.LABEL:
+        if (stmt.active) {
+          return false
+        }
+        break
+      case NODE.IF:
+        if (!caninlineif(stmt)) {
+          return false
+        }
+        break
+      default:
+        return false
+    }
+  }
+  return true
+}
+
+function stmtneedssy(stmt: CodeNode): boolean {
+  switch (stmt.type) {
+    case NODE.MARK:
+      return false
+    case NODE.LABEL:
+      return stmt.active
+    case NODE.STAT:
+      return context.isfirststat
+    case NODE.TEXT:
+    case NODE.COMMAND:
+    case NODE.API:
+    case NODE.HYPERLINK:
+    case NODE.MOVE:
+      return true
+    case NODE.IF:
+      return caninlineif(stmt)
+    default:
+      return true
+  }
+}
+
+function lineneedssy(line: CodeNode): boolean {
+  if (line.type !== NODE.LINE) {
+    return false
+  }
+  return line.stmts.some(stmtneedssy)
+}
+
+function transformfusedlines(lines: CodeNode[]): SourceNode {
+  const first = lines[0]
+  const last = lines[lines.length - 1]
+  const chunks: (string | SourceNode)[] = []
+
+  context.infusedcase = true
+  lines.forEach((line) => {
+    if (line.type !== NODE.LINE) {
+      return
+    }
+    // Fallthrough case labels so a mid-block yield can resume on the next line.
+    chunks.push(`case ${line.lineindex}:\n`)
+    const needsy = lineneedssy(line)
+    line.stmts.forEach((stmt) => {
+      chunks.push(transformnode(stmt))
+    })
+    if (needsy) {
+      // Advance past this source line before yielding so the next tick
+      // resumes at the following fallthrough case (matches break + nextcase).
+      chunks.push(`  if (api.sy()) { `)
+      chunks.push(writeApi(line, `jump`, [`${line.lineindex + 1}`]))
+      chunks.push(`; return 1; }\n`)
+    }
+  })
+  context.infusedcase = false
+
+  chunks.push(
+    `  `,
+    writeApi(first, `jump`, [`${last.lineindex + 1}`]),
+    `; continue;\n`,
+  )
+
+  return write(first, chunks)
+}
+
+function transformprogramlines(lines: CodeNode[]): SourceNode[] {
+  const result: SourceNode[] = []
+  let current: CodeNode[] = []
+
+  function flush() {
+    if (current.length === 0) {
+      return
+    }
+    if (current.length === 1) {
+      result.push(transformnode(current[0]))
+    } else {
+      result.push(transformfusedlines(current))
+    }
+    current = []
+  }
+
+  for (const item of lines) {
+    if (item.type !== NODE.LINE) {
+      flush()
+      result.push(transformnode(item))
+      continue
+    }
+
+    if (linehasactivelabel(item)) {
+      flush()
+      if (linecanfuse(item)) {
+        current = [item]
+      } else {
+        result.push(transformnode(item))
+      }
+      continue
+    }
+
+    if (!linecanfuse(item)) {
+      flush()
+      result.push(transformnode(item))
+      continue
+    }
+
+    current.push(item)
+  }
+
+  flush()
+  return result
 }
 
 function transformnode(ast: CodeNode): SourceNode {
@@ -273,7 +626,7 @@ function transformnode(ast: CodeNode): SourceNode {
         `while (true) {\n`,
         `if (api.sy()) { return 1; }\n`,
         `switch (api.getcase()) {\n`,
-        ...ast.lines.map(transformnode).flat(),
+        ...transformprogramlines(ast.lines).flat(),
         `default:\n`,
         `  return 0;\n`,
         `}\n`,
@@ -365,10 +718,13 @@ function transformnode(ast: CodeNode): SourceNode {
       ])
     case NODE.IF: {
       const block = ast.block?.type === NODE.IF_BLOCK ? ast.block : undefined
+      if (ispresent(block) && caninlineif(ast) && context.infusedcase) {
+        return transforminlineif(ast)
+      }
       if (ispresent(block)) {
         writelookup([ast.check], NODE.IF_CHECK, block.skip)
         const source = write(ast, transformnode(ast.check))
-        block.lines.forEach((item) => source.add(transformnode(item)))
+        appendprogramlines(block.lines, source)
         writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
         block.altlines.forEach((item) => source.add(transformnode(item)))
         return source
@@ -395,7 +751,7 @@ function transformnode(ast: CodeNode): SourceNode {
     case NODE.ELSE_IF:
     case NODE.ELSE: {
       const source = write(ast, ``)
-      ast.lines.forEach((item) => source.add(transformnode(item)))
+      appendprogramlines(ast.lines, source)
       return source
     }
     case NODE.WHILE: {
@@ -417,7 +773,7 @@ function transformnode(ast: CodeNode): SourceNode {
     case NODE.WAITFOR: {
       const source = write(ast, ``)
       writelookup(ast.lines, NODE.IF_CHECK, ast.loop)
-      ast.lines.forEach((item) => source.add(transformnode(item)))
+      appendprogramlines(ast.lines, source)
       return source
     }
     case NODE.FOREACH: {
@@ -509,6 +865,7 @@ export function createlineindexes(ast: CodeNode) {
   context.internal = 1
   context.lineindex = 0
   context.isfirststat = true
+  context.infusedcase = false
 
   // index nodes
   indexnode(ast)

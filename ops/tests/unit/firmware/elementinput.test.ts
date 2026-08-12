@@ -60,7 +60,7 @@ describe('applyinputqueue', () => {
     expect(flags.inputshoot).toEqual([])
   })
 
-  it('coalesces diagonal SHOOT_* into inputshoot without inputmove', () => {
+  it('coalesces diagonal SHOOT_* into inputshoot and mirrors inputmove+shift', () => {
     const flags = applyinputqueue(
       emptyflags([
         [INPUT.SHOOT_UP, 0],
@@ -70,10 +70,11 @@ describe('applyinputqueue', () => {
       undefined,
     )
     expect(flags.inputshoot).toEqual(['NORTH', 'EAST'])
-    expect(flags.inputmove).toEqual([])
+    expect(flags.inputmove).toEqual(['NORTH', 'EAST'])
+    expect(flags.inputshift).toBe(1)
   })
 
-  it('sets inputmove and inputshift for MOVE_* with INPUT_SHIFT', () => {
+  it('sets inputmove, inputshift, and inputshoot for MOVE_* with INPUT_SHIFT', () => {
     const flags = applyinputqueue(
       emptyflags([[INPUT.MOVE_UP, INPUT_SHIFT]]),
       undefined,
@@ -81,7 +82,7 @@ describe('applyinputqueue', () => {
     )
     expect(flags.inputmove).toEqual(['NORTH'])
     expect(flags.inputshift).toBe(1)
-    expect(flags.inputshoot).toEqual([])
+    expect(flags.inputshoot).toEqual(['NORTH'])
   })
 
   it('sets inputl2 for BUTTON_L2 without setting inputctrl', () => {

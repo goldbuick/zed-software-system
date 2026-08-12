@@ -72,6 +72,24 @@ export function capterminalbookmarklist(
   return list.slice(-TERMINAL_PIN_MAX)
 }
 
+export function sorturlbookmarksbycreatedat(
+  list: ZssUrlBookmark[],
+): ZssUrlBookmark[] {
+  return [...list].sort((a, b) => b.createdat - a.createdat)
+}
+
+export function sorteditorbookmarksbytypeandtitle(
+  list: ZssEditorBookmark[],
+): ZssEditorBookmark[] {
+  return [...list].sort((a, b) => {
+    const bytype = a.type.localeCompare(b.type)
+    if (bytype !== 0) {
+      return bytype
+    }
+    return a.title.localeCompare(b.title)
+  })
+}
+
 export function normalizebookmarks(raw: unknown): ZssBookmarksBlob {
   if (!raw || typeof raw !== 'object') {
     return { version: BOOKMARKS_VERSION, url: [], terminal: [], editor: [] }
@@ -83,9 +101,9 @@ export function normalizebookmarks(raw: unknown): ZssBookmarksBlob {
   const terminalfiltered = terminal.filter(isterminalbookmark)
   return {
     version: BOOKMARKS_VERSION,
-    url: url.filter(isurlbookmark),
+    url: sorturlbookmarksbycreatedat(url.filter(isurlbookmark)),
     terminal: capterminalbookmarklist(terminalfiltered),
-    editor: editor.filter(iseditorbookmark),
+    editor: sorteditorbookmarksbytypeandtitle(editor.filter(iseditorbookmark)),
   }
 }
 
@@ -165,7 +183,7 @@ export async function appendurlbookmark(
   }
   await mergebookmarksintostorage((prev) => ({
     ...prev,
-    url: [...prev.url, entry],
+    url: sorturlbookmarksbycreatedat([...prev.url, entry]),
   }))
   return entry
 }
@@ -201,7 +219,7 @@ export async function appendeditorbookmark(args: {
   }
   await mergebookmarksintostorage((prev) => ({
     ...prev,
-    editor: [...prev.editor, entry],
+    editor: sorteditorbookmarksbytypeandtitle([...prev.editor, entry]),
   }))
   return entry
 }
@@ -223,7 +241,7 @@ export async function updateurlbookmarkbyid(
       }
       return updated
     })
-    return { ...prev, url }
+    return { ...prev, url: sorturlbookmarksbycreatedat(url) }
   })
   return updated
 }
@@ -251,7 +269,7 @@ export async function updateeditorbookmarkbyid(
       }
       return updated
     })
-    return { ...prev, editor }
+    return { ...prev, editor: sorteditorbookmarksbytypeandtitle(editor) }
   })
   return updated
 }

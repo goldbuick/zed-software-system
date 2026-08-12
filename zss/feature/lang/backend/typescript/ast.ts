@@ -73,12 +73,20 @@ function mapparsererrors(input: IToken[]): LANG_ERROR[] {
   }))
 }
 
-export function compileast(text: string): {
+export type CompileAstOptions = {
+  ranges?: boolean
+}
+
+export function compileast(
+  text: string,
+  options: CompileAstOptions = {},
+): {
   errors?: LANG_ERROR[]
   tokens?: IToken[]
   cst?: CstNode
   ast?: CodeNode
 } {
+  const withranges = options.ranges ?? true
   const tokens = tokenize(`${text}\n`)
   if (tokens.errors.length > 0) {
     return {
@@ -107,8 +115,10 @@ export function compileast(text: string): {
     }
   }
 
-  // need this for code completion
-  addRange(ast)
+  if (withranges) {
+    // need this for code completion
+    addRange(ast)
+  }
 
   return {
     tokens: tokens.tokens,

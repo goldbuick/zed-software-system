@@ -7,7 +7,7 @@ jest.mock('zss/config', () => ({
   },
   LANG_DEV: false,
   LANG_TYPES: false,
-  SHOW_CODE: false,
+  DEBUG_SHOW_CODE: false,
   TRACE_CODE: '',
   DEBUG_LOG: false,
 }))
@@ -33,19 +33,18 @@ describe('chained comparison lowering', () => {
   it('emits and of pairwise compares for a < b < c', () => {
     const code = emit('#if 1 < 2 < 3\n')
     expect(code).toContain('api.and(')
-    expect(code.split('api.isLessThan').length - 1).toBe(2)
+    expect(code).toContain('api.if(')
   })
 
-  it('emits single compare for one operator', () => {
+  it('folds a single literal compare', () => {
     const code = emit('#if 1 < 2\n')
-    expect(code.split('api.isLessThan').length - 1).toBe(1)
-    expect(code).not.toContain('api.and(')
+    expect(code).toContain('api.if(1)')
+    expect(code).not.toContain('api.isLessThan')
   })
 
   it('allows mixed operators in the chain', () => {
     const code = emit('#if 1 < 3 >= 2\n')
     expect(code).toContain('api.and(')
-    expect(code).toContain('api.isLessThan')
-    expect(code).toContain('api.isGreaterThanOrEq')
+    expect(code).toContain('api.if(')
   })
 })

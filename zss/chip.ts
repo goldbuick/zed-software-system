@@ -1162,65 +1162,104 @@ export function createchip(
       return this.isEq(lhs, rhs) ? 0 : 1
     },
     isLessThan(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs < rhs ? 1 : 0
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left < right ? 1 : 0
     },
     isGreaterThan(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs > rhs ? 1 : 0
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left > right ? 1 : 0
     },
     isLessThanOrEq(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs <= rhs ? 1 : 0
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left <= right ? 1 : 0
     },
     isGreaterThanOrEq(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs >= rhs ? 1 : 0
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left >= right ? 1 : 0
     },
     opPlus(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs + rhs
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
       const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       return left + right
     },
     opMinus(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs - rhs
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
       const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       return left - right
     },
     opPower(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return Math.pow(lhs, rhs)
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return Math.pow(left, right)
     },
     opMultiply(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs * rhs
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left * right
     },
     opDivide(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs / rhs
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left / right
     },
     opModDivide(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return lhs % rhs
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return left % right
     },
     opFloorDivide(lhs, rhs) {
+      if (typeof lhs === 'number' && typeof rhs === 'number') {
+        return Math.floor(lhs / rhs)
+      }
       const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return Math.floor(left / right)
     },
     opUniPlus(rhs) {
+      if (typeof rhs === 'number') {
+        return +rhs
+      }
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return +right
     },
     opUniMinus(rhs) {
+      if (typeof rhs === 'number') {
+        return -rhs
+      }
       const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
       return -right
     },
