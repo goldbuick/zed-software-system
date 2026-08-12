@@ -9,7 +9,7 @@ title: generator.ts
 - `chevrotain` — CstNode, IToken
 - `source-map` — SourceMapGenerator
 - `zss/chip` — CHIP type
-- `zss/config` — SHOW_CODE
+- `zss/config` — DEBUG_SHOW_CODE
 - `./ast` — compileast
 - `./lexer` — LANG_ERROR
 - `./transformer` — transformast
@@ -41,5 +41,5 @@ title: generator.ts
 ## Context
 
 - `name` used for `console.time` / `console.timeEnd` when profiling
-- `SHOW_CODE` logs source and errors during compilation
+- `DEBUG_SHOW_CODE` logs source and errors during compilation
 - Generated code runs in `while (true)` loop; returns `1` on yield, `0` when done

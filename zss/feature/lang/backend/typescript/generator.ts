@@ -2,6 +2,7 @@
 import { CstNode, IToken } from 'chevrotain'
 import { SourceMapGenerator } from 'source-map'
 import { CHIP } from 'zss/chip'
+import { DEBUG_SHOW_CODE } from 'zss/config'
 
 import { compileast } from './ast'
 import { LANG_ERROR } from './lexer'
@@ -22,9 +23,18 @@ export type GeneratorBuild = {
 }
 
 export function compile(_name: string, text: string): GeneratorBuild {
-  const astResult = compileast(text)
+  const astResult = compileast(text, { ranges: false })
+
+  if (DEBUG_SHOW_CODE) {
+    // eslint-disable-next-line no-console
+    console.info(text, astResult.errors)
+  }
 
   if (astResult.errors && astResult.errors.length > 0) {
+    if (DEBUG_SHOW_CODE) {
+      // eslint-disable-next-line no-console
+      console.info(text, astResult.tokens, astResult.errors)
+    }
     return astResult
   }
 
@@ -41,6 +51,10 @@ export function compile(_name: string, text: string): GeneratorBuild {
 
   // TS transform + new Function executes chip scripts in the browser.
   if (transformResult.code) {
+    if (DEBUG_SHOW_CODE) {
+      // eslint-disable-next-line no-console
+      console.info(transformResult.code)
+    }
     try {
       return {
         ...astResult,

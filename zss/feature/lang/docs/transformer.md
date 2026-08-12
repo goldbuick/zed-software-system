@@ -50,7 +50,7 @@ try {
 | `LINE` | `case N:` + stmts + `break` |
 | `API` | `api.method(...);` |
 | `TEXT` | `api.text(template);` |
-| `STAT` | `api.stat(...)` (first only; others skipped) |
+| `STAT` | `api.stat(...)` (first only; others skipped as comments) |
 | `LABEL` | `// lineindex 'name' label` |
 | `GOTO` | `api.jump(N); continue;` |
 | `HYPERLINK` | `api.hyperlink(template, ...words);` |

@@ -7,7 +7,7 @@ jest.mock('zss/config', () => ({
   },
   LANG_DEV: false,
   LANG_TYPES: false,
-  SHOW_CODE: false,
+  DEBUG_SHOW_CODE: false,
   TRACE_CODE: '',
   DEBUG_LOG: false,
 }))
@@ -100,12 +100,12 @@ describe('compileast pipeline', () => {
 
   it('treats / as division inside # command expression', () => {
     const code = emit('#if 1 / 2\n')
-    expect(code).toContain('api.opDivide')
+    expect(code).toContain('api.if(0.5)')
   })
 
   it('allows newline inside parentheses in expression', () => {
     const code = emit('#if ( 1\n+ 2 )\n')
-    expect(code).toContain('api.opPlus')
+    expect(code).toContain('api.if(3)')
   })
 
   it('parses pick token_expr and emits api.if with pick', () => {
