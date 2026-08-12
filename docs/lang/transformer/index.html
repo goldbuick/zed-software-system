@@ -86,7 +86,7 @@
 </tr>
 <tr>
 <td><code>STAT</code></td>
-<td><code>api.stat(...)</code> (first only; others skipped)</td>
+<td><code>api.stat(...)</code> (first only; others skipped as comments)</td>
 </tr>
 <tr>
 <td><code>LABEL</code></td>
@@ -142,10 +142,12 @@
 <li><strong><code>writelookup</code></strong> / <strong><code>writelookupline</code></strong> — Connect skip/done labels to case numbers</li>
 <li><strong><code>writeTemplateString</code></strong> — Interpolates <code>$name</code> via <code>api.print(api.get('name'))</code></li>
 <li><strong><code>writeApi</code></strong> — <code>api.method(param1, param2, ...)</code></li>
+<li><strong><code>transformprogramlines</code></strong> — Fuses straight-line runs at program level and inside <code>#if</code> / <code>#else</code> / loop / <code>#waitfor</code> bodies (fallthrough cases + mid-block <code>sy</code> yield)</li>
 </ul>
 <h2 id="implementation-notes"><a class="blume-heading-anchor" href="#implementation-notes">Implementation Notes</a></h2>
 <ul>
 <li>First <code>STAT</code> in program is emitted; subsequent stats are comments (codepage structure)</li>
+<li>Straight-line fusion applies to program lines and to consecutive fusible lines inside jump-based <code>#if</code> / <code>#else</code> bodies and loop / <code>#waitfor</code> bodies</li>
 <li>Labels use <code>linelookup</code> to resolve <code>GOTO</code> targets</li>
 <li><code>break</code>/<code>continue</code> resolve to loop/done via <code>writelookup</code></li>
 <li><code>GENERATED_FILENAME</code> used for source map; errors get line/column from map</li>

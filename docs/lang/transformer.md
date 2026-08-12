@@ -50,7 +50,7 @@ try {
 | `LINE` | `case N:` + stmts + `break` |
 | `API` | `api.method(...);` |
 | `TEXT` | `api.text(template);` |
-| `STAT` | `api.stat(...)` (first only; others skipped) |
+| `STAT` | `api.stat(...)` (first only; others skipped as comments) |
 | `LABEL` | `// lineindex 'name' label` |
 | `GOTO` | `api.jump(N); continue;` |
 | `HYPERLINK` | `api.hyperlink(template, ...words);` |
@@ -71,10 +71,12 @@ try {
 - **`writelookup`** / **`writelookupline`** — Connect skip/done labels to case numbers
 - **`writeTemplateString`** — Interpolates `$name` via `api.print(api.get('name'))`
 - **`writeApi`** — `api.method(param1, param2, ...)`
+- **`transformprogramlines`** — Fuses straight-line runs at program level and inside `#if` / `#else` / loop / `#waitfor` bodies (fallthrough cases + mid-block `sy` yield)
 
 ## Implementation Notes
 
 - First `STAT` in program is emitted; subsequent stats are comments (codepage structure)
+- Straight-line fusion applies to program lines and to consecutive fusible lines inside jump-based `#if` / `#else` bodies and loop / `#waitfor` bodies
 - Labels use `linelookup` to resolve `GOTO` targets
 - `break`/`continue` resolve to loop/done via `writelookup`
 - `GENERATED_FILENAME` used for source map; errors get line/column from map
