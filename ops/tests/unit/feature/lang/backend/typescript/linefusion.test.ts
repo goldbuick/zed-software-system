@@ -91,4 +91,20 @@ describe('straight-line fusion', () => {
     expect(code).toContain('return 1')
     expect(code).toMatch(/api\.jump\(3\);\s*return 1/)
   })
+
+  it('fuses text lines inside jump-based #if do bodies', () => {
+    const code = emit('#if 1 do\n"a\n"b\n#done\n')
+    expect(code).toContain("api.text('a');")
+    expect(code).toContain("api.text('b');")
+    expect(countfusedsy(code)).toBeGreaterThanOrEqual(2)
+    expect(code).toMatch(/case 3:[\s\S]*case 4:[\s\S]*if \(api\.sy\(\)\)/)
+  })
+
+  it('fuses #clear lines inside #repeat do bodies', () => {
+    const code = emit('#repeat 2 do\n#clear a\n#clear b\n#done\n')
+    expect(code).toContain("api.command('clear', 'a')")
+    expect(code).toContain("api.command('clear', 'b')")
+    expect(countfusedsy(code)).toBeGreaterThanOrEqual(2)
+    expect(code).toMatch(/case 3:[\s\S]*case 4:[\s\S]*if \(api\.sy\(\)\)/)
+  })
 })

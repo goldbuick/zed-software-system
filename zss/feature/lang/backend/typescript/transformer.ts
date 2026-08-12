@@ -279,8 +279,12 @@ function applyloopbreakcontinue(
     } else if (item.type === NODE.CONTINUE) {
       item.goto = loop
     }
-    source.add(transformnode(item))
   })
+  appendprogramlines(lines, source)
+}
+
+function appendprogramlines(lines: CodeNode[], source: SourceNode) {
+  transformprogramlines(lines).forEach((chunk) => source.add(chunk))
 }
 
 type NumberLiteralNode = Extract<
@@ -720,7 +724,7 @@ function transformnode(ast: CodeNode): SourceNode {
       if (ispresent(block)) {
         writelookup([ast.check], NODE.IF_CHECK, block.skip)
         const source = write(ast, transformnode(ast.check))
-        block.lines.forEach((item) => source.add(transformnode(item)))
+        appendprogramlines(block.lines, source)
         writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
         block.altlines.forEach((item) => source.add(transformnode(item)))
         return source
@@ -747,7 +751,7 @@ function transformnode(ast: CodeNode): SourceNode {
     case NODE.ELSE_IF:
     case NODE.ELSE: {
       const source = write(ast, ``)
-      ast.lines.forEach((item) => source.add(transformnode(item)))
+      appendprogramlines(ast.lines, source)
       return source
     }
     case NODE.WHILE: {
@@ -769,7 +773,7 @@ function transformnode(ast: CodeNode): SourceNode {
     case NODE.WAITFOR: {
       const source = write(ast, ``)
       writelookup(ast.lines, NODE.IF_CHECK, ast.loop)
-      ast.lines.forEach((item) => source.add(transformnode(item)))
+      appendprogramlines(ast.lines, source)
       return source
     }
     case NODE.FOREACH: {
