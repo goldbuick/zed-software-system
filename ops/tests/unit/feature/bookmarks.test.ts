@@ -2,6 +2,7 @@ import type { DEVICELIKE } from 'zss/device/api'
 import { apitoast, vmcli } from 'zss/device/api'
 import {
   ZSS_BOOKMARKS_KEY,
+  normalizebookmarks,
   removebookmarkbyid,
   runterminalbookmarkclibyid,
   updateeditorbookmarkbyid,
@@ -27,6 +28,70 @@ jest.mock('zss/feature/storage', () => ({
   storagewritevar: jest.fn(),
 }))
 
+describe('normalizebookmarks', () => {
+  it('sorts url newest-first and editor by type then title', () => {
+    const blob = normalizebookmarks({
+      version: 1,
+      url: [
+        {
+          kind: 'url',
+          id: 'old',
+          name: 'old',
+          href: 'https://old/',
+          createdat: 10,
+        },
+        {
+          kind: 'url',
+          id: 'new',
+          name: 'new',
+          href: 'https://new/',
+          createdat: 30,
+        },
+        {
+          kind: 'url',
+          id: 'mid',
+          name: 'mid',
+          href: 'https://mid/',
+          createdat: 20,
+        },
+      ],
+      terminal: [
+        { kind: 'terminal', id: 't1', text: '#one', createdat: 1 },
+        { kind: 'terminal', id: 't2', text: '#two', createdat: 2 },
+      ],
+      editor: [
+        {
+          kind: 'editor',
+          id: 'e1',
+          type: 'object',
+          title: 'zeta',
+          codepage: {},
+          createdat: 1,
+        },
+        {
+          kind: 'editor',
+          id: 'e2',
+          type: 'board',
+          title: 'zoo',
+          codepage: {},
+          createdat: 2,
+        },
+        {
+          kind: 'editor',
+          id: 'e3',
+          type: 'board',
+          title: 'alpha',
+          codepage: {},
+          createdat: 3,
+        },
+      ],
+    })
+    expect(blob.url.map((b) => b.id)).toEqual(['new', 'mid', 'old'])
+    expect(blob.editor.map((b) => b.id)).toEqual(['e3', 'e2', 'e1'])
+    expect(blob.terminal.map((b) => b.id)).toEqual(['t1', 't2'])
+  })
+})
+
 describe('terminalbookmarkpindisplaylabel', () => {
   it('shows right-hand label after semicolon for bang lines', () => {
     expect(
@@ -45,6 +110,13 @@ describe('updateurlbookmarkbyid', () => {
         name: 'my room',
         href: 'https://old.example/',
         createdat: 10,
+      },
+      {
+        kind: 'url' as const,
+        id: 'u2',
+        name: 'newer room',
+        href: 'https://newer.example/',
+        createdat: 20,
       },
     ],
     terminal: [],
@@ -77,9 +149,18 @@ describe('updateurlbookmarkbyid', () => {
             name: 'my room',
             href: 'https://new.example/',
           }),
+          expect.objectContaining({ id: 'u2' }),
         ],
       }),
     )
+  })
+
+  it('bumps overwritten bookmark to first', async () => {
+    await updateurlbookmarkbyid('u1', 'https://new.example/')
+    const written = jest.mocked(storagewritevar).mock.calls[0]?.[1] as {
+      url: { id: string }[]
+    }
+    expect(written.url.map((b) => b.id)).toEqual(['u1', 'u2'])
   })
 
   it('returns undefined when id missing', async () => {
@@ -101,6 +182,14 @@ describe('updateeditorbookmarkbyid', () => {
         title: 'old title',
         codepage: { id: 'cp-old', code: 'old' },
         createdat: 5,
+      },
+      {
+        kind: 'editor' as const,
+        id: 'e2',
+        type: 'object',
+        title: 'alpha',
+        codepage: { id: 'cp-a', code: 'a' },
+        createdat: 6,
       },
     ],
   }
@@ -126,6 +215,18 @@ describe('updateeditorbookmarkbyid', () => {
         codepage: { id: 'cp-new', code: 'new' },
       }),
     )
+  })
+
+  it('re-sorts by type then title after update', async () => {
+    await updateeditorbookmarkbyid('e1', {
+      type: 'object',
+      title: 'zeta',
+      codepage: { id: 'cp-new', code: 'new' },
+    })
+    const written = jest.mocked(storagewritevar).mock.calls[0]?.[1] as {
+      editor: { id: string }[]
+    }
+    expect(written.editor.map((b) => b.id)).toEqual(['e2', 'e1'])
   })
 
   it('returns undefined when id missing', async () => {
