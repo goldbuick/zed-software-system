@@ -30,13 +30,18 @@ function emit(source: string) {
   return out.code
 }
 
+function countfusedsy(code: string | undefined): number {
+  // Mid-block yield checks: `if (api.sy()) { api.jump(...); return 1; }`
+  return (code?.match(/if \(api\.sy\(\)\) \{ api\.jump/g) ?? []).length
+}
+
 describe('straight-line fusion', () => {
-  it('fuses consecutive #clear lines into one switch case', () => {
+  it('fuses consecutive #clear lines with fallthrough resume cases', () => {
     const code = emit('#clear a\n#clear b\n#clear c\n')
     expect(code).toContain('case 2:')
-    expect(code).not.toContain('case 3:')
-    expect(code).not.toContain('case 4:')
-    expect(code.match(/api\.sy\(\);/g)?.length ?? 0).toBe(3)
+    expect(code).toContain('case 3:')
+    expect(code).toContain('case 4:')
+    expect(countfusedsy(code)).toBe(3)
     expect(code).toContain("api.command('clear', 'a')")
     expect(code).toContain("api.command('clear', 'c')")
   })
@@ -63,7 +68,7 @@ describe('straight-line fusion', () => {
     const code = emit('@ispushable\n@cycle 1\n@char 2\n#clear a\n')
     expect(code).toContain('// skipped cycle 1')
     expect(code).toContain("api.command('clear', 'a')")
-    expect(code.match(/api\.sy\(\);/g)?.length ?? 0).toBe(2)
+    expect(countfusedsy(code)).toBe(2)
   })
 
   it('emits api.stat for the first header stat only', () => {
@@ -77,6 +82,13 @@ describe('straight-line fusion', () => {
     const code = emit("'sidebar code\n#clear a\n")
     expect(code).toContain("'sidebar code' comment")
     expect(code).toContain("api.command('clear', 'a')")
-    expect(code.match(/api\.sy\(\);/g)?.length ?? 0).toBe(1)
+    expect(countfusedsy(code)).toBe(1)
+  })
+
+  it('yields with jump after fused sy so ticks do not re-run the line', () => {
+    const code = emit('#clear a\n#clear b\n')
+    expect(code).toContain('if (api.sy())')
+    expect(code).toContain('return 1')
+    expect(code).toMatch(/api\.jump\(3\);\s*return 1/)
   })
 })

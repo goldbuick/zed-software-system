@@ -345,11 +345,7 @@ function foldoperator(ast: CodeNode): MAYBE<number> {
   return value
 }
 
-function foldcomparepair(
-  method: COMPARE,
-  lhs: number,
-  rhs: number,
-): 0 | 1 {
+function foldcomparepair(method: COMPARE, lhs: number, rhs: number): 0 | 1 {
   switch (method) {
     case COMPARE.IS_EQ:
       return lhs === rhs ? 1 : 0
@@ -370,9 +366,7 @@ function linehasactivelabel(line: CodeNode): boolean {
   if (line.type !== NODE.LINE) {
     return false
   }
-  return line.stmts.some(
-    (stmt) => stmt.type === NODE.LABEL && stmt.active,
-  )
+  return line.stmts.some((stmt) => stmt.type === NODE.LABEL && stmt.active)
 }
 
 function ifnodeneedsowncase(node: CodeNode): boolean {
@@ -460,7 +454,9 @@ function transformifcheckcondition(node: CodeNode): SourceNode {
   return transformnode(node)
 }
 
-function transforminlineif(node: Extract<CodeNode, { type: NODE.IF }>): SourceNode {
+function transforminlineif(
+  node: Extract<CodeNode, { type: NODE.IF }>,
+): SourceNode {
   const block = node.block as Extract<CodeNode, { type: NODE.IF_BLOCK }>
   writelookup([node.check], NODE.IF_CHECK, block.skip)
   writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
@@ -540,18 +536,25 @@ function lineneedssy(line: CodeNode): boolean {
 function transformfusedlines(lines: CodeNode[]): SourceNode {
   const first = lines[0]
   const last = lines[lines.length - 1]
-  const chunks: (string | SourceNode)[] = [`case ${first.lineindex}:\n`]
+  const chunks: (string | SourceNode)[] = []
 
   context.infusedcase = true
   lines.forEach((line) => {
-    if (line.type === NODE.LINE) {
-      const needsy = lineneedssy(line)
-      line.stmts.forEach((stmt) => {
-        chunks.push(transformnode(stmt))
-      })
-      if (needsy) {
-        chunks.push(`  api.sy();\n`)
-      }
+    if (line.type !== NODE.LINE) {
+      return
+    }
+    // Fallthrough case labels so a mid-block yield can resume on the next line.
+    chunks.push(`case ${line.lineindex}:\n`)
+    const needsy = lineneedssy(line)
+    line.stmts.forEach((stmt) => {
+      chunks.push(transformnode(stmt))
+    })
+    if (needsy) {
+      // Advance past this source line before yielding so the next tick
+      // resumes at the following fallthrough case (matches break + nextcase).
+      chunks.push(`  if (api.sy()) { `)
+      chunks.push(writeApi(line, `jump`, [`${line.lineindex + 1}`]))
+      chunks.push(`; return 1; }\n`)
     }
   })
   context.infusedcase = false

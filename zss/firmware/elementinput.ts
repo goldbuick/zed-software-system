@@ -208,10 +208,9 @@ export function applyinputqueue(
       if (mods & INPUT_CTRL) {
         flags.inputctrl = 1
       }
-      // also update inputshoot when SHIFT is held down
       if (mods & INPUT_SHIFT) {
         flags.inputshift = 1
-        inputshoot = pushdir(inputmove, dir)
+        inputshoot = inputmove
       }
       continue
     }
