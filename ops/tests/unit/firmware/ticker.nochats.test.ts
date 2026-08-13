@@ -66,6 +66,7 @@ describe('ticker without chat', () => {
 
   it('aftertick single-line queue sets tickertext and does not emit chat', () => {
     jest.mocked(gadgetcheckqueue).mockReturnValueOnce(['vote update'])
+    RUNTIME_FIRMWARE.everytick(chip)
     RUNTIME_FIRMWARE.aftertick(chip)
     expect(READ_CONTEXT.element?.tickertext).toBe('vote update')
     expect(READ_CONTEXT.element?.tickertime).toBe(42)
