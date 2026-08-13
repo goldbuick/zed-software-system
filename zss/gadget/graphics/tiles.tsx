@@ -33,6 +33,8 @@ type TilesProps = {
   tilesversion?: number
   /** board = useMedia (game); ui = useGadgetMedia (chrome). Default board. */
   mediasource?: TILES_MEDIA_SOURCE
+  /** Partial upload cell indices when PERF_TILE_SUBIMAGE is enabled. */
+  dirtycells?: Iterable<number>
 }
 
 export function Tiles({
@@ -47,6 +49,7 @@ export function Tiles({
   skipraycast = false,
   tilesversion = 0,
   mediasource = 'board',
+  dirtycells,
 }: TilesProps) {
   const boardpalette = useMedia((state) => state.palettedata)
   const boardcharset = useMedia((state) => state.charsetdata)
@@ -83,6 +86,7 @@ export function Tiles({
       char,
       color,
       bg,
+      dirtycells,
     )
   }, [
     material.uniforms.data.value,
@@ -93,6 +97,7 @@ export function Tiles({
     bg,
     label,
     tilesversion,
+    dirtycells,
   ])
 
   // create / config material

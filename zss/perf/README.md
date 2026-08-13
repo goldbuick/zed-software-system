@@ -1,5 +1,9 @@
 # UI performance tooling
 
+## Optimization pass (Aug 2026)
+
+Trace-driven render/gadget fixes (control cache, layer flag cache, tile subimage wiring, reader fast paths) are documented in **[`docs/render-gadget-optimizations.md`](docs/render-gadget-optimizations.md)** — intent, architecture, trace before/after, failure modes, and verification commands. Read that doc before changing [`gadgetclient.ts`](../device/gadgetclient.ts), [`types.ts`](../gadget/data/types.ts) `readgadgetcontrol`, [`gadgetlayersflags.ts`](../memory/gadgetlayersflags.ts), or draw-dirty / tile upload paths.
+
 ## Perf monitor overlay
 
 Toggle the in-game perf panel with **`Ctrl+I`** or the CLI command **`#perf`**.
@@ -33,10 +37,10 @@ Browser builds expose these via `vite.config.ts` `zssprocessenvkeys` (set in the
 | Env | Default | Effect |
 |-----|---------|--------|
 | `ZSS_PERF_SPATIAL_INDEX` | `true` | Spatial-index path in draw-dirty allowids |
-| `ZSS_PERF_INCREMENTAL_LAYERS` | `false` | Skip full layer rebuild when drawallowids is empty |
+| `ZSS_PERF_INCREMENTAL_LAYERS` | `true` | Skip full layer rebuild when drawallowids is empty |
 | `ZSS_PERF_TILE_SUBIMAGE` | `false` | Partial tile DataTexture uploads when `dirtycells` is passed |
 
-Note: `PERF_TILE_SUBIMAGE` is currently inert even when enabled — [`updateTilemapDataTexture`](../gadget/display/tiles.ts) supports `dirtycells`, but [`Tiles`](../gadget/graphics/tiles.tsx) never passes that argument. Wiring dirty cells is a phase-2 change.
+When `PERF_TILE_SUBIMAGE` is enabled, [`Tiles`](../gadget/graphics/tiles.tsx) passes sim `drawdirtycells` through to [`updateTilemapDataTexture`](../gadget/display/tiles.ts) for partial GPU uploads.
 
 ## Bundle size
 
@@ -94,4 +98,6 @@ Populate after a clean session on a populated board. Leave cells blank until mea
 
 ## Jest
 
-[`ops/jest.config.ts`](../../ops/jest.config.ts) maps `zss/perf/ui` to [`ops/lib/test/mocks/perfui.ts`](../../ops/lib/test/mocks/perfui.ts) so Node tests do not load Vite `import.meta.env`.
+[`ops/jest.config.ts`](../../ops/jest.config.ts) maps `zss/perf/ui` to [`ops/lib/test/mocks/perfui.ts`](../../ops/lib/test/mocks/perfui.ts) and `zss/perf/ticktimingstats` to [`ops/lib/test/mocks/ticktimingstats.ts`](../../ops/lib/test/mocks/ticktimingstats.ts) so Node tests do not load Vite `import.meta.env`.
+
+**Graphics / TSX changes:** Jest does **not** compile the cafe Vite graph. After editing `zss/gadget/graphics/*.tsx`, run `yarn tsc --noEmit -p tsconfig.json` — duplicate bindings and similar errors are otherwise only caught by `cafe:dev`.

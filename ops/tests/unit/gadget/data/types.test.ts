@@ -11,6 +11,7 @@ import {
   LAYER_TYPE,
   PALETTE_COLORS,
   VIEWSCALE,
+  attachcontroltogadget,
   createcontrol,
   createdither,
   createmedia,
@@ -19,6 +20,7 @@ import {
   createtiles,
   layersreadcontrol,
   layersreadmedia,
+  readgadgetcontrol,
   paneladdress,
 } from 'zss/gadget/data/types'
 import { COLOR } from 'zss/words/types'
@@ -236,6 +238,89 @@ describe('types', () => {
 
       expect(result.focusx).toBe(15)
       expect(result.viewscale).toBe(VIEWSCALE.NEAR)
+    })
+  })
+
+  describe('readgadgetcontrol', () => {
+    it('uses cached control on gadget state when present', () => {
+      const control = createcontrol('p1', 0)
+      control.graphics = 'flat'
+      const gadget = {
+        id: 'g1',
+        board: 'b1',
+        boardname: '',
+        exiteast: '',
+        exitwest: '',
+        exitnorth: '',
+        exitsouth: '',
+        exiteast2: '',
+        exitwest2: '',
+        exitnorth2: '',
+        exitsouth2: '',
+        exitne: '',
+        exitnw: '',
+        exitse: '',
+        exitsw: '',
+        layers: [control],
+        control: {
+          width: 10,
+          height: 10,
+          focusx: 0,
+          focusy: 0,
+          viewscale: VIEWSCALE.MID,
+          graphics: 'iso',
+          facing: 0,
+        },
+      }
+      expect(readgadgetcontrol(gadget).graphics).toBe('iso')
+    })
+
+    it('attachcontroltogadget derives control from layers', () => {
+      const control = createcontrol('p1', 0)
+      control.graphics = 'mode7'
+      const gadget = attachcontroltogadget({
+        id: 'g1',
+        board: 'b1',
+        boardname: '',
+        exiteast: '',
+        exitwest: '',
+        exitnorth: '',
+        exitsouth: '',
+        exiteast2: '',
+        exitwest2: '',
+        exitnorth2: '',
+        exitsouth2: '',
+        exitne: '',
+        exitnw: '',
+        exitse: '',
+        exitsw: '',
+        layers: [control],
+      })
+      expect(gadget.control?.graphics).toBe('mode7')
+    })
+
+    it('falls back to layer scan when control cache missing', () => {
+      const control = createcontrol('p1', 0)
+      control.graphics = 'mode7'
+      const gadget = {
+        id: 'g1',
+        board: 'b1',
+        boardname: '',
+        exiteast: '',
+        exitwest: '',
+        exitnorth: '',
+        exitsouth: '',
+        exiteast2: '',
+        exitwest2: '',
+        exitnorth2: '',
+        exitsouth2: '',
+        exitne: '',
+        exitnw: '',
+        exitse: '',
+        exitsw: '',
+        layers: [control],
+      }
+      expect(readgadgetcontrol(gadget).graphics).toBe('mode7')
     })
   })
 

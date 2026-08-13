@@ -115,8 +115,11 @@ export function readargs<T extends ARG_TYPES>(
   index: number,
   args: T,
 ): [...ARG_TYPE_VALUES<T>, number] {
-  const tmp = READ_CONTEXT.words
-  READ_CONTEXT.words = words
+  const needwordsswap = READ_CONTEXT.words !== words
+  const tmp = needwordsswap ? READ_CONTEXT.words : words
+  if (needwordsswap) {
+    READ_CONTEXT.words = words
+  }
 
   const values: any[] = []
 
@@ -335,7 +338,9 @@ export function readargs<T extends ARG_TYPES>(
     }
   }
 
-  READ_CONTEXT.words = tmp
+  if (needwordsswap) {
+    READ_CONTEXT.words = tmp
+  }
 
   return [...values, ii] as [...ARG_TYPE_VALUES<T>, number]
 }

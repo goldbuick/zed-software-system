@@ -74,6 +74,10 @@ export function readexpr(index: number): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
   const ii = index + 1
 
+  if (isnumber(maybevalue) || isarray(maybevalue)) {
+    return [maybevalue, ii]
+  }
+
   // check consts
   if (mapstrcategory(maybevalue)) {
     const [maybecategory, n1] = readcategory(index)
@@ -124,11 +128,6 @@ export function readexpr(index: number): [any, number] {
   // empty is invalid
   if (!ispresent(maybevalue)) {
     return [undefined, index]
-  }
-
-  // check for pt, number, or array
-  if (isnumber(maybevalue) || isarray(maybevalue)) {
-    return [maybevalue, ii]
   }
 
   // check for flags and expressions

@@ -69,6 +69,7 @@ export function FPVLayer({
               char={floor.char}
               color={floor.color}
               bg={floor.bg}
+              dirtycells={layer.dirtycells}
             />
             <group position-z={drawheight * -0.25}>
               <Tiles
@@ -77,6 +78,7 @@ export function FPVLayer({
                 char={water.char}
                 color={water.color}
                 bg={water.bg}
+                dirtycells={layer.dirtycells}
               />
             </group>
             {!multi && (
@@ -105,6 +107,7 @@ export function FPVLayer({
                 char={sky.char}
                 color={sky.color}
                 bg={sky.bg}
+                dirtycells={layer.dirtycells}
               />
             </group>
             {!multi && (

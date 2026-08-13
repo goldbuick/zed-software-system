@@ -1,7 +1,11 @@
 import { createdevice } from 'zss/device'
 import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { decodepatchwire } from 'zss/feature/jsonpipe/wire'
-import type { GADGET_STATE, LAYER } from 'zss/gadget/data/types'
+import {
+  type GADGET_STATE,
+  type LAYER,
+  attachcontroltogadget,
+} from 'zss/gadget/data/types'
 import {
   applylayercacheupdate,
   emptygadgetstate,
@@ -38,13 +42,14 @@ function commitgadgetdisplay(gadget: GADGET_STATE) {
     if (ismaybeblankgadgetstate(gadget)) {
       return state
     }
+    const withcontrol = attachcontroltogadget(gadget)
     const layercachemap = applylayercacheupdate(
       state.layercachemap,
-      gadget?.board ?? '',
-      gadget?.layers ?? [],
+      withcontrol?.board ?? '',
+      withcontrol?.layers ?? [],
     )
     return {
-      gadget,
+      gadget: withcontrol,
       layercachemap,
     }
   })
@@ -76,14 +81,15 @@ function maybedefergadgetdisplay(
   const nextboard = gadget.board ?? ''
   const boardchanged = nextboard !== displayedboard
   if (!awaitingboardreveal || !boardchanged) {
+    const withcontrol = attachcontroltogadget(gadget)
     const layercachemap = applylayercacheupdate(
       state.layercachemap,
       nextboard,
-      gadget?.layers ?? [],
+      withcontrol?.layers ?? [],
     )
     return {
       deferred: false,
-      next: { gadget, layercachemap },
+      next: { gadget: withcontrol, layercachemap },
     }
   }
 
@@ -96,14 +102,15 @@ function maybedefergadgetdisplay(
   // Hold / in / idle after out: already at or past black -- reveal now.
   awaitingboardreveal = false
   deferredgadget = undefined
+  const withcontrol = attachcontroltogadget(gadget)
   const layercachemap = applylayercacheupdate(
     state.layercachemap,
     nextboard,
-    gadget?.layers ?? [],
+    withcontrol?.layers ?? [],
   )
   return {
     deferred: false,
-    next: { gadget, layercachemap },
+    next: { gadget: withcontrol, layercachemap },
   }
 }
 

@@ -1,6 +1,7 @@
 import { PERF_INCREMENTAL_LAYERS } from 'zss/config'
 import {
   LAYER,
+  LAYER_TILES,
   LAYER_TYPE,
   TICKER,
   VIEWSCALE,
@@ -196,6 +197,21 @@ export function memoryconverttogadgetcontrollayer(
  */
 const memoryconverttogadgetlayerscache = new Map<string, LAYER[]>()
 
+function memoryattachdrawdirtycellstotiles(board: BOARD, tiles: LAYER_TILES) {
+  // PERF_TILE_SUBIMAGE path: zss/perf/docs/render-gadget-optimizations.md
+  const boardruntime = memoryreadboardruntime(board)
+  if (boardruntime?.drawneedfull) {
+    delete tiles.dirtycells
+    return
+  }
+  const dirty = boardruntime?.drawdirtycells
+  if (dirty?.length) {
+    tiles.dirtycells = dirty
+  } else {
+    delete tiles.dirtycells
+  }
+}
+
 export function memoryconverttogadgetlayers(
   graphics: string,
   index: number,
@@ -224,6 +240,12 @@ export function memoryconverttogadgetlayers(
       const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
       const cached = memoryconverttogadgetlayerscache.get(cachekey)
       if (cached) {
+        const tilelayer = cached.find(
+          (layer) => layer.type === LAYER_TYPE.TILES,
+        )
+        if (tilelayer?.type === LAYER_TYPE.TILES) {
+          memoryattachdrawdirtycellstotiles(board, tilelayer)
+        }
         return cached
       }
     }
@@ -251,6 +273,7 @@ export function memoryconverttogadgetlayers(
     COLOR.BLACK,
   )
   layers.push(tiles)
+  memoryattachdrawdirtycellstotiles(board, tiles)
 
   const objectindex = iiii++
   const objects = memorycreatecachedsprites(cacheowner, objectindex)

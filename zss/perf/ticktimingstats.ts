@@ -9,6 +9,10 @@ export type FANOUT_STAT = {
 const PERF_DEV =
   typeof import.meta !== 'undefined' && import.meta.env?.DEV === true
 
+export function isperfdevbuild(): boolean {
+  return PERF_DEV
+}
+
 const localstages = new Map<string, STAGE_STAT>()
 const localfanout = new Map<string, FANOUT_STAT>()
 

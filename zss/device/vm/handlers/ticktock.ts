@@ -19,6 +19,7 @@ import {
 } from 'zss/memory/session'
 import type { BOARD, BOOK } from 'zss/memory/types'
 import { MEMORY_LABEL } from 'zss/memory/types'
+import { isperfdevbuild, readtickstats } from 'zss/perf/ticktimingstats'
 import { perfmeasure } from 'zss/perf/ui'
 
 /** Rebuild per-board gadget layer caches before gadgetsynctick reads them. */
@@ -41,6 +42,7 @@ function rebuildgadgetlayers(mainbook: BOOK, boards: BOARD[]) {
 
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
+  const t0 = isperfdevbuild() ? performance.now() : 0
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   if (ispresent(mainbook) && !memoryreadfrozen()) {
     perfmeasure('vm:memorytickloaders', () => {
@@ -65,5 +67,15 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     perfmeasure('vm:memoryfs', () => {
       memoryfsvmcheckontick(vm)
     })
+  }
+  if (isperfdevbuild()) {
+    const elapsed = performance.now() - t0
+    if (elapsed > 16) {
+      // eslint-disable-next-line no-console -- dev-only slow tick diagnosis
+      console.log(
+        `[zss perf] slow ticktock ${elapsed.toFixed(1)}ms`,
+        readtickstats().stages,
+      )
+    }
   }
 }

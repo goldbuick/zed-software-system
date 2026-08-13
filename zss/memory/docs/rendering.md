@@ -36,3 +36,14 @@ title: rendering.ts
 | `memoryelementtologprefix(element)` | Element → log/chat prefix (logical name; not affected by `@displayname`) |
 | `memoryelementtotickerprefix(element)` | Element → ticker strip prefix (`@displayname` on element or kind when set) |
 | `MEMORY_GADGET_LAYERS` (type) | The shape consumed by [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) — board id, name, exits, over/under, layers, tickers |
+
+## Perf: layer store cache and dirty tile cells
+
+Aug 2026 optimizations touching this module:
+
+- **Layer flag read cache** — [`gadgetlayersflags.ts`](../gadgetlayersflags.ts) caches `memoryreadbookflags(book, createlayersid(board))` per board; see [render-gadget-optimizations.md](../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker).
+- **Incremental layer rebuild** — `memoryconverttogadgetlayers` cache when `PERF_INCREMENTAL_LAYERS` and empty `drawallowids`; gated in [`rendering.ts`](../rendering.ts).
+- **Tile dirty cells** — `memoryattachdrawdirtycellstotiles` copies `boardruntime.drawdirtycells` (from [`boarddrawdirty.ts`](../boarddrawdirty.ts)) onto `LAYER_TILES.dirtycells` for main-thread `PERF_TILE_SUBIMAGE` uploads.
+
+Full intent, trace evidence, and debugging: [`zss/perf/docs/render-gadget-optimizations.md`](../../perf/docs/render-gadget-optimizations.md).
+

@@ -9,7 +9,7 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
@@ -149,8 +149,7 @@ export const FPVGraphics = memo(function FPVGraphics({
     }
 
     const { gadget } = useGadgetClient.getState()
-    const { layers = [] } = gadget
-    const control = layersreadcontrol(layers)
+    const control = readgadgetcontrol(gadget)
     const currentboard = gadget.board
 
     const animrate = 0.05

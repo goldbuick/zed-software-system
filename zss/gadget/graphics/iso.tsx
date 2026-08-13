@@ -9,7 +9,7 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
@@ -135,13 +135,10 @@ export const IsoGraphics = memo(function IsoGraphics({
       return
     }
 
-    // camera focus logic
-    const control = layersreadcontrol(
-      useGadgetClient.getState().gadget.layers ?? [],
-    )
-
+    const gadget = useGadgetClient.getState().gadget
+    const control = readgadgetcontrol(gadget)
     const animrate = FOCUS_ANIM_RATE
-    const currentboard = useGadgetClient.getState().gadget.board
+    const currentboard = gadget.board
 
     // tracking state
     const userdata = (cameraref.current.userData ??= {})
@@ -175,8 +172,7 @@ export const IsoGraphics = memo(function IsoGraphics({
       delta,
     )
     // Live board world offset: useLayoutEffect only (useFrame ahead of React remount = void).
-    const gadgetforstash = useGadgetClient.getState().gadget
-    stashfocusexitsnap(userdata, gadgettoexitsnap(gadgetforstash))
+    stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
 
     const bias = readgridbias(userdata)
     const panphase = isfocuspanphase(userdata)
@@ -227,7 +223,6 @@ export const IsoGraphics = memo(function IsoGraphics({
         break
     }
 
-    const gadget = useGadgetClient.getState().gadget
     const gadgetlayers = gadget.layers ?? []
     const playerspritez = maxspriteslayerz(gadgetlayers, 'iso')
     if (
