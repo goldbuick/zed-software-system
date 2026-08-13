@@ -39,6 +39,25 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       return undefined
     }),
   )
+  const boarddirtycount = useGadgetClient(
+    useShallow((state) => {
+      const stack = [
+        ...(state.gadget.layers ?? []),
+        ...(state.gadget.over ?? []),
+        ...(state.gadget.under ?? []),
+      ]
+      for (let i = 0; i < stack.length; ++i) {
+        const item = stack[i]
+        if (item.type === LAYER_TYPE.TILES) {
+          const count = item.dirtycells?.length ?? 0
+          if (count > 0) {
+            return count
+          }
+        }
+      }
+      return 0
+    }),
+  )
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -47,6 +66,9 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
   // typed arrays + a derived walls cap on every parent commit when the
   // underlying layer reference is unchanged.
   const tilelayer = layer?.type === LAYER_TYPE.TILES ? layer : undefined
+  // Memo on layer identity only is unsafe: sim reuses LAYER_* buffers and mutates
+  // char/sprite arrays in place. Invalidate when board dirtycells or sprite count changes.
+  // See zss/perf/docs/render-gadget-optimizations.md (Aug 2026 prod regression).
   const tilefilters = useMemo(() => {
     if (!tilelayer) {
       return undefined
@@ -82,10 +104,11 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
     }
     recordfilterrebuild('iso')
     return { floor, walls, water, ground, wallscap }
-  }, [tilelayer])
+  }, [tilelayer, boarddirtycount])
 
   const spritelayer = layer?.type === LAYER_TYPE.SPRITES ? layer : undefined
   const hideplayer = ispresent(layers)
+  const spritecount = spritelayer?.sprites?.length ?? 0
   const spritefilters = useMemo(() => {
     if (!spritelayer) {
       return undefined
@@ -104,7 +127,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
       (sprite) => (sprite.stat as COLLISION) !== COLLISION.ISGHOST,
     )
     return { othersprites, watersprites, shadowsprites }
-  }, [spritelayer, hideplayer])
+  }, [spritelayer, hideplayer, boarddirtycount, spritecount])
 
   switch (layer?.type) {
     default:
