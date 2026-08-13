@@ -69,7 +69,7 @@
 <p>Aug 2026 optimizations touching this module:</p>
 <ul>
 <li><strong>Layer flag read cache</strong> — <a href="../gadgetlayersflags.ts"><code>gadgetlayersflags.ts</code></a> caches <code>memoryreadbookflags(book, createlayersid(board))</code> per board; see <a href="../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker">render-gadget-optimizations.md</a>.</li>
-<li><strong>Incremental layer rebuild</strong> — <code>memoryconverttogadgetlayers</code> cache when <code>PERF_INCREMENTAL_LAYERS</code> and empty <code>drawallowids</code>; gated in <a href="../rendering.ts"><code>rendering.ts</code></a>.</li>
+<li><strong>Incremental layer rebuild</strong> — <code>memoryconverttogadgetlayers</code> cache when <code>PERF_INCREMENTAL_LAYERS</code>, empty <code>drawallowids</code>, <strong>and</strong> empty <code>drawdirtycells</code>; see <code>memoryincrementallayerscachestable</code> in <a href="../rendering.ts"><code>rendering.ts</code></a>.</li>
 <li><strong>Tile dirty cells</strong> — <code>memoryattachdrawdirtycellstotiles</code> copies <code>boardruntime.drawdirtycells</code> (from <a href="../boarddrawdirty.ts"><code>boarddrawdirty.ts</code></a>) onto <code>LAYER_TILES.dirtycells</code> for main-thread <code>PERF_TILE_SUBIMAGE</code> uploads.</li>
 </ul>
 <p>Full intent, trace evidence, and debugging: <a href="../../perf/docs/render-gadget-optimizations.md"><code>zss/perf/docs/render-gadget-optimizations.md</code></a>.</p>
