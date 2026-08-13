@@ -40,7 +40,7 @@ import {
 } from 'zss/words/textformat'
 import { ARG_TYPE } from 'zss/words/types'
 
-export type TICK_READ_CONTEXT = {
+type TICK_READ_CONTEXT = {
   board: MAYBE<BOARD>
   element: MAYBE<BOARD_ELEMENT>
   elementid: string
@@ -48,28 +48,35 @@ export type TICK_READ_CONTEXT = {
   elementisplayer: boolean
 }
 
-let tickreadcontextcache: MAYBE<TICK_READ_CONTEXT>
+const tickreadcontextstack: TICK_READ_CONTEXT[] = []
 
 function bindtickreadcontext(ctx: TICK_READ_CONTEXT) {
-  tickreadcontextcache = ctx
+  tickreadcontextstack.push(ctx)
 }
 
+/** Pop innermost tick bind (aftertick). */
 export function cleartickreadcontext() {
-  tickreadcontextcache = undefined
+  tickreadcontextstack.pop()
 }
 
-export function readtickreadcontext(): TICK_READ_CONTEXT {
-  if (!ispresent(tickreadcontextcache)) {
+/** Test / reset helper — drop all binds. */
+export function cleartickreadcontextall() {
+  tickreadcontextstack.length = 0
+}
+
+function readtickreadcontext(): TICK_READ_CONTEXT {
+  const ctx = tickreadcontextstack[tickreadcontextstack.length - 1]
+  if (!ispresent(ctx)) {
     const player = READ_CONTEXT.elementfocus || memoryreadoperator()
     apierror(
       SOFTWARE,
       player,
       'runtime',
-      'readtickreadcontext without everytick bind',
+      `readtickreadcontext without everytick bind (stack depth ${tickreadcontextstack.length})`,
     )
     throw new Error('readtickreadcontext without everytick bind')
   }
-  return tickreadcontextcache
+  return ctx
 }
 
 function asserttickreadcontextinvariant(
