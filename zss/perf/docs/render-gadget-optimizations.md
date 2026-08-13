@@ -206,7 +206,7 @@ updateTilemapDataTexture(..., dirtycells)
 |-----|---------|--------|
 | `ZSS_PERF_TILE_SUBIMAGE` | `false` | Must be **`true`** at build/dev time for partial uploads |
 
-Set in shell before `yarn task run cafe:dev`, e.g. in [`cafe/.env.local`](../../../cafe/.env.local) via vite `zssprocessenvkeys`.
+Set in shell before `yarn task run cafe:dev`, e.g. in `cafe/.env.local` (local only, not committed) via vite `zssprocessenvkeys`.
 
 ### Failure modes and debugging
 
