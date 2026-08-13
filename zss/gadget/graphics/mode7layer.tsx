@@ -79,6 +79,7 @@ export function Mode7Layer({
             char={floor.char}
             color={floor.color}
             bg={floor.bg}
+            dirtycells={layer.dirtycells}
           />
           <group position-z={drawheight * -0.25}>
             <Tiles
@@ -87,6 +88,7 @@ export function Mode7Layer({
               char={water.char}
               color={water.color}
               bg={water.bg}
+              dirtycells={layer.dirtycells}
             />
           </group>
           <group position-z={drawheight * 0.25}>
@@ -96,6 +98,7 @@ export function Mode7Layer({
               char={walls.char}
               color={walls.color}
               bg={walls.bg}
+              dirtycells={layer.dirtycells}
             />
           </group>
         </group>

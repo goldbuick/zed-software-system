@@ -3,7 +3,8 @@ import { gadgetclientgotofade } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { applyplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryinitboard, memoryreadboardbyaddress } from 'zss/memory/boards'
+import { memoryensureboardready } from 'zss/memory/boardlookup'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memorylistboardelementsbykind } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -26,7 +27,7 @@ export function resolveplayergotodestpt(
     return undefined
   }
 
-  memoryinitboard(targetboard)
+  memoryensureboardready(targetboard)
 
   const destpt: PT = {
     x: maybex ?? targetboard.startx ?? Math.round(BOARD_WIDTH * 0.5),

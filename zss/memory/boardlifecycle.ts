@@ -7,7 +7,7 @@ import {
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent, noop } from 'zss/mapping/types'
-import { PT } from 'zss/words/types'
+import { CATEGORY, PT } from 'zss/words/types'
 
 import {
   memoryexportboardelement,
@@ -17,8 +17,10 @@ import {
 import {
   memorydeleteboardobjectnamedlookup,
   memorydeleteboardterrainnamed,
+  memorywriteboardnamed,
+  memorywriteboardobjectlookup,
 } from './boardlookup'
-import { memoryreadelementstat } from './boards'
+import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryexportterrainelement } from './boardterrainmap'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
@@ -43,7 +45,18 @@ function createempty() {
 
 export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
   if (ispresent(board?.objects[id])) {
+    memorydeleteboardobjectnamedlookup(board, board.objects[id])
     memorydeleteboardelementruntime(board.objects[id])
+    delete board.objects[id]
+    return true
+  }
+  return false
+}
+
+/** Remove object from a board without destroying its runtime (board hop / relocate). */
+export function memoryunlinkboardobject(board: MAYBE<BOARD>, id: string) {
+  if (ispresent(board?.objects[id])) {
+    memorydeleteboardobjectnamedlookup(board, board.objects[id])
     delete board.objects[id]
     return true
   }
@@ -153,8 +166,12 @@ export function memorycreateboardobject(
   const object = deepcopy(from)
   object.id = object.id ?? createsid()
   object.runtime = ''
-  memoryensureboardelementruntime(object)
+  const runtime = memoryensureboardelementruntime(object)
+  runtime.category = CATEGORY.ISOBJECT
   board.objects[object.id] = object
+  memoryreadelementkind(object)
+  memorywriteboardnamed(board, object)
+  memorywriteboardobjectlookup(board, object)
   return board.objects[object.id]
 }
 
@@ -251,14 +268,24 @@ export function memorywriteterrain(
   ) {
     return undefined
   }
+  const index = from.x + from.y * BOARD_WIDTH
+  const prior = board.terrain[index]
+  if (ispresent(prior)) {
+    memoryreadelementkind(prior)
+    memorydeleteboardterrainnamed(board, prior)
+  }
   const terrain = deepcopy(from)
   terrain.runtime = ''
-  memoryensureboardelementruntime(terrain)
-  const index = from.x + from.y * BOARD_WIDTH
+  const runtime = memoryensureboardelementruntime(terrain)
+  runtime.category = CATEGORY.ISTERRAIN
   board.terrain[index] = terrain
   const boardruntime = memoryreadboardruntime(board)
   if (ispresent(boardruntime)) {
     delete boardruntime.distmaps
+  }
+  if (ispresent(terrain.kind) && terrain.kind) {
+    memoryreadelementkind(terrain)
+    memorywriteboardnamed(board, terrain, index)
   }
   return board.terrain[index]
 }

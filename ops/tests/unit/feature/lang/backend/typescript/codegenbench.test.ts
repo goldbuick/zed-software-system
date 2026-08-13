@@ -25,6 +25,8 @@ import { performance } from 'node:perf_hooks'
 import type { CHIP } from 'zss/chip'
 import { compileast } from 'zss/feature/lang/backend/typescript/ast'
 import { compile } from 'zss/feature/lang/backend/typescript/generator'
+import { readexpr } from 'zss/words/expr'
+import { READ_CONTEXT } from 'zss/words/reader'
 
 const FIXTURE = path.join(
   process.cwd(),
@@ -101,6 +103,19 @@ describe('lang codegen microbench', () => {
     const runtimems = benchruntime(RUNTIME_SOURCE, 200)
     expect(runtimems).toBeGreaterThan(0)
     expect(runtimems).toBeLessThan(30_000)
+  })
+
+  it('records readexpr fast path for numeric literals', () => {
+    READ_CONTEXT.words = [42, 'north']
+    const start = performance.now()
+    for (let i = 0; i < 10_000; i++) {
+      const [value, next] = readexpr(0)
+      expect(value).toBe(42)
+      expect(next).toBe(1)
+    }
+    const elapsed = performance.now() - start
+    expect(elapsed).toBeGreaterThan(0)
+    expect(elapsed).toBeLessThan(5000)
   })
 
   it('compileast skips addRange on runtime path', () => {

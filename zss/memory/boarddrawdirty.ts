@@ -76,6 +76,7 @@ export function memoryinvalidatedraw(board: MAYBE<BOARD>) {
   delete boardruntime.drawlastfp
   delete boardruntime.drawlastxy
   delete boardruntime.drawallowids
+  delete boardruntime.drawdirtycells
 }
 
 function expandneighborcells(seed: Set<number>) {
@@ -256,4 +257,5 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
   boardruntime.drawlastfp = nextfp
   boardruntime.drawlastxy = nextxy
   boardruntime.drawallowids = allowids
+  boardruntime.drawdirtycells = [...expanded]
 }

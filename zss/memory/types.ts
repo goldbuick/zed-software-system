@@ -303,10 +303,15 @@ export type BOARD_RUNTIME = {
   drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
   drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
   drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
+  drawdirtycells?: number[] // expanded cell indices for partial tile upload
   drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
 }
 
 export type BOARD_ELEMENT_RUNTIME = {
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
+  /** Codepage id that produced kinddata; used for cheap freshness checks. */
+  kindsourcepageid?: string
+  /** NAME(element.kind) at resolve time; detects kind string changes without pick. */
+  kindsourcekind?: string
 }

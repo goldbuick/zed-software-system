@@ -9,7 +9,7 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { VIEWSCALE, layersreadcontrol } from 'zss/gadget/data/types'
+import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
@@ -168,7 +168,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
 
     // camera focus logic
     const { gadget } = useGadgetClient.getState()
-    const control = layersreadcontrol(gadget.layers ?? [])
+    const control = readgadgetcontrol(gadget)
     const currentboard = gadget.board
 
     // tracking state

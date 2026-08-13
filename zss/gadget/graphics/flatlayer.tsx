@@ -41,6 +41,7 @@ export function FlatLayer({ id, z, from, layers }: FlatLayerProps) {
             char={layer.char}
             color={layer.color}
             bg={layer.bg}
+            dirtycells={layer.dirtycells}
           />
         </group>
       )

@@ -57,6 +57,8 @@ export type LAYER_TILES = {
   color: number[]
   bg: number[]
   props: number[]
+  /** Sim tick dirty cell indices for partial texture upload (render-only). */
+  dirtycells?: number[]
 }
 
 export type LAYER_SPRITES = {
@@ -203,7 +205,7 @@ export function createcontrol(player: string, index: number): LAYER_CONTROL {
   }
 }
 
-export function layersreadcontrol(layers: LAYER[]): {
+export type GADGET_CONTROL = {
   width: number
   height: number
   focusx: number
@@ -211,7 +213,9 @@ export function layersreadcontrol(layers: LAYER[]): {
   viewscale: VIEWSCALE
   graphics: string
   facing: number
-} {
+}
+
+export function layersreadcontrol(layers: LAYER[]): GADGET_CONTROL {
   let width = 0
   let height = 0
   let focusx = BOARD_WIDTH * 0.5
@@ -241,6 +245,22 @@ export function layersreadcontrol(layers: LAYER[]): {
   })
 
   return { width, height, focusx, focusy, viewscale, graphics, facing }
+}
+
+/** Cached control from gadget patch; falls back to layer scan for legacy payloads. */
+export function readgadgetcontrol(gadget: GADGET_STATE): GADGET_CONTROL {
+  if (gadget.control) {
+    return gadget.control
+  }
+  return layersreadcontrol(gadget.layers ?? [])
+}
+
+/** Recompute `gadget.control` from layers (main-thread patch path). See zss/perf/docs/render-gadget-optimizations.md */
+export function attachcontroltogadget(gadget: GADGET_STATE): GADGET_STATE {
+  return {
+    ...gadget,
+    control: layersreadcontrol(gadget.layers ?? []),
+  }
 }
 
 export type PANEL_ITEM = WORD | WORD[]
@@ -277,6 +297,8 @@ export type GADGET_STATE = {
   id: string
   board: string
   boardname: string
+  /** Derived from layers on gadgetclient patch; avoids per-frame layer scan. */
+  control?: GADGET_CONTROL
   exiteast: string
   exitwest: string
   exitnorth: string

@@ -18,10 +18,11 @@ import { memoryboardelementisobject } from './boardelement'
 import {
   memorycreateboardobjectfromkind,
   memorydeleteboardobject,
+  memoryunlinkboardobject,
 } from './boardlifecycle'
 import {
   memorydeleteboardobjectnamedlookup,
-  memoryresetboardlookups,
+  memoryensureboardready,
   memorywriteboardnamed,
   memorywriteboardobjectlookup,
 } from './boardlookup'
@@ -105,8 +106,8 @@ export function memorymoveplayertoboard(
     return false
   }
 
-  // ensure sure the lookup is created for the current board
-  memoryresetboardlookups(currentboard)
+  // ensure lookup exists for the current board
+  memoryensureboardready(currentboard)
 
   // player element
   const element = memoryreadobject(currentboard, player)
@@ -124,7 +125,7 @@ export function memorymoveplayertoboard(
   }
 
   // make sure lookup is created
-  memoryresetboardlookups(destboard)
+  memoryensureboardready(destboard)
 
   // read target spot
   const maybeobject = memorycheckblockedboardobject(
@@ -142,15 +143,8 @@ export function memorymoveplayertoboard(
     }
   }
 
-  // remove from current board lookups
-  memorydeleteboardobjectnamedlookup(currentboard, element)
-
-  // hard remove player element
-  memorydeleteboardobject(currentboard, element.id)
-
-  // what are we missing here?
-  // need to figure out why we're getting lingering player elements
-  // ?? at least when moving a player to a new board
+  // unlink from current board; keep runtime (category / kinddata) for dest
+  memoryunlinkboardobject(currentboard, element.id)
 
   // add to dest board
   element.x = dest.x
@@ -304,6 +298,7 @@ export function memoryloginplayer(
   }
 
   // plotting a new player
+  memoryensureboardready(currentboard)
   const isheadlessop = getclimode() && memoryisoperator(player)
   const startx = currentboard.startx ?? 0
   const starty = currentboard.starty ?? 0

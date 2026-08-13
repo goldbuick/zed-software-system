@@ -16,6 +16,14 @@ export function measurestage<T>(_name: string, run: () => T): T {
   return run()
 }
 
+export function isperfdevbuild() {
+  return false
+}
+
+export function readtickstats(): TICK_STATS_SNAPSHOT {
+  return { stages: {}, fanout: {} }
+}
+
 export function recordtickstage() {}
 
 export function recordemitdiff() {}
@@ -25,7 +33,3 @@ export function snapshotlocalandreset(): TICK_STATS_SNAPSHOT | undefined {
 }
 
 export function mergeremotetickstats() {}
-
-export function readtickstats(): TICK_STATS_SNAPSHOT {
-  return { stages: {}, fanout: {} }
-}

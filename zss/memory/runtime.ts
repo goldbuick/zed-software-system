@@ -21,8 +21,8 @@ import { NAME } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
-import { memoryresetboardlookups } from './boardlookup'
-import { memoryinitboard, memoryreadelementstat } from './boards'
+import { memoryensureboardready } from './boardlookup'
+import { memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuresoftwarebook } from './books'
@@ -187,8 +187,8 @@ export function memorytickmain(
       for (let b = 0; b < boards.length; ++b) {
         const board = boards[b]
 
-        // init kinds
-        memoryinitboard(board)
+        // ensure lookups/kind without per-tick wipe
+        memoryensureboardready(board)
         if (timestamp % APPLY_SYNTH_RATE === 0) {
           memoryapplyboardsynthstats(board)
         }
@@ -379,8 +379,8 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
-  // ensure sure the lookup is created for the current board
-  memoryresetboardlookups(READ_CONTEXT.board)
+  // ensure lookup is created for the current board
+  memoryensureboardready(READ_CONTEXT.board)
 
   // invoke once
   os.once(id, DRIVER_TYPE.CLI, 'cli', cli, '')

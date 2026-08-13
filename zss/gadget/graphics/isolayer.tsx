@@ -125,6 +125,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
               char={floor.char}
               color={floor.color}
               bg={floor.bg}
+              dirtycells={layer.dirtycells}
             />
             <group position-z={drawheight * -0.5}>
               <Tiles
@@ -133,6 +134,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 char={water.char}
                 color={water.color}
                 bg={water.bg}
+                dirtycells={layer.dirtycells}
               />
             </group>
             {from !== 'over' && (
@@ -158,6 +160,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
                 char={walls.char}
                 color={walls.color}
                 bg={walls.bg}
+                dirtycells={layer.dirtycells}
               />
             </group>
           </group>

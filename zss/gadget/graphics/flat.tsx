@@ -7,7 +7,7 @@ import {
   Vector3,
 } from 'three'
 import { FLAT_CAMERA_ORTHO_ASSERT, RUNTIME } from 'zss/config'
-import { layersreadcontrol } from 'zss/gadget/data/types'
+import { readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
@@ -92,7 +92,7 @@ export const FlatGraphics = memo(function FlatGraphics({
     }
 
     const gadget = useGadgetClient.getState().gadget
-    const control = layersreadcontrol(gadget.layers ?? [])
+    const control = readgadgetcontrol(gadget)
     const currentboard = gadget.board
 
     // tracking state
