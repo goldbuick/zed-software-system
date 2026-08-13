@@ -28,13 +28,13 @@ import {
   memoryreadcodepage,
 } from './bookoperations'
 import {
-  memoryreadcodepagepickcache,
-  memorywritecodepagepickcache,
-} from './codepagepickcache'
-import {
   memoryreadcodepagestat,
   memoryreadcodepagetype,
 } from './codepageoperations'
+import {
+  memoryreadcodepagepickcache,
+  memorywritecodepagepickcache,
+} from './codepagepickcache'
 import { memoryreadbookbysoftware, memoryreadbooklist } from './session'
 import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
 
