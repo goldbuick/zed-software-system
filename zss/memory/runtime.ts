@@ -367,6 +367,8 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
     return
   }
 
+  const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
+
   // player id + unique id fo run
   const id = `${player}_cli`
 
@@ -391,6 +393,11 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
     // track value of invoke
     flags.playbuffer = cli
   }
+
+  objectKeys(OLD_CONTEXT).forEach((key) => {
+    // @ts-expect-error dont bother me
+    READ_CONTEXT[key] = OLD_CONTEXT[key]
+  })
 }
 
 export function memoryruncodepage(address: string, label: string) {
