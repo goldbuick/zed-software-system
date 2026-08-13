@@ -70,6 +70,7 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
   // char/sprite arrays in place. Invalidate when board dirtycells or sprite count changes.
   // See zss/perf/docs/render-gadget-optimizations.md (Aug 2026 prod regression).
   const tilefilters = useMemo(() => {
+    void boarddirtycount
     if (!tilelayer) {
       return undefined
     }
@@ -110,6 +111,8 @@ export function IsoLayer({ id, z, from, layers }: GraphicsLayerProps) {
   const hideplayer = ispresent(layers)
   const spritecount = spritelayer?.sprites?.length ?? 0
   const spritefilters = useMemo(() => {
+    void boarddirtycount
+    void spritecount
     if (!spritelayer) {
       return undefined
     }
