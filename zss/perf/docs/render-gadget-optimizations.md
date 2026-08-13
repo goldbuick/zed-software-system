@@ -162,13 +162,22 @@ memoryreadbookgadgetlayersforboard(book, board)
 
 | Symptom | Likely cause | What to check |
 |---------|--------------|---------------|
+| **Frozen player / board in prod preview** | Incremental cache hit while sprites/tiles stale; iso `useMemo` missed in-place buffer writes | [`memoryincrementallayerscachestable`](../../memory/rendering.ts); `boarddirtycount` in [`isolayer.tsx`](../../gadget/graphics/isolayer.tsx) |
 | Gadget layers empty after book import | Cached store from previous book if `BOOK` reference reused incorrectly | Call `memoryresetbookgadgetlayersreadcache()` on nuclear import; verify `book !== cachebook` |
 | Layers not updating but store reads cheap | Store ref cached correctly; rebuild not writing modes | `rebuildgadgetlayers` / `memoryreadgadgetlayers` User Timing (`zss:vm:gadgetlayerscache`) |
 | `memoryreadbookgadgetlayersforboard` hot in profile | Cache bypassed every tick | Breakpoint on map miss; count players × boards per tick |
 
+### Invariant (do not regress)
+
+**Empty `drawallowids` does not mean “nothing moved.”** Player/object motion updates [`drawdirtycells`](../../memory/boarddrawdirty.ts) via fingerprint diffs even when no element owns a `:drawdisplay` label in the current dirty set. Any layer cache keyed only on `drawallowids` must also consult `drawdirtycells` (and `drawneedfull`).
+
+Main-thread **iso tile filters** memoized on layer identity alone are unsafe: sim reuses stable `LAYER_TILES` / `LAYER_SPRITES` buffers and mutates arrays in place. Invalidate on `dirtycells` (movement) or sprite count changes.
+
+Regression tests: [`incrementallayerscache.test.ts`](../../../ops/tests/unit/memory/incrementallayerscache.test.ts), [`incrementallayerscache.regression.test.ts`](../../../ops/tests/unit/memory/incrementallayerscache.regression.test.ts).
+
 ### Related: incremental layer rebuild
 
-[`PERF_INCREMENTAL_LAYERS`](../../config.ts) (default **`true`**) skips full [`memoryconverttogadgetlayers`](../../memory/rendering.ts) rebuild when `drawallowids` is empty and `drawneedfull` is false. Documented in [`rendering.ts`](../../memory/rendering.ts) cache comment block. Disable with `ZSS_PERF_INCREMENTAL_LAYERS=false` to A/B.
+[`PERF_INCREMENTAL_LAYERS`](../../config.ts) (default **`true`**) skips full [`memoryconverttogadgetlayers`](../../memory/rendering.ts) rebuild when `drawallowids` is empty, `drawdirtycells` is empty, and `drawneedfull` is false. Empty `drawallowids` alone is insufficient: player movement updates `drawdirtycells` without `:drawdisplay` allow entries. Documented in [`rendering.ts`](../../memory/rendering.ts) cache comment block. Disable with `ZSS_PERF_INCREMENTAL_LAYERS=false` to A/B.
 
 ---
 
@@ -276,6 +285,7 @@ yarn task run ops:test
 yarn task run ops:fixtures:lang:regression:test
 
 yarn jest ops/tests/unit/gadget/data/types.test.ts --config ops/jest.config.ts --no-coverage
+yarn jest ops/tests/unit/memory/incrementallayerscache --config ops/jest.config.ts --no-coverage
 yarn jest ops/tests/unit/feature/lang/backend/typescript/codegenbench.test.ts --config ops/jest.config.ts --no-coverage
 ```
 

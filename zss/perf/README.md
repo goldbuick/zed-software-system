@@ -101,3 +101,16 @@ Populate after a clean session on a populated board. Leave cells blank until mea
 [`ops/jest.config.ts`](../../ops/jest.config.ts) maps `zss/perf/ui` to [`ops/lib/test/mocks/perfui.ts`](../../ops/lib/test/mocks/perfui.ts) and `zss/perf/ticktimingstats` to [`ops/lib/test/mocks/ticktimingstats.ts`](../../ops/lib/test/mocks/ticktimingstats.ts) so Node tests do not load Vite `import.meta.env`.
 
 **Graphics / TSX changes:** Jest does **not** compile the cafe Vite graph. After editing `zss/gadget/graphics/*.tsx`, run `yarn tsc --noEmit -p tsconfig.json` — duplicate bindings and similar errors are otherwise only caught by `cafe:dev`.
+
+## Preventing render-cache regressions
+
+When adding sim-side layer caches or main-thread render memoization:
+
+| Step | Why |
+|------|-----|
+| `yarn jest ops/tests/unit/memory/incrementallayerscache --config ops/jest.config.ts --no-coverage` | Regression gate for incremental layer cache + sprite rebuild after player move. |
+| `yarn tsc --noEmit -p tsconfig.json` after graphics TSX edits | Jest skips the R3F bundle. |
+| `yarn task run cafe:build` + `cafe:preview` -- move on an iso board | Prod inlines perf flags; dev server alone is insufficient. |
+| A/B `ZSS_PERF_INCREMENTAL_LAYERS=false` in `cafe/.env.local` | Isolates incremental layer path from other render bugs. |
+
+Design rules and failure modes: [`docs/render-gadget-optimizations.md`](docs/render-gadget-optimizations.md) (invariant under optimization 1B).

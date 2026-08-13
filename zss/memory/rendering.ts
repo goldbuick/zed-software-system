@@ -187,15 +187,38 @@ export function memoryconverttogadgetcontrollayer(
 /**
  * Cache of last-built layer wrappers per (graphics, board, whichlayer, index).
  * When `PERF_INCREMENTAL_LAYERS` is enabled and `boardruntime.drawneedfull`
- * is false AND `drawallowids` is empty, returning the cached array reuses
- * the already-populated tile/sprite/dither buffers (their identities are
- * stable thanks to `createcachedtiles` / `memorycreatecachedsprites`).
+ * is false AND `drawallowids` is empty AND `drawdirtycells` is empty,
+ * returning the cached array reuses the already-populated tile/sprite/dither
+ * buffers (their identities are stable thanks to `createcachedtiles` /
+ * `memorycreatecachedsprites`).
+ *
+ * Empty `drawallowids` alone is not enough: player movement updates
+ * fingerprints and `drawdirtycells` without `:drawdisplay` allow entries.
  *
  * NOTE: a deeper incremental rebuild that touches only the cells in
  * `drawallowids` is the eventual goal; this cache is a conservative
  * stepping stone, gated so it is trivially disabled when needed.
  */
 const memoryconverttogadgetlayerscache = new Map<string, LAYER[]>()
+
+/** Gate for incremental layer cache reuse; exported for unit tests. */
+export function memoryincrementallayerscachestable(
+  boardruntime: MAYBE<{
+    drawneedfull?: boolean
+    drawallowids?: Set<string>
+    drawdirtycells?: number[]
+  }>,
+): boolean {
+  if (!boardruntime || boardruntime.drawneedfull) {
+    return false
+  }
+  const allowids = boardruntime.drawallowids
+  if (!ispresent(allowids) || allowids.size !== 0) {
+    return false
+  }
+  const dirtycells = boardruntime.drawdirtycells
+  return !dirtycells || dirtycells.length === 0
+}
 
 function memoryattachdrawdirtycellstotiles(board: BOARD, tiles: LAYER_TILES) {
   // PERF_TILE_SUBIMAGE path: zss/perf/docs/render-gadget-optimizations.md
@@ -230,12 +253,8 @@ export function memoryconverttogadgetlayers(
 
   if (PERF_INCREMENTAL_LAYERS) {
     const boardruntime = memoryreadboardruntime(board)
-    const allowids = boardruntime?.drawallowids
     const stable =
-      boardruntime &&
-      !boardruntime.drawneedfull &&
-      ispresent(allowids) &&
-      allowids.size === 0
+      boardruntime && memoryincrementallayerscachestable(boardruntime)
     if (stable) {
       const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
       const cached = memoryconverttogadgetlayerscache.get(cachekey)
