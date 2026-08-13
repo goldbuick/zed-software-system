@@ -1,6 +1,6 @@
 import type { CHIP } from 'zss/chip'
 import { apierror } from 'zss/device/api'
-import { RUNTIME_FIRMWARE, cleartickreadcontext } from 'zss/firmware/runtime'
+import { RUNTIME_FIRMWARE, cleartickreadcontextall } from 'zss/firmware/runtime'
 import { gadgetcheckqueue, gadgetstate } from 'zss/gadget/data/api'
 import { ispresent } from 'zss/mapping/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -28,7 +28,7 @@ const chip = {
 describe('runtime sidebar vs scroll aftertick', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    cleartickreadcontext()
+    cleartickreadcontextall()
     READ_CONTEXT.timestamp = 42
     READ_CONTEXT.board = {
       id: 'board1',
@@ -73,6 +73,23 @@ describe('runtime sidebar vs scroll aftertick', () => {
     expect(shared.scrollname).toBe('sign')
     expect(shared.scroll?.length).toBeGreaterThan(0)
     expect(chip.scrolllock).toHaveBeenCalledWith('pid_player1')
+  })
+
+  it('survives nested runtime tick (reentrant memorytickobject)', () => {
+    jest
+      .mocked(gadgetcheckqueue)
+      .mockReturnValueOnce([])
+      .mockReturnValueOnce(['health 100', 'ammo 5'])
+    RUNTIME_FIRMWARE.everytick(chip)
+    READ_CONTEXT.elementid = 'sid_bullet1'
+    READ_CONTEXT.elementisplayer = false
+    RUNTIME_FIRMWARE.everytick(chip)
+    RUNTIME_FIRMWARE.aftertick(chip)
+    READ_CONTEXT.elementid = 'pid_player1'
+    READ_CONTEXT.elementisplayer = true
+    RUNTIME_FIRMWARE.aftertick(chip)
+    const shared = gadgetstate('pid_player1')
+    expect(shared.sidebar?.length).toBeGreaterThan(0)
   })
 
   it('fails loud when aftertick runs without everytick bind', () => {
