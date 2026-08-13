@@ -20,8 +20,8 @@ import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from './boardlighting'
+import { memoryensureboardready } from './boardlookup'
 import {
-  memoryinitboard,
   memoryreadboardbyaddress,
   memoryreadelementkind,
   memoryreadelementstat,
@@ -229,8 +229,8 @@ export function memoryconverttogadgetlayers(
     }
   }
 
-  // make sure lookup is created
-  memoryinitboard(board)
+  // make sure lookup is created (tick path already ensured; lazy if other callers)
+  memoryensureboardready(board)
 
   // update resolve caches
   memoryupdateboardvisuals(board)

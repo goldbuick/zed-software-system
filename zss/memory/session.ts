@@ -8,6 +8,7 @@ import { NAME } from 'zss/words/types'
 
 import { memoryboundarydelete } from './boundaries'
 import { memoryfreecodepage } from './codepageoperations'
+import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
 import { BOOK, MEMORY_LABEL } from './types'
 
 const MEMORY = {
@@ -119,10 +120,12 @@ export function memoryresetbooks(books: BOOK[]) {
       MEMORY.software.main = first.id
     }
   }
+  memoryinvalidatecodepagepickcache()
 }
 
 export function memorywritebook(book: BOOK) {
   MEMORY.books[book.id] = book
+  memoryinvalidatecodepagepickcache()
   return book.id
 }
 
@@ -146,6 +149,7 @@ export function memoryclearbook(address: string) {
   if (ispresent(book)) {
     memoryfreebook(book)
     delete MEMORY.books[book.id]
+    memoryinvalidatecodepagepickcache()
   }
 }
 

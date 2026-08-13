@@ -309,4 +309,8 @@ export type BOARD_RUNTIME = {
 export type BOARD_ELEMENT_RUNTIME = {
   category?: CATEGORY
   kinddata?: BOARD_ELEMENT
+  /** Codepage id that produced kinddata; used for cheap freshness checks. */
+  kindsourcepageid?: string
+  /** NAME(element.kind) at resolve time; detects kind string changes without pick. */
+  kindsourcekind?: string
 }

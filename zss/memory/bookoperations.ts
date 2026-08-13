@@ -24,6 +24,7 @@ import {
   memoryreadcodepagetype,
   memoryresetcodepagestats,
 } from './codepageoperations'
+import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
 import { memoryexportshouldskipflagowner } from './exportflagcache'
 import {
   applyexportidremap,
@@ -467,6 +468,7 @@ export function memorywritecodepage(
   }
   book.pages.push(codepage)
   memoryupdatebooktoken(book)
+  memoryinvalidatecodepagepickcache()
   return true
 }
 

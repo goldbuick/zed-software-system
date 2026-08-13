@@ -61,6 +61,7 @@ import {
   memoryboundaryget,
   memoryboundaryset,
 } from './boundaries'
+import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
 import {
   memorydeleteboardelementruntime,
   memorydeleteboardruntime,
@@ -774,6 +775,7 @@ export function memoryresetcodepagestats(
     return {}
   }
   codepage.stats = undefined
+  memoryinvalidatecodepagepickcache()
   return memoryreadcodepagestats(codepage)
 }
 

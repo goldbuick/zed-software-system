@@ -7,6 +7,7 @@ import {
 } from 'zss/feature/memoryfs/schema'
 import { ispresent } from 'zss/mapping/types'
 import { memorydeleteboardobject } from 'zss/memory/boardlifecycle'
+import { memoryinitboard } from 'zss/memory/boards'
 import {
   memoryclearbookcodepage,
   memoryclearbookflags,
@@ -17,7 +18,9 @@ import {
 } from 'zss/memory/bookoperations'
 import {
   memoryexportcodepageasjson,
+  memoryreadcodepagedata,
   memoryreadcodepageruntime,
+  memoryreadcodepagetype,
 } from 'zss/memory/codepageoperations'
 import {
   memoryclearbook,
@@ -26,6 +29,7 @@ import {
   memorywritesoftwarebook,
 } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import type { WORD } from 'zss/words/types'
 
 const decoder = new TextDecoder()
@@ -256,6 +260,21 @@ function applypagebags(
 
     if (!memoryupsertcodepage(book, flat)) {
       errors.push(`failed upsert page ${pageid}`)
+      continue
+    }
+    if (
+      bag.boardstats ||
+      bag.terrain !== undefined ||
+      Object.keys(bag.objects).length > 0
+    ) {
+      const page = memoryreadcodepage(book, pageid)
+      if (
+        ispresent(page) &&
+        memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD
+      ) {
+        const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(page)
+        memoryinitboard(board)
+      }
     }
   }
 }

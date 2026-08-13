@@ -38,10 +38,10 @@ const PERF_SPATIAL_INDEX = zssjsonboolwithdefault(
   'ZSS_PERF_SPATIAL_INDEX',
   true,
 )
-/** Incremental gadget layer rebuild tied to drawallowids (experimental). */
+/** Incremental gadget layer rebuild tied to drawallowids. */
 const PERF_INCREMENTAL_LAYERS = zssjsonboolwithdefault(
   'ZSS_PERF_INCREMENTAL_LAYERS',
-  false,
+  true,
 )
 /** Partial tile texture uploads via texSubImage2D dirty rows. */
 const PERF_TILE_SUBIMAGE = zssjsonboolwithdefault(

@@ -11,7 +11,7 @@ import {
   mapstrdirtoconst,
 } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { COLLISION, DIR, PT } from 'zss/words/types'
+import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
 import { memoryapplyboardelementcolor } from './boardelement'
 import {
@@ -27,7 +27,10 @@ import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,
 } from './codepageoperations'
-import { memorypickcodepagewithtypeandstat } from './codepages'
+import {
+  memorypickcodepagewithtypeandstat,
+  memoryreadcodepagebyaddress,
+} from './codepages'
 import {
   memoryensureboardelementruntime,
   memoryensureboardruntime,
@@ -36,10 +39,58 @@ import {
 import {
   BOARD,
   BOARD_ELEMENT,
+  BOARD_ELEMENT_RUNTIME,
   BOARD_ELEMENT_STAT,
   BOARD_WIDTH,
+  CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
+
+function memorykinddataisfresh(
+  runtimedata: BOARD_ELEMENT_RUNTIME,
+  cached: BOARD_ELEMENT,
+): boolean {
+  const pageid = runtimedata.kindsourcepageid
+  if (!isstring(pageid) || !pageid) {
+    return false
+  }
+  const page = memoryreadcodepagebyaddress(pageid)
+  return ispresent(page) && cached.code === page.code
+}
+
+function memoryapplykinddatafrompage(
+  runtimedata: BOARD_ELEMENT_RUNTIME,
+  page: CODE_PAGE,
+  type: CODE_PAGE_TYPE.OBJECT | CODE_PAGE_TYPE.TERRAIN,
+  kind: string,
+): MAYBE<BOARD_ELEMENT> {
+  const kinddata =
+    type === CODE_PAGE_TYPE.OBJECT
+      ? memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(page)
+      : memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(page)
+  if (!ispresent(kinddata)) {
+    return undefined
+  }
+  runtimedata.kinddata = kinddata
+  runtimedata.kindsourcepageid = page.id
+  runtimedata.kindsourcekind = NAME(kind)
+  return kinddata
+}
+
+export function memoryclearelementkinddata(
+  element: MAYBE<BOARD_ELEMENT>,
+): void {
+  if (!ispresent(element)) {
+    return
+  }
+  const runtimedata = memoryreadboardelementruntime(element)
+  if (!ispresent(runtimedata)) {
+    return
+  }
+  delete runtimedata.kinddata
+  delete runtimedata.kindsourcepageid
+  delete runtimedata.kindsourcekind
+}
 
 export function memoryreadelementkind(
   element: MAYBE<BOARD_ELEMENT>,
@@ -50,37 +101,43 @@ export function memoryreadelementkind(
   if (!ispresent(runtimedata) || !isstring(element?.kind) || !element.kind) {
     return undefined
   }
+
+  // Hot path: exists -> kind match -> fresh, before any book scan pick.
+  const cached = runtimedata.kinddata
+  if (ispresent(cached)) {
+    const kindname = NAME(element.kind)
+    if (
+      kindname === runtimedata.kindsourcekind &&
+      memorykinddataisfresh(runtimedata, cached)
+    ) {
+      return cached
+    }
+  }
+
+  // Cold path: pick once, rebuild kinddata, stamp kindsourcepageid.
   const maybeobject = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.OBJECT,
     element.kind,
   )
   if (ispresent(maybeobject)) {
-    // Reuse cache only when page.code still matches; make-it stub then editor
-    // edit used to leave kinddata stuck on empty forever.
-    if (
-      ispresent(runtimedata.kinddata) &&
-      runtimedata.kinddata.code === maybeobject.code
-    ) {
-      return runtimedata.kinddata
-    }
-    runtimedata.kinddata =
-      memoryreadcodepagedata<CODE_PAGE_TYPE.OBJECT>(maybeobject)
-    return runtimedata.kinddata
+    return memoryapplykinddatafrompage(
+      runtimedata,
+      maybeobject,
+      CODE_PAGE_TYPE.OBJECT,
+      element.kind,
+    )
   }
   const maybeterrain = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.TERRAIN,
     element.kind,
   )
   if (ispresent(maybeterrain)) {
-    if (
-      ispresent(runtimedata.kinddata) &&
-      runtimedata.kinddata.code === maybeterrain.code
-    ) {
-      return runtimedata.kinddata
-    }
-    runtimedata.kinddata =
-      memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(maybeterrain)
-    return runtimedata.kinddata
+    return memoryapplykinddatafrompage(
+      runtimedata,
+      maybeterrain,
+      CODE_PAGE_TYPE.TERRAIN,
+      element.kind,
+    )
   }
   // No codepage yet (make-it stub / unit fixtures): keep existing kinddata.
   return runtimedata.kinddata
@@ -211,6 +268,11 @@ export function memorywritebullet(
   if (ispresent(maybeobject)) {
     const object = memorycreateboardobjectfromkind(board, dest, name)
     memoryapplyboardelementcolor(object, maybecolor)
+    if (ispresent(object)) {
+      memoryreadelementkind(object)
+      memorywriteboardobjectlookup(board, object)
+      memorywriteboardnamed(board, object)
+    }
     return object
   }
   return undefined
@@ -288,23 +350,10 @@ export function memoryreadboardbyevaldir(dir: EVAL_DIR, board: MAYBE<BOARD>) {
   }
 }
 
+/** Structural / tools: full kind resolve + wipe/rebuild lookup+named. Not for tick path. */
 export function memoryinitboard(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
-  }
-  if (ispresent(board.terrain)) {
-    for (let i = 0; i < board.terrain.length; ++i) {
-      memoryreadelementkind(board.terrain[i])
-    }
-  }
-  if (!ispresent(board.objects)) {
-    memoryresetboardlookups(board)
-    return
-  }
-  const oids = Object.keys(board.objects)
-  for (let i = 0; i < oids.length; ++i) {
-    const id = oids[i]
-    memoryreadelementkind(board.objects[id])
   }
   memoryresetboardlookups(board)
 }

@@ -28,6 +28,10 @@ import {
   memoryreadcodepage,
 } from './bookoperations'
 import {
+  memoryreadcodepagepickcache,
+  memorywritecodepagepickcache,
+} from './codepagepickcache'
+import {
   memoryreadcodepagestat,
   memoryreadcodepagetype,
 } from './codepageoperations'
@@ -73,6 +77,10 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
   type: T,
   address: string,
 ): MAYBE<CODE_PAGE> {
+  const cached = memoryreadcodepagepickcache(type, address)
+  if (cached.hit) {
+    return cached.page
+  }
   const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
   const matchedpages: Record<string, CODE_PAGE> = {}
   const pages = memorylistcodepagebytypeandstat(mainbook, type, address)
@@ -91,6 +99,8 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
   }
   const allpages = Object.values(matchedpages)
   if (allpages.length <= 1) {
+    // Deterministic single/miss — safe to memoize across elements of same kind.
+    memorywritecodepagepickcache(type, address, allpages[0])
     return allpages[0]
   }
   let pickmode: 'shuffle' | 'inorder' | '' = ''

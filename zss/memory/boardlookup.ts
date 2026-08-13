@@ -91,6 +91,39 @@ export function memorydeleteboardobjectnamedlookup(
   }
 }
 
+export function memoryensureterraincoords(board: MAYBE<BOARD>): void {
+  if (!ispresent(board?.terrain)) {
+    return
+  }
+  let x = 0
+  let y = 0
+  for (let i = 0; i < board.terrain.length; ++i) {
+    const tile = board.terrain[i]
+    if (ispresent(tile)) {
+      if (!ispresent(tile.x)) {
+        tile.x = x
+      }
+      if (!ispresent(tile.y)) {
+        tile.y = y
+      }
+    }
+    ++x
+    if (x >= BOARD_WIDTH) {
+      x = 0
+      ++y
+    }
+  }
+}
+
+/** Tick/render path: ensure lookup+named exist without wiping them every frame. */
+export function memoryensureboardready(board: MAYBE<BOARD>): void {
+  if (!ispresent(board)) {
+    return
+  }
+  memoryinitboardlookup(board)
+  memoryensureterraincoords(board)
+}
+
 export function memoryresetboardlookups(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return

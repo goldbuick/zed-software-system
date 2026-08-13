@@ -54,6 +54,8 @@ export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
     })
     // Rebuild from post-tick boards so dest boards get layers before gadgetsynctick
     // (pre-tick snapshot misses dest and triggers void-fallback flashes of old content).
+    // memorytickmain already called memoryensureboardready on pre-tick boards;
+    // post-tick dest boards get ensureboardready inside memoryreadgadgetlayers.
     perfmeasure('vm:gadgetlayerscache', () => {
       rebuildgadgetlayers(mainbook, memoryreadbookplayerboards(mainbook))
     })
