@@ -11,6 +11,7 @@ import {
   type SynthBackend,
 } from 'zss/feature/synth/frontend/synthbackend'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
+import { restorevolumesfromstorage } from 'zss/feature/synth/volumeconfig'
 import {
   applyttsengineconfig,
   ttsclearqueue,
@@ -60,10 +61,11 @@ export function enableaudio() {
   workstatus(synthdevice, registerreadplayer(), 'audio init')
 
   void createsynthbackend()
-    .then((result) => {
+    .then(async (result) => {
       backend = result
       locked = false
       enabled = true
+      await restorevolumesfromstorage(result)
       synthaudioenabled(synthdevice, registerreadplayer())
       try {
         const customnavigator = navigator as CustomNavigator

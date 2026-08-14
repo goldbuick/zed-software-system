@@ -16,6 +16,9 @@ export const CONFIG_STRING_KEYS = [
   'ttsengine',
   'ttsengineconfig',
   'ttsenginemodel',
+  'vol',
+  'bgvol',
+  'ttsvol',
 ] as const
 
 export function isconfigstringkey(name: string): boolean {
