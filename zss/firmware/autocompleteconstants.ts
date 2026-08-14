@@ -63,13 +63,11 @@ export const BRIDGE_SUBCOMMANDS = ['status'] as const
 
 export const MEDIAQUEUE_HEAD_KEYWORDS = [
   'listen',
-  'peer',
   'add',
   'list',
   'goto',
   'next',
   'clear',
-  'call',
   'stop',
   'scroll',
   'menu',

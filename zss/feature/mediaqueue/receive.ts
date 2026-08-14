@@ -66,7 +66,7 @@ export function mediaqueuepushqueuesnapshot() {
   mediaqueuefanoutroom()
 }
 
-export function mediaqueuerequesthelpercall() {
+function mediaqueuerequesthelpercall() {
   sendtohelper({ type: 'mediaqueue:requestcall' })
 }
 
@@ -248,6 +248,7 @@ function wirehelperconnection(conn: DataConnection) {
       peerid: mediapeer?.id ?? '',
     })
     mediaqueuepushqueuesnapshot()
+    mediaqueuerequesthelpercall()
   })
   conn.on('close', () => {
     if (helperconnection === conn) {
@@ -354,8 +355,11 @@ export function mediaqueuelisten(player: string, peerid: string): void {
     apilog(
       SOFTWARE,
       player,
-      'players on this board receive the stream (board = room)',
+      'helper MediaConnection starts when the app connects (board = room)',
     )
+    if (ispresent(helperconnection) && helperconnection.open) {
+      mediaqueuerequesthelpercall()
+    }
   })
 
   mediapeer.on('connection', (conn) => {

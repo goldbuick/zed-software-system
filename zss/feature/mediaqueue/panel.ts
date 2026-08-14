@@ -60,10 +60,6 @@ export function handlemediaqueuepanel(
       vmcli(vm, player, '#mediaqueue clear')
       showmediaqueuescroll(player)
       break
-    case 'call':
-      vmcli(vm, player, '#mediaqueue call')
-      showmediaqueuescroll(player)
-      break
     case 'stop':
       vmcli(vm, player, '#mediaqueue stop')
       showmediaqueuescroll(player)

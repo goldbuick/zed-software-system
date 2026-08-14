@@ -18,12 +18,12 @@ Cafe CLI (operator, bridge permission family):
 #mediaqueue
 #mediaqueue listen <peerid>
 #mediaqueue add https://example.com
-#mediaqueue list | next | goto <i> | clear | call | stop | peer
+#mediaqueue list | next | goto <i> | clear | stop
 ```
 
-Bare `#mediaqueue` opens a scroll: queue list, URL text field, add/next/clear/call.
+Bare `#mediaqueue` opens a scroll: queue list, URL text field, add/next/clear.
 
-`listen <peerid>` creates the cafe Peer as that id and **binds it to the operator’s current board** (room fan-out stays on that board even if the operator walks away).
+`listen <peerid>` creates the cafe Peer as that id and **binds it to the operator’s current board**. The helper **MediaConnection starts automatically** when the desktop app connects (no `#mediaqueue call`).
 ## Dev
 
 ```bash

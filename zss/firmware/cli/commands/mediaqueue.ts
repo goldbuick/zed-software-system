@@ -10,13 +10,9 @@ import {
   mediaqueuesetindex,
 } from 'zss/feature/mediaqueue/queue'
 import {
-  mediaqueuefanoutroom,
   mediaqueueislistening,
   mediaqueuelisten,
   mediaqueuepushqueuesnapshot,
-  mediaqueuereadboundboardid,
-  mediaqueuereadpeerid,
-  mediaqueuerequesthelpercall,
   mediaqueuestop,
 } from 'zss/feature/mediaqueue/receive'
 import { FIRMWARE } from 'zss/firmware'
@@ -26,7 +22,7 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function mediaqueueusage() {
   return (
-    'usage: mediaqueue | listen <peerid> | peer | add <url> | list | goto <index> | next | clear | call | stop'
+    'usage: mediaqueue | listen <peerid> | add <url> | list | goto <index> | next | clear | stop'
   )
 }
 
@@ -74,28 +70,6 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         mediaqueuelisten(player, id)
-        return 0
-      }
-
-      if (action === 'peer' || action === 'id') {
-        const id = mediaqueuereadpeerid()
-        if (!id) {
-          apierror(
-            SOFTWARE,
-            player,
-            'mediaqueue',
-            'not listening -- run #mediaqueue listen <peerid>',
-          )
-          return 0
-        }
-        const boardid = mediaqueuereadboundboardid()
-        apilog(
-          SOFTWARE,
-          player,
-          boardid
-            ? `mediaqueue peer ${id} bound to board ${boardid}`
-            : `mediaqueue peer ${id}`,
-        )
         return 0
       }
 
@@ -174,22 +148,6 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
             'tip: run #mediaqueue listen <peerid> so the helper can connect',
           )
         }
-        return 0
-      }
-
-      if (action === 'call') {
-        if (!mediaqueueislistening()) {
-          apierror(
-            SOFTWARE,
-            player,
-            'mediaqueue',
-            'not listening -- run #mediaqueue listen <peerid>',
-          )
-          return 0
-        }
-        mediaqueuerequesthelpercall()
-        mediaqueuefanoutroom()
-        apilog(SOFTWARE, player, 'mediaqueue requested helper MediaConnection')
         return 0
       }
 

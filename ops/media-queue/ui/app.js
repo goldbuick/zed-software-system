@@ -150,6 +150,8 @@
           role: 'helper',
           peerid: peer && peer.id ? peer.id : '',
         })
+        // Auto-start capture/call when cafe is listening (no manual call step).
+        void startcaptureandcall()
         break
       case 'mediaqueue:queue':
         queueurls = Array.isArray(data.urls) ? data.urls.slice() : []

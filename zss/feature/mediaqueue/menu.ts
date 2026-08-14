@@ -69,7 +69,6 @@ export function showmediaqueuescroll(player: string) {
     rows.push(zsszedlinkline('clear hyperlink next', '$redClear queue'))
   }
   if (peerid) {
-    rows.push(zsszedlinkline('call hyperlink next', '$cyanRequest call'))
     rows.push(zsszedlinkline('stop hyperlink', '$redStop listen'))
   }
   rows.push(zsszedlinkline('refresh hyperlink next', '$grayRefresh'))
