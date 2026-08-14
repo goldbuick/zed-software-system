@@ -235,11 +235,36 @@ function memoryattachdrawdirtycellstotiles(board: BOARD, tiles: LAYER_TILES) {
   }
 }
 
+/** Append live object ticker strips for a board. Kept outside layer cache. */
+export function memoryappendboardtickers(
+  board: MAYBE<BOARD>,
+  tickers: TICKER[],
+): void {
+  if (!ispresent(board?.objects)) {
+    return
+  }
+  const boardobjects = Object.values(board.objects)
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length &&
+      isstring(object.id)
+    ) {
+      tickers.push({
+        id: object.id,
+        text: `${memoryelementtotickerprefix(object)}${object.tickertext}`,
+        tickertime: object.tickertime,
+      })
+    }
+  }
+}
+
 export function memoryconverttogadgetlayers(
   graphics: string,
   index: number,
   board: MAYBE<BOARD>,
-  tickers: TICKER[],
   whichlayer: DIR.UNDER | DIR.MID | DIR.OVER,
   multi = false,
 ): LAYER[] {
@@ -412,24 +437,6 @@ export function memoryconverttogadgetlayers(
     sprite.bg = display.bg
     sprite.stat = collision
     objects.sprites.push(sprite)
-  }
-
-  // process ticker messages
-  for (let i = 0; i < boardobjects.length; ++i) {
-    const object = boardobjects[i]
-    // write ticker messages
-    if (
-      isstring(object.tickertext) &&
-      isnumber(object.tickertime) &&
-      object.tickertext.length &&
-      isstring(object.id)
-    ) {
-      tickers.push({
-        id: object.id,
-        text: `${memoryelementtotickerprefix(object)}${object.tickertext}`,
-        tickertime: object.tickertime,
-      })
-    }
   }
 
   // layers for display media
@@ -633,9 +640,9 @@ function memoryreadgadgetlayersbody(
     id4all.push(underboard.id)
   }
 
-  // compose layers
+  // compose layers (tickers collected separately so layer cache hits cannot drop them)
   under.push(
-    ...memoryconverttogadgetlayers(graphics, 0, underboard, tickers, DIR.UNDER),
+    ...memoryconverttogadgetlayers(graphics, 0, underboard, DIR.UNDER),
   )
   const multi = ispresent(overboard)
   layers.push(
@@ -643,7 +650,6 @@ function memoryreadgadgetlayersbody(
       graphics,
       under.length,
       board,
-      tickers,
       DIR.MID,
       multi,
     ),
@@ -653,11 +659,13 @@ function memoryreadgadgetlayersbody(
       graphics,
       under.length + layers.length,
       overboard,
-      tickers,
       DIR.OVER,
       multi,
     ),
   )
+  memoryappendboardtickers(underboard, tickers)
+  memoryappendboardtickers(board, tickers)
+  memoryappendboardtickers(overboard, tickers)
 
   // scan for media layers
   const media = layersreadmedia(layers)
