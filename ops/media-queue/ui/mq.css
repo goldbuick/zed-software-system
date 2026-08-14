@@ -1,0 +1,18 @@
+/* media-queue extras on top of shared EGA theme */
+.frame.mq {
+  width: 520px;
+}
+
+#preview {
+  display: block;
+  width: calc(100% - 16px);
+  margin: 8px;
+  max-height: 140px;
+  background: #000;
+  border: 1px solid var(--border);
+  object-fit: contain;
+}
+
+#queue {
+  height: 96px;
+}

@@ -61,6 +61,18 @@ export const CODEPAGE_NAME_LISTS = [...ZNS_CODEPAGE_LISTS]
 
 export const BRIDGE_SUBCOMMANDS = ['status'] as const
 
+export const MEDIAQUEUE_HEAD_KEYWORDS = [
+  'listen',
+  'peer',
+  'add',
+  'list',
+  'goto',
+  'next',
+  'clear',
+  'call',
+  'stop',
+] as const
+
 export const MEMORYFS_ACTION_KEYWORDS = ['status', 'detach'] as const
 
 export const ZZTSEARCH_FIELD_KEYWORDS = [

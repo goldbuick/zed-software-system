@@ -4,7 +4,7 @@ title: Local media helpers on Tauri v2
 
 **Purpose:** Ship cafe’s **local desktop helpers** on **[Tauri v2](https://v2.tauri.app/)**, not Electron. One stack covers (1) the existing **YouTube WHIP→RTMPS relay** and (2) the **media-queue browser** that PeerJS-calls cafe. Cafe stays a website; helpers stay local binaries on GitHub Releases.
 
-**Status:** Design locked. Electron YouTube relay is **legacy** until the Tauri build replaces it. Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
+**Status:** Design locked. Electron YouTube relay is **legacy** until the Tauri build replaces it. Media-queue Tauri app + cafe `#mediaqueue` / board TV receive path land under [`ops/media-queue/`](../media-queue/README.md) and [`zss/feature/mediaqueue/`](../../zss/feature/mediaqueue/docs/README.md). Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
 
 ## Product shape
 
@@ -71,10 +71,10 @@ Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay
 
 ## Cafe work (separate from helper packaging)
 
-- Peer available when a media queue is active (today Peer starts only on join/host).
+- Dedicated media-queue Peer (not the game DataConnection) via `#mediaqueue listen`.
 - `MediaConnection` answer path isolated from netterminal tick traffic.
-- Board-region video sink (`VideoTexture` on a tile rect / sprite).
-- Queue CLI (names TBD: e.g. `#mediaqueue …`) under the existing bridge permission family.
+- Board-region video sink (`VideoTexture` via `BoardTvSink` / `useMedia.screen`).
+- Queue CLI `#mediaqueue …` under the bridge permission family.
 
 ## Explicitly out
 
@@ -89,8 +89,8 @@ Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay
 
 1. **Design** (this doc) + Tauri scaffold for YouTube relay.
 2. **YouTube relay → Tauri** until `relay:build:desktop` produces Tauri installers; remove Electron.
-3. **Cafe Peer `call` + board TV sink** (minimal receive path).
-4. **Media-queue Tauri app** + `#commands` control plane.
+3. **Cafe Peer `call` + board TV sink** — `#mediaqueue` + [`receive.ts`](../../zss/feature/mediaqueue/receive.ts) + [`boardtvsink.tsx`](../../zss/gadget/boardtvsink.tsx).
+4. **Media-queue Tauri app** — [`ops/media-queue/`](../media-queue/README.md) (control UI + browser window + `getDisplayMedia` call).
 5. Shared packaging polish (icons, signing, one Releases checklist).
 
 ## Related

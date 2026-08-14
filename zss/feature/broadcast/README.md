@@ -7,7 +7,7 @@ First-party browser broadcast client under `zss/feature/broadcast/`. Replaces th
 | Direction | CLI | Role |
 |-----------|-----|------|
 | **Out** (cafe canvas + synth) | `#broadcast` | WHIP / IVS **publish** to Twitch, YouTube relay, IVS |
-| **In** (URL queue → board TV) | planned `#mediaqueue` + PeerJS `call` | Tauri helper loads URLs and calls cafe — see [`ops/docs/local-media-helpers-tauri.mdx`](../../../ops/docs/local-media-helpers-tauri.mdx) |
+| **In** (URL queue → board TV) | `#mediaqueue` + PeerJS `call` | Tauri helper [`ops/media-queue/`](../../../ops/media-queue/README.md) loads URLs and calls cafe — see [`ops/docs/local-media-helpers-tauri.mdx`](../../../ops/docs/local-media-helpers-tauri.mdx) |
 
 YouTube relay packaging migrates Electron → Tauri on the same stack; cafe `#broadcast whip youtube` stays the product contract.
 

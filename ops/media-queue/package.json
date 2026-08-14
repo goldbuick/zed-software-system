@@ -1,0 +1,6 @@
+{
+  "name": "zed-cafe-media-queue",
+  "private": true,
+  "version": "1.12.19",
+  "description": "Tauri media-queue helper for zed.cafe (UI is static; build via cargo tauri)"
+}

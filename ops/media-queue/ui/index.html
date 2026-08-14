@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe; media-src 'self' blob: mediastream:"
+    />
+    <title>zed.cafe Media Queue</title>
+    <link rel="stylesheet" href="./theme.css" />
+    <link rel="stylesheet" href="./mq.css" />
+  </head>
+  <body>
+    <div class="frame mq">
+      <h1>zed.cafe <span>Media Queue</span></h1>
+      <div class="sub">PeerJS call cafe - board TV sink</div>
+
+      <label for="cafepeer">Cafe peer id (from #mediaqueue listen)</label>
+      <input id="cafepeer" type="text" spellcheck="false" autocomplete="off" />
+
+      <div class="row">
+        <button id="savepeer" type="button">Save peer</button>
+        <button id="connect" class="action" type="button">Connect</button>
+        <button id="disconnect" class="danger" type="button">Disconnect</button>
+      </div>
+
+      <label for="status">status</label>
+      <div id="statusbox" class="status">
+        <div><span class="label">peer</span> <span id="localpeer" class="value">-</span></div>
+        <div><span class="label">link</span> <span id="link" class="value">idle</span></div>
+        <div id="detail" class="mono"></div>
+      </div>
+
+      <label for="queue">queue (from cafe)</label>
+      <textarea id="queue" readonly></textarea>
+
+      <div class="row">
+        <button id="opencapture" class="action" type="button">Capture + call</button>
+        <button id="stopcall" class="danger" type="button">Stop call</button>
+        <button id="openbrowser" type="button">Open browser</button>
+      </div>
+
+      <video id="preview" muted playsinline autoplay></video>
+
+      <div class="help">
+        In cafe (operator):
+        <code>#mediaqueue listen</code>
+        then
+        <code>#mediaqueue add &lt;url&gt;</code>
+        <br />
+        Capture picks a screen/window (choose the Media Queue Browser).
+      </div>
+    </div>
+    <script src="./vendor/peerjs.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

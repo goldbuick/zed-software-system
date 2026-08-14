@@ -19,6 +19,7 @@ import {
   layersreadcontrol,
 } from 'zss/gadget/data/types'
 import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
 import { FlatGraphics } from 'zss/gadget/graphics/flat'
 import { FPVGraphics } from 'zss/gadget/graphics/fpv'
 import { IsoGraphics } from 'zss/gadget/graphics/iso'
@@ -149,6 +150,7 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
       {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
       {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
       {graphics === 'fpv' && <FPVGraphics width={width} height={height} />}
+      <BoardTvSink width={width} height={height} />
       <group position-z={512}>
         <ScreenUITickerText
           width={Math.floor(width)}

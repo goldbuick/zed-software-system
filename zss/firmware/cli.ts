@@ -4,6 +4,7 @@ import { registerbookscommands } from 'zss/firmware/cli/commands/books'
 import { registereditorcommands } from 'zss/firmware/cli/commands/editor'
 import { registerexportcommands } from 'zss/firmware/cli/commands/export'
 import { registerinputcommands } from 'zss/firmware/cli/commands/input'
+import { registermediaqueuecommands } from 'zss/firmware/cli/commands/mediaqueue'
 import { registermemoryfscommands } from 'zss/firmware/cli/commands/memoryfs'
 import { registermisccommands } from 'zss/firmware/cli/commands/misc'
 import { registermultiplayercommands } from 'zss/firmware/cli/commands/multiplayer'
@@ -21,6 +22,7 @@ const REGISTER_COMMANDS = [
   registereditorcommands,
   registerzztcommands,
   registermultiplayercommands,
+  registermediaqueuecommands,
   registerpermissionscommands,
   registerinputcommands,
   registermemoryfscommands,

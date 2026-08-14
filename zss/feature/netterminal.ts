@@ -24,6 +24,7 @@ import {
   encodepeerwire,
   netmsgtounit8,
 } from 'zss/feature/peerzstdwire'
+import { peerserveroptions } from 'zss/feature/peerserver'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { znsautopublishpeer } from 'zss/feature/url'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
@@ -543,15 +544,6 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   subscribetopic = topicpeerid
   clearpeercliquestate()
   vmtopic(SOFTWARE, player, subscribetopic)
-
-  function peerserveroptions() {
-    return {
-      debug: import.meta.env.DEV ? 2 : 0,
-      host: 'terminal.zed.cafe',
-      secure: true,
-      port: 443,
-    }
-  }
 
   function sessionstillactive() {
     return sessionserial === netterminalsessionserial
