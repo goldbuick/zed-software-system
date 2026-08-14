@@ -45,7 +45,8 @@ export const RELAY_TASKS: TaskDef[] = [
     }),
   }),
   def('relay:build:desktop', {
-    description: 'Build YouTube relay Electron installers for current host OS',
+    description:
+      'Build YouTube relay desktop installers (Electron legacy; migrating to Tauri — ops/docs/local-media-helpers-tauri.mdx)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
@@ -64,7 +65,8 @@ export const RELAY_TASKS: TaskDef[] = [
     }),
   }),
   def('relay:build:desktop:mac', {
-    description: 'Build YouTube relay macOS dmg (arm64 + x64)',
+    description:
+      'Build YouTube relay macOS dmg (Electron legacy; Tauri target in src-tauri/)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
@@ -72,7 +74,8 @@ export const RELAY_TASKS: TaskDef[] = [
     }),
   }),
   def('relay:build:desktop:win', {
-    description: 'Build YouTube relay Windows nsis installer (x64)',
+    description:
+      'Build YouTube relay Windows nsis installer (Electron legacy; Tauri target in src-tauri/)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {

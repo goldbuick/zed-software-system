@@ -2,14 +2,14 @@
 
 First-party browser broadcast client under `zss/feature/broadcast/`. Replaces the closed-source `amazon-ivs-web-broadcast` npm package.
 
-## Two directions
+## Directions
 
 | Direction | CLI | Role |
 |-----------|-----|------|
 | **Out** (cafe canvas + synth) | `#broadcast` | WHIP / IVS **publish** to Twitch, YouTube relay, IVS |
-| **In** (remote tab or any WHEP) | `#media whep` / `#browser watch` | WHEP **play** onto the tape overlay |
+| **In** (URL queue → board TV) | planned `#mediaqueue` + PeerJS `call` | Tauri helper loads URLs and calls cafe — see [`ops/docs/local-media-helpers-tauri.mdx`](../../../ops/docs/local-media-helpers-tauri.mdx) |
 
-Inbound media is **not** a YouTube/Twitch simulcast. See [`ops/docs/remote-browser-webrtc.mdx`](../../../ops/docs/remote-browser-webrtc.mdx) and [`ops/remote-browser/README.md`](../../../ops/remote-browser/README.md).
+The WHEP tape-overlay experiment (`#media whep`, `ops/remote-browser`) is **superseded** by that Tauri + PeerJS design. YouTube relay packaging migrates Electron → Tauri on the same stack; cafe `#broadcast whip youtube` stays the product contract.
 
 ## Capture (outbound)
 
@@ -19,39 +19,6 @@ Inbound media is **not** a YouTube/Twitch simulcast. See [`ops/docs/remote-brows
 Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()`.
 
 ## Transports (outbound)
-
-| Kind | Auth | Endpoint |
-|------|------|----------|
-| `ivs-low-latency` | IVS / Twitch stream key | `https://g.webrtc.live-video.net:4443/v1/offer` (default) |
-| `whip` | Bearer token (required) | **Any WHIP URL** or alias (`twitch`, `youtube`, `ivs`) |
-| `ivs-whip` | IVS Real-Time participant token | `https://global.whip.live-video.net` (default) |
-
-Low-latency signaling follows the JSON `/v1/offer` flow observed from the IVS Web Broadcast SDK. Generic WHIP follows [RFC 9725](https://www.rfc-editor.org/info/rfc9725): `POST` with `Content-Type: application/sdp` and `Authorization: Bearer …`.
-
-## Media input (inbound WHEP)
-
-`#media whep <url|browser> <bearer>` opens a recvonly peer connection ([`WhepTransport`](wheptransport.ts)) and shows the remote video via [`TapeViewVideo`](../../gadget/viewvideo.tsx). Alias `browser` is `https://127.0.0.1:8890/whep` (local headed Chromium sidecar). `#media stop` or overlay cancel ends it.
-
-```text
-#media whep browser <sidecar-bearer>
-#media whep https://127.0.0.1:8889/other/whep <bearer>
-#media stop
-#browser attach <bearer>
-#browser goto https://example.com
-#browser watch
-```
-
-## Usage
-
-```ts
-import { createwebbroadcastclient } from 'zss/feature/broadcast/webbroadcastclient'
-
-- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 60fps**, ~3.5 Mbps cap).
-- **Audio:** Web Audio graph mixes attached `MediaStream` inputs into one outbound audio track.
-
-Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()`.
-
-## Transports
 
 | Kind | Auth | Endpoint |
 |------|------|----------|
@@ -118,4 +85,4 @@ Browsers cannot speak RTMP. Download the **Zed Cafe YouTube Relay** tray app fro
 #broadcast whip youtube <local-bearer>
 ```
 
-The alias targets `https://127.0.0.1:8889/cafe/whip`. See [`ops/youtube-rtmp-relay/README.md`](../../../ops/youtube-rtmp-relay/README.md).
+The alias targets `https://127.0.0.1:8889/cafe/whip`. See [`ops/youtube-rtmp-relay/README.md`](../../../ops/youtube-rtmp-relay/README.md). Packaging target is **Tauri v2** (Electron is legacy until migration completes) — [`ops/docs/local-media-helpers-tauri.mdx`](../../../ops/docs/local-media-helpers-tauri.mdx).

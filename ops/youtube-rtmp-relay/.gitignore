@@ -1,0 +1,7 @@
+# Electron / Tauri local build artifacts
+node_modules/
+dist/
+vendor/
+src-tauri/target/
+*.log
+.DS_Store
