@@ -6,7 +6,7 @@ Receive path for the **Zed Cafe Media Queue** Tauri helper.
 |--------|------|
 | [`protocol.ts`](../protocol.ts) | DataConnection message types |
 | [`queue.ts`](../queue.ts) | Host-owned URL queue |
-| [`receive.ts`](../receive.ts) | Peer listen, answer `call`, board-room fan-out |
+| [`receive.ts`](../receive.ts) | `#mediaqueue listen <peerid>` binds Peer to board; answer + room fan-out |
 | [`roompeers.ts`](../roompeers.ts) | Board players → clique peer ids |
 | [`callmetadata.ts`](../callmetadata.ts) | `helper` vs `room` MediaConnection metadata |
 | [`sinkregistry.ts`](../sinkregistry.ts) / [`attachvideo.ts`](../attachvideo.ts) | Stream to `useMedia.screen` |

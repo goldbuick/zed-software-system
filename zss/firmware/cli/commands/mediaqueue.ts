@@ -13,6 +13,7 @@ import {
   mediaqueueislistening,
   mediaqueuelisten,
   mediaqueuepushqueuesnapshot,
+  mediaqueuereadboundboardid,
   mediaqueuereadpeerid,
   mediaqueuerequesthelpercall,
   mediaqueuestop,
@@ -24,7 +25,7 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function mediaqueueusage() {
   return (
-    'usage: mediaqueue listen | peer | add <url> | list | goto <index> | next | clear | call | stop'
+    'usage: mediaqueue listen <peerid> | peer | add <url> | list | goto <index> | next | clear | call | stop'
   )
 }
 
@@ -55,7 +56,18 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
       }
 
       if (action === 'listen' || action === 'start') {
-        mediaqueuelisten(player)
+        const [peerid] = readargs(words, 1, [ARG_TYPE.MAYBE_NAME])
+        const id = String(peerid ?? '').trim()
+        if (!id) {
+          apierror(
+            SOFTWARE,
+            player,
+            'mediaqueue',
+            'usage: mediaqueue listen <peerid> (binds peer to current board)',
+          )
+          return 0
+        }
+        mediaqueuelisten(player, id)
         return 0
       }
 
@@ -66,11 +78,18 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'mediaqueue',
-            'not listening -- run #mediaqueue listen',
+            'not listening -- run #mediaqueue listen <peerid>',
           )
           return 0
         }
-        apilog(SOFTWARE, player, `mediaqueue peer ${id}`)
+        const boardid = mediaqueuereadboundboardid()
+        apilog(
+          SOFTWARE,
+          player,
+          boardid
+            ? `mediaqueue peer ${id} bound to board ${boardid}`
+            : `mediaqueue peer ${id}`,
+        )
         return 0
       }
 
@@ -146,7 +165,7 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
           apilog(
             SOFTWARE,
             player,
-            'tip: run #mediaqueue listen so the helper can connect',
+            'tip: run #mediaqueue listen <peerid> so the helper can connect',
           )
         }
         return 0
@@ -158,7 +177,7 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
             SOFTWARE,
             player,
             'mediaqueue',
-            'not listening -- run #mediaqueue listen',
+            'not listening -- run #mediaqueue listen <peerid>',
           )
           return 0
         }
@@ -174,6 +193,8 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
     {
       byposition: [[...MEDIAQUEUE_HEAD_KEYWORDS]],
       whenfirst: {
+        listen: [[], []],
+        start: [[], []],
         add: [[], []],
         goto: [[], []],
       },

@@ -24,8 +24,8 @@ import {
   readpeerroster,
 } from 'zss/feature/netterminal'
 import { peerserveroptions } from 'zss/feature/peerserver'
-import { createinfohash } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 
@@ -35,13 +35,11 @@ let mediapeer: MAYBE<Peer>
 let helperconnection: MAYBE<DataConnection>
 let activecall: MAYBE<MediaConnection>
 let listenplayer = ''
+/** Board id bound by `#mediaqueue listen <peerid>` (board = room). */
+let listenboardid = ''
 let activeroomstream: MAYBE<MediaStream>
 const roomoutbound = new Map<string, MediaConnection>()
 let bootstrapped = false
-
-function mediapeeridforplayer(player: string) {
-  return createinfohash(`${MEDIAQUEUE_PEER_LABEL}:${player}`)
-}
 
 function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
   if (!ispresent(helperconnection) || !helperconnection.open) {
@@ -88,10 +86,10 @@ function closeroomoutbound() {
 }
 
 export function mediaqueuefanoutroom() {
-  if (!ispresent(activeroomstream) || !listenplayer) {
+  if (!ispresent(activeroomstream) || !listenplayer || !listenboardid) {
     return
   }
-  const board = memoryreadplayerboard(listenplayer)
+  const board = memoryreadboardbyaddress(listenboardid)
   const boardplayers = memoryreadplayersonboard(board)
   const targets = mediaqueueroompeerids(
     boardplayers,
@@ -270,6 +268,10 @@ export function mediaqueuereadpeerid(): string | undefined {
   return undefined
 }
 
+export function mediaqueuereadboundboardid(): string {
+  return listenboardid
+}
+
 export function mediaqueueislistening(): boolean {
   return ispresent(mediapeer)
 }
@@ -286,23 +288,64 @@ export function mediaqueuebootstrap() {
   })
 }
 
-/** Start (or reuse) the receive Peer and answer MediaConnections. */
-export function mediaqueuelisten(player: string): void {
+/**
+ * Start (or reuse) the receive Peer as `peerid` and bind it to the player's
+ * current board (board = room for fan-out).
+ */
+export function mediaqueuelisten(player: string, peerid: string): void {
   mediaqueuebootstrap()
-  listenplayer = player
-  if (ispresent(mediapeer)) {
-    const id = mediaqueuereadpeerid()
-    if (id) {
-      apilog(SOFTWARE, player, `mediaqueue already listening as ${id}`)
-      return
-    }
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    apierror(
+      SOFTWARE,
+      player,
+      'mediaqueue',
+      'usage: mediaqueue listen <peerid>',
+    )
+    return
   }
 
-  const peerid = mediapeeridforplayer(player)
-  mediapeer = new Peer(peerid, peerserveroptions())
+  const board = memoryreadplayerboard(player)
+  if (!ispresent(board) || !board.id) {
+    apierror(
+      SOFTWARE,
+      player,
+      'mediaqueue',
+      'need an active player on a board to bind mediaqueue peer',
+    )
+    return
+  }
+
+  listenplayer = player
+
+  if (ispresent(mediapeer)) {
+    const id = mediaqueuereadpeerid()
+    if (id === trimmed && listenboardid === board.id) {
+      apilog(
+        SOFTWARE,
+        player,
+        `mediaqueue already listening as ${id} on board ${board.name || board.id}`,
+      )
+      return
+    }
+    apierror(
+      SOFTWARE,
+      player,
+      'mediaqueue',
+      `already listening as ${id ?? 'peer'} on board ${listenboardid || '?'} -- run #mediaqueue stop first`,
+    )
+    return
+  }
+
+  listenboardid = board.id
+  mediapeer = new Peer(trimmed, peerserveroptions())
 
   mediapeer.on('open', (id) => {
-    apilog(SOFTWARE, player, `mediaqueue listening as ${id}`)
+    apilog(
+      SOFTWARE,
+      player,
+      `mediaqueue listening as ${id} bound to board ${board.name || board.id}`,
+    )
     apilog(
       SOFTWARE,
       player,
@@ -311,7 +354,7 @@ export function mediaqueuelisten(player: string): void {
     apilog(
       SOFTWARE,
       player,
-      'board mates on joincode receive the same stream (board = room)',
+      'players on this board receive the stream (board = room)',
     )
   })
 
@@ -350,5 +393,6 @@ export function mediaqueuestop(player: string): void {
     mediapeer.destroy()
     mediapeer = undefined
   }
+  listenboardid = ''
   apilog(SOFTWARE, player, 'mediaqueue stopped')
 }

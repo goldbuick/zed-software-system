@@ -15,11 +15,12 @@ Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-t
 Cafe CLI (operator, bridge permission family):
 
 ```text
-#mediaqueue listen
+#mediaqueue listen <peerid>
 #mediaqueue add https://example.com
 #mediaqueue list | next | goto <i> | clear | call | stop | peer
 ```
 
+`listen <peerid>` creates the cafe Peer as that id and **binds it to the operator’s current board** (room fan-out stays on that board even if the operator walks away).
 ## Dev
 
 ```bash
@@ -31,11 +32,11 @@ Requires Tauri v2 Linux/macOS/Windows prerequisites (WebKitGTK on Linux). No new
 
 ## Use
 
-1. In cafe: `#mediaqueue listen` — copy the peer id from the tape.
+1. In cafe: `#mediaqueue listen <peerid>` — binds that PeerJS id to the current board; paste the same id into the app.
 2. Open this app — paste cafe peer id — **Save peer** — **Connect**.
 3. In cafe: `#mediaqueue add <url>` — app opens a browser window and may prompt for capture.
 4. Or click **Capture + call** and pick the **Media Queue Browser** window.
-5. Video appears on the board TV for the listening tab and for **other players on the same board** (joincode clique; board = room). `#mediaqueue stop` tears down the cafe Peer + room calls.
+5. Video appears on the board TV for the listening tab and for **other players on the bound board** (joincode clique; board = room). `#mediaqueue stop` tears down the cafe Peer + room calls.
 
 ## Capture note
 
