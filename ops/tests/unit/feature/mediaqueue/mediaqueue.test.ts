@@ -1,4 +1,12 @@
 import {
+  mediaqueuecallmetadata,
+  ismediaqueuecallmetadata,
+} from 'zss/feature/mediaqueue/callmetadata'
+import {
+  MEDIAQUEUE_PROTOCOL,
+  ismediaqueuemessage,
+} from 'zss/feature/mediaqueue/protocol'
+import {
   mediaqueueadd,
   mediaqueueclear,
   mediaqueuecurrenturl,
@@ -6,10 +14,7 @@ import {
   mediaqueuereadstate,
   mediaqueuesetindex,
 } from 'zss/feature/mediaqueue/queue'
-import {
-  MEDIAQUEUE_PROTOCOL,
-  ismediaqueuemessage,
-} from 'zss/feature/mediaqueue/protocol'
+import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
 import { MEDIAQUEUE_HEAD_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { keywordsforcommandargcomplete } from 'zss/screens/tape/argcomplete'
 
@@ -51,6 +56,41 @@ describe('mediaqueue protocol', () => {
     ).toBe(true)
     expect(ismediaqueuemessage({ type: 'nope' })).toBe(false)
     expect(ismediaqueuemessage(null)).toBe(false)
+  })
+})
+
+describe('mediaqueue room peers', () => {
+  it('selects board mate peer ids and skips self', () => {
+    const ids = mediaqueueroompeerids(
+      ['p1', 'p2', 'p3'],
+      [
+        { player: 'p1', peerid: 'peer-a' },
+        { player: 'p2', peerid: 'peer-b' },
+        { player: 'p3', peerid: 'peer-c' },
+      ],
+      'peer-a',
+    )
+    expect(ids).toEqual(['peer-b', 'peer-c'])
+  })
+
+  it('skips players missing from roster', () => {
+    expect(
+      mediaqueueroompeerids(
+        ['p1', 'ghost'],
+        [{ player: 'p1', peerid: 'peer-a' }],
+        undefined,
+      ),
+    ).toEqual(['peer-a'])
+  })
+})
+
+describe('mediaqueue call metadata', () => {
+  it('accepts helper and room sources', () => {
+    expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('helper'))).toBe(
+      true,
+    )
+    expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('room'))).toBe(true)
+    expect(ismediaqueuecallmetadata({ kind: 'nope' })).toBe(false)
   })
 })
 

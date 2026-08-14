@@ -67,13 +67,13 @@ Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay
 1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
 2. Cafe `#commands` mutate a host-owned queue and push updates over a **DataConnection** (control plane). Do **not** put video on the game `DataConnection`.
 3. Tauri loads the current URL in a webview (or child window), captures to `MediaStream`, then `peer.call(cafePeerId, stream)`.
-4. Cafe: ensure a Peer exists for the operator, `on('call')` + answer, attach stream to a **board TV** surface.
+4. Cafe: operator Peer answers; **board mates** receive a room fan-out `MediaConnection` and attach the same **board TV** surface.
 
 ## Cafe work (separate from helper packaging)
 
-- Dedicated media-queue Peer (not the game DataConnection) via `#mediaqueue listen`.
-- `MediaConnection` answer path isolated from netterminal tick traffic.
-- Board-region video sink (`VideoTexture` via `BoardTvSink` / `useMedia.screen`).
+- Dedicated media-queue Peer for the helper control/call via `#mediaqueue listen`.
+- **Board = room:** host fans the helper `MediaStream` out to every other player on the same board over clique PeerJS `MediaConnection`s (`source: 'room'`). Joins answer on the netterminal Peer (not the game DataConnection).
+- Board-region video sink (`VideoTexture` via `BoardTvSink` / `useMedia.screen`) on host and joins.
 - Queue CLI `#mediaqueue …` under the bridge permission family.
 
 ## Explicitly out

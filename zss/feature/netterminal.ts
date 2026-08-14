@@ -1,4 +1,4 @@
-import Peer, { DataConnection } from 'peerjs'
+import Peer, { DataConnection, MediaConnection } from 'peerjs'
 import { createdevice, createmessage, parsetarget } from 'zss/device'
 import {
   apierror,
@@ -59,6 +59,47 @@ export function readnetworkpeerid(): string | undefined {
   return undefined
 }
 
+export type NETTERMINAL_PEER_ROSTER_ENTRY = {
+  player: string
+  peerid: string
+}
+
+/** Snapshot of player -> peerid clique roster (host + joins). */
+export function readpeerroster(): NETTERMINAL_PEER_ROSTER_ENTRY[] {
+  return rosterentries()
+}
+
+type MEDIACALL_HANDLER = (call: MediaConnection) => void
+type ROSTER_CHANGE_HANDLER = () => void
+
+let mediacallhandler: MAYBE<MEDIACALL_HANDLER>
+let rosterchangehandler: MAYBE<ROSTER_CHANGE_HANDLER>
+
+/** MediaConnection answer path (media queue board room). Not game DataConnection. */
+export function netterminalregistermediacallhandler(
+  handler: MEDIACALL_HANDLER,
+) {
+  mediacallhandler = handler
+}
+
+export function netterminalregisterrosterchangehandler(
+  handler: ROSTER_CHANGE_HANDLER,
+) {
+  rosterchangehandler = handler
+}
+
+/** Outbound MediaConnection from the clique Peer (fan-out to board mates). */
+export function netterminalmediacall(
+  peerid: string,
+  stream: MediaStream,
+  metadata?: object,
+): MAYBE<MediaConnection> {
+  if (!ispresent(networkpeer) || !networkpeer.open || !peerid) {
+    return undefined
+  }
+  return networkpeer.call(peerid, stream, metadata ? { metadata } : undefined)
+}
+
 const SIGNAL_HANDSHAKE_TIMEOUT_MS = 20_000
 const SIGNAL_RETRY_BASE_MS = 1_000
 const SIGNAL_RETRY_MAX_MS = 60_000
@@ -74,10 +115,7 @@ let netterminalunloadregistered = false
 
 const NETTERMINAL_MAX_JOINS = 10
 
-type PEER_ROSTER_ENTRY = {
-  player: string
-  peerid: string
-}
+type PEER_ROSTER_ENTRY = NETTERMINAL_PEER_ROSTER_ENTRY
 
 function shoulddialpeer(selfpeerid: string, otherpeerid: string): boolean {
   if (!selfpeerid || !otherpeerid || selfpeerid === otherpeerid) {
@@ -478,6 +516,7 @@ function handledataconnection(dataconnection: DataConnection) {
             playerbypeer[hellopeer] = helloplayer
             ensurehostselfonroster()
             broadcastpeerroster()
+            rosterchangehandler?.()
           }
           return
         }
@@ -523,6 +562,7 @@ createdevice('netterminal', [], (message) => {
         `peer roster ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`,
       )
       ensurejoinclique()
+      rosterchangehandler?.()
       break
     }
     case 'peerhello':
@@ -607,6 +647,13 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     registernetterminalunload()
 
     workstatus(SOFTWARE, player, 'peer dial')
+
+    networkpeer.on('call', (call) => {
+      if (!sessionstillactive()) {
+        return
+      }
+      mediacallhandler?.(call)
+    })
 
     signalhandshaketimer = setTimeout(() => {
       signalhandshaketimer = undefined

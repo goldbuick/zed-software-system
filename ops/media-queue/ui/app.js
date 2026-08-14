@@ -122,7 +122,9 @@
         setlink('connected', 'capture ended')
       })
     })
-    mediacall = peer.call(cafeid, mediastream)
+    mediacall = peer.call(cafeid, mediastream, {
+      metadata: { kind: 'mediaqueue', source: 'helper' },
+    })
     mediacall.on('close', function () {
       mediacall = null
       stopmediastream()

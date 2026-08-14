@@ -35,7 +35,7 @@ Requires Tauri v2 Linux/macOS/Windows prerequisites (WebKitGTK on Linux). No new
 2. Open this app — paste cafe peer id — **Save peer** — **Connect**.
 3. In cafe: `#mediaqueue add <url>` — app opens a browser window and may prompt for capture.
 4. Or click **Capture + call** and pick the **Media Queue Browser** window.
-5. Video appears on the board TV plane. `#mediaqueue stop` tears down the cafe Peer.
+5. Video appears on the board TV for the listening tab and for **other players on the same board** (joincode clique; board = room). `#mediaqueue stop` tears down the cafe Peer + room calls.
 
 ## Capture note
 

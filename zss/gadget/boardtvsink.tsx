@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react'
 import { VideoTexture } from 'three'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/receive'
 import { updateTexture } from 'zss/gadget/display/textures'
 import { useMedia } from 'zss/gadget/media'
 
@@ -49,6 +50,7 @@ function BoardTvPlane({
  */
 export function BoardTvSink({ width, height }: BoardTvSinkProps) {
   useEffect(() => {
+    mediaqueuebootstrap()
     mediaqueueensurevideosink()
   }, [])
 

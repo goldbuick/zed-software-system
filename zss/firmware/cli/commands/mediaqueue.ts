@@ -9,6 +9,7 @@ import {
   mediaqueuesetindex,
 } from 'zss/feature/mediaqueue/queue'
 import {
+  mediaqueuefanoutroom,
   mediaqueueislistening,
   mediaqueuelisten,
   mediaqueuepushqueuesnapshot,
@@ -162,6 +163,7 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         mediaqueuerequesthelpercall()
+        mediaqueuefanoutroom()
         apilog(SOFTWARE, player, 'mediaqueue requested helper MediaConnection')
         return 0
       }
