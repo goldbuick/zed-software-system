@@ -18,6 +18,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
+import { storevolumeconfig } from 'zss/feature/synth/volumeconfig'
 import { write } from 'zss/feature/writeui'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -355,6 +356,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       READ_CONTEXT.board?.id ?? '',
       volume,
     )
+    storevolumeconfig('vol', volume)
     return 0
   })
   .command('bgvol', [ARG_TYPE.NUMBER, 'bgplay volume'], (_, words) => {
@@ -365,6 +367,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       READ_CONTEXT.board?.id ?? '',
       volume,
     )
+    storevolumeconfig('bgvol', volume)
     return 0
   })
   .command('ttsvol', [ARG_TYPE.NUMBER, 'TTS volume'], (_, words) => {
@@ -375,6 +378,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       READ_CONTEXT.board?.id ?? '',
       volume,
     )
+    storevolumeconfig('ttsvol', volume)
     return 0
   })
   .command('play', [ARG_TYPE.MAYBE_NAME, 'music notes'], (chip, words) => {

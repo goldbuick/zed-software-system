@@ -21,6 +21,10 @@ jest.mock('zss/feature/synth/backend/wasm/audiocontextunlock', () => ({
   getliveaudiocontext: jest.fn(),
 }))
 
+jest.mock('zss/feature/synth/volumeconfig', () => ({
+  restorevolumesfromstorage: jest.fn(async () => undefined),
+}))
+
 jest.mock('zss/feature/tts/client', () => ({
   applyttsengineconfig: jest.fn(),
   ttsclearqueue: jest.fn(),
