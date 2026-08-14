@@ -30,6 +30,7 @@ import { TapeToastConnected } from './toast'
 import { UserFocus } from './userinput'
 import { UserScreen } from './userscreen'
 import { TapeViewImage } from './viewimage'
+import { TapeViewVideo } from './viewvideo'
 import { WorkStatusBadgeConnected } from './workstatus'
 
 const VIGNETTE_DARKNESS_LIGHT = 0.44
@@ -173,6 +174,7 @@ export function Engine() {
             <TapeToastConnected />
             <WorkStatusBadgeConnected />
             <TapeViewImage />
+            <TapeViewVideo />
             <AirshareView />
             <ScreenUIScrollLayer />
             <BoardFadeOverlay />

@@ -85,6 +85,8 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 | `jointab` | [hidden] | Join via tab |
 | `chat` | [channel] | Start/stop chat |
 | `broadcast` | [streamkey] | Start/stop stream |
+| `media` | whep / stop | WHEP media input overlay |
+| `browser` | attach / watch / goto / ... | Headed Chromium sidecar control |
 
 ### ZNS (namespace redirects)
 

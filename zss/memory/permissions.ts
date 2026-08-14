@@ -6,7 +6,7 @@ import { memoryreadoperator } from './session'
 
 /** Group names and descriptions for allowlists (nine families). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  ['bridge', 'chat, join, broadcast, fetch, bridge status'],
+  ['bridge', 'chat, join, broadcast, media input, fetch, bridge status'],
   ['build', 'world edit: put, shoot, copy, weave, and other transforms'],
   ['coder', 'codepages, books/pages lists, bind, die, run'],
   ['explore', 'boards, boardopen, goto'],
@@ -21,6 +21,8 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
 export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   bridge: 'bridge',
   broadcast: 'bridge',
+  media: 'bridge',
+  browser: 'bridge',
   chat: 'bridge',
   fetch: 'bridge',
   fetchwith: 'bridge',

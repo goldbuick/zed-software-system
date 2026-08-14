@@ -1,43 +1,18 @@
-import type {
-  ConnectionState,
-  StreamConfig,
-} from 'zss/feature/broadcast/webbroadcasttypes'
+import type { ConnectionState } from 'zss/feature/broadcast/webbroadcasttypes'
 import {
   mapconnectionstate,
   parseiceserversfromlink,
   postsdp,
+  resolvelocation,
+  waiticegathering,
 } from 'zss/feature/broadcast/webrtcice'
 
-export type WhipStart = {
+export type WhepStart = {
   endpoint: string
   bearer: string
 }
 
-async function applyvideocaps(
-  pc: RTCPeerConnection,
-  streamconfig: StreamConfig,
-) {
-  const maxbitratebps = streamconfig.maxBitrate * 1000
-  const maxframerate = streamconfig.maxFramerate
-  for (const sender of pc.getSenders()) {
-    if (sender.track?.kind !== 'video') {
-      continue
-    }
-    const params = sender.getParameters()
-    const encodings = params.encodings?.length ? [...params.encodings] : [{}]
-    encodings[0] = {
-      ...encodings[0],
-      maxBitrate: maxbitratebps,
-      maxFramerate: maxframerate,
-    }
-    await sender.setParameters({
-      ...params,
-      encodings,
-    })
-  }
-}
-
-export class WhipTransport {
+export class WhepTransport {
   private peerconnection: RTCPeerConnection | undefined
   private sessionurl: string | undefined
   private bearer: string | undefined
@@ -45,13 +20,16 @@ export class WhipTransport {
     | ((state: ConnectionState) => void)
     | undefined
   private onerror: ((message: string) => void) | undefined
+  private ontrack: ((event: RTCTrackEvent) => void) | undefined
 
   sethandlers(handlers: {
     onconnectionstatechange?: (state: ConnectionState) => void
     onerror?: (message: string) => void
+    ontrack?: (event: RTCTrackEvent) => void
   }) {
     this.onconnectionstatechange = handlers.onconnectionstatechange
     this.onerror = handlers.onerror
+    this.ontrack = handlers.ontrack
   }
 
   getconnectionstate(): ConnectionState {
@@ -69,11 +47,7 @@ export class WhipTransport {
     return this.peerconnection
   }
 
-  async start(
-    start: WhipStart,
-    streamconfig: StreamConfig,
-    tracks: MediaStreamTrack[],
-  ) {
+  async start(start: WhepStart) {
     void this.stop()
     this.bearer = start.bearer
     const pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle' })
@@ -84,19 +58,25 @@ export class WhipTransport {
     pc.oniceconnectionstatechange = () => {
       this.onconnectionstatechange?.(mapconnectionstate(pc))
     }
-
-    for (const track of tracks) {
-      pc.addTrack(track)
+    pc.ontrack = (event) => {
+      this.ontrack?.(event)
     }
-    await applyvideocaps(pc, streamconfig)
+
+    pc.addTransceiver('video', { direction: 'recvonly' })
+    pc.addTransceiver('audio', { direction: 'recvonly' })
 
     const offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
-    if (!offer.sdp) {
-      throw new Error('whip: missing local sdp')
+    await waiticegathering(pc)
+    const localsdp = pc.localDescription?.sdp ?? offer.sdp
+    if (!localsdp) {
+      throw new Error('whep: missing local sdp')
     }
 
-    let response = await postsdp(start.endpoint, start.bearer, offer.sdp)
+    let requesturl = start.endpoint
+    let response = await postsdp(requesturl, start.bearer, localsdp, {
+      Accept: 'application/sdp',
+    })
     if (
       response.status === 307 ||
       response.status === 301 ||
@@ -104,13 +84,16 @@ export class WhipTransport {
     ) {
       const location = response.headers.get('Location')
       if (!location) {
-        throw new Error('whip: redirect missing Location header')
+        throw new Error('whep: redirect missing Location header')
       }
-      response = await postsdp(location, start.bearer, offer.sdp)
+      requesturl = resolvelocation(requesturl, location)
+      response = await postsdp(requesturl, start.bearer, localsdp, {
+        Accept: 'application/sdp',
+      })
     }
 
     if (!response.ok) {
-      let message = `whip: offer failed (${response.status})`
+      let message = `whep: offer failed (${response.status})`
       try {
         const text = await response.text()
         if (text) {
@@ -132,7 +115,7 @@ export class WhipTransport {
 
     const location = response.headers.get('Location')
     if (location) {
-      this.sessionurl = location
+      this.sessionurl = resolvelocation(requesturl, location)
     }
 
     await pc.setRemoteDescription({ type: 'answer', sdp: answer })
@@ -145,6 +128,7 @@ export class WhipTransport {
     if (this.peerconnection) {
       this.peerconnection.onconnectionstatechange = null
       this.peerconnection.oniceconnectionstatechange = null
+      this.peerconnection.ontrack = null
       this.peerconnection.close()
       this.peerconnection = undefined
     }

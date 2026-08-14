@@ -1,6 +1,8 @@
 import {
   BROADCAST_HEAD_KEYWORDS,
   BROADCAST_WHIP_ALIASES,
+  MEDIA_HEAD_KEYWORDS,
+  MEDIA_WHEP_ALIASES,
   PIVOT_SHEAR_KEYWORDS,
 } from 'zss/firmware/autocompleteconstants'
 import { TRANSFORM_FIRMWARE } from 'zss/firmware/transforms'
@@ -23,6 +25,22 @@ describe('broadcast argmeta shape', () => {
       'youtube',
       'ivs',
     ])
+  })
+})
+
+describe('media argmeta shape', () => {
+  it('resolves stop/whep and browser alias via whenfirst', () => {
+    const meta = {
+      byposition: [[...MEDIA_HEAD_KEYWORDS]],
+      whenfirst: {
+        whep: [[], [...MEDIA_WHEP_ALIASES]],
+      },
+    }
+    expect(keywordsforcommandargcomplete(meta, 0, '')).toEqual([
+      'stop',
+      'whep',
+    ])
+    expect(keywordsforcommandargcomplete(meta, 1, 'whep')).toEqual(['browser'])
   })
 })
 

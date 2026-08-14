@@ -113,6 +113,20 @@ export const BROADCAST_HEAD_KEYWORDS = ['stop', 'whip'] as const
 
 export const BROADCAST_WHIP_ALIASES = ['twitch', 'youtube', 'ivs'] as const
 
+export const MEDIA_HEAD_KEYWORDS = ['stop', 'whep'] as const
+
+export const MEDIA_WHEP_ALIASES = ['browser'] as const
+
+export const BROWSER_HEAD_KEYWORDS = [
+  'attach',
+  'watch',
+  'goto',
+  'click',
+  'type',
+  'back',
+  'status',
+] as const
+
 export const PIVOT_SHEAR_KEYWORDS = [
   'taper_floor',
   'taper_ceil',

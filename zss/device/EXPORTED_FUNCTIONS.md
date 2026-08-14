@@ -225,6 +225,9 @@ Functions for network operations, streaming, and external service integration.
 ### Streaming
 - `bridgestreamstart(device, player, streamkey)` - Start IVS broadcast stream
 - `bridgestreamstop(device, player)` - Stop broadcast stream
+- `bridgemediastart(device, player, payload)` - Start WHEP media input (`{ kind: 'whep', endpoint, bearer }`)
+- `bridgemediastop(device, player)` - Stop WHEP media input
+- `bridgebrowser(device, player, payload)` - Control local headed browser sidecar
 
 ### Chat Integration
 - `bridgechatstart(device, player, payload)` - Start or replace a chat connector. `payload` may be a string (legacy Twitch channel; `routekey` = channel) or an object `{ kind, routekey, … }` with `kind` `twitch` | `rss` | `mastodon` | `bluesky`. Twitch: optional `channel` (defaults to `routekey`). RSS: `feedurl`, optional `pollintervalsec` (default 120); **browser `fetch` only**—the feed URL must allow CORS from the app origin or be same-origin. Mastodon: `mastodoninstance`, and either `mastodonaccount` or `mastodonhashtag`, optional `mastodontoken`, optional `pollintervalsec`. Bluesky: `blueskyhandle`, optional `blueskyfeeduri` (`at://…` feed generator), optional `pollintervalsec`. Store tokens in saved bridge profiles (CLI `chat profile save`), not in shell history.

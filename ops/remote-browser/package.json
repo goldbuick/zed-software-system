@@ -1,0 +1,9 @@
+{
+  "name": "zss-remote-browser",
+  "private": true,
+  "type": "module",
+  "description": "Headed Chromium sidecar that publishes tab capture as WHEP for zed.cafe media input",
+  "scripts": {
+    "start": "node src/server.mjs"
+  }
+}

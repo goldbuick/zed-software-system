@@ -49,6 +49,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip youtube <local-bearer>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `media` | WebRTC media **input** (WHEP play, not outbound broadcast): `#media whep <url or browser> <bearer>`, `#media stop` (operator only) |
+| `browser` | Remote headed Chromium sidecar: `#browser attach <bearer>`, `#browser watch [bearer]`, `#browser goto <url>`, `#browser click <x> <y>`, `#browser type <text>`, `#browser back`, `#browser status` (operator only) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
 | `access` | Set base preset: `lockdown`, `creative`, or `open` (overrides preserved) |
 | `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |
