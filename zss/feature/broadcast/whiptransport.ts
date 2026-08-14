@@ -2,11 +2,6 @@ import type {
   ConnectionState,
   StreamConfig,
 } from 'zss/feature/broadcast/webbroadcasttypes'
-import {
-  mapconnectionstate,
-  parseiceserversfromlink,
-  postsdp,
-} from 'zss/feature/broadcast/webrtcice'
 
 export type WhipStart = {
   endpoint: string
@@ -35,6 +30,72 @@ async function applyvideocaps(
       encodings,
     })
   }
+}
+
+function mapconnectionstate(pc: RTCPeerConnection): ConnectionState {
+  const state = String(pc.connectionState || pc.iceConnectionState)
+  switch (state) {
+    case 'new':
+      return 'new'
+    case 'connecting':
+    case 'checking':
+      return 'connecting'
+    case 'connected':
+    case 'completed':
+      return 'connected'
+    case 'disconnected':
+      return 'disconnected'
+    case 'failed':
+      return 'failed'
+    case 'closed':
+      return 'closed'
+    default:
+      return 'none'
+  }
+}
+
+function parseiceserversfromlink(header: string | null): RTCIceServer[] {
+  if (!header) {
+    return []
+  }
+  const servers: RTCIceServer[] = []
+  const parts = header.split(/,\s*(?=<)/)
+  for (const part of parts) {
+    if (!part.includes('rel="ice-server"')) {
+      continue
+    }
+    const urlmatch = /<([^>]+)>/.exec(part)
+    if (!urlmatch) {
+      continue
+    }
+    const server: RTCIceServer = { urls: urlmatch[1] }
+    const user = /username="([^"]+)"/.exec(part)
+    const cred = /credential="([^"]+)"/.exec(part)
+    if (user) {
+      server.username = user[1]
+    }
+    if (cred) {
+      server.credential = cred[1]
+    }
+    servers.push(server)
+  }
+  return servers
+}
+
+async function postwhipoffer(
+  url: string,
+  bearer: string,
+  sdp: string,
+): Promise<Response> {
+  return fetch(url, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: {
+      'Content-Type': 'application/sdp',
+      Authorization: `Bearer ${bearer}`,
+    },
+    body: sdp,
+  })
 }
 
 export class WhipTransport {
@@ -96,7 +157,7 @@ export class WhipTransport {
       throw new Error('whip: missing local sdp')
     }
 
-    let response = await postsdp(start.endpoint, start.bearer, offer.sdp)
+    let response = await postwhipoffer(start.endpoint, start.bearer, offer.sdp)
     if (
       response.status === 307 ||
       response.status === 301 ||
@@ -106,7 +167,7 @@ export class WhipTransport {
       if (!location) {
         throw new Error('whip: redirect missing Location header')
       }
-      response = await postsdp(location, start.bearer, offer.sdp)
+      response = await postwhipoffer(location, start.bearer, offer.sdp)
     }
 
     if (!response.ok) {

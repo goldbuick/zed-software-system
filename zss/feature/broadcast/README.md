@@ -9,7 +9,7 @@ First-party browser broadcast client under `zss/feature/broadcast/`. Replaces th
 | **Out** (cafe canvas + synth) | `#broadcast` | WHIP / IVS **publish** to Twitch, YouTube relay, IVS |
 | **In** (URL queue → board TV) | planned `#mediaqueue` + PeerJS `call` | Tauri helper loads URLs and calls cafe — see [`ops/docs/local-media-helpers-tauri.mdx`](../../../ops/docs/local-media-helpers-tauri.mdx) |
 
-The WHEP tape-overlay experiment (`#media whep`, `ops/remote-browser`) is **superseded** by that Tauri + PeerJS design. YouTube relay packaging migrates Electron → Tauri on the same stack; cafe `#broadcast whip youtube` stays the product contract.
+YouTube relay packaging migrates Electron → Tauri on the same stack; cafe `#broadcast whip youtube` stays the product contract.
 
 ## Capture (outbound)
 
@@ -41,17 +41,14 @@ client.on('error', (message) => { /* ... */ })
 await client.addimagesource(canvas, 'video', { index: 1 })
 await client.addaudioinputdevice(audio.stream, 'audio')
 
-// Low-latency channel (#broadcast <stream-key>)
 await client.start({ kind: 'ivs-low-latency', streamKey: 'sk_...' })
 
-// Generic WHIP (LiveKit Ingress, Cloudflare Stream, Twitch v2, etc.)
 await client.start({
   kind: 'whip',
   endpoint: 'https://g.webrtc.live-video.net:4443/v2/offer',
   bearer: '<stream-key-or-token>',
 })
 
-// IVS Real-Time stage (default WHIP endpoint)
 await client.start({ kind: 'ivs-whip', token: 'participant-token' })
 
 client.stop()

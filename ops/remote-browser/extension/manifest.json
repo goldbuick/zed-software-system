@@ -1,9 +1,0 @@
-{
-  "manifest_version": 3,
-  "name": "Zed Cafe tab capture",
-  "version": "1.0.0",
-  "permissions": ["tabCapture", "tabs"],
-  "background": {
-    "service_worker": "background.js"
-  }
-}

@@ -261,8 +261,6 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 |---------|-------------|
 | `chat` | Start/stop chat channel |
 | `broadcast` | Start/stop stream broadcast |
-| `media` | WHEP media input (play into cafe) |
-| `browser` | Remote headed browser control |
 
 #### ZNS (namespace string sharing)
 | Command | Description |

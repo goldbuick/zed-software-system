@@ -4,7 +4,7 @@ title: Local media helpers on Tauri v2
 
 **Purpose:** Ship cafe’s **local desktop helpers** on **[Tauri v2](https://v2.tauri.app/)**, not Electron. One stack covers (1) the existing **YouTube WHIP→RTMPS relay** and (2) the **media-queue browser** that PeerJS-calls cafe. Cafe stays a website; helpers stay local binaries on GitHub Releases.
 
-**Status:** Design locked. Electron YouTube relay is **legacy** until the Tauri build replaces it. The WHEP / tape-overlay / `ops/remote-browser` experiment is **superseded** (see [remote-browser-webrtc.mdx](./remote-browser-webrtc.mdx)).
+**Status:** Design locked. Electron YouTube relay is **legacy** until the Tauri build replaces it. Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
 
 ## Product shape
 
@@ -39,7 +39,7 @@ flowchart TB
 
 - The YouTube relay never needed Chromium; Electron was only tray + settings + process spawn. Tauri does that with a smaller shell; MediaMTX/ffmpeg remain the heavy bits either way.
 - The media-queue helper **is** a browser surface + PeerJS. Building it on Electron while leaving the relay on Electron locks in two Chromium downloads. Tauri for **both** keeps one desktop toolchain (Rust + webview UI).
-- Capture for the queue app is **webview / window capture** (or an explicit Chromium sidecar if Chrome parity is required later) — not the superseded WHEP sidecar.
+- Capture for the queue app is **webview / window capture** (or an explicit Chromium sidecar if Chrome parity is required later).
 
 ## YouTube relay migration (Electron → Tauri)
 
@@ -57,19 +57,17 @@ flowchart TB
 |----------------|--------------|
 | `src/main.cjs` tray + IPC | Rust `tauri::Builder`, system tray, `invoke` commands |
 | `preload.cjs` | Tauri `invoke` / events from the settings UI |
-| `src/renderer/*` | Same ZNS/EGA HTML/CSS/JS as the webview frontend |
+| `src/renderer/*` | Same ZNS/EGA HTML/CSS/JS as the webview frontend (`ui/`) |
 | `electron-builder` via `relay:build:desktop*` | `tauri build` wired through the **same** task ids (in-place; no new CI jobs) |
 
-**Port to Rust (or thin Rust wrappers):** config/bearer persistence, TLS cert generation + trust install, auth HTTP for MediaMTX, spawn/stop MediaMTX with generated YAML. Reuse the existing `fetch-binaries` script; binaries still land in `vendor/` / app resources.
-
-**Non-goals for the migration:** changing WHIP URL, cafe broadcast client, or YouTube RTMPS endpoint.
+Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay/src-tauri/README.md).
 
 ## Media-queue helper (new, Tauri)
 
 1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
 2. Cafe `#commands` mutate a host-owned queue and push updates over a **DataConnection** (control plane). Do **not** put video on the game `DataConnection`.
 3. Tauri loads the current URL in a webview (or child window), captures to `MediaStream`, then `peer.call(cafePeerId, stream)`.
-4. Cafe: ensure a Peer exists for the operator, `on('call')` + answer, attach stream to a **board TV** surface — not `TapeViewVideo` / VIEWIT overlay.
+4. Cafe: ensure a Peer exists for the operator, `on('call')` + answer, attach stream to a **board TV** surface.
 
 ## Cafe work (separate from helper packaging)
 
@@ -82,22 +80,21 @@ flowchart TB
 
 | Approach | Why out |
 |----------|---------|
-| WHEP + tape overlay (`#media whep`, `ops/remote-browser`) | Wrong UX for board TV; wrong signaling for PeerJS clique |
+| WHEP / tape overlay / Chromium sidecar | Wrong UX for board TV; PeerJS is the cafe clique |
 | Cloudflare Worker / yt-dlp | Cannot run headed browser or PeerJS media |
 | Cafe itself as a Tauri app | Product stays https://zed.cafe |
-| New citty tasks / new GHA workflows | Extend `relay:build*` / existing release path only ([no-new-ci-tooling](../../.cursor/rules/no-new-ci-tooling.mdc)) |
+| New citty tasks / new GHA workflows | Extend `relay:build*` / existing release path only |
 
 ## Implementation order
 
-1. **Design** (this doc) + supersede WHEP docs.
-2. **YouTube relay → Tauri** until `relay:build:desktop` produces Tauri installers; remove Electron deps.
+1. **Design** (this doc) + Tauri scaffold for YouTube relay.
+2. **YouTube relay → Tauri** until `relay:build:desktop` produces Tauri installers; remove Electron.
 3. **Cafe Peer `call` + board TV sink** (minimal receive path).
 4. **Media-queue Tauri app** + `#commands` control plane.
 5. Shared packaging polish (icons, signing, one Releases checklist).
 
 ## Related
 
-- Current Electron relay: [`ops/youtube-rtmp-relay/`](../youtube-rtmp-relay/README.md)
+- Current Electron relay + Tauri scaffold: [`ops/youtube-rtmp-relay/`](../youtube-rtmp-relay/README.md)
 - PeerJS baseline: [`zss/feature/docs/netterminal.md`](../../zss/feature/docs/netterminal.md)
-- Outbound broadcast (unchanged direction): [`zss/feature/broadcast/README.md`](../../zss/feature/broadcast/README.md)
-- Superseded WHEP experiment: [remote-browser-webrtc.mdx](./remote-browser-webrtc.mdx)
+- Outbound broadcast: [`zss/feature/broadcast/README.md`](../../zss/feature/broadcast/README.md)

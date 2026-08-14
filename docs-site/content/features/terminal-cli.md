@@ -17,7 +17,6 @@ description: Terminal & CLI features in Zed Cafe / ZSS.
 | #admin | Both | Show admin interface for session moderation. | `#admin` |
 | #joincode / #jointab | Both | Start or join multiplayer via code or tab (operator for host). | `#joincode` |
 | #chat / #broadcast | Both | Chat bridges and stream broadcast control. | `#chat` |
-| #media / #browser | Both | WHEP media input overlay; local headed Chromium sidecar. | `#media` |
 | #zns | Creator | ZNS login, list, publish, delete published content. | `#zns` |
 | #screenshot | Both | Capture display screenshot (operator). | `#screenshot` |
 | #endgame | Both | End current game session and return to title flow. | `#endgame` |

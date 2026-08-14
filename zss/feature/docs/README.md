@@ -32,7 +32,6 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
 | [media-transport-layer.mdx](media-transport-layer.mdx) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
-| [broadcast README](../broadcast/README.md) | Outbound WHIP/IVS broadcast; inbound media helpers → [local-media-helpers-tauri](../../../ops/docs/local-media-helpers-tauri.mdx) |
 | [tts.md](tts.md) | Text-to-speech (Piper, Supertonic, Fish) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
 | [rom.md](rom.md) | ROM/help content and scroll display |

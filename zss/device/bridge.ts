@@ -22,18 +22,6 @@ import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector
 import { doasync } from 'zss/device/doasync'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
-  parsebrowsercontrol,
-  readbrowserbearer,
-  runbrowsercontrol,
-  writebrowserauth,
-} from 'zss/feature/broadcast/browsercontrol'
-import {
-  createmediainputclient,
-  parsemediastartpayload,
-} from 'zss/feature/broadcast/mediainput'
-import type { MediaInputClient } from 'zss/feature/broadcast/mediainput'
-import { BROWSER_CONTROL_ORIGIN } from 'zss/feature/broadcast/mediainputaliases'
-import {
   createwebbroadcastclient,
   parsebroadcaststartpayload,
 } from 'zss/feature/broadcast/webbroadcastclient'
@@ -70,7 +58,6 @@ const chatslots = new Map<CHAT_KIND, CHAT_CONNECTOR>()
 let broadcastclient: MAYBE<WebBroadcastClient>
 let broadcastivsconnection = 'idle'
 let broadcastlive = false
-let mediainputclient: MAYBE<MediaInputClient>
 
 function setbroadcastclient(client: MAYBE<WebBroadcastClient>) {
   broadcastclient = client
@@ -509,11 +496,6 @@ const bridge = createdevice('bridge', [], (message) => {
         message.player,
         `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive}`,
       )
-      apilog(
-        bridge,
-        message.player,
-        `media input: client=${ispresent(mediainputclient) ? 'present' : 'absent'}`,
-      )
       break
     case 'streamstart':
       doasync(bridge, message.player, async () => {
@@ -626,102 +608,6 @@ const bridge = createdevice('bridge', [], (message) => {
       } else {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')
       }
-      break
-    case 'mediastart':
-      doasync(bridge, message.player, async () => {
-        const payload = parsemediastartpayload(message.data)
-        if (!payload) {
-          apierror(
-            bridge,
-            message.player,
-            'media',
-            'usage: media whep <url|browser> <bearer>',
-          )
-          return
-        }
-        const bearer = payload.bearer || readbrowserbearer()
-        if (!bearer) {
-          apierror(
-            bridge,
-            message.player,
-            'media',
-            'whep needs a bearer; run browser attach <bearer> first or pass it on the command',
-          )
-          return
-        }
-        payload.bearer = bearer
-        if (ispresent(mediainputclient)) {
-          await mediainputclient.stop()
-          mediainputclient = undefined
-        }
-        const client = createmediainputclient()
-        mediainputclient = client
-        client.sethandlers({
-          onconnectionstatechange: (state) => {
-            apilog(bridge, message.player, `media input ${state}`)
-          },
-          onerror: (error) => {
-            apierror(bridge, message.player, 'media', String(error))
-          },
-        })
-        try {
-          await client.start(payload)
-          if (payload.endpoint.startsWith(BROWSER_CONTROL_ORIGIN)) {
-            writebrowserauth(BROWSER_CONTROL_ORIGIN, payload.bearer)
-          }
-          apilog(bridge, message.player, `media input whep ${payload.endpoint}`)
-        } catch (error) {
-          await client.stop()
-          mediainputclient = undefined
-          apierror(
-            bridge,
-            message.player,
-            'media',
-            error instanceof Error ? error.message : String(error),
-          )
-        }
-      })
-      break
-    case 'mediastop':
-      doasync(bridge, message.player, async () => {
-        if (!ispresent(mediainputclient)) {
-          apierror(
-            bridge,
-            message.player,
-            'media',
-            'media input already stopped',
-          )
-          return
-        }
-        await mediainputclient.stop()
-        mediainputclient = undefined
-        apilog(bridge, message.player, 'media input stopped')
-      })
-      break
-    case 'browser':
-      doasync(bridge, message.player, async () => {
-        const payload = parsebrowsercontrol(message.data)
-        if (!payload) {
-          apierror(
-            bridge,
-            message.player,
-            'media',
-            'browser command missing payload',
-          )
-          return
-        }
-        try {
-          const line = await runbrowsercontrol(payload)
-          apilog(bridge, message.player, line)
-        } catch (error) {
-          apierror(
-            bridge,
-            message.player,
-            'media',
-            error instanceof Error ? error.message : String(error),
-          )
-        }
-      })
       break
   }
 })

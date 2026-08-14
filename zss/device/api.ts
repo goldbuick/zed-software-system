@@ -142,26 +142,6 @@ export function bridgestreamstop(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:streamstop', undefined)
 }
 
-export function bridgemediastart(
-  device: DEVICELIKE,
-  player: string,
-  payload: Record<string, unknown>,
-) {
-  device.emit(player, 'bridge:mediastart', payload)
-}
-
-export function bridgemediastop(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:mediastop', undefined)
-}
-
-export function bridgebrowser(
-  device: DEVICELIKE,
-  player: string,
-  payload: Record<string, unknown>,
-) {
-  device.emit(player, 'bridge:browser', payload)
-}
-
 export function bridgetab(device: DEVICELIKE, player: string, hidden: boolean) {
   device.emit(player, 'bridge:tab', hidden)
 }
