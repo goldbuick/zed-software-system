@@ -71,6 +71,8 @@ export const MEDIAQUEUE_HEAD_KEYWORDS = [
   'clear',
   'call',
   'stop',
+  'scroll',
+  'menu',
 ] as const
 
 export const MEMORYFS_ACTION_KEYWORDS = ['status', 'detach'] as const

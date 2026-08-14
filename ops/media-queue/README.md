@@ -15,10 +15,13 @@ Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-t
 Cafe CLI (operator, bridge permission family):
 
 ```text
+#mediaqueue
 #mediaqueue listen <peerid>
 #mediaqueue add https://example.com
 #mediaqueue list | next | goto <i> | clear | call | stop | peer
 ```
+
+Bare `#mediaqueue` opens a scroll: queue list, URL text field, add/next/clear/call.
 
 `listen <peerid>` creates the cafe Peer as that id and **binds it to the operator’s current board** (room fan-out stays on that board even if the operator walks away).
 ## Dev

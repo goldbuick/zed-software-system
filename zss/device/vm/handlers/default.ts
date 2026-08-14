@@ -10,6 +10,7 @@ import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
+import { handlemediaqueuepanel } from 'zss/feature/mediaqueue/panel'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
@@ -208,6 +209,9 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'bookmarkscroll':
       handlebookmarkscrollpanel(vm, message, path)
+      break
+    case 'mediaqueue':
+      handlemediaqueuepanel(vm, message, path)
       break
     default: {
       // expect that the chip: prefix is already removed from the path

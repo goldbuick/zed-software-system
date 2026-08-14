@@ -1,5 +1,6 @@
 import { apierror, apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { showmediaqueuescroll } from 'zss/feature/mediaqueue/menu'
 import {
   mediaqueueadd,
   mediaqueueclear,
@@ -25,7 +26,7 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function mediaqueueusage() {
   return (
-    'usage: mediaqueue listen <peerid> | peer | add <url> | list | goto <index> | next | clear | call | stop'
+    'usage: mediaqueue | listen <peerid> | peer | add <url> | list | goto <index> | next | clear | call | stop'
   )
 }
 
@@ -51,7 +52,12 @@ export function registermediaqueuecommands(fw: FIRMWARE): FIRMWARE {
       const action = NAME(head ?? '')
 
       if (!action || action === 'help') {
-        apierror(SOFTWARE, player, 'mediaqueue', mediaqueueusage())
+        showmediaqueuescroll(player)
+        return 0
+      }
+
+      if (action === 'scroll' || action === 'menu') {
+        showmediaqueuescroll(player)
         return 0
       }
 

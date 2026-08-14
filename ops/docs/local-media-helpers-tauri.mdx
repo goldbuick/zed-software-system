@@ -74,7 +74,7 @@ Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay
 - Dedicated media-queue Peer for the helper control/call via `#mediaqueue listen <peerid>` (binds that peer id to the operator’s **current board**).
 - **Board = room:** host fans the helper `MediaStream` out to every other player on that **bound board** over clique PeerJS `MediaConnection`s (`source: 'room'`). Joins answer on the netterminal Peer (not the game DataConnection).
 - Board-region video sink (`VideoTexture` via `BoardTvSink` / `useMedia.screen`) on host and joins.
-- Queue CLI `#mediaqueue …` under the bridge permission family.
+- Queue CLI `#mediaqueue …` under the bridge permission family; bare `#mediaqueue` opens a scroll to browse the queue and add URLs.
 
 ## Explicitly out
 
