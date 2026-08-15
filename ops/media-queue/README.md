@@ -1,6 +1,6 @@
 # Zed Cafe Media Queue
 
-Local **Tauri v2** helper that loads a URL queue, captures a browser window, and **PeerJS `call`s** [zed.cafe](https://zed.cafe). Video lands on a **board TV** sink -- not the tape overlay.
+Local **Tauri v2** helper that loads a URL queue, captures the **Media Queue Browser** webview natively, and **PeerJS `call`s** [zed.cafe](https://zed.cafe). Video lands on a **board TV** sink and audio plays on cafe speakers for the host and board mates -- not the tape overlay.
 
 Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-tauri.mdx)
 
@@ -9,7 +9,7 @@ Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-t
 | Plane | Transport |
 |-------|-----------|
 | Control (queue RPCs) | PeerJS `DataConnection` to cafe peer |
-| Media | PeerJS `MediaConnection` (`peer.call`) |
+| Media | PeerJS `MediaConnection` (`peer.call`, video + audio tracks) |
 | Signaling | `terminal.zed.cafe` (same PeerServer as netterminal) |
 
 Cafe: scroll-only **`#media`** (bridge permission family). Start binds a peer id to the current board; queue controls live in the scroll.
@@ -37,11 +37,18 @@ yarn task run mediaqueue:dev
 ## Use
 
 1. Open this app -- it starts a PeerJS peer and shows **Your peer id**.
-2. Click **Copy** (or select the id) and in cafe run `#media` -- paste the id -- **Start**.
-3. In cafe: add URLs from the `#media` scroll -- app opens a browser window and may prompt for capture.
-4. Or click **Recapture** and pick the **Media Queue Browser** window.
-5. Video appears on the board TV for the host and for **other players on the bound board**. **Stop** in the scroll tears down the cafe connection + room calls.
+2. Copy peer id and in cafe run `#media <peerid>` (Start in the scroll).
+3. In cafe `#media` scroll, add a URL and advance the queue (first `goto`).
+4. The **Media Queue Browser** window opens; capture **auto-starts** (no Share screen picker).
+5. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. **Stop** in the scroll tears down capture + room calls.
 
 ## Capture note
 
-MVP uses `getDisplayMedia` (pick the browser window). True tab-capture / Chromium sidecar is a later option if OS webview capture is insufficient.
+| Piece | macOS | Windows |
+|-------|-------|---------|
+| Video | `WKWebView.takeSnapshot` pumped to `canvas.captureStream` | Planned (`CapturePreview`) |
+| Audio | ScreenCaptureKit window audio loopback | Planned (WASAPI process loopback) |
+
+macOS may prompt for screen/audio capture permission the first time. YouTube may still need a click in the browser window for video autoplay.
+
+Some DRM-protected video may snapshot as black frames; test with non-DRM URLs if the board TV is empty.

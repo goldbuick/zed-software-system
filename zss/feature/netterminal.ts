@@ -104,6 +104,57 @@ export function netterminalpeerisopen(): boolean {
   return ispresent(networkpeer) && networkpeer.open
 }
 
+/** Start hosting if needed and wait until the clique Peer is open (for #media, etc.). */
+export async function netterminalensurehostready(
+  timeoutms = SIGNAL_HANDSHAKE_TIMEOUT_MS,
+): Promise<boolean> {
+  if (netterminalpeerisopen()) {
+    return true
+  }
+  const player = registerreadplayer()
+  if (!ispresent(networkpeer)) {
+    apilog(SOFTWARE, player, 'starting netterminal for cafe session')
+    await netterminalhost()
+  }
+  if (netterminalpeerisopen()) {
+    return true
+  }
+  const peer = networkpeer
+  if (!ispresent(peer)) {
+    apierror(SOFTWARE, player, 'netterminal', 'peer failed to start')
+    return false
+  }
+  return await new Promise<boolean>((resolve) => {
+    let settled = false
+    const finish = (ok: boolean) => {
+      if (settled) {
+        return
+      }
+      settled = true
+      clearTimeout(timer)
+      peer.off('open', onopen)
+      peer.off('error', onerror)
+      resolve(ok)
+    }
+    const onopen = () => finish(true)
+    const onerror = () => finish(false)
+    const timer = setTimeout(() => {
+      apierror(
+        SOFTWARE,
+        player,
+        'netterminal',
+        'peer handshake timed out',
+      )
+      finish(false)
+    }, timeoutms)
+    peer.on('open', onopen)
+    peer.on('error', onerror)
+    if (peer.open) {
+      onopen()
+    }
+  })
+}
+
 /** Outbound DataConnection on the clique Peer (media queue helper control plane). */
 export function netterminaldataconnect(peerid: string): MAYBE<DataConnection> {
   const trimmed = peerid.trim()

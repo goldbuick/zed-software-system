@@ -32,7 +32,6 @@ import {
 import {
   netterminaldataconnect,
   netterminalmediacall,
-  netterminalpeerisopen,
   netterminalregistermediacallhandler,
   netterminalregisterrosterchangehandler,
   readnetworkpeerid,
@@ -239,11 +238,22 @@ function handlehelperdata(data: unknown) {
     case 'mediaqueue:status':
       if (mediaqueuereadlistenplayer()) {
         const detail = data.detail ? ` ${data.detail}` : ''
-        apilog(
-          SOFTWARE,
-          mediaqueuereadlistenplayer(),
-          `mediaqueue helper: ${data.status}${detail}`,
-        )
+        const player = mediaqueuereadlistenplayer()
+        if (data.status === 'audio-denied') {
+          apilog(
+            SOFTWARE,
+            player,
+            `mediaqueue helper: audio denied${detail}`,
+          )
+        } else if (data.status === 'waiting-for-url') {
+          apilog(SOFTWARE, player, 'mediaqueue helper: waiting for queue URL')
+        } else {
+          apilog(
+            SOFTWARE,
+            player,
+            `mediaqueue helper: ${data.status}${detail}`,
+          )
+        }
       }
       break
     default:
@@ -313,16 +323,6 @@ export function mediaqueuelisten(
       player,
       'media',
       'enter the helper peer id from the Media Queue app first',
-    )
-    return
-  }
-
-  if (!netterminalpeerisopen()) {
-    apierror(
-      SOFTWARE,
-      player,
-      'media',
-      'need netterminal peer -- run #joincode first',
     )
     return
   }

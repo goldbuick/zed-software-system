@@ -14,8 +14,8 @@
         "label": "main",
         "title": "zed.cafe Media Queue",
         "width": 480,
-        "height": 420,
-        "resizable": true,
+        "height": 464,
+        "resizable": false,
         "maximizable": false,
         "visible": true
       }

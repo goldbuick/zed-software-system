@@ -3,6 +3,7 @@ import { apitoast } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
+import { showmediascroll } from 'zss/feature/mediaqueue/menu'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryensuresoftwarebook } from 'zss/memory/books'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
@@ -49,6 +50,10 @@ export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
     content.trim(),
     'refscroll',
   )
+}
+
+export function handlermediascroll(_vm: DEVICE, message: MESSAGE): void {
+  showmediascroll(message.player)
 }
 
 export function handlegadgetscroll(vm: DEVICE, message: MESSAGE): void {

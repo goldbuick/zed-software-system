@@ -28,7 +28,7 @@ import {
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
 import { handlemediapanel } from 'zss/feature/mediaqueue/panel'
-import { showmediascroll } from 'zss/feature/mediaqueue/menu'
+import { publishmediascroll } from 'zss/feature/mediaqueue/menu'
 import {
   netterminalhost,
   netterminaljoin,
@@ -612,7 +612,7 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'mediascroll':
-      showmediascroll(message.player)
+      publishmediascroll(message.player)
       break
     case 'mediapanel': {
       const payload = message.data as

@@ -969,7 +969,7 @@ export function vmrefscroll(device: DEVICELIKE, player: string) {
 }
 
 export function vmmediascroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'bridge:mediascroll')
+  device.emit(player, 'vm:mediascroll')
 }
 
 export function vmrestart(device: DEVICELIKE, player: string) {

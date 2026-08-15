@@ -4,7 +4,8 @@ import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import 'zss/feature/mediaqueue/urlfield'
-import { showmediascroll } from 'zss/feature/mediaqueue/menu'
+import { publishmediascroll } from 'zss/feature/mediaqueue/menu'
+import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueueadd,
   mediaqueueclear,
@@ -17,12 +18,10 @@ import {
   mediaqueuestop,
 } from 'zss/feature/mediaqueue/receive'
 import {
-  mediaqueuecleardraftpeerid,
   mediaqueuecleardrafturl,
-  mediaqueuereaddraftpeerid,
   mediaqueuereaddrafturl,
 } from 'zss/feature/mediaqueue/urlfield'
-import { netterminalhost } from 'zss/feature/netterminal'
+import { netterminalensurehostready } from 'zss/feature/netterminal'
 import { isarray, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -38,6 +37,29 @@ function readstringarg(message: MESSAGE): string | undefined {
   return undefined
 }
 
+function mediabind(
+  player: string,
+  peerid: string,
+  boardid: string,
+  boardname: string,
+): void {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    apierror(SOFTWARE, player, 'media', 'need a helper peer id')
+    return
+  }
+  doasync(SOFTWARE, player, async () => {
+    mediaqueueensurevideosink()
+    const ready = await netterminalensurehostready()
+    if (!ready) {
+      apierror(SOFTWARE, player, 'media', 'could not start netterminal peer')
+      return
+    }
+    mediaqueuelisten(player, trimmed, boardid, boardname)
+    publishmediascroll(player)
+  })
+}
+
 /** Scroll chip actions for #media (MAIN thread via bridge:mediapanel). */
 export function handlemediapanel(
   vm: DEVICE,
@@ -47,25 +69,16 @@ export function handlemediapanel(
   const player = message.player
   void vm
   switch (NAME(path)) {
-    case 'start': {
-      const peerid = mediaqueuereaddraftpeerid()
-      if (!peerid) {
-        apierror(SOFTWARE, player, 'media', 'enter the helper peer id first')
-        return
-      }
+    case 'bind': {
       const payload = message.data as
-        | { boardid?: unknown; boardname?: unknown }
+        | { peerid?: unknown; boardid?: unknown; boardname?: unknown }
         | undefined
+      const peerid = isstring(payload?.peerid) ? payload.peerid.trim() : ''
       const boardid = isstring(payload?.boardid) ? payload.boardid.trim() : ''
       const boardname = isstring(payload?.boardname)
         ? payload.boardname.trim()
         : ''
-      doasync(SOFTWARE, player, async () => {
-        await netterminalhost()
-        mediaqueuelisten(player, peerid, boardid, boardname)
-        mediaqueuecleardraftpeerid()
-        showmediascroll(player)
-      })
+      mediabind(player, peerid, boardid, boardname)
       break
     }
     case 'addurl': {
@@ -77,7 +90,7 @@ export function handlemediapanel(
       mediaqueueadd(url)
       mediaqueuepushqueuesnapshot()
       mediaqueuecleardrafturl()
-      showmediascroll(player)
+      publishmediascroll(player)
       break
     }
     case 'goto': {
@@ -89,25 +102,25 @@ export function handlemediapanel(
       }
       mediaqueuesetindex(index)
       mediaqueuepushqueuesnapshot()
-      showmediascroll(player)
+      publishmediascroll(player)
       break
     }
     case 'next':
       mediaqueuenext()
       mediaqueuepushqueuesnapshot()
-      showmediascroll(player)
+      publishmediascroll(player)
       break
     case 'clear':
       mediaqueueclear()
       mediaqueuepushqueuesnapshot()
-      showmediascroll(player)
+      publishmediascroll(player)
       break
     case 'stop':
       mediaqueuestop(player)
-      showmediascroll(player)
+      publishmediascroll(player)
       break
     case 'refresh':
-      showmediascroll(player)
+      publishmediascroll(player)
       apilog(SOFTWARE, player, 'media scroll refreshed')
       break
     default:

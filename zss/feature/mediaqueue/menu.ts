@@ -1,5 +1,6 @@
+import { vmgadgetscroll } from 'zss/device/api'
+import { SOFTWARE } from 'zss/device/session'
 import {
-  MEDIA_PEER_TARGET,
   MEDIA_SCROLL_CHIP,
   MEDIA_SCROLL_NAME,
   MEDIA_URL_TARGET,
@@ -14,6 +15,7 @@ import {
   mediaqueuereadpeerid,
 } from 'zss/feature/mediaqueue/listenstate'
 import { mediaqueuereadstate } from 'zss/feature/mediaqueue/queue'
+import 'zss/feature/mediaqueue/urlfield'
 import {
   zssheaderlines,
   zsstextline,
@@ -39,7 +41,7 @@ function statushint(player: string): string {
     if (mediaqueuehasactivestream() && !ishost) {
       return 'receiving board TV -- host controls queue'
     }
-    return 'copy peer id from Media Queue app, paste below, Start'
+    return '#media <peerid> to bind Media Queue helper'
   }
   if (!helperup) {
     return 'waiting for Media Queue app'
@@ -77,8 +79,8 @@ function statustag(): string {
   return parts.join(' / ')
 }
 
-/** Build and open the #media scroll (state-driven instructions + queue). */
-export function showmediascroll(player: string) {
+/** Build #media scroll tape from live queue + listen state (main-thread helpers). */
+export function mediascrollcontent(player: string): string {
   const state = mediaqueuereadstate()
   const peerid = mediaqueuereadpeerid()
   const ishost = mediaqueueislistenhost(player)
@@ -89,8 +91,7 @@ export function showmediascroll(player: string) {
   ]
 
   if (!mediaqueueislistening() || !ishost) {
-    rows.push(zsszedlinkline(`${MEDIA_PEER_TARGET} text`, 'peer id'))
-    rows.push(zsszedlinkline('start hyperlink next', '$greenStart'))
+    rows.push(zsstextline('#media <peerid> binds helper on this board'))
   }
 
   if (state.urls.length === 0) {
@@ -120,10 +121,24 @@ export function showmediascroll(player: string) {
   }
   rows.push(zsszedlinkline('refresh hyperlink next', '$grayRefresh'))
 
+  return zsstexttape(...rows).trim()
+}
+
+/** Open #media scroll on the VM gadget state (sim worker). */
+export function showmediascroll(player: string) {
   scrollwritelines(
     player,
     MEDIA_SCROLL_NAME,
-    zsstexttape(...rows).trim(),
+    mediascrollcontent(player),
     MEDIA_SCROLL_CHIP,
   )
+}
+
+/** Push #media scroll from MAIN after helper/queue mutations (gadget state lives on VM). */
+export function publishmediascroll(player: string) {
+  vmgadgetscroll(SOFTWARE, player, {
+    scrollname: MEDIA_SCROLL_NAME,
+    content: mediascrollcontent(player),
+    chip: MEDIA_SCROLL_CHIP,
+  })
 }

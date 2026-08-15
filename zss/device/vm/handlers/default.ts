@@ -211,11 +211,13 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       handlebookmarkscrollpanel(vm, message, path)
       break
     case 'media':
-      if (path === 'start') {
+      if (path === 'bind') {
         const board = memoryreadplayerboard(message.player)
+        const payload = (message.data ?? {}) as Record<string, unknown>
         bridgemediapanel(SOFTWARE, message.player, path, {
-          boardid: board?.id ?? '',
-          boardname: board?.name ?? '',
+          ...payload,
+          boardid: board?.id ?? payload.boardid ?? '',
+          boardname: board?.name ?? payload.boardname ?? '',
         })
       } else {
         bridgemediapanel(SOFTWARE, message.player, path, message.data)

@@ -15,7 +15,7 @@
       <h1>zed.cafe <span>Media Queue</span></h1>
       <div class="sub">PeerJS helper for cafe #media board TV</div>
 
-      <label for="localpeer">Your peer id (paste into cafe #media)</label>
+      <label for="localpeer">Your peer id (cafe: #media &lt;peerid&gt;)</label>
       <div class="peerbox">
         <input
           id="localpeer"
@@ -43,21 +43,18 @@
       <textarea id="queue" readonly></textarea>
 
       <div class="row">
-        <button id="opencapture" type="button">Recapture</button>
         <button id="stopcall" class="danger" type="button">Stop call</button>
-        <button id="openbrowser" type="button">Open browser</button>
       </div>
 
       <video id="preview" muted playsinline autoplay></video>
 
       <div class="help">
-        In cafe: <code>#media</code> -- paste the peer id above -- <code>Start</code>
-        -- add URLs from the scroll.
-        <br />
-        Capture starts when cafe connects (use Recapture to pick again).
+        Cafe: <code>#media &lt;peerid&gt;</code> to bind -- <code>#media</code> for
+        queue scroll -- capture auto-starts on the first URL.
       </div>
     </div>
     <script src="./vendor/peerjs.min.js"></script>
+    <script src="./capture.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

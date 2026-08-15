@@ -25,12 +25,20 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  margin: 0;
+  padding: 0;
+  width: 480px;
+  height: auto;
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
 body {
   margin: 0;
   padding: 0;
-  width: max-content;
-  height: max-content;
+  width: 480px;
+  height: auto;
   overflow: hidden;
   background-color: var(--bg);
   color: var(--fg);
@@ -53,7 +61,7 @@ body {
 
 h1 {
   margin: 0;
-  padding: 8px 8px 0;
+  padding: 0;
   font-size: 16px;
   font-weight: normal;
   color: var(--brand);
@@ -65,14 +73,14 @@ h1 span {
 
 .sub {
   margin: 0;
-  padding: 0 8px 8px;
+  padding: 0;
   color: var(--muted);
 }
 
 label {
   display: block;
   margin: 0;
-  padding: 8px 8px 0;
+  padding: 0;
   color: var(--brand);
 }
 
@@ -95,8 +103,8 @@ textarea {
 }
 
 textarea {
-  min-height: calc(var(--row) * 4);
-  height: calc(var(--row) * 4);
+  min-height: calc(var(--row) * 3);
+  height: calc(var(--row) * 3);
   resize: none;
   border-bottom: none;
 }
@@ -106,7 +114,7 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
   margin: 0;
-  padding: 8px;
+  padding: 0;
 }
 
 button {
@@ -142,7 +150,7 @@ button:disabled {
   margin: 0;
   border: none;
   border-top: 1px solid var(--border);
-  padding: 4px 8px;
+  padding: 4px 0;
 }
 
 .status .label {
@@ -164,7 +172,7 @@ button:disabled {
 
 .help {
   margin: 0;
-  padding: 8px;
+  padding: 0;
   border-top: 1px solid var(--border);
   color: var(--muted);
 }

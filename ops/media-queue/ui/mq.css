@@ -1,6 +1,8 @@
 /* media-queue extras on top of shared EGA theme */
 .frame.mq {
   width: 480px;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 .peerbox {
@@ -14,6 +16,7 @@
 .peerbox input[type='text'] {
   flex: 1 1 auto;
   width: auto;
+  min-width: 0;
   border: 1px solid var(--border);
   border-left: none;
   border-right: none;
@@ -22,14 +25,14 @@
 
 .peerbox button {
   flex: 0 0 auto;
-  margin: 0 8px 0 0;
+  margin: 0;
 }
 
 #preview {
   display: none;
   width: 100%;
+  height: 140px;
   margin: 0;
-  max-height: 140px;
   background: #000;
   border: none;
   border-top: 1px solid var(--border);
@@ -40,6 +43,18 @@
   display: block;
 }
 
-#queue {
-  height: 96px;
+#opencapture.pending {
+  animation: mq-pulse 1s ease-in-out infinite;
+  outline: 2px solid var(--hint);
+  outline-offset: 2px;
+}
+
+@keyframes mq-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
 }

@@ -1,4 +1,4 @@
-/* global Peer */
+/* global Peer, mqcapture */
 ;(function () {
   const PEER_HOST = 'terminal.zed.cafe'
   const PROTOCOL = 'mediaqueue/v1'
@@ -9,9 +9,7 @@
     link: document.getElementById('link'),
     detail: document.getElementById('detail'),
     queue: document.getElementById('queue'),
-    opencapture: document.getElementById('opencapture'),
     stopcall: document.getElementById('stopcall'),
-    openbrowser: document.getElementById('openbrowser'),
     preview: document.getElementById('preview'),
     statusbox: document.getElementById('statusbox'),
     frame: document.querySelector('.frame.mq'),
@@ -25,6 +23,8 @@
   let queueindex = 0
   let cafemediapeerid = ''
   let localpeerid = ''
+  let capturestarted = false
+  let pendinggoto = false
 
   function invoke(cmd, args) {
     if (!window.__TAURI__ || !window.__TAURI__.core) {
@@ -32,6 +32,9 @@
     }
     return window.__TAURI__.core.invoke(cmd, args || {})
   }
+
+  const MAIN_HEIGHT_IDLE = 464
+  const MAIN_HEIGHT_PREVIEW = 604
 
   function setlink(text, detail) {
     els.link.textContent = text
@@ -42,14 +45,13 @@
   function renderqueue() {
     if (!queueurls.length) {
       els.queue.value = '(empty)'
-      return
+    } else {
+      els.queue.value = queueurls
+        .map(function (url, i) {
+          return (i === queueindex ? '> ' : '  ') + '[' + i + '] ' + url
+        })
+        .join('\n')
     }
-    els.queue.value = queueurls
-      .map(function (url, i) {
-        return (i === queueindex ? '> ' : '  ') + '[' + i + '] ' + url
-      })
-      .join('\n')
-    schedulefitwindow()
   }
 
   function send(msg) {
@@ -71,7 +73,7 @@
     fitwindowtimer = setTimeout(function () {
       fitwindowtimer = null
       void fitmainwindow()
-    }, 0)
+    }, 16)
   }
 
   function setpreviewstream(stream) {
@@ -81,20 +83,14 @@
   }
 
   async function fitmainwindow() {
-    if (!window.__TAURI__ || !window.__TAURI__.webviewWindow) {
+    if (!window.__TAURI__ || !window.__TAURI__.core) {
       return
     }
-    const root = els.frame || document.body
+    const height = els.preview.classList.contains('has-stream')
+      ? MAIN_HEIGHT_PREVIEW
+      : MAIN_HEIGHT_IDLE
     try {
-      const win = window.__TAURI__.webviewWindow.getCurrentWebviewWindow()
-      const dpi = window.__TAURI__.dpi
-      const rect = root.getBoundingClientRect()
-      const width = Math.ceil(rect.width)
-      const height = Math.ceil(rect.height)
-      if (width < 1 || height < 1) {
-        return
-      }
-      await win.setSize(new dpi.LogicalSize(width, height))
+      await invoke('resize_main_window', { height: height })
     } catch (_) {
       // Browser-only preview.
     }
@@ -111,7 +107,6 @@
       setlink('error', String(err))
       sendstatus('navigate-error', String(err))
     }
-    schedulefitwindow()
   }
 
   function stopmediastream() {
@@ -124,7 +119,8 @@
     setpreviewstream(null)
   }
 
-  function endcall() {
+  async function endcall() {
+    const hadcall = Boolean(mediacall || mediastream || capturestarted)
     if (mediacall) {
       try {
         mediacall.close()
@@ -132,7 +128,13 @@
       mediacall = null
     }
     stopmediastream()
-    sendstatus('call-stopped')
+    if (capturestarted && window.mqcapture) {
+      await window.mqcapture.stopbrowsercapture()
+      capturestarted = false
+    }
+    if (hadcall) {
+      sendstatus('call-stopped')
+    }
   }
 
   async function startcaptureandcall() {
@@ -145,21 +147,25 @@
       setlink('waiting', 'cafe not connected yet')
       return
     }
-    endcall()
+    if (mediacall || mediastream || capturestarted) {
+      await endcall()
+    }
+    if (!window.mqcapture) {
+      setlink('error', 'capture module missing')
+      return
+    }
     try {
-      mediastream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false,
-      })
+      mediastream = await window.mqcapture.startbrowsercapture()
     } catch (err) {
-      setlink('error', 'capture denied: ' + err)
+      setlink('error', 'capture failed: ' + err)
       sendstatus('capture-denied', String(err))
       return
     }
+    capturestarted = true
     setpreviewstream(mediastream)
     mediastream.getVideoTracks().forEach(function (track) {
       track.addEventListener('ended', function () {
-        endcall()
+        void endcall()
         setlink('connected', 'capture ended')
       })
     })
@@ -168,14 +174,38 @@
     })
     mediacall.on('close', function () {
       mediacall = null
-      stopmediastream()
+      void endcall()
     })
     mediacall.on('error', function (err) {
       setlink('error', 'call: ' + err)
-      endcall()
+      void endcall()
     })
-    setlink('calling', cafeid)
-    sendstatus('calling', cafeid)
+    setlink('capturing', cafeid)
+    sendstatus('capturing', cafeid)
+  }
+
+  async function maybeautostartaftergoto(url) {
+    if (capturestarted || pendinggoto) {
+      return
+    }
+    pendinggoto = true
+    try {
+      if (!window.mqcapture) {
+        return
+      }
+      const ready = window.mqcapture.waitbrowserready(20000)
+      await navigatebrowser(url)
+      await ready
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 500)
+      })
+      await startcaptureandcall()
+    } catch (err) {
+      setlink('error', String(err))
+      sendstatus('capture-denied', String(err))
+    } finally {
+      pendinggoto = false
+    }
   }
 
   function handlecafemessage(data) {
@@ -194,7 +224,7 @@
           role: 'helper',
           peerid: localpeerid,
         })
-        void startcaptureandcall()
+        sendstatus('waiting-for-url', 'add a URL in cafe #media scroll')
         break
       case 'mediaqueue:queue':
         queueurls = Array.isArray(data.urls) ? data.urls.slice() : []
@@ -204,10 +234,14 @@
       case 'mediaqueue:goto':
         queueindex = typeof data.index === 'number' ? data.index : queueindex
         renderqueue()
-        void navigatebrowser(data.url)
+        void maybeautostartaftergoto(data.url)
         break
       case 'mediaqueue:requestcall':
-        void startcaptureandcall()
+        if (!capturestarted && queueurls[queueindex]) {
+          void maybeautostartaftergoto(queueurls[queueindex])
+        } else if (!capturestarted) {
+          sendstatus('waiting-for-url', 'queue a URL in cafe first')
+        }
         break
       default:
         break
@@ -236,7 +270,7 @@
         dataconnection = null
       }
       cafemediapeerid = ''
-      endcall()
+      void endcall()
       setlink('ready', 'waiting for cafe')
     })
     conn.on('error', function (err) {
@@ -245,7 +279,7 @@
   }
 
   function destroypeer() {
-    endcall()
+    void endcall()
     cafemediapeerid = ''
     if (dataconnection) {
       try {
@@ -278,8 +312,7 @@
       localpeerid = id
       els.localpeer.value = id
       els.copypeer.disabled = false
-      setlink('ready', 'paste id into cafe #media')
-      schedulefitwindow()
+      setlink('ready', '#media <peerid> in cafe')
     })
     peer.on('connection', wiredataconnection)
     peer.on('error', function (err) {
@@ -310,31 +343,17 @@
   els.copypeer.addEventListener('click', function () {
     void copypeerid()
   })
-
-  els.opencapture.addEventListener('click', function () {
-    void startcaptureandcall()
+  els.stopcall.addEventListener('click', function () {
+    void endcall()
   })
-  els.stopcall.addEventListener('click', endcall)
-  els.openbrowser.addEventListener('click', function () {
-    const url =
-      queueurls[queueindex] ||
-      window.prompt('URL to open in browser window', 'https://')
-    if (url) {
-      void navigatebrowser(url)
-    }
-  })
-
-  if (typeof ResizeObserver !== 'undefined' && els.frame) {
-    const observer = new ResizeObserver(function () {
-      schedulefitwindow()
-    })
-    observer.observe(els.frame)
-  }
 
   function bootfit() {
     renderqueue()
     startpeer()
-    schedulefitwindow()
+    window.addEventListener('mq-audio-error', function (event) {
+      sendstatus('audio-denied', event.detail || '')
+    })
+    void fitmainwindow()
   }
 
   if (document.fonts && document.fonts.ready) {

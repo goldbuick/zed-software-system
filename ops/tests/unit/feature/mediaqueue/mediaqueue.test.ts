@@ -1,7 +1,18 @@
+import { boardtvshouldshow } from 'zss/feature/mediaqueue/boardtvvisible'
 import {
   mediaqueuecallmetadata,
   ismediaqueuecallmetadata,
 } from 'zss/feature/mediaqueue/callmetadata'
+import {
+  BOARD_TV_COLS,
+  BOARD_TV_ROWS,
+  boardtvisupright,
+} from 'zss/feature/mediaqueue/constants'
+import {
+  mediaqueueclearlistenstate,
+  mediaqueuesetlistenboardid,
+  mediaqueuesetlistening,
+} from 'zss/feature/mediaqueue/listenstate'
 import {
   MEDIAQUEUE_PROTOCOL,
   ismediaqueuemessage,
@@ -15,7 +26,6 @@ import {
   mediaqueuesetindex,
 } from 'zss/feature/mediaqueue/queue'
 import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
-import { BOARD_TV_COLS, BOARD_TV_ROWS } from 'zss/feature/mediaqueue/constants'
 
 describe('mediaqueue queue', () => {
   beforeEach(() => {
@@ -98,5 +108,24 @@ describe('board TV sink sizing', () => {
     expect(BOARD_TV_COLS).toBe(40)
     expect(BOARD_TV_ROWS).toBe(15)
     expect(BOARD_TV_COLS).toBeGreaterThan(BOARD_TV_ROWS)
+  })
+
+  it('stands the TV only in fpv; iso and mode7 lie on the board', () => {
+    expect(boardtvisupright('fpv')).toBe(true)
+    expect(boardtvisupright('flat')).toBe(false)
+    expect(boardtvisupright('iso')).toBe(false)
+    expect(boardtvisupright('mode7')).toBe(false)
+  })
+
+  it('shows the TV when video is up, and only on the bound board while listening', () => {
+    mediaqueueclearlistenstate()
+    expect(boardtvshouldshow('board-a', false)).toBe(false)
+    expect(boardtvshouldshow('board-a', true)).toBe(true)
+
+    mediaqueuesetlistening(true)
+    mediaqueuesetlistenboardid('board-a')
+    expect(boardtvshouldshow('board-a', true)).toBe(true)
+    expect(boardtvshouldshow('board-b', true)).toBe(false)
+    mediaqueueclearlistenstate()
   })
 })

@@ -39,7 +39,7 @@ flowchart TB
 
 - The YouTube relay never needed Chromium; Electron was only tray + settings + process spawn. Tauri does that with a smaller shell; MediaMTX/ffmpeg remain the heavy bits either way.
 - The media-queue helper **is** a browser surface + PeerJS. Building it on Electron while leaving the relay on Electron locks in two Chromium downloads. Tauri for **both** keeps one desktop toolchain (Rust + webview UI).
-- Capture for the queue app is **webview / window capture** (or an explicit Chromium sidecar if Chrome parity is required later).
+- Capture for the queue app is **native webview snapshot + OS audio loopback** (macOS: WKWebView + ScreenCaptureKit window audio; Windows: `CapturePreview` + WASAPI process loopback when implemented). Chromium sidecar remains out of scope unless parity fails.
 
 ## YouTube relay migration (Electron → Tauri)
 
@@ -66,7 +66,7 @@ Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay
 
 1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
 2. Cafe `#commands` mutate a host-owned queue and push updates over a **DataConnection** (control plane). Do **not** put video on the game `DataConnection`.
-3. Tauri loads the current URL in a webview (or child window), captures to `MediaStream`, then `peer.call(cafePeerId, stream)`.
+3. Tauri loads the current URL in a **Media Queue Browser** webview, captures video frames + browser audio natively, merges into one `MediaStream`, then `peer.call(cafePeerId, stream)`. Capture auto-starts on the first queue `goto` (no `getDisplayMedia` picker).
 4. Cafe: operator Peer answers; **board mates** receive a room fan-out `MediaConnection` and attach the same **board TV** surface.
 
 ## Cafe work (separate from helper packaging)
@@ -90,7 +90,7 @@ Scaffold lives under [`ops/youtube-rtmp-relay/src-tauri/`](../youtube-rtmp-relay
 1. **Design** (this doc) + Tauri scaffold for YouTube relay.
 2. **YouTube relay → Tauri** until `relay:build:desktop` produces Tauri installers; remove Electron.
 3. **Cafe Peer `call` + board TV sink** — `#mediaqueue` + [`receive.ts`](../../zss/feature/mediaqueue/receive.ts) + [`boardtvsink.tsx`](../../zss/gadget/boardtvsink.tsx).
-4. **Media-queue Tauri app** — [`ops/media-queue/`](../media-queue/README.md) (control UI + browser window + `getDisplayMedia` call).
+4. **Media-queue Tauri app** — [`ops/media-queue/`](../media-queue/README.md) (control UI + browser window + native capture + PeerJS call).
 5. Shared packaging polish (icons, signing, one Releases checklist). Windows SignPath OSS: [`desktop-signing.md`](desktop-signing.md).
 
 ## Related

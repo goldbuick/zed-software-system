@@ -44,6 +44,7 @@ import {
   handlegadgetscroll,
   handlemakeitscroll,
   handlerefscroll,
+  handlermediascroll,
 } from './scroll'
 import { handlesecond } from './second'
 import { handleticktock } from './ticktock'
@@ -80,6 +81,7 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   second: handlesecond,
   makeitscroll: handlemakeitscroll,
   refscroll: handlerefscroll,
+  mediascroll: handlermediascroll,
   gadgetscroll: handlegadgetscroll,
   readzipfilelist: handlereadzipfilelist,
   readimageimport: handlereadimageimport,
