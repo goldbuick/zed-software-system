@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe; media-src 'self' blob: mediastream:"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost"
     />
     <title>zed.cafe Media Queue</title>
     <link rel="stylesheet" href="./theme.css" />
@@ -44,17 +44,21 @@
 
       <div class="row">
         <button id="stopcall" class="danger" type="button">Stop call</button>
+        <button id="cleardownloads" type="button" class="action">
+          Clear downloads
+        </button>
       </div>
 
       <video id="preview" muted playsinline autoplay></video>
 
       <div class="help">
-        Cafe: <code>#media &lt;peerid&gt;</code> to bind -- <code>#media</code> for
-        queue scroll -- capture auto-starts on the first URL.
+        Cafe: <code>#media &lt;peerid&gt;</code> to bind --
+        <code>#media</code> for queue menu. Playback auto-starts on the first
+        URL via yt-dlp download.
       </div>
     </div>
     <script src="./vendor/peerjs.min.js"></script>
-    <script src="./capture.js"></script>
+    <script src="./playback.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

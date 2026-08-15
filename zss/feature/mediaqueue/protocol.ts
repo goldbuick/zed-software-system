@@ -21,6 +21,7 @@ export type MEDIAQUEUE_GOTO = {
   url: string
 }
 
+/** Helper -> cafe status strings (mediaqueue:status). Includes playback-ended. */
 export type MEDIAQUEUE_STATUS = {
   type: 'mediaqueue:status'
   status: string

@@ -28,7 +28,17 @@
   margin: 0;
 }
 
-#preview {
+.frame.mq .row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.frame.mq .row button {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
   display: none;
   width: 100%;
   height: 140px;

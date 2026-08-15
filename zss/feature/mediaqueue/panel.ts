@@ -1,27 +1,26 @@
 import type { DEVICE } from 'zss/device'
-import { apierror, apilog } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
-import 'zss/feature/mediaqueue/urlfield'
-import { publishmediascroll } from 'zss/feature/mediaqueue/menu'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
+import { mediareadcanmanagefrompayload } from 'zss/feature/mediaqueue/mediaguards'
+import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
+import { mediaqueueislistening } from 'zss/feature/mediaqueue/listenstate'
 import {
   mediaqueueadd,
   mediaqueueclear,
-  mediaqueuenext,
-  mediaqueuesetindex,
+  mediaqueuereadperplayerlimit,
+  mediaqueuesetperplayerlimit,
+  mediaqueueskip,
 } from 'zss/feature/mediaqueue/queue'
 import {
   mediaqueuepushqueuesnapshot,
   mediaqueuelisten,
   mediaqueuestop,
 } from 'zss/feature/mediaqueue/receive'
-import {
-  mediaqueuecleardrafturl,
-  mediaqueuereaddrafturl,
-} from 'zss/feature/mediaqueue/urlfield'
 import { netterminalensurehostready } from 'zss/feature/netterminal'
+import { write } from 'zss/feature/writeui'
 import { isarray, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
@@ -37,11 +36,41 @@ function readstringarg(message: MESSAGE): string | undefined {
   return undefined
 }
 
+function readurlfrompayload(message: MESSAGE): string {
+  const payload = message.data as { url?: unknown } | undefined
+  if (isstring(payload?.url)) {
+    return payload.url.trim()
+  }
+  return readstringarg(message)?.trim() ?? ''
+}
+
+function readlimitfrompayload(message: MESSAGE): number | undefined {
+  const payload = message.data as { limit?: unknown } | undefined
+  if (payload && payload.limit !== undefined) {
+    const limit = Number(payload.limit)
+    if (Number.isFinite(limit)) {
+      return limit
+    }
+  }
+  const raw = readstringarg(message)
+  const limit = Number(raw)
+  return Number.isFinite(limit) ? limit : undefined
+}
+
+function requiremanage(player: string, message: MESSAGE): boolean {
+  if (mediareadcanmanagefrompayload(message.data)) {
+    return true
+  }
+  apierror(SOFTWARE, player, 'media', 'queue admin only')
+  return false
+}
+
 function mediabind(
   player: string,
   peerid: string,
   boardid: string,
   boardname: string,
+  canmanage: boolean,
 ): void {
   const trimmed = peerid.trim()
   if (!trimmed) {
@@ -56,20 +85,27 @@ function mediabind(
       return
     }
     mediaqueuelisten(player, trimmed, boardid, boardname)
-    publishmediascroll(player)
+    showmediamenu(player, canmanage)
   })
 }
 
-/** Scroll chip actions for #media (MAIN thread via bridge:mediapanel). */
+/** CLI actions for #media (MAIN thread via bridge:mediapanel). */
 export function handlemediapanel(
   vm: DEVICE,
   message: MESSAGE,
   path: string,
 ): void {
   const player = message.player
+  const canmanage = mediareadcanmanagefrompayload(message.data)
   void vm
   switch (NAME(path)) {
+    case 'menu':
+      showmediamenu(player, canmanage)
+      break
     case 'bind': {
+      if (!requiremanage(player, message)) {
+        return
+      }
       const payload = message.data as
         | { peerid?: unknown; boardid?: unknown; boardname?: unknown }
         | undefined
@@ -78,51 +114,87 @@ export function handlemediapanel(
       const boardname = isstring(payload?.boardname)
         ? payload.boardname.trim()
         : ''
-      mediabind(player, peerid, boardid, boardname)
+      mediabind(player, peerid, boardid, boardname, canmanage)
       break
     }
-    case 'addurl': {
-      const url = mediaqueuereaddrafturl()
+    case 'add': {
+      const url = readurlfrompayload(message)
       if (!url) {
-        apierror(SOFTWARE, player, 'media', 'enter a url first')
+        apierror(SOFTWARE, player, 'media', 'usage: #media add <url>')
         return
       }
-      mediaqueueadd(url)
-      mediaqueuepushqueuesnapshot()
-      mediaqueuecleardrafturl()
-      publishmediascroll(player)
-      break
-    }
-    case 'goto': {
-      const raw = readstringarg(message)
-      const index = Number(raw)
-      if (!Number.isFinite(index)) {
-        apierror(SOFTWARE, player, 'media', 'goto needs an index')
+      if (!mediaqueueislistening()) {
+        apierror(
+          SOFTWARE,
+          player,
+          'media',
+          'bind the media helper first (#media <peerid>)',
+        )
         return
       }
-      mediaqueuesetindex(index)
+      const result = mediaqueueadd(player, url)
+      if (!result.ok) {
+        if (result.reason === 'duplicate') {
+          apierror(SOFTWARE, player, 'media', 'URL already in queue')
+        } else if (result.reason === 'limit') {
+          apierror(
+            SOFTWARE,
+            player,
+            'media',
+            `queue limit (${mediaqueuereadperplayerlimit()} per player)`,
+          )
+        } else {
+          apierror(SOFTWARE, player, 'media', 'usage: #media add <url>')
+        }
+        return
+      }
       mediaqueuepushqueuesnapshot()
-      publishmediascroll(player)
+      write(SOFTWARE, player, `media added: ${url}`)
       break
     }
-    case 'next':
-      mediaqueuenext()
+    case 'skip': {
+      if (!requiremanage(player, message)) {
+        return
+      }
+      mediaqueueskip()
       mediaqueuepushqueuesnapshot()
-      publishmediascroll(player)
+      write(SOFTWARE, player, 'media skipped to next')
       break
-    case 'clear':
+    }
+    case 'limit': {
+      if (!requiremanage(player, message)) {
+        return
+      }
+      const limit = readlimitfrompayload(message)
+      if (limit === undefined) {
+        apierror(SOFTWARE, player, 'media', 'usage: #media limit <N>')
+        return
+      }
+      mediaqueuesetperplayerlimit(limit)
+      write(
+        SOFTWARE,
+        player,
+        `media queue limit: ${mediaqueuereadperplayerlimit()} per player`,
+      )
+      break
+    }
+    case 'clear': {
+      if (!requiremanage(player, message)) {
+        return
+      }
       mediaqueueclear()
       mediaqueuepushqueuesnapshot()
-      publishmediascroll(player)
+      write(SOFTWARE, player, 'media queue cleared')
       break
-    case 'stop':
+    }
+    case 'stop': {
+      if (!requiremanage(player, message)) {
+        return
+      }
       mediaqueuestop(player)
-      publishmediascroll(player)
+      write(SOFTWARE, player, 'media stopped')
       break
-    case 'refresh':
-      publishmediascroll(player)
-      apilog(SOFTWARE, player, 'media scroll refreshed')
-      break
+    }
     default:
       break
   }

@@ -968,10 +968,6 @@ export function vmrefscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
 }
 
-export function vmmediascroll(device: DEVICELIKE, player: string) {
-  device.emit(player, 'vm:mediascroll')
-}
-
 export function vmrestart(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:restart')
 }

@@ -1,55 +1,92 @@
 /** Host-owned media URL queue (cafe side). */
 
-export type MEDIAQUEUE_STATE = {
-  urls: string[]
-  index: number
+import { mediaqueuenormalizeurl } from 'zss/feature/mediaqueue/urlnormalize'
+
+export type MEDIAQUEUE_ENTRY = {
+  url: string
+  player: string
+  key: string
 }
 
-let queueurls: string[] = []
-let queueindex = 0
+export type MEDIAQUEUE_STATE = {
+  urls: string[]
+  players: string[]
+  index: number
+  perplayerlimit: number
+}
+
+export type MEDIAQUEUE_ADD_RESULT =
+  | { ok: true }
+  | { ok: false; reason: 'empty' | 'duplicate' | 'limit' }
+
+const DEFAULT_PER_PLAYER_LIMIT = 3
+const MIN_PER_PLAYER_LIMIT = 1
+const MAX_PER_PLAYER_LIMIT = 20
+
+let entries: MEDIAQUEUE_ENTRY[] = []
+let perplayerlimit = DEFAULT_PER_PLAYER_LIMIT
 
 export function mediaqueuereadstate(): MEDIAQUEUE_STATE {
   return {
-    urls: [...queueurls],
-    index: queueindex,
+    urls: entries.map((entry) => entry.url),
+    players: entries.map((entry) => entry.player),
+    index: 0,
+    perplayerlimit: perplayerlimit,
   }
 }
 
 export function mediaqueueclear() {
-  queueurls = []
-  queueindex = 0
+  entries = []
 }
 
-export function mediaqueueadd(url: string) {
+export function mediaqueuereadperplayerlimit(): number {
+  return perplayerlimit
+}
+
+export function mediaqueuesetperplayerlimit(limit: number) {
+  perplayerlimit = Math.max(
+    MIN_PER_PLAYER_LIMIT,
+    Math.min(MAX_PER_PLAYER_LIMIT, Math.floor(limit)),
+  )
+}
+
+export function mediaqueuecountforplayer(player: string): number {
+  return entries.filter((entry) => entry.player === player).length
+}
+
+export function mediaqueueadd(
+  player: string,
+  url: string,
+): MEDIAQUEUE_ADD_RESULT {
   const trimmed = url.trim()
   if (!trimmed) {
-    return mediaqueuereadstate()
+    return { ok: false, reason: 'empty' }
   }
-  queueurls = [...queueurls, trimmed]
-  return mediaqueuereadstate()
+  const key = mediaqueuenormalizeurl(trimmed)
+  if (entries.some((entry) => entry.key === key)) {
+    return { ok: false, reason: 'duplicate' }
+  }
+  if (mediaqueuecountforplayer(player) >= perplayerlimit) {
+    return { ok: false, reason: 'limit' }
+  }
+  entries = [...entries, { url: trimmed, player, key }]
+  return { ok: true }
 }
 
-export function mediaqueuesetindex(index: number) {
-  if (queueurls.length === 0) {
-    queueindex = 0
-    return mediaqueuereadstate()
+export function mediaqueueshiftcurrent(): MEDIAQUEUE_ENTRY | undefined {
+  if (entries.length === 0) {
+    return undefined
   }
-  const next = Math.max(0, Math.min(index, queueurls.length - 1))
-  queueindex = next
-  return mediaqueuereadstate()
+  const [removed, ...rest] = entries
+  entries = rest
+  return removed
 }
 
-export function mediaqueuenext() {
-  if (queueurls.length === 0) {
-    return mediaqueuereadstate()
-  }
-  queueindex = (queueindex + 1) % queueurls.length
-  return mediaqueuereadstate()
+export function mediaqueueskip(): string | undefined {
+  mediaqueueshiftcurrent()
+  return mediaqueuecurrenturl()
 }
 
 export function mediaqueuecurrenturl(): string | undefined {
-  if (queueurls.length === 0) {
-    return undefined
-  }
-  return queueurls[queueindex]
+  return entries[0]?.url
 }

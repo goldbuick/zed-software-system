@@ -1,7 +1,7 @@
 [package]
 name = "zed-cafe-media-queue"
 version = "1.12.19"
-description = "Local media-queue browser that PeerJS-calls zed.cafe (Tauri)"
+description = "Local media-queue helper that PeerJS-calls zed.cafe (Tauri)"
 authors = ["zed.cafe"]
 edition = "2021"
 
@@ -13,33 +13,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-clipboard-manager = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-thiserror = "2"
-url = "2"
-base64 = "0.22"
-parking_lot = "0.12"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-
-[target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = ["NSData", "NSError", "NSString"] }
-objc2-app-kit = { version = "0.3", features = ["NSBitmapImageRep", "NSImage", "NSRunningApplication", "NSWorkspace"] }
-objc2-web-kit = { version = "0.3", features = ["WKWebView", "WKSnapshotConfiguration", "block2"] }
-block2 = "0.6"
-screencapturekit = "0.3"
-core-media-rs = "0.3"
-
-[target.'cfg(windows)'.dependencies]
-windows = { version = "0.58", features = [
-  "Win32_Foundation",
-  "Win32_System_Com",
-  "Win32_System_Com_StructuredStorage",
-  "Win32_System_Threading",
-  "Win32_Media_Audio",
-  "Win32_System_Memory",
-] }
-webview2-com = "0.38"
-windows-core = "0.58"

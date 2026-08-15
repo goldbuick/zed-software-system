@@ -1,4 +1,4 @@
-/* global Peer, mqcapture */
+/* global Peer, mqplayback */
 ;(function () {
   const PEER_HOST = 'terminal.zed.cafe'
   const PROTOCOL = 'mediaqueue/v1'
@@ -10,6 +10,7 @@
     detail: document.getElementById('detail'),
     queue: document.getElementById('queue'),
     stopcall: document.getElementById('stopcall'),
+    cleardownloads: document.getElementById('cleardownloads'),
     preview: document.getElementById('preview'),
     statusbox: document.getElementById('statusbox'),
     frame: document.querySelector('.frame.mq'),
@@ -23,8 +24,11 @@
   let queueindex = 0
   let cafemediapeerid = ''
   let localpeerid = ''
-  let capturestarted = false
+  let playbackstarted = false
   let pendinggoto = false
+  let cachebytes = 0
+  let downloadinflight = false
+  let lastdownloadpct = -1
 
   function invoke(cmd, args) {
     if (!window.__TAURI__ || !window.__TAURI__.core) {
@@ -35,6 +39,42 @@
 
   const MAIN_HEIGHT_IDLE = 464
   const MAIN_HEIGHT_PREVIEW = 604
+
+  function formatbytes(bytes) {
+    if (!bytes || bytes < 1) {
+      return '0 B'
+    }
+    const units = ['B', 'KB', 'MB', 'GB']
+    let value = bytes
+    let unit = 0
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024
+      unit += 1
+    }
+    return value.toFixed(unit === 0 ? 0 : 1) + ' ' + units[unit]
+  }
+
+  function updateclearlabel() {
+    if (!els.cleardownloads) {
+      return
+    }
+    const label =
+      cachebytes > 0
+        ? 'Clear downloads (' + formatbytes(cachebytes) + ')'
+        : 'Clear downloads'
+    els.cleardownloads.textContent = label
+  }
+
+  async function refreshcachebytes() {
+    try {
+      const state = await invoke('get_media_download_state')
+      cachebytes = state && state.cacheBytes ? state.cacheBytes : 0
+      updateclearlabel()
+    } catch (_) {
+      cachebytes = 0
+      updateclearlabel()
+    }
+  }
 
   function setlink(text, detail) {
     els.link.textContent = text
@@ -59,6 +99,37 @@
       return
     }
     dataconnection.send(msg)
+  }
+
+  function formatdownloadprogress(percent, eta, phase) {
+    const pct = Math.max(0, Math.min(100, Math.round(percent || 0)))
+    let line = (phase || 'downloading') + ' ' + pct + '%'
+    if (eta) {
+      line += ' eta ' + eta
+    }
+    return line
+  }
+
+  function handledownloadprogress(payload) {
+    if (!downloadinflight) {
+      return
+    }
+    const percent = payload && payload.percent ? payload.percent : 0
+    const eta = payload && payload.eta ? payload.eta : ''
+    const phase =
+      percent >= 99.5
+        ? 'transcoding'
+        : payload && payload.status
+          ? payload.status
+          : 'downloading'
+    const line = formatdownloadprogress(percent, eta, phase)
+    setlink(phase, line)
+    const pct = Math.round(percent || 0)
+    if (pct !== lastdownloadpct && (pct - lastdownloadpct >= 5 || pct >= 99)) {
+      lastdownloadpct = pct
+      const detail = String(pct) + (eta ? '|' + eta : '')
+      sendstatus('download-progress', detail)
+    }
   }
 
   function sendstatus(status, detail) {
@@ -96,19 +167,6 @@
     }
   }
 
-  async function navigatebrowser(url) {
-    if (!url) {
-      return
-    }
-    try {
-      await invoke('open_browser', { url: url })
-      sendstatus('navigated', url)
-    } catch (err) {
-      setlink('error', String(err))
-      sendstatus('navigate-error', String(err))
-    }
-  }
-
   function stopmediastream() {
     if (mediastream) {
       mediastream.getTracks().forEach(function (t) {
@@ -120,7 +178,7 @@
   }
 
   async function endcall() {
-    const hadcall = Boolean(mediacall || mediastream || capturestarted)
+    const hadcall = Boolean(mediacall || mediastream || playbackstarted)
     if (mediacall) {
       try {
         mediacall.close()
@@ -128,16 +186,16 @@
       mediacall = null
     }
     stopmediastream()
-    if (capturestarted && window.mqcapture) {
-      await window.mqcapture.stopbrowsercapture()
-      capturestarted = false
+    if (playbackstarted && window.mqplayback) {
+      await window.mqplayback.stopplayback()
+      playbackstarted = false
     }
     if (hadcall) {
       sendstatus('call-stopped')
     }
   }
 
-  async function startcaptureandcall() {
+  async function startplaybackandcall(url) {
     const cafeid = (cafemediapeerid || '').trim()
     if (!peer || !peer.open) {
       setlink('error', 'peer not ready')
@@ -147,26 +205,42 @@
       setlink('waiting', 'cafe not connected yet')
       return
     }
-    if (mediacall || mediastream || capturestarted) {
+    if (mediacall || mediastream || playbackstarted) {
       await endcall()
     }
-    if (!window.mqcapture) {
-      setlink('error', 'capture module missing')
+    if (!window.mqplayback) {
+      setlink('error', 'playback module missing')
       return
     }
+    let path = ''
     try {
-      mediastream = await window.mqcapture.startbrowsercapture()
+      downloadinflight = true
+      lastdownloadpct = -1
+      setlink('downloading', url)
+      sendstatus('downloading', url)
+      const ready = await window.mqplayback.startdownload(url)
+      path = ready && ready.path ? ready.path : ''
+      setlink('buffering', path)
+      sendstatus('buffering', path)
+      const playback = await window.mqplayback.startplayback(path)
+      mediastream = playback.stream
     } catch (err) {
-      setlink('error', 'capture failed: ' + err)
-      sendstatus('capture-denied', String(err))
+      const phase = path ? 'playback-failed' : 'download-failed'
+      setlink('error', phase + ': ' + err)
+      sendstatus(phase, String(err))
       return
+    } finally {
+      downloadinflight = false
+      lastdownloadpct = -1
     }
-    capturestarted = true
+    playbackstarted = true
     setpreviewstream(mediastream)
+    void refreshcachebytes()
     mediastream.getVideoTracks().forEach(function (track) {
       track.addEventListener('ended', function () {
+        sendstatus('playback-ended', '')
         void endcall()
-        setlink('connected', 'capture ended')
+        setlink('connected', 'playback ended')
       })
     })
     mediacall = peer.call(cafeid, mediastream, {
@@ -180,29 +254,20 @@
       setlink('error', 'call: ' + err)
       void endcall()
     })
-    setlink('capturing', cafeid)
-    sendstatus('capturing', cafeid)
+    setlink('playing', cafeid)
+    sendstatus('playing', cafeid)
   }
 
   async function maybeautostartaftergoto(url) {
-    if (capturestarted || pendinggoto) {
+    if (pendinggoto || !url) {
       return
     }
     pendinggoto = true
     try {
-      if (!window.mqcapture) {
-        return
-      }
-      const ready = window.mqcapture.waitbrowserready(20000)
-      await navigatebrowser(url)
-      await ready
-      await new Promise(function (resolve) {
-        setTimeout(resolve, 500)
-      })
-      await startcaptureandcall()
+      await startplaybackandcall(url)
     } catch (err) {
       setlink('error', String(err))
-      sendstatus('capture-denied', String(err))
+      sendstatus('download-failed', String(err))
     } finally {
       pendinggoto = false
     }
@@ -224,12 +289,19 @@
           role: 'helper',
           peerid: localpeerid,
         })
-        sendstatus('waiting-for-url', 'add a URL in cafe #media scroll')
+        sendstatus('waiting-for-url', 'add a URL in cafe #media')
         break
       case 'mediaqueue:queue':
         queueurls = Array.isArray(data.urls) ? data.urls.slice() : []
         queueindex = typeof data.index === 'number' ? data.index : 0
         renderqueue()
+        if (
+          queueurls.length === 0 &&
+          (playbackstarted || mediacall || mediastream)
+        ) {
+          void endcall()
+          setlink('connected', 'queue empty')
+        }
         break
       case 'mediaqueue:goto':
         queueindex = typeof data.index === 'number' ? data.index : queueindex
@@ -237,9 +309,9 @@
         void maybeautostartaftergoto(data.url)
         break
       case 'mediaqueue:requestcall':
-        if (!capturestarted && queueurls[queueindex]) {
+        if (!playbackstarted && queueurls[queueindex]) {
           void maybeautostartaftergoto(queueurls[queueindex])
-        } else if (!capturestarted) {
+        } else if (!playbackstarted) {
           sendstatus('waiting-for-url', 'queue a URL in cafe first')
         }
         break
@@ -332,9 +404,24 @@
     if (!localpeerid) {
       return
     }
+    const cliline = '#media "' + localpeerid + '"'
     try {
-      await invoke('copy_text', { text: localpeerid })
+      await invoke('copy_text', { text: cliline })
       setlink(els.link.textContent, 'copied to clipboard')
+    } catch (err) {
+      setlink('error', String(err))
+    }
+  }
+
+  async function cleardownloadcache() {
+    try {
+      await endcall()
+      const result = await invoke('clear_media_downloads')
+      const count = result && result.deletedCount ? result.deletedCount : 0
+      const freed = result && result.freedBytes ? result.freedBytes : 0
+      cachebytes = 0
+      updateclearlabel()
+      setlink('ready', 'cleared ' + count + ' file(s), freed ' + formatbytes(freed))
     } catch (err) {
       setlink('error', String(err))
     }
@@ -346,13 +433,22 @@
   els.stopcall.addEventListener('click', function () {
     void endcall()
   })
+  if (els.cleardownloads) {
+    els.cleardownloads.addEventListener('click', function () {
+      void cleardownloadcache()
+    })
+  }
 
   function bootfit() {
     renderqueue()
     startpeer()
-    window.addEventListener('mq-audio-error', function (event) {
-      sendstatus('audio-denied', event.detail || '')
-    })
+    void refreshcachebytes()
+    if (window.__TAURI__ && window.__TAURI__.event) {
+      void window.__TAURI__.event.listen('mq-download-progress', function (event) {
+        handledownloadprogress(event && event.payload ? event.payload : null)
+        void refreshcachebytes()
+      })
+    }
     void fitmainwindow()
   }
 

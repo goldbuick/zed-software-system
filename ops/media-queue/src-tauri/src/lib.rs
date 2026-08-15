@@ -1,14 +1,14 @@
-mod capture;
+mod download;
 
-use std::sync::{Arc, Mutex};
+use std::fs;
+use std::path::{Path, PathBuf};
 
-use capture::audio::{start_browser_audio_capture, stop_shared_audio, SharedAudioSession};
-use capture::video::capture_browser_webview;
-use capture::{BrowserReadyPayload, BROWSER_LABEL, BROWSER_WINDOW_TITLE};
-use parking_lot::Mutex as ParkingMutex;
+use download::{
+  ClearDownloadsResult, DownloadManager, DownloadState,
+};
 use serde::Serialize;
-use tauri::webview::PageLoadEvent;
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager};
+use tauri::ipc::Response;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
 const MAIN_WINDOW_WIDTH: f64 = 480.0;
@@ -17,71 +17,19 @@ const MAIN_WINDOW_HEIGHT_IDLE: f64 = 464.0;
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiState {
-  browser_url: String,
-  browser_open: bool,
+  download: DownloadState,
 }
 
 pub struct AppState {
-  browser_url: Mutex<String>,
-  browser_process_id: Mutex<u32>,
-  audio_session: SharedAudioSession,
-}
-
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CaptureFrameResponse {
-  width: u32,
-  height: u32,
-  rgba_b64: String,
+  downloads: DownloadManager,
+  media_cache_dir: PathBuf,
 }
 
 fn build_ui_state(app: &AppHandle) -> UiState {
   let st = app.state::<AppState>();
-  let browser_url = st
-    .browser_url
-    .lock()
-    .map(|g| g.clone())
-    .unwrap_or_default();
-  let browser_open = app.get_webview_window(BROWSER_LABEL).is_some();
   UiState {
-    browser_url,
-    browser_open,
+    download: st.downloads.read_state(),
   }
-}
-
-fn emit_state(app: &AppHandle) {
-  let _ = app.emit("mq-state", build_ui_state(app));
-}
-
-fn resolve_browser_process_id() -> u32 {
-  #[cfg(target_os = "macos")]
-  {
-    if let Ok(content) = screencapturekit::shareable_content::SCShareableContent::get() {
-      for window in content.windows() {
-        if window.title().contains(BROWSER_WINDOW_TITLE) {
-          return window.owning_application().process_id().max(0) as u32;
-        }
-      }
-    }
-    return std::process::id();
-  }
-  #[cfg(not(target_os = "macos"))]
-  {
-    std::process::id()
-  }
-}
-
-fn emit_browser_ready(app: &AppHandle, url: String) {
-  let process_id = {
-    let st = app.state::<AppState>();
-    let mut guard = st.browser_process_id.lock().unwrap();
-    if *guard == 0 {
-      *guard = resolve_browser_process_id();
-    }
-    *guard
-  };
-  let payload = BrowserReadyPayload { url, process_id };
-  let _ = app.emit("mq-browser-ready", payload);
 }
 
 #[tauri::command]
@@ -103,62 +51,6 @@ fn copy_text(app: AppHandle, text: String) -> Result<bool, String> {
 }
 
 #[tauri::command]
-fn open_browser(app: AppHandle, url: String) -> Result<UiState, String> {
-  let trimmed = url.trim().to_string();
-  if trimmed.is_empty() {
-    return Err("url required".into());
-  }
-  let parsed = trimmed
-    .parse::<url::Url>()
-    .or_else(|_| format!("https://{trimmed}").parse::<url::Url>())
-    .map_err(|e| e.to_string())?;
-
-  {
-    let st = app.state::<AppState>();
-    let urlstr = parsed.as_str().to_string();
-    if let Ok(mut g) = st.browser_url.lock() {
-      *g = urlstr;
-    };
-  }
-
-  if let Some(existing) = app.get_webview_window(BROWSER_LABEL) {
-    existing
-      .navigate(parsed.clone())
-      .map_err(|e| e.to_string())?;
-    let _ = existing.show();
-    let _ = existing.set_focus();
-    emit_state(&app);
-    return Ok(build_ui_state(&app));
-  }
-
-  let app_ready = app.clone();
-  WebviewWindowBuilder::new(&app, BROWSER_LABEL, WebviewUrl::External(parsed))
-    .title(BROWSER_WINDOW_TITLE)
-    .inner_size(1024.0, 720.0)
-    .resizable(true)
-    .on_navigation(|_url| true)
-    .on_page_load(move |_webview, payload| {
-      if payload.event() == PageLoadEvent::Finished {
-        emit_browser_ready(&app_ready, payload.url().to_string());
-      }
-    })
-    .build()
-    .map_err(|e| e.to_string())?;
-
-  emit_state(&app);
-  Ok(build_ui_state(&app))
-}
-
-#[tauri::command]
-fn close_browser(app: AppHandle) -> Result<UiState, String> {
-  if let Some(w) = app.get_webview_window(BROWSER_LABEL) {
-    w.close().map_err(|e| e.to_string())?;
-  }
-  emit_state(&app);
-  Ok(build_ui_state(&app))
-}
-
-#[tauri::command]
 fn resize_main_window(app: AppHandle, height: f64) -> Result<(), String> {
   if !height.is_finite() || height < 1.0 {
     return Err("invalid window height".into());
@@ -176,66 +68,86 @@ fn resize_main_window(app: AppHandle, height: f64) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn capture_browser_frame(app: AppHandle) -> Result<CaptureFrameResponse, String> {
-  let window = app
-    .get_webview_window(BROWSER_LABEL)
-    .ok_or_else(|| "browser window missing".to_string())?;
-  tauri::async_runtime::spawn_blocking(move || {
-    let (tx, rx) = std::sync::mpsc::sync_channel(1);
-    window
-      .with_webview(move |platform| {
-        let frame = capture_browser_webview(platform.inner());
-        let _ = tx.send(frame);
-      })
-      .map_err(|err| err.to_string())?;
-    let frame = rx
-      .recv()
-      .map_err(|_| "capture did not complete".to_string())??;
-    Ok(CaptureFrameResponse {
-      width: frame.width,
-      height: frame.height,
-      rgba_b64: base64::Engine::encode(
-        &base64::engine::general_purpose::STANDARD,
-        frame.rgba,
-      ),
-    })
-  })
-  .await
-  .map_err(|err| err.to_string())?
+fn start_media_download(app: AppHandle, url: String) -> Result<DownloadState, String> {
+  let st = app.state::<AppState>();
+  st.downloads.start_download(app.clone(), url)?;
+  Ok(st.downloads.read_state())
 }
 
 #[tauri::command]
-fn start_browser_audio(app: AppHandle, state: tauri::State<'_, AppState>) -> Result<u32, String> {
-  stop_shared_audio(&state.audio_session);
-  let session = start_browser_audio_capture(app)?;
-  let session_id = session.session_id;
-  *state.audio_session.lock() = Some(session);
-  Ok(session_id)
+fn cancel_media_download(app: AppHandle) -> Result<DownloadState, String> {
+  let st = app.state::<AppState>();
+  st.downloads.cancel_download();
+  Ok(st.downloads.read_state())
 }
 
 #[tauri::command]
-fn stop_browser_audio(state: tauri::State<'_, AppState>) {
-  stop_shared_audio(&state.audio_session);
+fn clear_media_downloads(app: AppHandle) -> Result<ClearDownloadsResult, String> {
+  let st = app.state::<AppState>();
+  st.downloads.clear_downloads()
 }
 
 #[tauri::command]
-fn get_browser_process_id(state: tauri::State<'_, AppState>) -> u32 {
-  let mut guard = state.browser_process_id.lock().unwrap();
-  if *guard == 0 {
-    *guard = resolve_browser_process_id();
+fn get_media_download_state(app: AppHandle) -> DownloadState {
+  let st = app.state::<AppState>();
+  st.downloads.read_state()
+}
+
+fn media_path_allowed(media_cache_dir: &Path, path: &str) -> Result<PathBuf, String> {
+  let requested = PathBuf::from(path);
+  if !requested.is_absolute() {
+    return Err("path must be absolute".into());
   }
-  *guard
+  let canonical = fs::canonicalize(&requested).map_err(|e| e.to_string())?;
+  let cache_canonical =
+    fs::canonicalize(media_cache_dir).map_err(|e| e.to_string())?;
+  if !canonical.starts_with(&cache_canonical) {
+    return Err("path outside media cache".into());
+  }
+  if !canonical.is_file() {
+    return Err("not a file".into());
+  }
+  Ok(canonical)
+}
+
+#[tauri::command]
+fn read_media_file(app: AppHandle, path: String) -> Result<Response, String> {
+  let st = app.state::<AppState>();
+  let allowed = media_path_allowed(&st.media_cache_dir, path.trim())?;
+  let bytes = fs::read(&allowed).map_err(|e| e.to_string())?;
+  Ok(Response::new(bytes))
 }
 
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_clipboard_manager::init())
     .setup(|app| {
+      let cache_dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| e.to_string())?
+        .join("media-queue");
+      std::fs::create_dir_all(&cache_dir).ok();
+
+      let resource_root = if cfg!(debug_assertions) {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..")
+      } else {
+        app
+          .path()
+          .resource_dir()
+          .unwrap_or_else(|_| PathBuf::from("."))
+      };
+
       app.manage(AppState {
-        browser_url: Mutex::new(String::new()),
-        browser_process_id: Mutex::new(0),
-        audio_session: Arc::new(ParkingMutex::new(None)),
+        downloads: DownloadManager::new(resource_root, cache_dir.clone()),
+        media_cache_dir: cache_dir,
       });
+
+      {
+        let st = app.state::<AppState>();
+        st.downloads.warm_ejs_cache();
+      }
+
       if let Some(win) = app.get_webview_window("main") {
         use tauri::{LogicalSize, Size};
         let _ = win.set_resizable(false);
@@ -249,13 +161,12 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       get_state,
       copy_text,
-      open_browser,
-      close_browser,
       resize_main_window,
-      capture_browser_frame,
-      start_browser_audio,
-      stop_browser_audio,
-      get_browser_process_id,
+      start_media_download,
+      cancel_media_download,
+      clear_media_downloads,
+      get_media_download_state,
+      read_media_file,
     ])
     .run(tauri::generate_context!())
     .expect("error while running media-queue");

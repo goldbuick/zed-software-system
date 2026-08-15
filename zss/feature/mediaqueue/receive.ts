@@ -12,6 +12,7 @@ import {
 } from 'zss/feature/mediaqueue/protocol'
 import {
   mediaqueuecurrenturl,
+  mediaqueueshiftcurrent,
   mediaqueuereadstate,
 } from 'zss/feature/mediaqueue/queue'
 import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
@@ -22,6 +23,7 @@ import {
   mediaqueuereadhelperpeerid,
   mediaqueuereadlistenplayer,
   mediaqueueislistening,
+  mediaqueuehelperconnected,
   mediaqueuesethasactiveroomstream,
   mediaqueuesethelperconnected,
   mediaqueuesethelperpeerid,
@@ -54,6 +56,20 @@ function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
     return
   }
   helperconnection.send(message)
+}
+
+function mediaqueueadvanceafterplayback() {
+  mediaqueueshiftcurrent()
+  mediaqueuepushqueuesnapshot()
+  const listenplayer = mediaqueuereadlistenplayer()
+  if (!listenplayer) {
+    return
+  }
+  if (mediaqueuecurrenturl()) {
+    apilog(SOFTWARE, listenplayer, 'mediaqueue helper: advancing queue')
+  } else {
+    apilog(SOFTWARE, listenplayer, 'mediaqueue helper: queue empty')
+  }
 }
 
 export function mediaqueuepushqueuesnapshot() {
@@ -239,14 +255,50 @@ function handlehelperdata(data: unknown) {
       if (mediaqueuereadlistenplayer()) {
         const detail = data.detail ? ` ${data.detail}` : ''
         const player = mediaqueuereadlistenplayer()
-        if (data.status === 'audio-denied') {
-          apilog(
+        if (data.status === 'waiting-for-url') {
+          apilog(SOFTWARE, player, 'mediaqueue helper: waiting for queue URL')
+        } else if (data.status === 'downloading') {
+          apilog(SOFTWARE, player, `mediaqueue helper: downloading${detail}`)
+        } else if (data.status === 'download-progress') {
+          const parts = (data.detail || '').split('|')
+          const pct = Number(parts[0])
+          if (Number.isFinite(pct)) {
+            const eta = parts[1] ? ` eta ${parts[1]}` : ''
+            apilog(
+              SOFTWARE,
+              player,
+              `mediaqueue helper: download ${Math.round(pct)}%${eta}`,
+            )
+          }
+        } else if (data.status === 'buffering') {
+          apilog(SOFTWARE, player, `mediaqueue helper: buffering${detail}`)
+        } else if (data.status === 'playback-ended') {
+          apilog(SOFTWARE, player, 'mediaqueue helper: finished, advancing')
+          if (mediaqueueislistening() && mediaqueuehelperconnected()) {
+            mediaqueueadvanceafterplayback()
+          }
+        } else if (data.status === 'download-failed') {
+          apierror(
             SOFTWARE,
             player,
-            `mediaqueue helper: audio denied${detail}`,
+            'media',
+            `helper download failed${detail}`,
           )
-        } else if (data.status === 'waiting-for-url') {
-          apilog(SOFTWARE, player, 'mediaqueue helper: waiting for queue URL')
+          if (mediaqueueislistening() && mediaqueuehelperconnected()) {
+            mediaqueueadvanceafterplayback()
+          }
+        } else if (data.status === 'playback-failed') {
+          apierror(
+            SOFTWARE,
+            player,
+            'media',
+            `helper playback failed${detail}`,
+          )
+          if (mediaqueueislistening() && mediaqueuehelperconnected()) {
+            mediaqueueadvanceafterplayback()
+          }
+        } else if (data.status === 'playing') {
+          apilog(SOFTWARE, player, `mediaqueue helper: playing${detail}`)
         } else {
           apilog(
             SOFTWARE,
@@ -356,7 +408,7 @@ export function mediaqueuelisten(
       SOFTWARE,
       player,
       'media',
-      `already listening to helper ${mediaqueuereadhelperpeerid() || '?'} on board ${mediaqueuereadboundboardid() || '?'} -- use Stop in the scroll first`,
+      `already listening to helper ${mediaqueuereadhelperpeerid() || '?'} on board ${mediaqueuereadboundboardid() || '?'} -- use #media stop first`,
     )
     return
   }

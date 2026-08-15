@@ -21,15 +21,21 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe; media-src 'self' blob: mediastream:"
+      "csp": "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$CACHE/**", "$APPCACHE/**"]
+      }
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
     "icon": ["icons/icon.png"],
+    "resources": ["bin/**/*"],
     "macOS": {
-      "minimumSystemVersion": "10.15"
+      "minimumSystemVersion": "10.15",
+      "infoPlist": "Info.plist"
     },
     "windows": {
       "nsis": {

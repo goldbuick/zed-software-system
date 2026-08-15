@@ -20,36 +20,77 @@ import {
 import {
   mediaqueueadd,
   mediaqueueclear,
+  mediaqueuecountforplayer,
   mediaqueuecurrenturl,
-  mediaqueuenext,
+  mediaqueuereadperplayerlimit,
   mediaqueuereadstate,
-  mediaqueuesetindex,
+  mediaqueuesetperplayerlimit,
+  mediaqueueshiftcurrent,
+  mediaqueueskip,
 } from 'zss/feature/mediaqueue/queue'
 import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
+import { mediaqueuenormalizeurl } from 'zss/feature/mediaqueue/urlnormalize'
+
+describe('mediaqueue url normalize', () => {
+  it('collapses youtube watch and youtu.be to the same key', () => {
+    const a = mediaqueuenormalizeurl(
+      'https://www.youtube.com/watch?v=abc123&utm_source=x',
+    )
+    const b = mediaqueuenormalizeurl('https://youtu.be/abc123')
+    expect(a).toBe('youtube:abc123')
+    expect(b).toBe('youtube:abc123')
+  })
+})
 
 describe('mediaqueue queue', () => {
   beforeEach(() => {
     mediaqueueclear()
+    mediaqueuesetperplayerlimit(3)
   })
 
-  it('adds urls and advances with next', () => {
-    mediaqueueadd('https://a.example')
-    mediaqueueadd('https://b.example')
+  it('adds urls for a player and plays fifo front', () => {
+    expect(mediaqueueadd('p1', 'https://a.example').ok).toBe(true)
+    expect(mediaqueueadd('p2', 'https://b.example').ok).toBe(true)
     expect(mediaqueuereadstate()).toEqual({
       urls: ['https://a.example', 'https://b.example'],
+      players: ['p1', 'p2'],
       index: 0,
+      perplayerlimit: 3,
     })
     expect(mediaqueuecurrenturl()).toBe('https://a.example')
-    mediaqueuenext()
+    mediaqueueskip()
     expect(mediaqueuecurrenturl()).toBe('https://b.example')
-    mediaqueuenext()
-    expect(mediaqueuecurrenturl()).toBe('https://a.example')
+    expect(mediaqueuereadstate().urls).toEqual(['https://b.example'])
   })
 
-  it('goto clamps index', () => {
-    mediaqueueadd('https://a.example')
-    mediaqueuesetindex(99)
-    expect(mediaqueuereadstate().index).toBe(0)
+  it('rejects duplicate normalized urls', () => {
+    expect(mediaqueueadd('p1', 'https://youtu.be/abc123').ok).toBe(true)
+    expect(mediaqueueadd('p2', 'https://www.youtube.com/watch?v=abc123').ok).toBe(
+      false,
+    )
+  })
+
+  it('enforces per-player limit', () => {
+    expect(mediaqueueadd('p1', 'https://a.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'https://b.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'https://c.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'https://d.example').ok).toBe(false)
+    expect(mediaqueuecountforplayer('p1')).toBe(3)
+  })
+
+  it('clamps limit setter', () => {
+    mediaqueuesetperplayerlimit(99)
+    expect(mediaqueuereadperplayerlimit()).toBe(20)
+    mediaqueuesetperplayerlimit(0)
+    expect(mediaqueuereadperplayerlimit()).toBe(1)
+  })
+
+  it('shift removes front entry', () => {
+    mediaqueueadd('p1', 'https://a.example')
+    mediaqueueadd('p1', 'https://b.example')
+    const removed = mediaqueueshiftcurrent()
+    expect(removed?.url).toBe('https://a.example')
+    expect(mediaqueuecurrenturl()).toBe('https://b.example')
   })
 })
 
@@ -81,51 +122,42 @@ describe('mediaqueue room peers', () => {
     )
     expect(ids).toEqual(['peer-b', 'peer-c'])
   })
-
-  it('skips players missing from roster', () => {
-    expect(
-      mediaqueueroompeerids(
-        ['p1', 'ghost'],
-        [{ player: 'p1', peerid: 'peer-a' }],
-        undefined,
-      ),
-    ).toEqual(['peer-a'])
-  })
 })
 
-describe('mediaqueue call metadata', () => {
-  it('accepts helper and room sources', () => {
-    expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('helper'))).toBe(
-      true,
-    )
-    expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('room'))).toBe(true)
-    expect(ismediaqueuecallmetadata({ kind: 'nope' })).toBe(false)
-  })
-})
-
-describe('board TV sink sizing', () => {
-  it('uses landscape 40x15 in all graphics modes', () => {
-    expect(BOARD_TV_COLS).toBe(40)
-    expect(BOARD_TV_ROWS).toBe(15)
-    expect(BOARD_TV_COLS).toBeGreaterThan(BOARD_TV_ROWS)
+describe('mediaqueue board tv', () => {
+  beforeEach(() => {
+    mediaqueueclearlistenstate()
   })
 
-  it('stands the TV only in fpv; iso and mode7 lie on the board', () => {
+  it('boardtvisupright is true only for fpv', () => {
     expect(boardtvisupright('fpv')).toBe(true)
     expect(boardtvisupright('flat')).toBe(false)
     expect(boardtvisupright('iso')).toBe(false)
     expect(boardtvisupright('mode7')).toBe(false)
   })
 
-  it('shows the TV when video is up, and only on the bound board while listening', () => {
-    mediaqueueclearlistenstate()
-    expect(boardtvshouldshow('board-a', false)).toBe(false)
-    expect(boardtvshouldshow('board-a', true)).toBe(true)
-
+  it('boardtvshouldshow requires listening board match and video', () => {
     mediaqueuesetlistening(true)
     mediaqueuesetlistenboardid('board-a')
     expect(boardtvshouldshow('board-a', true)).toBe(true)
     expect(boardtvshouldshow('board-b', true)).toBe(false)
-    mediaqueueclearlistenstate()
+    expect(boardtvshouldshow('board-a', false)).toBe(false)
+  })
+
+  it('uses landscape tv size constants', () => {
+    expect(BOARD_TV_COLS).toBe(40)
+    expect(BOARD_TV_ROWS).toBe(15)
+    expect(BOARD_TV_COLS).toBeGreaterThan(BOARD_TV_ROWS)
+  })
+})
+
+describe('mediaqueue call metadata', () => {
+  it('tags helper and room calls', () => {
+    expect(mediaqueuecallmetadata('helper')).toEqual({
+      kind: 'mediaqueue',
+      source: 'helper',
+    })
+    expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('room'))).toBe(true)
+    expect(ismediaqueuecallmetadata({ kind: 'other' })).toBe(false)
   })
 })

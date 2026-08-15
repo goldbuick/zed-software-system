@@ -12,6 +12,10 @@ import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { bridgemediapanel } from 'zss/device/api'
+import {
+  mediapayloadwithmanage,
+  mediarequiremanageonvm,
+} from 'zss/feature/mediaqueue/mediaguards'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -210,19 +214,33 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'bookmarkscroll':
       handlebookmarkscrollpanel(vm, message, path)
       break
-    case 'media':
+    case 'media': {
+      const managepaths = new Set(['bind', 'skip', 'clear', 'stop', 'limit'])
+      if (managepaths.has(path) && !mediarequiremanageonvm(message.player)) {
+        break
+      }
       if (path === 'bind') {
         const board = memoryreadplayerboard(message.player)
         const payload = (message.data ?? {}) as Record<string, unknown>
         bridgemediapanel(SOFTWARE, message.player, path, {
-          ...payload,
+          ...mediapayloadwithmanage(message.player, payload),
           boardid: board?.id ?? payload.boardid ?? '',
           boardname: board?.name ?? payload.boardname ?? '',
         })
       } else {
-        bridgemediapanel(SOFTWARE, message.player, path, message.data)
+        const payload =
+          message.data && typeof message.data === 'object'
+            ? (message.data as Record<string, unknown>)
+            : undefined
+        bridgemediapanel(
+          SOFTWARE,
+          message.player,
+          path,
+          mediapayloadwithmanage(message.player, payload),
+        )
       }
       break
+    }
     default: {
       // expect that the chip: prefix is already removed from the path
       if (NAME(target) === 'self' || !path) {

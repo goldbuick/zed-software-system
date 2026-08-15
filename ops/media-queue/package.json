@@ -5,7 +5,12 @@
   "description": "Tauri media-queue helper for zed.cafe",
   "license": "MIT",
   "scripts": {
+    "fetch-binaries": "node scripts/fetch-binaries.mjs",
+    "verify-download": "node scripts/verify-download.mjs",
+    "stage-tauri-resources": "node scripts/stage-tauri-resources.mjs",
+    "prestart": "node scripts/fetch-binaries.mjs",
     "start": "tauri dev",
+    "predist": "node scripts/fetch-binaries.mjs && node scripts/stage-tauri-resources.mjs",
     "dist": "tauri build",
     "dist:mac": "tauri build",
     "dist:win": "tauri build"

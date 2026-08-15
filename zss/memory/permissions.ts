@@ -6,7 +6,7 @@ import { memoryreadoperator } from './session'
 
 /** Group names and descriptions for allowlists (nine families). */
 export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
-  ['bridge', 'chat, join, broadcast, media, fetch, bridge status'],
+  ['bridge', 'chat, join, broadcast, fetch, media queue admin, bridge status'],
   ['build', 'world edit: put, shoot, copy, weave, and other transforms'],
   ['coder', 'codepages, books/pages lists, bind, die, run'],
   ['explore', 'boards, boardopen, goto'],
@@ -14,7 +14,7 @@ export const PERMISSION_CONTROLLED_GROUPS = new Map<string, string>([
   ['persist', 'save sim state, share content'],
   ['risk', 'nuke, publish/export, trash, access, zns, restart'],
   ['roles', 'manage role and permission assignments'],
-  ['speaker', 'play, synth, bgplay, toast, TTS'],
+  ['speaker', 'play, synth, bgplay, toast, TTS, media queue submit'],
 ])
 
 /** Variant commands mapped to one of PERMISSION_CONTROLLED_GROUPS. */
@@ -26,7 +26,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   fetchwith: 'bridge',
   joincode: 'bridge',
   jointab: 'bridge',
-  media: 'bridge',
+  mediamanage: 'bridge',
 
   build: 'build',
   change: 'build',
@@ -128,6 +128,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   fcrush2: 'speaker',
   fcrush3: 'speaker',
   fcrush4: 'speaker',
+  media: 'speaker',
   play: 'speaker',
   reverb1: 'speaker',
   reverb2: 'speaker',

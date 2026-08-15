@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
-import { Euler, VideoTexture } from 'three'
+import { Euler, DoubleSide, VideoTexture } from 'three'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
@@ -26,10 +26,12 @@ function BoardTvPlane({
   video,
   drawwidth,
   drawheight,
+  upright,
 }: {
   video: HTMLVideoElement
   drawwidth: number
   drawheight: number
+  upright: boolean
 }) {
   const texture = useMemo(() => {
     const tex = new VideoTexture(video)
@@ -45,12 +47,20 @@ function BoardTvPlane({
   const scale = Math.min(drawwidth / vw, drawheight / vh)
   const w = vw * scale
   const h = vh * scale
+  // Upright FPV: parent local Y is world Z (up). Anchor plane bottom on wall base.
+  const lifty = upright ? h * 0.5 : 0
 
   return (
-    <mesh>
-      <planeGeometry args={[w, h]} />
-      <meshBasicMaterial map={texture} toneMapped={false} />
-    </mesh>
+    <group position={[0, lifty, 0]}>
+      <mesh>
+        <planeGeometry args={[w, h]} />
+        <meshBasicMaterial
+          map={texture}
+          toneMapped={false}
+          side={DoubleSide}
+        />
+      </mesh>
+    </group>
   )
 }
 
@@ -87,6 +97,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const rotation = boardtvisupright(graphics)
     ? new Euler(-Math.PI * 0.5, 0, Math.PI)
     : new Euler(0, 0, Math.PI)
+  const upright = boardtvisupright(graphics)
   const z = graphics === 'flat' ? 800 : drawheight * 0.5
 
   return (
@@ -95,6 +106,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
         video={video}
         drawwidth={tvdrawwidth}
         drawheight={tvdrawheight}
+        upright={upright}
       />
     </group>
   )

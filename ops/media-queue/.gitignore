@@ -1,2 +1,5 @@
 node_modules/
+vendor/
+src-tauri/bin/
+.verify-download/
 src-tauri/target/
