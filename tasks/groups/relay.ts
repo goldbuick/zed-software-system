@@ -6,20 +6,14 @@ const RELAY_DIR = 'ops/youtube-rtmp-relay'
 async function runyarn(
   ctx: { root: string },
   args: string[],
-  opts: { clearelectronrunasnode?: boolean } = {},
 ): Promise<number> {
   const { spawnSync } = await import('node:child_process')
   const path = await import('node:path')
   const cwd = path.join(ctx.root, RELAY_DIR)
-  const env = { ...process.env }
-  if (opts.clearelectronrunasnode) {
-    delete env.ELECTRON_RUN_AS_NODE
-  }
-  // Windows resolves yarn.cmd only when shell is enabled; bare spawn ENOENTs.
   const result = spawnSync('yarn', args, {
     cwd,
     stdio: 'inherit',
-    env,
+    env: process.env,
     shell: process.platform === 'win32',
   })
   if (result.error) {
@@ -45,7 +39,8 @@ export const RELAY_TASKS: TaskDef[] = [
     }),
   }),
   def('relay:build:desktop', {
-    description: 'Build YouTube relay Electron installers for current host OS',
+    description:
+      'Build YouTube relay desktop installers (Tauri v2) for current host OS',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
@@ -60,23 +55,23 @@ export const RELAY_TASKS: TaskDef[] = [
           'relay:build:desktop supports macOS and Windows hosts only',
         )
       }
-      return runyarn(ctx, [script], { clearelectronrunasnode: true })
+      return runyarn(ctx, [script])
     }),
   }),
   def('relay:build:desktop:mac', {
-    description: 'Build YouTube relay macOS dmg (arm64 + x64)',
+    description: 'Build YouTube relay macOS dmg (Tauri v2)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
-      return runyarn(ctx, ['dist:mac'], { clearelectronrunasnode: true })
+      return runyarn(ctx, ['dist:mac'])
     }),
   }),
   def('relay:build:desktop:win', {
-    description: 'Build YouTube relay Windows nsis installer (x64)',
+    description: 'Build YouTube relay Windows nsis installer (Tauri v2)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
-      return runyarn(ctx, ['dist:win'], { clearelectronrunasnode: true })
+      return runyarn(ctx, ['dist:win'])
     }),
   }),
 ]

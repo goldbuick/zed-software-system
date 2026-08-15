@@ -11,6 +11,7 @@ import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
+import { bridgemediapanel } from 'zss/device/api'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -208,6 +209,17 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     case 'bookmarkscroll':
       handlebookmarkscrollpanel(vm, message, path)
+      break
+    case 'media':
+      if (path === 'start') {
+        const board = memoryreadplayerboard(message.player)
+        bridgemediapanel(SOFTWARE, message.player, path, {
+          boardid: board?.id ?? '',
+          boardname: board?.name ?? '',
+        })
+      } else {
+        bridgemediapanel(SOFTWARE, message.player, path, message.data)
+      }
       break
     default: {
       // expect that the chip: prefix is already removed from the path

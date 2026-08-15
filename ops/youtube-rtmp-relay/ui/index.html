@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'"
+    />
+    <title>zed.cafe YouTube relay</title>
+    <link rel="stylesheet" href="./theme.css" />
+  </head>
+  <body>
+    <div class="frame">
+      <h1>zed.cafe <span>YouTube relay</span></h1>
+      <div class="sub">WHIP localhost -&gt; YouTube RTMPS</div>
+
+      <label for="ytkey">YouTube stream key (stays on this machine)</label>
+      <input id="ytkey" type="password" autocomplete="off" spellcheck="false" />
+
+      <label for="bearer">Local bearer (paste into cafe)</label>
+      <input id="bearer" type="text" readonly spellcheck="false" />
+
+      <div class="row">
+        <button id="savekey" type="button">Save key</button>
+        <button id="copybearer" type="button">Copy bearer</button>
+        <button id="regen" type="button">New bearer</button>
+      </div>
+
+      <div class="row">
+        <button id="start" class="action" type="button">Start relay</button>
+        <button id="stop" class="danger" type="button">Stop</button>
+        <button id="releases" type="button">Releases</button>
+      </div>
+
+      <div id="statusbox" class="status">
+        <div><span class="label">status</span> <span id="status" class="value">idle</span></div>
+        <div id="detail" class="mono"></div>
+        <div class="mono">WHIP <span id="whip"></span></div>
+      </div>
+
+      <label for="logs">logs</label>
+      <textarea id="logs" readonly></textarea>
+
+      <div class="help">
+        In cafe (operator):
+        <code>#broadcast whip youtube &lt;local-bearer&gt;</code>
+        <br />
+        Windows installers on GitHub Releases are signed via SignPath OSS when
+        release secrets are configured.
+      </div>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

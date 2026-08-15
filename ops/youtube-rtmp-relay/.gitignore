@@ -1,0 +1,5 @@
+node_modules/
+vendor/
+dist/
+src-tauri/bin/
+src-tauri/target/

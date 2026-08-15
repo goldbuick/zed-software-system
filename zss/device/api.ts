@@ -109,6 +109,15 @@ export function bridgeshowjoincode(
   device.emit(player, 'bridge:showjoincode', hidden)
 }
 
+export function bridgemediapanel(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+  data?: unknown,
+) {
+  device.emit(player, 'bridge:mediapanel', { path, data })
+}
+
 export function bridgestart(
   device: DEVICELIKE,
   player: string,
@@ -957,6 +966,10 @@ export function vmreadzipfilelist(device: DEVICELIKE, player: string) {
 
 export function vmrefscroll(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:refscroll')
+}
+
+export function vmmediascroll(device: DEVICELIKE, player: string) {
+  device.emit(player, 'bridge:mediascroll')
 }
 
 export function vmrestart(device: DEVICELIKE, player: string) {

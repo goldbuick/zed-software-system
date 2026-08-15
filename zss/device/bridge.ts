@@ -27,6 +27,8 @@ import {
 } from 'zss/feature/broadcast/webbroadcastclient'
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
+import { handlemediapanel } from 'zss/feature/mediaqueue/panel'
+import { showmediascroll } from 'zss/feature/mediaqueue/menu'
 import {
   netterminalhost,
   netterminaljoin,
@@ -609,5 +611,23 @@ const bridge = createdevice('bridge', [], (message) => {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')
       }
       break
+    case 'mediascroll':
+      showmediascroll(message.player)
+      break
+    case 'mediapanel': {
+      const payload = message.data as
+        | { path?: unknown; data?: unknown }
+        | undefined
+      if (!payload || !isstring(payload.path)) {
+        apierror(bridge, message.player, 'bridge', 'media panel: need path')
+        break
+      }
+      handlemediapanel(
+        bridge,
+        { ...message, data: payload.data },
+        payload.path,
+      )
+      break
+    }
   }
 })

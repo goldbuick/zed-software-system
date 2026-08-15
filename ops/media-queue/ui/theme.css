@@ -1,0 +1,174 @@
+@font-face {
+  font-family: 'IBM EGA 8x14';
+  src: url('./fonts/IBMEGA8x14.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  --bg: #0000aa;
+  --panel: #000000;
+  --fg: #ffffff;
+  --brand: #55ffff;
+  --action: #55ff55;
+  --hint: #ffff55;
+  --muted: #aaaaaa;
+  --border: #5555ff;
+  --danger: #ff5555;
+  --radius: 0;
+  --font: 'IBM EGA 8x14', ui-monospace, 'Courier New', monospace;
+  --row: 28px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: max-content;
+  height: max-content;
+  overflow: hidden;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: var(--row);
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+.frame {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: var(--bg);
+  background-image: url('./zns-dot-tile.svg');
+  background-size: 16px 28px;
+  width: 480px;
+}
+
+h1 {
+  margin: 0;
+  padding: 8px 8px 0;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--brand);
+}
+
+h1 span {
+  color: var(--hint);
+}
+
+.sub {
+  margin: 0;
+  padding: 0 8px 8px;
+  color: var(--muted);
+}
+
+label {
+  display: block;
+  margin: 0;
+  padding: 8px 8px 0;
+  color: var(--brand);
+}
+
+input[type='text'],
+input[type='password'],
+textarea {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-right: none;
+  border-radius: var(--radius);
+  background: #000066;
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: var(--row);
+  padding: 0 8px;
+}
+
+textarea {
+  min-height: calc(var(--row) * 4);
+  height: calc(var(--row) * 4);
+  resize: none;
+  border-bottom: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 8px;
+}
+
+button {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #000088;
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: var(--row);
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+button.action {
+  color: #000000;
+  background: var(--action);
+  border-color: var(--action);
+}
+
+button.danger {
+  color: #000000;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.status {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  padding: 4px 8px;
+}
+
+.status .label {
+  color: var(--hint);
+}
+
+.status .value {
+  color: var(--action);
+}
+
+.status.error .value {
+  color: var(--danger);
+}
+
+.mono {
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.help {
+  margin: 0;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.help code {
+  color: var(--hint);
+}

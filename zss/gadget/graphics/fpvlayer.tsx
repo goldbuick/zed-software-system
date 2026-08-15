@@ -1,8 +1,13 @@
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import {
+  mediaqueueislistening,
+  mediaqueuereadboundboardid,
+} from 'zss/feature/mediaqueue/listenstate'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { ispresent } from 'zss/mapping/types'
+import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { BOARD_WIDTH } from 'zss/memory/types'
 import { recordfilterrebuild } from 'zss/perf/renderupdatestats'
 import { COLLISION } from 'zss/words/types'
@@ -59,6 +64,12 @@ export function FPVLayer({
     case LAYER_TYPE.TILES: {
       const { floor, walls, water, sky, flooredge, skyedge } =
         splitlayer2fpvtiles(layer.char, layer.color, layer.bg, layer.props)
+      const playerboard = memoryreadplayerboard(player)
+      const boundboard = mediaqueuereadboundboardid()
+      const skipceiling =
+        mediaqueueislistening() &&
+        Boolean(boundboard) &&
+        playerboard?.id === boundboard
       recordfilterrebuild('fpv')
       return (
         <>
@@ -100,17 +111,19 @@ export function FPVLayer({
                 bg={walls.bg}
               />
             </group>
-            <group position-z={drawheight + 0.5}>
-              <Tiles
-                width={layer.width}
-                height={layer.height}
-                char={sky.char}
-                color={sky.color}
-                bg={sky.bg}
-                dirtycells={layer.dirtycells}
-              />
-            </group>
-            {!multi && (
+            {!skipceiling && (
+              <group position-z={drawheight + 0.5}>
+                <Tiles
+                  width={layer.width}
+                  height={layer.height}
+                  char={sky.char}
+                  color={sky.color}
+                  bg={sky.bg}
+                  dirtycells={layer.dirtycells}
+                />
+              </group>
+            )}
+            {!multi && !skipceiling && (
               <group position-z={drawheight + 0.5}>
                 <PillarwMeshes
                   width={BOARD_WIDTH}

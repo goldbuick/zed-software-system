@@ -32,7 +32,6 @@ export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
-  // Ctrl+H / vm:refscroll skips memoryruncli; gadget state + gadgetsynctick need MAIN.
   const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
   if (!ispresent(mainbook)) {
     apitoast(vm, message.player, 'gadget scroll: need main book')

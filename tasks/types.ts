@@ -4,4 +4,5 @@ export const TASK_GROUPS = [
   'headless',
   'ops',
   'relay',
+  'mediaqueue',
 ] as const

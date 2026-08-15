@@ -11,6 +11,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
@@ -384,6 +385,7 @@ export const IsoGraphics = memo(function IsoGraphics({
                         />
                       ))}
                       <InspectorComponent z={inspectorz} />
+                      <BoardTvSink graphics="iso" />
                     </group>
                     {exitpreviewgroups.map(({ key, preview, position }) =>
                       preview.layers.length > 0 ? (

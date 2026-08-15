@@ -1,6 +1,8 @@
 # Zed Cafe YouTube Relay
 
-Electron tray app that accepts **WHIP** from [zed.cafe](https://zed.cafe) and pushes **RTMPS** to YouTube. The YouTube stream key stays in this app only.
+Local tray app that accepts **WHIP** from [zed.cafe](https://zed.cafe) and pushes **RTMPS** to YouTube. The YouTube stream key stays in this app only.
+
+Packaged with **Tauri v2** (`src-tauri/`). Shared desktop stack with the media-queue helper ([design](../docs/local-media-helpers-tauri.mdx)).
 
 ## Download
 
@@ -9,9 +11,9 @@ Installers are attached to the same GitHub **`v*`** Releases as the headless ser
 https://github.com/goldbuick/zed-software-system/releases/latest
 
 - macOS: `.dmg` (arm64 / x64)
-- Windows: `.exe` (x64)
+- Windows: `.exe` (x64, NSIS)
 
-Gatekeeper / SmartScreen may warn until builds are signed. Use Open Anyway / Run anyway on first launch.
+macOS Gatekeeper may warn until Apple Developer ID signing is configured. Windows installers are signed via [SignPath OSS](https://signpath.io/solutions/open-source-community) when release secrets are set ([`ops/docs/desktop-signing.md`](../docs/desktop-signing.md)); otherwise use Run anyway on first SmartScreen prompt.
 
 ## Use
 
@@ -38,9 +40,7 @@ yarn fetch-binaries
 yarn start
 ```
 
-Requires **openssl** on PATH once (generates localhost SAN cert).
-
-If `electron.app` is undefined when starting, unset `ELECTRON_RUN_AS_NODE` (the `yarn start` script does this).
+Requires **openssl** on PATH once (generates localhost SAN cert) and Rust + [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/). `yarn install` pulls `@tauri-apps/cli` (no global `cargo tauri` needed).
 
 ## Build installers
 

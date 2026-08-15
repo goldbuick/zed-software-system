@@ -1,0 +1,16 @@
+{
+  "name": "zed-cafe-media-queue",
+  "private": true,
+  "version": "1.12.19",
+  "description": "Tauri media-queue helper for zed.cafe",
+  "license": "MIT",
+  "scripts": {
+    "start": "tauri dev",
+    "dist": "tauri build",
+    "dist:mac": "tauri build",
+    "dist:win": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

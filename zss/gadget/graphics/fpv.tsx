@@ -12,6 +12,7 @@ import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
@@ -476,6 +477,7 @@ export const FPVGraphics = memo(function FPVGraphics({
                   />
                 ))}
                 <InspectorComponent z={inspectorz} />
+                <BoardTvSink graphics="fpv" />
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) => {
                 if (preview.layers.length > 0) {

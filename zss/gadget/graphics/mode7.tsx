@@ -11,6 +11,7 @@ import {
 import { RUNTIME } from 'zss/config'
 import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
@@ -438,6 +439,7 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       />
                     ))}
                     <InspectorComponent z={inspectorz} />
+                    <BoardTvSink graphics="mode7" />
                   </group>
                   {exitpreviewgroups.map(({ key, preview, position }) =>
                     preview.layers.length > 0 ? (

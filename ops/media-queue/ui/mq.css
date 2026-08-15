@@ -1,0 +1,45 @@
+/* media-queue extras on top of shared EGA theme */
+.frame.mq {
+  width: 480px;
+}
+
+.peerbox {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+}
+
+.peerbox input[type='text'] {
+  flex: 1 1 auto;
+  width: auto;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-right: none;
+  color: var(--hint);
+}
+
+.peerbox button {
+  flex: 0 0 auto;
+  margin: 0 8px 0 0;
+}
+
+#preview {
+  display: none;
+  width: 100%;
+  margin: 0;
+  max-height: 140px;
+  background: #000;
+  border: none;
+  border-top: 1px solid var(--border);
+  object-fit: contain;
+}
+
+#preview.has-stream {
+  display: block;
+}
+
+#queue {
+  height: 96px;
+}

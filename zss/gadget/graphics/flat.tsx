@@ -9,6 +9,7 @@ import {
 import { FLAT_CAMERA_ORTHO_ASSERT, RUNTIME } from 'zss/config'
 import { readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
@@ -352,6 +353,7 @@ export const FlatGraphics = memo(function FlatGraphics({
                   />
                 ))}
                 <InspectorComponent z={inspectorz} />
+                <BoardTvSink graphics="flat" />
               </group>
               {exitpreviewgroups.map(({ key, preview, position }) =>
                 preview.layers.length > 0 ? (

@@ -1,0 +1,237 @@
+use std::fs;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
+use std::process::{Child, Command, Stdio};
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+use crate::constants::{
+  AUTH_PORT, PATH_NAME, RTSP_PORT, WHIP_PORT, YOUTUBE_RTMPS_BASE,
+};
+use crate::tls::CertPaths;
+
+pub struct MediaMtx {
+  child: Arc<Mutex<Option<Child>>>,
+  logs: Arc<Mutex<Vec<String>>>,
+  resource_root: PathBuf,
+  userdata: PathBuf,
+}
+
+impl MediaMtx {
+  pub fn new(resource_root: PathBuf, userdata: PathBuf) -> Self {
+    Self {
+      child: Arc::new(Mutex::new(None)),
+      logs: Arc::new(Mutex::new(Vec::new())),
+      resource_root,
+      userdata,
+    }
+  }
+
+  pub fn is_running(&self) -> bool {
+    let mut guard = match self.child.lock() {
+      Ok(g) => g,
+      Err(_) => return false,
+    };
+    if let Some(child) = guard.as_mut() {
+      match child.try_wait() {
+        Ok(None) => return true,
+        Ok(Some(_)) => {
+          *guard = None;
+          return false;
+        }
+        Err(_) => return false,
+      }
+    }
+    false
+  }
+
+  pub fn logs(&self) -> Vec<String> {
+    self
+      .logs
+      .lock()
+      .map(|g| g.clone())
+      .unwrap_or_default()
+  }
+
+  fn push_log(&self, line: String) {
+    if let Ok(mut g) = self.logs.lock() {
+      g.push(line);
+      if g.len() > 200 {
+        let drain = g.len() - 200;
+        g.drain(0..drain);
+      }
+    }
+  }
+
+  fn bin_path(&self, name: &str) -> PathBuf {
+    // Packaged: resources/bin ; dev: vendor/<plat>/
+    let packaged = self.resource_root.join("bin").join(name);
+    if packaged.exists() {
+      return packaged;
+    }
+    let plat = platform_dir();
+    self.resource_root
+      .join("vendor")
+      .join(plat)
+      .join(name)
+  }
+
+  pub fn start(&self, certs: &CertPaths, youtube_key: &str) -> Result<(), String> {
+    if self.is_running() {
+      return Ok(());
+    }
+    let key = youtube_key.trim();
+    if key.is_empty() {
+      return Err(
+        "YouTube stream key is required in Settings before Start.".into(),
+      );
+    }
+    #[cfg(windows)]
+    let mtx_name = "mediamtx.exe";
+    #[cfg(not(windows))]
+    let mtx_name = "mediamtx";
+    #[cfg(windows)]
+    let ff_name = "ffmpeg.exe";
+    #[cfg(not(windows))]
+    let ff_name = "ffmpeg";
+
+    let mtx = self.bin_path(mtx_name);
+    let ff = self.bin_path(ff_name);
+    if !mtx.exists() {
+      return Err(format!(
+        "MediaMTX binary missing: {}. Run fetch-binaries / rebuild.",
+        mtx.display()
+      ));
+    }
+    if !ff.exists() {
+      return Err(format!(
+        "ffmpeg binary missing: {}. Run fetch-binaries / rebuild.",
+        ff.display()
+      ));
+    }
+
+    let configpath = self.write_config(certs, &ff, key)?;
+    self.push_log(format!("starting mediamtx with {}", configpath.display()));
+    let datadir = self.userdata.join("mediamtx");
+    let mut child = Command::new(&mtx)
+      .arg(&configpath)
+      .current_dir(&datadir)
+      .stdout(Stdio::piped())
+      .stderr(Stdio::piped())
+      .spawn()
+      .map_err(|e| format!("spawn mediamtx: {e}"))?;
+
+    let logs = Arc::clone(&self.logs);
+    if let Some(stdout) = child.stdout.take() {
+      let logs = Arc::clone(&logs);
+      thread::spawn(move || {
+        for line in BufReader::new(stdout).lines().flatten() {
+          if let Ok(mut g) = logs.lock() {
+            g.push(line);
+            if g.len() > 200 {
+              let drain = g.len() - 200;
+              g.drain(0..drain);
+            }
+          }
+        }
+      });
+    }
+    if let Some(stderr) = child.stderr.take() {
+      thread::spawn(move || {
+        for line in BufReader::new(stderr).lines().flatten() {
+          if let Ok(mut g) = logs.lock() {
+            g.push(line);
+            if g.len() > 200 {
+              let drain = g.len() - 200;
+              g.drain(0..drain);
+            }
+          }
+        }
+      });
+    }
+
+    *self.child.lock().map_err(|e| e.to_string())? = Some(child);
+    Ok(())
+  }
+
+  pub fn stop(&self) -> Result<(), String> {
+    let mut guard = self.child.lock().map_err(|e| e.to_string())?;
+    if let Some(mut child) = guard.take() {
+      let _ = child.kill();
+      let _ = child.wait();
+    }
+    Ok(())
+  }
+
+  fn write_config(
+    &self,
+    certs: &CertPaths,
+    ffmpeg: &Path,
+    youtube_key: &str,
+  ) -> Result<PathBuf, String> {
+    let ffmpeg_s = ffmpeg.to_string_lossy().replace('\\', "/");
+    let rtmpurl = format!("{YOUTUBE_RTMPS_BASE}/{youtube_key}");
+    let run = format!(
+      "\"{ffmpeg_s}\" -hide_banner -loglevel warning -rtsp_transport tcp -i rtsp://127.0.0.1:{RTSP_PORT}/{PATH_NAME} -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 48000 -f flv \"{rtmpurl}\""
+    );
+    let key = certs.key.to_string_lossy().replace('\\', "/");
+    let cert = certs.cert.to_string_lossy().replace('\\', "/");
+    let yaml = format!(
+      r#"###############################################
+# Generated by Zed Cafe YouTube Relay (Tauri) - do not edit by hand
+###############################################
+
+logLevel: info
+logDestinations: [stdout]
+
+api: no
+metrics: no
+pprof: no
+
+rtsp: yes
+rtspAddress: 127.0.0.1:{RTSP_PORT}
+rtmp: no
+hls: no
+srt: no
+
+webrtc: yes
+webrtcAddress: 127.0.0.1:{WHIP_PORT}
+webrtcEncryption: true
+webrtcServerKey: {key:?}
+webrtcServerCert: {cert:?}
+webrtcAllowOrigins: ['*']
+webrtcLocalUDPAddress: 127.0.0.1:8189
+webrtcLocalTCPAddress: 127.0.0.1:8189
+
+authMethod: http
+authHTTPAddress: http://127.0.0.1:{AUTH_PORT}/auth
+
+paths:
+  {PATH_NAME}:
+    runOnReady: {run}
+    runOnReadyRestart: no
+"#
+    );
+    let datadir = self.userdata.join("mediamtx");
+    fs::create_dir_all(&datadir).map_err(|e| e.to_string())?;
+    let configpath = datadir.join("mediamtx.yml");
+    fs::write(&configpath, yaml).map_err(|e| e.to_string())?;
+    Ok(configpath)
+  }
+}
+
+fn platform_dir() -> String {
+  let os = if cfg!(target_os = "macos") {
+    "darwin"
+  } else if cfg!(target_os = "windows") {
+    "win32"
+  } else {
+    "linux"
+  };
+  let arch = if cfg!(target_arch = "aarch64") {
+    "arm64"
+  } else {
+    "x64"
+  };
+  format!("{os}-{arch}")
+}
