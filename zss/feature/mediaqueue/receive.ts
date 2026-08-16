@@ -66,9 +66,9 @@ function mediaqueueadvanceafterplayback() {
     return
   }
   if (mediaqueuecurrenturl()) {
-    apilog(SOFTWARE, listenplayer, 'mediaqueue helper: advancing queue')
+    apilog(SOFTWARE, listenplayer, 'media: advancing queue')
   } else {
-    apilog(SOFTWARE, listenplayer, 'mediaqueue helper: queue empty')
+    apilog(SOFTWARE, listenplayer, 'media: queue empty')
     mediaqueueclearnowplayingboard()
   }
 }
@@ -178,7 +178,7 @@ function handlehelperdata(data: unknown) {
         apilog(
           SOFTWARE,
           mediaqueuereadlistenplayer(),
-          `mediaqueue helper connected (${data.peerid})`,
+          `media connected (${data.peerid})`,
         )
         mediaqueuepushqueuesnapshot(true)
         mediaqueuerequesthelpercall()
@@ -194,11 +194,11 @@ function handlehelperdata(data: unknown) {
           mediaqueueworkstatus(worklabel)
         }
         if (data.status === 'waiting-for-url') {
-          apilog(SOFTWARE, player, 'mediaqueue helper: waiting for queue URL')
+          apilog(SOFTWARE, player, 'media: waiting for queue URL')
         } else if (data.status === 'downloading') {
-          apilog(SOFTWARE, player, `mediaqueue helper: downloading${detail}`)
+          apilog(SOFTWARE, player, `media: downloading${detail}`)
         } else if (data.status === 'extracting') {
-          apilog(SOFTWARE, player, `mediaqueue helper: extracting${detail}`)
+          apilog(SOFTWARE, player, `media: extracting${detail}`)
         } else if (data.status === 'download-progress') {
           const parts = (data.detail ?? '').split('|')
           const pct = Number(parts[0])
@@ -210,25 +210,25 @@ function handlehelperdata(data: unknown) {
             apilog(
               SOFTWARE,
               player,
-              `mediaqueue helper: download ${Math.round(pct)}%${eta}`,
+              `media: download ${Math.round(pct)}%${eta}`,
             )
           }
         } else if (data.status === 'transcoding') {
-          apilog(SOFTWARE, player, 'mediaqueue helper: processing')
+          apilog(SOFTWARE, player, 'media: processing')
         } else if (data.status === 'buffering') {
-          apilog(SOFTWARE, player, `mediaqueue helper: buffering${detail}`)
+          apilog(SOFTWARE, player, `media: buffering${detail}`)
         } else if (data.status === 'playback-ended') {
-          apilog(SOFTWARE, player, 'mediaqueue helper: finished, advancing')
+          apilog(SOFTWARE, player, 'media: finished, advancing')
           if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'download-failed') {
-          apierror(SOFTWARE, player, 'media', `helper download failed${detail}`)
+          apierror(SOFTWARE, player, 'media', `download failed${detail}`)
           if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'playback-failed') {
-          apierror(SOFTWARE, player, 'media', `helper playback failed${detail}`)
+          apierror(SOFTWARE, player, 'media', `playback failed${detail}`)
           if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
@@ -236,13 +236,13 @@ function handlehelperdata(data: unknown) {
           apilog(
             SOFTWARE,
             player,
-            'mediaqueue helper: call stopped (queue kept)',
+            'media: call stopped (queue kept)',
           )
         } else if (data.status === 'playing') {
           mediaqueueretryplayerconnect()
-          apilog(SOFTWARE, player, `mediaqueue helper: playing${detail}`)
+          apilog(SOFTWARE, player, `media: playing${detail}`)
         } else {
-          apilog(SOFTWARE, player, `mediaqueue helper: ${data.status}${detail}`)
+          apilog(SOFTWARE, player, `media: ${data.status}${detail}`)
         }
       }
       break

@@ -303,6 +303,10 @@
     els.link.textContent = text
     els.detail.textContent = detail || ''
     els.statusbox.classList.toggle('error', text === 'error')
+    var cfg = mqdevconfig()
+    if (cfg && cfg.statustextfile) {
+      writemqstatus(String(text) + '|' + String(detail || ''))
+    }
     schedulefitwindow()
   }
 
@@ -828,7 +832,11 @@
   function startpeer() {
     destroypeer()
     setlink('starting', PEER_HOST)
-    peer = new Peer(
+    void startpeerasync()
+  }
+
+  async function startpeerasync() {
+    const opts =
       typeof window.mqpeerserveroptions === 'function'
         ? window.mqpeerserveroptions({ debug: 1 })
         : {
@@ -836,8 +844,17 @@
             secure: true,
             port: 443,
             debug: 1,
-          },
-    )
+          }
+    let requestedpeerid = ''
+    try {
+      const resolved = await invoke('resolve_mq_peer_id')
+      if (resolved && resolved.peerid) {
+        requestedpeerid = String(resolved.peerid).trim()
+      }
+    } catch (_) {
+      requestedpeerid = ''
+    }
+    peer = requestedpeerid ? new Peer(requestedpeerid, opts) : new Peer(opts)
     peer.on('open', function (id) {
       localpeerid = id
       els.localpeer.value = id

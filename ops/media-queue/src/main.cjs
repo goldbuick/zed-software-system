@@ -4,6 +4,7 @@ const electron = require('electron')
 const fs = require('node:fs')
 const path = require('node:path')
 const { DownloadManager } = require('./lib/download.cjs')
+const { resolvemqpeerid } = require('./lib/peerid.cjs')
 
 const { app, BrowserWindow, ipcMain, clipboard } = electron
 
@@ -13,6 +14,14 @@ let mainwin = null
 let windowchrome = 0
 let downloads = null
 let mediacachedir = ''
+
+function mqnetidfilepath() {
+  const override = String(process.env.MQ_NETID_FILE || '').trim()
+  if (override) {
+    return override
+  }
+  return path.join(app.getPath('userData'), 'mq-netid')
+}
 
 function iconpath() {
   return path.join(__dirname, '..', 'resources', 'icons', 'icon.png')
@@ -157,6 +166,13 @@ function wireipc() {
     fs.mkdirSync(path.dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, text, 'utf8')
     return true
+  })
+
+  ipcMain.handle('resolve_mq_peer_id', () => {
+    return resolvemqpeerid(
+      mqnetidfilepath(),
+      process.env.MQ_PEER_ID || '',
+    )
   })
 
   ipcMain.handle('get_mq_dev_config', () => ({

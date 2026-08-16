@@ -132,6 +132,33 @@ async function fetchffmpeg(outdir, plat) {
   }
 }
 
+async function fetchffprobe(outdir, plat) {
+  const probename = plat.os === 'win32' ? 'ffprobe.exe' : 'ffprobe'
+  const dest = path.join(outdir, probename)
+  if (existsSync(dest)) {
+    return
+  }
+
+  let asset
+  if (plat.os === 'darwin' && plat.arch === 'arm64') {
+    asset = 'ffprobe-darwin-arm64.gz'
+  } else if (plat.os === 'darwin' && plat.arch === 'x64') {
+    asset = 'ffprobe-darwin-x64.gz'
+  } else if (plat.os === 'win32' && plat.arch === 'x64') {
+    asset = 'ffprobe-win32-x64.gz'
+  } else {
+    throw new Error(`unsupported os for ffprobe fetch: ${plat.os}-${plat.arch}`)
+  }
+
+  const url = `https://github.com/eugeneware/ffmpeg-static/releases/download/b6.1.1/${asset}`
+  const archive = path.join(outdir, asset)
+  await download(url, archive)
+  await pipeline(createReadStream(archive), createGunzip(), createWriteStream(dest))
+  if (plat.os !== 'win32') {
+    chmodSync(dest, 0o755)
+  }
+}
+
 function parsetargets() {
   const raw = process.env.MQ_FETCH_TARGETS
   if (raw) {
@@ -158,6 +185,7 @@ async function main() {
     await fetchytdlp(outdir, plat)
     await fetchdeno(outdir, plat)
     await fetchffmpeg(outdir, plat)
+    await fetchffprobe(outdir, plat)
   }
   console.log('fetch-binaries done')
 }

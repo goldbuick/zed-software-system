@@ -166,7 +166,7 @@ function resolveffprobe(ffmpeg) {
   if (fs.existsSync(probe)) {
     return probe
   }
-  return ''
+  return 'ffprobe'
 }
 
 function probemediafile(ffprobe, filepath) {
@@ -221,7 +221,7 @@ function validatemediafile(filepath, probe) {
     return false
   }
   if (probe.hasVideo && path.extname(filepath).toLowerCase() === '.mp4') {
-    return mp4containervalvalid(filepath)
+    return mp4containervalid(filepath)
   }
   return probe.hasAudio
 }

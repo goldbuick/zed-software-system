@@ -171,7 +171,7 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
   apilog(
     SOFTWARE,
     player,
-    `mediaqueue stream from ${helperpeerid} v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length}`,
+    `media stream from ${helperpeerid} v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length}`,
   )
   return true
 }
@@ -201,7 +201,7 @@ function scheduletracksynctimeout(call: MediaConnection, helperpeerid: string) {
     apilog(
       SOFTWARE,
       player,
-      `mediaqueue no tracks from ${helperpeerid} after ${TRACK_SYNC_TIMEOUT_MS}ms ice=${ice} conn=${conn}`,
+      `media no tracks from ${helperpeerid} after ${TRACK_SYNC_TIMEOUT_MS}ms ice=${ice} conn=${conn}`,
     )
   }, TRACK_SYNC_TIMEOUT_MS)
   calltracksynctimers.set(call, timer)
@@ -318,8 +318,8 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
     apierror(
       SOFTWARE,
       player,
-      'mediaqueue',
-      `helper call ${helperpeerid}: ${message}`,
+      'media',
+      `call ${helperpeerid}: ${message}`,
     )
     clearpctracklistener(call)
     teardownactivecall()
@@ -365,7 +365,7 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
     return true
   }
   const player = registerreadplayer()
-  apilog(SOFTWARE, player, `mediaqueue connecting to helper ${trimmed}`)
+  apilog(SOFTWARE, player, `media connecting ${trimmed}`)
   headedtrace(`tryplayerconnect helper=${trimmed} board=${gadgetboard}`)
   const metadata = mediaqueuecallmetadata('player')
   const call = netterminalmediacall(trimmed, playerofferstream(), metadata)
@@ -375,8 +375,8 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
     apierror(
       SOFTWARE,
       player,
-      'mediaqueue',
-      `could not place helper call to ${trimmed} (netterminal peer not ready)`,
+      'media',
+      `could not place call to ${trimmed} (netterminal peer not ready)`,
     )
     return false
   }

@@ -27,12 +27,12 @@ const HOST_BIND_TIMEOUT_MS = 120_000
 const JOIN_CONNECT_TIMEOUT_MS = 120_000
 const STREAM_ASSERT_TIMEOUT_MS = 120_000
 const SCRIPT_TIMEOUT_MS = 300_000
-const YOUTUBE_DOWNLOAD_TIMEOUT_MS = 240_000
+const YOUTUBE_DOWNLOAD_TIMEOUT_MS = 600_000
 const BOOT_WAIT_MS = 15_000
 const JOIN_HOST_READY_MS = 45_000
 const BOOK_FIXTURE_PATH = '/fixtures/books/example-coolregionsbow.book.json'
 const DEFAULT_TVSINK_MEDIA_URL =
-  'https://www.youtube.com/watch?v=uB1D9wWxd2w'
+  'https://youtu.be/uB1D9wWxd2w?si=BYrXxUwAIFp2l7Q7'
 
 function isyoutubeurl(url: string) {
   return /youtube\.com\/watch|youtu\.be\//i.test(url)
@@ -288,8 +288,9 @@ async function addmediaurl(
   playerid: string,
   url: string,
 ) {
-  await runcli(page, `#media ${url}`, root)
-  console.log(`addmediaurl ok: ${url}`)
+  const trimmed = url.trim()
+  await runcli(page, `#media "${trimmed}"`, root)
+  console.log(`addmediaurl ok: ${trimmed}`)
 }
 
 async function nudgehostconnect(
@@ -418,6 +419,36 @@ async function pollfile(
     await sleep(250)
   }
   throw new Error(`poll timeout for ${filepath} last=${JSON.stringify(last)}`)
+}
+
+async function pollplayingstatus(
+  statusfile: string,
+  timeoutms: number,
+): Promise<string> {
+  const deadline = Date.now() + timeoutms
+  let last = ''
+  let lastlog = 0
+  while (Date.now() < deadline) {
+    if (fs.existsSync(statusfile)) {
+      last = fs.readFileSync(statusfile, 'utf8').trim()
+      if (
+        last.startsWith('error|') ||
+        last.includes('download-failed') ||
+        last.includes('playback-failed')
+      ) {
+        throw new Error(`helper media failed: ${last}`)
+      }
+      if (last.startsWith('playing|')) {
+        return last
+      }
+      if (Date.now() - lastlog > 15_000 && last) {
+        console.log(`helper status=${last}`)
+        lastlog = Date.now()
+      }
+    }
+    await sleep(500)
+  }
+  throw new Error(`poll timeout for ${statusfile} last=${JSON.stringify(last)}`)
 }
 
 const HELPER_PID_REGISTRY = path.join(os.tmpdir(), 'mq-tvsink-helper-pids.json')
@@ -755,6 +786,7 @@ async function runflow(ctx: HeadedPlaywrightContext) {
     const helperenv = { ...process.env }
     delete helperenv.ELECTRON_RUN_AS_NODE
     helperenv.MQ_PEER_ID_FILE = peeridfile
+    helperenv.MQ_NETID_FILE = path.join(tmpdir, 'mq-netid.txt')
     if (mediasource.usedevfixture) {
       helperenv.MQ_DEV_PLAYBACK_PATH = fixturepath
     } else {
@@ -854,6 +886,14 @@ async function runflow(ctx: HeadedPlaywrightContext) {
         if (!queuebound) {
           failstage('host_bind', 'helper never accepted queue data connection')
         }
+        await pollfile(
+          statusfile,
+          90_000,
+          (text) =>
+            text.startsWith('connected|data open') ||
+            text.startsWith('playing|'),
+        )
+        console.log('helper data channel open')
         await addmediaurl(
           hostpage,
           ctx.root,
@@ -862,11 +902,7 @@ async function runflow(ctx: HeadedPlaywrightContext) {
             ? fixtureserver!.url
             : mediasource.mediaurl,
         )
-        await pollfile(
-          statusfile,
-          mediasource.downloadtimeoutms,
-          (text) => text.startsWith('playing|'),
-        )
+        await pollplayingstatus(statusfile, mediasource.downloadtimeoutms)
         const statusaftermedia = fs.existsSync(statusfile)
           ? fs.readFileSync(statusfile, 'utf8').trim()
           : ''

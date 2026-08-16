@@ -38,6 +38,8 @@ yarn task run mediaqueue:dev
 | Env | Purpose |
 |-----|---------|
 | `MQ_PEER_ID_FILE` | Write helper PeerJS id when signaling opens |
+| `MQ_NETID_FILE` | Override sticky peer seed file (default: userData `mq-netid`) |
+| `MQ_PEER_ID` | Force PeerJS id (skip sticky resolve; headed / debug) |
 | `MQ_DEV_PLAYBACK_PATH` | Skip yt-dlp; play absolute local mp4 (also allows `read_media_file`) |
 | `MQ_STATUS_TEXT_FILE` | Write `playing\|N player(s)` link status for headed scripts |
 
@@ -52,7 +54,7 @@ Fixture clip: `ops/fixtures/media/test.mp4`.
 
 ## Use
 
-1. Open this app -- it starts a PeerJS peer and shows **Your peer id**.
+1. Open this app -- it starts a PeerJS peer and shows **Your peer id** (sticky across restarts; seed in app userData `mq-netid`, same `createinfohash` as netterminal).
 2. Copy peer id and in cafe run `#queue <peerid>` (admin).
 3. In cafe: `#media <url>` (players, after bind). Queue autoplays; admin may `#queue skip`, `#queue clear`, or `#queue limit <N>`.
 4. The helper downloads via yt-dlp, plays the merged file, and starts the Peer call when cafe advances the queue.
