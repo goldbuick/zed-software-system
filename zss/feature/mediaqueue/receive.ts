@@ -1,10 +1,8 @@
-import type { DataConnection, MediaConnection } from 'peerjs'
-import { apierror, apilog, workstatus } from 'zss/device/api'
+import type { DataConnection } from 'peerjs'
+import { apierror, apilog, vmmediaqueueboard, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  ismediaqueuecallmetadata,
-  mediaqueuecallmetadata,
-} from 'zss/feature/mediaqueue/callmetadata'
+import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
+import { restoremediavolfromstorage } from 'zss/feature/mediaqueue/boardtvaudio'
 import {
   mediaqueueclearlistenstate,
   mediaqueuehelperconnected,
@@ -12,7 +10,6 @@ import {
   mediaqueuereadboundboardid,
   mediaqueuereadhelperpeerid,
   mediaqueuereadlistenplayer,
-  mediaqueuesethasactiveroomstream,
   mediaqueuesethelperconnected,
   mediaqueuesethelperpeerid,
   mediaqueuesetlistenboardid,
@@ -29,34 +26,30 @@ import {
   mediaqueuereadstate,
   mediaqueueshiftcurrent,
 } from 'zss/feature/mediaqueue/queue'
-import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
-import { mediaqueueattachvideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
-  netterminalmediacall,
-  netterminalregistermediacallhandler,
-  netterminalregisterrosterchangehandler,
+  netterminalregisterpeeropenhandler,
   readnetworkpeerid,
-  readpeerroster,
 } from 'zss/feature/netterminal'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
-import { memoryreadboardbyaddress } from 'zss/memory/boards'
-
-const MEDIAQUEUE_PEER_LABEL = 'mediaqueue'
 
 let helperconnection: MAYBE<DataConnection>
-let activecall: MAYBE<MediaConnection>
-let activeroomstream: MAYBE<MediaStream>
-const roomoutbound = new Map<string, MediaConnection>()
 let bootstrapped = false
 
 function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
   if (!ispresent(helperconnection) || !helperconnection.open) {
     return
   }
-  helperconnection.send(message)
+  void helperconnection.send(message)
+}
+
+function helperdatalinkup(): boolean {
+  return (
+    mediaqueuehelperconnected() &&
+    ispresent(helperconnection) &&
+    helperconnection.open
+  )
 }
 
 function mediaqueueadvanceafterplayback() {
@@ -88,152 +81,10 @@ export function mediaqueuepushqueuesnapshot(gotoplay = false) {
       url,
     })
   }
-  mediaqueuefanoutroom()
 }
 
 function mediaqueuerequesthelpercall() {
   sendtohelper({ type: 'mediaqueue:requestcall' })
-}
-
-function clearremotevideo() {
-  mediaqueuesethasactiveroomstream(false)
-  mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, undefined)
-}
-
-function closeroomoutbound() {
-  for (const call of roomoutbound.values()) {
-    try {
-      call.close()
-    } catch {
-      // ignore
-    }
-  }
-  roomoutbound.clear()
-}
-
-export function mediaqueuefanoutroom() {
-  const listenplayer = mediaqueuereadlistenplayer()
-  const listenboardid = mediaqueuereadboundboardid()
-  if (!ispresent(activeroomstream) || !listenplayer || !listenboardid) {
-    return
-  }
-  const board = memoryreadboardbyaddress(listenboardid)
-  const boardplayers = memoryreadplayersonboard(board)
-  const targets = mediaqueueroompeerids(
-    boardplayers,
-    readpeerroster(),
-    readnetworkpeerid(),
-  )
-  const keep = new Set(targets)
-  for (const [peerid, call] of roomoutbound) {
-    if (!keep.has(peerid)) {
-      try {
-        call.close()
-      } catch {
-        // ignore
-      }
-      roomoutbound.delete(peerid)
-    }
-  }
-  const metadata = mediaqueuecallmetadata('room')
-  for (let i = 0; i < targets.length; ++i) {
-    const peerid = targets[i]
-    if (roomoutbound.has(peerid)) {
-      continue
-    }
-    const call = netterminalmediacall(peerid, activeroomstream, metadata)
-    if (!ispresent(call)) {
-      continue
-    }
-    roomoutbound.set(peerid, call)
-    call.on('close', () => {
-      if (roomoutbound.get(peerid) === call) {
-        roomoutbound.delete(peerid)
-      }
-    })
-    call.on('error', () => {
-      if (roomoutbound.get(peerid) === call) {
-        roomoutbound.delete(peerid)
-      }
-    })
-  }
-  if (listenplayer && targets.length > 0) {
-    apilog(
-      SOFTWARE,
-      listenplayer,
-      `mediaqueue room fan-out to ${targets.length} peer(s)`,
-    )
-  }
-}
-
-function attachhelperstream(stream: MediaStream, frompeer: string) {
-  activeroomstream = stream
-  mediaqueuesethasactiveroomstream(true)
-  mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
-  const listenplayer = mediaqueuereadlistenplayer()
-  if (listenplayer) {
-    apilog(SOFTWARE, listenplayer, `mediaqueue stream from ${frompeer}`)
-  }
-  mediaqueuefanoutroom()
-}
-
-function handleinboundcall(
-  call: MediaConnection,
-  defaultsource?: 'helper' | 'room',
-) {
-  let metadata = call.metadata
-  if (!ismediaqueuecallmetadata(metadata)) {
-    if (!defaultsource) {
-      // Ignore non-mediaqueue calls on shared clique Peer.
-      return
-    }
-    metadata = mediaqueuecallmetadata(defaultsource)
-  }
-
-  if (metadata.source === 'helper') {
-    if (ispresent(activecall) && activecall !== call) {
-      activecall.close()
-    }
-    activecall = call
-    call.answer()
-    call.on('stream', (stream) => {
-      attachhelperstream(stream, call.peer)
-    })
-    call.on('close', () => {
-      if (activecall === call) {
-        activecall = undefined
-        activeroomstream = undefined
-        mediaqueuesethasactiveroomstream(false)
-        closeroomoutbound()
-        clearremotevideo()
-      }
-    })
-    call.on('error', () => {
-      if (activecall === call) {
-        activecall = undefined
-        activeroomstream = undefined
-        mediaqueuesethasactiveroomstream(false)
-        closeroomoutbound()
-        clearremotevideo()
-      }
-    })
-    return
-  }
-
-  // Room fan-out: join (or host mate) receives board TV stream.
-  call.answer()
-  call.on('stream', (stream) => {
-    mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
-    const listenplayer = mediaqueuereadlistenplayer()
-    const player = listenplayer || call.peer
-    apilog(SOFTWARE, player, `mediaqueue room stream from ${call.peer}`)
-  })
-  call.on('close', () => {
-    clearremotevideo()
-  })
-  call.on('error', () => {
-    clearremotevideo()
-  })
 }
 
 function mediaqueuestatusdetail(detail?: string): string {
@@ -260,6 +111,14 @@ function mediaqueueworkstatus(label: string) {
     return
   }
   workstatus(SOFTWARE, player, label)
+}
+
+function syncboardhelperlayer(
+  player: string,
+  boardid: string,
+  helperpeerid: string | undefined,
+) {
+  vmmediaqueueboard(SOFTWARE, player, boardid, helperpeerid)
 }
 
 function handlehelperdata(data: unknown) {
@@ -293,7 +152,7 @@ function handlehelperdata(data: unknown) {
         } else if (data.status === 'extracting') {
           apilog(SOFTWARE, player, `mediaqueue helper: extracting${detail}`)
         } else if (data.status === 'download-progress') {
-          const parts = (data.detail || '').split('|')
+          const parts = (data.detail ?? '').split('|')
           const pct = Number(parts[0])
           if (
             Number.isFinite(pct) &&
@@ -312,19 +171,25 @@ function handlehelperdata(data: unknown) {
           apilog(SOFTWARE, player, `mediaqueue helper: buffering${detail}`)
         } else if (data.status === 'playback-ended') {
           apilog(SOFTWARE, player, 'mediaqueue helper: finished, advancing')
-          if (mediaqueueislistening() && mediaqueuehelperconnected()) {
+          if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'download-failed') {
           apierror(SOFTWARE, player, 'media', `helper download failed${detail}`)
-          if (mediaqueueislistening() && mediaqueuehelperconnected()) {
+          if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'playback-failed') {
           apierror(SOFTWARE, player, 'media', `helper playback failed${detail}`)
-          if (mediaqueueislistening() && mediaqueuehelperconnected()) {
+          if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
+        } else if (data.status === 'call-stopped') {
+          apilog(
+            SOFTWARE,
+            player,
+            'mediaqueue helper: call stopped (queue kept)',
+          )
         } else if (data.status === 'playing') {
           apilog(SOFTWARE, player, `mediaqueue helper: playing${detail}`)
         } else {
@@ -369,21 +234,23 @@ function wirehelperconnection(conn: DataConnection) {
   })
 }
 
-/** Wire clique Peer call + roster hooks so join tabs can join the board room. */
+/** Wire board TV sink; players connect to helper via MEDIA layer. */
 export function mediaqueuebootstrap() {
   if (bootstrapped) {
     return
   }
   bootstrapped = true
-  netterminalregistermediacallhandler(handleinboundcall)
-  netterminalregisterrosterchangehandler(() => {
-    mediaqueuefanoutroom()
-  })
+  void restoremediavolfromstorage()
+  mediaqueueensurevideosink()
 }
+
+netterminalregisterpeeropenhandler(() => {
+  mediaqueuebootstrap()
+})
 
 /**
  * Connect to the desktop helper's Peer id and bind media to the player's
- * current board (board = room for fan-out).
+ * current board (helper peer id projected on board for direct player connects).
  */
 export function mediaqueuelisten(
   player: string,
@@ -421,11 +288,31 @@ export function mediaqueuelisten(
       mediaqueuereadhelperpeerid() === trimmed &&
       mediaqueuereadboundboardid() === boundboardid
     ) {
+      if (helperdatalinkup()) {
+        apilog(
+          SOFTWARE,
+          player,
+          `media already listening to helper ${trimmed} on board ${boardname ?? boundboardid}`,
+        )
+        return
+      }
       apilog(
         SOFTWARE,
         player,
-        `media already listening to helper ${trimmed} on board ${boardname || boundboardid}`,
+        `media reconnecting to helper ${trimmed} on board ${boardname ?? boundboardid}`,
       )
+      syncboardhelperlayer(player, boundboardid, trimmed)
+      const conn = netterminaldataconnect(trimmed)
+      if (ispresent(conn)) {
+        wirehelperconnection(conn)
+      } else {
+        apierror(
+          SOFTWARE,
+          player,
+          'media',
+          'could not reopen helper data connection',
+        )
+      }
       return
     }
     apierror(
@@ -440,10 +327,11 @@ export function mediaqueuelisten(
   mediaqueuesethelperpeerid(trimmed)
   mediaqueuesetlistenboardid(boundboardid)
   mediaqueuesetlistening(true)
+  syncboardhelperlayer(player, boundboardid, trimmed)
   apilog(
     SOFTWARE,
     player,
-    `media bound to helper ${mediaqueuereadhelperpeerid()} on board ${boardname || boundboardid}`,
+    `media bound to helper ${mediaqueuereadhelperpeerid()} on board ${boardname ?? boundboardid}`,
   )
   apilog(
     SOFTWARE,
@@ -455,24 +343,21 @@ export function mediaqueuelisten(
     wirehelperconnection(conn)
   } else {
     apierror(SOFTWARE, player, 'media', 'could not open helper data connection')
+    syncboardhelperlayer(player, boundboardid, undefined)
     mediaqueueclearlistenstate()
   }
 }
 
 export function mediaqueuestop(player: string): void {
+  const boundboardid = mediaqueuereadboundboardid()
   mediaqueuesetlistenplayer(player)
-  if (ispresent(activecall)) {
-    activecall.close()
-    activecall = undefined
-  }
-  activeroomstream = undefined
-  mediaqueuesethasactiveroomstream(false)
-  closeroomoutbound()
-  clearremotevideo()
   if (ispresent(helperconnection)) {
     helperconnection.close()
     helperconnection = undefined
     mediaqueuesethelperconnected(false)
+  }
+  if (boundboardid) {
+    syncboardhelperlayer(player, boundboardid, undefined)
   }
   mediaqueueclearlistenstate()
   apilog(SOFTWARE, player, 'media stopped')

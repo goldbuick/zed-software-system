@@ -118,6 +118,14 @@ export function bridgemediapanel(
   device.emit(player, 'bridge:mediapanel', { path, data })
 }
 
+export function bridgemediavol(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'bridge:mediavol', volume)
+}
+
 export function bridgestart(
   device: DEVICELIKE,
   player: string,
@@ -927,6 +935,19 @@ export function vmoperator(device: DEVICELIKE, player: string) {
 
 export function vmpage(device: DEVICELIKE, player: string, codepage: any) {
   device.emit(player, 'vm:page', codepage)
+}
+
+export function vmmediaqueueboard(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+  helperpeerid: string | undefined,
+) {
+  device.emit(player, 'vm:mediaqueueboard', {
+    action: helperpeerid ? 'bind' : 'clear',
+    boardid,
+    helperpeerid: helperpeerid ?? '',
+  })
 }
 
 export function vmplayermovetoboard(

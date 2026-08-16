@@ -1,7 +1,7 @@
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/device/doasync'
-import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
 import { mediaqueueresumeaudio } from 'zss/feature/mediaqueue/boardtvaudio'
+import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
 import {
   getliveaudiocontext,
   unlockaudiocontext,

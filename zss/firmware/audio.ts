@@ -1,5 +1,6 @@
 import { CHIP } from 'zss/chip'
 import {
+  bridgemediavol,
   synthbgplay,
   synthbgplayvolume,
   synthflush,
@@ -15,7 +16,6 @@ import {
   synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { mediaqueuesetplayvolume } from 'zss/feature/mediaqueue/boardtvaudio'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
@@ -357,8 +357,12 @@ export const AUDIO_FIRMWARE = createfirmware()
       READ_CONTEXT.board?.id ?? '',
       volume,
     )
-    mediaqueuesetplayvolume(volume)
     storevolumeconfig('vol', volume)
+    return 0
+  })
+  .command('mediavol', [ARG_TYPE.NUMBER, 'board TV volume'], (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    bridgemediavol(SOFTWARE, READ_CONTEXT.elementfocus, volume)
     return 0
   })
   .command('bgvol', [ARG_TYPE.NUMBER, 'bgplay volume'], (_, words) => {

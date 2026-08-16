@@ -19,6 +19,7 @@ export const CONFIG_STRING_KEYS = [
   'vol',
   'bgvol',
   'ttsvol',
+  'mediavol',
 ] as const
 
 export function isconfigstringkey(name: string): boolean {

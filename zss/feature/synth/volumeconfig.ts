@@ -1,4 +1,3 @@
-import { mediaqueuesetplayvolume } from 'zss/feature/mediaqueue/boardtvaudio'
 import {
   storagereadconfigstring,
   storagewriteconfigstring,
@@ -42,13 +41,11 @@ export async function readplayvolumeconfig(): Promise<number> {
 }
 
 export async function restorevolumesfromstorage(backend: SynthBackend) {
-  let playvolume = WASM_DEFAULT_PLAY_VOLUME
   for (const key of VOLUME_CONFIG_KEYS) {
     const raw = await storagereadconfigstring(key)
     const volume = parsevolumevalue(raw) ?? VOLUME_DEFAULTS[key]
     switch (key) {
       case 'vol':
-        playvolume = volume
         backend.setplayvolume(volume)
         break
       case 'bgvol':
@@ -59,5 +56,4 @@ export async function restorevolumesfromstorage(backend: SynthBackend) {
         break
     }
   }
-  mediaqueuesetplayvolume(playvolume)
 }

@@ -71,9 +71,17 @@ export function readpeerroster(): NETTERMINAL_PEER_ROSTER_ENTRY[] {
 
 type MEDIACALL_HANDLER = (call: MediaConnection) => void
 type ROSTER_CHANGE_HANDLER = () => void
+type PEER_OPEN_HANDLER = () => void
 
 let mediacallhandler: MAYBE<MEDIACALL_HANDLER>
 let rosterchangehandler: MAYBE<ROSTER_CHANGE_HANDLER>
+const peeropenhandlers: PEER_OPEN_HANDLER[] = []
+
+function runpeeropenhandlers() {
+  for (let i = 0; i < peeropenhandlers.length; ++i) {
+    peeropenhandlers[i]()
+  }
+}
 
 /** MediaConnection answer path (media queue board room). Not game DataConnection. */
 export function netterminalregistermediacallhandler(
@@ -88,7 +96,15 @@ export function netterminalregisterrosterchangehandler(
   rosterchangehandler = handler
 }
 
-/** Outbound MediaConnection from the clique Peer (fan-out to board mates). */
+/** Run when the clique Peer opens (host or join) so media can answer room calls. */
+export function netterminalregisterpeeropenhandler(handler: PEER_OPEN_HANDLER) {
+  peeropenhandlers.push(handler)
+  if (netterminalpeerisopen()) {
+    handler()
+  }
+}
+
+/** Outbound MediaConnection from the clique Peer (e.g. direct helper connect). */
 export function netterminalmediacall(
   peerid: string,
   stream: MediaStream,
@@ -735,6 +751,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       signalretryattempt = 0
       apilog(SOFTWARE, player, `connected to netterminal`)
       apilog(SOFTWARE, player, 'peer connected')
+      runpeeropenhandlers()
       if (topicpeerid !== peerid) {
         if (!joinoutsignalconnectdone) {
           joinoutsignalconnectdone = true

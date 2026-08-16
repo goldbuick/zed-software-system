@@ -488,6 +488,16 @@ export function memoryconverttogadgetlayers(
         )
       }
     }
+    if (isstring(boardruntime?.mediaqueuehelperpeerid)) {
+      layers.push(
+        createcachedmedia(
+          cacheowner,
+          iiii++,
+          'text/mediaqueue-helper',
+          boardruntime.mediaqueuehelperpeerid,
+        ),
+      )
+    }
     // add media layer to list peer ids
     const pids = Object.keys(board.objects).filter(ispid)
     layers.push(

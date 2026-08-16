@@ -1,12 +1,27 @@
-import { WASM_DEFAULT_PLAY_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
-import { ispresent } from 'zss/mapping/types'
+import { MEDIAQUEUE_DEFAULT_TV_VOLUME } from 'zss/feature/mediaqueue/constants'
+import {
+  storagereadconfigstring,
+  storagewriteconfigstring,
+} from 'zss/feature/storage'
+import { isnumber, ispresent } from 'zss/mapping/types'
 
 let remoteaudio: HTMLAudioElement | undefined
 let gesturewired = false
-let playvolume = WASM_DEFAULT_PLAY_VOLUME
+let mediavolume = MEDIAQUEUE_DEFAULT_TV_VOLUME
+
+function parsemediavol(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw.trim() === '') {
+    return undefined
+  }
+  const volume = Number(raw)
+  if (!isnumber(volume) || Number.isNaN(volume)) {
+    return undefined
+  }
+  return volume
+}
 
 function mediaqueueaudiogain(): number {
-  return Math.max(0, Math.min(1, playvolume / 100))
+  return Math.max(0, Math.min(1, mediavolume / 100))
 }
 
 function resumeremoteaudio() {
@@ -40,16 +55,31 @@ function applyremoteaudiovolume() {
   remoteaudio.volume = mediaqueueaudiogain()
 }
 
-/** Keep board TV speaker level in sync with #vol (0-100). Worker-safe leaf. */
-export function mediaqueuesetplayvolume(volume: number) {
-  playvolume = volume
+/** Board TV speaker level (#mediavol, 0-100). Not synth #vol. */
+export function mediaqueuesetmediavolume(volume: number) {
+  mediavolume = volume
   applyremoteaudiovolume()
+}
+
+export function mediaqueuereadmediavolume(): number {
+  return mediavolume
+}
+
+export function storemediavolconfig(volume: number) {
+  void storagewriteconfigstring('mediavol', String(volume))
+}
+
+export async function restoremediavolfromstorage() {
+  const raw = await storagereadconfigstring('mediavol')
+  const volume = parsemediavol(raw) ?? MEDIAQUEUE_DEFAULT_TV_VOLUME
+  mediaqueuesetmediavolume(volume)
 }
 
 export function mediaqueueclearremoteaudio() {
   if (!ispresent(remoteaudio)) {
     return
   }
+  remoteaudio.pause()
   remoteaudio.srcObject = null
   remoteaudio.remove()
   remoteaudio = undefined
@@ -63,7 +93,6 @@ export function mediaqueueattachremoteaudio(audiotracks: MediaStreamTrack[]) {
   mediaqueuewireaudiogestureretry()
   const audio = document.createElement('audio')
   audio.autoplay = true
-  audio.playsInline = true
   audio.setAttribute('playsinline', '')
   audio.style.display = 'none'
   document.body.appendChild(audio)

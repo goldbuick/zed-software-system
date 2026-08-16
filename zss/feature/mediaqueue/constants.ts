@@ -1,5 +1,10 @@
-import type { GRAPHICS_MODES } from 'zss/gadget/graphics/layerz'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
+
+/** Default board TV speaker level (0-100); separate from #vol / synth play. */
+export const MEDIAQUEUE_DEFAULT_TV_VOLUME = 25
+
+/** useMedia.screen key for board TV remote stream. */
+export const MEDIAQUEUE_PEER_LABEL = 'mediaqueue'
 
 /** Landscape board TV size in char cells (all graphics modes). */
 export const BOARD_TV_COLS = 40

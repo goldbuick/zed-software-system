@@ -28,6 +28,7 @@ import { handleinput } from './input'
 import { handlefindany, handleinspect } from './inspect'
 import { handlelastinputtouch } from './lastinputtouch'
 import { handleloader } from './loader'
+import { handlemediaqueueboard } from './mediaqueueboard'
 import {
   handlememoryfsapply,
   handlememoryfsattached,
@@ -101,4 +102,5 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   memoryfsattached: handlememoryfsattached,
   memoryfsdetached: handlememoryfsdetached,
   memoryfsapply: handlememoryfsapply,
+  mediaqueueboard: handlemediaqueueboard,
 }

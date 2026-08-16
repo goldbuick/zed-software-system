@@ -102,6 +102,16 @@ describe('mediaqueue queue', () => {
     expect(removed?.url).toBe('https://a.example')
     expect(mediaqueuecurrenturl()).toBe('https://b.example')
   })
+
+  it('clearlistenstate does not empty the queue', () => {
+    mediaqueueadd('p1', 'https://a.example')
+    mediaqueueadd('p2', 'https://b.example')
+    mediaqueueclearlistenstate()
+    expect(mediaqueuereadstate().urls).toEqual([
+      'https://a.example',
+      'https://b.example',
+    ])
+  })
 })
 
 describe('mediaqueue protocol', () => {
@@ -165,7 +175,7 @@ describe('mediaqueue board tv', () => {
     expect(boardtvshouldshow('board-a', true)).toBe(true)
   })
 
-  it('boardtvshouldshow shows room stream without listen bind', () => {
+  it('boardtvshouldshow shows video when player has direct helper stream', () => {
     mediaqueueclearlistenstate()
     expect(boardtvshouldshow('any-board', true)).toBe(true)
     expect(boardtvshouldshow('any-board', false)).toBe(false)
@@ -195,12 +205,17 @@ describe('mediaqueue workstatus labels', () => {
 })
 
 describe('mediaqueue call metadata', () => {
-  it('tags helper and room calls', () => {
+  it('tags helper, room, and player calls', () => {
     expect(mediaqueuecallmetadata('helper')).toEqual({
       kind: 'mediaqueue',
       source: 'helper',
     })
+    expect(mediaqueuecallmetadata('player')).toEqual({
+      kind: 'mediaqueue',
+      source: 'player',
+    })
     expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('room'))).toBe(true)
+    expect(ismediaqueuecallmetadata(mediaqueuecallmetadata('player'))).toBe(true)
     expect(ismediaqueuecallmetadata({ kind: 'other' })).toBe(false)
   })
 })

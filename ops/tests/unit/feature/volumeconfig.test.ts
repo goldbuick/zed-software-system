@@ -3,15 +3,10 @@ jest.mock('zss/feature/storage', () => ({
   storagewriteconfigstring: jest.fn(),
 }))
 
-jest.mock('zss/feature/mediaqueue/boardtvaudio', () => ({
-  mediaqueuesetplayvolume: jest.fn(),
-}))
-
 import {
   storagereadconfigstring,
   storagewriteconfigstring,
 } from 'zss/feature/storage'
-import { mediaqueuesetplayvolume } from 'zss/feature/mediaqueue/boardtvaudio'
 import {
   restorevolumesfromstorage,
   storevolumeconfig,
@@ -71,7 +66,6 @@ describe('volume config persistence', () => {
     expect(backend.setplayvolume).toHaveBeenCalledWith(20)
     expect(backend.setbgplayvolume).toHaveBeenCalledWith(45)
     expect(backend.setttsvolume).toHaveBeenCalledWith(90)
-    expect(mediaqueuesetplayvolume).toHaveBeenCalledWith(20)
   })
 
   it('restorevolumesfromstorage applies defaults when keys are missing or invalid', async () => {
@@ -91,6 +85,5 @@ describe('volume config persistence', () => {
     expect(backend.setplayvolume).toHaveBeenCalledWith(50)
     expect(backend.setbgplayvolume).toHaveBeenCalledWith(50)
     expect(backend.setttsvolume).toHaveBeenCalledWith(100)
-    expect(mediaqueuesetplayvolume).toHaveBeenCalledWith(50)
   })
 })

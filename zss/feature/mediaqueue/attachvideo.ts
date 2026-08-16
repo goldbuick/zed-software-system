@@ -1,8 +1,10 @@
+import type { MediaConnection } from 'peerjs'
 import {
   mediaqueueattachremoteaudio,
   mediaqueueclearremoteaudio,
   mediaqueuewireaudiogestureretry,
 } from 'zss/feature/mediaqueue/boardtvaudio'
+import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
 import { mediaqueueregistervideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
@@ -37,6 +39,33 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
     useMedia.getState().setscreen(peerkey, video)
   }
   mediaqueueattachremoteaudio(audiotracks)
+}
+
+export type MEDIAQUEUE_PLAYER_SINK_TEARDOWN = {
+  call?: MediaConnection
+  stream?: MediaStream
+  peerkey?: string
+}
+
+/** Close player MediaConnection, stop tracks, and clear board TV sink. */
+export function mediaqueueteardownplayersink(
+  opts: MEDIAQUEUE_PLAYER_SINK_TEARDOWN = {},
+) {
+  const peerkey = opts.peerkey ?? MEDIAQUEUE_PEER_LABEL
+  if (ispresent(opts.call)) {
+    try {
+      opts.call.close()
+    } catch {
+      // ignore
+    }
+  }
+  if (ispresent(opts.stream)) {
+    const tracks = opts.stream.getTracks()
+    for (let i = 0; i < tracks.length; ++i) {
+      tracks[i].stop()
+    }
+  }
+  clearremotevideo(peerkey)
 }
 
 /** Wire MediaStream -> useMedia.screen + speaker audio. Call once from BoardTvSink mount. */

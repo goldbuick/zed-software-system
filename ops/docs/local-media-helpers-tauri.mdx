@@ -11,7 +11,7 @@ title: Local media helpers on Electron
 | Helper | Job | Cafe side |
 |--------|-----|-----------|
 | **YouTube relay** (Electron) | Accept WHIP from cafe, push RTMPS to YouTube; hold stream key + bearer | `#broadcast whip youtube <bearer>` |
-| **Media queue** (Electron) | yt-dlp download + local playback, `peer.call(cafePeerId, stream)` | `#media` CLI menu; Peer answers; **board TV** sink -- **no tape overlay** |
+| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` CLI menu; **board TV** sink via direct helper connect -- **no tape overlay** |
 
 Both ship as Electron apps on the same GitHub Releases channel (`v*` tags).
 
@@ -31,7 +31,7 @@ flowchart TB
   CLI -->|WHIP publish| YT
   YT -->|RTMPS| YouTube[YouTube Live]
   CLI -->|queue RPCs DataConnection| MQ
-  MQ -->|MediaConnection call| Peer
+  MQ -->|MediaConnection per player on board| Peer
   Peer --> TV
 ```
 
@@ -50,9 +50,9 @@ flowchart TB
 ## Media-queue helper
 
 1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
-2. Cafe `#media` subcommands mutate a host-owned FIFO queue and push updates over a **DataConnection** (control plane).
-3. On queue advance, the helper runs **yt-dlp** into a local cache file, plays it in Chromium, and `peer.call(cafePeerId, stream)` via **`video.captureStream()`**.
-4. Cafe: operator Peer answers; **board mates** receive a room fan-out `MediaConnection` and attach the **board TV** surface.
+2. Cafe `#media` subcommands mutate a host-owned FIFO queue and push updates over a **DataConnection** (control plane). Bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (`text/mediaqueue-helper`).
+3. On queue advance, the helper runs **yt-dlp** into a local cache file, plays it in Chromium, and publishes **`video.captureStream()`** to each player tab that calls the helper via **`MediaConnection`** (host admin and joins use the same path).
+4. Leaving the bound board tears down the player call and board TV sink (video + speaker audio).
 
 ## Build / dev
 

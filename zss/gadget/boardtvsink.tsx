@@ -5,7 +5,7 @@ import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueuehasvideo,
-  useboardtvvisible,
+  useBoardTvVisible,
 } from 'zss/feature/mediaqueue/boardtvvisible'
 import {
   BOARD_TV_COLS,
@@ -77,11 +77,10 @@ function BoardTvPlane({
   const h = vh * scale
 
   return (
-    <mesh
-      position={[0, 0, z]}
-      {...(userenderorder ? { renderOrder: 2 } : {})}
-    >
+    <mesh position={[0, 0, z]} {...(userenderorder ? { renderOrder: 2 } : {})}>
       <planeGeometry args={[w, h]} />
+      {/* toneMapped: video texture should not pass through renderer tone mapping */}
+      {/* eslint-disable-next-line react/no-unknown-property -- three.js Material.toneMapped via R3F */}
       <meshBasicMaterial map={texture} toneMapped={false} side={DoubleSide} />
     </mesh>
   )
@@ -99,11 +98,9 @@ function BoardTvBlackFill({
   userenderorder: boolean
 }) {
   return (
-    <mesh
-      position={[0, 0, z]}
-      {...(userenderorder ? { renderOrder: 1 } : {})}
-    >
+    <mesh position={[0, 0, z]} {...(userenderorder ? { renderOrder: 1 } : {})}>
       <planeGeometry args={[width, height]} />
+      {/* eslint-disable-next-line react/no-unknown-property -- three.js Material.toneMapped via R3F */}
       <meshBasicMaterial color="#000000" toneMapped={false} side={DoubleSide} />
     </mesh>
   )
@@ -123,7 +120,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
 
   const screen = useMedia((state) => state.screen)
   const hasvideo = mediaqueuehasvideo(screen)
-  const shouldshow = useboardtvvisible(gadgetboard, hasvideo)
+  const shouldshow = useBoardTvVisible(gadgetboard, hasvideo)
   const video =
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null

@@ -1,6 +1,10 @@
 import { useEffect } from 'react'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
+import {
+  mediaqueueconnectifonboard,
+  mediaqueuedisconnect,
+} from 'zss/feature/mediaqueue/playerconnect'
 import { PALETTE } from 'zss/feature/palette'
 import { createbitmapfromarray } from 'zss/gadget/data/bitmap'
 import {
@@ -22,10 +26,13 @@ const defaultcharset = loadcharsetfrombytes(CHARSET)
 /** Applies board MEDIA layers into useMedia (board/game only — not useGadgetMedia). */
 export function MediaLayers() {
   const id = useGadgetClient((state) => state.gadget.id)
+  const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
+
   useEffect(() => {
     const layers = useGadgetClient.getState().gadget.layers ?? []
     let usepalette = defaultpalette
     let usecharset = defaultcharset
+    let helperpeerid = ''
     const media = useMedia.getState()
     for (let i = 0; layers && i < layers.length; ++i) {
       const layer = layers[i]
@@ -59,11 +66,22 @@ export function MediaLayers() {
               //
             }
             break
+          case 'text/mediaqueue-helper':
+            if (isstring(layer.media)) {
+              helperpeerid = layer.media.trim()
+            }
+            break
         }
       }
       media.setpalette(usepalette)
       media.setcharset(usecharset)
     }
-  }, [id])
+    if (helperpeerid) {
+      mediaqueueconnectifonboard(helperpeerid, gadgetboard)
+    } else {
+      mediaqueuedisconnect()
+    }
+  }, [id, gadgetboard])
+
   return null
 }

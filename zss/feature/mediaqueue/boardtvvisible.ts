@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-
 import {
   mediaqueuehelperconnected,
   mediaqueueislistening,
@@ -33,7 +32,7 @@ export function boardtvshouldshow(
 }
 
 /** Re-renders when helper listen / connect state changes (module singleton). */
-export function useboardtvvisible(
+export function useBoardTvVisible(
   gadgetboard: string,
   hasvideo: boolean,
 ): boolean {

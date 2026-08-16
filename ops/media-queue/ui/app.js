@@ -20,7 +20,7 @@
   let peer = null
   let dataconnection = null
   let mediastream = null
-  let mediacall = null
+  let playercalls = new Map()
   let queueurls = []
   let queueindex = 0
   let cafemediapeerid = ''
@@ -34,6 +34,15 @@
   let lastdownloadlabel = ''
   let transcodepulsetimer = null
   let downloadpolltimer = null
+  let endedvideo = null
+
+  function clearendedlistener() {
+    if (endedvideo && endedvideo.__mqonended) {
+      endedvideo.removeEventListener('ended', endedvideo.__mqonended)
+      endedvideo.__mqonended = null
+    }
+    endedvideo = null
+  }
 
   function cleardownloadpoll() {
     if (downloadpolltimer) {
@@ -320,6 +329,63 @@
     observer.observe(els.frame)
   }
 
+  function closeplayercalls() {
+    playercalls.forEach(function (entry) {
+      try {
+        entry.call.close()
+      } catch (_) {}
+    })
+    playercalls.clear()
+  }
+
+  function publishstreamtoplayers() {
+    if (!mediastream) {
+      return
+    }
+    playercalls.forEach(function (entry) {
+      var pc = entry.call.peerConnection
+      if (!pc) {
+        return
+      }
+      var senders = pc.getSenders()
+      mediastream.getTracks().forEach(function (track) {
+        var sender = null
+        for (var i = 0; i < senders.length; ++i) {
+          if (senders[i].track && senders[i].track.kind === track.kind) {
+            sender = senders[i]
+            break
+          }
+        }
+        if (sender) {
+          void sender.replaceTrack(track)
+        } else {
+          try {
+            pc.addTrack(track, mediastream)
+          } catch (_) {}
+        }
+      })
+    })
+  }
+
+  function handleplayercall(call) {
+    var meta = call.metadata || {}
+    if (meta.kind !== 'mediaqueue') {
+      return
+    }
+    var answerstream = mediastream || new MediaStream()
+    call.answer(answerstream)
+    playercalls.set(call.peer, { call: call, answerstream: answerstream })
+    call.on('close', function () {
+      playercalls.delete(call.peer)
+    })
+    call.on('error', function () {
+      playercalls.delete(call.peer)
+    })
+    if (mediastream) {
+      publishstreamtoplayers()
+    }
+  }
+
   function stopmediastream() {
     if (mediastream) {
       mediastream.getTracks().forEach(function (t) {
@@ -330,38 +396,32 @@
     setpreviewstream(null)
   }
 
-  async function endcall() {
-    const hadcall = Boolean(mediacall || mediastream || playbackstarted)
-    if (mediacall) {
-      try {
-        mediacall.close()
-      } catch (_) {}
-      mediacall = null
-    }
+  async function endcall(opts) {
+    clearendedlistener()
+    const hadcall = Boolean(playercalls.size > 0 || mediastream || playbackstarted)
+    const naturalend = Boolean(opts && opts.natural)
+    closeplayercalls()
     stopmediastream()
     if (playbackstarted && window.mqplayback) {
       await window.mqplayback.stopplayback()
       playbackstarted = false
     }
     currentplaybackurl = ''
-    if (hadcall) {
+    if (hadcall && !naturalend) {
       sendstatus('call-stopped')
     }
   }
 
   function wireplaybackended(sourcevideo) {
+    clearendedlistener()
     if (!sourcevideo) {
       return
     }
-    if (sourcevideo.__mqonended) {
-      sourcevideo.removeEventListener('ended', sourcevideo.__mqonended)
-      sourcevideo.__mqonended = null
-    }
+    endedvideo = sourcevideo
     function onended() {
-      sourcevideo.removeEventListener('ended', onended)
-      sourcevideo.__mqonended = null
+      clearendedlistener()
       sendstatus('playback-ended', '')
-      void endcall()
+      void endcall({ natural: true })
       setlink('connected', 'playback ended')
     }
     sourcevideo.__mqonended = onended
@@ -369,16 +429,15 @@
   }
 
   async function startplaybackandcall(url) {
-    const cafeid = (cafemediapeerid || '').trim()
     if (!peer || !peer.open) {
       setlink('error', 'peer not ready')
       return
     }
-    if (!cafeid) {
+    if (!dataconnection || !dataconnection.open) {
       setlink('waiting', 'cafe not connected yet')
       return
     }
-    if (mediacall || mediastream || playbackstarted) {
+    if (playercalls.size > 0 || mediastream || playbackstarted) {
       await endcall()
     }
     if (!window.mqplayback) {
@@ -426,19 +485,9 @@
     }
     void refreshcachebytes()
     wireplaybackended(playback && playback.video ? playback.video : null)
-    mediacall = peer.call(cafeid, mediastream, {
-      metadata: { kind: 'mediaqueue', source: 'helper' },
-    })
-    mediacall.on('close', function () {
-      mediacall = null
-      void endcall()
-    })
-    mediacall.on('error', function (err) {
-      setlink('error', 'call: ' + err)
-      void endcall()
-    })
-    setlink('playing', cafeid)
-    sendstatus('playing', cafeid)
+    publishstreamtoplayers()
+    setlink('playing', String(playercalls.size) + ' player(s)')
+    sendstatus('playing', String(playercalls.size))
   }
 
   async function maybeautostartaftergoto(url) {
@@ -581,6 +630,7 @@
       setlink('ready', '#media <peerid> in cafe')
     })
     peer.on('connection', wiredataconnection)
+    peer.on('call', handleplayercall)
     peer.on('error', function (err) {
       setlink('error', (err && err.type) || String(err))
     })

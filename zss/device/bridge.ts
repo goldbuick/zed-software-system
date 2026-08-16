@@ -27,7 +27,12 @@ import {
 } from 'zss/feature/broadcast/webbroadcastclient'
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
+import {
+  mediaqueuesetmediavolume,
+  storemediavolconfig,
+} from 'zss/feature/mediaqueue/boardtvaudio'
 import { handlemediapanel } from 'zss/feature/mediaqueue/panel'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/receive'
 import {
   netterminalhost,
   netterminaljoin,
@@ -268,6 +273,7 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'start':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
+        mediaqueuebootstrap()
         // show join code
         bridgeshowjoincode(SOFTWARE, message.player, !!message.data)
       })
@@ -275,6 +281,7 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'tab':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
+        mediaqueuebootstrap()
         // open a join tab
         bridgetabopen(SOFTWARE, message.player)
       })
@@ -286,6 +293,7 @@ const bridge = createdevice('bridge', [], (message) => {
     }
     case 'join':
       if (isstring(message.data)) {
+        mediaqueuebootstrap()
         netterminaljoin(message.data)
       }
       break
@@ -619,6 +627,16 @@ const bridge = createdevice('bridge', [], (message) => {
         break
       }
       handlemediapanel(bridge, { ...message, data: payload.data }, payload.path)
+      break
+    }
+    case 'mediavol': {
+      const volume = Number(message.data)
+      if (!Number.isFinite(volume)) {
+        apierror(bridge, message.player, 'bridge', 'mediavol: need a number')
+        break
+      }
+      mediaqueuesetmediavolume(volume)
+      storemediavolconfig(volume)
       break
     }
   }
