@@ -31,6 +31,33 @@ const TRACK_SYNC_TIMEOUT_MS = 30_000
 const TRACK_SYNC_POLL_MS = 50
 const TRACK_SYNC_POLL_MAX = TRACK_SYNC_TIMEOUT_MS / TRACK_SYNC_POLL_MS
 
+let playerofferstreamcache: MAYBE<MediaStream>
+
+/** PeerJS/Chrome may ignore recv-only offers with zero tracks; send a silent 1x1 canvas track. */
+function playerofferstream(): MediaStream {
+  if (ispresent(playerofferstreamcache)) {
+    return playerofferstreamcache
+  }
+  if (typeof document === 'undefined') {
+    playerofferstreamcache = new MediaStream()
+    return playerofferstreamcache
+  }
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1
+    canvas.height = 1
+    const stream = canvas.captureStream(0)
+    if (stream.getTracks().length > 0) {
+      playerofferstreamcache = stream
+      return stream
+    }
+  } catch {
+    // fall through
+  }
+  playerofferstreamcache = new MediaStream()
+  return playerofferstreamcache
+}
+
 let activecall: MAYBE<MediaConnection>
 let activestream: MAYBE<MediaStream>
 const pctracklisteners = new Map<
@@ -317,6 +344,14 @@ function teardownactivecall() {
   activestream = undefined
 }
 
+function headedtrace(message: string) {
+  const fn = (globalThis as unknown as { __mqheadedlog?: (msg: string) => void })
+    .__mqheadedlog
+  if (typeof fn === 'function') {
+    fn(message)
+  }
+}
+
 function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
   const trimmed = helperpeerid.trim()
   if (!trimmed || !gadgetboard) {
@@ -331,15 +366,24 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
   }
   const player = registerreadplayer()
   apilog(SOFTWARE, player, `mediaqueue connecting to helper ${trimmed}`)
+  headedtrace(`tryplayerconnect helper=${trimmed} board=${gadgetboard}`)
   const metadata = mediaqueuecallmetadata('player')
-  const call = netterminalmediacall(trimmed, new MediaStream(), metadata)
+  const call = netterminalmediacall(trimmed, playerofferstream(), metadata)
   if (!ispresent(call)) {
     mediaqueuesetplayerlayerpending(true)
+    headedtrace(`tryplayerconnect failed netterminalmediacall helper=${trimmed}`)
+    apierror(
+      SOFTWARE,
+      player,
+      'mediaqueue',
+      `could not place helper call to ${trimmed} (netterminal peer not ready)`,
+    )
     return false
   }
   mediaqueuesetplayerlayerpending(false)
   activecall = call
   wirecallhandlers(call, trimmed)
+  headedtrace(`tryplayerconnect call open helper=${trimmed}`)
   return true
 }
 

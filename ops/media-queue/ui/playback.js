@@ -1,8 +1,9 @@
-/* global window */
+/* global window, mqvisualizer */
 ;(function (global) {
   let previewel = null
   let hiddenvideo = null
   let playbackpath = ''
+  let playbackaudioonly = false
   let bloburl = ''
   let playbackactive = false
   let keepalivetimer = null
@@ -43,6 +44,9 @@
   }
 
   function decodesourceel() {
+    if (playbackaudioonly) {
+      return null
+    }
     return previewel || hiddenvideo
   }
 
@@ -89,9 +93,16 @@
     captureaudioel = null
   }
 
+  function stopvisualizer() {
+    if (global.mqvisualizer && typeof global.mqvisualizer.stop === 'function') {
+      global.mqvisualizer.stop()
+    }
+  }
+
   function stopvideo() {
     playbackactive = false
     stopcaptureaudio()
+    stopvisualizer()
     if (keepalivetimer) {
       window.clearTimeout(keepalivetimer)
       keepalivetimer = null
@@ -99,6 +110,7 @@
     const el = decodesourceel()
     if (!el) {
       playbackpath = ''
+      playbackaudioonly = false
       revokebloburl()
       return
     }
@@ -115,6 +127,7 @@
       hiddenvideo = null
     }
     playbackpath = ''
+    playbackaudioonly = false
     revokebloburl()
   }
 
@@ -208,6 +221,9 @@
   }
 
   function resumeplayback() {
+    if (playbackaudioonly) {
+      return
+    }
     const active = decodesourceel()
     if (!playbackactive || !active || playbackatornear_end(active)) {
       return
@@ -260,6 +276,16 @@
     schedulekeepalive()
   }
 
+  function bindaudiokeepalive(el) {
+    if (el.__mqaudiokeepalive) {
+      return
+    }
+    el.__mqaudiokeepalive = true
+    el.addEventListener('ended', function () {
+      playbackactive = false
+    })
+  }
+
   function wirecaptureaudio(el, stream) {
     if (captureaudioel === el && captureaudiosource) {
       return
@@ -281,7 +307,6 @@
     if (typeof el.captureStream !== 'function') {
       throw new Error('video.captureStream not supported')
     }
-    // Helper stays silent: never unmute the local decode element.
     el.muted = true
     const stream = new MediaStream()
     wirecaptureaudio(el, stream)
@@ -358,16 +383,13 @@
     return pending
   }
 
-  async function startplayback(localpath) {
-    const path = (localpath || '').trim()
-    if (!path) {
-      throw new Error('missing download path')
-    }
+  async function startvideoplayback(path) {
     let el = ensurevideo()
-    if (playbackpath !== path) {
+    if (playbackpath !== path || playbackaudioonly) {
       stopvideo()
       el = ensurevideo()
       playbackpath = path
+      playbackaudioonly = false
       await loadlocalvideo(el, path)
     }
     await el.play()
@@ -378,12 +400,59 @@
     return {
       stream: stream,
       video: el,
+      audio: null,
       usespreviewsource: Boolean(previewel && el === previewel),
     }
   }
 
+  async function startaudiovisualizer(path) {
+    if (!global.mqvisualizer || typeof global.mqvisualizer.start !== 'function') {
+      throw new Error('visualizer module missing')
+    }
+    if (playbackpath !== path || !playbackaudioonly) {
+      stopvideo()
+      playbackpath = path
+      playbackaudioonly = true
+    }
+    const result = await global.mqvisualizer.start(path, {
+      invoke: invoke,
+      tobytes: tobytes,
+    })
+    playbackactive = true
+    bindaudiokeepalive(result.audio)
+    return {
+      stream: result.stream,
+      video: null,
+      audio: result.audio,
+      canvas: result.canvas,
+      usespreviewsource: false,
+    }
+  }
+
+  async function startplayback(localpath, opts) {
+    const path = (localpath || '').trim()
+    if (!path) {
+      throw new Error('missing download path')
+    }
+    const audioonly = Boolean(opts && opts.audioOnly)
+    if (audioonly) {
+      return startaudiovisualizer(path)
+    }
+    return startvideoplayback(path)
+  }
+
   async function stopplayback() {
     stopvideo()
+  }
+
+  function readendedelement() {
+    if (playbackaudioonly && global.mqvisualizer) {
+      if (typeof global.mqvisualizer.readaudio === 'function') {
+        return global.mqvisualizer.readaudio()
+      }
+      return null
+    }
+    return decodesourceel()
   }
 
   global.mqplayback = {
@@ -391,6 +460,7 @@
     startdownload: startdownload,
     startplayback: startplayback,
     stopplayback: stopplayback,
+    readendedelement: readendedelement,
   }
 
   void listen('mq-download-progress', function (event) {

@@ -31,6 +31,10 @@ export async function launchparitybrowser(
     headless: process.env.PLAYWRIGHT_HEADLESS === '1',
     channel: 'chrome',
     timeout: timeoutms,
+    args: [
+      '--use-fake-device-for-media-stream',
+      '--use-fake-ui-for-media-stream',
+    ],
   })
 }
 

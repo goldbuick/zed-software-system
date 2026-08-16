@@ -656,7 +656,9 @@
         const label = playbacklabel(currentplaybacktitle, url, path)
         setlink('buffering', label)
         sendstatus('buffering', label)
-        playback = await window.mqplayback.startplayback(path)
+        playback = await window.mqplayback.startplayback(path, {
+          audioOnly: Boolean(ready && ready.audioOnly),
+        })
         mediastream = playback.stream
       }
     } catch (err) {
@@ -683,7 +685,15 @@
       setpreviewstream(mediastream)
     }
     void refreshcachebytes()
-    wireplaybackended(playback && playback.video ? playback.video : null)
+    wireplaybackended(
+      playback && playback.video
+        ? playback.video
+        : playback && playback.audio
+          ? playback.audio
+          : window.mqplayback && window.mqplayback.readendedelement
+            ? window.mqplayback.readendedelement()
+            : null,
+    )
     answerpendingplayercalls()
     publishstreamtoplayers()
     syncplayerlinkstatus()
@@ -771,6 +781,7 @@
     dataconnection = conn
     conn.on('open', function () {
       setlink('connected', 'data open')
+      writemqstatus('connected|data open')
       send({
         type: 'mediaqueue:hello',
         protocol: PROTOCOL,
@@ -833,6 +844,7 @@
       els.copypeer.disabled = false
       setlink('ready', '#queue <peerid> in cafe')
       writemqpeerid(id)
+      writemqstatus('ready|peer open')
     })
     peer.on('connection', wiredataconnection)
     peer.on('call', handleplayercall)

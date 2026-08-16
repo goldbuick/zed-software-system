@@ -332,6 +332,7 @@ export function mediaqueuelisten(
           player,
           `media already listening to helper ${trimmed} on board ${boardname ?? boundboardid}`,
         )
+        mediaqueueretryplayerconnect()
         return
       }
       apilog(

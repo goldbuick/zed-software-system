@@ -20,4 +20,18 @@ const child = spawn(electronbin, ['.'], {
   env: process.env,
   shell: process.platform === 'win32',
 })
+
+function forwardsignal(signal) {
+  if (!child.killed) {
+    try {
+      child.kill(signal)
+    } catch {
+      // ignore
+    }
+  }
+}
+
+process.on('SIGTERM', () => forwardsignal('SIGTERM'))
+process.on('SIGINT', () => forwardsignal('SIGINT'))
+
 child.on('exit', (code) => process.exit(code ?? 1))

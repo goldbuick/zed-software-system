@@ -19,7 +19,7 @@ Cafe: **`#media`** menu and **`#media <url>`** submit. Admin binds with **`#queu
 ```bash
 cd ops/media-queue
 yarn fetch-binaries
-yarn verify-download   # local gate: download + h264/aac check (retries built-in)
+yarn verify-download   # local gate: video h264+aac or audio-only (retries built-in)
 yarn start             # electron dev
 yarn task run mediaqueue:build
 yarn task run mediaqueue:build:desktop
@@ -62,11 +62,13 @@ Fixture clip: `ops/fixtures/media/test.mp4`.
 
 | Piece | Role |
 |-------|------|
-| yt-dlp | Extract + merge video/audio for supported URLs (pinned release) |
+| yt-dlp | Extract + merge video/audio, or audio-only fallback for SoundCloud etc. |
 | deno | JavaScript runtime for YouTube challenge solving (bundled) |
 | ffmpeg | Merge streams (bundled next to yt-dlp) |
 | Local cache | `app cache/media-queue/` until **Clear downloads** |
 
 YouTube downloads pass `--js-runtimes deno:<bundled>` and `--remote-components ejs:github` (fetches yt-dlp-ejs solver scripts on first use). If YouTube asks you to sign in, set **youtube cookies** in the helper (defaults to Safari on macOS) so yt-dlp can read your browser session. On 403 the helper retries with rotated `player_client` values, fragment retries, and cache clear. ffmpeg then **transcodes to H.264 + AAC** for Chromium playback and `video.captureStream()`. Use **Clear downloads** before retrying if an old file is cached.
+
+**Audio-only URLs** (SoundCloud, etc.): when yt-dlp finds no video formats, the helper falls back to `bestaudio`, tags the file `audioOnly`, and plays it through a **Winamp-style canvas visualizer** (`canvas.captureStream()` supplies the board TV video track; audio goes to speakers). Track title scrolls on the board TV marquee as for video items -- not drawn on the visualizer.
 
 Unsupported URLs fail loud (`download-failed`). No Screen Recording permission is required.

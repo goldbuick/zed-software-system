@@ -2,7 +2,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
-const { spawn } = require('node:child_process')
+const { spawn, execFileSync } = require('node:child_process')
 const readline = require('node:readline')
 const {
   resolveytdlp,
@@ -14,10 +14,21 @@ const {
 const MAX_DOWNLOAD_ATTEMPTS = 4
 const YTDLP_FORMAT =
   'best[height<=720][vcodec^=avc][ext=mp4][acodec^=mp4a]/bestvideo[vcodec^=avc1][height<=720][ext=mp4]+bestaudio[acodec^=mp4a][ext=m4a]/bestvideo[vcodec^=avc][height<=720]+bestaudio/best[height<=720]'
+const YTDLP_AUDIO_FORMAT = 'bestaudio[ext=m4a]/bestaudio/best'
+const MQ_MEDIA_EXTENSIONS = new Set([
+  '.mp4',
+  '.m4a',
+  '.mp3',
+  '.opus',
+  '.webm',
+  '.aac',
+  '.ogg',
+])
 const FFMPEG_POST_ARGS_COPY =
   'ffmpeg:-c:v copy -c:a copy -movflags +faststart'
 const FFMPEG_POST_ARGS_TRANSCODE =
   'ffmpeg:-c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart'
+const FFMPEG_POST_ARGS_AUDIO = 'ffmpeg:-c:a aac -b:a 128k'
 const YOUTUBE_PLAYER_CLIENTS = [
   'default,-android_sdkless',
   'default,-android_vr',
@@ -80,6 +91,14 @@ function clearytdlpextractorcache(ytdlphome) {
   }
 }
 
+function ismqmediafile(name) {
+  if (!name.startsWith('mq-')) {
+    return false
+  }
+  const ext = path.extname(name).toLowerCase()
+  return MQ_MEDIA_EXTENSIONS.has(ext)
+}
+
 function removemqmediafiles(cachedir, includepartials) {
   let deleted = 0
   if (!fs.existsSync(cachedir)) {
@@ -90,7 +109,7 @@ function removemqmediafiles(cachedir, includepartials) {
     if (!fs.statSync(filepath).isFile()) {
       continue
     }
-    if (!name.startsWith('mq-')) {
+    if (!ismqmediafile(name)) {
       if (
         !(
           includepartials &&
@@ -114,7 +133,7 @@ function mediafilebytes(cachedir) {
     return total
   }
   for (const name of fs.readdirSync(cachedir)) {
-    if (!name.startsWith('mq-') || !name.endsWith('.mp4')) {
+    if (!ismqmediafile(name)) {
       continue
     }
     const filepath = path.join(cachedir, name)
@@ -138,6 +157,73 @@ function mp4containervalid(filepath) {
   } finally {
     fs.closeSync(fd)
   }
+}
+
+function resolveffprobe(ffmpeg) {
+  const dir = path.dirname(ffmpeg)
+  const name = process.platform === 'win32' ? 'ffprobe.exe' : 'ffprobe'
+  const probe = path.join(dir, name)
+  if (fs.existsSync(probe)) {
+    return probe
+  }
+  return ''
+}
+
+function probemediafile(ffprobe, filepath) {
+  if (!ffprobe || !fs.existsSync(filepath)) {
+    return { hasVideo: false, hasAudio: false }
+  }
+  try {
+    const out = execFileSync(
+      ffprobe,
+      [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-show_entries',
+        'stream=codec_type',
+        '-of',
+        'csv=p=0',
+        filepath,
+      ],
+      { encoding: 'utf8' },
+    )
+    const types = out
+      .trim()
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+    return {
+      hasVideo: types.includes('video'),
+      hasAudio: types.includes('audio'),
+    }
+  } catch (_) {
+    return { hasVideo: false, hasAudio: false }
+  }
+}
+
+function ytdlpneedsaudiofallback(message) {
+  const lower = String(message).toLowerCase()
+  return (
+    lower.includes('requested format is not available') ||
+    lower.includes('no video formats') ||
+    lower.includes('does not contain a video') ||
+    lower.includes('format is not available') ||
+    lower.includes('only images are available')
+  )
+}
+
+function validatemediafile(filepath, probe) {
+  if (!fs.existsSync(filepath)) {
+    return false
+  }
+  if (fs.statSync(filepath).size < 1) {
+    return false
+  }
+  if (probe.hasVideo && path.extname(filepath).toLowerCase() === '.mp4') {
+    return mp4containervalvalid(filepath)
+  }
+  return probe.hasAudio
 }
 
 function parsepercent(line) {
@@ -289,6 +375,99 @@ function applyytdlpdownloadargs(args, attempt) {
 function applyytdlpcookies(args, browser) {
   if (browser) {
     args.push('--cookies-from-browser', browser)
+  }
+}
+
+function buildytdlpargs(profile, ctx) {
+  const args = []
+  applyytdlpbaseargs(args, ctx.jspath, ctx.ytdlphome, ctx.attempt)
+  applyytdlpdownloadargs(args, ctx.attempt)
+  applyytdlpcookies(args, ctx.cookiesbrowser)
+  if (profile === 'audio') {
+    args.push(
+      '-f',
+      YTDLP_AUDIO_FORMAT,
+      '--force-overwrites',
+      '--postprocessor-args',
+      FFMPEG_POST_ARGS_AUDIO,
+    )
+  } else {
+    const postargs =
+      ctx.attempt === 1 ? FFMPEG_POST_ARGS_COPY : FFMPEG_POST_ARGS_TRANSCODE
+    args.push(
+      '-f',
+      YTDLP_FORMAT,
+      '--merge-output-format',
+      'mp4',
+      '--force-overwrites',
+      '--postprocessor-args',
+      postargs,
+    )
+  }
+  args.push(
+    '--no-playlist',
+    '--progress',
+    '--newline',
+    '--ffmpeg-location',
+    ctx.ffdir,
+    '-o',
+    'mq-%(id)s.%(ext)s',
+    '--print',
+    'title',
+    '--print',
+    'after_move:filepath',
+    ctx.url,
+  )
+  return args
+}
+
+async function runytdlpdownload(manager, emit, ctx, profile) {
+  const args = buildytdlpargs(profile, ctx)
+  const child = spawn(ctx.ytdlp, args, {
+    cwd: ctx.cachedir,
+    env: { ...process.env, XDG_CACHE_HOME: ctx.ytdlphome },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  manager.activechild = child
+
+  let outpath = ''
+  let title = ''
+  const errlines = []
+
+  const stdoutdone = readstreamlines(child.stdout, (line) => {
+    if (manager.cancelled) {
+      return
+    }
+    emitline(manager, emit, line)
+    title = captureytdlptitle(title, line)
+    outpath = captureytdlpoutpath(outpath, line)
+  })
+  const stderrdone = readstreamlines(child.stderr, (line) => {
+    if (manager.cancelled) {
+      return
+    }
+    emitline(manager, emit, line)
+    if (line.trim()) {
+      errlines.push(line)
+    }
+  })
+
+  const code = await new Promise((resolve) => {
+    child.on('close', resolve)
+  })
+  await Promise.all([stdoutdone, stderrdone])
+  manager.activechild = null
+
+  const message = errlines.length
+    ? formatytdlperror(errlines, code)
+    : `yt-dlp exited with status ${code ?? -1}`
+
+  return {
+    success: code === 0,
+    outpath,
+    title,
+    message,
+    errlines,
   }
 }
 
@@ -486,6 +665,7 @@ class DownloadManager {
     const denopath = fs.realpathSync(deno)
     const jspath = `deno:${denopath}`
     const ffdir = ffmpegdir(ffmpeg)
+    const ffprobe = resolveffprobe(ffmpeg)
 
     const run = async () => {
       let lastmessage = ''
@@ -523,83 +703,49 @@ class DownloadManager {
           status: 'extracting',
         })
 
-        const postargs =
-          attempt === 1 ? FFMPEG_POST_ARGS_COPY : FFMPEG_POST_ARGS_TRANSCODE
-        const args = []
-        applyytdlpbaseargs(args, jspath, this.ytdlphome, attempt)
-        applyytdlpdownloadargs(args, attempt)
-        applyytdlpcookies(args, cookiesbrowser)
-        args.push(
-          '-f',
-          YTDLP_FORMAT,
-          '--merge-output-format',
-          'mp4',
-          '--force-overwrites',
-          '--postprocessor-args',
-          postargs,
-          '--no-playlist',
-          '--progress',
-          '--newline',
-          '--ffmpeg-location',
+        const ctx = {
+          ytdlp,
+          jspath,
+          ytdlphome: this.ytdlphome,
           ffdir,
-          '-o',
-          'mq-%(id)s.%(ext)s',
-          '--print',
-          'title',
-          '--print',
-          'after_move:filepath',
-          trimmed,
-        )
+          cachedir: this.cachedir,
+          attempt,
+          cookiesbrowser,
+          url: trimmed,
+        }
 
-        const child = spawn(ytdlp, args, {
-          cwd: this.cachedir,
-          env: { ...process.env, XDG_CACHE_HOME: this.ytdlphome },
-          stdio: ['ignore', 'pipe', 'pipe'],
-        })
-        this.activechild = child
-
-        let outpath = ''
-        let title = ''
-        const errlines = []
-
-        const stdoutdone = readstreamlines(child.stdout, (line) => {
-          if (this.cancelled) {
-            return
-          }
-          emitline(this, emit, line)
-          title = captureytdlptitle(title, line)
-          outpath = captureytdlpoutpath(outpath, line)
-        })
-        const stderrdone = readstreamlines(child.stderr, (line) => {
-          if (this.cancelled) {
-            return
-          }
-          emitline(this, emit, line)
-          if (line.trim()) {
-            errlines.push(line)
-          }
-        })
-
-        const code = await new Promise((resolve) => {
-          child.on('close', resolve)
-        })
-        await Promise.all([stdoutdone, stderrdone])
-        this.activechild = null
+        let result = await runytdlpdownload(this, emit, ctx, 'video')
+        if (
+          !result.success &&
+          ytdlpneedsaudiofallback(result.message) &&
+          !this.cancelled
+        ) {
+          removemqmediafiles(this.cachedir, true)
+          this.status = 'extracting'
+          this.detail = 'audio-only'
+          emit('mq-download-progress', {
+            percent: 0,
+            eta: 'audio-only',
+            status: 'extracting',
+          })
+          result = await runytdlpdownload(this, emit, ctx, 'audio')
+        }
 
         if (this.cancelled) {
           this.phase = 'idle'
           return
         }
 
-        const success = code === 0
-        const outpathexists = outpath && fs.existsSync(outpath)
-        if (success && outpathexists && !mp4containervalid(outpath)) {
-          lastmessage = 'downloaded file is not a valid mp4 container'
-          continue
-        }
-        if (success && outpathexists) {
-          this.filepath = outpath
-          this.title = title
+        const outpathexists = result.outpath && fs.existsSync(result.outpath)
+        if (result.success && outpathexists) {
+          const probe = probemediafile(ffprobe, result.outpath)
+          if (!validatemediafile(result.outpath, probe)) {
+            lastmessage = 'downloaded file failed media validation'
+            continue
+          }
+          const audioonly = probe.hasAudio && !probe.hasVideo
+          this.filepath = result.outpath
+          this.title = result.title
           this.percent = 100
           this.status = 'downloading'
           this.detail = ''
@@ -610,16 +756,15 @@ class DownloadManager {
           })
           this.phase = 'ready'
           emit('mq-download-ready', {
-            path: outpath,
-            title: title,
+            path: result.outpath,
+            title: result.title,
+            audioOnly: audioonly,
             duration: 0,
           })
           return
         }
 
-        lastmessage = errlines.length
-          ? formatytdlperror(errlines, code)
-          : `yt-dlp exited with status ${code ?? -1}`
+        lastmessage = result.message
       }
 
       this.error = lastmessage
@@ -637,4 +782,11 @@ class DownloadManager {
   }
 }
 
-module.exports = { DownloadManager }
+module.exports = {
+  DownloadManager,
+  YTDLP_FORMAT,
+  YTDLP_AUDIO_FORMAT,
+  FFMPEG_POST_ARGS_COPY,
+  FFMPEG_POST_ARGS_TRANSCODE,
+  FFMPEG_POST_ARGS_AUDIO,
+}

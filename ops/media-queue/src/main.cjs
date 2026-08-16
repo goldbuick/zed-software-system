@@ -200,6 +200,12 @@ app.commandLine.appendSwitch('disable-backgrounding-occluded-windows')
 app.whenReady().then(() => {
   mediacachedir = path.join(app.getPath('cache'), 'media-queue')
   downloads = new DownloadManager(resourceroot(), mediacachedir)
+  const cookiesbrowser = String(process.env.MQ_COOKIES_BROWSER || '')
+    .trim()
+    .toLowerCase()
+  if (cookiesbrowser) {
+    downloads.setcookiesbrowser(cookiesbrowser)
+  }
   downloads.warmejscache()
   wireipc()
   createmainwindow()
