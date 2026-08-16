@@ -3,17 +3,54 @@
   "productName": "Zed Cafe YouTube Relay",
   "version": "1.11.60",
   "private": true,
-  "description": "Local WHIP to YouTube RTMPS relay for zed.cafe (Tauri v2)",
+  "main": "src/main.cjs",
+  "description": "Local WHIP to YouTube RTMPS relay for zed.cafe (Electron)",
   "author": "zed.cafe",
   "license": "MIT",
   "scripts": {
-    "start": "tauri dev",
+    "prestart": "node scripts/fetch-binaries.mjs",
+    "start": "node scripts/run-electron.mjs",
     "fetch-binaries": "node scripts/fetch-binaries.mjs",
-    "dist": "node scripts/stage-tauri-resources.mjs && tauri build",
-    "dist:mac": "node scripts/stage-tauri-resources.mjs && tauri build",
-    "dist:win": "node scripts/stage-tauri-resources.mjs && tauri build"
+    "stage-electron-resources": "node scripts/stage-electron-resources.mjs",
+    "predist": "node scripts/fetch-binaries.mjs && node scripts/stage-electron-resources.mjs",
+    "dist": "node scripts/run-builder.mjs",
+    "dist:mac": "node scripts/run-builder.mjs --mac",
+    "dist:win": "node scripts/run-builder.mjs --win"
+  },
+  "build": {
+    "appId": "cafe.zed.youtube-relay",
+    "productName": "Zed Cafe YouTube Relay",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "target": ["dmg"],
+      "icon": "resources/icons/icon.png",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "resources/icons/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2"
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
   }
 }

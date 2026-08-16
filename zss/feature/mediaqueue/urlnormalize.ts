@@ -32,6 +32,23 @@ function collapsewhitespace(value: string): string {
   return value.trim().replace(/\s+/g, ' ')
 }
 
+/** True when a #media arg should queue a URL (not bind a helper peer id). */
+export function mediaisqueueurl(raw: string): boolean {
+  const trimmed = raw.trim()
+  if (!trimmed) {
+    return false
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return true
+  }
+  try {
+    const parsed = new URL(trimmed)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 /** Dedupe key for queue entries. Helper still receives the original URL string. */
 export function mediaqueuenormalizeurl(raw: string): string {
   const trimmed = raw.trim()
@@ -51,7 +68,7 @@ export function mediaqueuenormalizeurl(raw: string): string {
     const query = keys
       .map((key) => `${key}=${parsed.searchParams.get(key) ?? ''}`)
       .join('&')
-    let path = parsed.pathname.replace(/\/+$/, '') || '/'
+    const path = parsed.pathname.replace(/\/+$/, '') || '/'
     return `${parsed.protocol}//${host}${path}${query ? `?${query}` : ''}`
   } catch {
     return collapsewhitespace(trimmed).toLowerCase()

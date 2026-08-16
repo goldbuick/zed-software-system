@@ -5,9 +5,7 @@ import { memoryisoperator } from 'zss/memory/session'
 
 /** Run on VM thread only (chip / vm:media). Bridge MEMORY has no operator/token. */
 export function mediacanmanagequeue(player: string): boolean {
-  return (
-    memoryisoperator(player) || memorycanruncommand(player, 'mediamanage')
-  )
+  return memoryisoperator(player) || memorycanruncommand(player, 'mediamanage')
 }
 
 export function mediarequiremanageonvm(player: string): boolean {

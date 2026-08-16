@@ -9,9 +9,9 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { BoardTvSink } from 'zss/gadget/boardtvsink'
+import { LAYER_TYPE, VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
   FOCUS_ANIM_RATE,
@@ -421,14 +421,27 @@ export const Mode7Graphics = memo(function Mode7Graphics({
               <group ref={tiltref}>
                 <group ref={cornerref}>
                   <group ref={liveboardref}>
-                    {layers.map((layer) => (
-                      <Mode7Layer
-                        key={layer.id}
-                        id={layer.id}
-                        from="layers"
-                        z={maptolayerz(layer, 'mode7')}
-                      />
-                    ))}
+                    {layers.map((layer) =>
+                      layer.type !== LAYER_TYPE.SPRITES ? (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          from="layers"
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ) : null,
+                    )}
+                    <BoardTvSink graphics="mode7" />
+                    {layers.map((layer) =>
+                      layer.type === LAYER_TYPE.SPRITES ? (
+                        <Mode7Layer
+                          key={layer.id}
+                          id={layer.id}
+                          from="layers"
+                          z={maptolayerz(layer, 'mode7')}
+                        />
+                      ) : null,
+                    )}
                     {over.map((layer) => (
                       <Mode7Layer
                         key={layer.id}
@@ -439,7 +452,6 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       />
                     ))}
                     <InspectorComponent z={inspectorz} />
-                    <BoardTvSink graphics="mode7" />
                   </group>
                   {exitpreviewgroups.map(({ key, preview, position }) =>
                     preview.layers.length > 0 ? (

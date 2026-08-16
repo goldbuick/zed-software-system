@@ -1,6 +1,7 @@
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/device/doasync'
 import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
+import { mediaqueueresumeaudio } from 'zss/feature/mediaqueue/boardtvaudio'
 import {
   getliveaudiocontext,
   unlockaudiocontext,
@@ -53,6 +54,7 @@ let backend: MAYBE<SynthBackend>
 export function enableaudio() {
   // Always drive unlock/resume on the gesture turn (Firefox drops resume after awaits).
   unlockaudiocontext()
+  mediaqueueresumeaudio()
   if (enabled || locked) {
     return
   }

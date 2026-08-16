@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..')
 
 const DEFAULT_URL = 'https://www.youtube.com/watch?v=FrLequ6dUdM'
-const MAX_ATTEMPTS = Number(process.env.MQ_VERIFY_ATTEMPTS || 3)
+const MAX_ATTEMPTS = Number(process.env.MQ_VERIFY_ATTEMPTS || 4)
 
 function platdir() {
   const os = process.platform === 'darwin' ? 'darwin' : process.platform
@@ -46,7 +46,19 @@ function ffprobe(pathname) {
   }
 }
 
-function warm(ytdlp, deno, ytdlphome, url) {
+const YOUTUBE_PLAYER_CLIENTS = [
+  'default,-android_sdkless',
+  'default,-android_vr',
+  'tv,web_creator',
+  'web,web_creator',
+]
+
+function youtubeplayerclient(attempt) {
+  const idx = (attempt - 1) % YOUTUBE_PLAYER_CLIENTS.length
+  return `youtube:player_client=${YOUTUBE_PLAYER_CLIENTS[idx]}`
+}
+
+function warm(ytdlp, deno, ytdlphome, url, attempt) {
   const env = { ...process.env, XDG_CACHE_HOME: ytdlphome }
   spawnSync(
     ytdlp,
@@ -57,7 +69,7 @@ function warm(ytdlp, deno, ytdlphome, url) {
       '--remote-components',
       'ejs:github',
       '--extractor-args',
-      'youtube:player_client=default,-android_sdkless',
+      youtubeplayerclient(attempt),
       '--skip-download',
       '--print',
       'id',
@@ -86,7 +98,12 @@ function download(ytdlp, deno, ffmpegdir, mediadir, ytdlphome, url, attempt) {
       '--remote-components',
       'ejs:github',
       '--extractor-args',
-      'youtube:player_client=default,-android_sdkless',
+      youtubeplayerclient(attempt),
+      '--retries',
+      '10',
+      '--fragment-retries',
+      '10',
+      ...(attempt > 1 ? ['--sleep-requests', '1'] : []),
       '-f',
       YTDLP_FORMAT,
       '--merge-output-format',
@@ -134,7 +151,7 @@ async function main() {
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     console.log(`attempt ${attempt}/${MAX_ATTEMPTS}`)
-    warm(ytdlp, deno, ytdlphome, url)
+    warm(ytdlp, deno, ytdlphome, url, attempt)
     await sleep(500)
     for (const name of readdirSync(mediadir)) {
       if (name.startsWith('mq-')) {

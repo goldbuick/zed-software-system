@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Copy vendor/<platform> binaries into src-tauri/bin for Tauri bundle resources.
- * Run after fetch-binaries and before `tauri build`.
+ * Copy vendor/<platform> binaries into resources/bin for electron-builder extraResources.
+ * Run after fetch-binaries and before electron-builder.
  */
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
@@ -18,7 +18,7 @@ function platformkey() {
 
 const plat = platformkey()
 const vendordir = path.join(root, 'vendor', plat)
-const bindir = path.join(root, 'src-tauri', 'bin')
+const bindir = path.join(root, 'resources', 'bin')
 
 if (!existsSync(vendordir)) {
   console.error(`missing ${vendordir} -- run yarn fetch-binaries first`)
@@ -26,14 +26,13 @@ if (!existsSync(vendordir)) {
 }
 
 const iswin = process.platform === 'win32'
-const ytdlpname = iswin ? 'yt-dlp.exe' : 'yt-dlp'
+const mtxname = iswin ? 'mediamtx.exe' : 'mediamtx'
 const ffname = iswin ? 'ffmpeg.exe' : 'ffmpeg'
-const denoname = iswin ? 'deno.exe' : 'deno'
 
 rmSync(bindir, { recursive: true, force: true })
 mkdirSync(bindir, { recursive: true })
 
-for (const name of [ytdlpname, ffname, denoname]) {
+for (const name of [mtxname, ffname, 'mediamtx.yml']) {
   const src = path.join(vendordir, name)
   if (!existsSync(src)) {
     console.error(`missing ${src}`)

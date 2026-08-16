@@ -7,6 +7,26 @@ let helperpeerid = ''
 let listening = false
 let helperconnected = false
 let hasactiveroomstream = false
+let boardtvgateepoch = 0
+const boardtvgatesubs = new Set<() => void>()
+
+function bumpboardtvgate() {
+  boardtvgateepoch += 1
+  for (const sub of boardtvgatesubs) {
+    sub()
+  }
+}
+
+export function mediaqueuesubscribeboardtvgate(onstorechange: () => void) {
+  boardtvgatesubs.add(onstorechange)
+  return () => {
+    boardtvgatesubs.delete(onstorechange)
+  }
+}
+
+export function mediaqueuereadboardtvgatesnapshot() {
+  return boardtvgateepoch
+}
 
 export function mediaqueuereadlistenplayer(): string {
   return listenplayer
@@ -22,6 +42,7 @@ export function mediaqueuereadboundboardid(): string {
 
 export function mediaqueuesetlistenboardid(boardid: string) {
   listenboardid = boardid
+  bumpboardtvgate()
 }
 
 export function mediaqueuereadhelperpeerid(): string {
@@ -38,14 +59,17 @@ export function mediaqueueclearlistenstate() {
   listening = false
   helperconnected = false
   hasactiveroomstream = false
+  bumpboardtvgate()
 }
 
 export function mediaqueuesetlistening(active: boolean) {
   listening = active
+  bumpboardtvgate()
 }
 
 export function mediaqueuesethelperconnected(active: boolean) {
   helperconnected = active
+  bumpboardtvgate()
 }
 
 export function mediaqueuesethasactiveroomstream(active: boolean) {

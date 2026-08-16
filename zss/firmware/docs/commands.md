@@ -49,7 +49,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip youtube <local-bearer>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
-| `media` | Board TV media queue: `#media` (menu), `#media add <url>` (speaker), `#media <peerid>` / `skip` / `clear` / `stop` / `limit <N>` (bridge admin) |
+| `media` | Board TV media queue: `#media` (menu), `#media <url>` / `#media add <url>` (speaker), `#media <peerid>` / `skip` / `clear` / `stop` / `limit <N>` (bridge admin) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
 | `access` | Set base preset: `lockdown`, `creative`, or `open` (overrides preserved) |
 | `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |

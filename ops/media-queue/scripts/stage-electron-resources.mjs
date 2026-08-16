@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * Copy vendor/<platform> binaries into src-tauri/bin for Tauri bundle resources.
- * Run after fetch-binaries and before `tauri build`.
+ * Copy vendor/<platform> binaries into resources/bin for electron-builder extraResources.
  */
-import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,26 +17,18 @@ function platformkey() {
 
 const plat = platformkey()
 const vendordir = path.join(root, 'vendor', plat)
-const bindir = path.join(root, 'src-tauri', 'bin')
+const bindir = path.join(root, 'resources', 'bin')
 
 if (!existsSync(vendordir)) {
   console.error(`missing ${vendordir} -- run yarn fetch-binaries first`)
   process.exit(1)
 }
 
-const iswin = process.platform === 'win32'
-const mtxname = iswin ? 'mediamtx.exe' : 'mediamtx'
-const ffname = iswin ? 'ffmpeg.exe' : 'ffmpeg'
-
 rmSync(bindir, { recursive: true, force: true })
 mkdirSync(bindir, { recursive: true })
 
-for (const name of [mtxname, ffname, 'mediamtx.yml']) {
+for (const name of readdirSync(vendordir)) {
   const src = path.join(vendordir, name)
-  if (!existsSync(src)) {
-    console.error(`missing ${src}`)
-    process.exit(1)
-  }
   cpSync(src, path.join(bindir, name), { recursive: false })
 }
 

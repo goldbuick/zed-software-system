@@ -3,10 +3,7 @@ import type { TaskDef } from '../types'
 
 const RELAY_DIR = 'ops/youtube-rtmp-relay'
 
-async function runyarn(
-  ctx: { root: string },
-  args: string[],
-): Promise<number> {
+async function runyarn(ctx: { root: string }, args: string[]): Promise<number> {
   const { spawnSync } = await import('node:child_process')
   const path = await import('node:path')
   const cwd = path.join(ctx.root, RELAY_DIR)
@@ -40,7 +37,7 @@ export const RELAY_TASKS: TaskDef[] = [
   }),
   def('relay:build:desktop', {
     description:
-      'Build YouTube relay desktop installers (Tauri v2) for current host OS',
+      'Build YouTube relay desktop installers (Electron) for current host OS',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
@@ -59,7 +56,7 @@ export const RELAY_TASKS: TaskDef[] = [
     }),
   }),
   def('relay:build:desktop:mac', {
-    description: 'Build YouTube relay macOS dmg (Tauri v2)',
+    description: 'Build YouTube relay macOS dmg (Electron)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {
@@ -67,7 +64,7 @@ export const RELAY_TASKS: TaskDef[] = [
     }),
   }),
   def('relay:build:desktop:win', {
-    description: 'Build YouTube relay Windows nsis installer (Tauri v2)',
+    description: 'Build YouTube relay Windows nsis installer (Electron)',
     tags: ['deploy'],
     deps: ['relay:build'],
     run: handler(async (ctx) => {

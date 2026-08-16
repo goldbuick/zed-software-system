@@ -1,6 +1,6 @@
 # Zed Cafe Media Queue
 
-Local **Tauri v2** helper that downloads queue URLs with **yt-dlp**, plays them locally, and **PeerJS `call`s** [zed.cafe](https://zed.cafe). Video lands on a **board TV** sink and audio plays on cafe speakers for the host and board mates -- not the tape overlay.
+Local **Electron** helper that downloads queue URLs with **yt-dlp**, plays them locally, and **PeerJS `call`s** [zed.cafe](https://zed.cafe). Video lands on a **board TV** sink and audio plays on cafe speakers for the host and board mates -- not the tape overlay.
 
 Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-tauri.mdx)
 
@@ -20,15 +20,12 @@ Cafe: **`#media`** terminal menu. Admin binds with `#media <peerid>`; players `#
 cd ops/media-queue
 yarn fetch-binaries
 yarn verify-download   # local gate: download + h264/aac check (retries built-in)
-yarn start             # tauri dev
-yarn stage-tauri-resources   # before release build only
+yarn start             # electron dev
 yarn task run mediaqueue:build
 yarn task run mediaqueue:build:desktop
 ```
 
-`yarn start` / `yarn dist` run `fetch-binaries` automatically. Installers land under `ops/media-queue/src-tauri/target/release/bundle/`.
-
-Requires Rust and [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/).
+`yarn start` / `yarn dist` run `fetch-binaries` automatically. Installers land under `ops/media-queue/dist/`.
 
 ## Dev
 
@@ -51,8 +48,8 @@ yarn task run mediaqueue:dev
 | yt-dlp | Extract + merge video/audio for supported URLs (pinned release) |
 | deno | JavaScript runtime for YouTube challenge solving (bundled) |
 | ffmpeg | Merge streams (bundled next to yt-dlp) |
+| Local cache | `app cache/media-queue/` until **Clear downloads** |
 
-YouTube downloads pass `--js-runtimes deno:<bundled>` and `--remote-components ejs:github` (fetches yt-dlp-ejs solver scripts on first use). ffmpeg then **transcodes to H.264 + AAC** for WKWebView playback and `captureStream()`. Use **Clear downloads** before retrying if an old file is cached.
-| Local cache | `app_cache_dir()/media-queue/` until **Clear downloads** |
+YouTube downloads pass `--js-runtimes deno:<bundled>` and `--remote-components ejs:github` (fetches yt-dlp-ejs solver scripts on first use). If YouTube asks you to sign in, set **youtube cookies** in the helper (defaults to Safari on macOS) so yt-dlp can read your browser session. On 403 the helper retries with rotated `player_client` values, fragment retries, and cache clear. ffmpeg then **transcodes to H.264 + AAC** for Chromium playback and `video.captureStream()`. Use **Clear downloads** before retrying if an old file is cached.
 
 Unsupported URLs fail loud (`download-failed`). No Screen Recording permission is required.

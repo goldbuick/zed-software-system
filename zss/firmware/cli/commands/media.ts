@@ -1,11 +1,12 @@
 import { bridgemediapanel } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { FIRMWARE } from 'zss/firmware'
-import { MEDIA_ACTION_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import {
   mediapayloadwithmanage,
   mediarequiremanageonvm,
 } from 'zss/feature/mediaqueue/mediaguards'
+import { mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
+import { FIRMWARE } from 'zss/firmware'
+import { MEDIA_ACTION_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
@@ -19,11 +20,11 @@ const MEDIA_RESERVED = new Set([
   'menu',
 ])
 
-/** `#media` terminal menu; `#media <peerid>` binds; subcommands manage the queue. */
+/** `#media` terminal menu; `#media <url>` queues; `#media <peerid>` binds. */
 export function registermediacommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'media',
-    [ARG_TYPE.MAYBE_NAME, 'Board TV media queue menu or helper peer id'],
+    [ARG_TYPE.MAYBE_NAME, 'Board TV media queue menu, URL, or helper peer id'],
     (_, words) => {
       const [first, iii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus
@@ -37,15 +38,28 @@ export function registermediacommands(fw: FIRMWARE): FIRMWARE {
         return 0
       }
       const cmd = NAME(String(first))
-      if (cmd === 'add') {
-        const [urlwords] = readargsuntilend(words, iii, ARG_TYPE.NUMBER_OR_STRING)
-        const url = Array.isArray(urlwords) ? urlwords.join(' ') : String(urlwords ?? '')
+      function bridgeadd(start: number) {
+        const [urlwords] = readargsuntilend(
+          words,
+          start,
+          ARG_TYPE.NUMBER_OR_STRING,
+        )
+        const url = Array.isArray(urlwords)
+          ? urlwords.join(' ')
+          : String(urlwords ?? '')
         bridgemediapanel(
           SOFTWARE,
           player,
           'add',
           mediapayloadwithmanage(player, { url: url }),
         )
+      }
+      if (cmd === 'add') {
+        bridgeadd(iii)
+        return 0
+      }
+      if (mediaisqueueurl(String(first))) {
+        bridgeadd(iii - 1)
         return 0
       }
       if (cmd === 'limit') {

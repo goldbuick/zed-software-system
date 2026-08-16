@@ -19,12 +19,12 @@ import {
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
+import { peerserveroptions } from 'zss/feature/peerserver'
 import {
   decodepeerwire,
   encodepeerwire,
   netmsgtounit8,
 } from 'zss/feature/peerzstdwire'
-import { peerserveroptions } from 'zss/feature/peerserver'
 import { storagereadnetid, storagewritenetid } from 'zss/feature/storage'
 import { znsautopublishpeer } from 'zss/feature/url'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
@@ -139,12 +139,7 @@ export async function netterminalensurehostready(
     const onopen = () => finish(true)
     const onerror = () => finish(false)
     const timer = setTimeout(() => {
-      apierror(
-        SOFTWARE,
-        player,
-        'netterminal',
-        'peer handshake timed out',
-      )
+      apierror(SOFTWARE, player, 'netterminal', 'peer handshake timed out')
       finish(false)
     }, timeoutms)
     peer.on('open', onopen)

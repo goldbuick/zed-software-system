@@ -1,22 +1,29 @@
 /* global window */
 ;(function (global) {
-  let video = null
+  let previewel = null
+  let hiddenvideo = null
   let playbackpath = ''
   let bloburl = ''
-  let canvas = null
-  let canvasctx = null
-  let capturetimer = null
-  let capturevfc = false
-  let capturestream = null
-  let audiocontext = null
   let playbackactive = false
   let keepalivetimer = null
+  let captureaudioctx = null
+  let captureaudiodest = null
+  let captureaudiosource = null
+  let captureaudioel = null
 
-  const CAPTURE_MS = 33
+  function attachpreview(el) {
+    previewel = el || null
+    if (!previewel) {
+      return
+    }
+    previewel.playsInline = true
+    previewel.muted = true
+    previewel.setAttribute('playsinline', '')
+  }
 
   function invoke(cmd, args) {
     if (!window.__TAURI__ || !window.__TAURI__.core) {
-      return Promise.reject(new Error('Tauri API missing'))
+      return Promise.reject(new Error('Electron API missing'))
     }
     return window.__TAURI__.core.invoke(cmd, args || {})
   }
@@ -35,67 +42,78 @@
     }
   }
 
-  function stopcapture() {
-    capturevfc = false
-    if (capturetimer) {
-      clearInterval(capturetimer)
-      capturetimer = null
-    }
-    if (capturestream) {
-      capturestream.getTracks().forEach(function (track) {
-        track.stop()
-      })
-      capturestream = null
-    }
-    if (audiocontext) {
-      void audiocontext.close().catch(function () {})
-      audiocontext = null
-    }
-    if (keepalivetimer) {
-      clearInterval(keepalivetimer)
-      keepalivetimer = null
-    }
-    if (canvas) {
-      canvas.remove()
-      canvas = null
-      canvasctx = null
-    }
+  function decodesourceel() {
+    return previewel || hiddenvideo
   }
 
   function ensurevideo() {
-    if (video) {
-      return video
+    if (previewel) {
+      return previewel
     }
-    video = document.createElement('video')
-    video.playsInline = true
-    video.muted = true
-    video.setAttribute('playsinline', '')
-    video.style.position = 'fixed'
-    video.style.left = '-9999px'
-    video.style.top = '0'
-    video.style.width = '1px'
-    video.style.height = '1px'
-    video.style.opacity = '0'
-    video.style.pointerEvents = 'none'
-    document.body.appendChild(video)
-    return video
+    if (hiddenvideo) {
+      return hiddenvideo
+    }
+    hiddenvideo = document.createElement('video')
+    hiddenvideo.playsInline = true
+    hiddenvideo.muted = true
+    hiddenvideo.setAttribute('playsinline', '')
+    hiddenvideo.style.position = 'fixed'
+    hiddenvideo.style.left = '0'
+    hiddenvideo.style.top = '0'
+    hiddenvideo.style.width = '320px'
+    hiddenvideo.style.height = '180px'
+    hiddenvideo.style.opacity = '0'
+    hiddenvideo.style.pointerEvents = 'none'
+    hiddenvideo.style.zIndex = '-1'
+    document.body.appendChild(hiddenvideo)
+    return hiddenvideo
+  }
+
+  function stopcaptureaudio() {
+    if (captureaudiosource) {
+      try {
+        captureaudiosource.disconnect()
+      } catch (_) {}
+      captureaudiosource = null
+    }
+    if (captureaudiodest) {
+      try {
+        captureaudiodest.disconnect()
+      } catch (_) {}
+      captureaudiodest = null
+    }
+    if (captureaudioctx) {
+      void captureaudioctx.close().catch(function () {})
+      captureaudioctx = null
+    }
+    captureaudioel = null
   }
 
   function stopvideo() {
     playbackactive = false
-    stopcapture()
-    if (!video) {
+    stopcaptureaudio()
+    if (keepalivetimer) {
+      window.clearTimeout(keepalivetimer)
+      keepalivetimer = null
+    }
+    const el = decodesourceel()
+    if (!el) {
       playbackpath = ''
       revokebloburl()
       return
     }
     try {
-      video.pause()
+      el.pause()
     } catch (_) {}
-    video.removeAttribute('src')
-    video.load()
-    video.remove()
-    video = null
+    el.removeAttribute('src')
+    if (el.srcObject) {
+      el.srcObject = null
+    }
+    el.load()
+    if (hiddenvideo) {
+      hiddenvideo.remove()
+      hiddenvideo = null
+    }
     playbackpath = ''
     revokebloburl()
   }
@@ -178,135 +196,103 @@
     await waitforcanplay(el)
   }
 
-  function resumeplayback(el) {
-    if (!playbackactive || !el || el.ended) {
+  function playbackatornear_end(el) {
+    if (el.ended) {
+      return true
+    }
+    const duration = el.duration
+    if (!Number.isFinite(duration) || duration <= 0) {
+      return false
+    }
+    return el.currentTime >= duration - 0.1
+  }
+
+  function resumeplayback() {
+    const active = decodesourceel()
+    if (!playbackactive || !active || playbackatornear_end(active)) {
       return
     }
-    if (el.paused) {
-      void el.play().catch(function () {})
+    if (active.paused) {
+      void active.play().catch(function () {})
     }
-    if (audiocontext && audiocontext.state === 'suspended') {
-      void audiocontext.resume().catch(function () {})
+  }
+
+  function schedulekeepalive() {
+    if (keepalivetimer) {
+      window.clearTimeout(keepalivetimer)
     }
+    const ms = document.hidden ? 16 : 2000
+    keepalivetimer = window.setTimeout(function keepalivetick() {
+      resumeplayback()
+      if (!playbackactive) {
+        keepalivetimer = null
+        return
+      }
+      keepalivetimer = window.setTimeout(keepalivetick, ms)
+    }, ms)
   }
 
   function bindkeepalive(el) {
     if (el.__mqkeepalive) {
+      schedulekeepalive()
       return
     }
     el.__mqkeepalive = true
     document.addEventListener('visibilitychange', function () {
-      resumeplayback(el)
+      schedulekeepalive()
+      resumeplayback()
     })
     window.addEventListener('blur', function () {
-      resumeplayback(el)
+      resumeplayback()
     })
     window.addEventListener('focus', function () {
-      resumeplayback(el)
+      resumeplayback()
     })
     el.addEventListener('pause', function () {
-      resumeplayback(el)
+      if (playbackatornear_end(el)) {
+        return
+      }
+      resumeplayback()
     })
-    if (keepalivetimer) {
-      clearInterval(keepalivetimer)
-    }
-    keepalivetimer = setInterval(function () {
-      resumeplayback(el)
-    }, 2000)
+    el.addEventListener('ended', function () {
+      playbackactive = false
+    })
+    schedulekeepalive()
   }
 
-  function drawframe(el) {
-    if (!canvas || !canvasctx || !el || !playbackactive) {
+  function wirecaptureaudio(el, stream) {
+    if (captureaudioel === el && captureaudiosource) {
       return
     }
-    if (el.ended) {
-      return
+    stopcaptureaudio()
+    captureaudioctx = new AudioContext()
+    captureaudiodest = captureaudioctx.createMediaStreamDestination()
+    captureaudiosource = captureaudioctx.createMediaElementSource(el)
+    captureaudiosource.connect(captureaudiodest)
+    captureaudioel = el
+    void captureaudioctx.resume()
+    const audiotracks = captureaudiodest.stream.getAudioTracks()
+    for (let i = 0; i < audiotracks.length; i++) {
+      stream.addTrack(audiotracks[i])
     }
-    resumeplayback(el)
-    if (el.videoWidth > 0 && el.videoHeight > 0) {
-      if (canvas.width !== el.videoWidth || canvas.height !== el.videoHeight) {
-        canvas.width = el.videoWidth
-        canvas.height = el.videoHeight
-      }
-      canvasctx.drawImage(el, 0, 0, canvas.width, canvas.height)
-    }
-  }
-
-  function startcanvasloop(el) {
-    capturevfc = false
-    if (capturetimer) {
-      clearInterval(capturetimer)
-      capturetimer = null
-    }
-    if (typeof el.requestVideoFrameCallback === 'function') {
-      capturevfc = true
-      function loop() {
-        if (!capturevfc || !playbackactive || !canvas) {
-          return
-        }
-        drawframe(el)
-        if (!el.ended) {
-          el.requestVideoFrameCallback(loop)
-        }
-      }
-      el.requestVideoFrameCallback(loop)
-      return
-    }
-    capturetimer = setInterval(function () {
-      drawframe(el)
-    }, CAPTURE_MS)
-  }
-
-  function capturefromcanvas(el) {
-    stopcapture()
-    const width = el.videoWidth > 0 ? el.videoWidth : 1280
-    const height = el.videoHeight > 0 ? el.videoHeight : 720
-    canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    canvas.style.position = 'fixed'
-    canvas.style.left = '-9999px'
-    canvas.style.top = '0'
-    canvas.style.width = '1px'
-    canvas.style.height = '1px'
-    canvas.style.opacity = '0'
-    canvas.style.pointerEvents = 'none'
-    document.body.appendChild(canvas)
-    canvasctx = canvas.getContext('2d')
-    if (!canvasctx) {
-      throw new Error('canvas 2d context unavailable')
-    }
-    if (typeof canvas.captureStream !== 'function') {
-      throw new Error('canvas captureStream not supported')
-    }
-    capturestream = canvas.captureStream(30)
-    startcanvasloop(el)
-
-    const AudioCtx = window.AudioContext || window.webkitAudioContext
-    if (AudioCtx) {
-      try {
-        audiocontext = new AudioCtx()
-        const source = audiocontext.createMediaElementSource(el)
-        const dest = audiocontext.createMediaStreamDestination()
-        source.connect(dest)
-        const audio = dest.stream.getAudioTracks()[0]
-        if (audio) {
-          capturestream.addTrack(audio)
-        }
-      } catch (_) {}
-    }
-
-    return capturestream
   }
 
   function capturefromvideo(el) {
-    if (typeof el.captureStream === 'function') {
-      return el.captureStream()
+    if (typeof el.captureStream !== 'function') {
+      throw new Error('video.captureStream not supported')
     }
-    if (typeof el.webkitCaptureStream === 'function') {
-      return el.webkitCaptureStream()
+    el.muted = false
+    const stream = el.captureStream()
+    if (!stream || !stream.getVideoTracks().length) {
+      throw new Error('video.captureStream produced no video track')
     }
-    return capturefromcanvas(el)
+    if (!stream.getAudioTracks().length) {
+      wirecaptureaudio(el, stream)
+    }
+    if (!stream.getAudioTracks().length) {
+      throw new Error('video capture produced no audio track')
+    }
+    return stream
   }
 
   function waitfordownload(timeoutms) {
@@ -385,10 +371,11 @@
     playbackactive = true
     bindkeepalive(el)
     const stream = capturefromvideo(el)
-    if (!stream || !stream.getVideoTracks().length) {
-      throw new Error('playback produced no video track')
+    return {
+      stream: stream,
+      video: el,
+      usespreviewsource: Boolean(previewel && el === previewel),
     }
-    return { stream: stream, video: el }
   }
 
   async function stopplayback() {
@@ -396,8 +383,15 @@
   }
 
   global.mqplayback = {
+    attachpreview: attachpreview,
     startdownload: startdownload,
     startplayback: startplayback,
     stopplayback: stopplayback,
   }
+
+  void listen('mq-download-progress', function (event) {
+    if (typeof global.mqondownloadprogress === 'function') {
+      global.mqondownloadprogress(event.payload)
+    }
+  })
 })(typeof window !== 'undefined' ? window : globalThis)

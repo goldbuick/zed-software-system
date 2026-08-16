@@ -641,9 +641,7 @@ function memoryreadgadgetlayersbody(
   }
 
   // compose layers (tickers collected separately so layer cache hits cannot drop them)
-  under.push(
-    ...memoryconverttogadgetlayers(graphics, 0, underboard, DIR.UNDER),
-  )
+  under.push(...memoryconverttogadgetlayers(graphics, 0, underboard, DIR.UNDER))
   const multi = ispresent(overboard)
   layers.push(
     ...memoryconverttogadgetlayers(

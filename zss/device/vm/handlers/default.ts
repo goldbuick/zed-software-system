@@ -1,6 +1,7 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
 import {
+  bridgemediapanel,
   registercopy,
   vmcli,
   vmloader,
@@ -11,7 +12,6 @@ import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
-import { bridgemediapanel } from 'zss/device/api'
 import {
   mediapayloadwithmanage,
   mediarequiremanageonvm,

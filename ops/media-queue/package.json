@@ -1,21 +1,58 @@
 {
   "name": "zed-cafe-media-queue",
+  "productName": "Zed Cafe Media Queue",
   "private": true,
   "version": "1.12.19",
-  "description": "Tauri media-queue helper for zed.cafe",
+  "main": "src/main.cjs",
+  "description": "Electron media-queue helper for zed.cafe",
+  "author": "zed.cafe",
   "license": "MIT",
   "scripts": {
     "fetch-binaries": "node scripts/fetch-binaries.mjs",
     "verify-download": "node scripts/verify-download.mjs",
-    "stage-tauri-resources": "node scripts/stage-tauri-resources.mjs",
+    "stage-electron-resources": "node scripts/stage-electron-resources.mjs",
     "prestart": "node scripts/fetch-binaries.mjs",
-    "start": "tauri dev",
-    "predist": "node scripts/fetch-binaries.mjs && node scripts/stage-tauri-resources.mjs",
-    "dist": "tauri build",
-    "dist:mac": "tauri build",
-    "dist:win": "tauri build"
+    "start": "node scripts/run-electron.mjs",
+    "predist": "node scripts/fetch-binaries.mjs && node scripts/stage-electron-resources.mjs",
+    "dist": "node scripts/run-builder.mjs",
+    "dist:mac": "node scripts/run-builder.mjs --mac",
+    "dist:win": "node scripts/run-builder.mjs --win"
+  },
+  "build": {
+    "appId": "cafe.zed.media-queue",
+    "productName": "Zed Cafe Media Queue",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "ui/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "target": ["dmg"],
+      "icon": "resources/icons/icon.png",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "resources/icons/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2"
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
   }
 }

@@ -1,29 +1,17 @@
 import type { DataConnection, MediaConnection } from 'peerjs'
-import { apierror, apilog } from 'zss/device/api'
+import { apierror, apilog, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
-  mediaqueuecallmetadata,
   ismediaqueuecallmetadata,
+  mediaqueuecallmetadata,
 } from 'zss/feature/mediaqueue/callmetadata'
 import {
-  MEDIAQUEUE_PROTOCOL,
-  type MEDIAQUEUE_MESSAGE,
-  ismediaqueuemessage,
-} from 'zss/feature/mediaqueue/protocol'
-import {
-  mediaqueuecurrenturl,
-  mediaqueueshiftcurrent,
-  mediaqueuereadstate,
-} from 'zss/feature/mediaqueue/queue'
-import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
-import { mediaqueueattachvideosink } from 'zss/feature/mediaqueue/sinkregistry'
-import {
   mediaqueueclearlistenstate,
+  mediaqueuehelperconnected,
+  mediaqueueislistening,
   mediaqueuereadboundboardid,
   mediaqueuereadhelperpeerid,
   mediaqueuereadlistenplayer,
-  mediaqueueislistening,
-  mediaqueuehelperconnected,
   mediaqueuesethasactiveroomstream,
   mediaqueuesethelperconnected,
   mediaqueuesethelperpeerid,
@@ -31,6 +19,19 @@ import {
   mediaqueuesetlistening,
   mediaqueuesetlistenplayer,
 } from 'zss/feature/mediaqueue/listenstate'
+import {
+  type MEDIAQUEUE_MESSAGE,
+  MEDIAQUEUE_PROTOCOL,
+  ismediaqueuemessage,
+} from 'zss/feature/mediaqueue/protocol'
+import {
+  mediaqueuecurrenturl,
+  mediaqueuereadstate,
+  mediaqueueshiftcurrent,
+} from 'zss/feature/mediaqueue/queue'
+import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
+import { mediaqueueattachvideosink } from 'zss/feature/mediaqueue/sinkregistry'
+import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
   netterminalmediacall,
@@ -40,8 +41,8 @@ import {
   readpeerroster,
 } from 'zss/feature/netterminal'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadplayersonboard } from 'zss/memory/boardaccess'
+import { memoryreadboardbyaddress } from 'zss/memory/boards'
 
 const MEDIAQUEUE_PEER_LABEL = 'mediaqueue'
 
@@ -60,7 +61,7 @@ function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
 
 function mediaqueueadvanceafterplayback() {
   mediaqueueshiftcurrent()
-  mediaqueuepushqueuesnapshot()
+  mediaqueuepushqueuesnapshot(true)
   const listenplayer = mediaqueuereadlistenplayer()
   if (!listenplayer) {
     return
@@ -72,7 +73,7 @@ function mediaqueueadvanceafterplayback() {
   }
 }
 
-export function mediaqueuepushqueuesnapshot() {
+export function mediaqueuepushqueuesnapshot(gotoplay = false) {
   const state = mediaqueuereadstate()
   sendtohelper({
     type: 'mediaqueue:queue',
@@ -80,7 +81,7 @@ export function mediaqueuepushqueuesnapshot() {
     index: state.index,
   })
   const url = mediaqueuecurrenturl()
-  if (url) {
+  if (gotoplay && url) {
     sendtohelper({
       type: 'mediaqueue:goto',
       index: state.index,
@@ -235,6 +236,32 @@ function handleinboundcall(
   })
 }
 
+function mediaqueuestatusdetail(detail?: string): string {
+  if (!detail) {
+    return ''
+  }
+  const trimmed = detail.trim()
+  if (!trimmed) {
+    return ''
+  }
+  if (trimmed.includes('://')) {
+    return ` ${trimmed}`
+  }
+  const slash = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'))
+  if (slash >= 0) {
+    return ` ${trimmed.slice(slash + 1)}`
+  }
+  return ` ${trimmed}`
+}
+
+function mediaqueueworkstatus(label: string) {
+  const player = mediaqueuereadlistenplayer()
+  if (!player) {
+    return
+  }
+  workstatus(SOFTWARE, player, label)
+}
+
 function handlehelperdata(data: unknown) {
   if (!ismediaqueuemessage(data)) {
     return
@@ -247,22 +274,31 @@ function handlehelperdata(data: unknown) {
           mediaqueuereadlistenplayer(),
           `mediaqueue helper connected (${data.peerid})`,
         )
-        mediaqueuepushqueuesnapshot()
+        mediaqueuepushqueuesnapshot(true)
         mediaqueuerequesthelpercall()
       }
       break
     case 'mediaqueue:status':
       if (mediaqueuereadlistenplayer()) {
-        const detail = data.detail ? ` ${data.detail}` : ''
+        const detail = mediaqueuestatusdetail(data.detail)
         const player = mediaqueuereadlistenplayer()
+        const worklabel = mediaqueuestatusworklabel(data.status, data.detail)
+        if (worklabel || data.status === 'playing') {
+          mediaqueueworkstatus(worklabel)
+        }
         if (data.status === 'waiting-for-url') {
           apilog(SOFTWARE, player, 'mediaqueue helper: waiting for queue URL')
         } else if (data.status === 'downloading') {
           apilog(SOFTWARE, player, `mediaqueue helper: downloading${detail}`)
+        } else if (data.status === 'extracting') {
+          apilog(SOFTWARE, player, `mediaqueue helper: extracting${detail}`)
         } else if (data.status === 'download-progress') {
           const parts = (data.detail || '').split('|')
           const pct = Number(parts[0])
-          if (Number.isFinite(pct)) {
+          if (
+            Number.isFinite(pct) &&
+            (pct === 0 || pct >= 99 || pct % 5 === 0)
+          ) {
             const eta = parts[1] ? ` eta ${parts[1]}` : ''
             apilog(
               SOFTWARE,
@@ -270,6 +306,8 @@ function handlehelperdata(data: unknown) {
               `mediaqueue helper: download ${Math.round(pct)}%${eta}`,
             )
           }
+        } else if (data.status === 'transcoding') {
+          apilog(SOFTWARE, player, 'mediaqueue helper: processing')
         } else if (data.status === 'buffering') {
           apilog(SOFTWARE, player, `mediaqueue helper: buffering${detail}`)
         } else if (data.status === 'playback-ended') {
@@ -278,33 +316,19 @@ function handlehelperdata(data: unknown) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'download-failed') {
-          apierror(
-            SOFTWARE,
-            player,
-            'media',
-            `helper download failed${detail}`,
-          )
+          apierror(SOFTWARE, player, 'media', `helper download failed${detail}`)
           if (mediaqueueislistening() && mediaqueuehelperconnected()) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'playback-failed') {
-          apierror(
-            SOFTWARE,
-            player,
-            'media',
-            `helper playback failed${detail}`,
-          )
+          apierror(SOFTWARE, player, 'media', `helper playback failed${detail}`)
           if (mediaqueueislistening() && mediaqueuehelperconnected()) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'playing') {
           apilog(SOFTWARE, player, `mediaqueue helper: playing${detail}`)
         } else {
-          apilog(
-            SOFTWARE,
-            player,
-            `mediaqueue helper: ${data.status}${detail}`,
-          )
+          apilog(SOFTWARE, player, `mediaqueue helper: ${data.status}${detail}`)
         }
       }
       break
@@ -328,7 +352,7 @@ function wirehelperconnection(conn: DataConnection) {
       role: 'cafe',
       peerid: readnetworkpeerid() ?? '',
     })
-    mediaqueuepushqueuesnapshot()
+    mediaqueuepushqueuesnapshot(true)
     mediaqueuerequesthelpercall()
   })
   conn.on('close', () => {
@@ -430,12 +454,7 @@ export function mediaqueuelisten(
   if (ispresent(conn)) {
     wirehelperconnection(conn)
   } else {
-    apierror(
-      SOFTWARE,
-      player,
-      'media',
-      'could not open helper data connection',
-    )
+    apierror(SOFTWARE, player, 'media', 'could not open helper data connection')
     mediaqueueclearlistenstate()
   }
 }

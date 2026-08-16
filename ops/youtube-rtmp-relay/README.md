@@ -2,7 +2,7 @@
 
 Local tray app that accepts **WHIP** from [zed.cafe](https://zed.cafe) and pushes **RTMPS** to YouTube. The YouTube stream key stays in this app only.
 
-Packaged with **Tauri v2** (`src-tauri/`). Shared desktop stack with the media-queue helper ([design](../docs/local-media-helpers-tauri.mdx)).
+Packaged with **Electron** (`src/main.cjs`). Shared desktop stack with the media-queue helper ([design](../docs/local-media-helpers-tauri.mdx)).
 
 ## Download
 
@@ -40,7 +40,7 @@ yarn fetch-binaries
 yarn start
 ```
 
-Requires **openssl** on PATH once (generates localhost SAN cert) and Rust + [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/). `yarn install` pulls `@tauri-apps/cli` (no global `cargo tauri` needed).
+Requires **openssl** on PATH once (generates localhost SAN cert).
 
 ## Build installers
 
@@ -51,7 +51,7 @@ yarn dist:mac   # on macOS
 yarn dist:win   # on Windows
 ```
 
-Pinned MediaMTX / ffmpeg binaries are fetched into `vendor/` (gitignored) at build time.
+Pinned MediaMTX / ffmpeg binaries are fetched into `vendor/` (gitignored) at build time. Installers land in `dist/`.
 
 ## Visuals
 

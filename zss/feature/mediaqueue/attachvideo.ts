@@ -1,9 +1,13 @@
+import {
+  mediaqueueattachremoteaudio,
+  mediaqueueclearremoteaudio,
+  mediaqueuewireaudiogestureretry,
+} from 'zss/feature/mediaqueue/boardtvaudio'
 import { mediaqueueregistervideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 
 let remotevideo: HTMLVideoElement | undefined
-let remoteaudio: HTMLAudioElement | undefined
 let registered = false
 
 function clearremotevideo(peerkey: string) {
@@ -12,11 +16,7 @@ function clearremotevideo(peerkey: string) {
     remotevideo.remove()
     remotevideo = undefined
   }
-  if (ispresent(remoteaudio)) {
-    remoteaudio.srcObject = null
-    remoteaudio.remove()
-    remoteaudio = undefined
-  }
+  mediaqueueclearremoteaudio()
   useMedia.getState().setscreen(peerkey, undefined)
 }
 
@@ -36,15 +36,7 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
     remotevideo = video
     useMedia.getState().setscreen(peerkey, video)
   }
-  if (audiotracks.length > 0) {
-    const audio = document.createElement('audio')
-    audio.autoplay = true
-    audio.srcObject = new MediaStream(audiotracks)
-    void audio.play().catch(() => {
-      // Autoplay may wait for a user gesture after #media bind.
-    })
-    remoteaudio = audio
-  }
+  mediaqueueattachremoteaudio(audiotracks)
 }
 
 /** Wire MediaStream -> useMedia.screen + speaker audio. Call once from BoardTvSink mount. */
@@ -53,6 +45,7 @@ export function mediaqueueensurevideosink() {
     return
   }
   registered = true
+  mediaqueuewireaudiogestureretry()
   mediaqueueregistervideosink((peerkey, stream) => {
     if (!ispresent(stream)) {
       clearremotevideo(peerkey)

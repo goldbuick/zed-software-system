@@ -1,6 +1,6 @@
 # Desktop helper signing
 
-Windows installers for the Tauri desktop helpers ship on GitHub Releases (`v*` tags). macOS builds are unsigned until an Apple Developer ID is configured.
+Windows installers for the Electron desktop helpers ship on GitHub Releases (`v*` tags). macOS builds are unsigned until an Apple Developer ID is configured.
 
 ## Windows (SignPath OSS)
 
@@ -16,7 +16,7 @@ Free code signing for eligible open-source projects: [SignPath open source](http
 2. Point at `https://github.com/goldbuick/zed-software-system`
 3. Describe both helpers:
    - **YouTube relay** (`ops/youtube-rtmp-relay`) -- WHIP to RTMPS local tray app
-   - **Media queue** (`ops/media-queue`) -- PeerJS browser capture for `#media` board TV
+   - **Media queue** (`ops/media-queue`) -- PeerJS `video.captureStream()` for `#media` board TV
 4. Note SmartScreen / download warnings on unsigned Windows `.exe` installers
 5. Confirm OSI license, public repo, free GitHub Releases distribution
 
@@ -82,7 +82,7 @@ signtool verify /pa /v "Zed Cafe Media Queue_*_x64-setup.exe"
 | `relay-windows` | `relay:build:desktop:win` | `youtube-relay-nsis` |
 | `mediaqueue-windows` | `mediaqueue:build:desktop:win` | `media-queue-nsis` |
 
-Each job builds the Tauri NSIS installer, uploads the unsigned `.exe` as a named workflow artifact, and when secrets are set submits to SignPath (`signpath/github-action-submit-signing-request@v2`). The signed `.exe` is attached to the GitHub Release.
+Each job builds the Electron NSIS installer, uploads the unsigned `.exe` as a named workflow artifact, and when secrets are set submits to SignPath (`signpath/github-action-submit-signing-request@v2`). The signed `.exe` is attached to the GitHub Release.
 
 ## macOS
 

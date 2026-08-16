@@ -259,17 +259,17 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run relay:build` | Install youtube-rtmp-relay deps and fetch MediaMTX/ffmpeg binaries | `deploy` | — | — |
-| `yarn task run relay:build:desktop` | Build YouTube relay desktop installers (Tauri v2) for current host OS | `deploy` | `relay:build` | — |
-| `yarn task run relay:build:desktop:mac` | Build YouTube relay macOS dmg (Tauri v2) | `deploy` | `relay:build` | — |
-| `yarn task run relay:build:desktop:win` | Build YouTube relay Windows nsis installer (Tauri v2) | `deploy` | `relay:build` | — |
+| `yarn task run relay:build:desktop` | Build YouTube relay desktop installers (Electron) for current host OS | `deploy` | `relay:build` | — |
+| `yarn task run relay:build:desktop:mac` | Build YouTube relay macOS dmg (Electron) | `deploy` | `relay:build` | — |
+| `yarn task run relay:build:desktop:win` | Build YouTube relay Windows nsis installer (Electron) | `deploy` | `relay:build` | — |
 
 
 ## mediaqueue
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run mediaqueue:build` | Install media-queue Tauri helper deps (@tauri-apps/cli) | `deploy` | — | — |
-| `yarn task run mediaqueue:build:desktop` | Build media-queue desktop installers (Tauri v2) for current host OS | `deploy` | `mediaqueue:build` | — |
-| `yarn task run mediaqueue:build:desktop:mac` | Build media-queue macOS dmg (Tauri v2) | `deploy` | `mediaqueue:build` | — |
-| `yarn task run mediaqueue:build:desktop:win` | Build media-queue Windows nsis installer (Tauri v2) | `deploy` | `mediaqueue:build` | — |
-| `yarn task run mediaqueue:dev` | Run media-queue Tauri helper in dev mode | `dev` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:build` | Install media-queue Electron helper deps | `deploy` | — | — |
+| `yarn task run mediaqueue:build:desktop` | Build media-queue desktop installers (Electron) for current host OS | `deploy` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:build:desktop:mac` | Build media-queue macOS dmg (Electron) | `deploy` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:build:desktop:win` | Build media-queue Windows nsis installer (Electron) | `deploy` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:dev` | Run media-queue Electron helper in dev mode | `dev` | `mediaqueue:build` | — |

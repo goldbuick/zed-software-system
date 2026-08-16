@@ -15,7 +15,7 @@
       <h1>zed.cafe <span>Media Queue</span></h1>
       <div class="sub">PeerJS helper for cafe #media board TV</div>
 
-      <label for="localpeer">Your peer id (cafe: #media &lt;peerid&gt;)</label>
+      <label for="localpeer">Your peer id</label>
       <div class="peerbox">
         <input
           id="localpeer"
@@ -42,6 +42,16 @@
       <label for="queue">queue (from cafe)</label>
       <textarea id="queue" readonly></textarea>
 
+      <label for="cookiesbrowser">youtube cookies</label>
+      <select id="cookiesbrowser">
+        <option value="">off</option>
+        <option value="safari">safari</option>
+        <option value="chrome">chrome</option>
+        <option value="firefox">firefox</option>
+        <option value="brave">brave</option>
+        <option value="edge">edge</option>
+      </select>
+
       <div class="row">
         <button id="stopcall" class="danger" type="button">Stop call</button>
         <button id="cleardownloads" type="button" class="action">
@@ -58,6 +68,7 @@
       </div>
     </div>
     <script src="./vendor/peerjs.min.js"></script>
+    <script src="./peerserver.js"></script>
     <script src="./playback.js"></script>
     <script src="./app.js"></script>
   </body>

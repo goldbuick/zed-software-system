@@ -1,6 +1,6 @@
 # Media queue (cafe)
 
-Receive path for the **Zed Cafe Media Queue** Tauri helper.
+Receive path for the **Zed Cafe Media Queue** Electron helper.
 
 | Module | Role |
 |--------|------|

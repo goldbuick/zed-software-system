@@ -9,6 +9,7 @@
     link: document.getElementById('link'),
     detail: document.getElementById('detail'),
     queue: document.getElementById('queue'),
+    cookiesbrowser: document.getElementById('cookiesbrowser'),
     stopcall: document.getElementById('stopcall'),
     cleardownloads: document.getElementById('cleardownloads'),
     preview: document.getElementById('preview'),
@@ -26,9 +27,66 @@
   let localpeerid = ''
   let playbackstarted = false
   let pendinggoto = false
+  let currentplaybackurl = ''
   let cachebytes = 0
   let downloadinflight = false
   let lastdownloadpct = -1
+  let lastdownloadlabel = ''
+  let transcodepulsetimer = null
+  let downloadpolltimer = null
+
+  function cleardownloadpoll() {
+    if (downloadpolltimer) {
+      clearInterval(downloadpolltimer)
+      downloadpolltimer = null
+    }
+  }
+
+  function startdownloadpoll() {
+    cleardownloadpoll()
+    downloadpolltimer = setInterval(function () {
+      if (!downloadinflight) {
+        cleardownloadpoll()
+        return
+      }
+      void invoke('get_media_download_state')
+        .then(function (state) {
+          if (!downloadinflight || !state) {
+            return
+          }
+          const phase = String(
+            state && state.phase ? state.phase : 'downloading',
+          ).toLowerCase()
+          handledownloadprogress({
+            percent: Number(state.percent),
+            eta: '',
+            status: phase === 'downloading' ? 'downloading' : phase,
+          })
+        })
+        .catch(function () {})
+    }, 200)
+  }
+
+  function cleardownloadpulse() {
+    if (transcodepulsetimer) {
+      clearInterval(transcodepulsetimer)
+      transcodepulsetimer = null
+    }
+  }
+
+  function ensuretranscodepulse() {
+    if (transcodepulsetimer) {
+      return
+    }
+    transcodepulsetimer = setInterval(function () {
+      if (!downloadinflight) {
+        cleardownloadpulse()
+        return
+      }
+      const pct = lastdownloadpct >= 0 ? lastdownloadpct : 99
+      sendstatus('transcoding', String(pct))
+    }, 1500)
+  }
 
   function invoke(cmd, args) {
     if (!window.__TAURI__ || !window.__TAURI__.core) {
@@ -37,8 +95,60 @@
     return window.__TAURI__.core.invoke(cmd, args || {})
   }
 
-  const MAIN_HEIGHT_IDLE = 464
-  const MAIN_HEIGHT_PREVIEW = 604
+  function mediabasename(path) {
+    if (!path) {
+      return ''
+    }
+    const parts = String(path).split(/[/\\]/)
+    return parts[parts.length - 1] || path
+  }
+
+  function shortenerr(message) {
+    const text = String(message)
+    const lower = text.toLowerCase()
+    if (lower.includes('sign in') || lower.includes('cookies-from-browser')) {
+      return 'youtube needs browser login -- pick youtube cookies below'
+    }
+    if (text.length > 140) {
+      return text.slice(0, 137) + '...'
+    }
+    return text
+  }
+
+  function defaultcookiesbrowser() {
+    if (/Mac/i.test(navigator.userAgent || '')) {
+      return 'safari'
+    }
+    if (/Win/i.test(navigator.userAgent || '')) {
+      return 'chrome'
+    }
+    return 'chrome'
+  }
+
+  async function synccookiessetting() {
+    if (!els.cookiesbrowser) {
+      return
+    }
+    const browser = els.cookiesbrowser.value || ''
+    try {
+      await invoke('set_media_cookies_browser', { browser: browser })
+      localStorage.setItem('mq-cookies-browser', browser)
+    } catch (_) {}
+    schedulefitwindow()
+  }
+
+  function initcookiessetting() {
+    if (!els.cookiesbrowser) {
+      return
+    }
+    const saved = localStorage.getItem('mq-cookies-browser')
+    els.cookiesbrowser.value =
+      saved != null ? saved : defaultcookiesbrowser()
+    els.cookiesbrowser.addEventListener('change', function () {
+      void synccookiessetting()
+    })
+    void synccookiessetting()
+  }
 
   function formatbytes(bytes) {
     if (!bytes || bytes < 1) {
@@ -63,6 +173,7 @@
         ? 'Clear downloads (' + formatbytes(cachebytes) + ')'
         : 'Clear downloads'
     els.cleardownloads.textContent = label
+    schedulefitwindow()
   }
 
   async function refreshcachebytes() {
@@ -80,6 +191,7 @@
     els.link.textContent = text
     els.detail.textContent = detail || ''
     els.statusbox.classList.toggle('error', text === 'error')
+    schedulefitwindow()
   }
 
   function renderqueue() {
@@ -92,6 +204,7 @@
         })
         .join('\n')
     }
+    schedulefitwindow()
   }
 
   function send(msg) {
@@ -114,26 +227,55 @@
     if (!downloadinflight) {
       return
     }
-    const percent = payload && payload.percent ? payload.percent : 0
-    const eta = payload && payload.eta ? payload.eta : ''
+    const raw = payload && payload.payload ? payload.payload : payload
+    const percent = Number(raw && raw.percent != null ? raw.percent : 0)
+    const eta = raw && raw.eta ? raw.eta : ''
+    const rawstatus = raw && raw.status ? raw.status : 'downloading'
     const phase =
-      percent >= 99.5
-        ? 'transcoding'
-        : payload && payload.status
-          ? payload.status
-          : 'downloading'
-    const line = formatdownloadprogress(percent, eta, phase)
-    setlink(phase, line)
+      rawstatus === 'extracting'
+        ? 'extracting'
+        : percent >= 99.5 ||
+            rawstatus === 'processing' ||
+            rawstatus === 'transcoding'
+          ? 'transcoding'
+          : rawstatus === 'downloading'
+            ? 'downloading'
+            : rawstatus
     const pct = Math.round(percent || 0)
-    if (pct !== lastdownloadpct && (pct - lastdownloadpct >= 5 || pct >= 99)) {
-      lastdownloadpct = pct
-      const detail = String(pct) + (eta ? '|' + eta : '')
-      sendstatus('download-progress', detail)
+    const detail =
+      phase === 'extracting'
+        ? eta || 'starting'
+        : formatdownloadprogress(percent, eta, phase)
+    const dedupekey = phase + '|' + detail
+    if (dedupekey === lastdownloadlabel) {
+      return
     }
+    lastdownloadlabel = dedupekey
+    lastdownloadpct = pct
+    setlink(phase, detail)
+    if (phase === 'transcoding') {
+      ensuretranscodepulse()
+      sendstatus('transcoding', String(pct))
+      return
+    }
+    cleardownloadpulse()
+    if (phase === 'extracting') {
+      sendstatus('extracting', eta || 'starting')
+      return
+    }
+    const progressdetail = String(pct) + (eta ? '|' + eta : '')
+    sendstatus('download-progress', progressdetail)
   }
 
   function sendstatus(status, detail) {
     send({ type: 'mediaqueue:status', status: status, detail: detail })
+  }
+
+  function measurecontentheight() {
+    if (!els.frame) {
+      return 0
+    }
+    return Math.ceil(els.frame.getBoundingClientRect().height)
   }
 
   let fitwindowtimer = null
@@ -157,14 +299,25 @@
     if (!window.__TAURI__ || !window.__TAURI__.core) {
       return
     }
-    const height = els.preview.classList.contains('has-stream')
-      ? MAIN_HEIGHT_PREVIEW
-      : MAIN_HEIGHT_IDLE
+    const contentheight = measurecontentheight()
+    if (contentheight < 1) {
+      return
+    }
     try {
-      await invoke('resize_main_window', { height: height })
+      await invoke('resize_main_window', { contentHeight: contentheight })
     } catch (_) {
       // Browser-only preview.
     }
+  }
+
+  function startwindowfitobserver() {
+    if (!els.frame || typeof ResizeObserver !== 'function') {
+      return
+    }
+    const observer = new ResizeObserver(function () {
+      schedulefitwindow()
+    })
+    observer.observe(els.frame)
   }
 
   function stopmediastream() {
@@ -190,9 +343,29 @@
       await window.mqplayback.stopplayback()
       playbackstarted = false
     }
+    currentplaybackurl = ''
     if (hadcall) {
       sendstatus('call-stopped')
     }
+  }
+
+  function wireplaybackended(sourcevideo) {
+    if (!sourcevideo) {
+      return
+    }
+    if (sourcevideo.__mqonended) {
+      sourcevideo.removeEventListener('ended', sourcevideo.__mqonended)
+      sourcevideo.__mqonended = null
+    }
+    function onended() {
+      sourcevideo.removeEventListener('ended', onended)
+      sourcevideo.__mqonended = null
+      sendstatus('playback-ended', '')
+      void endcall()
+      setlink('connected', 'playback ended')
+    }
+    sourcevideo.__mqonended = onended
+    sourcevideo.addEventListener('ended', onended)
   }
 
   async function startplaybackandcall(url) {
@@ -213,36 +386,46 @@
       return
     }
     let path = ''
+    let playback = null
     try {
       downloadinflight = true
       lastdownloadpct = -1
-      setlink('downloading', url)
-      sendstatus('downloading', url)
+      lastdownloadlabel = ''
+      setlink('extracting', 'starting')
+      sendstatus('extracting', 'starting')
+      startdownloadpoll()
       const ready = await window.mqplayback.startdownload(url)
       path = ready && ready.path ? ready.path : ''
-      setlink('buffering', path)
-      sendstatus('buffering', path)
-      const playback = await window.mqplayback.startplayback(path)
+      handledownloadprogress({ percent: 100, status: 'downloading' })
+      sendstatus('download-progress', '100|')
+      const shortpath = mediabasename(path)
+      setlink('buffering', shortpath)
+      sendstatus('buffering', shortpath)
+      playback = await window.mqplayback.startplayback(path)
       mediastream = playback.stream
     } catch (err) {
       const phase = path ? 'playback-failed' : 'download-failed'
-      setlink('error', phase + ': ' + err)
-      sendstatus(phase, String(err))
+      const message = shortenerr(err)
+      setlink('error', phase + ': ' + message)
+      sendstatus(phase, message)
+      await endcall()
       return
     } finally {
       downloadinflight = false
       lastdownloadpct = -1
+      cleardownloadpulse()
+      cleardownloadpoll()
     }
     playbackstarted = true
-    setpreviewstream(mediastream)
+    currentplaybackurl = url
+    if (playback && playback.usespreviewsource) {
+      els.preview.classList.add('has-stream')
+      schedulefitwindow()
+    } else {
+      setpreviewstream(mediastream)
+    }
     void refreshcachebytes()
-    mediastream.getVideoTracks().forEach(function (track) {
-      track.addEventListener('ended', function () {
-        sendstatus('playback-ended', '')
-        void endcall()
-        setlink('connected', 'playback ended')
-      })
-    })
+    wireplaybackended(playback && playback.video ? playback.video : null)
     mediacall = peer.call(cafeid, mediastream, {
       metadata: { kind: 'mediaqueue', source: 'helper' },
     })
@@ -306,6 +489,13 @@
       case 'mediaqueue:goto':
         queueindex = typeof data.index === 'number' ? data.index : queueindex
         renderqueue()
+        if (
+          playbackstarted &&
+          data.url &&
+          data.url === currentplaybackurl
+        ) {
+          break
+        }
         void maybeautostartaftergoto(data.url)
         break
       case 'mediaqueue:requestcall':
@@ -374,12 +564,16 @@
   function startpeer() {
     destroypeer()
     setlink('starting', PEER_HOST)
-    peer = new Peer({
-      host: PEER_HOST,
-      secure: true,
-      port: 443,
-      debug: 1,
-    })
+    peer = new Peer(
+      typeof window.mqpeerserveroptions === 'function'
+        ? window.mqpeerserveroptions({ debug: 1 })
+        : {
+            host: PEER_HOST,
+            secure: true,
+            port: 443,
+            debug: 1,
+          },
+    )
     peer.on('open', function (id) {
       localpeerid = id
       els.localpeer.value = id
@@ -440,6 +634,12 @@
   }
 
   function bootfit() {
+    window.mqondownloadprogress = handledownloadprogress
+    if (window.mqplayback && window.mqplayback.attachpreview) {
+      window.mqplayback.attachpreview(els.preview)
+    }
+    startwindowfitobserver()
+    initcookiessetting()
     renderqueue()
     startpeer()
     void refreshcachebytes()

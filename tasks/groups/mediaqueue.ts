@@ -3,10 +3,7 @@ import type { TaskDef } from '../types'
 
 const MEDIAQUEUE_DIR = 'ops/media-queue'
 
-async function runyarn(
-  ctx: { root: string },
-  args: string[],
-): Promise<number> {
+async function runyarn(ctx: { root: string }, args: string[]): Promise<number> {
   const { spawnSync } = await import('node:child_process')
   const path = await import('node:path')
   const cwd = path.join(ctx.root, MEDIAQUEUE_DIR)
@@ -27,7 +24,7 @@ async function runyarn(
 
 export const MEDIAQUEUE_TASKS: TaskDef[] = [
   def('mediaqueue:build', {
-    description: 'Install media-queue Tauri helper deps (@tauri-apps/cli)',
+    description: 'Install media-queue Electron helper deps',
     tags: ['deploy'],
     run: handler(async (ctx) => {
       return runyarn(ctx, ['install'])
@@ -35,7 +32,7 @@ export const MEDIAQUEUE_TASKS: TaskDef[] = [
   }),
   def('mediaqueue:build:desktop', {
     description:
-      'Build media-queue desktop installers (Tauri v2) for current host OS',
+      'Build media-queue desktop installers (Electron) for current host OS',
     tags: ['deploy'],
     deps: ['mediaqueue:build'],
     run: handler(async (ctx) => {
@@ -54,7 +51,7 @@ export const MEDIAQUEUE_TASKS: TaskDef[] = [
     }),
   }),
   def('mediaqueue:build:desktop:mac', {
-    description: 'Build media-queue macOS dmg (Tauri v2)',
+    description: 'Build media-queue macOS dmg (Electron)',
     tags: ['deploy'],
     deps: ['mediaqueue:build'],
     run: handler(async (ctx) => {
@@ -62,7 +59,7 @@ export const MEDIAQUEUE_TASKS: TaskDef[] = [
     }),
   }),
   def('mediaqueue:build:desktop:win', {
-    description: 'Build media-queue Windows nsis installer (Tauri v2)',
+    description: 'Build media-queue Windows nsis installer (Electron)',
     tags: ['deploy'],
     deps: ['mediaqueue:build'],
     run: handler(async (ctx) => {
@@ -70,7 +67,7 @@ export const MEDIAQUEUE_TASKS: TaskDef[] = [
     }),
   }),
   def('mediaqueue:dev', {
-    description: 'Run media-queue Tauri helper in dev mode',
+    description: 'Run media-queue Electron helper in dev mode',
     tags: ['dev'],
     deps: ['mediaqueue:build'],
     run: handler(async (ctx) => {

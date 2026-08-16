@@ -618,11 +618,7 @@ const bridge = createdevice('bridge', [], (message) => {
         apierror(bridge, message.player, 'bridge', 'media panel: need path')
         break
       }
-      handlemediapanel(
-        bridge,
-        { ...message, data: payload.data },
-        payload.path,
-      )
+      handlemediapanel(bridge, { ...message, data: payload.data }, payload.path)
       break
     }
   }

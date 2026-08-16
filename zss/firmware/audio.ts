@@ -15,6 +15,7 @@ import {
   synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { mediaqueuesetplayvolume } from 'zss/feature/mediaqueue/boardtvaudio'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
@@ -356,6 +357,7 @@ export const AUDIO_FIRMWARE = createfirmware()
       READ_CONTEXT.board?.id ?? '',
       volume,
     )
+    mediaqueuesetplayvolume(volume)
     storevolumeconfig('vol', volume)
     return 0
   })

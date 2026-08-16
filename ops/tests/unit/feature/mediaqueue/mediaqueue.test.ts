@@ -7,9 +7,11 @@ import {
   BOARD_TV_COLS,
   BOARD_TV_ROWS,
   boardtvisupright,
+  boardtvlayerz,
 } from 'zss/feature/mediaqueue/constants'
 import {
   mediaqueueclearlistenstate,
+  mediaqueuesethelperconnected,
   mediaqueuesetlistenboardid,
   mediaqueuesetlistening,
 } from 'zss/feature/mediaqueue/listenstate'
@@ -29,9 +31,17 @@ import {
   mediaqueueskip,
 } from 'zss/feature/mediaqueue/queue'
 import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
-import { mediaqueuenormalizeurl } from 'zss/feature/mediaqueue/urlnormalize'
+import { mediaqueuenormalizeurl, mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
+import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 
 describe('mediaqueue url normalize', () => {
+  it('detects queue URLs vs peer ids', () => {
+    expect(mediaisqueueurl('https://www.youtube.com/watch?v=abc')).toBe(true)
+    expect(mediaisqueueurl('http://a.example/x')).toBe(true)
+    expect(mediaisqueueurl('aa88624b-b68c-449f-bdfd-1bb319e48108')).toBe(false)
+    expect(mediaisqueueurl('add')).toBe(false)
+  })
+
   it('collapses youtube watch and youtu.be to the same key', () => {
     const a = mediaqueuenormalizeurl(
       'https://www.youtube.com/watch?v=abc123&utm_source=x',
@@ -129,25 +139,58 @@ describe('mediaqueue board tv', () => {
     mediaqueueclearlistenstate()
   })
 
-  it('boardtvisupright is true only for fpv', () => {
+  it('boardtvisupright is true for fpv and iso', () => {
     expect(boardtvisupright('fpv')).toBe(true)
+    expect(boardtvisupright('iso')).toBe(true)
     expect(boardtvisupright('flat')).toBe(false)
-    expect(boardtvisupright('iso')).toBe(false)
     expect(boardtvisupright('mode7')).toBe(false)
   })
 
-  it('boardtvshouldshow requires listening board match and video', () => {
+  it('boardtvlayerz sits above floor and below sprites', () => {
+    expect(boardtvlayerz('flat', 28)).toBe(2)
+    expect(boardtvlayerz('iso', 28)).toBe(0.25)
+    expect(boardtvlayerz('fpv', 28)).toBe(0.25)
+    expect(boardtvlayerz('mode7', 28)).toBeCloseTo(1.4)
+  })
+
+  it('boardtvshouldshow matches bound board when listening', () => {
     mediaqueuesetlistening(true)
     mediaqueuesetlistenboardid('board-a')
+    mediaqueuesethelperconnected(true)
     expect(boardtvshouldshow('board-a', true)).toBe(true)
     expect(boardtvshouldshow('board-b', true)).toBe(false)
+    expect(boardtvshouldshow('board-a', false)).toBe(true)
+    mediaqueuesethelperconnected(false)
     expect(boardtvshouldshow('board-a', false)).toBe(false)
+    expect(boardtvshouldshow('board-a', true)).toBe(true)
+  })
+
+  it('boardtvshouldshow shows room stream without listen bind', () => {
+    mediaqueueclearlistenstate()
+    expect(boardtvshouldshow('any-board', true)).toBe(true)
+    expect(boardtvshouldshow('any-board', false)).toBe(false)
   })
 
   it('uses landscape tv size constants', () => {
     expect(BOARD_TV_COLS).toBe(40)
     expect(BOARD_TV_ROWS).toBe(15)
     expect(BOARD_TV_COLS).toBeGreaterThan(BOARD_TV_ROWS)
+  })
+})
+
+describe('mediaqueue workstatus labels', () => {
+  it('maps helper status to badge text', () => {
+    expect(mediaqueuestatusworklabel('downloading')).toBe('media fetch')
+    expect(mediaqueuestatusworklabel('extracting')).toBe('media extract')
+    expect(mediaqueuestatusworklabel('download-progress', '42|1:23')).toBe(
+      'media 42%',
+    )
+    expect(mediaqueuestatusworklabel('download-progress', '99|')).toBe(
+      'media process',
+    )
+    expect(mediaqueuestatusworklabel('transcoding')).toBe('media process')
+    expect(mediaqueuestatusworklabel('buffering')).toBe('media buffer')
+    expect(mediaqueuestatusworklabel('playing')).toBe('')
   })
 })
 

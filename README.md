@@ -34,4 +34,4 @@ Production build: `yarn task run cafe:build` (Vite app + Blume docs at `cafe/dis
 
 ## Desktop helpers (Releases)
 
-Tauri installers for the YouTube relay and media-queue helper attach to [GitHub Releases](https://github.com/goldbuick/zed-software-system/releases) on `v*` tags. Windows signing: free code signing provided by SignPath.io, certificate by SignPath Foundation ([setup](ops/docs/desktop-signing.md)).
+Electron installers for the YouTube relay and media-queue helper attach to [GitHub Releases](https://github.com/goldbuick/zed-software-system/releases) on `v*` tags. Windows signing: free code signing provided by SignPath.io, certificate by SignPath Foundation ([setup](ops/docs/desktop-signing.md)).

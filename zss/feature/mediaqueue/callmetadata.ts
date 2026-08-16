@@ -18,8 +18,7 @@ export function ismediaqueuecallmetadata(
   const kind = (metadata as { kind?: unknown }).kind
   const source = (metadata as { source?: unknown }).source
   return (
-    kind === MEDIAQUEUE_CALL_KIND &&
-    (source === 'helper' || source === 'room')
+    kind === MEDIAQUEUE_CALL_KIND && (source === 'helper' || source === 'room')
   )
 }
 

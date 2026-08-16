@@ -1,0 +1,175 @@
+'use strict'
+
+const electron = require('electron')
+const fs = require('node:fs')
+const path = require('node:path')
+const { DownloadManager } = require('./lib/download.cjs')
+
+const { app, BrowserWindow, ipcMain, clipboard } = electron
+
+const MAIN_WINDOW_WIDTH = 480
+
+let mainwin = null
+let windowchrome = 0
+let downloads = null
+let mediacachedir = ''
+
+function iconpath() {
+  return path.join(__dirname, '..', 'resources', 'icons', 'icon.png')
+}
+
+function resourceroot() {
+  return app.isPackaged ? process.resourcesPath : app.getAppPath()
+}
+
+function emitto(event, payload) {
+  if (mainwin && !mainwin.isDestroyed()) {
+    mainwin.webContents.send(event, payload)
+  }
+}
+
+function mediapathallowed(requested) {
+  const trimmed = String(requested || '').trim()
+  if (!path.isAbsolute(trimmed)) {
+    throw new Error('path must be absolute')
+  }
+  const canonical = fs.realpathSync(trimmed)
+  const cachecanonical = fs.realpathSync(mediacachedir)
+  if (!canonical.startsWith(cachecanonical)) {
+    throw new Error('path outside media cache')
+  }
+  if (!fs.statSync(canonical).isFile()) {
+    throw new Error('not a file')
+  }
+  return canonical
+}
+
+function windowchromelogical(win) {
+  if (windowchrome > 0) {
+    return windowchrome
+  }
+  const outer = win.getBounds().height
+  const inner = win.getContentBounds().height
+  windowchrome = Math.max(0, outer - inner)
+  return windowchrome
+}
+
+function createmainwindow() {
+  if (mainwin && !mainwin.isDestroyed()) {
+    mainwin.show()
+    mainwin.focus()
+    return
+  }
+  mainwin = new BrowserWindow({
+    width: MAIN_WINDOW_WIDTH,
+    height: 464,
+    useContentSize: true,
+    resizable: false,
+    maximizable: false,
+    title: 'zed.cafe Media Queue',
+    backgroundColor: '#000000',
+    autoHideMenuBar: true,
+    backgroundThrottling: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+    icon: iconpath(),
+  })
+  mainwin.loadFile(path.join(__dirname, '..', 'ui', 'index.html'))
+  mainwin.on('closed', () => {
+    mainwin = null
+  })
+}
+
+function wireipc() {
+  ipcMain.handle('get_state', () => ({
+    download: downloads.readstate(),
+    cookiesBrowser: downloads.readcookiesbrowser(),
+  }))
+
+  ipcMain.handle('copy_text', (_event, args) => {
+    const text = String((args && args.text) || '').trim()
+    if (!text) {
+      throw new Error('nothing to copy')
+    }
+    clipboard.writeText(text)
+    return true
+  })
+
+  ipcMain.handle('resize_main_window', (_event, args) => {
+    if (!mainwin || mainwin.isDestroyed()) {
+      throw new Error('main window missing')
+    }
+    const contentheight = Number(args && args.contentHeight)
+    if (!Number.isFinite(contentheight) || contentheight < 1) {
+      throw new Error('invalid content height')
+    }
+    const chrome = windowchromelogical(mainwin)
+    mainwin.setContentSize(
+      MAIN_WINDOW_WIDTH,
+      Math.ceil(contentheight + chrome),
+    )
+    return null
+  })
+
+  ipcMain.handle('set_media_cookies_browser', (_event, args) => {
+    downloads.setcookiesbrowser(String((args && args.browser) || ''))
+    return downloads.readcookiesbrowser()
+  })
+
+  ipcMain.handle('start_media_download', async (_event, args) => {
+    const url = String((args && args.url) || '')
+    return downloads.startdownload(url, emitto)
+  })
+
+  ipcMain.handle('cancel_media_download', () => {
+    downloads.canceldownload()
+    return downloads.readstate()
+  })
+
+  ipcMain.handle('clear_media_downloads', () => downloads.cleardownloads())
+
+  ipcMain.handle('get_media_download_state', () => downloads.readstate())
+
+  ipcMain.handle('read_media_file', (_event, args) => {
+    const allowed = mediapathallowed(String((args && args.path) || ''))
+    return fs.readFileSync(allowed)
+  })
+}
+
+if (!app) {
+  console.error('electron.app is undefined')
+  process.exit(1)
+}
+
+app.commandLine.appendSwitch('disable-background-timer-throttling')
+app.commandLine.appendSwitch('disable-renderer-backgrounding')
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows')
+
+app.whenReady().then(() => {
+  mediacachedir = path.join(app.getPath('cache'), 'media-queue')
+  downloads = new DownloadManager(resourceroot(), mediacachedir)
+  downloads.warmejscache()
+  wireipc()
+  createmainwindow()
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (!mainwin) {
+    createmainwindow()
+  }
+})
+
+app.on('before-quit', () => {
+  if (downloads) {
+    downloads.canceldownload()
+  }
+})

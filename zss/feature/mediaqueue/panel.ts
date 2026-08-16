@@ -4,19 +4,20 @@ import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
+import { mediaqueueislistening } from 'zss/feature/mediaqueue/listenstate'
 import { mediareadcanmanagefrompayload } from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
-import { mediaqueueislistening } from 'zss/feature/mediaqueue/listenstate'
 import {
   mediaqueueadd,
   mediaqueueclear,
   mediaqueuereadperplayerlimit,
+  mediaqueuereadstate,
   mediaqueuesetperplayerlimit,
   mediaqueueskip,
 } from 'zss/feature/mediaqueue/queue'
 import {
-  mediaqueuepushqueuesnapshot,
   mediaqueuelisten,
+  mediaqueuepushqueuesnapshot,
   mediaqueuestop,
 } from 'zss/feature/mediaqueue/receive'
 import { netterminalensurehostready } from 'zss/feature/netterminal'
@@ -46,7 +47,7 @@ function readurlfrompayload(message: MESSAGE): string {
 
 function readlimitfrompayload(message: MESSAGE): number | undefined {
   const payload = message.data as { limit?: unknown } | undefined
-  if (payload && payload.limit !== undefined) {
+  if (payload?.limit !== undefined) {
     const limit = Number(payload.limit)
     if (Number.isFinite(limit)) {
       return limit
@@ -124,14 +125,10 @@ export function handlemediapanel(
         return
       }
       if (!mediaqueueislistening()) {
-        apierror(
-          SOFTWARE,
-          player,
-          'media',
-          'bind the media helper first (#media <peerid>)',
-        )
+        apierror(SOFTWARE, player, 'media', 'use #media "peerid" first')
         return
       }
+      const hadqueue = mediaqueuereadstate().urls.length > 0
       const result = mediaqueueadd(player, url)
       if (!result.ok) {
         if (result.reason === 'duplicate') {
@@ -148,7 +145,7 @@ export function handlemediapanel(
         }
         return
       }
-      mediaqueuepushqueuesnapshot()
+      mediaqueuepushqueuesnapshot(!hadqueue)
       write(SOFTWARE, player, `media added: ${url}`)
       break
     }
@@ -157,7 +154,7 @@ export function handlemediapanel(
         return
       }
       mediaqueueskip()
-      mediaqueuepushqueuesnapshot()
+      mediaqueuepushqueuesnapshot(true)
       write(SOFTWARE, player, 'media skipped to next')
       break
     }

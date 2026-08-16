@@ -1,5 +1,4 @@
 import { SOFTWARE } from 'zss/device/session'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   mediaqueuehasactivestream,
   mediaqueuehelperconnected,
@@ -9,6 +8,7 @@ import {
   mediaqueuereadpeerid,
 } from 'zss/feature/mediaqueue/listenstate'
 import { mediaqueuereadstate } from 'zss/feature/mediaqueue/queue'
+import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
   zssheaderlines,
   zsstextline,

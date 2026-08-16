@@ -1,8 +1,8 @@
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import {
-  boardtvshouldshow,
   mediaqueuehasvideo,
+  useboardtvvisible,
 } from 'zss/feature/mediaqueue/boardtvvisible'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
@@ -53,8 +53,8 @@ export function FPVLayer({
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
   const hasvideo = useMedia((state) => mediaqueuehasvideo(state.screen))
-  // Same gate as BoardTvSink: gadget board + video, not sim MEMORY.
-  const skipceiling = boardtvshouldshow(gadgetboard, hasvideo)
+  // Same gate as BoardTvSink: bound board + helper or stream, not sim MEMORY.
+  const skipceiling = useboardtvvisible(gadgetboard, hasvideo)
 
   const control = layersreadcontrol(
     useGadgetClient.getState().gadget.layers ?? [],
