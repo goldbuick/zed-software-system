@@ -29,6 +29,7 @@
   let playbackstarted = false
   let pendinggoto = false
   let currentplaybackurl = ''
+  let currentplaybacktitle = ''
   let cachebytes = 0
   let downloadinflight = false
   let lastdownloadpct = -1
@@ -108,6 +109,41 @@
     }
     const parts = String(path).split(/[/\\]/)
     return parts[parts.length - 1] || path
+  }
+
+  function playbacklabel(title, url, path) {
+    const trimmed = String(title || '').trim()
+    if (trimmed) {
+      return trimmed
+    }
+    const fromurl = urlfallbacklabel(url)
+    if (fromurl) {
+      return fromurl
+    }
+    return mediabasename(path)
+  }
+
+  function urlfallbacklabel(url) {
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      return ''
+    }
+    try {
+      const parsed = new URL(trimmed)
+      const v = parsed.searchParams.get('v')
+      if (v) {
+        return 'youtube:' + v
+      }
+      const host = parsed.hostname.replace(/^www\./i, '')
+      const path = parsed.pathname.replace(/\/+$/, '')
+      const tail = path.split('/').filter(Boolean).pop()
+      if (tail) {
+        return host + '/' + tail
+      }
+      return host
+    } catch (_) {
+      return trimmed.length > 80 ? trimmed.slice(0, 77) + '...' : trimmed
+    }
   }
 
   function shortenerr(message) {
@@ -297,9 +333,32 @@
   }
 
   function setpreviewstream(stream) {
-    els.preview.srcObject = stream || null
+    if (!stream) {
+      els.preview.srcObject = null
+    } else {
+      const previewstream = new MediaStream(stream.getVideoTracks())
+      els.preview.srcObject = previewstream
+    }
+    els.preview.muted = true
     els.preview.classList.toggle('has-stream', Boolean(stream))
     schedulefitwindow()
+  }
+
+  function syncplayerlinkstatus() {
+    if (playercalls.size > 0) {
+      setlink('playing', String(playercalls.size) + ' player(s)')
+      return
+    }
+    if (pendingplayercalls.size > 0) {
+      setlink(
+        'waiting',
+        String(pendingplayercalls.size) + ' player(s) waiting',
+      )
+      return
+    }
+    if (playbackstarted && mediastream) {
+      setlink('playing', '0 player(s)')
+    }
   }
 
   async function fitmainwindow() {
@@ -349,10 +408,12 @@
     call.on('close', function () {
       playercalls.delete(peerid)
       pendingplayercalls.delete(peerid)
+      syncplayerlinkstatus()
     })
     call.on('error', function () {
       playercalls.delete(peerid)
       pendingplayercalls.delete(peerid)
+      syncplayerlinkstatus()
     })
   }
 
@@ -375,6 +436,7 @@
     })
     pendingplayercalls.clear()
     publishstreamtoplayers()
+    syncplayerlinkstatus()
   }
 
   function publishstreamtoplayers() {
@@ -414,13 +476,11 @@
     wireplayercallcleanup(call, call.peer)
     if (answerplayercall(call)) {
       publishstreamtoplayers()
+      syncplayerlinkstatus()
       return
     }
     pendingplayercalls.set(call.peer, call)
-    setlink(
-      'waiting',
-      String(pendingplayercalls.size + playercalls.size) + ' player(s) waiting',
-    )
+    syncplayerlinkstatus()
   }
 
   function stopmediastream() {
@@ -453,6 +513,7 @@
       playbackstarted = false
     }
     currentplaybackurl = ''
+    currentplaybacktitle = ''
     if (hadcall && !naturalend) {
       sendstatus('call-stopped')
     }
@@ -501,11 +562,13 @@
       startdownloadpoll()
       const ready = await window.mqplayback.startdownload(url)
       path = ready && ready.path ? ready.path : ''
+      currentplaybacktitle =
+        ready && ready.title ? String(ready.title).trim() : ''
       handledownloadprogress({ percent: 100, status: 'downloading' })
       sendstatus('download-progress', '100|')
-      const shortpath = mediabasename(path)
-      setlink('buffering', shortpath)
-      sendstatus('buffering', shortpath)
+      const label = playbacklabel(currentplaybacktitle, url, path)
+      setlink('buffering', label)
+      sendstatus('buffering', label)
       playback = await window.mqplayback.startplayback(path)
       mediastream = playback.stream
     } catch (err) {
@@ -533,8 +596,9 @@
     wireplaybackended(playback && playback.video ? playback.video : null)
     answerpendingplayercalls()
     publishstreamtoplayers()
-    setlink('playing', String(playercalls.size) + ' player(s)')
-    sendstatus('playing', String(playercalls.size))
+    syncplayerlinkstatus()
+    const playinglabel = playbacklabel(currentplaybacktitle, url, path)
+    sendstatus('playing', playinglabel)
   }
 
   async function maybeautostartaftergoto(url) {

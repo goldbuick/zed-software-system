@@ -307,6 +307,8 @@ export type BOARD_RUNTIME = {
   drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
   /** Desktop media-queue helper Peer id when #media is bound to this board. */
   mediaqueuehelperpeerid?: string
+  /** Now-playing marquee label for board TV (synced from helper status). */
+  mediaqueuenowplayingtitle?: string
 }
 
 export type BOARD_ELEMENT_RUNTIME = {

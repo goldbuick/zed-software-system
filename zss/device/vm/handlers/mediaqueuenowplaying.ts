@@ -6,10 +6,10 @@ import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
-export function handlemediaqueueboard(_vm: DEVICE, message: MESSAGE): void {
+export function handlemediaqueuenowplaying(_vm: DEVICE, message: MESSAGE): void {
   void _vm
   const data = message.data as
-    | { boardid?: unknown; helperpeerid?: unknown; action?: unknown }
+    | { boardid?: unknown; title?: unknown; action?: unknown }
     | undefined
   const boardid = isstring(data?.boardid) ? data.boardid.trim() : ''
   if (!boardid) {
@@ -21,15 +21,11 @@ export function handlemediaqueueboard(_vm: DEVICE, message: MESSAGE): void {
   }
   const runtime = memoryensureboardruntime(board)
   const action = isstring(data?.action) ? data.action : ''
-  if (
-    action === 'clear' ||
-    !isstring(data?.helperpeerid) ||
-    !data.helperpeerid.trim()
-  ) {
-    delete runtime.mediaqueuehelperpeerid
+  const title = isstring(data?.title) ? data.title.trim() : ''
+  if (action === 'clear' || !title) {
     delete runtime.mediaqueuenowplayingtitle
   } else {
-    runtime.mediaqueuehelperpeerid = data.helperpeerid.trim()
+    runtime.mediaqueuenowplayingtitle = title.slice(0, 120)
   }
   memoryinvalidatedraw(board)
   memoryinvalidategadgetlayerscacheforboard(board.id)

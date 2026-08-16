@@ -5,6 +5,7 @@ import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   mediaqueueconnectifonboard,
   mediaqueuedisconnect,
+  mediaqueueretryplayerconnect,
 } from 'zss/feature/mediaqueue/playerconnect'
 import {
   mediaqueueclearlistenstate,
@@ -29,6 +30,10 @@ import {
   mediaqueuereadstate,
   mediaqueueshiftcurrent,
 } from 'zss/feature/mediaqueue/queue'
+import {
+  mediaqueueformatnowplayinglabel,
+  mediaqueuesyncnowplayingboard,
+} from 'zss/feature/mediaqueue/nowplayinglabel'
 import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
@@ -64,6 +69,7 @@ function mediaqueueadvanceafterplayback() {
     apilog(SOFTWARE, listenplayer, 'mediaqueue helper: advancing queue')
   } else {
     apilog(SOFTWARE, listenplayer, 'mediaqueue helper: queue empty')
+    mediaqueueclearnowplayingboard()
   }
 }
 
@@ -122,6 +128,46 @@ function syncboardhelperlayer(
   vmmediaqueueboard(SOFTWARE, player, boardid, helperpeerid)
 }
 
+function mediaqueuesyncnowplayingfromstatus(detail?: string) {
+  const player = mediaqueuereadlistenplayer()
+  const boardid = mediaqueuereadboundboardid()
+  if (!player || !boardid) {
+    return
+  }
+  const label = mediaqueueformatnowplayinglabel(
+    detail,
+    mediaqueuecurrenturl(),
+  )
+  if (!label) {
+    return
+  }
+  mediaqueuesyncnowplayingboard(player, boardid, label)
+}
+
+function mediaqueueclearnowplayingboard() {
+  const player = mediaqueuereadlistenplayer()
+  const boardid = mediaqueuereadboundboardid()
+  if (!player || !boardid) {
+    return
+  }
+  mediaqueuesyncnowplayingboard(player, boardid, undefined)
+}
+
+function mediaqueueapplynowplayingstatus(status: string, detail?: string) {
+  if (status === 'buffering' || status === 'playing') {
+    mediaqueuesyncnowplayingfromstatus(detail)
+    return
+  }
+  if (
+    status === 'playback-ended' ||
+    status === 'download-failed' ||
+    status === 'playback-failed' ||
+    status === 'call-stopped'
+  ) {
+    mediaqueueclearnowplayingboard()
+  }
+}
+
 function handlehelperdata(data: unknown) {
   if (!ismediaqueuemessage(data)) {
     return
@@ -142,6 +188,7 @@ function handlehelperdata(data: unknown) {
       if (mediaqueuereadlistenplayer()) {
         const detail = mediaqueuestatusdetail(data.detail)
         const player = mediaqueuereadlistenplayer()
+        mediaqueueapplynowplayingstatus(data.status, data.detail)
         const worklabel = mediaqueuestatusworklabel(data.status, data.detail)
         if (worklabel || data.status === 'playing') {
           mediaqueueworkstatus(worklabel)
@@ -192,6 +239,7 @@ function handlehelperdata(data: unknown) {
             'mediaqueue helper: call stopped (queue kept)',
           )
         } else if (data.status === 'playing') {
+          mediaqueueretryplayerconnect()
           apilog(SOFTWARE, player, `mediaqueue helper: playing${detail}`)
         } else {
           apilog(SOFTWARE, player, `mediaqueue helper: ${data.status}${detail}`)

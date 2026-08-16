@@ -256,6 +256,17 @@ function captureytdlpoutpath(current, line) {
   return current
 }
 
+function captureytdlptitle(current, line) {
+  const trimmed = line.trim()
+  if (!trimmed || trimmed.startsWith('[')) {
+    return current
+  }
+  if (trimmed.includes('/') || trimmed.includes('\\')) {
+    return current
+  }
+  return trimmed.slice(0, 120)
+}
+
 function applyytdlpbaseargs(args, jspath, ytdlphome, attempt) {
   args.push(
     '--no-update',
@@ -335,6 +346,7 @@ class DownloadManager {
     this.status = 'idle'
     this.detail = ''
     this.filepath = ''
+    this.title = ''
     this.error = ''
     this.cancelled = false
     this.activechild = null
@@ -441,6 +453,7 @@ class DownloadManager {
     this.canceldownload()
     this.error = ''
     this.filepath = ''
+    this.title = ''
     this.percent = 0
     this.status = 'extracting'
     this.detail = 'starting'
@@ -532,6 +545,8 @@ class DownloadManager {
           '-o',
           'mq-%(id)s.%(ext)s',
           '--print',
+          'title',
+          '--print',
           'after_move:filepath',
           trimmed,
         )
@@ -544,6 +559,7 @@ class DownloadManager {
         this.activechild = child
 
         let outpath = ''
+        let title = ''
         const errlines = []
 
         const stdoutdone = readstreamlines(child.stdout, (line) => {
@@ -551,6 +567,7 @@ class DownloadManager {
             return
           }
           emitline(this, emit, line)
+          title = captureytdlptitle(title, line)
           outpath = captureytdlpoutpath(outpath, line)
         })
         const stderrdone = readstreamlines(child.stderr, (line) => {
@@ -582,6 +599,7 @@ class DownloadManager {
         }
         if (success && outpathexists) {
           this.filepath = outpath
+          this.title = title
           this.percent = 100
           this.status = 'downloading'
           this.detail = ''
@@ -593,7 +611,7 @@ class DownloadManager {
           this.phase = 'ready'
           emit('mq-download-ready', {
             path: outpath,
-            title: '',
+            title: title,
             duration: 0,
           })
           return

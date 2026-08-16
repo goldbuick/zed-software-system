@@ -2,6 +2,11 @@ import { useEffect } from 'react'
 import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import {
+  mediaqueueislistening,
+  mediaqueuereadboundboardid,
+  mediaqueuereadhelperpeerid,
+} from 'zss/feature/mediaqueue/listenstate'
+import {
   mediaqueueconnectifonboard,
   mediaqueuedisconnect,
 } from 'zss/feature/mediaqueue/playerconnect'
@@ -90,12 +95,26 @@ export function MediaLayers() {
       media.setpalette(usepalette)
       media.setcharset(usecharset)
     }
+    if (!gadgetboard) {
+      return
+    }
     const activehelper = helperpeerid || helperfromloop
     if (activehelper) {
       mediaqueueconnectifonboard(activehelper, gadgetboard)
-    } else {
-      mediaqueuedisconnect()
+      return
     }
+    const boundboard = mediaqueuereadboundboardid()
+    const boundhelper = mediaqueuereadhelperpeerid()
+    if (
+      mediaqueueislistening() &&
+      boundhelper &&
+      boundboard === gadgetboard
+    ) {
+      // Helper layer may lag #queue bind by a tick; keep the media plane up.
+      mediaqueueconnectifonboard(boundhelper, gadgetboard)
+      return
+    }
+    mediaqueuedisconnect()
   }, [id, gadgetboard, helperpeerid])
 
   return null

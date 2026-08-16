@@ -10,6 +10,11 @@ import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import { mediaqueuecallmetadata } from 'zss/feature/mediaqueue/callmetadata'
 import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
 import {
+  mediaqueueislistening,
+  mediaqueuereadboundboardid,
+  mediaqueuereadhelperpeerid,
+} from 'zss/feature/mediaqueue/listenstate'
+import {
   mediaqueueclearplayerlayerstate,
   mediaqueuereadplayerlayerstate,
   mediaqueuesetplayerlayerpending,
@@ -24,8 +29,8 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 let activecall: MAYBE<MediaConnection>
 let activestream: MAYBE<MediaStream>
-const streamtracklisteners = new Map<MediaConnection, () => void>()
 const pctracklisteners = new Map<MediaConnection, (evt: RTCTrackEvent) => void>()
+const calltrackpollers = new Map<MediaConnection, ReturnType<typeof setInterval>>()
 
 function retryplayerconnectfromlayer() {
   const layer = mediaqueuereadplayerlayerstate()
@@ -43,7 +48,31 @@ function streamhasmedia(stream: MediaStream): boolean {
   )
 }
 
+function streamfromreceivers(pc: RTCPeerConnection): MediaStream | undefined {
+  const receivers = pc.getReceivers?.() ?? []
+  const tracks: MediaStreamTrack[] = []
+  for (let i = 0; i < receivers.length; ++i) {
+    const track = receivers[i]?.track
+    if (track) {
+      tracks.push(track)
+    }
+  }
+  if (tracks.length === 0) {
+    return undefined
+  }
+  return new MediaStream(tracks)
+}
+
+function clearcalltrackpoll(call: MediaConnection) {
+  const poller = calltrackpollers.get(call)
+  if (poller) {
+    clearInterval(poller)
+    calltrackpollers.delete(call)
+  }
+}
+
 function clearpctracklistener(call: MediaConnection) {
+  clearcalltrackpoll(call)
   const pc = call.peerConnection
   const listener = pctracklisteners.get(call)
   if (pc && listener) {
@@ -52,79 +81,106 @@ function clearpctracklistener(call: MediaConnection) {
   pctracklisteners.delete(call)
 }
 
-function clearstreamtracklistener(call: MediaConnection) {
-  const listener = streamtracklisteners.get(call)
-  if (listener && activestream) {
-    activestream.removeEventListener('addtrack', listener)
-  }
-  streamtracklisteners.delete(call)
-}
-
 function attachplayerstream(stream: MediaStream, helperpeerid: string) {
   if (!streamhasmedia(stream)) {
-    return
+    return false
+  }
+  for (const track of stream.getTracks()) {
+    if (track.muted) {
+      track.addEventListener(
+        'unmute',
+        () => {
+          if (activestream === stream || !ispresent(activestream)) {
+            attachplayerstream(stream, helperpeerid)
+          }
+        },
+        { once: true },
+      )
+    }
   }
   activestream = stream
   mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
   mediaqueuesetplayerlayerpending(false)
   const player = registerreadplayer()
-  apilog(SOFTWARE, player, `mediaqueue stream from ${helperpeerid}`)
+  apilog(
+    SOFTWARE,
+    player,
+    `mediaqueue stream from ${helperpeerid} v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length}`,
+  )
+  return true
 }
 
-function wirepctracklistener(
-  call: MediaConnection,
-  stream: MediaStream,
-  helperpeerid: string,
-) {
-  clearpctracklistener(call)
+function synccallstream(call: MediaConnection, helperpeerid: string): boolean {
+  if (activecall !== call) {
+    return false
+  }
   const pc = call.peerConnection
   if (!pc) {
-    return
+    return false
   }
-  const ontrack = (evt: RTCTrackEvent) => {
-    if (activecall !== call || !evt.track) {
-      return
-    }
-    const tracks = stream.getTracks()
-    if (!tracks.includes(evt.track)) {
-      stream.addTrack(evt.track)
-    }
-    attachplayerstream(stream, helperpeerid)
+  const merged = streamfromreceivers(pc)
+  if (!ispresent(merged) || !streamhasmedia(merged)) {
+    return false
   }
-  pctracklisteners.set(call, ontrack)
-  pc.addEventListener('track', ontrack)
+  return attachplayerstream(merged, helperpeerid)
 }
 
-function wirestreamfromcall(
-  call: MediaConnection,
-  stream: MediaStream,
-  helperpeerid: string,
-) {
-  clearstreamtracklistener(call)
-  wirepctracklistener(call, stream, helperpeerid)
-  const ontracks = () => {
+function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
+  clearpctracklistener(call)
+
+  const ontrack = (evt: RTCTrackEvent) => {
     if (activecall !== call) {
       return
     }
-    attachplayerstream(stream, helperpeerid)
+    void evt
+    synccallstream(call, helperpeerid)
   }
-  streamtracklisteners.set(call, ontracks)
-  stream.addEventListener('addtrack', ontracks)
-  ontracks()
+
+  const trywire = (): boolean => {
+    if (activecall !== call) {
+      return true
+    }
+    const pc = call.peerConnection
+    if (!pc) {
+      return false
+    }
+    if (!pctracklisteners.has(call)) {
+      pctracklisteners.set(call, ontrack)
+      pc.addEventListener('track', ontrack)
+    }
+    return synccallstream(call, helperpeerid)
+  }
+
+  if (trywire()) {
+    return
+  }
+
+  let attempts = 0
+  const poller = setInterval(() => {
+    attempts += 1
+    if (trywire() || activecall !== call || attempts > 100) {
+      clearcalltrackpoll(call)
+    }
+  }, 50)
+  calltrackpollers.set(call, poller)
 }
 
 function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
+  wirecalltrackbridge(call, helperpeerid)
   call.on('stream', (stream) => {
     if (activecall !== call) {
       return
     }
-    wirestreamfromcall(call, stream, helperpeerid)
+    if (streamhasmedia(stream)) {
+      attachplayerstream(stream, helperpeerid)
+      return
+    }
+    synccallstream(call, helperpeerid)
   })
   call.on('close', () => {
     if (activecall !== call) {
       return
     }
-    clearstreamtracklistener(call)
     clearpctracklistener(call)
     teardownactivecall()
     const layer = mediaqueuereadplayerlayerstate()
@@ -137,7 +193,6 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
     if (activecall !== call) {
       return
     }
-    clearstreamtracklistener(call)
     clearpctracklistener(call)
     teardownactivecall()
     const layer = mediaqueuereadplayerlayerstate()
@@ -150,7 +205,6 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
 
 function teardownactivecall() {
   if (ispresent(activecall)) {
-    clearstreamtracklistener(activecall)
     clearpctracklistener(activecall)
   }
   mediaqueueteardownplayersink({
@@ -168,6 +222,9 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
     return false
   }
   if (ispresent(activecall)) {
+    if (!ispresent(activestream)) {
+      synccallstream(activecall, trimmed)
+    }
     mediaqueuesetplayerlayerpending(false)
     return true
   }
@@ -185,30 +242,76 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
   return true
 }
 
+function readconnectboard(gadgetboard: string): string {
+  const trimmed = gadgetboard.trim()
+  if (trimmed) {
+    return trimmed
+  }
+  return mediaqueuereadboundboardid().trim()
+}
+
 export function mediaqueueconnectifonboard(
   helperpeerid: string,
   gadgetboard: string,
 ) {
   mediaqueuebootstrap()
   mediaqueueensurevideosink()
-  const trimmed = helperpeerid.trim()
-  if (!trimmed || !gadgetboard) {
-    mediaqueuedisconnect()
+  const trimmed =
+    helperpeerid.trim() || mediaqueuereadhelperpeerid().trim()
+  const board = readconnectboard(gadgetboard)
+  if (!trimmed || !board) {
+    if (
+      !mediaqueueislistening() ||
+      !mediaqueuereadhelperpeerid() ||
+      !mediaqueuereadboundboardid()
+    ) {
+      mediaqueuedisconnect()
+    }
     return
   }
   const layer = mediaqueuereadplayerlayerstate()
   const samelayer =
     layer.helperpeerid === trimmed &&
-    layer.board === gadgetboard &&
+    layer.board === board &&
     ispresent(activecall)
-  mediaqueuesetplayerlayerstate(trimmed, gadgetboard, layer.pendingconnect)
+  mediaqueuesetplayerlayerstate(trimmed, board, layer.pendingconnect)
   if (samelayer) {
+    if (!ispresent(activestream) && ispresent(activecall)) {
+      synccallstream(activecall, trimmed)
+    }
     return
   }
   if (ispresent(activecall)) {
     teardownactivecall()
   }
-  tryplayerconnect(trimmed, gadgetboard)
+  tryplayerconnect(trimmed, board)
+}
+
+/** Retry outbound helper MediaConnection when control plane says playback started. */
+export function mediaqueueretryplayerconnect() {
+  const layer = mediaqueuereadplayerlayerstate()
+  if (ispresent(activecall)) {
+    const helper =
+      layer.helperpeerid ||
+      mediaqueuereadhelperpeerid() ||
+      activecall.peer ||
+      ''
+    if (helper && !ispresent(activestream)) {
+      synccallstream(activecall, helper)
+    }
+    return
+  }
+  if (layer.helperpeerid && layer.board) {
+    tryplayerconnect(layer.helperpeerid, layer.board)
+    return
+  }
+  const helper = mediaqueuereadhelperpeerid()
+  const board = mediaqueuereadboundboardid()
+  if (!helper || !board || !mediaqueueislistening()) {
+    return
+  }
+  mediaqueuesetplayerlayerstate(helper, board, true)
+  tryplayerconnect(helper, board)
 }
 
 export function mediaqueuedisconnect() {
@@ -223,5 +326,6 @@ export function mediaqueuereadplayerconnectstate() {
     connectedboard: layer.board,
     hascall: ispresent(activecall),
     pendingconnect: layer.pendingconnect,
+    hasstream: ispresent(activestream),
   }
 }

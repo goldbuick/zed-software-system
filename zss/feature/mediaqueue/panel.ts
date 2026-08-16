@@ -4,9 +4,10 @@ import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
-import { mediaqueueislistening } from 'zss/feature/mediaqueue/listenstate'
+import { mediaqueueislistening, mediaqueuereadboundboardid } from 'zss/feature/mediaqueue/listenstate'
 import { mediareadcanmanagefrompayload } from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
+import { mediaqueuesyncnowplayingboard } from 'zss/feature/mediaqueue/nowplayinglabel'
 import {
   mediaqueueadd,
   mediaqueueclear,
@@ -206,6 +207,10 @@ export function handlequeuepanel(
       }
       mediaqueueclear()
       mediaqueuepushqueuesnapshot()
+      const boundboard = mediaqueuereadboundboardid()
+      if (boundboard) {
+        mediaqueuesyncnowplayingboard(player, boundboard, undefined)
+      }
       write(SOFTWARE, player, 'queue cleared')
       break
     }

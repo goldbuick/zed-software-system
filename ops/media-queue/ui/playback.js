@@ -281,13 +281,17 @@
     if (typeof el.captureStream !== 'function') {
       throw new Error('video.captureStream not supported')
     }
-    el.muted = false
-    const stream = el.captureStream()
-    if (!stream || !stream.getVideoTracks().length) {
-      throw new Error('video.captureStream produced no video track')
+    // Helper stays silent: never unmute the local decode element.
+    el.muted = true
+    const stream = new MediaStream()
+    wirecaptureaudio(el, stream)
+    const captured = el.captureStream()
+    const videotracks = captured.getVideoTracks()
+    for (let i = 0; i < videotracks.length; i++) {
+      stream.addTrack(videotracks[i])
     }
-    if (!stream.getAudioTracks().length) {
-      wirecaptureaudio(el, stream)
+    if (!stream.getVideoTracks().length) {
+      throw new Error('video.captureStream produced no video track')
     }
     if (!stream.getAudioTracks().length) {
       throw new Error('video capture produced no audio track')

@@ -11,6 +11,26 @@ import { ispresent } from 'zss/mapping/types'
 
 let remotevideo: HTMLVideoElement | undefined
 let registered = false
+let videogesturewired = false
+
+function resumeremotevideo() {
+  if (!ispresent(remotevideo) || !remotevideo.paused) {
+    return
+  }
+  void remotevideo.play().catch(() => {
+    // Still blocked until a stronger user gesture.
+  })
+}
+
+function wirevideogestureretry() {
+  if (videogesturewired || typeof window === 'undefined') {
+    return
+  }
+  videogesturewired = true
+  window.addEventListener('keydown', resumeremotevideo, { capture: true })
+  window.addEventListener('pointerdown', resumeremotevideo, { capture: true })
+  window.addEventListener('click', resumeremotevideo, { capture: true })
+}
 
 function clearremotevideo(peerkey: string) {
   if (ispresent(remotevideo)) {
@@ -31,12 +51,28 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
     video.autoplay = true
     video.playsInline = true
     video.muted = true
-    video.srcObject = new MediaStream(videotracks)
+    video.setAttribute('playsinline', '')
+    video.style.display = 'none'
+    document.body.appendChild(video)
+    const videostream = new MediaStream(videotracks)
+    video.srcObject = videostream
+    const publishvideo = () => {
+      if (remotevideo !== video) {
+        return
+      }
+      wirevideogestureretry()
+      useMedia.getState().setscreen(peerkey, video)
+    }
+    video.addEventListener('loadeddata', publishvideo)
+    video.addEventListener('playing', publishvideo)
+    for (let i = 0; i < videotracks.length; ++i) {
+      videotracks[i].addEventListener('unmute', publishvideo, { once: true })
+    }
+    publishvideo()
     void video.play().catch(() => {
       // Autoplay may wait for a user gesture; texture still updates once playing.
     })
     remotevideo = video
-    useMedia.getState().setscreen(peerkey, video)
   }
   mediaqueueattachremoteaudio(audiotracks)
 }

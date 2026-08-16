@@ -512,6 +512,16 @@ export function memoryconverttogadgetlayers(
         ),
       )
     }
+    if (isstring(boardruntime?.mediaqueuenowplayingtitle)) {
+      layers.push(
+        createcachedmedia(
+          cacheowner,
+          iiii++,
+          'text/mediaqueue-nowplaying',
+          boardruntime.mediaqueuenowplayingtitle,
+        ),
+      )
+    }
     // add media layer to list peer ids
     const pids = Object.keys(board.objects).filter(ispid)
     layers.push(

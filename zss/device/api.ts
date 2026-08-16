@@ -959,6 +959,19 @@ export function vmmediaqueueboard(
   })
 }
 
+export function vmmediaqueuenowplaying(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+  title: string | undefined,
+) {
+  device.emit(player, 'vm:mediaqueuenowplaying', {
+    action: title ? 'set' : 'clear',
+    boardid,
+    title: title ?? '',
+  })
+}
+
 export function vmplayermovetoboard(
   device: DEVICELIKE,
   player: string,

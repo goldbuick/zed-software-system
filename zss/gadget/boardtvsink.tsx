@@ -15,13 +15,16 @@ import {
   boardtvlayerz,
 } from 'zss/feature/mediaqueue/constants'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
+import { BoardTvMarquee } from 'zss/gadget/boardtvmarquee'
 import { type BOX_FRAME, buildboxframe } from 'zss/gadget/boxframe'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { updateTexture } from 'zss/gadget/display/textures'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { Tiles } from 'zss/gadget/graphics/tiles'
 import { useMedia } from 'zss/gadget/media'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
+import { isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 type BoardTvSinkProps = {
@@ -112,6 +115,20 @@ function BoardTvBlackFill({
  */
 export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
+  const nowplayinglabel = useGadgetClient((state) => {
+    const layers = state.gadget.layers ?? []
+    for (let i = 0; i < layers.length; ++i) {
+      const layer = layers[i]
+      if (
+        layer.type === LAYER_TYPE.MEDIA &&
+        layer.mime === 'text/mediaqueue-nowplaying' &&
+        isstring(layer.media)
+      ) {
+        return layer.media.trim()
+      }
+    }
+    return ''
+  })
 
   useEffect(() => {
     mediaqueuebootstrap()
@@ -151,6 +168,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   // Flat: group z=2 sits between tiles (1) and sprites (3+); inner offsets would overshoot sprites.
   const innerblackz = flatstack ? 0 : zstep
   const innervideoz = flatstack ? 0.001 : zstep * 2
+  const marqueez = flatstack ? 0.002 : zstep * 3
   // Flat stacks TV at z=2 and sprites at z=3+; renderOrder would paint over sprites.
   const userenderorder = !flatstack
 
@@ -183,6 +201,14 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
             userenderorder={userenderorder}
           />
         ) : null}
+        <BoardTvMarquee
+          label={nowplayinglabel}
+          drawwidth={drawwidth}
+          drawheight={drawheight}
+          tvdrawwidth={tvdrawwidth}
+          tvdrawheight={tvdrawheight}
+          z={marqueez}
+        />
       </group>
     </group>
   )
