@@ -6,6 +6,7 @@ import {
   memoryapplypermissionconfig,
   memorycanruncommand,
   memorymapcommandtofamily,
+  memoryplayerallowedcommand,
   memoryreadallowlistbreakdownbyrole,
   memoryreadallowlistbyrole,
   memoryreadpermissionconfig,
@@ -172,6 +173,16 @@ describe('permissions', () => {
       expect(memorymapcommandtofamily('media')).toBe('speaker')
       expect(memorycanruncommand('player1', 'media')).toBe(true)
       expect(memorycanruncommand('player1', 'mediamanage')).toBe(false)
+    })
+
+    it('memoryplayerallowedcommand probes mediamanage without apierror', () => {
+      memoryapplypermissionconfig('creative')
+      memorysetplayertotoken('player1', 'token-a')
+      memorysetrolefortoken('token-a', 'player')
+      mockapierror.mockClear()
+      expect(memoryplayerallowedcommand('player1', 'media')).toBe(true)
+      expect(memoryplayerallowedcommand('player1', 'mediamanage')).toBe(false)
+      expect(mockapierror).not.toHaveBeenCalled()
     })
 
     it('creative mod can submit and manage media queue', () => {

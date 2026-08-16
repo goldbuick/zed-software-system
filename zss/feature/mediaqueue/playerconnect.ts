@@ -24,13 +24,32 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 let activecall: MAYBE<MediaConnection>
 let activestream: MAYBE<MediaStream>
-let peeropenretrywired = false
 const streamtracklisteners = new Map<MediaConnection, () => void>()
+const pctracklisteners = new Map<MediaConnection, (evt: RTCTrackEvent) => void>()
+
+function retryplayerconnectfromlayer() {
+  const layer = mediaqueuereadplayerlayerstate()
+  if (!layer.helperpeerid || !layer.board || ispresent(activecall)) {
+    return
+  }
+  tryplayerconnect(layer.helperpeerid, layer.board)
+}
+
+netterminalregisterpeeropenhandler(retryplayerconnectfromlayer)
 
 function streamhasmedia(stream: MediaStream): boolean {
   return (
     stream.getVideoTracks().length > 0 || stream.getAudioTracks().length > 0
   )
+}
+
+function clearpctracklistener(call: MediaConnection) {
+  const pc = call.peerConnection
+  const listener = pctracklisteners.get(call)
+  if (pc && listener) {
+    pc.removeEventListener('track', listener)
+  }
+  pctracklisteners.delete(call)
 }
 
 function clearstreamtracklistener(call: MediaConnection) {
@@ -52,12 +71,37 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
   apilog(SOFTWARE, player, `mediaqueue stream from ${helperpeerid}`)
 }
 
+function wirepctracklistener(
+  call: MediaConnection,
+  stream: MediaStream,
+  helperpeerid: string,
+) {
+  clearpctracklistener(call)
+  const pc = call.peerConnection
+  if (!pc) {
+    return
+  }
+  const ontrack = (evt: RTCTrackEvent) => {
+    if (activecall !== call || !evt.track) {
+      return
+    }
+    const tracks = stream.getTracks()
+    if (!tracks.includes(evt.track)) {
+      stream.addTrack(evt.track)
+    }
+    attachplayerstream(stream, helperpeerid)
+  }
+  pctracklisteners.set(call, ontrack)
+  pc.addEventListener('track', ontrack)
+}
+
 function wirestreamfromcall(
   call: MediaConnection,
   stream: MediaStream,
   helperpeerid: string,
 ) {
   clearstreamtracklistener(call)
+  wirepctracklistener(call, stream, helperpeerid)
   const ontracks = () => {
     if (activecall !== call) {
       return
@@ -67,19 +111,6 @@ function wirestreamfromcall(
   streamtracklisteners.set(call, ontracks)
   stream.addEventListener('addtrack', ontracks)
   ontracks()
-}
-
-function wirepeeropenretry() {
-  if (peeropenretrywired) {
-    return
-  }
-  peeropenretrywired = true
-  netterminalregisterpeeropenhandler(() => {
-    const layer = mediaqueuereadplayerlayerstate()
-    if (layer.pendingconnect && layer.helperpeerid && layer.board) {
-      tryplayerconnect(layer.helperpeerid, layer.board)
-    }
-  })
 }
 
 function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
@@ -94,6 +125,7 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
       return
     }
     clearstreamtracklistener(call)
+    clearpctracklistener(call)
     teardownactivecall()
     const layer = mediaqueuereadplayerlayerstate()
     if (layer.helperpeerid && layer.board) {
@@ -106,6 +138,7 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
       return
     }
     clearstreamtracklistener(call)
+    clearpctracklistener(call)
     teardownactivecall()
     const layer = mediaqueuereadplayerlayerstate()
     if (layer.helperpeerid && layer.board) {
@@ -118,6 +151,7 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
 function teardownactivecall() {
   if (ispresent(activecall)) {
     clearstreamtracklistener(activecall)
+    clearpctracklistener(activecall)
   }
   mediaqueueteardownplayersink({
     call: activecall,
@@ -137,11 +171,12 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
     mediaqueuesetplayerlayerpending(false)
     return true
   }
+  const player = registerreadplayer()
+  apilog(SOFTWARE, player, `mediaqueue connecting to helper ${trimmed}`)
   const metadata = mediaqueuecallmetadata('player')
   const call = netterminalmediacall(trimmed, new MediaStream(), metadata)
   if (!ispresent(call)) {
     mediaqueuesetplayerlayerpending(true)
-    wirepeeropenretry()
     return false
   }
   mediaqueuesetplayerlayerpending(false)

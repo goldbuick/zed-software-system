@@ -38,9 +38,9 @@ export function showmediamenu(player: string, canmanage: boolean) {
 
   if (canmanage) {
     rows.push('$32')
-    rows.push(zsszedlinkline('media skip', '$cyanSkip'))
-    rows.push(zsszedlinkline('media clear', '$redClear queue'))
-    rows.push(zsszedlinkline('media stop', '$redStop helper'))
+    rows.push(zsszedlinkline('queue skip', '$cyanSkip'))
+    rows.push(zsszedlinkline('queue clear', '$redClear queue'))
+    rows.push(zsszedlinkline('queue stop', '$redStop helper'))
   }
 
   terminalwritelines(SOFTWARE, player, zsstexttape(...rows))

@@ -50,7 +50,7 @@ flowchart TB
 ## Media-queue helper
 
 1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
-2. Cafe `#media` subcommands mutate a host-owned FIFO queue and push updates over a **DataConnection** (control plane). Bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (`text/mediaqueue-helper`).
+2. Cafe `#media <url>` and `#queue` admin commands mutate a host-owned FIFO queue and push updates over a **DataConnection** (control plane). `#queue <peerid>` bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (`text/mediaqueue-helper`).
 3. On queue advance, the helper runs **yt-dlp** into a local cache file, plays it in Chromium, and publishes **`video.captureStream()`** to each player tab that calls the helper via **`MediaConnection`** (host admin and joins use the same path).
 4. Leaving the bound board tears down the player call and board TV sink (video + speaker audio).
 

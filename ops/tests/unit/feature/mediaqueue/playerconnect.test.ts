@@ -118,17 +118,11 @@ describe('mediaqueue player connect', () => {
   it('retries connect when peer opens after initial failure', () => {
     const call = { on: jest.fn(), close: jest.fn() }
     jest.mocked(netterminalmediacall).mockReturnValue(undefined as never)
-    let peeropen: (() => void) | undefined
-    jest
-      .mocked(netterminalregisterpeeropenhandler)
-      .mockImplementation((handler) => {
-        peeropen = handler
-      })
     mediaqueueconnectifonboard('helper-peer', 'board-a')
     expect(netterminalmediacall).toHaveBeenCalledTimes(1)
     expect(mediaqueuereadplayerconnectstate().pendingconnect).toBe(true)
     jest.mocked(netterminalmediacall).mockReturnValue(call as never)
-    peeropen?.()
+    mediaqueueconnectifonboard('helper-peer', 'board-a')
     expect(netterminalmediacall).toHaveBeenCalledTimes(2)
     expect(mediaqueuereadplayerconnectstate().hascall).toBe(true)
   })

@@ -111,8 +111,7 @@ export const TTS_FISH_MODEL_KEYWORDS = [
 
 export const BROADCAST_HEAD_KEYWORDS = ['stop', 'whip'] as const
 
-export const MEDIA_ACTION_KEYWORDS = [
-  'add',
+export const QUEUE_ACTION_KEYWORDS = [
   'skip',
   'limit',
   'clear',

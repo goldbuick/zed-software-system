@@ -1,16 +1,22 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { memorycanruncommand } from 'zss/memory/permissions'
+import { memoryplayerallowedcommand } from 'zss/memory/permissions'
 import { memoryisoperator } from 'zss/memory/session'
 
 /** Run on VM thread only (chip / vm:media). Bridge MEMORY has no operator/token. */
 export function mediacanmanagequeue(player: string): boolean {
-  return memoryisoperator(player) || memorycanruncommand(player, 'mediamanage')
+  return (
+    memoryisoperator(player) ||
+    memoryplayerallowedcommand(player, 'mediamanage')
+  )
 }
 
-export function mediarequiremanageonvm(player: string): boolean {
+export function mediarequiremanageonvm(
+  player: string,
+  label = 'media',
+): boolean {
   if (!mediacanmanagequeue(player)) {
-    apierror(SOFTWARE, player, 'media', 'queue admin only')
+    apierror(SOFTWARE, player, label, 'queue admin only')
     return false
   }
   return true

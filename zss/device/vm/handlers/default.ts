@@ -2,6 +2,7 @@ import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
 import {
   bridgemediapanel,
+  bridgequeuepanel,
   registercopy,
   vmcli,
   vmloader,
@@ -215,14 +216,30 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       handlebookmarkscrollpanel(vm, message, path)
       break
     case 'media': {
+      const payload =
+        message.data && typeof message.data === 'object'
+          ? (message.data as Record<string, unknown>)
+          : undefined
+      bridgemediapanel(
+        SOFTWARE,
+        message.player,
+        path,
+        mediapayloadwithmanage(message.player, payload),
+      )
+      break
+    }
+    case 'queue': {
       const managepaths = new Set(['bind', 'skip', 'clear', 'stop', 'limit'])
-      if (managepaths.has(path) && !mediarequiremanageonvm(message.player)) {
+      if (
+        managepaths.has(path) &&
+        !mediarequiremanageonvm(message.player, 'queue')
+      ) {
         break
       }
       if (path === 'bind') {
         const board = memoryreadplayerboard(message.player)
         const payload = (message.data ?? {}) as Record<string, unknown>
-        bridgemediapanel(SOFTWARE, message.player, path, {
+        bridgequeuepanel(SOFTWARE, message.player, path, {
           ...mediapayloadwithmanage(message.player, payload),
           boardid: board?.id ?? payload.boardid ?? '',
           boardname: board?.name ?? payload.boardname ?? '',
@@ -232,7 +249,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           message.data && typeof message.data === 'object'
             ? (message.data as Record<string, unknown>)
             : undefined
-        bridgemediapanel(
+        bridgequeuepanel(
           SOFTWARE,
           message.player,
           path,

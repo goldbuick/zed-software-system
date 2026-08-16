@@ -8,7 +8,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 | [`queue.ts`](../queue.ts) | Host-owned FIFO URL queue |
 | [`urlnormalize.ts`](../urlnormalize.ts) | Dedupe keys for queue URLs |
 | [`mediaguards.ts`](../mediaguards.ts) | Submit vs manage permission checks |
-| [`mediamenu.ts`](../mediamenu.ts) / [`panel.ts`](../panel.ts) | `#media` CLI menu + bridge actions |
+| [`mediamenu.ts`](../mediamenu.ts) / [`panel.ts`](../panel.ts) | `#media` / `#queue` CLI + bridge actions |
 | [`playerconnect.ts`](../playerconnect.ts) | Direct helper `MediaConnection` + board-leave teardown |
 | [`roompeers.ts`](../roompeers.ts) | Board players -> clique peer ids (legacy tests) |
 | [`callmetadata.ts`](../callmetadata.ts) | `player` MediaConnection metadata |
@@ -19,23 +19,23 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 
 | Action | Who | Permission |
 |--------|-----|------------|
-| `#media add`, menu | Players (creative) | `speaker` (`media`) |
-| bind, skip, clear, stop, limit | Admin / mod | `bridge` (`mediamanage`) |
+| `#media`, `#media <url>` | Players (creative) | `speaker` (`media`) |
+| `#queue` bind, skip, clear, stop, limit | Admin / mod | `bridge` (`mediamanage`) |
 
-`#media add` requires a bound helper. Queue is FIFO autoplay: finished items are removed; failures auto-skip.
+`#media <url>` requires a bound helper (`#queue <peerid>` first). Queue is FIFO autoplay: finished items are removed; failures auto-skip.
 
 ## Commands
 
 | Command | Role |
 |---------|------|
-| `#media` | Queue table + admin links (skip/clear/stop) |
-| `#media add <url>` | Submit URL (deduped, per-player limit default 3) |
-| `#media skip` | Admin: skip current item |
-| `#media clear` | Admin: stop playback + empty queue (helper stays up) |
-| `#media stop` | Admin: disconnect helper |
-| `#media limit <N>` | Admin: set per-player cap (1-20) |
-| `#media <peerid>` | Admin: bind helper on current board |
+| `#media` | Queue table + admin zed links |
+| `#media <url>` | Submit URL (deduped, per-player limit default 3) |
+| `#queue <peerid>` | Admin: bind helper on current board |
+| `#queue skip` | Admin: skip current item |
+| `#queue clear` | Admin: stop playback + empty queue (helper stays up) |
+| `#queue stop` | Admin: disconnect helper |
+| `#queue limit <N>` | Admin: set per-player cap (1-20) |
 
-CLI registration: [`media.ts`](../../../firmware/cli/commands/media.ts). Board sink: [`boardtvsink.tsx`](../../../gadget/boardtvsink.tsx).
+CLI registration: [`media.ts`](../../../firmware/cli/commands/media.ts), [`queue.ts`](../../../firmware/cli/commands/queue.ts). Board sink: [`boardtvsink.tsx`](../../../gadget/boardtvsink.tsx).
 
 Design: [`ops/docs/local-media-helpers-tauri.mdx`](../../../../ops/docs/local-media-helpers-tauri.mdx)

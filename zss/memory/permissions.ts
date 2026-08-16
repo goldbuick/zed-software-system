@@ -421,15 +421,36 @@ export function memorymapcommandtofamily(command: string): string {
 }
 
 /**
+ * Silent allowlist probe (no apierror). Use when composing payloads or UI flags;
+ * call memorycanruncommand when denying a command the player explicitly invoked.
+ */
+export function memoryplayerallowedcommand(
+  player: string,
+  command: string,
+): boolean {
+  if (player === memoryreadoperator()) {
+    return true
+  }
+  if (!ispermissioncontrolledcommand(command)) {
+    return true
+  }
+  const family = memorymapcommandtofamily(command)
+  const token = PERMISSION_STATE.playertotoken[player]
+  if (token === undefined) {
+    return false
+  }
+  const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
+  const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
+  return allowlist?.has(family) ?? false
+}
+
+/**
  * Returns true if this player may run the command. Operator always may; non-operator
  * must have a token and a role whose allowlist includes the command (or its family).
  * On deny, reports apierror and returns false. Call only for CLI driver + player context.
  */
 export function memorycanruncommand(player: string, command: string): boolean {
-  if (player === memoryreadoperator()) {
-    return true
-  }
-  if (!ispermissioncontrolledcommand(command)) {
+  if (memoryplayerallowedcommand(player, command)) {
     return true
   }
   const family = memorymapcommandtofamily(command)
@@ -444,20 +465,14 @@ export function memorycanruncommand(player: string, command: string): boolean {
     )
     return false
   }
-  const tokenrole = PERMISSION_STATE.rolebytoken[token] ?? 'player'
-  const allowlist = PERMISSION_STATE.allowlistbyrole[tokenrole]
-  const allowed = allowlist?.has(family) ?? false
-  if (!allowed) {
-    apierror(
-      SOFTWARE,
-      player,
-      'permissions',
-      `(deny)`,
-      `${family} - ${command}`,
-    )
-    return false
-  }
-  return true
+  apierror(
+    SOFTWARE,
+    player,
+    'permissions',
+    `(deny)`,
+    `${family} - ${command}`,
+  )
+  return false
 }
 
 export function memorysetplayertotoken(player: string, token: string) {

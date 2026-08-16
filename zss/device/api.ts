@@ -118,6 +118,15 @@ export function bridgemediapanel(
   device.emit(player, 'bridge:mediapanel', { path, data })
 }
 
+export function bridgequeuepanel(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+  data?: unknown,
+) {
+  device.emit(player, 'bridge:queuepanel', { path, data })
+}
+
 export function bridgemediavol(
   device: DEVICELIKE,
   player: string,

@@ -175,7 +175,7 @@ function ytdlpprogressstatus(line) {
   return 'downloading'
 }
 
-function ytdlpstderrphase(line) {
+function ytdlplogphase(line) {
   const lower = line.toLowerCase()
   if (
     lower.includes('extracting url') ||
@@ -197,14 +197,16 @@ function ytdlpstderrphase(line) {
     lower.includes('merger') ||
     lower.includes('ffmpeg') ||
     lower.includes('extractaudio') ||
-    lower.includes('post-process')
+    lower.includes('post-process') ||
+    lower.includes('videoconvertor') ||
+    lower.includes('converting video')
   ) {
     return 'processing'
   }
   return null
 }
 
-function ytdlpstderrdetail(line) {
+function ytdlplogdetail(line) {
   const trimmed = line.trim()
   const idx = trimmed.lastIndexOf(':')
   if (idx >= 0) {
@@ -288,21 +290,28 @@ function emitline(manager, emit, line) {
     if (pct === null) {
       return
     }
+    const status = ytdlpprogressstatus(line)
+    const eta = parseeta(line)
     manager.percent = pct
+    manager.status = status
+    manager.detail = eta
     emit('mq-download-progress', {
       percent: pct,
-      eta: parseeta(line),
-      status: ytdlpprogressstatus(line),
+      eta: eta,
+      status: status,
     })
     return
   }
-  const phase = ytdlpstderrphase(line)
+  const phase = ytdlplogphase(line)
   if (!phase) {
     return
   }
+  const detail = ytdlplogdetail(line)
+  manager.status = phase
+  manager.detail = detail
   emit('mq-download-progress', {
     percent: manager.percent,
-    eta: ytdlpstderrdetail(line),
+    eta: detail,
     status: phase,
   })
 }
@@ -323,6 +332,8 @@ class DownloadManager {
     this.cookiesbrowser = ''
     this.phase = 'idle'
     this.percent = 0
+    this.status = 'idle'
+    this.detail = ''
     this.filepath = ''
     this.error = ''
     this.cancelled = false
@@ -351,6 +362,8 @@ class DownloadManager {
     return {
       phase: this.phase,
       percent: this.percent,
+      status: this.status,
+      detail: this.detail,
       path: this.filepath,
       error: this.error,
       cacheBytes: mediafilebytes(this.cachedir),
@@ -394,6 +407,8 @@ class DownloadManager {
     if (this.phase === 'downloading') {
       this.phase = 'idle'
       this.percent = 0
+      this.status = 'idle'
+      this.detail = ''
     }
     this.cancelled = false
   }
@@ -403,6 +418,8 @@ class DownloadManager {
     this.filepath = ''
     this.error = ''
     this.percent = 0
+    this.status = 'idle'
+    this.detail = ''
     this.phase = 'idle'
     const before = mediafilebytes(this.cachedir)
     const deleted = removemqmediafiles(this.cachedir, false)
@@ -425,12 +442,14 @@ class DownloadManager {
     this.error = ''
     this.filepath = ''
     this.percent = 0
+    this.status = 'extracting'
+    this.detail = 'starting'
     this.phase = 'downloading'
     this.cancelled = false
     emit('mq-download-progress', {
       percent: 0,
-      eta: '',
-      status: 'downloading',
+      eta: 'starting',
+      status: 'extracting',
     })
 
     const ytdlp = resolveytdlp(this.resourceroot)
@@ -483,9 +502,11 @@ class DownloadManager {
           lastmessage,
         )
         this.percent = 0
+        this.status = 'extracting'
+        this.detail = 'starting'
         emit('mq-download-progress', {
           percent: 0,
-          eta: '',
+          eta: 'starting',
           status: 'extracting',
         })
 
@@ -562,6 +583,8 @@ class DownloadManager {
         if (success && outpathexists) {
           this.filepath = outpath
           this.percent = 100
+          this.status = 'downloading'
+          this.detail = ''
           emit('mq-download-progress', {
             percent: 100,
             eta: '',

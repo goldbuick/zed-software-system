@@ -3,6 +3,7 @@ import type { MESSAGE } from 'zss/device/types'
 import { isstring } from 'zss/mapping/types'
 import { memoryinvalidatedraw } from 'zss/memory/boarddrawdirty'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
+import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
 export function handlemediaqueueboard(_vm: DEVICE, message: MESSAGE): void {
@@ -30,4 +31,5 @@ export function handlemediaqueueboard(_vm: DEVICE, message: MESSAGE): void {
     runtime.mediaqueuehelperpeerid = data.helperpeerid.trim()
   }
   memoryinvalidatedraw(board)
+  memoryinvalidategadgetlayerscacheforboard(board.id)
 }

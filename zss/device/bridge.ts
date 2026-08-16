@@ -31,7 +31,7 @@ import {
   mediaqueuesetmediavolume,
   storemediavolconfig,
 } from 'zss/feature/mediaqueue/boardtvaudio'
-import { handlemediapanel } from 'zss/feature/mediaqueue/panel'
+import { handlemediapanel, handlequeuepanel } from 'zss/feature/mediaqueue/panel'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   netterminalhost,
@@ -627,6 +627,17 @@ const bridge = createdevice('bridge', [], (message) => {
         break
       }
       handlemediapanel(bridge, { ...message, data: payload.data }, payload.path)
+      break
+    }
+    case 'queuepanel': {
+      const payload = message.data as
+        | { path?: unknown; data?: unknown }
+        | undefined
+      if (!payload || !isstring(payload.path)) {
+        apierror(bridge, message.player, 'bridge', 'queue panel: need path')
+        break
+      }
+      handlequeuepanel(bridge, { ...message, data: payload.data }, payload.path)
       break
     }
     case 'mediavol': {

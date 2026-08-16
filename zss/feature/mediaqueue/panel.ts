@@ -58,11 +58,19 @@ function readlimitfrompayload(message: MESSAGE): number | undefined {
   return Number.isFinite(limit) ? limit : undefined
 }
 
+function readpeeridfrompayload(message: MESSAGE): string {
+  const payload = message.data as { peerid?: unknown } | undefined
+  if (isstring(payload?.peerid)) {
+    return payload.peerid.trim()
+  }
+  return readstringarg(message)?.trim() ?? ''
+}
+
 function requiremanage(player: string, message: MESSAGE): boolean {
   if (mediareadcanmanagefrompayload(message.data)) {
     return true
   }
-  apierror(SOFTWARE, player, 'media', 'queue admin only')
+  apierror(SOFTWARE, player, 'queue', 'queue admin only')
   return false
 }
 
@@ -75,14 +83,14 @@ function mediabind(
 ): void {
   const trimmed = peerid.trim()
   if (!trimmed) {
-    apierror(SOFTWARE, player, 'media', 'need a helper peer id')
+    apierror(SOFTWARE, player, 'queue', 'need a helper peer id')
     return
   }
   doasync(SOFTWARE, player, async () => {
     mediaqueueensurevideosink()
     const ready = await netterminalensurehostready()
     if (!ready) {
-      apierror(SOFTWARE, player, 'media', 'could not start netterminal peer')
+      apierror(SOFTWARE, player, 'queue', 'could not start netterminal peer')
       return
     }
     mediaqueuelisten(player, trimmed, boardid, boardname)
@@ -103,29 +111,14 @@ export function handlemediapanel(
     case 'menu':
       showmediamenu(player, canmanage)
       break
-    case 'bind': {
-      if (!requiremanage(player, message)) {
-        return
-      }
-      const payload = message.data as
-        | { peerid?: unknown; boardid?: unknown; boardname?: unknown }
-        | undefined
-      const peerid = isstring(payload?.peerid) ? payload.peerid.trim() : ''
-      const boardid = isstring(payload?.boardid) ? payload.boardid.trim() : ''
-      const boardname = isstring(payload?.boardname)
-        ? payload.boardname.trim()
-        : ''
-      mediabind(player, peerid, boardid, boardname, canmanage)
-      break
-    }
     case 'add': {
       const url = readurlfrompayload(message)
       if (!url) {
-        apierror(SOFTWARE, player, 'media', 'usage: #media add <url>')
+        apierror(SOFTWARE, player, 'media', 'usage: #media <url>')
         return
       }
       if (!mediaqueueislistening()) {
-        apierror(SOFTWARE, player, 'media', 'use #media "peerid" first')
+        apierror(SOFTWARE, player, 'media', 'use #queue <peerid> first')
         return
       }
       const hadqueue = mediaqueuereadstate().urls.length > 0
@@ -141,12 +134,44 @@ export function handlemediapanel(
             `queue limit (${mediaqueuereadperplayerlimit()} per player)`,
           )
         } else {
-          apierror(SOFTWARE, player, 'media', 'usage: #media add <url>')
+          apierror(SOFTWARE, player, 'media', 'usage: #media <url>')
         }
         return
       }
       mediaqueuepushqueuesnapshot(!hadqueue)
       write(SOFTWARE, player, `media added: ${url}`)
+      break
+    }
+    default:
+      break
+  }
+}
+
+/** CLI actions for #queue (MAIN thread via bridge:queuepanel). */
+export function handlequeuepanel(
+  vm: DEVICE,
+  message: MESSAGE,
+  path: string,
+): void {
+  const player = message.player
+  const canmanage = mediareadcanmanagefrompayload(message.data)
+  void vm
+  switch (NAME(path)) {
+    case 'bind': {
+      if (!requiremanage(player, message)) {
+        return
+      }
+      const payload = message.data as
+        | { peerid?: unknown; boardid?: unknown; boardname?: unknown }
+        | undefined
+      const peerid = isstring(payload?.peerid)
+        ? payload.peerid.trim()
+        : readpeeridfrompayload(message)
+      const boardid = isstring(payload?.boardid) ? payload.boardid.trim() : ''
+      const boardname = isstring(payload?.boardname)
+        ? payload.boardname.trim()
+        : ''
+      mediabind(player, peerid, boardid, boardname, canmanage)
       break
     }
     case 'skip': {
@@ -155,7 +180,7 @@ export function handlemediapanel(
       }
       mediaqueueskip()
       mediaqueuepushqueuesnapshot(true)
-      write(SOFTWARE, player, 'media skipped to next')
+      write(SOFTWARE, player, 'queue skipped to next')
       break
     }
     case 'limit': {
@@ -164,14 +189,14 @@ export function handlemediapanel(
       }
       const limit = readlimitfrompayload(message)
       if (limit === undefined) {
-        apierror(SOFTWARE, player, 'media', 'usage: #media limit <N>')
+        apierror(SOFTWARE, player, 'queue', 'usage: #queue limit <N>')
         return
       }
       mediaqueuesetperplayerlimit(limit)
       write(
         SOFTWARE,
         player,
-        `media queue limit: ${mediaqueuereadperplayerlimit()} per player`,
+        `queue limit: ${mediaqueuereadperplayerlimit()} per player`,
       )
       break
     }
@@ -181,7 +206,7 @@ export function handlemediapanel(
       }
       mediaqueueclear()
       mediaqueuepushqueuesnapshot()
-      write(SOFTWARE, player, 'media queue cleared')
+      write(SOFTWARE, player, 'queue cleared')
       break
     }
     case 'stop': {
@@ -189,7 +214,7 @@ export function handlemediapanel(
         return
       }
       mediaqueuestop(player)
-      write(SOFTWARE, player, 'media stopped')
+      write(SOFTWARE, player, 'queue stopped')
       break
     }
     default:

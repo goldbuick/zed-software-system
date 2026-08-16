@@ -201,6 +201,20 @@ export function memoryconverttogadgetcontrollayer(
  */
 const memoryconverttogadgetlayerscache = new Map<string, LAYER[]>()
 
+/** Drop incremental MID/UNDER/OVER cache rows for a board (media bind, palette, etc.). */
+export function memoryinvalidategadgetlayerscacheforboard(boardid: string) {
+  const trimmed = boardid.trim()
+  if (!trimmed) {
+    return
+  }
+  const needle = `:${trimmed}:`
+  for (const key of memoryconverttogadgetlayerscache.keys()) {
+    if (key.includes(needle)) {
+      memoryconverttogadgetlayerscache.delete(key)
+    }
+  }
+}
+
 /** Gate for incremental layer cache reuse; exported for unit tests. */
 export function memoryincrementallayerscachestable(
   boardruntime: MAYBE<{

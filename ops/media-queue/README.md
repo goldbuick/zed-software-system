@@ -12,7 +12,7 @@ Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-t
 | Media | PeerJS `MediaConnection` (`peer.call`, video + audio tracks) |
 | Signaling | `terminal.zed.cafe` (same PeerServer as netterminal) |
 
-Cafe: **`#media`** terminal menu. Admin binds with `#media <peerid>`; players `#media add <url>` after bind; queue autoplays FIFO.
+Cafe: **`#media`** menu and **`#media <url>`** submit. Admin binds with **`#queue <peerid>`**; **`#queue skip|clear|stop|limit`** for admin queue control.
 
 ## Build
 
@@ -36,10 +36,10 @@ yarn task run mediaqueue:dev
 ## Use
 
 1. Open this app -- it starts a PeerJS peer and shows **Your peer id**.
-2. Copy peer id and in cafe run `#media <peerid>` (admin).
-3. In cafe: `#media add <url>` (players, after bind). Queue autoplays; admin may `#media skip`, `#media clear`, or `#media limit <N>`.
+2. Copy peer id and in cafe run `#queue <peerid>` (admin).
+3. In cafe: `#media <url>` (players, after bind). Queue autoplays; admin may `#queue skip`, `#queue clear`, or `#queue limit <N>`.
 4. The helper downloads via yt-dlp, plays the merged file, and starts the Peer call when cafe advances the queue.
-5. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. `#media stop` disconnects the helper; `#media clear` stops playback and empties the queue. **Clear downloads** wipes the local cache.
+5. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. `#queue stop` disconnects the helper; `#queue clear` stops playback and empties the queue. **Clear downloads** wipes the local cache.
 
 ## Download note
 

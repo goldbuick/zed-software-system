@@ -1,6 +1,7 @@
 import { handlemediaqueueboard } from 'zss/device/vm/handlers/mediaqueueboard'
 import { memoryinvalidatedraw } from 'zss/memory/boarddrawdirty'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
+import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
 jest.mock('zss/memory/boards', () => ({
@@ -13,6 +14,10 @@ jest.mock('zss/memory/runtimeboundary', () => ({
 
 jest.mock('zss/memory/boarddrawdirty', () => ({
   memoryinvalidatedraw: jest.fn(),
+}))
+
+jest.mock('zss/memory/rendering', () => ({
+  memoryinvalidategadgetlayerscacheforboard: jest.fn(),
 }))
 
 describe('mediaqueue board runtime sync', () => {
@@ -35,6 +40,9 @@ describe('mediaqueue board runtime sync', () => {
     } as never)
     expect(runtime.mediaqueuehelperpeerid).toBe('helper-1')
     expect(memoryinvalidatedraw).toHaveBeenCalledWith(board)
+    expect(memoryinvalidategadgetlayerscacheforboard).toHaveBeenCalledWith(
+      'board-a',
+    )
   })
 
   it('clears helper peer id on stop', () => {
@@ -52,5 +60,8 @@ describe('mediaqueue board runtime sync', () => {
     } as never)
     expect(runtime.mediaqueuehelperpeerid).toBeUndefined()
     expect(memoryinvalidatedraw).toHaveBeenCalledWith(board)
+    expect(memoryinvalidategadgetlayerscacheforboard).toHaveBeenCalledWith(
+      'board-a',
+    )
   })
 })

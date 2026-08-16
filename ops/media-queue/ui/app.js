@@ -21,6 +21,7 @@
   let dataconnection = null
   let mediastream = null
   let playercalls = new Map()
+  let pendingplayercalls = new Map()
   let queueurls = []
   let queueindex = 0
   let cafemediapeerid = ''
@@ -63,13 +64,10 @@
           if (!downloadinflight || !state) {
             return
           }
-          const phase = String(
-            state && state.phase ? state.phase : 'downloading',
-          ).toLowerCase()
           handledownloadprogress({
             percent: Number(state.percent),
-            eta: '',
-            status: phase === 'downloading' ? 'downloading' : phase,
+            eta: state.detail ? String(state.detail) : '',
+            status: state.status ? String(state.status) : 'downloading',
           })
         })
         .catch(function () {})
@@ -338,6 +336,47 @@
     playercalls.clear()
   }
 
+  function closependingplayercalls() {
+    pendingplayercalls.forEach(function (call) {
+      try {
+        call.close()
+      } catch (_) {}
+    })
+    pendingplayercalls.clear()
+  }
+
+  function wireplayercallcleanup(call, peerid) {
+    call.on('close', function () {
+      playercalls.delete(peerid)
+      pendingplayercalls.delete(peerid)
+    })
+    call.on('error', function () {
+      playercalls.delete(peerid)
+      pendingplayercalls.delete(peerid)
+    })
+  }
+
+  function answerplayercall(call) {
+    if (!mediastream) {
+      return false
+    }
+    call.answer(mediastream)
+    playercalls.set(call.peer, { call: call, answerstream: mediastream })
+    pendingplayercalls.delete(call.peer)
+    return true
+  }
+
+  function answerpendingplayercalls() {
+    if (!mediastream) {
+      return
+    }
+    pendingplayercalls.forEach(function (call) {
+      answerplayercall(call)
+    })
+    pendingplayercalls.clear()
+    publishstreamtoplayers()
+  }
+
   function publishstreamtoplayers() {
     if (!mediastream) {
       return
@@ -372,18 +411,16 @@
     if (meta.kind !== 'mediaqueue') {
       return
     }
-    var answerstream = mediastream || new MediaStream()
-    call.answer(answerstream)
-    playercalls.set(call.peer, { call: call, answerstream: answerstream })
-    call.on('close', function () {
-      playercalls.delete(call.peer)
-    })
-    call.on('error', function () {
-      playercalls.delete(call.peer)
-    })
-    if (mediastream) {
+    wireplayercallcleanup(call, call.peer)
+    if (answerplayercall(call)) {
       publishstreamtoplayers()
+      return
     }
+    pendingplayercalls.set(call.peer, call)
+    setlink(
+      'waiting',
+      String(pendingplayercalls.size + playercalls.size) + ' player(s) waiting',
+    )
   }
 
   function stopmediastream() {
@@ -398,9 +435,18 @@
 
   async function endcall(opts) {
     clearendedlistener()
-    const hadcall = Boolean(playercalls.size > 0 || mediastream || playbackstarted)
+    const hadcall = Boolean(
+      playercalls.size > 0 ||
+        pendingplayercalls.size > 0 ||
+        mediastream ||
+        playbackstarted,
+    )
     const naturalend = Boolean(opts && opts.natural)
-    closeplayercalls()
+    const keepplayers = Boolean(opts && opts.keepplayers)
+    if (!keepplayers) {
+      closeplayercalls()
+      closependingplayercalls()
+    }
     stopmediastream()
     if (playbackstarted && window.mqplayback) {
       await window.mqplayback.stopplayback()
@@ -437,8 +483,8 @@
       setlink('waiting', 'cafe not connected yet')
       return
     }
-    if (playercalls.size > 0 || mediastream || playbackstarted) {
-      await endcall()
+    if (mediastream || playbackstarted) {
+      await endcall({ keepplayers: true })
     }
     if (!window.mqplayback) {
       setlink('error', 'playback module missing')
@@ -485,6 +531,7 @@
     }
     void refreshcachebytes()
     wireplaybackended(playback && playback.video ? playback.video : null)
+    answerpendingplayercalls()
     publishstreamtoplayers()
     setlink('playing', String(playercalls.size) + ' player(s)')
     sendstatus('playing', String(playercalls.size))
@@ -521,7 +568,7 @@
           role: 'helper',
           peerid: localpeerid,
         })
-        sendstatus('waiting-for-url', 'add a URL in cafe #media')
+        sendstatus('waiting-for-url', 'add a URL in cafe #media <url>')
         break
       case 'mediaqueue:queue':
         queueurls = Array.isArray(data.urls) ? data.urls.slice() : []
@@ -627,7 +674,7 @@
       localpeerid = id
       els.localpeer.value = id
       els.copypeer.disabled = false
-      setlink('ready', '#media <peerid> in cafe')
+      setlink('ready', '#queue <peerid> in cafe')
     })
     peer.on('connection', wiredataconnection)
     peer.on('call', handleplayercall)
@@ -648,7 +695,7 @@
     if (!localpeerid) {
       return
     }
-    const cliline = '#media "' + localpeerid + '"'
+    const cliline = '#queue "' + localpeerid + '"'
     try {
       await invoke('copy_text', { text: cliline })
       setlink(els.link.textContent, 'copied to clipboard')

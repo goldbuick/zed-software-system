@@ -310,7 +310,7 @@ export function mediaqueuelisten(
       SOFTWARE,
       player,
       'media',
-      `already listening to helper ${mediaqueuereadhelperpeerid() || '?'} on board ${mediaqueuereadboundboardid() || '?'} -- use #media stop first`,
+      `already listening to helper ${mediaqueuereadhelperpeerid() || '?'} on board ${mediaqueuereadboundboardid() || '?'} -- use #queue stop first`,
     )
     return
   }
