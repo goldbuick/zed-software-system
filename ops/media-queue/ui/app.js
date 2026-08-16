@@ -38,6 +38,75 @@
   let downloadpolltimer = null
   let endedvideo = null
 
+  let mqdevcache = null
+
+  async function loadmqdevconfig() {
+    if (!window.__TAURI__ || !window.__TAURI__.core) {
+      return
+    }
+    try {
+      mqdevcache = await window.__TAURI__.core.invoke('get_mq_dev_config')
+    } catch (_) {
+      mqdevcache = null
+    }
+  }
+
+  void loadmqdevconfig()
+
+  function mqdevconfig() {
+    if (mqdevcache) {
+      return mqdevcache
+    }
+    return typeof window.mqdev === 'object' && window.mqdev ? window.mqdev : null
+  }
+
+  async function writemqdevfile(filepath, text) {
+    if (!filepath || !window.__TAURI__ || !window.__TAURI__.core) {
+      return
+    }
+    try {
+      await window.__TAURI__.core.invoke('write_text_file', {
+        path: filepath,
+        text: text,
+      })
+    } catch (_) {}
+  }
+
+  function writemqpeerid(id) {
+    if (window.__TAURI__ && window.__TAURI__.core) {
+      void window.__TAURI__.core.invoke('mq_dev_peer_open', { id: id })
+      return
+    }
+    var cfg = mqdevconfig()
+    if (cfg && cfg.peeridfile) {
+      void writemqdevfile(cfg.peeridfile, id)
+    }
+  }
+
+  function writemqstatus(text) {
+    if (window.__TAURI__ && window.__TAURI__.core) {
+      void window.__TAURI__.core.invoke('mq_dev_status', { text: text })
+      return
+    }
+    var cfg = mqdevconfig()
+    if (cfg && cfg.statustextfile) {
+      void writemqdevfile(cfg.statustextfile, text)
+    }
+  }
+
+  function readdevplaybackpath() {
+    var cfg = mqdevconfig()
+    return cfg && cfg.playbackpath ? String(cfg.playbackpath).trim() : ''
+  }
+
+  function maybeautostartdevfixture() {
+    var devpath = readdevplaybackpath()
+    if (!devpath || playbackstarted || pendinggoto || !dataconnection) {
+      return
+    }
+    void startplaybackandcall('dev://fixture')
+  }
+
   function clearendedlistener() {
     if (endedvideo && endedvideo.__mqonended) {
       endedvideo.removeEventListener('ended', endedvideo.__mqonended)
@@ -346,19 +415,23 @@
 
   function syncplayerlinkstatus() {
     if (playercalls.size > 0) {
-      setlink('playing', String(playercalls.size) + ' player(s)')
+      var playing = String(playercalls.size) + ' player(s)'
+      setlink('playing', playing)
+      writemqstatus('playing|' + playing)
       return
     }
     if (pendingplayercalls.size > 0) {
-      setlink(
-        'waiting',
-        String(pendingplayercalls.size) + ' player(s) waiting',
-      )
+      var waiting = String(pendingplayercalls.size) + ' player(s) waiting'
+      setlink('waiting', waiting)
+      writemqstatus('waiting|' + waiting)
       return
     }
     if (playbackstarted && mediastream) {
       setlink('playing', '0 player(s)')
+      writemqstatus('playing|0 player(s)')
+      return
     }
+    writemqstatus('idle|')
   }
 
   async function fitmainwindow() {
@@ -457,13 +530,17 @@
             break
           }
         }
+        if (sender && sender.track === track) {
+          return
+        }
         if (sender) {
-          void sender.replaceTrack(track)
-        } else {
           try {
-            pc.addTrack(track, mediastream)
+            pc.removeTrack(sender)
           } catch (_) {}
         }
+        try {
+          pc.addTrack(track, mediastream)
+        } catch (_) {}
       })
     })
   }
@@ -554,23 +631,34 @@
     let path = ''
     let playback = null
     try {
-      downloadinflight = true
-      lastdownloadpct = -1
-      lastdownloadlabel = ''
-      setlink('extracting', 'starting')
-      sendstatus('extracting', 'starting')
-      startdownloadpoll()
-      const ready = await window.mqplayback.startdownload(url)
-      path = ready && ready.path ? ready.path : ''
-      currentplaybacktitle =
-        ready && ready.title ? String(ready.title).trim() : ''
-      handledownloadprogress({ percent: 100, status: 'downloading' })
-      sendstatus('download-progress', '100|')
-      const label = playbacklabel(currentplaybacktitle, url, path)
-      setlink('buffering', label)
-      sendstatus('buffering', label)
-      playback = await window.mqplayback.startplayback(path)
-      mediastream = playback.stream
+      const devpath = readdevplaybackpath()
+      if (devpath) {
+        path = devpath
+        currentplaybacktitle = 'dev fixture'
+        currentplaybackurl = url || 'dev://fixture'
+        setlink('buffering', path)
+        sendstatus('buffering', path)
+        playback = await window.mqplayback.startplayback(path)
+        mediastream = playback.stream
+      } else {
+        downloadinflight = true
+        lastdownloadpct = -1
+        lastdownloadlabel = ''
+        setlink('extracting', 'starting')
+        sendstatus('extracting', 'starting')
+        startdownloadpoll()
+        const ready = await window.mqplayback.startdownload(url)
+        path = ready && ready.path ? ready.path : ''
+        currentplaybacktitle =
+          ready && ready.title ? String(ready.title).trim() : ''
+        handledownloadprogress({ percent: 100, status: 'downloading' })
+        sendstatus('download-progress', '100|')
+        const label = playbacklabel(currentplaybacktitle, url, path)
+        setlink('buffering', label)
+        sendstatus('buffering', label)
+        playback = await window.mqplayback.startplayback(path)
+        mediastream = playback.stream
+      }
     } catch (err) {
       const phase = path ? 'playback-failed' : 'download-failed'
       const message = shortenerr(err)
@@ -579,10 +667,12 @@
       await endcall()
       return
     } finally {
-      downloadinflight = false
-      lastdownloadpct = -1
-      cleardownloadpulse()
-      cleardownloadpoll()
+      if (!readdevplaybackpath()) {
+        downloadinflight = false
+        lastdownloadpct = -1
+        cleardownloadpulse()
+        cleardownloadpoll()
+      }
     }
     playbackstarted = true
     currentplaybackurl = url
@@ -633,6 +723,7 @@
           peerid: localpeerid,
         })
         sendstatus('waiting-for-url', 'add a URL in cafe #media <url>')
+        maybeautostartdevfixture()
         break
       case 'mediaqueue:queue':
         queueurls = Array.isArray(data.urls) ? data.urls.slice() : []
@@ -663,6 +754,7 @@
           void maybeautostartaftergoto(queueurls[queueindex])
         } else if (!playbackstarted) {
           sendstatus('waiting-for-url', 'queue a URL in cafe first')
+          maybeautostartdevfixture()
         }
         break
       default:
@@ -685,6 +777,7 @@
         role: 'helper',
         peerid: localpeerid,
       })
+      maybeautostartdevfixture()
     })
     conn.on('data', handlecafemessage)
     conn.on('close', function () {
@@ -739,6 +832,7 @@
       els.localpeer.value = id
       els.copypeer.disabled = false
       setlink('ready', '#queue <peerid> in cafe')
+      writemqpeerid(id)
     })
     peer.on('connection', wiredataconnection)
     peer.on('call', handleplayercall)

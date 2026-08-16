@@ -1,5 +1,5 @@
 import type { MediaConnection } from 'peerjs'
-import { apilog } from 'zss/device/api'
+import { apierror, apilog } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -27,10 +27,19 @@ import {
 } from 'zss/feature/netterminal'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+const TRACK_SYNC_TIMEOUT_MS = 30_000
+const TRACK_SYNC_POLL_MS = 50
+const TRACK_SYNC_POLL_MAX = TRACK_SYNC_TIMEOUT_MS / TRACK_SYNC_POLL_MS
+
 let activecall: MAYBE<MediaConnection>
 let activestream: MAYBE<MediaStream>
-const pctracklisteners = new Map<MediaConnection, (evt: RTCTrackEvent) => void>()
+const pctracklisteners = new Map<
+  MediaConnection,
+  (evt: RTCTrackEvent) => void
+>()
+const pcstatelisteners = new Map<MediaConnection, () => void>()
 const calltrackpollers = new Map<MediaConnection, ReturnType<typeof setInterval>>()
+const calltracksynctimers = new Map<MediaConnection, ReturnType<typeof setTimeout>>()
 
 function retryplayerconnectfromlayer() {
   const layer = mediaqueuereadplayerlayerstate()
@@ -63,6 +72,18 @@ function streamfromreceivers(pc: RTCPeerConnection): MediaStream | undefined {
   return new MediaStream(tracks)
 }
 
+function readcallstream(call: MediaConnection): MediaStream | undefined {
+  const remote = (call as { remoteStream?: MediaStream }).remoteStream
+  if (ispresent(remote) && streamhasmedia(remote)) {
+    return remote
+  }
+  const pc = call.peerConnection
+  if (!pc) {
+    return undefined
+  }
+  return streamfromreceivers(pc)
+}
+
 function clearcalltrackpoll(call: MediaConnection) {
   const poller = calltrackpollers.get(call)
   if (poller) {
@@ -71,14 +92,29 @@ function clearcalltrackpoll(call: MediaConnection) {
   }
 }
 
+function clearcalltracksynctimer(call: MediaConnection) {
+  const timer = calltracksynctimers.get(call)
+  if (timer) {
+    clearTimeout(timer)
+    calltracksynctimers.delete(call)
+  }
+}
+
 function clearpctracklistener(call: MediaConnection) {
   clearcalltrackpoll(call)
+  clearcalltracksynctimer(call)
   const pc = call.peerConnection
   const listener = pctracklisteners.get(call)
   if (pc && listener) {
     pc.removeEventListener('track', listener)
   }
   pctracklisteners.delete(call)
+  const statelistener = pcstatelisteners.get(call)
+  if (pc && statelistener) {
+    pc.removeEventListener('iceconnectionstatechange', statelistener)
+    pc.removeEventListener('connectionstatechange', statelistener)
+  }
+  pcstatelisteners.delete(call)
 }
 
 function attachplayerstream(stream: MediaStream, helperpeerid: string) {
@@ -99,6 +135,9 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
     }
   }
   activestream = stream
+  if (ispresent(activecall)) {
+    clearcalltracksynctimer(activecall)
+  }
   mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
   mediaqueuesetplayerlayerpending(false)
   const player = registerreadplayer()
@@ -114,15 +153,31 @@ function synccallstream(call: MediaConnection, helperpeerid: string): boolean {
   if (activecall !== call) {
     return false
   }
-  const pc = call.peerConnection
-  if (!pc) {
-    return false
-  }
-  const merged = streamfromreceivers(pc)
+  const merged = readcallstream(call)
   if (!ispresent(merged) || !streamhasmedia(merged)) {
     return false
   }
   return attachplayerstream(merged, helperpeerid)
+}
+
+function scheduletracksynctimeout(call: MediaConnection, helperpeerid: string) {
+  clearcalltracksynctimer(call)
+  const timer = setTimeout(() => {
+    calltracksynctimers.delete(call)
+    if (activecall !== call || ispresent(activestream)) {
+      return
+    }
+    const player = registerreadplayer()
+    const pc = call.peerConnection
+    const ice = pc?.iceConnectionState ?? '?'
+    const conn = pc?.connectionState ?? '?'
+    apilog(
+      SOFTWARE,
+      player,
+      `mediaqueue no tracks from ${helperpeerid} after ${TRACK_SYNC_TIMEOUT_MS}ms ice=${ice} conn=${conn}`,
+    )
+  }, TRACK_SYNC_TIMEOUT_MS)
+  calltracksynctimers.set(call, timer)
 }
 
 function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
@@ -132,8 +187,33 @@ function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
     if (activecall !== call) {
       return
     }
-    void evt
-    synccallstream(call, helperpeerid)
+    queueMicrotask(() => {
+      if (activecall !== call) {
+        return
+      }
+      const bucket = evt.streams[0]
+      if (ispresent(bucket) && streamhasmedia(bucket)) {
+        attachplayerstream(bucket, helperpeerid)
+        return
+      }
+      synccallstream(call, helperpeerid)
+    })
+  }
+
+  const onconnectionstate = () => {
+    if (activecall !== call) {
+      return
+    }
+    const pc = call.peerConnection
+    if (!pc) {
+      return
+    }
+    if (
+      pc.iceConnectionState === 'connected' ||
+      pc.connectionState === 'connected'
+    ) {
+      synccallstream(call, helperpeerid)
+    }
   }
 
   const trywire = (): boolean => {
@@ -148,6 +228,11 @@ function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
       pctracklisteners.set(call, ontrack)
       pc.addEventListener('track', ontrack)
     }
+    if (!pcstatelisteners.has(call)) {
+      pcstatelisteners.set(call, onconnectionstate)
+      pc.addEventListener('iceconnectionstatechange', onconnectionstate)
+      pc.addEventListener('connectionstatechange', onconnectionstate)
+    }
     return synccallstream(call, helperpeerid)
   }
 
@@ -158,15 +243,20 @@ function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
   let attempts = 0
   const poller = setInterval(() => {
     attempts += 1
-    if (trywire() || activecall !== call || attempts > 100) {
+    if (trywire() || activecall !== call || attempts > TRACK_SYNC_POLL_MAX) {
       clearcalltrackpoll(call)
     }
-  }, 50)
+  }, TRACK_SYNC_POLL_MS)
   calltrackpollers.set(call, poller)
 }
 
 function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
+  const remote = readcallstream(call)
+  if (ispresent(remote) && streamhasmedia(remote)) {
+    attachplayerstream(remote, helperpeerid)
+  }
   wirecalltrackbridge(call, helperpeerid)
+  scheduletracksynctimeout(call, helperpeerid)
   call.on('stream', (stream) => {
     if (activecall !== call) {
       return
@@ -189,10 +279,21 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
       tryplayerconnect(layer.helperpeerid, layer.board)
     }
   })
-  call.on('error', () => {
+  call.on('error', (err: unknown) => {
     if (activecall !== call) {
       return
     }
+    const player = registerreadplayer()
+    const message =
+      err && typeof err === 'object' && 'message' in err
+        ? String((err as { message?: unknown }).message ?? err)
+        : String(err)
+    apierror(
+      SOFTWARE,
+      player,
+      'mediaqueue',
+      `helper call ${helperpeerid}: ${message}`,
+    )
     clearpctracklistener(call)
     teardownactivecall()
     const layer = mediaqueuereadplayerlayerstate()
@@ -307,7 +408,7 @@ export function mediaqueueretryplayerconnect() {
   }
   const helper = mediaqueuereadhelperpeerid()
   const board = mediaqueuereadboundboardid()
-  if (!helper || !board || !mediaqueueislistening()) {
+  if (!helper || !board) {
     return
   }
   mediaqueuesetplayerlayerstate(helper, board, true)

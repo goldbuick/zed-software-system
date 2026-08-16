@@ -134,8 +134,57 @@ function wireipc() {
   ipcMain.handle('get_media_download_state', () => downloads.readstate())
 
   ipcMain.handle('read_media_file', (_event, args) => {
-    const allowed = mediapathallowed(String((args && args.path) || ''))
+    const requested = String((args && args.path) || '')
+    const devpath = process.env.MQ_DEV_PLAYBACK_PATH
+    if (devpath) {
+      const trimmed = requested.trim()
+      const canonical = fs.realpathSync(trimmed)
+      const devcanonical = fs.realpathSync(devpath)
+      if (canonical === devcanonical && fs.statSync(canonical).isFile()) {
+        return fs.readFileSync(canonical)
+      }
+    }
+    const allowed = mediapathallowed(requested)
     return fs.readFileSync(allowed)
+  })
+
+  ipcMain.handle('write_text_file', (_event, args) => {
+    const filepath = String((args && args.path) || '').trim()
+    const text = String((args && args.text) ?? '')
+    if (!filepath) {
+      throw new Error('path required')
+    }
+    fs.mkdirSync(path.dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, text, 'utf8')
+    return true
+  })
+
+  ipcMain.handle('get_mq_dev_config', () => ({
+    peeridfile: process.env.MQ_PEER_ID_FILE || '',
+    playbackpath: process.env.MQ_DEV_PLAYBACK_PATH || '',
+    statustextfile: process.env.MQ_STATUS_TEXT_FILE || '',
+  }))
+
+  ipcMain.handle('mq_dev_peer_open', (_event, args) => {
+    const id = String((args && args.id) || '').trim()
+    const filepath = process.env.MQ_PEER_ID_FILE
+    if (!id || !filepath) {
+      return false
+    }
+    fs.mkdirSync(path.dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, id, 'utf8')
+    return true
+  })
+
+  ipcMain.handle('mq_dev_status', (_event, args) => {
+    const text = String((args && args.text) ?? '')
+    const filepath = process.env.MQ_STATUS_TEXT_FILE
+    if (!filepath) {
+      return false
+    }
+    fs.mkdirSync(path.dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, text, 'utf8')
+    return true
   })
 }
 

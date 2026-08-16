@@ -33,6 +33,23 @@ yarn task run mediaqueue:build:desktop
 yarn task run mediaqueue:dev
 ```
 
+### Automation hooks (dev only)
+
+| Env | Purpose |
+|-----|---------|
+| `MQ_PEER_ID_FILE` | Write helper PeerJS id when signaling opens |
+| `MQ_DEV_PLAYBACK_PATH` | Skip yt-dlp; play absolute local mp4 (also allows `read_media_file`) |
+| `MQ_STATUS_TEXT_FILE` | Write `playing\|N player(s)` link status for headed scripts |
+
+Headed TV sink proof (cafe dev must already be on `:7777`):
+
+```bash
+yarn task run cafe:dev
+yarn task run cafe:playwright:headed https://localhost:7777 ops/lib/mediaqueue-parity/tvsink-headed.ts
+```
+
+Fixture clip: `ops/fixtures/media/test.mp4`.
+
 ## Use
 
 1. Open this app -- it starts a PeerJS peer and shows **Your peer id**.

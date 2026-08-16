@@ -18,3 +18,11 @@ contextBridge.exposeInMainWorld('__TAURI__', {
     listen: listen,
   },
 })
+
+contextBridge.exposeInMainWorld('mqdev', {
+  peeridfile: process.env.MQ_PEER_ID_FILE || '',
+  playbackpath: process.env.MQ_DEV_PLAYBACK_PATH || '',
+  statustextfile: process.env.MQ_STATUS_TEXT_FILE || '',
+  writetextfile: (filepath, text) =>
+    ipcRenderer.invoke('write_text_file', { path: filepath, text: String(text ?? '') }),
+})

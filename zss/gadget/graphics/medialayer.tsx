@@ -7,6 +7,10 @@ import {
   mediaqueuereadhelperpeerid,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
+  mediaqueuelayerconnectaction,
+  mediaqueuereadplayerlayerstate,
+} from 'zss/feature/mediaqueue/playerlayerstate'
+import {
   mediaqueueconnectifonboard,
   mediaqueuedisconnect,
 } from 'zss/feature/mediaqueue/playerconnect'
@@ -99,22 +103,26 @@ export function MediaLayers() {
       return
     }
     const activehelper = helperpeerid || helperfromloop
-    if (activehelper) {
-      mediaqueueconnectifonboard(activehelper, gadgetboard)
-      return
+    const layer = mediaqueuereadplayerlayerstate()
+    const action = mediaqueuelayerconnectaction({
+      gadgetboard,
+      activehelper,
+      islistening: mediaqueueislistening(),
+      boundboard: mediaqueuereadboundboardid(),
+      boundhelper: mediaqueuereadhelperpeerid(),
+      layerhelper: layer.helperpeerid,
+      layerboard: layer.board,
+    })
+    switch (action.kind) {
+      case 'connect':
+        mediaqueueconnectifonboard(action.helperpeerid, gadgetboard)
+        break
+      case 'disconnect':
+        mediaqueuedisconnect()
+        break
+      default:
+        break
     }
-    const boundboard = mediaqueuereadboundboardid()
-    const boundhelper = mediaqueuereadhelperpeerid()
-    if (
-      mediaqueueislistening() &&
-      boundhelper &&
-      boundboard === gadgetboard
-    ) {
-      // Helper layer may lag #queue bind by a tick; keep the media plane up.
-      mediaqueueconnectifonboard(boundhelper, gadgetboard)
-      return
-    }
-    mediaqueuedisconnect()
   }, [id, gadgetboard, helperpeerid])
 
   return null
