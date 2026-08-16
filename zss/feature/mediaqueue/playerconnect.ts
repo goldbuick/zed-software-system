@@ -32,6 +32,28 @@ const TRACK_SYNC_POLL_MS = 50
 const TRACK_SYNC_POLL_MAX = TRACK_SYNC_TIMEOUT_MS / TRACK_SYNC_POLL_MS
 
 let playerofferstreamcache: MAYBE<MediaStream>
+let playerofferaudiocontext: MAYBE<AudioContext>
+
+function playersilentaudiotrack(): MAYBE<MediaStreamTrack> {
+  if (typeof AudioContext === 'undefined') {
+    return undefined
+  }
+  try {
+    if (!ispresent(playerofferaudiocontext)) {
+      playerofferaudiocontext = new AudioContext()
+    }
+    const dest = playerofferaudiocontext.createMediaStreamDestination()
+    const osc = playerofferaudiocontext.createOscillator()
+    const gain = playerofferaudiocontext.createGain()
+    gain.gain.value = 0
+    osc.connect(gain)
+    gain.connect(dest)
+    osc.start()
+    return dest.stream.getAudioTracks()[0]
+  } catch {
+    return undefined
+  }
+}
 
 /** PeerJS/Chrome may ignore recv-only offers with zero tracks; send a silent 1x1 canvas track. */
 function playerofferstream(): MediaStream {
@@ -47,6 +69,10 @@ function playerofferstream(): MediaStream {
     canvas.width = 1
     canvas.height = 1
     const stream = canvas.captureStream(0)
+    const audio = playersilentaudiotrack()
+    if (ispresent(audio)) {
+      stream.addTrack(audio)
+    }
     if (stream.getTracks().length > 0) {
       playerofferstreamcache = stream
       return stream
@@ -99,16 +125,43 @@ function streamfromreceivers(pc: RTCPeerConnection): MediaStream | undefined {
   return new MediaStream(tracks)
 }
 
+function streamtrackids(stream: MediaStream): string {
+  return stream
+    .getTracks()
+    .map((track) => `${track.kind}:${track.id}`)
+    .sort()
+    .join('|')
+}
+
+function streammatches(left: MediaStream, right: MediaStream): boolean {
+  return streamtrackids(left) === streamtrackids(right)
+}
+
 function readcallstream(call: MediaConnection): MediaStream | undefined {
-  const remote = (call as { remoteStream?: MediaStream }).remoteStream
-  if (ispresent(remote) && streamhasmedia(remote)) {
-    return remote
-  }
   const pc = call.peerConnection
-  if (!pc) {
+  const bykind = new Map<string, MediaStreamTrack>()
+  function addtrack(track: MediaStreamTrack | null | undefined) {
+    if (!track || bykind.has(track.kind)) {
+      return
+    }
+    bykind.set(track.kind, track)
+  }
+  if (pc) {
+    const receivers = pc.getReceivers?.() ?? []
+    for (let i = 0; i < receivers.length; ++i) {
+      addtrack(receivers[i]?.track ?? undefined)
+    }
+  }
+  const remote = (call as { remoteStream?: MediaStream }).remoteStream
+  if (ispresent(remote)) {
+    for (const track of remote.getTracks()) {
+      addtrack(track)
+    }
+  }
+  if (bykind.size === 0) {
     return undefined
   }
-  return streamfromreceivers(pc)
+  return new MediaStream([...bykind.values()])
 }
 
 function clearcalltrackpoll(call: MediaConnection) {
@@ -148,6 +201,14 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
   if (!streamhasmedia(stream)) {
     return false
   }
+  if (
+    ispresent(activestream) &&
+    streammatches(activestream, stream) &&
+    stream.getAudioTracks().length === activestream.getAudioTracks().length &&
+    stream.getVideoTracks().length === activestream.getVideoTracks().length
+  ) {
+    return true
+  }
   for (const track of stream.getTracks()) {
     if (track.muted) {
       track.addEventListener(
@@ -168,11 +229,31 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
   mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
   mediaqueuesetplayerlayerpending(false)
   const player = registerreadplayer()
+  const videocount = stream.getVideoTracks().length
+  const audiocount = stream.getAudioTracks().length
   apilog(
     SOFTWARE,
     player,
-    `media stream from ${helperpeerid} v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length}`,
+    `media stream from ${helperpeerid} v=${videocount} a=${audiocount}`,
   )
+  if (audiocount === 0 && ispresent(activecall)) {
+    const pc = activecall.peerConnection
+    const receivers = pc?.getReceivers?.() ?? []
+    const kinds = receivers
+      .map((receiver) => {
+        const track = receiver.track
+        if (!track) {
+          return 'none'
+        }
+        return `${track.kind}:${track.readyState}`
+      })
+      .join(',')
+    apilog(
+      SOFTWARE,
+      player,
+      `media no audio in stream; receivers=[${kinds || 'empty'}]`,
+    )
+  }
   return true
 }
 
@@ -210,17 +291,12 @@ function scheduletracksynctimeout(call: MediaConnection, helperpeerid: string) {
 function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
   clearpctracklistener(call)
 
-  const ontrack = (evt: RTCTrackEvent) => {
+  const ontrack = (_evt: RTCTrackEvent) => {
     if (activecall !== call) {
       return
     }
     queueMicrotask(() => {
       if (activecall !== call) {
-        return
-      }
-      const bucket = evt.streams[0]
-      if (ispresent(bucket) && streamhasmedia(bucket)) {
-        attachplayerstream(bucket, helperpeerid)
         return
       }
       synccallstream(call, helperpeerid)
@@ -284,12 +360,8 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
   }
   wirecalltrackbridge(call, helperpeerid)
   scheduletracksynctimeout(call, helperpeerid)
-  call.on('stream', (stream) => {
+  call.on('stream', (_stream) => {
     if (activecall !== call) {
-      return
-    }
-    if (streamhasmedia(stream)) {
-      attachplayerstream(stream, helperpeerid)
       return
     }
     synccallstream(call, helperpeerid)

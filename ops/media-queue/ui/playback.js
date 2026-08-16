@@ -7,10 +7,6 @@
   let bloburl = ''
   let playbackactive = false
   let keepalivetimer = null
-  let captureaudioctx = null
-  let captureaudiodest = null
-  let captureaudiosource = null
-  let captureaudioel = null
 
   function attachpreview(el) {
     previewel = el || null
@@ -47,50 +43,47 @@
     if (playbackaudioonly) {
       return null
     }
-    return previewel || hiddenvideo
-  }
-
-  function ensurevideo() {
-    if (previewel) {
-      return previewel
-    }
-    if (hiddenvideo) {
-      return hiddenvideo
-    }
-    hiddenvideo = document.createElement('video')
-    hiddenvideo.playsInline = true
-    hiddenvideo.muted = true
-    hiddenvideo.setAttribute('playsinline', '')
-    hiddenvideo.style.position = 'fixed'
-    hiddenvideo.style.left = '0'
-    hiddenvideo.style.top = '0'
-    hiddenvideo.style.width = '320px'
-    hiddenvideo.style.height = '180px'
-    hiddenvideo.style.opacity = '0'
-    hiddenvideo.style.pointerEvents = 'none'
-    hiddenvideo.style.zIndex = '-1'
-    document.body.appendChild(hiddenvideo)
     return hiddenvideo
   }
 
-  function stopcaptureaudio() {
-    if (captureaudiosource) {
-      try {
-        captureaudiosource.disconnect()
-      } catch (_) {}
-      captureaudiosource = null
+  function createdecodevideo() {
+    const el = document.createElement('video')
+    el.playsInline = true
+    el.muted = false
+    el.volume = 1
+    el.setAttribute('playsinline', '')
+    el.style.position = 'fixed'
+    el.style.left = '0'
+    el.style.top = '0'
+    el.style.width = '320px'
+    el.style.height = '180px'
+    el.style.opacity = '0'
+    el.style.pointerEvents = 'none'
+    el.style.zIndex = '-1'
+    document.body.appendChild(el)
+    return el
+  }
+
+  function ensuredecodevideo() {
+    if (!hiddenvideo) {
+      hiddenvideo = createdecodevideo()
     }
-    if (captureaudiodest) {
-      try {
-        captureaudiodest.disconnect()
-      } catch (_) {}
-      captureaudiodest = null
+    return hiddenvideo
+  }
+
+  function syncpreview(el) {
+    if (!previewel || previewel === el) {
+      return
     }
-    if (captureaudioctx) {
-      void captureaudioctx.close().catch(function () {})
-      captureaudioctx = null
+    previewel.muted = true
+    previewel.playsInline = true
+    previewel.srcObject = null
+    if (el.src) {
+      previewel.src = el.src
+    } else {
+      previewel.removeAttribute('src')
     }
-    captureaudioel = null
+    void previewel.play().catch(function () {})
   }
 
   function stopvisualizer() {
@@ -101,7 +94,6 @@
 
   function stopvideo() {
     playbackactive = false
-    stopcaptureaudio()
     stopvisualizer()
     if (keepalivetimer) {
       window.clearTimeout(keepalivetimer)
@@ -195,17 +187,14 @@
     throw new Error('unexpected media file payload')
   }
 
-  async function loadlocalvideo(el, path) {
+  function mediafileurl(filepath) {
+    return 'mqmedia://local/' + encodeURIComponent(filepath)
+  }
+
+  async function loadlocalvideo(el, filepath) {
     revokebloburl()
-    const raw = await invoke('read_media_file', { path: path })
-    const bytes = tobytes(raw)
-    if (!bytes.length) {
-      throw new Error('media file is empty')
-    }
-    const blob = new Blob([bytes], { type: 'video/mp4' })
-    bloburl = URL.createObjectURL(blob)
     el.removeAttribute('crossorigin')
-    el.src = bloburl
+    el.src = mediafileurl(filepath)
     await waitforcanplay(el)
   }
 
@@ -286,41 +275,60 @@
     })
   }
 
-  function wirecaptureaudio(el, stream) {
-    if (captureaudioel === el && captureaudiosource) {
-      return
+  function waitforaudiocapture(stream, timeoutms) {
+    if (stream.getAudioTracks().length) {
+      return Promise.resolve(stream)
     }
-    stopcaptureaudio()
-    captureaudioctx = new AudioContext()
-    captureaudiodest = captureaudioctx.createMediaStreamDestination()
-    captureaudiosource = captureaudioctx.createMediaElementSource(el)
-    captureaudiosource.connect(captureaudiodest)
-    captureaudioel = el
-    void captureaudioctx.resume()
-    const audiotracks = captureaudiodest.stream.getAudioTracks()
-    for (let i = 0; i < audiotracks.length; i++) {
-      stream.addTrack(audiotracks[i])
+    return new Promise(function (resolve, reject) {
+      let done = false
+      const timer = setTimeout(function () {
+        if (done) {
+          return
+        }
+        done = true
+        stream.removeEventListener('addtrack', onadd)
+        reject(new Error('video.captureStream produced no audio track'))
+      }, timeoutms)
+      function finish(next) {
+        if (done) {
+          return
+        }
+        done = true
+        clearTimeout(timer)
+        stream.removeEventListener('addtrack', onadd)
+        resolve(next)
+      }
+      function onadd(evt) {
+        if (evt.track && evt.track.kind === 'audio') {
+          finish(stream)
+        }
+      }
+      stream.addEventListener('addtrack', onadd)
+    })
+  }
+
+  async function preparelocalcapture(el) {
+    el.muted = false
+    el.volume = 1
+    if (typeof el.setSinkId === 'function') {
+      try {
+        await el.setSinkId('none')
+      } catch (_) {
+        // Chromium-only; helper may play quietly if unavailable
+      }
     }
   }
 
-  function capturefromvideo(el) {
+  async function capturefromvideo(el) {
     if (typeof el.captureStream !== 'function') {
       throw new Error('video.captureStream not supported')
     }
-    el.muted = true
-    const stream = new MediaStream()
-    wirecaptureaudio(el, stream)
-    const captured = el.captureStream()
-    const videotracks = captured.getVideoTracks()
-    for (let i = 0; i < videotracks.length; i++) {
-      stream.addTrack(videotracks[i])
-    }
+    await preparelocalcapture(el)
+    const stream = el.captureStream()
     if (!stream.getVideoTracks().length) {
       throw new Error('video.captureStream produced no video track')
     }
-    if (!stream.getAudioTracks().length) {
-      throw new Error('video capture produced no audio track')
-    }
+    await waitforaudiocapture(stream, 5000)
     return stream
   }
 
@@ -384,24 +392,24 @@
   }
 
   async function startvideoplayback(path) {
-    let el = ensurevideo()
     if (playbackpath !== path || playbackaudioonly) {
       stopvideo()
-      el = ensurevideo()
-      playbackpath = path
-      playbackaudioonly = false
-      await loadlocalvideo(el, path)
     }
+    const el = ensuredecodevideo()
+    playbackpath = path
+    playbackaudioonly = false
+    await loadlocalvideo(el, path)
+    syncpreview(el)
     await el.play()
     await waitforvideoframe(el)
     playbackactive = true
     bindkeepalive(el)
-    const stream = capturefromvideo(el)
+    const stream = await capturefromvideo(el)
     return {
       stream: stream,
       video: el,
       audio: null,
-      usespreviewsource: Boolean(previewel && el === previewel),
+      usespreviewsource: false,
     }
   }
 

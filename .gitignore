@@ -81,8 +81,4 @@ ops/infra/generated/
 
 # Blume docs site (docs-site/)
 docs-site/.blume/
-ops/youtube-rtmp-relay/vendor/
-ops/youtube-rtmp-relay/dist/
-ops/youtube-rtmp-relay/node_modules/
-ops/youtube-rtmp-relay/out/
 

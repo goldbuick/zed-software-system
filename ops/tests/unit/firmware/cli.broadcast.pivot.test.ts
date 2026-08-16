@@ -20,7 +20,6 @@ describe('broadcast argmeta shape', () => {
     ])
     expect(keywordsforcommandargcomplete(meta, 1, 'whip')).toEqual([
       'twitch',
-      'youtube',
       'ivs',
     ])
   })

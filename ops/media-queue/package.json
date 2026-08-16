@@ -11,10 +11,11 @@
     "fetch-binaries": "node scripts/fetch-binaries.mjs",
     "fetch-peerjs": "node scripts/fetch-peerjs.mjs",
     "verify-download": "node scripts/verify-download.mjs",
+    "test-prep-cache": "node scripts/test-prep-cache.mjs",
     "stage-electron-resources": "node scripts/stage-electron-resources.mjs",
-    "prestart": "node scripts/fetch-peerjs.mjs && node scripts/fetch-binaries.mjs",
+    "prestart": "node scripts/fetch-peerjs.mjs && node scripts/fetch-binaries.mjs && node scripts/stage-icon.mjs && node scripts/stage-dev-app.mjs",
     "start": "node scripts/run-electron.mjs",
-    "predist": "node scripts/fetch-peerjs.mjs && node scripts/fetch-binaries.mjs && node scripts/stage-electron-resources.mjs",
+    "predist": "node scripts/fetch-peerjs.mjs && node scripts/fetch-binaries.mjs && node scripts/stage-electron-resources.mjs && node scripts/stage-icon.mjs",
     "dist": "node scripts/run-builder.mjs",
     "dist:mac": "node scripts/run-builder.mjs --mac",
     "dist:win": "node scripts/run-builder.mjs --win"
@@ -40,7 +41,7 @@
     ],
     "mac": {
       "target": ["dmg"],
-      "icon": "resources/icons/icon.png",
+      "icon": "resources/icons/icon.icns",
       "category": "public.app-category.utilities"
     },
     "win": {

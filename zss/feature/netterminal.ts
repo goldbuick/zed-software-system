@@ -265,6 +265,20 @@ function registernetterminalunload() {
   })
 }
 
+/**
+ * PeerJS errors carry `type` plus a standard Error `message`; `message` and
+ * `stack` are non-enumerable, so JSON.stringify alone yields `{"type":"..."}`
+ * with no explanation of what went wrong.
+ */
+function peererrortext(err: unknown): string {
+  if (!ispresent(err) || typeof err !== 'object') {
+    return String(err)
+  }
+  const type = String((err as { type?: unknown }).type ?? 'error')
+  const message = String((err as { message?: unknown }).message ?? '').trim()
+  return message ? `${type}: ${message}` : type
+}
+
 function issignalrecoverableerrortype(type: string) {
   return (
     type === 'network' ||
@@ -612,7 +626,7 @@ function handledataconnection(dataconnection: DataConnection) {
       SOFTWARE,
       player,
       `netterminal`,
-      `dataconnection ${dataconnection.peer} - ${JSON.stringify(err)}`,
+      `dataconnection ${dataconnection.peer} - ${peererrortext(err)}`,
     )
   })
 
@@ -845,7 +859,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
           SOFTWARE,
           player,
           `netterminal`,
-          `${networkpeer?.id} - ${JSON.stringify(err)}`,
+          `${networkpeer?.id} - ${peererrortext(err)}; reconnecting`,
         )
         requestfullsignalingrestart(err.type)
         return
@@ -854,7 +868,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         SOFTWARE,
         player,
         `netterminal`,
-        `${networkpeer?.id} - ${JSON.stringify(err)}`,
+        `${networkpeer?.id} - ${peererrortext(err)}`,
       )
     })
   }

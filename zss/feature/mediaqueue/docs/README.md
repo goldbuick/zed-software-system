@@ -8,7 +8,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 | [`queue.ts`](../queue.ts) | Host-owned FIFO URL queue |
 | [`urlnormalize.ts`](../urlnormalize.ts) | Dedupe keys for queue URLs |
 | [`mediaguards.ts`](../mediaguards.ts) | Submit vs manage permission checks |
-| [`mediamenu.ts`](../mediamenu.ts) / [`panel.ts`](../panel.ts) | `#media` / `#queue` CLI + bridge actions |
+| [`mediamenu.ts`](../mediamenu.ts) / [`queuemenu.ts`](../queuemenu.ts) / [`panel.ts`](../panel.ts) | `#media` / `#queue` CLI + bridge actions |
 | [`playerconnect.ts`](../playerconnect.ts) | Direct helper `MediaConnection` + board-leave teardown |
 | [`roompeers.ts`](../roompeers.ts) | Board players -> clique peer ids (legacy tests) |
 | [`callmetadata.ts`](../callmetadata.ts) | `player` MediaConnection metadata |
@@ -20,7 +20,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 | Action | Who | Permission |
 |--------|-----|------------|
 | `#media`, `#media <url>` | Players (creative) | `speaker` (`media`) |
-| `#queue` bind, skip, clear, stop, limit | Admin / mod | `bridge` (`mediamanage`) |
+| `#queue`, `#queue` bind, skip, clear, stop, limit | Admin / mod | `bridge` (`mediamanage`) |
 
 `#media <url>` requires a bound helper (`#queue <peerid>` first). Queue is FIFO autoplay: finished items are removed; failures auto-skip.
 
@@ -28,8 +28,9 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 
 | Command | Role |
 |---------|------|
-| `#media` | Queue table + admin zed links |
+| `#media` | Queue list (user names, index, url) |
 | `#media <url>` | Submit URL (deduped, per-player limit default 3) |
+| `#queue` | Admin: control menu (skip / clear / stop links + limit line) |
 | `#queue <peerid>` | Admin: bind helper on current board |
 | `#queue skip` | Admin: skip current item |
 | `#queue clear` | Admin: stop playback + empty queue (helper stays up) |

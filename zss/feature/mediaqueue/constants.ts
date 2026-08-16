@@ -33,7 +33,7 @@ export function boardtvlayerz(graphics: string, drawheight: number): number {
       return 0.25
     case 'mode7':
       // Flat on the board plane; above TILES (0), below SPRITES (~0.5 * drawheight).
-      return drawheight * 0.05
+      return drawheight * 0.12
     default:
       return 2
   }
@@ -43,4 +43,29 @@ export function boardtvlayerz(graphics: string, drawheight: number): number {
 export function boardtvisupright(graphics: string): boolean {
   const mode = normalizelayerzvariant(graphics)
   return mode === 'fpv' || mode === 'iso'
+}
+
+export type BOARD_TV_LAYOUT = {
+  marqueerow: number
+  scrollstep: number
+  videoflipvertical: boolean
+  videoz: number
+}
+
+/**
+ * Board tiles render with +Y down-screen in every mode, so the TV chrome needs
+ * no per-mode flips -- only the upright rotation differs. Video z separation
+ * must clear depth-buffer precision in the perspective / tilted modes.
+ */
+export function boardtvlayout(
+  graphics: string,
+  drawheight: number,
+): BOARD_TV_LAYOUT {
+  const mode = normalizelayerzvariant(graphics)
+  return {
+    marqueerow: BOARD_TV_ROWS - 1,
+    scrollstep: 1,
+    videoflipvertical: true,
+    videoz: mode === 'flat' ? 0.001 : drawheight * 0.05,
+  }
 }

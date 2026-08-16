@@ -99,6 +99,56 @@ function ismqmediafile(name) {
   return MQ_MEDIA_EXTENSIONS.has(ext)
 }
 
+function ispartialfilename(name) {
+  return (
+    name.endsWith('.part') ||
+    name.endsWith('.ytdl') ||
+    name.endsWith('.temp')
+  )
+}
+
+function removefilepath(filepath) {
+  if (!filepath || !fs.existsSync(filepath)) {
+    return false
+  }
+  fs.rmSync(filepath, { force: true })
+  return true
+}
+
+function removepartialfiles(cachedir, protectpaths) {
+  let deleted = 0
+  if (!fs.existsSync(cachedir)) {
+    return deleted
+  }
+  const protectedset = new Set()
+  if (protectpaths) {
+    for (const filepath of protectpaths) {
+      if (filepath) {
+        protectedset.add(path.normalize(filepath))
+      }
+    }
+  }
+  for (const name of fs.readdirSync(cachedir)) {
+    const filepath = path.join(cachedir, name)
+    if (!fs.statSync(filepath).isFile()) {
+      continue
+    }
+    if (protectedset.has(path.normalize(filepath))) {
+      continue
+    }
+    if (ispartialfilename(name)) {
+      fs.rmSync(filepath, { force: true })
+      deleted += 1
+      continue
+    }
+    if (ismqmediafile(name)) {
+      fs.rmSync(filepath, { force: true })
+      deleted += 1
+    }
+  }
+  return deleted
+}
+
 function removemqmediafiles(cachedir, includepartials) {
   let deleted = 0
   if (!fs.existsSync(cachedir)) {
@@ -110,14 +160,7 @@ function removemqmediafiles(cachedir, includepartials) {
       continue
     }
     if (!ismqmediafile(name)) {
-      if (
-        !(
-          includepartials &&
-          (name.endsWith('.part') ||
-            name.endsWith('.ytdl') ||
-            name.endsWith('.temp'))
-        )
-      ) {
+      if (!(includepartials && ispartialfilename(name))) {
         continue
       }
     }
@@ -421,32 +464,32 @@ function buildytdlpargs(profile, ctx) {
   return args
 }
 
-async function runytdlpdownload(manager, emit, ctx, profile) {
+async function runytdlpdownload(job, emit, ctx, profile) {
   const args = buildytdlpargs(profile, ctx)
   const child = spawn(ctx.ytdlp, args, {
     cwd: ctx.cachedir,
     env: { ...process.env, XDG_CACHE_HOME: ctx.ytdlphome },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
-  manager.activechild = child
+  job.activechild = child
 
   let outpath = ''
   let title = ''
   const errlines = []
 
   const stdoutdone = readstreamlines(child.stdout, (line) => {
-    if (manager.cancelled) {
+    if (job.cancelled) {
       return
     }
-    emitline(manager, emit, line)
+    emitline(job, emit, line)
     title = captureytdlptitle(title, line)
     outpath = captureytdlpoutpath(outpath, line)
   })
   const stderrdone = readstreamlines(child.stderr, (line) => {
-    if (manager.cancelled) {
+    if (job.cancelled) {
       return
     }
-    emitline(manager, emit, line)
+    emitline(job, emit, line)
     if (line.trim()) {
       errlines.push(line)
     }
@@ -456,7 +499,7 @@ async function runytdlpdownload(manager, emit, ctx, profile) {
     child.on('close', resolve)
   })
   await Promise.all([stdoutdone, stderrdone])
-  manager.activechild = null
+  job.activechild = null
 
   const message = errlines.length
     ? formatytdlperror(errlines, code)
@@ -471,10 +514,11 @@ async function runytdlpdownload(manager, emit, ctx, profile) {
   }
 }
 
-function emitline(manager, emit, line) {
+function emitline(job, emit, line) {
   if (!line) {
     return
   }
+  const progressevent = job.progressevent || 'mq-download-progress'
   if (line.includes('%')) {
     const pct = parsepercent(line)
     if (pct === null) {
@@ -482,10 +526,10 @@ function emitline(manager, emit, line) {
     }
     const status = ytdlpprogressstatus(line)
     const eta = parseeta(line)
-    manager.percent = pct
-    manager.status = status
-    manager.detail = eta
-    emit('mq-download-progress', {
+    job.percent = pct
+    job.status = status
+    job.detail = eta
+    emit(progressevent, {
       percent: pct,
       eta: eta,
       status: status,
@@ -497,10 +541,10 @@ function emitline(manager, emit, line) {
     return
   }
   const detail = ytdlplogdetail(line)
-  manager.status = phase
-  manager.detail = detail
-  emit('mq-download-progress', {
-    percent: manager.percent,
+  job.status = phase
+  job.detail = detail
+  emit(progressevent, {
+    percent: job.percent,
     eta: detail,
     status: phase,
   })
@@ -514,22 +558,66 @@ function readstreamlines(stream, online) {
   })
 }
 
+const PREP_RETRY_DELAYS_MS = [5000, 15000, 45000]
+
+function createjob() {
+  return {
+    url: '',
+    phase: 'idle',
+    percent: 0,
+    status: 'idle',
+    detail: '',
+    filepath: '',
+    title: '',
+    error: '',
+    cancelled: false,
+    activechild: null,
+    activethread: null,
+    progressevent: 'mq-download-progress',
+    readyevent: 'mq-download-ready',
+    errorevent: 'mq-download-error',
+  }
+}
+
+function resetjob(job) {
+  job.phase = 'idle'
+  job.percent = 0
+  job.status = 'idle'
+  job.detail = ''
+  job.filepath = ''
+  job.title = ''
+  job.error = ''
+  job.cancelled = false
+  job.activechild = null
+}
+
+function readjobstate(job) {
+  return {
+    url: job.url,
+    phase: job.phase,
+    percent: job.percent,
+    status: job.status,
+    detail: job.detail,
+    path: job.filepath,
+    error: job.error,
+  }
+}
+
 class DownloadManager {
   constructor(resourceroot, cachedir) {
     this.resourceroot = resourceroot
     this.cachedir = cachedir
     this.ytdlphome = path.join(cachedir, 'ytdlp-home')
     this.cookiesbrowser = ''
-    this.phase = 'idle'
-    this.percent = 0
-    this.status = 'idle'
-    this.detail = ''
-    this.filepath = ''
-    this.title = ''
-    this.error = ''
-    this.cancelled = false
-    this.activechild = null
-    this.activethread = null
+    this.playback = createjob()
+    this.prep = createjob()
+    this.prep.progressevent = 'mq-prep-progress'
+    this.prep.readyevent = 'mq-prep-ready'
+    this.prep.errorevent = 'mq-prep-error'
+    this.registry = new Map()
+    this.prepretrytimer = null
+    this.prepretryattempt = 0
+    this.prepemit = null
     fs.mkdirSync(cachedir, { recursive: true })
     fs.mkdirSync(this.ytdlphome, { recursive: true })
   }
@@ -551,14 +639,145 @@ class DownloadManager {
 
   readstate() {
     return {
-      phase: this.phase,
-      percent: this.percent,
-      status: this.status,
-      detail: this.detail,
-      path: this.filepath,
-      error: this.error,
+      phase: this.playback.phase,
+      percent: this.playback.percent,
+      status: this.playback.status,
+      detail: this.playback.detail,
+      path: this.playback.filepath,
+      error: this.playback.error,
       cacheBytes: mediafilebytes(this.cachedir),
     }
+  }
+
+  readprepstate() {
+    const entry = this.prep.url ? this.registry.get(this.prep.url) : null
+    if (entry && entry.state === 'ready') {
+      return {
+        url: this.prep.url,
+        phase: 'ready',
+        percent: 100,
+        status: 'ready',
+        detail: '',
+        path: entry.path,
+        error: '',
+      }
+    }
+    return readjobstate(this.prep)
+  }
+
+  protectedpaths() {
+    const paths = []
+    for (const entry of this.registry.values()) {
+      if (entry.path) {
+        paths.push(entry.path)
+      }
+    }
+    if (this.playback.filepath) {
+      paths.push(this.playback.filepath)
+    }
+    if (this.prep.filepath) {
+      paths.push(this.prep.filepath)
+    }
+    return paths
+  }
+
+  setregistryready(url, meta) {
+    this.registry.set(url, {
+      path: meta.path,
+      title: meta.title,
+      audioOnly: meta.audioOnly,
+      state: 'ready',
+    })
+  }
+
+  readregistryready(url) {
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      return null
+    }
+    const entry = this.registry.get(trimmed)
+    if (!entry || entry.state !== 'ready' || !entry.path) {
+      return null
+    }
+    if (!fs.existsSync(entry.path)) {
+      this.registry.delete(trimmed)
+      return null
+    }
+    return entry
+  }
+
+  takeprepready(url) {
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      return null
+    }
+    const entry = this.readregistryready(trimmed)
+    if (!entry) {
+      return null
+    }
+    this.registry.delete(trimmed)
+    if (this.prep.url === trimmed) {
+      resetjob(this.prep)
+    }
+    return {
+      path: entry.path,
+      title: entry.title,
+      audioOnly: entry.audioOnly,
+      duration: 0,
+    }
+  }
+
+  prunequeuecache(keepurls, playingurl) {
+    const keep = new Set()
+    if (Array.isArray(keepurls)) {
+      for (const raw of keepurls) {
+        const trimmed = String(raw || '').trim()
+        if (trimmed) {
+          keep.add(trimmed)
+        }
+      }
+    }
+    const playing = String(playingurl || '').trim()
+    if (playing) {
+      keep.add(playing)
+    }
+    let deleted = 0
+    for (const [url, entry] of this.registry.entries()) {
+      if (keep.has(url)) {
+        continue
+      }
+      if (entry.path) {
+        if (removefilepath(entry.path)) {
+          deleted += 1
+        }
+      }
+      this.registry.delete(url)
+    }
+    return { deletedCount: deleted }
+  }
+
+  clearprepretry() {
+    if (this.prepretrytimer) {
+      clearTimeout(this.prepretrytimer)
+      this.prepretrytimer = null
+    }
+    this.prepretryattempt = 0
+  }
+
+  scheduleprepretry(url, emit) {
+    this.clearprepretry()
+    const delay =
+      PREP_RETRY_DELAYS_MS[
+        Math.min(this.prepretryattempt, PREP_RETRY_DELAYS_MS.length - 1)
+      ]
+    this.prepretryattempt += 1
+    this.prepretrytimer = setTimeout(() => {
+      this.prepretrytimer = null
+      if (this.prep.url !== url || this.prep.phase === 'ready') {
+        return
+      }
+      void this.startprep(url, emit)
+    }, delay)
   }
 
   warmejscache() {
@@ -582,36 +801,45 @@ class DownloadManager {
     })
   }
 
-  canceljob() {
-    this.cancelled = true
-    if (this.activechild) {
+  canceljob(job) {
+    job.cancelled = true
+    if (job.activechild) {
       try {
-        this.activechild.kill()
+        job.activechild.kill()
       } catch (_) {}
-      this.activechild = null
+      job.activechild = null
+    }
+  }
+
+  canceljobpartials(job) {
+    removepartialfiles(this.cachedir, this.protectedpaths())
+    if (job.phase === 'downloading') {
+      resetjob(job)
+    } else {
+      job.cancelled = false
     }
   }
 
   canceldownload() {
-    this.canceljob()
-    removemqmediafiles(this.cachedir, true)
-    if (this.phase === 'downloading') {
-      this.phase = 'idle'
-      this.percent = 0
-      this.status = 'idle'
-      this.detail = ''
-    }
-    this.cancelled = false
+    this.canceljob(this.playback)
+    this.canceljobpartials(this.playback)
+    this.playback.url = ''
+  }
+
+  cancelprep() {
+    this.clearprepretry()
+    this.prepemit = null
+    this.canceljob(this.prep)
+    this.canceljobpartials(this.prep)
+    this.prep.url = ''
   }
 
   cleardownloads() {
     this.canceldownload()
-    this.filepath = ''
-    this.error = ''
-    this.percent = 0
-    this.status = 'idle'
-    this.detail = ''
-    this.phase = 'idle'
+    this.cancelprep()
+    this.registry.clear()
+    this.playback.filepath = ''
+    this.playback.error = ''
     const before = mediafilebytes(this.cachedir)
     const deleted = removemqmediafiles(this.cachedir, false)
     fs.mkdirSync(this.cachedir, { recursive: true })
@@ -623,27 +851,7 @@ class DownloadManager {
     }
   }
 
-  async startdownload(url, emit) {
-    const trimmed = String(url || '').trim()
-    if (!trimmed) {
-      throw new Error('url required')
-    }
-
-    this.canceldownload()
-    this.error = ''
-    this.filepath = ''
-    this.title = ''
-    this.percent = 0
-    this.status = 'extracting'
-    this.detail = 'starting'
-    this.phase = 'downloading'
-    this.cancelled = false
-    emit('mq-download-progress', {
-      percent: 0,
-      eta: 'starting',
-      status: 'extracting',
-    })
-
+  resolvebinaries() {
     const ytdlp = resolveytdlp(this.resourceroot)
     const ffmpeg = resolveffmpeg(this.resourceroot)
     const deno = resolvedeno(this.resourceroot)
@@ -663,123 +871,237 @@ class DownloadManager {
       )
     }
     const denopath = fs.realpathSync(deno)
-    const jspath = `deno:${denopath}`
-    const ffdir = ffmpegdir(ffmpeg)
-    const ffprobe = resolveffprobe(ffmpeg)
+    return {
+      ytdlp,
+      jspath: `deno:${denopath}`,
+      ffdir: ffmpegdir(ffmpeg),
+      ffprobe: resolveffprobe(ffmpeg),
+    }
+  }
 
-    const run = async () => {
-      let lastmessage = ''
-      const usercookies = this.cookiesbrowser
-
-      for (let attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt += 1) {
-        if (this.cancelled) {
-          this.phase = 'idle'
-          return
-        }
-
-        if (attempt > 1) {
-          removemqmediafiles(this.cachedir, true)
-          if (lastmessage.includes('403') || ytdlpneedscookiesauth(lastmessage)) {
-            clearytdlpextractorcache(this.ytdlphome)
-          }
-          await sleep(
-            lastmessage.includes('403') || ytdlpneedscookiesauth(lastmessage)
-              ? 3000
-              : 1500,
-          )
-        }
-
-        const cookiesbrowser = resolvecookiesbrowser(
-          attempt,
-          usercookies,
-          lastmessage,
-        )
-        this.percent = 0
-        this.status = 'extracting'
-        this.detail = 'starting'
-        emit('mq-download-progress', {
-          percent: 0,
-          eta: 'starting',
-          status: 'extracting',
-        })
-
-        const ctx = {
-          ytdlp,
-          jspath,
-          ytdlphome: this.ytdlphome,
-          ffdir,
-          cachedir: this.cachedir,
-          attempt,
-          cookiesbrowser,
-          url: trimmed,
-        }
-
-        let result = await runytdlpdownload(this, emit, ctx, 'video')
-        if (
-          !result.success &&
-          ytdlpneedsaudiofallback(result.message) &&
-          !this.cancelled
-        ) {
-          removemqmediafiles(this.cachedir, true)
-          this.status = 'extracting'
-          this.detail = 'audio-only'
-          emit('mq-download-progress', {
-            percent: 0,
-            eta: 'audio-only',
-            status: 'extracting',
-          })
-          result = await runytdlpdownload(this, emit, ctx, 'audio')
-        }
-
-        if (this.cancelled) {
-          this.phase = 'idle'
-          return
-        }
-
-        const outpathexists = result.outpath && fs.existsSync(result.outpath)
-        if (result.success && outpathexists) {
-          const probe = probemediafile(ffprobe, result.outpath)
-          if (!validatemediafile(result.outpath, probe)) {
-            lastmessage = 'downloaded file failed media validation'
-            continue
-          }
-          const audioonly = probe.hasAudio && !probe.hasVideo
-          this.filepath = result.outpath
-          this.title = result.title
-          this.percent = 100
-          this.status = 'downloading'
-          this.detail = ''
-          emit('mq-download-progress', {
-            percent: 100,
-            eta: '',
-            status: 'downloading',
-          })
-          this.phase = 'ready'
-          emit('mq-download-ready', {
-            path: result.outpath,
-            title: result.title,
-            audioOnly: audioonly,
-            duration: 0,
-          })
-          return
-        }
-
-        lastmessage = result.message
-      }
-
-      this.error = lastmessage
-      this.phase = 'error'
-      emit('mq-download-error', { message: lastmessage })
+  async runjobdownload(job, url, emit) {
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      throw new Error('url required')
     }
 
-    this.activethread = run().catch((err) => {
-      this.error = err.message || String(err)
-      this.phase = 'error'
-      emit('mq-download-error', { message: this.error })
+    job.url = trimmed
+    job.error = ''
+    job.filepath = ''
+    job.title = ''
+    job.percent = 0
+    job.status = 'extracting'
+    job.detail = 'starting'
+    job.phase = 'downloading'
+    job.cancelled = false
+    emit(job.progressevent, {
+      percent: 0,
+      eta: 'starting',
+      status: 'extracting',
+    })
+
+    const bins = this.resolvebinaries()
+    const ytdlp = bins.ytdlp
+    const jspath = bins.jspath
+    const ffdir = bins.ffdir
+    const ffprobe = bins.ffprobe
+
+    let lastmessage = ''
+    const usercookies = this.cookiesbrowser
+
+    for (let attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt += 1) {
+      if (job.cancelled) {
+        job.phase = 'idle'
+        return null
+      }
+
+      if (attempt > 1) {
+        removepartialfiles(this.cachedir, this.protectedpaths())
+        if (lastmessage.includes('403') || ytdlpneedscookiesauth(lastmessage)) {
+          clearytdlpextractorcache(this.ytdlphome)
+        }
+        await sleep(
+          lastmessage.includes('403') || ytdlpneedscookiesauth(lastmessage)
+            ? 3000
+            : 1500,
+        )
+      }
+
+      const cookiesbrowser = resolvecookiesbrowser(
+        attempt,
+        usercookies,
+        lastmessage,
+      )
+      job.percent = 0
+      job.status = 'extracting'
+      job.detail = 'starting'
+      emit(job.progressevent, {
+        percent: 0,
+        eta: 'starting',
+        status: 'extracting',
+      })
+
+      const ctx = {
+        ytdlp,
+        jspath,
+        ytdlphome: this.ytdlphome,
+        ffdir,
+        cachedir: this.cachedir,
+        attempt,
+        cookiesbrowser,
+        url: trimmed,
+      }
+
+      let result = await runytdlpdownload(job, emit, ctx, 'video')
+      if (
+        !result.success &&
+        ytdlpneedsaudiofallback(result.message) &&
+        !job.cancelled
+      ) {
+        removepartialfiles(this.cachedir, this.protectedpaths())
+        job.status = 'extracting'
+        job.detail = 'audio-only'
+        emit(job.progressevent, {
+          percent: 0,
+          eta: 'audio-only',
+          status: 'extracting',
+        })
+        result = await runytdlpdownload(job, emit, ctx, 'audio')
+      }
+
+      if (job.cancelled) {
+        job.phase = 'idle'
+        return null
+      }
+
+      const outpathexists = result.outpath && fs.existsSync(result.outpath)
+      if (result.success && outpathexists) {
+        const probe = probemediafile(ffprobe, result.outpath)
+        if (!validatemediafile(result.outpath, probe)) {
+          lastmessage = 'downloaded file failed media validation'
+          continue
+        }
+        const audioonly = probe.hasAudio && !probe.hasVideo
+        job.filepath = result.outpath
+        job.title = result.title
+        job.percent = 100
+        job.status = 'downloading'
+        job.detail = ''
+        emit(job.progressevent, {
+          percent: 100,
+          eta: '',
+          status: 'downloading',
+        })
+        job.phase = 'ready'
+        const payload = {
+          path: result.outpath,
+          title: result.title,
+          audioOnly: audioonly,
+          duration: 0,
+        }
+        emit(job.readyevent, payload)
+        return payload
+      }
+
+      lastmessage = result.message
+    }
+
+    job.error = lastmessage
+    job.phase = 'error'
+    emit(job.errorevent, { message: lastmessage })
+    return null
+  }
+
+  async startdownload(url, emit) {
+    const trimmed = String(url || '').trim()
+    if (this.prep.url === trimmed) {
+      this.cancelprep()
+    }
+    this.canceljob(this.playback)
+    this.canceljobpartials(this.playback)
+    this.playback.url = ''
+    resetjob(this.playback)
+    this.playback.progressevent = 'mq-download-progress'
+    this.playback.readyevent = 'mq-download-ready'
+    this.playback.errorevent = 'mq-download-error'
+
+    const run = async () => {
+      await this.runjobdownload(this.playback, url, emit)
+    }
+
+    this.playback.activethread = run().catch((err) => {
+      this.playback.error = err.message || String(err)
+      this.playback.phase = 'error'
+      emit('mq-download-error', { message: this.playback.error })
     })
 
     return this.readstate()
   }
+
+  async startprep(url, emit) {
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      return this.readprepstate()
+    }
+
+    const ready = this.readregistryready(trimmed)
+    if (ready) {
+      this.prep.url = trimmed
+      this.prep.phase = 'ready'
+      this.prep.percent = 100
+      this.prep.status = 'ready'
+      this.prep.filepath = ready.path
+      this.prep.title = ready.title
+      return this.readprepstate()
+    }
+
+    if (this.prep.url === trimmed && this.prep.phase === 'downloading') {
+      return this.readprepstate()
+    }
+
+    if (this.prep.url !== trimmed) {
+      this.cancelprep()
+    }
+
+    this.prepemit = emit
+    this.clearprepretry()
+    resetjob(this.prep)
+    this.prep.url = trimmed
+    this.prep.progressevent = 'mq-prep-progress'
+    this.prep.readyevent = 'mq-prep-ready'
+    this.prep.errorevent = 'mq-prep-error'
+
+    const run = async () => {
+      const payload = await this.runjobdownload(this.prep, trimmed, emit)
+      if (jobcancelled(this.prep)) {
+        return
+      }
+      if (payload) {
+        this.setregistryready(trimmed, payload)
+        this.prepretryattempt = 0
+        return
+      }
+      if (this.prep.url === trimmed && this.prepemit) {
+        this.scheduleprepretry(trimmed, this.prepemit)
+      }
+    }
+
+    this.prep.activethread = run().catch(() => {
+      if (this.prep.url === trimmed && this.prepemit) {
+        this.scheduleprepretry(trimmed, this.prepemit)
+      }
+    })
+
+    return this.readprepstate()
+  }
+
+  seedregistryready(url, meta) {
+    this.setregistryready(url, meta)
+  }
+}
+
+function jobcancelled(job) {
+  return job.cancelled || job.phase === 'idle'
 }
 
 module.exports = {
@@ -789,4 +1111,6 @@ module.exports = {
   FFMPEG_POST_ARGS_COPY,
   FFMPEG_POST_ARGS_TRANSCODE,
   FFMPEG_POST_ARGS_AUDIO,
+  removepartialfiles,
+  ismqmediafile,
 }

@@ -4,18 +4,15 @@ import { NAME } from 'zss/words/types'
 export const TWITCH_WHIP_ENDPOINT =
   'https://g.webrtc.live-video.net:4443/v2/offer'
 
-export const YOUTUBE_WHIP_ENDPOINT = 'https://127.0.0.1:8889/cafe/whip'
-
 const WHIP_ENDPOINT_ALIASES: Record<string, string> = {
   twitch: TWITCH_WHIP_ENDPOINT,
-  youtube: YOUTUBE_WHIP_ENDPOINT,
   ivs: DEFAULT_IVS_WHIP_ENDPOINT,
   'ivs-realtime': DEFAULT_IVS_WHIP_ENDPOINT,
   ivsrealtime: DEFAULT_IVS_WHIP_ENDPOINT,
 }
 
 export function listwhipendpointaliases(): string[] {
-  return ['twitch', 'youtube', 'ivs']
+  return ['twitch', 'ivs']
 }
 
 export function resolvewhipendpoint(

@@ -6,11 +6,11 @@ import { FIRMWARE } from 'zss/firmware'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
-/** `#media` queue menu; `#media <url>` submits a URL. */
+/** `#media` queue list; `#media <url>` submits a URL. */
 export function registermediacommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'media',
-    [ARG_TYPE.MAYBE_NAME, 'Board TV media queue menu or URL'],
+    [ARG_TYPE.MAYBE_NAME, 'Board TV media queue list or URL submit'],
     (_, words) => {
       const [first, iii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus

@@ -3,12 +3,17 @@ jest.mock('zss/feature/storage', () => ({
   storagereadconfigstring: jest.fn(),
   storagewriteconfigstring: jest.fn(),
 }))
+jest.mock('zss/device/api', () => ({
+  apilog: jest.fn(),
+}))
 
+import { apilog } from 'zss/device/api'
 import { MEDIAQUEUE_DEFAULT_TV_VOLUME } from 'zss/feature/mediaqueue/constants'
 import {
-  mediaqueueattachremoteaudio,
-  mediaqueueclearremoteaudio,
+  mediaqueuebindremotevideo,
+  mediaqueueclearremotevideo,
   mediaqueuereadmediavolume,
+  mediaqueueresumeaudio,
   mediaqueuesetmediavolume,
   restoremediavolfromstorage,
   storemediavolconfig,
@@ -18,10 +23,26 @@ import {
   storagewriteconfigstring,
 } from 'zss/feature/storage'
 
+function setpaused(video: HTMLVideoElement, paused: boolean) {
+  Object.defineProperty(video, 'paused', { value: paused, configurable: true })
+}
+
+async function flushplaypromise() {
+  await new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+function playblockedlogs(): string[] {
+  return jest
+    .mocked(apilog)
+    .mock.calls.map((call) => String(call[2] ?? ''))
+    .filter((line) => line.includes('play blocked'))
+}
+
 describe('board TV audio volume', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mediaqueuesetmediavolume(MEDIAQUEUE_DEFAULT_TV_VOLUME)
+    mediaqueueclearremotevideo()
     HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined)
     HTMLMediaElement.prototype.pause = jest.fn()
   })
@@ -48,25 +69,71 @@ describe('board TV audio volume', () => {
     expect(mediaqueuereadmediavolume()).toBe(MEDIAQUEUE_DEFAULT_TV_VOLUME)
   })
 
-  it('mediaqueuesetmediavolume updates active remote audio gain', () => {
-    class MockAudioTrack {
-      kind = 'audio'
-      stop() {}
-    }
-    class MockMediaStream {
-      constructor(public tracks: MockAudioTrack[]) {}
-      getTracks() {
-        return this.tracks
-      }
-    }
-    global.MediaStream = MockMediaStream as never
-    mediaqueueattachremoteaudio([new MockAudioTrack()])
-    const audio = document.querySelector('audio')
-    expect(audio).toBeTruthy()
+  it('mediaqueuesetmediavolume updates active remote video gain', () => {
+    const video = document.createElement('video')
+    mediaqueuebindremotevideo(video)
     mediaqueuesetmediavolume(50)
-    expect(audio?.volume).toBe(0.5)
+    expect(video.volume).toBe(0.5)
+    expect(video.muted).toBe(false)
     mediaqueuesetmediavolume(0)
-    expect(audio?.volume).toBe(0)
-    mediaqueueclearremoteaudio()
+    expect(video.volume).toBe(0)
+    mediaqueueclearremotevideo()
+  })
+})
+
+describe('board TV playback retry', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mediaqueueclearremotevideo()
+    HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined)
+    HTMLMediaElement.prototype.pause = jest.fn()
+  })
+
+  it('leaves a playing video alone instead of restarting it', () => {
+    const video = document.createElement('video')
+    setpaused(video, false)
+    mediaqueuebindremotevideo(video)
+    mediaqueueresumeaudio()
+    expect(video.pause).not.toHaveBeenCalled()
+    expect(video.play).not.toHaveBeenCalled()
+    expect(video.muted).toBe(false)
+    mediaqueueclearremotevideo()
+  })
+
+  it('plays a paused video once per resume', () => {
+    const video = document.createElement('video')
+    setpaused(video, true)
+    mediaqueuebindremotevideo(video)
+    expect(video.play).toHaveBeenCalledTimes(1)
+    expect(video.pause).not.toHaveBeenCalled()
+    mediaqueueclearremotevideo()
+  })
+
+  it('stays quiet when a play is superseded by a later load', async () => {
+    const aborted = new DOMException(
+      'The play() request was interrupted by a call to pause().',
+      'AbortError',
+    )
+    HTMLMediaElement.prototype.play = jest.fn().mockRejectedValue(aborted)
+    const video = document.createElement('video')
+    setpaused(video, true)
+    mediaqueuebindremotevideo(video)
+    await flushplaypromise()
+    expect(playblockedlogs()).toEqual([])
+    mediaqueueclearremotevideo()
+  })
+
+  it('reports a real autoplay block so the player can click', async () => {
+    const blocked = new DOMException(
+      'play() failed because the user did not interact with the document first.',
+      'NotAllowedError',
+    )
+    HTMLMediaElement.prototype.play = jest.fn().mockRejectedValue(blocked)
+    const video = document.createElement('video')
+    setpaused(video, true)
+    mediaqueuebindremotevideo(video)
+    await flushplaypromise()
+    expect(playblockedlogs()).toHaveLength(1)
+    mediaqueueclearremotevideo()
   })
 })

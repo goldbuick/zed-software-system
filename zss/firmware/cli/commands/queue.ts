@@ -1,4 +1,4 @@
-import { apierror, bridgequeuepanel } from 'zss/device/api'
+import { bridgequeuepanel } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
   mediapayloadwithmanage,
@@ -12,20 +12,23 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 const QUEUE_RESERVED = new Set(['skip', 'limit', 'clear', 'stop'])
 
-/** `#queue <peerid>` binds helper; `#queue skip|clear|stop|limit` admin. */
+/** `#queue` admin menu; `#queue <peerid>` binds helper; `#queue skip|clear|stop|limit` admin. */
 export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'queue',
-    [ARG_TYPE.MAYBE_NAME, 'Bind media helper or manage queue (admin)'],
+    [ARG_TYPE.MAYBE_NAME, 'Media queue admin menu, bind helper, or manage queue'],
     (_, words) => {
       const [first, iii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus
       if (!first) {
-        apierror(
+        if (!mediarequiremanageonvm(player, 'queue')) {
+          return 0
+        }
+        bridgequeuepanel(
           SOFTWARE,
           player,
-          'queue',
-          'usage: #queue <peerid> or skip/clear/stop/limit',
+          'menu',
+          mediapayloadwithmanage(player),
         )
         return 0
       }

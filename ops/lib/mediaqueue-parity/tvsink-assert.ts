@@ -13,19 +13,11 @@ export async function evaluatetvsink(page: {
 }): Promise<TVSINK_ASSERT_RESULT> {
   return page.evaluate(() => {
     const videos = Array.from(document.querySelectorAll('video'))
-    const audios = Array.from(document.querySelectorAll('audio'))
     for (let i = 0; i < videos.length; ++i) {
       const video = videos[i]
       video.muted = false
       void video.play().catch(() => {
         // autoplay may still need a user gesture
-      })
-    }
-    for (let i = 0; i < audios.length; ++i) {
-      const audio = audios[i]
-      audio.muted = false
-      void audio.play().catch(() => {
-        // board TV audio uses a separate element from the muted decode video
       })
     }
     let best: HTMLVideoElement | undefined
@@ -43,18 +35,21 @@ export async function evaluatetvsink(page: {
         videowidth: 0,
         videocount: videos.length,
         ready: 0,
-        audiocount: audios.length,
+        audiocount: 0,
         errormessage: 'no video element',
       }
     }
     const ready = best.readyState
+    const stream = best.srcObject
+    const audiocount =
+      stream instanceof MediaStream ? stream.getAudioTracks().length : 0
     const ok = bestwidth > 0 && ready >= 2
     return {
       ok,
       videowidth: bestwidth,
       videocount: videos.length,
       ready,
-      audiocount: audios.length,
+      audiocount,
       errormessage: ok ? '' : `videoWidth=${bestwidth} readyState=${ready}`,
     }
   })

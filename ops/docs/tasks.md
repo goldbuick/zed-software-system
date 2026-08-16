@@ -254,16 +254,6 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN from shell or cafe/.env.local; --dry-run) | `deploy` | — | — |
 
 
-## relay
-
-| Task | Description | Tags | Deps | Env |
-|------|-------------|------|------|-----|
-| `yarn task run relay:build` | Install youtube-rtmp-relay deps and fetch MediaMTX/ffmpeg binaries | `deploy` | — | — |
-| `yarn task run relay:build:desktop` | Build YouTube relay desktop installers (Electron) for current host OS | `deploy` | `relay:build` | — |
-| `yarn task run relay:build:desktop:mac` | Build YouTube relay macOS dmg (Electron) | `deploy` | `relay:build` | — |
-| `yarn task run relay:build:desktop:win` | Build YouTube relay Windows nsis installer (Electron) | `deploy` | `relay:build` | — |
-
-
 ## mediaqueue
 
 | Task | Description | Tags | Deps | Env |

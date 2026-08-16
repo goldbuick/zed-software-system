@@ -3,10 +3,13 @@
 const electron = require('electron')
 const fs = require('node:fs')
 const path = require('node:path')
+const { pathToFileURL } = require('node:url')
 const { DownloadManager } = require('./lib/download.cjs')
 const { resolvemqpeerid } = require('./lib/peerid.cjs')
 
-const { app, BrowserWindow, ipcMain, clipboard } = electron
+const { app, BrowserWindow, ipcMain, clipboard, protocol, net } = electron
+
+const APP_NAME = 'Zed Cafe Media Queue'
 
 const MAIN_WINDOW_WIDTH = 480
 
@@ -24,7 +27,25 @@ function mqnetidfilepath() {
 }
 
 function iconpath() {
+  const icns = path.join(__dirname, '..', 'resources', 'icons', 'icon.icns')
+  if (process.platform === 'darwin' && fs.existsSync(icns)) {
+    return icns
+  }
   return path.join(__dirname, '..', 'resources', 'icons', 'icon.png')
+}
+
+function applyappicon() {
+  const iconfile = iconpath()
+  if (!fs.existsSync(iconfile)) {
+    return
+  }
+  const image = electron.nativeImage.createFromPath(iconfile)
+  if (image.isEmpty()) {
+    return
+  }
+  if (process.platform === 'darwin' && app.dock) {
+    app.dock.setIcon(image)
+  }
 }
 
 function resourceroot() {
@@ -53,6 +74,24 @@ function mediapathallowed(requested) {
   return canonical
 }
 
+function registermediaprotocol() {
+  protocol.handle('mqmedia', async (request) => {
+    try {
+      const prefix = 'mqmedia://local/'
+      if (!request.url.startsWith(prefix)) {
+        return new Response('bad mqmedia url', { status: 400 })
+      }
+      const filepath = mediapathallowed(
+        decodeURIComponent(request.url.slice(prefix.length)),
+      )
+      return net.fetch(pathToFileURL(filepath).toString())
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return new Response(message, { status: 403 })
+    }
+  })
+}
+
 function windowchromelogical(win) {
   if (windowchrome > 0) {
     return windowchrome
@@ -75,7 +114,7 @@ function createmainwindow() {
     useContentSize: true,
     resizable: false,
     maximizable: false,
-    title: 'zed.cafe Media Queue',
+    title: APP_NAME,
     backgroundColor: '#000000',
     autoHideMenuBar: true,
     backgroundThrottling: false,
@@ -95,6 +134,7 @@ function createmainwindow() {
 function wireipc() {
   ipcMain.handle('get_state', () => ({
     download: downloads.readstate(),
+    prep: downloads.readprepstate(),
     cookiesBrowser: downloads.readcookiesbrowser(),
   }))
 
@@ -133,9 +173,32 @@ function wireipc() {
     return downloads.startdownload(url, emitto)
   })
 
+  ipcMain.handle('start_media_prep', async (_event, args) => {
+    const url = String((args && args.url) || '')
+    return downloads.startprep(url, emitto)
+  })
+
   ipcMain.handle('cancel_media_download', () => {
     downloads.canceldownload()
     return downloads.readstate()
+  })
+
+  ipcMain.handle('cancel_media_prep', () => {
+    downloads.cancelprep()
+    return downloads.readprepstate()
+  })
+
+  ipcMain.handle('read_media_prep_state', () => downloads.readprepstate())
+
+  ipcMain.handle('take_media_prep_ready', (_event, args) => {
+    const url = String((args && args.url) || '')
+    return downloads.takeprepready(url)
+  })
+
+  ipcMain.handle('prune_media_queue_cache', (_event, args) => {
+    const urls = args && Array.isArray(args.urls) ? args.urls : []
+    const playingurl = String((args && args.playingUrl) || '')
+    return downloads.prunequeuecache(urls, playingurl)
   })
 
   ipcMain.handle('clear_media_downloads', () => downloads.cleardownloads())
@@ -209,12 +272,31 @@ if (!app) {
   process.exit(1)
 }
 
+if (typeof app.setName === 'function') {
+  app.setName(APP_NAME)
+}
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'mqmedia',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      bypassCSP: true,
+    },
+  },
+])
+
 app.commandLine.appendSwitch('disable-background-timer-throttling')
 app.commandLine.appendSwitch('disable-renderer-backgrounding')
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows')
 
 app.whenReady().then(() => {
+  applyappicon()
   mediacachedir = path.join(app.getPath('cache'), 'media-queue')
+  registermediaprotocol()
   downloads = new DownloadManager(resourceroot(), mediacachedir)
   const cookiesbrowser = String(process.env.MQ_COOKIES_BROWSER || '')
     .trim()
@@ -234,6 +316,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
+  applyappicon()
   if (!mainwin) {
     createmainwindow()
   }
@@ -242,5 +325,6 @@ app.on('activate', () => {
 app.on('before-quit', () => {
   if (downloads) {
     downloads.canceldownload()
+    downloads.cancelprep()
   }
 })

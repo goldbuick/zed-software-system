@@ -1,3 +1,6 @@
+import { apilog } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import { MEDIAQUEUE_DEFAULT_TV_VOLUME } from 'zss/feature/mediaqueue/constants'
 import {
   storagereadconfigstring,
@@ -5,8 +8,8 @@ import {
 } from 'zss/feature/storage'
 import { isnumber, ispresent } from 'zss/mapping/types'
 
-let remoteaudio: HTMLAudioElement | undefined
-let gesturewired = false
+let remotevideo: HTMLVideoElement | undefined
+let gesturehandler: (() => void) | undefined
 let mediavolume = MEDIAQUEUE_DEFAULT_TV_VOLUME
 
 function parsemediavol(raw: string | undefined): number | undefined {
@@ -24,41 +27,115 @@ function mediaqueueaudiogain(): number {
   return Math.max(0, Math.min(1, mediavolume / 100))
 }
 
-function resumeremoteaudio() {
-  if (!ispresent(remoteaudio) || !remoteaudio.paused) {
-    return
-  }
-  void remoteaudio.play().catch(() => {
-    // Still blocked until a stronger user gesture.
-  })
+function applyremotevideovolume() {
+  mediaqueueunlockremotevideo()
 }
 
-/** Retry board TV audio after a user gesture (e.g. synth unlock). */
+/** Unmute board TV, enable audio tracks, apply #mediavol gain. */
+export function mediaqueueunlockremotevideo(video?: HTMLVideoElement) {
+  const target = video ?? remotevideo
+  if (!ispresent(target)) {
+    return
+  }
+  const stream = target.srcObject
+  if (
+    ispresent(stream) &&
+    typeof (stream as MediaStream).getAudioTracks === 'function'
+  ) {
+    const tracks = (stream as MediaStream).getAudioTracks()
+    for (let i = 0; i < tracks.length; ++i) {
+      tracks[i].enabled = true
+    }
+  }
+  target.removeAttribute('muted')
+  target.muted = false
+  target.volume = mediaqueueaudiogain()
+}
+
+/**
+ * AbortError means a later load/pause/play superseded this play() call -- it is
+ * normal control flow, not a blocked autoplay the player can act on.
+ */
+function issupersededplay(err: unknown): boolean {
+  return (
+    ispresent(err) &&
+    typeof err === 'object' &&
+    'name' in err &&
+    String((err as { name?: unknown }).name) === 'AbortError'
+  )
+}
+
+/** Start board TV playback; report only real autoplay blocks to the tape. */
+function playremotevideo(video: HTMLVideoElement) {
+  mediaqueueunlockremotevideo(video)
+  void video
+    .play()
+    .then(() => {
+      mediaqueueunlockremotevideo(video)
+      if (!video.muted) {
+        unwireaudiogestureretry()
+      }
+    })
+    .catch((err: unknown) => {
+      if (issupersededplay(err)) {
+        return
+      }
+      const player = registerreadplayer()
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message?: unknown }).message ?? err)
+          : String(err)
+      apilog(SOFTWARE, player, `media board TV play blocked: ${message}`)
+    })
+}
+
+function resumeremotevideo() {
+  const video = remotevideo
+  if (!ispresent(video)) {
+    return
+  }
+  // Unmute + volume only; restarting a playing element on every keypress
+  // aborts the in-flight play() and stutters playback.
+  mediaqueueunlockremotevideo(video)
+  if (video.paused) {
+    playremotevideo(video)
+    return
+  }
+  if (!video.muted) {
+    unwireaudiogestureretry()
+  }
+}
+
+/** Retry board TV playback after a user gesture (e.g. synth unlock). */
 export function mediaqueueresumeaudio() {
-  resumeremoteaudio()
+  resumeremotevideo()
 }
 
 export function mediaqueuewireaudiogestureretry() {
-  if (gesturewired || typeof window === 'undefined') {
+  if (ispresent(gesturehandler) || typeof window === 'undefined') {
     return
   }
-  gesturewired = true
-  window.addEventListener('keydown', resumeremoteaudio, { capture: true })
-  window.addEventListener('pointerdown', resumeremoteaudio, { capture: true })
-  window.addEventListener('click', resumeremoteaudio, { capture: true })
+  gesturehandler = resumeremotevideo
+  window.addEventListener('keydown', gesturehandler, { capture: true })
+  window.addEventListener('pointerdown', gesturehandler, { capture: true })
+  window.addEventListener('click', gesturehandler, { capture: true })
 }
 
-function applyremoteaudiovolume() {
-  if (!ispresent(remoteaudio)) {
+/** Playback is unmuted and running; stop touching it on every input event. */
+function unwireaudiogestureretry() {
+  if (!ispresent(gesturehandler) || typeof window === 'undefined') {
     return
   }
-  remoteaudio.volume = mediaqueueaudiogain()
+  window.removeEventListener('keydown', gesturehandler, { capture: true })
+  window.removeEventListener('pointerdown', gesturehandler, { capture: true })
+  window.removeEventListener('click', gesturehandler, { capture: true })
+  gesturehandler = undefined
 }
 
 /** Board TV speaker level (#mediavol, 0-100). Not synth #vol. */
 export function mediaqueuesetmediavolume(volume: number) {
   mediavolume = volume
-  applyremoteaudiovolume()
+  applyremotevideovolume()
 }
 
 export function mediaqueuereadmediavolume(): number {
@@ -75,31 +152,15 @@ export async function restoremediavolfromstorage() {
   mediaqueuesetmediavolume(volume)
 }
 
-export function mediaqueueclearremoteaudio() {
-  if (!ispresent(remoteaudio)) {
-    return
-  }
-  remoteaudio.pause()
-  remoteaudio.srcObject = null
-  remoteaudio.remove()
-  remoteaudio = undefined
+export function mediaqueueclearremotevideo() {
+  remotevideo = undefined
 }
 
-export function mediaqueueattachremoteaudio(audiotracks: MediaStreamTrack[]) {
-  mediaqueueclearremoteaudio()
-  if (audiotracks.length === 0) {
-    return
-  }
+/** Bind board TV volume + resume to the active remote video element. */
+export function mediaqueuebindremotevideo(video: HTMLVideoElement) {
+  remotevideo = video
+  // A fresh element can be blocked again, so the gesture retry comes back.
   mediaqueuewireaudiogestureretry()
-  const audio = document.createElement('audio')
-  audio.autoplay = true
-  audio.setAttribute('playsinline', '')
-  audio.style.display = 'none'
-  document.body.appendChild(audio)
-  audio.srcObject = new MediaStream(audiotracks)
-  remoteaudio = audio
-  applyremoteaudiovolume()
-  void audio.play().catch(() => {
-    // Autoplay may wait for a user gesture after #media bind.
-  })
+  applyremotevideovolume()
+  resumeremotevideo()
 }

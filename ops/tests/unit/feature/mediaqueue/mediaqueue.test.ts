@@ -6,9 +6,11 @@ import {
 import {
   BOARD_TV_COLS,
   BOARD_TV_ROWS,
+  boardtvlayout,
   boardtvisupright,
   boardtvlayerz,
 } from 'zss/feature/mediaqueue/constants'
+import { boardtvscreenrows } from 'zss/gadget/boardtvgrid'
 import {
   mediaqueueclearlistenstate,
   mediaqueuesethelperconnected,
@@ -164,7 +166,28 @@ describe('mediaqueue board tv', () => {
     expect(boardtvlayerz('flat', 28)).toBe(2)
     expect(boardtvlayerz('iso', 28)).toBe(0.25)
     expect(boardtvlayerz('fpv', 28)).toBe(0.25)
-    expect(boardtvlayerz('mode7', 28)).toBeCloseTo(1.4)
+    expect(boardtvlayerz('mode7', 28)).toBeCloseTo(3.36)
+  })
+
+  it('boardtvlayout places the marquee identically in every mode', () => {
+    for (const mode of ['flat', 'mode7', 'iso', 'fpv'] as const) {
+      const layout = boardtvlayout(mode, 28)
+      expect(layout.marqueerow).toBe(BOARD_TV_ROWS - 1)
+      expect(layout.scrollstep).toBe(1)
+      expect(layout.videoflipvertical).toBe(true)
+    }
+  })
+
+  it('boardtvlayout widens video z separation outside flat', () => {
+    expect(boardtvlayout('flat', 28).videoz).toBeCloseTo(0.001)
+    expect(boardtvlayout('mode7', 28).videoz).toBeCloseTo(1.4)
+    expect(boardtvlayout('iso', 28).videoz).toBeCloseTo(1.4)
+    expect(boardtvlayout('fpv', 28).videoz).toBeCloseTo(1.4)
+  })
+
+  it('boardtvscreenrows keeps video off the marquee row', () => {
+    expect(boardtvscreenrows(BOARD_TV_ROWS - 1)).toEqual({ start: 1, count: 13 })
+    expect(boardtvscreenrows(0)).toEqual({ start: 1, count: 13 })
   })
 
   it('boardtvshouldshow matches bound board when listening', () => {

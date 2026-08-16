@@ -207,17 +207,18 @@ describe('mediaqueue player connect', () => {
   })
 
   it('attaches stream from helper call when tracks are present', () => {
+    const stream = new MockMediaStream()
+    stream.addtrack({ kind: 'video' }, 'video')
     const handlers: Record<string, (arg: unknown) => void> = {}
     const call = {
       on: jest.fn((event: string, fn: (arg: unknown) => void) => {
         handlers[event] = fn
       }),
       close: jest.fn(),
+      remoteStream: stream,
     }
     jest.mocked(netterminalmediacall).mockReturnValue(call as never)
     mediaqueueconnectifonboard('helper-peer', 'board-a')
-    const stream = new MockMediaStream()
-    stream.addtrack({ kind: 'video' }, 'video')
     handlers.stream(stream)
     expect(mediaqueueattachvideosink).toHaveBeenCalledWith('mediaqueue', stream)
   })
@@ -280,6 +281,52 @@ describe('mediaqueue player connect', () => {
     jest.mocked(netterminalmediacall).mockReturnValue(call as never)
     mediaqueueconnectifonboard('helper-peer', 'board-a')
     expect(mediaqueueattachvideosink).toHaveBeenCalledWith('mediaqueue', stream)
+  })
+
+  it('merges audio from receivers when remoteStream is video-only', async () => {
+    const videostream = new MockMediaStream()
+    videostream.addtrack({ kind: 'video' }, 'video')
+    const trackhandlers: Array<
+      (evt: { track: { kind: string }; streams: MediaStream[] }) => void
+    > = []
+    const pc = {
+      iceConnectionState: 'connected',
+      connectionState: 'connected',
+      getReceivers: jest.fn(() => [] as Array<{ track?: { kind: string } }>),
+      addEventListener: jest.fn(
+        (
+          event: string,
+          fn: (evt: {
+            track: { kind: string }
+            streams: MediaStream[]
+          }) => void | (() => void),
+        ) => {
+          if (event === 'track') {
+            trackhandlers.push(fn)
+          }
+        },
+      ),
+      removeEventListener: jest.fn(),
+    }
+    const call = {
+      on: jest.fn(),
+      close: jest.fn(),
+      remoteStream: videostream,
+      peerConnection: pc,
+    }
+    jest.mocked(netterminalmediacall).mockReturnValue(call as never)
+    mediaqueueconnectifonboard('helper-peer', 'board-a')
+    pc.getReceivers.mockReturnValue([
+      { track: { kind: 'video' } },
+      { track: { kind: 'audio' } },
+    ])
+    expect(trackhandlers.length).toBeGreaterThan(0)
+    trackhandlers[0]?.({ track: { kind: 'audio' }, streams: [] })
+    await new Promise<void>((resolve) => queueMicrotask(resolve))
+    const calls = jest.mocked(mediaqueueattachvideosink).mock.calls
+    const last = calls[calls.length - 1]?.[1] as MockMediaStream
+    expect(last.getAudioTracks()).toEqual([{ kind: 'audio' }])
+    expect(last.getVideoTracks()).toEqual([{ kind: 'video' }])
   })
 
   it('retries from bound board without listen state for join tabs', () => {

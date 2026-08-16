@@ -1,4 +1,4 @@
-<!-- Legacy alias: use youtube-relay-nsis or media-queue-nsis per app -->
+<!-- Legacy alias: use media-queue-nsis per app -->
 <artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
   <pe-file>
     <authenticode-sign />

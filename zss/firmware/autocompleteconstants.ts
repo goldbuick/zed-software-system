@@ -118,7 +118,7 @@ export const QUEUE_ACTION_KEYWORDS = [
   'stop',
 ] as const
 
-export const BROADCAST_WHIP_ALIASES = ['twitch', 'youtube', 'ivs'] as const
+export const BROADCAST_WHIP_ALIASES = ['twitch', 'ivs'] as const
 
 export const PIVOT_SHEAR_KEYWORDS = [
   'taper_floor',

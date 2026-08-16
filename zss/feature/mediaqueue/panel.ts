@@ -7,6 +7,7 @@ import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import { mediaqueueislistening, mediaqueuereadboundboardid } from 'zss/feature/mediaqueue/listenstate'
 import { mediareadcanmanagefrompayload } from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
+import { showqueuemenu } from 'zss/feature/mediaqueue/queuemenu'
 import { mediaqueuesyncnowplayingboard } from 'zss/feature/mediaqueue/nowplayinglabel'
 import {
   mediaqueueadd,
@@ -80,7 +81,6 @@ function mediabind(
   peerid: string,
   boardid: string,
   boardname: string,
-  canmanage: boolean,
 ): void {
   const trimmed = peerid.trim()
   if (!trimmed) {
@@ -95,7 +95,7 @@ function mediabind(
       return
     }
     mediaqueuelisten(player, trimmed, boardid, boardname)
-    showmediamenu(player, canmanage)
+    showqueuemenu(player)
   })
 }
 
@@ -106,11 +106,10 @@ export function handlemediapanel(
   path: string,
 ): void {
   const player = message.player
-  const canmanage = mediareadcanmanagefrompayload(message.data)
   void vm
   switch (NAME(path)) {
     case 'menu':
-      showmediamenu(player, canmanage)
+      showmediamenu(player)
       break
     case 'add': {
       const url = readurlfrompayload(message)
@@ -155,9 +154,15 @@ export function handlequeuepanel(
   path: string,
 ): void {
   const player = message.player
-  const canmanage = mediareadcanmanagefrompayload(message.data)
   void vm
   switch (NAME(path)) {
+    case 'menu': {
+      if (!requiremanage(player, message)) {
+        return
+      }
+      showqueuemenu(player)
+      break
+    }
     case 'bind': {
       if (!requiremanage(player, message)) {
         return
@@ -172,7 +177,7 @@ export function handlequeuepanel(
       const boardname = isstring(payload?.boardname)
         ? payload.boardname.trim()
         : ''
-      mediabind(player, peerid, boardid, boardname, canmanage)
+      mediabind(player, peerid, boardid, boardname)
       break
     }
     case 'skip': {

@@ -1,7 +1,10 @@
 import type { MediaConnection } from 'peerjs'
+import { apilog } from 'zss/device/api'
+import { registerreadplayer } from 'zss/device/registerplayer'
+import { SOFTWARE } from 'zss/device/session'
 import {
-  mediaqueueattachremoteaudio,
-  mediaqueueclearremoteaudio,
+  mediaqueuebindremotevideo,
+  mediaqueueclearremotevideo,
   mediaqueuewireaudiogestureretry,
 } from 'zss/feature/mediaqueue/boardtvaudio'
 import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
@@ -11,70 +14,117 @@ import { ispresent } from 'zss/mapping/types'
 
 let remotevideo: HTMLVideoElement | undefined
 let registered = false
-let videogesturewired = false
+let wiredstream: MediaStream | undefined
+let streamtracklistener: ((evt: MediaStreamTrackEvent) => void) | undefined
+let attachedtrackids = ''
 
-function resumeremotevideo() {
-  if (!ispresent(remotevideo) || !remotevideo.paused) {
-    return
-  }
-  void remotevideo.play().catch(() => {
-    // Still blocked until a stronger user gesture.
-  })
+function streamtrackids(stream: MediaStream): string {
+  return stream
+    .getTracks()
+    .map((track) => `${track.kind}:${track.id}`)
+    .sort()
+    .join('|')
 }
 
-function wirevideogestureretry() {
-  if (videogesturewired || typeof window === 'undefined') {
+function clearstreamtracklistener() {
+  if (ispresent(wiredstream) && ispresent(streamtracklistener)) {
+    wiredstream.removeEventListener('addtrack', streamtracklistener)
+  }
+  wiredstream = undefined
+  streamtracklistener = undefined
+}
+
+function wirestreamtracks(stream: MediaStream) {
+  if (wiredstream === stream) {
     return
   }
-  videogesturewired = true
-  window.addEventListener('keydown', resumeremotevideo, { capture: true })
-  window.addEventListener('pointerdown', resumeremotevideo, { capture: true })
-  window.addEventListener('click', resumeremotevideo, { capture: true })
+  clearstreamtracklistener()
+  wiredstream = stream
+  streamtracklistener = (evt) => {
+    if (!ispresent(remotevideo)) {
+      return
+    }
+    const player = registerreadplayer()
+    apilog(
+      SOFTWARE,
+      player,
+      `media board TV track added: ${evt.track.kind}`,
+    )
+    remotevideo.srcObject = stream
+    mediaqueuebindremotevideo(remotevideo)
+  }
+  wiredstream.addEventListener('addtrack', streamtracklistener)
 }
 
 function clearremotevideo(peerkey: string) {
   if (ispresent(remotevideo)) {
+    remotevideo.pause()
     remotevideo.srcObject = null
     remotevideo.remove()
     remotevideo = undefined
   }
-  mediaqueueclearremoteaudio()
+  attachedtrackids = ''
+  mediaqueueclearremotevideo()
+  clearstreamtracklistener()
   useMedia.getState().setscreen(peerkey, undefined)
 }
 
 function attachremotestream(peerkey: string, stream: MediaStream) {
-  clearremotevideo(peerkey)
-  const videotracks = stream.getVideoTracks()
-  const audiotracks = stream.getAudioTracks()
-  if (videotracks.length > 0) {
-    const video = document.createElement('video')
-    video.autoplay = true
-    video.playsInline = true
-    video.muted = true
-    video.setAttribute('playsinline', '')
-    video.style.display = 'none'
-    document.body.appendChild(video)
-    const videostream = new MediaStream(videotracks)
-    video.srcObject = videostream
-    const publishvideo = () => {
-      if (remotevideo !== video) {
-        return
-      }
-      wirevideogestureretry()
-      useMedia.getState().setscreen(peerkey, video)
-    }
-    video.addEventListener('loadeddata', publishvideo)
-    video.addEventListener('playing', publishvideo)
-    for (let i = 0; i < videotracks.length; ++i) {
-      videotracks[i].addEventListener('unmute', publishvideo, { once: true })
-    }
-    publishvideo()
-    void video.play().catch(() => {
-      // Autoplay may wait for a user gesture; texture still updates once playing.
-    })
-    remotevideo = video
+  const trackids = streamtrackids(stream)
+  wirestreamtracks(stream)
+
+  if (
+    ispresent(remotevideo) &&
+    remotevideo.srcObject instanceof MediaStream &&
+    attachedtrackids === trackids &&
+    document.body.contains(remotevideo)
+  ) {
+    mediaqueuebindremotevideo(remotevideo)
+    return
   }
-  mediaqueueattachremoteaudio(audiotracks)
+
+  clearremotevideo(peerkey)
+  wirestreamtracks(stream)
+  attachedtrackids = trackids
+
+  if (stream.getVideoTracks().length === 0) {
+    const player = registerreadplayer()
+    apilog(
+      SOFTWARE,
+      player,
+      `media board TV waiting for video track a=${stream.getAudioTracks().length}`,
+    )
+    return
+  }
+
+  const video = document.createElement('video')
+  video.autoplay = true
+  video.playsInline = true
+  video.muted = false
+  video.setAttribute('playsinline', '')
+  video.style.display = 'none'
+  document.body.appendChild(video)
+  video.srcObject = stream
+  remotevideo = video
+
+  const publishvideo = () => {
+    if (remotevideo !== video) {
+      return
+    }
+    useMedia.getState().setscreen(peerkey, video)
+  }
+
+  video.addEventListener('loadeddata', publishvideo)
+  video.addEventListener('playing', publishvideo)
+  publishvideo()
+  mediaqueuebindremotevideo(video)
+
+  const player = registerreadplayer()
+  apilog(
+    SOFTWARE,
+    player,
+    `media board TV attached v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length}`,
+  )
 }
 
 export type MEDIAQUEUE_PLAYER_SINK_TEARDOWN = {

@@ -36,7 +36,10 @@
   let lastdownloadlabel = ''
   let transcodepulsetimer = null
   let downloadpolltimer = null
+  let preppolltimer = null
   let endedvideo = null
+  let prepstate = null
+  let preptarget = ''
 
   let mqdevcache = null
 
@@ -120,6 +123,55 @@
       clearInterval(downloadpolltimer)
       downloadpolltimer = null
     }
+  }
+
+  function clearpreppoll() {
+    if (preppolltimer) {
+      clearInterval(preppolltimer)
+      preppolltimer = null
+    }
+  }
+
+  function handleprepprogress(payload) {
+    const raw = payload && payload.payload ? payload.payload : payload
+    if (!raw) {
+      return
+    }
+    prepstate = {
+      url: preptarget,
+      phase: 'downloading',
+      percent: Number(raw.percent != null ? raw.percent : 0),
+      status: raw.status ? String(raw.status) : 'downloading',
+      detail: raw.eta ? String(raw.eta) : '',
+    }
+    renderqueue()
+  }
+
+  function startpreppoll() {
+    clearpreppoll()
+    preppolltimer = setInterval(function () {
+      if (!preptarget) {
+        clearpreppoll()
+        return
+      }
+      void invoke('read_media_prep_state')
+        .then(function (state) {
+          if (!preptarget || !state) {
+            return
+          }
+          if (state.url && state.url !== preptarget) {
+            return
+          }
+          prepstate = state
+          if (state.phase === 'ready' || state.phase === 'downloading') {
+            renderqueue()
+          }
+          if (state.phase === 'ready' || state.phase === 'idle') {
+            clearpreppoll()
+          }
+        })
+        .catch(function () {})
+    }, 500)
   }
 
   function startdownloadpoll() {
@@ -310,17 +362,96 @@
     schedulefitwindow()
   }
 
+  function prepbadge(index, url) {
+    if (index !== 1 || !url || url !== preptarget) {
+      return ''
+    }
+    if (prepstate && prepstate.phase === 'ready') {
+      return ' [ready]'
+    }
+    if (prepstate && prepstate.phase === 'downloading') {
+      const pct = Math.round(Number(prepstate.percent || 0))
+      return ' [prep ' + pct + '%]'
+    }
+    return ' [prep]'
+  }
+
   function renderqueue() {
     if (!queueurls.length) {
       els.queue.value = '(empty)'
     } else {
       els.queue.value = queueurls
         .map(function (url, i) {
-          return (i === queueindex ? '> ' : '  ') + '[' + i + '] ' + url
+          return (
+            (i === queueindex ? '> ' : '  ') +
+            '[' +
+            i +
+            '] ' +
+            url +
+            prepbadge(i, url)
+          )
         })
         .join('\n')
     }
     schedulefitwindow()
+  }
+
+  async function prunequeuecache() {
+    if (readdevplaybackpath()) {
+      return
+    }
+    try {
+      await invoke('prune_media_queue_cache', {
+        urls: queueurls,
+        playingUrl: currentplaybackurl,
+      })
+      void refreshcachebytes()
+    } catch (_) {}
+  }
+
+  async function reconcileprep() {
+    if (readdevplaybackpath()) {
+      return
+    }
+    const nexturl =
+      queueurls.length >= 2 ? String(queueurls[1] || '').trim() : ''
+    if (!nexturl) {
+      preptarget = ''
+      prepstate = null
+      clearpreppoll()
+      try {
+        await invoke('cancel_media_prep')
+      } catch (_) {}
+      renderqueue()
+      return
+    }
+    if (preptarget === nexturl && prepstate && prepstate.phase === 'ready') {
+      renderqueue()
+      return
+    }
+    try {
+      const state = await invoke('read_media_prep_state')
+      if (
+        state &&
+        state.url === nexturl &&
+        (state.phase === 'downloading' || state.phase === 'ready')
+      ) {
+        preptarget = nexturl
+        prepstate = state
+        if (state.phase === 'downloading') {
+          startpreppoll()
+        }
+        renderqueue()
+        return
+      }
+      preptarget = nexturl
+      prepstate = { url: nexturl, phase: 'downloading', percent: 0 }
+      await invoke('start_media_prep', { url: nexturl })
+      startpreppoll()
+      renderqueue()
+    } catch (_) {
+      renderqueue()
+    }
   }
 
   function send(msg) {
@@ -520,9 +651,11 @@
     if (!mediastream) {
       return
     }
+    var publisherrors = []
     playercalls.forEach(function (entry) {
       var pc = entry.call.peerConnection
       if (!pc) {
+        publisherrors.push('missing peer connection for ' + entry.call.peer)
         return
       }
       var senders = pc.getSenders()
@@ -537,16 +670,49 @@
         if (sender && sender.track === track) {
           return
         }
+        if (sender && typeof sender.replaceTrack === 'function') {
+          sender
+            .replaceTrack(track)
+            .catch(function (err) {
+              publisherrors.push(
+                'replaceTrack ' +
+                  track.kind +
+                  ' failed: ' +
+                  String((err && err.message) || err),
+              )
+            })
+          return
+        }
         if (sender) {
           try {
             pc.removeTrack(sender)
-          } catch (_) {}
+          } catch (err) {
+            publisherrors.push(
+              'removeTrack ' +
+                track.kind +
+                ' failed: ' +
+                String((err && err.message) || err),
+            )
+          }
         }
         try {
           pc.addTrack(track, mediastream)
-        } catch (_) {}
+        } catch (err) {
+          publisherrors.push(
+            'addTrack ' +
+              track.kind +
+              ' failed: ' +
+              String((err && err.message) || err),
+          )
+        }
       })
     })
+    if (publisherrors.length) {
+      var detail = publisherrors.join(' | ')
+      console.error('publishstreamtoplayers: ' + detail)
+      sendstatus('playback-failed', detail)
+      setlink('error', detail)
+    }
   }
 
   function handleplayercall(call) {
@@ -645,25 +811,46 @@
         playback = await window.mqplayback.startplayback(path)
         mediastream = playback.stream
       } else {
-        downloadinflight = true
-        lastdownloadpct = -1
-        lastdownloadlabel = ''
-        setlink('extracting', 'starting')
-        sendstatus('extracting', 'starting')
-        startdownloadpoll()
-        const ready = await window.mqplayback.startdownload(url)
-        path = ready && ready.path ? ready.path : ''
-        currentplaybacktitle =
-          ready && ready.title ? String(ready.title).trim() : ''
-        handledownloadprogress({ percent: 100, status: 'downloading' })
-        sendstatus('download-progress', '100|')
-        const label = playbacklabel(currentplaybacktitle, url, path)
-        setlink('buffering', label)
-        sendstatus('buffering', label)
-        playback = await window.mqplayback.startplayback(path, {
-          audioOnly: Boolean(ready && ready.audioOnly),
-        })
-        mediastream = playback.stream
+        let ready = null
+        try {
+          ready = await invoke('take_media_prep_ready', { url: url })
+        } catch (_) {
+          ready = null
+        }
+        if (ready && ready.path) {
+          path = ready.path
+          currentplaybacktitle =
+            ready.title ? String(ready.title).trim() : ''
+          const label = playbacklabel(currentplaybacktitle, url, path)
+          setlink('buffering', label)
+          sendstatus('buffering', label)
+          playback = await window.mqplayback.startplayback(path, {
+            audioOnly: Boolean(ready.audioOnly),
+          })
+          mediastream = playback.stream
+        } else {
+          downloadinflight = true
+          lastdownloadpct = -1
+          lastdownloadlabel = ''
+          setlink('extracting', 'starting')
+          sendstatus('extracting', 'starting')
+          startdownloadpoll()
+          const downloaded = await window.mqplayback.startdownload(url)
+          path = downloaded && downloaded.path ? downloaded.path : ''
+          currentplaybacktitle =
+            downloaded && downloaded.title
+              ? String(downloaded.title).trim()
+              : ''
+          handledownloadprogress({ percent: 100, status: 'downloading' })
+          sendstatus('download-progress', '100|')
+          const label = playbacklabel(currentplaybacktitle, url, path)
+          setlink('buffering', label)
+          sendstatus('buffering', label)
+          playback = await window.mqplayback.startplayback(path, {
+            audioOnly: Boolean(downloaded && downloaded.audioOnly),
+          })
+          mediastream = playback.stream
+        }
       }
     } catch (err) {
       const phase = path ? 'playback-failed' : 'download-failed'
@@ -703,6 +890,7 @@
     syncplayerlinkstatus()
     const playinglabel = playbacklabel(currentplaybacktitle, url, path)
     sendstatus('playing', playinglabel)
+    void reconcileprep()
   }
 
   async function maybeautostartaftergoto(url) {
@@ -743,9 +931,11 @@
         queueurls = Array.isArray(data.urls) ? data.urls.slice() : []
         queueindex = typeof data.index === 'number' ? data.index : 0
         renderqueue()
+        void prunequeuecache()
+        void reconcileprep()
         if (
           queueurls.length === 0 &&
-          (playbackstarted || mediacall || mediastream)
+          (playbackstarted || mediastream)
         ) {
           void endcall()
           setlink('connected', 'queue empty')
@@ -894,6 +1084,9 @@
   async function cleardownloadcache() {
     try {
       await endcall()
+      preptarget = ''
+      prepstate = null
+      clearpreppoll()
       const result = await invoke('clear_media_downloads')
       const count = result && result.deletedCount ? result.deletedCount : 0
       const freed = result && result.freedBytes ? result.freedBytes : 0
@@ -931,6 +1124,25 @@
       void window.__TAURI__.event.listen('mq-download-progress', function (event) {
         handledownloadprogress(event && event.payload ? event.payload : null)
         void refreshcachebytes()
+      })
+      void window.__TAURI__.event.listen('mq-prep-progress', function (event) {
+        handleprepprogress(event && event.payload ? event.payload : null)
+      })
+      void window.__TAURI__.event.listen('mq-prep-ready', function (event) {
+        const payload = event && event.payload ? event.payload : null
+        if (payload && preptarget) {
+          prepstate = {
+            url: preptarget,
+            phase: 'ready',
+            percent: 100,
+            status: 'ready',
+            detail: '',
+            path: payload.path || '',
+          }
+          clearpreppoll()
+          renderqueue()
+          void refreshcachebytes()
+        }
       })
     }
     void fitmainwindow()

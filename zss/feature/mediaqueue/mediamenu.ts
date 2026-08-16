@@ -1,4 +1,5 @@
 import { SOFTWARE } from 'zss/device/session'
+import { mediaplayerdisplayname } from 'zss/feature/mediaqueue/playerdisplayname'
 import { mediaqueuereadstate } from 'zss/feature/mediaqueue/queue'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
@@ -6,18 +7,10 @@ import {
   zsstextline,
   zsstexttablelines,
   zsstexttape,
-  zsszedlinkline,
 } from 'zss/feature/zsstextui'
 
-function shortplayerid(player: string): string {
-  if (player.length <= 10) {
-    return player
-  }
-  return `${player.slice(0, 7)}...`
-}
-
-/** Terminal #media menu (queue table + admin action links). */
-export function showmediamenu(player: string, canmanage: boolean) {
+/** Terminal #media menu (queue table only). */
+export function showmediamenu(player: string) {
   const state = mediaqueuereadstate()
   const rows: string[] = [...zssheaderlines('MEDIA')]
 
@@ -27,20 +20,13 @@ export function showmediamenu(player: string, canmanage: boolean) {
   } else {
     for (let i = 0; i < state.urls.length; ++i) {
       const url = state.urls[i]
-      const who = state.players[i] ? shortplayerid(state.players[i]) : '?'
+      const who = mediaplayerdisplayname(state.players[i])
       const mark = i === state.index ? '>' : ' '
       const short = url.length > 44 ? `${url.slice(0, 41)}...` : url
       queuerows.push([mark, String(i), who, short])
     }
     rows.push('$white  queue')
     rows.push(...zsstexttablelines(queuerows, ['', 'index', 'who', 'url']))
-  }
-
-  if (canmanage) {
-    rows.push('$32')
-    rows.push(zsszedlinkline('queue skip', '$cyanSkip'))
-    rows.push(zsszedlinkline('queue clear', '$redClear queue'))
-    rows.push(zsszedlinkline('queue stop', '$redStop helper'))
   }
 
   terminalwritelines(SOFTWARE, player, zsstexttape(...rows))

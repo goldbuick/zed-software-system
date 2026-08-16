@@ -2,34 +2,30 @@
 title: Local media helpers on Electron
 ---
 
-**Purpose:** Ship cafe's **local desktop helpers** on **Electron** (Chromium). One stack covers (1) the **YouTube WHIP→RTMPS relay** and (2) the **media-queue helper** that PeerJS-calls cafe. Cafe stays a website; helpers stay local binaries on GitHub Releases.
+**Purpose:** Ship cafe's **media-queue helper** as a local **Electron** (Chromium) desktop app. The helper PeerJS-calls cafe for board TV playback. Cafe stays a website; the helper ships as a local binary on GitHub Releases.
 
-**Status:** Electron is the desktop stack for both helpers. Media-queue + cafe `#media` CLI menu / board TV receive path live under [`ops/media-queue/`](../media-queue/README.md) and [`zss/feature/mediaqueue/`](../../zss/feature/mediaqueue/docs/README.md). Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
+**Status:** Electron is the desktop stack for the media-queue helper. Media-queue + cafe `#media` queue list / `#queue` admin menu / board TV receive path live under [`ops/media-queue/`](../media-queue/README.md) and [`zss/feature/mediaqueue/`](../../zss/feature/mediaqueue/docs/README.md). Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
 
 ## Product shape
 
 | Helper | Job | Cafe side |
 |--------|-----|-----------|
-| **YouTube relay** (Electron) | Accept WHIP from cafe, push RTMPS to YouTube; hold stream key + bearer | `#broadcast whip youtube <bearer>` |
-| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` CLI menu; **board TV** sink via direct helper connect -- **no tape overlay** |
+| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` queue list; `#queue` admin menu; **board TV** sink via direct helper connect -- **no tape overlay** |
 
-Both ship as Electron apps on the same GitHub Releases channel (`v*` tags).
+The helper ships as an Electron app on GitHub Releases (`v*` tags).
 
 ```mermaid
 flowchart TB
   subgraph cafe [zed.cafe browser]
-    CLI["#broadcast / #media …"]
+    CLI["#media / #queue …"]
     Peer["PeerJS peer on terminal.zed.cafe"]
     TV["Board TV MediaStream sink"]
   end
 
-  subgraph helpers [Electron local apps]
-    YT["YouTube relay: MediaMTX + ffmpeg"]
+  subgraph helpers [Electron local app]
     MQ["Media queue: yt-dlp + video.captureStream"]
   end
 
-  CLI -->|WHIP publish| YT
-  YT -->|RTMPS| YouTube[YouTube Live]
   CLI -->|queue RPCs DataConnection| MQ
   MQ -->|MediaConnection per player on board| Peer
   Peer --> TV
@@ -39,13 +35,6 @@ flowchart TB
 
 - **Chromium** provides `HTMLVideoElement.captureStream()` for media-queue WebRTC (WKWebView on Tauri macOS does not).
 - Playback path: download MP4 → `<video>.play()` → `video.captureStream()` → PeerJS.
-- Relay stays tray + settings + subprocess spawn (MediaMTX/ffmpeg); Electron main process already owned that before the Tauri experiment.
-
-## YouTube relay
-
-- Main: [`ops/youtube-rtmp-relay/src/main.cjs`](../youtube-rtmp-relay/src/main.cjs)
-- Renderer: [`ops/youtube-rtmp-relay/src/renderer/`](../youtube-rtmp-relay/src/renderer/)
-- Binaries: `vendor/` (dev) or `resources/bin/` (packaged via electron-builder `extraResources`)
 
 ## Media-queue helper
 
@@ -57,12 +46,11 @@ flowchart TB
 ## Build / dev
 
 ```bash
-yarn task run relay:build:desktop
 yarn task run mediaqueue:build:desktop
 yarn task run mediaqueue:dev
 ```
 
-Installers land under `ops/*/dist/` (electron-builder).
+Installers land under `ops/media-queue/dist/` (electron-builder).
 
 ## Explicitly out
 
@@ -75,7 +63,6 @@ Installers land under `ops/*/dist/` (electron-builder).
 
 ## Related
 
-- Relay: [`ops/youtube-rtmp-relay/`](../youtube-rtmp-relay/README.md)
 - Media queue: [`ops/media-queue/`](../media-queue/README.md)
 - PeerJS baseline: [`zss/feature/docs/netterminal.md`](../../zss/feature/docs/netterminal.md)
 - Windows signing: [`desktop-signing.md`](desktop-signing.md)

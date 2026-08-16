@@ -3,7 +3,6 @@ import { CAFE_TASKS } from './groups/cafe'
 import { HEADLESS_TASKS } from './groups/headless'
 import { MEDIAQUEUE_TASKS } from './groups/mediaqueue'
 import { OPS_TASKS } from './groups/ops'
-import { RELAY_TASKS } from './groups/relay'
 import type { TaskDef } from './types'
 
 const ALL_TASK_LIST: TaskDef[] = [
@@ -11,7 +10,6 @@ const ALL_TASK_LIST: TaskDef[] = [
   ...BLUME_TASKS,
   ...HEADLESS_TASKS,
   ...OPS_TASKS,
-  ...RELAY_TASKS,
   ...MEDIAQUEUE_TASKS,
 ]
 
