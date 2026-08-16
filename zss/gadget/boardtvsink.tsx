@@ -14,7 +14,7 @@ import {
   boardtvisupright,
   boardtvlayerz,
 } from 'zss/feature/mediaqueue/constants'
-import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/receive'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import { type BOX_FRAME, buildboxframe } from 'zss/gadget/boxframe'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { updateTexture } from 'zss/gadget/display/textures'

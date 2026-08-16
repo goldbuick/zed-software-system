@@ -6,6 +6,7 @@ import {
   mediaqueuereadboundboardid,
   mediaqueuesubscribeboardtvgate,
 } from 'zss/feature/mediaqueue/listenstate'
+import { mediaqueuereadplayerlayerstate } from 'zss/feature/mediaqueue/playerlayerstate'
 
 export function mediaqueuehasvideo(screen: Record<string, unknown>): boolean {
   return Object.values(screen).some(
@@ -18,6 +19,11 @@ export function boardtvshouldshow(
   gadgetboard: string,
   hasvideo: boolean,
 ): boolean {
+  const layer = mediaqueuereadplayerlayerstate()
+  if (layer.helperpeerid && layer.board === gadgetboard) {
+    return true
+  }
+
   const bound = mediaqueuereadboundboardid()
   const listening = mediaqueueislistening()
   const helperup = mediaqueuehelperconnected()

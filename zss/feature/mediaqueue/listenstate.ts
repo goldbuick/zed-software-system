@@ -28,6 +28,11 @@ export function mediaqueuereadboardtvgatesnapshot() {
   return boardtvgateepoch
 }
 
+/** Notify board TV subscribers (player layer / connect state on join tabs). */
+export function mediaqueuenotifyboardtvgate() {
+  bumpboardtvgate()
+}
+
 export function mediaqueuereadlistenplayer(): string {
   return listenplayer
 }

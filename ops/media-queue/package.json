@@ -9,11 +9,12 @@
   "license": "MIT",
   "scripts": {
     "fetch-binaries": "node scripts/fetch-binaries.mjs",
+    "fetch-peerjs": "node scripts/fetch-peerjs.mjs",
     "verify-download": "node scripts/verify-download.mjs",
     "stage-electron-resources": "node scripts/stage-electron-resources.mjs",
-    "prestart": "node scripts/fetch-binaries.mjs",
+    "prestart": "node scripts/fetch-peerjs.mjs && node scripts/fetch-binaries.mjs",
     "start": "node scripts/run-electron.mjs",
-    "predist": "node scripts/fetch-binaries.mjs && node scripts/stage-electron-resources.mjs",
+    "predist": "node scripts/fetch-peerjs.mjs && node scripts/fetch-binaries.mjs && node scripts/stage-electron-resources.mjs",
     "dist": "node scripts/run-builder.mjs",
     "dist:mac": "node scripts/run-builder.mjs --mac",
     "dist:win": "node scripts/run-builder.mjs --win"

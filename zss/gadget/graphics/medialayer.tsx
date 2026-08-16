@@ -27,12 +27,26 @@ const defaultcharset = loadcharsetfrombytes(CHARSET)
 export function MediaLayers() {
   const id = useGadgetClient((state) => state.gadget.id)
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
+  const helperpeerid = useGadgetClient((state) => {
+    const layers = state.gadget.layers ?? []
+    for (let i = 0; i < layers.length; ++i) {
+      const layer = layers[i]
+      if (
+        layer.type === LAYER_TYPE.MEDIA &&
+        layer.mime === 'text/mediaqueue-helper' &&
+        isstring(layer.media)
+      ) {
+        return layer.media.trim()
+      }
+    }
+    return ''
+  })
 
   useEffect(() => {
     const layers = useGadgetClient.getState().gadget.layers ?? []
     let usepalette = defaultpalette
     let usecharset = defaultcharset
-    let helperpeerid = ''
+    let helperfromloop = ''
     const media = useMedia.getState()
     for (let i = 0; layers && i < layers.length; ++i) {
       const layer = layers[i]
@@ -68,7 +82,7 @@ export function MediaLayers() {
             break
           case 'text/mediaqueue-helper':
             if (isstring(layer.media)) {
-              helperpeerid = layer.media.trim()
+              helperfromloop = layer.media.trim()
             }
             break
         }
@@ -76,12 +90,13 @@ export function MediaLayers() {
       media.setpalette(usepalette)
       media.setcharset(usecharset)
     }
-    if (helperpeerid) {
-      mediaqueueconnectifonboard(helperpeerid, gadgetboard)
+    const activehelper = helperpeerid || helperfromloop
+    if (activehelper) {
+      mediaqueueconnectifonboard(activehelper, gadgetboard)
     } else {
       mediaqueuedisconnect()
     }
-  }, [id, gadgetboard])
+  }, [id, gadgetboard, helperpeerid])
 
   return null
 }

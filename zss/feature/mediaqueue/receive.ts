@@ -1,8 +1,11 @@
 import type { DataConnection } from 'peerjs'
 import { apierror, apilog, vmmediaqueueboard, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
-import { restoremediavolfromstorage } from 'zss/feature/mediaqueue/boardtvaudio'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
+import {
+  mediaqueueconnectifonboard,
+  mediaqueuedisconnect,
+} from 'zss/feature/mediaqueue/playerconnect'
 import {
   mediaqueueclearlistenstate,
   mediaqueuehelperconnected,
@@ -29,13 +32,11 @@ import {
 import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
-  netterminalregisterpeeropenhandler,
   readnetworkpeerid,
 } from 'zss/feature/netterminal'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 let helperconnection: MAYBE<DataConnection>
-let bootstrapped = false
 
 function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
   if (!ispresent(helperconnection) || !helperconnection.open) {
@@ -235,18 +236,7 @@ function wirehelperconnection(conn: DataConnection) {
 }
 
 /** Wire board TV sink; players connect to helper via MEDIA layer. */
-export function mediaqueuebootstrap() {
-  if (bootstrapped) {
-    return
-  }
-  bootstrapped = true
-  void restoremediavolfromstorage()
-  mediaqueueensurevideosink()
-}
-
-netterminalregisterpeeropenhandler(() => {
-  mediaqueuebootstrap()
-})
+export { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 
 /**
  * Connect to the desktop helper's Peer id and bind media to the player's
@@ -305,6 +295,7 @@ export function mediaqueuelisten(
       const conn = netterminaldataconnect(trimmed)
       if (ispresent(conn)) {
         wirehelperconnection(conn)
+        mediaqueueconnectifonboard(trimmed, boundboardid)
       } else {
         apierror(
           SOFTWARE,
@@ -341,6 +332,7 @@ export function mediaqueuelisten(
   const conn = netterminaldataconnect(mediaqueuereadhelperpeerid())
   if (ispresent(conn)) {
     wirehelperconnection(conn)
+    mediaqueueconnectifonboard(trimmed, boundboardid)
   } else {
     apierror(SOFTWARE, player, 'media', 'could not open helper data connection')
     syncboardhelperlayer(player, boundboardid, undefined)
@@ -359,6 +351,7 @@ export function mediaqueuestop(player: string): void {
   if (boundboardid) {
     syncboardhelperlayer(player, boundboardid, undefined)
   }
+  mediaqueuedisconnect()
   mediaqueueclearlistenstate()
   apilog(SOFTWARE, player, 'media stopped')
 }

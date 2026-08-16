@@ -32,7 +32,7 @@ import {
   storemediavolconfig,
 } from 'zss/feature/mediaqueue/boardtvaudio'
 import { handlemediapanel } from 'zss/feature/mediaqueue/panel'
-import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/receive'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   netterminalhost,
   netterminaljoin,

@@ -31,6 +31,10 @@ import {
   mediaqueueskip,
 } from 'zss/feature/mediaqueue/queue'
 import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
+import {
+  mediaqueuesetplayerlayerstate,
+  mediaqueueclearplayerlayerstate,
+} from 'zss/feature/mediaqueue/playerlayerstate'
 import { mediaqueuenormalizeurl, mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 
@@ -173,6 +177,14 @@ describe('mediaqueue board tv', () => {
     mediaqueuesethelperconnected(false)
     expect(boardtvshouldshow('board-a', false)).toBe(false)
     expect(boardtvshouldshow('board-a', true)).toBe(true)
+  })
+
+  it('boardtvshouldshow shows mount when synced helper layer is on board', () => {
+    mediaqueueclearlistenstate()
+    mediaqueuesetplayerlayerstate('helper-1', 'board-a', false)
+    expect(boardtvshouldshow('board-a', false)).toBe(true)
+    expect(boardtvshouldshow('board-b', false)).toBe(false)
+    mediaqueueclearplayerlayerstate()
   })
 
   it('boardtvshouldshow shows video when player has direct helper stream', () => {
