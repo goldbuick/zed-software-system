@@ -69,7 +69,7 @@ export function mediaqueuelayerconnectaction(
   }
   const layerhelper = input.layerhelper.trim()
   const layerboard = input.layerboard.trim()
-  if (layerhelper && layerboard === board) {
+  if (layerhelper && layerboard) {
     return { kind: 'disconnect' }
   }
   return { kind: 'noop' }

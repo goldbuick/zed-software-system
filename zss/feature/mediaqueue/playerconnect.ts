@@ -6,7 +6,9 @@ import {
   mediaqueueensurevideosink,
   mediaqueueteardownplayersink,
 } from 'zss/feature/mediaqueue/attachvideo'
+import { mediaqueuereadaudiogain } from 'zss/feature/mediaqueue/boardtvaudio'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
+import { mediaqueuesyncbroadcastaudio } from 'zss/feature/mediaqueue/broadcastaudio'
 import { mediaqueuecallmetadata } from 'zss/feature/mediaqueue/callmetadata'
 import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
 import {
@@ -218,6 +220,7 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
     clearcalltracksynctimer(activecall)
   }
   mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
+  mediaqueuesyncbroadcastaudio(stream, mediaqueuereadaudiogain())
   mediaqueuesetplayerlayerpending(false)
   const player = registerreadplayer()
   const videocount = stream.getVideoTracks().length
@@ -403,6 +406,7 @@ function teardownactivecall() {
   })
   activecall = undefined
   activestream = undefined
+  mediaqueuesyncbroadcastaudio(undefined, mediaqueuereadaudiogain())
 }
 
 function headedtrace(message: string) {
@@ -534,6 +538,17 @@ export function mediaqueueretryplayerconnect() {
 export function mediaqueuedisconnect() {
   teardownactivecall()
   mediaqueueclearplayerlayerstate()
+}
+
+/** Audio tracks from the active helper MediaStream, if any. */
+export function mediaqueuereadaudiostream(): MediaStream | undefined {
+  if (!ispresent(activestream)) {
+    return undefined
+  }
+  if (activestream.getAudioTracks().length === 0) {
+    return undefined
+  }
+  return activestream
 }
 
 export function mediaqueuereadplayerconnectstate() {

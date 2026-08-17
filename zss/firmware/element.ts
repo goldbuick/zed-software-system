@@ -1,8 +1,6 @@
 import { CHIP } from 'zss/chip'
-import { apitoast, vmlogout } from 'zss/device/api'
-import { doasync } from 'zss/device/doasync'
+import { apitoast, registerstickyuser, vmlogout } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { storagewritevar } from 'zss/feature/storage'
 import { createfirmware } from 'zss/firmware'
 import {
   INPUT_FLAG_NAMES,
@@ -574,12 +572,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
     const flags = memoryreadflags(player)
     if (ispresent(flags)) {
       flags[name] = value
-      // sticky flags
+      // sticky flags persist on the local register tab, not the host sim
       switch (name) {
         case 'user': {
-          doasync(SOFTWARE, player, async () => {
-            await storagewritevar(name, value)
-          })
+          if (isstring(value)) {
+            registerstickyuser(SOFTWARE, player, value)
+          }
           break
         }
       }

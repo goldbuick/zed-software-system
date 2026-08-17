@@ -1,13 +1,17 @@
 /**
- * macOS dev: copy Electron.app with zed.cafe name + icon so Dock/Cmd+Tab
+ * macOS dev: brand the electron package's own dist app so Dock/Cmd+Tab
  * show "Zed Cafe Media Queue" instead of generic Electron.
+ *
+ * Brand in place (rename Electron.app + path.txt). A second copy under
+ * resources/dev plus lsregister made Launch Services open default_app
+ * with no args alongside electron-vite's real window.
  */
 import { execFileSync } from 'node:child_process'
 import {
   cpSync,
   existsSync,
-  mkdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -21,26 +25,25 @@ type ELECTRON_PACKAGE = {
 
 const root = MQ_ROOT
 const productname = 'Zed Cafe Media Queue'
-const bundleid = 'cafe.zed.media-queue.dev'
 const appname = `${productname}.app`
-const devroot = path.join(root, 'resources', 'dev')
-const devapp = path.join(devroot, appname)
-const stampfile = path.join(devroot, '.electron-version')
-const electronapp = path.join(
-  root,
-  'node_modules',
-  'electron',
-  'dist',
-  'Electron.app',
-)
+const electrondir = path.join(root, 'node_modules', 'electron')
+const distdir = path.join(electrondir, 'dist')
+const pathfile = path.join(electrondir, 'path.txt')
+const stampfile = path.join(electrondir, '.mq-dev-brand')
+const stockapp = path.join(distdir, 'Electron.app')
+const brandedapp = path.join(distdir, appname)
+const expectedpath = `${appname}/Contents/MacOS/Electron`
+const leftoverdev = path.join(root, 'resources', 'dev')
 const iconicns = path.join(root, 'resources', 'icons', 'icon.icns')
 
 if (process.platform !== 'darwin') {
   process.exit(0)
 }
 
-if (!existsSync(electronapp)) {
-  console.error(`missing ${electronapp} -- run yarn install in ops/media-queue`)
+if (!existsSync(stockapp) && !existsSync(brandedapp)) {
+  console.error(
+    `missing ${stockapp} -- run yarn install in ops/media-queue`,
+  )
   process.exit(1)
 }
 
@@ -51,33 +54,57 @@ if (!existsSync(iconicns)) {
   })
 }
 
-const STAMP_BRAND = '3'
+const STAMP_BRAND = '5'
 
 const electronpkg = JSON.parse(
-  readFileSync(
-    path.join(root, 'node_modules', 'electron', 'package.json'),
-    'utf8',
-  ),
+  readFileSync(path.join(electrondir, 'package.json'), 'utf8'),
 ) as ELECTRON_PACKAGE
 
-const electronversion = electronpkg.version
-
-const stampvalue = `${electronversion}:${STAMP_BRAND}`
+const stampvalue = `${electronpkg.version}:${STAMP_BRAND}`
+const pathcontents = existsSync(pathfile)
+  ? readFileSync(pathfile, 'utf8')
+  : ''
 
 if (
   existsSync(stampfile) &&
   readFileSync(stampfile, 'utf8').trim() === stampvalue &&
-  existsSync(devapp)
+  existsSync(brandedapp) &&
+  !existsSync(stockapp) &&
+  pathcontents === expectedpath
 ) {
   console.log(`dev app up to date: ${appname}`)
   process.exit(0)
 }
 
-rmSync(devroot, { recursive: true, force: true })
-mkdirSync(devroot, { recursive: true })
-execFileSync('ditto', [electronapp, devapp], { stdio: 'inherit' })
+const leftoverapp = path.join(leftoverdev, appname)
+if (existsSync(leftoverapp)) {
+  try {
+    execFileSync(
+      '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister',
+      ['-u', leftoverapp],
+      { stdio: 'ignore' },
+    )
+  } catch {
+    // copy is going away either way
+  }
+}
+rmSync(leftoverdev, { recursive: true, force: true })
 
-const infoplist = path.join(devapp, 'Contents', 'Info.plist')
+if (existsSync(stockapp)) {
+  if (existsSync(brandedapp)) {
+    rmSync(brandedapp, { recursive: true, force: true })
+  }
+  renameSync(stockapp, brandedapp)
+}
+
+if (!existsSync(brandedapp)) {
+  console.error(`missing branded app ${brandedapp}`)
+  process.exit(1)
+}
+
+writeFileSync(pathfile, expectedpath)
+
+const infoplist = path.join(brandedapp, 'Contents', 'Info.plist')
 let plist = readFileSync(infoplist, 'utf8')
 plist = plist.replace(
   /<key>CFBundleDisplayName<\/key>\s*<string>[^<]*<\/string>/,
@@ -87,23 +114,9 @@ plist = plist.replace(
   /<key>CFBundleName<\/key>\s*<string>[^<]*<\/string>/,
   `<key>CFBundleName</key>\n\t<string>${productname}</string>`,
 )
-plist = plist.replace(
-  /<key>CFBundleIdentifier<\/key>\s*<string>[^<]*<\/string>/,
-  `<key>CFBundleIdentifier</key>\n\t<string>${bundleid}</string>`,
-)
 writeFileSync(infoplist, plist)
 
-cpSync(iconicns, path.join(devapp, 'Contents', 'Resources', 'electron.icns'))
-
-try {
-  execFileSync(
-    '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister',
-    ['-f', devapp],
-    { stdio: 'ignore' },
-  )
-} catch {
-  // optional; dock may still refresh after quit/relaunch
-}
+cpSync(iconicns, path.join(brandedapp, 'Contents', 'Resources', 'electron.icns'))
 
 writeFileSync(stampfile, `${stampvalue}\n`)
-console.log(`staged dev app -> resources/dev/${appname}`)
+console.log(`staged dev app -> ${brandedapp}`)

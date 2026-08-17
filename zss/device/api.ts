@@ -381,6 +381,14 @@ export function registerbookmarkcontentsave(
   ])
 }
 
+export function registerstickyuser(
+  device: DEVICELIKE,
+  player: string,
+  value: string,
+) {
+  device.emit(player, 'register:stickyuser', value)
+}
+
 export function registercopy(
   device: DEVICELIKE,
   player: string,

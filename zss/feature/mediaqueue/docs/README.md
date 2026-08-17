@@ -9,7 +9,8 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 | [`urlnormalize.ts`](../urlnormalize.ts) | Dedupe keys for queue URLs |
 | [`mediaguards.ts`](../mediaguards.ts) | Submit vs manage permission checks |
 | [`mediamenu.ts`](../mediamenu.ts) / [`queuemenu.ts`](../queuemenu.ts) / [`panel.ts`](../panel.ts) | `#media` / `#queue` CLI + bridge actions |
-| [`playerconnect.ts`](../playerconnect.ts) | Direct helper `MediaConnection` + board-leave teardown |
+| [`playerconnect.ts`](../playerconnect.ts) | Direct helper `MediaConnection`; leave board disconnects, return reconnects while still bound |
+| [`broadcastaudio.ts`](../broadcastaudio.ts) | Mix board TV audio into `#broadcast` compositor (same board only) |
 | [`roompeers.ts`](../roompeers.ts) | Board players -> clique peer ids (legacy tests) |
 | [`callmetadata.ts`](../callmetadata.ts) | `player` MediaConnection metadata |
 | [`sinkregistry.ts`](../sinkregistry.ts) / [`attachvideo.ts`](../attachvideo.ts) | Stream to `useMedia.screen` |
@@ -23,6 +24,8 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 | `#queue`, `#queue` bind, skip, clear, stop, limit | Admin / mod | `bridge` (`mediamanage`) |
 
 `#media <url>` requires a bound helper (`#queue <peerid>` first). Queue is FIFO autoplay: finished items are removed; failures auto-skip.
+
+Leaving the bound board disconnects the local helper call (speakers and broadcast mix). Returning to that board reconnects while `#queue` is still bound. `#queue stop` clears the bind.
 
 ## Commands
 

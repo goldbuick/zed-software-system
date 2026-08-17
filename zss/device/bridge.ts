@@ -28,15 +28,21 @@ import {
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
+  mediaqueuereadaudiogain,
   mediaqueuesetmainvolume,
   mediaqueuesetmediavolume,
   storemediavolconfig,
 } from 'zss/feature/mediaqueue/boardtvaudio'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
+  mediaqueuesetbroadcastclient,
+  mediaqueuesyncbroadcastaudio,
+} from 'zss/feature/mediaqueue/broadcastaudio'
+import {
   handlemediapanel,
   handlequeuepanel,
 } from 'zss/feature/mediaqueue/panel'
+import { mediaqueuereadaudiostream } from 'zss/feature/mediaqueue/playerconnect'
 import {
   netterminalhost,
   netterminaljoin,
@@ -72,6 +78,7 @@ let broadcastlive = false
 function setbroadcastclient(client: MAYBE<WebBroadcastClient>) {
   broadcastclient = client
   setbroadcastactive(ispresent(broadcastclient))
+  mediaqueuesetbroadcastclient(client)
 }
 
 async function runnetworkfetch(
@@ -575,6 +582,11 @@ const bridge = createdevice('bridge', [], (message) => {
             clearIvsBroadcastClient()
             return
           }
+
+          mediaqueuesyncbroadcastaudio(
+            mediaqueuereadaudiostream(),
+            mediaqueuereadaudiogain(),
+          )
 
           apilog(bridge, message.player, `created client`)
         }

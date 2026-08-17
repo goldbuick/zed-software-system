@@ -168,6 +168,29 @@ export class WebBroadcastCompositor {
     })
   }
 
+  hasaudioinputdevice(name: string): boolean {
+    return this.audiolayers.some((layer) => layer.name === name)
+  }
+
+  removeaudioinputdevice(name: string) {
+    const index = this.audiolayers.findIndex((layer) => layer.name === name)
+    if (index < 0) {
+      return
+    }
+    const layer = this.audiolayers[index]
+    layer.audiotracksource.disconnect()
+    layer.gainnode.disconnect()
+    this.audiolayers.splice(index, 1)
+  }
+
+  setaudioinputgain(name: string, gain: number) {
+    const layer = this.audiolayers.find((entry) => entry.name === name)
+    if (!layer) {
+      return
+    }
+    layer.gainnode.gain.value = Math.max(0, Math.min(1, gain))
+  }
+
   private shouldmix(now: number) {
     if (now < this.nextmix) {
       return false

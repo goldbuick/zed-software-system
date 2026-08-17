@@ -109,6 +109,18 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
     await this.compositor.addaudioinputdevice(device, name)
   }
 
+  hasaudioinputdevice(name: string): boolean {
+    return this.compositor.hasaudioinputdevice(name)
+  }
+
+  removeaudioinputdevice(name: string) {
+    this.compositor.removeaudioinputdevice(name)
+  }
+
+  setaudioinputgain(name: string, gain: number) {
+    this.compositor.setaudioinputgain(name, gain)
+  }
+
   private collecttracks(): MediaStreamTrack[] {
     const tracks: MediaStreamTrack[] = []
     const video = this.compositor.getvideotrack()

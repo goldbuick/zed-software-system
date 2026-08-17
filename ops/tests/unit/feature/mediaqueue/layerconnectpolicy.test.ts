@@ -56,4 +56,55 @@ describe('mediaqueuelayerconnectaction', () => {
   it('no-ops when gadget board is empty', () => {
     expect(action({ gadgetboard: '' })).toEqual({ kind: 'noop' })
   })
+
+  it('no-ops empty gadget board even with a live layer connection', () => {
+    expect(
+      action({
+        gadgetboard: '',
+        islistening: true,
+        boundhelper: 'helper-1',
+        boundboard: 'board-a',
+        layerhelper: 'helper-1',
+        layerboard: 'board-a',
+      }),
+    ).toEqual({ kind: 'noop' })
+  })
+
+  it('disconnects when leaving the connected board', () => {
+    expect(
+      action({
+        gadgetboard: 'board-b',
+        islistening: true,
+        boundhelper: 'helper-1',
+        boundboard: 'board-a',
+        layerhelper: 'helper-1',
+        layerboard: 'board-a',
+      }),
+    ).toEqual({ kind: 'disconnect' })
+  })
+
+  it('no-ops on another board after layer state is cleared', () => {
+    expect(
+      action({
+        gadgetboard: 'board-b',
+        islistening: true,
+        boundhelper: 'helper-1',
+        boundboard: 'board-a',
+      }),
+    ).toEqual({ kind: 'noop' })
+  })
+
+  it('reconnects from listen state when returning to the bound board', () => {
+    expect(
+      action({
+        gadgetboard: 'board-a',
+        islistening: true,
+        boundhelper: 'helper-1',
+        boundboard: 'board-a',
+      }),
+    ).toEqual({
+      kind: 'connect',
+      helperpeerid: 'helper-1',
+    })
+  })
 })
