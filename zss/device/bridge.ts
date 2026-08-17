@@ -248,9 +248,13 @@ const bridge = createdevice('bridge', [], (message) => {
     return
   }
 
-  // player filter
+  // player filter -- mediapanel/queuepanel stay on the listening host
+  // even when the CLI player is a join (queue state is not on the join tab)
   const player = registerreadplayer()
   switch (message.target) {
+    case 'mediapanel':
+    case 'queuepanel':
+      break
     default:
       if (message.player !== player) {
         return

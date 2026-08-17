@@ -55,6 +55,24 @@ describe('forward peer predicates', () => {
     ).toBe(true)
   })
 
+  it('shouldforwardservertoclient keeps media queue panels on the host', () => {
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'bridge:mediapanel'),
+      ),
+    ).toBe(false)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'bridge:queuepanel'),
+      ),
+    ).toBe(false)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'bridge:showjoincode'),
+      ),
+    ).toBe(true)
+  })
+
   it('shouldforwardservertoclient allows synth audiobytes but not tts paths', () => {
     expect(
       shouldforwardservertoclient(

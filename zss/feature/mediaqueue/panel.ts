@@ -105,7 +105,7 @@ function mediabind(
   })
 }
 
-/** CLI actions for #media (MAIN thread via bridge:mediapanel). */
+/** CLI actions for #media (host MAIN thread via bridge:mediapanel). */
 export function handlemediapanel(
   vm: DEVICE,
   message: MESSAGE,
@@ -158,7 +158,7 @@ export function handlemediapanel(
   }
 }
 
-/** CLI actions for #queue (MAIN thread via bridge:queuepanel). */
+/** CLI actions for #queue (host MAIN thread via bridge:queuepanel). */
 export function handlequeuepanel(
   vm: DEVICE,
   message: MESSAGE,
