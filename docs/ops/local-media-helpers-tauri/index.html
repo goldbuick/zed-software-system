@@ -40,8 +40,8 @@
 <h2 id="media-queue-helper"><a class="blume-heading-anchor" href="#media-queue-helper">Media-queue helper</a></h2>
 <ol>
 <li>Register a Peer on <code>terminal.zed.cafe</code> (same PeerServer as <a href="../../zss/feature/netterminal.ts"><code>netterminal.ts</code></a>).</li>
-<li>Cafe <code>#media &lt;url&gt;</code> and <code>#queue</code> admin commands mutate a host-owned FIFO queue and push updates over a <strong>DataConnection</strong> (control plane). <code>#queue &lt;peerid&gt;</code> bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (<code>text/mediaqueue-helper</code>).</li>
-<li>On queue advance, the helper runs <strong>yt-dlp</strong> into a local cache file, plays it in Chromium, and publishes <strong><code>video.captureStream()</code></strong> to each player tab that calls the helper via <strong><code>MediaConnection</code></strong> (host admin and joins use the same path).</li>
+<li>Cafe <code>#media &lt;url&gt;</code> and <code>#queue</code> admin commands are RPCs over a <strong>DataConnection</strong> (control plane). The helper owns the FIFO and per-player limit in <code>userData/queue.json</code>. <code>#queue &lt;peerid&gt;</code> bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (<code>text/mediaqueue-helper</code>). After a signaling drop, cafe re-dials the helper data connection and player <code>MediaConnection</code>s; the helper does not stop playback when the control plane closes.</li>
+<li>On queue advance <strong>in the helper</strong>, it runs <strong>yt-dlp</strong> into a local cache file, plays it in Chromium, and publishes <strong><code>video.captureStream()</code></strong> to each player tab that calls the helper via <strong><code>MediaConnection</code></strong> (host admin and joins use the same path).</li>
 <li>Leaving the bound board tears down the player call and board TV sink (video + speaker audio).</li>
 </ol>
 <h2 id="build--dev"><a class="blume-heading-anchor" href="#build--dev">Build / dev</a></h2>

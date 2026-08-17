@@ -283,7 +283,7 @@ Chip `send` uses `chipmessage` → `SOFTWARE.emit` on the sim hub (same realm as
 
 [`shouldforwardclienttoserver`](../forward.ts): `vm:*`, `chip:*`, `modem:*`, plus path suffixes `sync`, `desync`, `joinack`.
 
-[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth` (except peer-blocked `synth:tts` / `synth:ttsqueue` — joins play `synth:audiobytes` instead), `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
+[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth` (except peer-blocked `synth:tts` / `synth:ttsqueue` — joins play `synth:audiobytes` instead), `modem`, `bridge` (except peer-blocked `bridge:mediapanel` / `bridge:queuepanel` — queue state lives on the listening host), `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
 
 TTS/STT workers are reached via main `postMessage` when [`platform.ts`](../../platform.ts) routes matching targets.
 
@@ -2424,6 +2424,7 @@ All firmware commands and their descriptions. Commands are available depending o
   - `chat:connect:<routekey>`
   - `chat:disconnect:<routekey>`
   - `chat:roster:<routekey>` (speaker idle list; body lines are `name:seconds`, no space after the colon)
+- **Message / action body:** `user:voice:text`. `#set voice <number|string>` is the middle field for in-session players; bridge events leave it empty (`user::text`). `:` and newlines are stripped from `user` and `voice` at emit time so loaders can `#readline "(.*?):(.*?):(.*)"`.
 - **Reserved routekey `player`:** in-session players (not a Twitch channel). `#text` from a player emits `chat:message:player` (not the board id). Login/logout emit `chat:connect:player` / `chat:disconnect:player` and refresh `chat:roster:player`. Match loaders with `@event ^chat:message:player`, `@event ^chat:roster:player`, etc.
 - **Twitch / feeds:** keep their own routekey (`chat:roster:mychannel`, …). Roster tracks speakers who recently messaged or acted; idle entries older than 3600s are dropped; disconnect clears the roster and emits an empty body.
 - **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens.
@@ -2506,7 +2507,7 @@ Source: https://zed.cafe/docs/firmware/element
 
 ## Dependencies
 
-- `zss/device/api` — apitoast, vmlogout
+- `zss/device/api` — apitoast, registerstickyuser, registerstickyvoice, vmlogout
 - `zss/gadget/data/types` — INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT
 - `zss/memory/*` — element/board operations, movement, spatial queries
 - `zss/words/*` — category, collision, color, dir, kind, reader
@@ -2531,7 +2532,7 @@ Writes stats:
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
 - **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only)
 - **senderid** — Writes to element.sender
-- **Fallback** — Player flags; `user` is persisted via `storagewritevar`
+- **Fallback** — Player flags; `user` and `voice` persist on the local tab via `register:stickyuser` / `register:stickyvoice`
 
 ### everytick(chip)
 
@@ -6792,8 +6793,8 @@ flowchart TB
 ## Media-queue helper
 
 1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
-2. Cafe `#media <url>` and `#queue` admin commands mutate a host-owned FIFO queue and push updates over a **DataConnection** (control plane). `#queue <peerid>` bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (`text/mediaqueue-helper`).
-3. On queue advance, the helper runs **yt-dlp** into a local cache file, plays it in Chromium, and publishes **`video.captureStream()`** to each player tab that calls the helper via **`MediaConnection`** (host admin and joins use the same path).
+2. Cafe `#media <url>` and `#queue` admin commands are RPCs over a **DataConnection** (control plane). The helper owns the FIFO and per-player limit in `userData/queue.json`. `#queue <peerid>` bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (`text/mediaqueue-helper`). After a signaling drop, cafe re-dials the helper data connection and player `MediaConnection`s; the helper does not stop playback when the control plane closes.
+3. On queue advance **in the helper**, it runs **yt-dlp** into a local cache file, plays it in Chromium, and publishes **`video.captureStream()`** to each player tab that calls the helper via **`MediaConnection`** (host admin and joins use the same path).
 4. Leaving the bound board tears down the player call and board TV sink (video + speaker audio).
 
 ## Build / dev
@@ -7778,7 +7779,7 @@ SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, b
 | `#playvol` | PLAY (0) | **90** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`) |
 | `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
-| `#mediavol` | (HTML video) | **25** | linear `mediavol/100 * vol/100` | Board TV only |
+| `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
 CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).

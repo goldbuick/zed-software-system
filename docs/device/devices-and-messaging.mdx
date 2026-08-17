@@ -171,7 +171,7 @@ Chip `send` uses `chipmessage` → `SOFTWARE.emit` on the sim hub (same realm as
 
 [`shouldforwardclienttoserver`](../forward.ts): `vm:*`, `chip:*`, `modem:*`, plus path suffixes `sync`, `desync`, `joinack`.
 
-[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth` (except peer-blocked `synth:tts` / `synth:ttsqueue` — joins play `synth:audiobytes` instead), `modem`, `bridge`, `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
+[`shouldforwardservertoclient`](../forward.ts): broadcast topics (`log`, `chat`, `ready`, `toast`, `second`, `ticktock`) and targets `tts`, `stt`, `synth` (except peer-blocked `synth:tts` / `synth:ttsqueue` — joins play `synth:audiobytes` instead), `modem`, `bridge` (except peer-blocked `bridge:mediapanel` / `bridge:queuepanel` — queue state lives on the listening host), `register`, `gadgetclient`, `perfreport`, `netterminal`, plus ack path suffixes.
 
 TTS/STT workers are reached via main `postMessage` when [`platform.ts`](../../platform.ts) routes matching targets.
 
