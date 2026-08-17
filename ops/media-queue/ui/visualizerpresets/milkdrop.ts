@@ -10,28 +10,48 @@ import type {
   MQ_VISUALIZER_PRESET_OPTS,
 } from './types'
 
-/** Curated classic Geiss / Flexi / Martin MilkDrop presets (butterchurn-presets). */
+/** Curated mix from butterchurn-presets default (converted) pack. */
 export const MILKDROP_PRESET_NAMES = [
   '_Geiss - Artifact 01',
   '_Geiss - Desert Rose 2',
   '_Geiss - untitled',
   '_Rovastar + Geiss - Hurricane Nightmare (Posterize Mix)',
   'Aderrasi + Geiss - Airhandler (Kali Mix) - Canvas Mix',
+  'Aderrasi - Potion of Spirits',
+  'Aderrasi - Songflower (Moss Posy)',
+  'Cope - The Neverending Explosion of Red Liquid Fire',
+  'cope + martin - mother-of-pearl',
+  'Eo.S. + Phat - cubetrace - v2',
+  'Eo.S. + Zylot - skylight (Stained Glass Majesty mix)',
+  'fiShbRaiN + Flexi - witchcraft 2.0',
+  'Flexi + Martin - astral projection',
+  'Flexi + Martin - cascading decay swing',
+  'Flexi - alien fish pond',
+  'Flexi - area 51',
+  'Flexi - infused with the spiral',
+  'Flexi - mindblob mix',
+  'Flexi - mindblob [shiny mix]',
+  'Flexi - predator-prey-spirals',
+  'flexi - swing out on the spiral',
+  'Flexi, martin + geiss - dedicated to the sherwin maxawow',
+  'Geiss + Flexi + Martin - disconnected',
   'Geiss - Cauldron - painterly 2 (saturation remix)',
   'Geiss - Reaction Diffusion 2',
   'Geiss - Spiral Artifact',
   'Geiss - Thumb Drum',
-  'Geiss + Flexi + Martin - disconnected',
-  'Flexi, martin + geiss - dedicated to the sherwin maxawow',
-  'Flexi + Martin - astral projection',
-  'Flexi + Martin - cascading decay swing',
-  'Flexi - mindblob mix',
-  'Flexi - mindblob [shiny mix]',
-  'flexi - swing out on the spiral',
-  'Flexi - predator-prey-spirals',
-  'Flexi - infused with the spiral',
-  'cope + martin - mother-of-pearl',
+  'Goody - The Wild Vort',
+  'Idiot - Star Of Annon',
+  'Krash + Illusion - Spiral Movement',
+  'martin - angel flight',
+  'martin - castle in the air',
+  'martin - ghost city',
+  'martin - stormy sea (2010 update)',
+  'ORB - Waaa',
   'Rovastar + Loadus + Geiss - FractalDrop (Triple Mix)',
+  'Rovastar - Oozing Resistance',
+  'Unchained - Rewop',
+  'Unchained - Unified Drag 2',
+  'Zylot - Star Ornament',
 ]
 
 function pickpresetname(): string {
@@ -77,7 +97,7 @@ async function startmilkdrop(
       return
     }
     visualizer.render()
-    blitvizcontrast(blit, glcanvas)
+    blitvizcontrast(blit, glcanvas, opts.artwork)
     animframe = window.requestAnimationFrame(drawframe)
   }
 

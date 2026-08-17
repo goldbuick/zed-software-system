@@ -23,7 +23,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 | `#media`, `#media <url>` | Players (creative) | `speaker` (`media`) |
 | `#queue`, `#queue` bind, skip, clear, stop, limit | Admin / mod | `bridge` (`mediamanage`) |
 
-`#media <url>` requires a bound helper (`#queue <peerid>` first). Queue is FIFO autoplay: finished items are removed; failures auto-skip.
+`#media <url>` requires a bound helper (`#queue <peerid>` first). Queue is FIFO autoplay: finished items are removed; failures auto-skip. Helper rejects media with unknown duration or longer than 10 minutes.
 
 Leaving the bound board disconnects the local helper call (speakers and broadcast mix). Returning to that board reconnects while `#queue` is still bound. `#queue stop` clears the bind.
 
@@ -32,7 +32,7 @@ Leaving the bound board disconnects the local helper call (speakers and broadcas
 | Command | Role |
 |---------|------|
 | `#media` | Queue list (user names, index, url) |
-| `#media <url>` | Submit URL (deduped, per-player limit default 3) |
+| `#media <url>` | Submit URL (deduped, per-player limit default 5) |
 | bare chat URL | Pasting a whole-message allowlisted http(s) URL is equivalent to `#media <url>` (speaker required; see `mediaischatqueueurl`). Join submits are handled on the host helper tab (`bridge:mediapanel` is not forwarded). |
 | `#queue` | Admin: control menu (skip / clear / stop links + limit line) |
 | `#queue <peerid>` | Admin: bind helper on current board |

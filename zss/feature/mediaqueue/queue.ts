@@ -22,7 +22,7 @@ export type MEDIAQUEUE_ADD_RESULT =
   | { ok: true }
   | { ok: false; reason: 'empty' | 'duplicate' | 'limit' }
 
-const DEFAULT_PER_PLAYER_LIMIT = 3
+const DEFAULT_PER_PLAYER_LIMIT = 5
 const MIN_PER_PLAYER_LIMIT = 1
 const MAX_PER_PLAYER_LIMIT = 20
 

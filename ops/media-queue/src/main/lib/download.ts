@@ -16,6 +16,9 @@ import type {
 
 import { ffmpegdir, resolvedeno, resolveffmpeg, resolveytdlp } from './bins'
 
+/** Reject media with unknown duration or longer than this (yt-dlp --match-filter). */
+const MQ_MAX_DURATION_SEC = 10 * 60
+
 type MQ_DOWNLOAD_JOB = {
   url: string
   phase: MQ_JOB_PHASE
@@ -536,6 +539,17 @@ function ytdlplogdetail(line: string): string {
 }
 
 function formatytdlperror(errlines: string[], code: number | null): string {
+  const joined = errlines.join('\n').toLowerCase()
+  if (
+    joined.includes('match filter') ||
+    joined.includes('does not pass filter') ||
+    (joined.includes('skipping') && joined.includes('duration'))
+  ) {
+    const mins = Math.round(MQ_MAX_DURATION_SEC / 60)
+    return (
+      'media duration unknown or longer than ' + mins + ' minutes (rejected)'
+    )
+  }
   const picked = errlines.filter((line) => {
     if (line.includes('WARNING: --paths is ignored')) {
       return false
@@ -603,6 +617,7 @@ function applyytdlpbaseargs(
 
 function applyytdlpdownloadargs(args: string[], attempt: number): void {
   args.push('--retries', '10', '--fragment-retries', '10')
+  args.push('--match-filter', 'duration <= ' + MQ_MAX_DURATION_SEC)
   if (attempt > 1) {
     args.push('--sleep-requests', '1')
   }

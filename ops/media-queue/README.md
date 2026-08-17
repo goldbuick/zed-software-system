@@ -68,12 +68,14 @@ Fixture clip: `ops/fixtures/media/test.mp4`.
 | yt-dlp | Extract + merge video/audio, or audio-only fallback for SoundCloud etc. |
 | deno | JavaScript runtime for YouTube challenge solving (bundled) |
 | ffmpeg | Merge streams (bundled next to yt-dlp) |
+
+Media with **unknown duration** or longer than **10 minutes** is rejected before download.
 | Local cache | `app cache/media-queue/` until **Clear downloads** |
 
 YouTube downloads pass `--js-runtimes deno:<bundled>` and `--remote-components ejs:github` (fetches yt-dlp-ejs solver scripts on first use). If YouTube asks you to sign in, set **youtube cookies** in the helper (defaults to Safari on macOS) so yt-dlp can read your browser session. On 403 the helper retries with rotated `player_client` values, fragment retries, and cache clear. ffmpeg then **transcodes to H.264 + AAC** for Chromium playback and `video.captureStream()`. Use **Clear downloads** before retrying if an old file is cached.
 
-**Audio-only URLs** (SoundCloud, etc.): when yt-dlp finds no video formats, the helper falls back to `bestaudio`, tags the file `audioOnly`, and plays it through a **random classic Winamp-style visualizer** (spectrum/scope Canvas 2D, Geiss-inspired WebGL feedback, or MilkDrop via [Butterchurn](https://github.com/jberg/butterchurn)). The compositor canvas (`608×364`, see `ui/tvcanvas.ts`) is captured for the board TV video track; audio goes to speakers. Classic presets may draw a dimmed JPEG thumbnail sidecar under bars/scope; Geiss/MilkDrop stay full-bleed. Track title scrolls on the board TV marquee as for video items -- not drawn on the visualizer.
+**Audio-only URLs** (SoundCloud, etc.): when yt-dlp finds no video formats, the helper falls back to `bestaudio`, tags the file `audioOnly`, and plays it through a **random classic Winamp-style visualizer** (spectrum/scope Canvas 2D, or MilkDrop via [Butterchurn](https://github.com/jberg/butterchurn)). The compositor canvas (`608×364`, see `ui/tvcanvas.ts`) is captured for the board TV video track; audio goes to speakers. Presets draw a dimmed JPEG thumbnail sidecar under the viz when artwork is present. Track title scrolls on the board TV marquee as for video items -- not drawn on the visualizer.
 
-Credits: [Ryan Geiss / Geisswerks](https://www.geisswerks.com/geiss/) (Geiss + MilkDrop), [Butterchurn](https://github.com/jberg/butterchurn) (WebGL MilkDrop), and MilkDrop preset authors (Flexi, Martin, and others).
+Credits: [Ryan Geiss / Geisswerks](https://www.geisswerks.com/geiss/) (MilkDrop), [Butterchurn](https://github.com/jberg/butterchurn) (WebGL MilkDrop), and MilkDrop preset authors (Flexi, Martin, Geiss, and others).
 
 Unsupported URLs fail loud (`download-failed`). No Screen Recording permission is required.

@@ -8,7 +8,6 @@ import {
 } from './tvcanvas'
 import { classicbarspreset } from './visualizerpresets/classicbars'
 import { classicscopepreset } from './visualizerpresets/classicscope'
-import { geisspreset } from './visualizerpresets/geiss'
 import { milkdroppreset } from './visualizerpresets/milkdrop'
 import type {
   MQ_VISUALIZER_PRESET,
@@ -34,7 +33,6 @@ type MQ_VISUALIZER_RESULT = {
 const PRESET_POOL: MQ_VISUALIZER_PRESET[] = [
   classicbarspreset,
   classicscopepreset,
-  geisspreset,
   milkdroppreset,
 ]
 
