@@ -1,4 +1,4 @@
-name: PR Check - Lint & Test
+name: PR
 
 on:
   pull_request:
@@ -6,12 +6,18 @@ on:
 
 jobs:
   lint-and-test:
+    name: ${{ matrix.task }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        task: ['ops:lint', 'ops:test', 'ops:native:lint']
+        task:
+          - ops:lint
+          - ops:test
+          - ops:native:lint
+          - mediaqueue:lint
+          - mediaqueue:test
     steps:
       - name: checkout
         uses: actions/checkout@v5
@@ -37,6 +43,7 @@ jobs:
         run: yarn task run ${{ matrix.task }}
 
   docs-and-lang:
+    name: docs and lang
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:

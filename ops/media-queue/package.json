@@ -11,6 +11,7 @@
     "fetch-binaries": "tsx scripts/fetch-binaries.ts",
     "verify-download": "tsx scripts/verify-download.ts",
     "test-prep-cache": "tsx scripts/test-prep-cache.ts",
+    "test": "tsx scripts/test-prep-cache.ts",
     "stage-electron-resources": "tsx scripts/stage-electron-resources.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.web.json --noEmit",
     "lint": "cd ../.. && ./node_modules/.bin/eslint 'ops/media-queue/**/*.ts' 'ops/media-queue/**/*.d.ts' --report-unused-disable-directives --max-warnings 0",

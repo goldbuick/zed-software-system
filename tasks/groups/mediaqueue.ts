@@ -74,4 +74,24 @@ export const MEDIAQUEUE_TASKS: TaskDef[] = [
       return runyarn(ctx, ['start'])
     }),
   }),
+  def('mediaqueue:lint', {
+    description: 'ESLint + typecheck media-queue Electron helper',
+    tags: ['ci'],
+    deps: ['mediaqueue:build'],
+    run: handler(async (ctx) => {
+      const lint = await runyarn(ctx, ['lint'])
+      if (lint !== 0) {
+        return lint
+      }
+      return runyarn(ctx, ['typecheck'])
+    }),
+  }),
+  def('mediaqueue:test', {
+    description: 'Run media-queue prep-cache unit checks',
+    tags: ['ci'],
+    deps: ['mediaqueue:build'],
+    run: handler(async (ctx) => {
+      return runyarn(ctx, ['test'])
+    }),
+  }),
 ]

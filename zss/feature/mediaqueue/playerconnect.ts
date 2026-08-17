@@ -430,11 +430,15 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
     return false
   }
   if (ispresent(activecall)) {
-    if (!ispresent(activestream)) {
-      synccallstream(activecall, trimmed)
+    if (ispresent(activestream)) {
+      mediaqueuesetplayerlayerpending(false)
+      return true
     }
-    mediaqueuesetplayerlayerpending(false)
-    return true
+    if (synccallstream(activecall, trimmed)) {
+      mediaqueuesetplayerlayerpending(false)
+      return true
+    }
+    teardownactivecall()
   }
   const player = registerreadplayer()
   apilog(SOFTWARE, player, `media connecting ${trimmed}`)
@@ -514,9 +518,14 @@ export function mediaqueueretryplayerconnect() {
       activecall.peer ||
       ''
     if (helper && !ispresent(activestream)) {
-      synccallstream(activecall, helper)
+      if (synccallstream(activecall, helper)) {
+        return
+      }
+      // Call still open but no usable remote media -- drop and re-dial.
+      teardownactivecall()
+    } else {
+      return
     }
-    return
   }
   if (layer.helperpeerid && layer.board) {
     tryplayerconnect(layer.helperpeerid, layer.board)

@@ -928,7 +928,10 @@ async function startplaybackandcall(url: string) {
     const message = shortenerr(err)
     setlink('error', phase + ': ' + message)
     sendstatus(phase, message)
-    await endcall()
+    // Keep cafe player calls open so the next goto can publishstreamtoplayers
+    // into the same PeerConnection. Closing here leaves board TV with no A/V
+    // until a full reconnect (often never if activecall is a zombie).
+    await endcall({ keepplayers: true })
     return
   } finally {
     if (!readdevplaybackpath()) {

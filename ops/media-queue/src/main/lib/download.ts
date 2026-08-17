@@ -110,8 +110,7 @@ export const FFMPEG_POST_ARGS_COPY =
   'Merger+VideoRemuxer:-c:v copy -c:a copy -movflags +faststart'
 export const FFMPEG_POST_ARGS_TRANSCODE =
   'Merger+VideoRemuxer+VideoConvertor:-c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart'
-export const FFMPEG_POST_ARGS_AUDIO =
-  'ExtractAudio+FixupM4a:-c:a aac -b:a 128k'
+export const FFMPEG_POST_ARGS_AUDIO = 'ExtractAudio+FixupM4a:-c:a aac -b:a 128k'
 const YOUTUBE_PLAYER_CLIENTS = [
   'default,-android_sdkless',
   'default,-android_vr',
