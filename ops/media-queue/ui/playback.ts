@@ -6,6 +6,14 @@ import type {
 } from '../src/shared/ipc'
 
 import { readaudio, start, stopvisualizer } from './visualizer'
+import {
+  clearcompositorplayback,
+  ensurecompositor,
+  getcompositorstream,
+  setcompositoraudio,
+  setvideosource,
+  setvisualizersource,
+} from './streamcompositor'
 
 export type MQ_PLAYBACK_RESULT = {
   stream: MediaStream
@@ -125,24 +133,10 @@ function ensuredecodevideo(): HTMLVideoElement {
   return hiddenvideo
 }
 
-function syncpreview(el: HTMLVideoElement) {
-  if (!previewel || previewel === el) {
-    return
-  }
-  previewel.muted = true
-  previewel.playsInline = true
-  previewel.srcObject = null
-  if (el.src) {
-    previewel.src = el.src
-  } else {
-    previewel.removeAttribute('src')
-  }
-  void previewel.play().catch(function () {})
-}
-
 function stopvideo() {
   playbackactive = false
   stopvisualizer()
+  clearcompositorplayback()
   if (keepalivetimer) {
     window.clearTimeout(keepalivetimer)
     keepalivetimer = null
@@ -372,17 +366,18 @@ async function preparelocalcapture(el: HTMLVideoElement) {
   }
 }
 
-async function capturefromvideo(el: MQ_CAPTURE_VIDEO) {
+async function captureaudiofromvideo(el: MQ_CAPTURE_VIDEO) {
   if (typeof el.captureStream !== 'function') {
     throw new Error('video.captureStream not supported')
   }
   await preparelocalcapture(el)
   const stream = el.captureStream()
-  if (!stream.getVideoTracks().length) {
-    throw new Error('video.captureStream produced no video track')
-  }
   await waitforaudiocapture(stream, 5000)
-  return stream
+  const audioonly = new MediaStream(stream.getAudioTracks())
+  if (!audioonly.getAudioTracks().length) {
+    throw new Error('video.captureStream produced no audio track')
+  }
+  return audioonly
 }
 
 function waitfordownload(timeoutms: number) {
@@ -455,12 +450,18 @@ async function startvideoplayback(path: string): Promise<MQ_PLAYBACK_RESULT> {
   playbackpath = path
   playbackaudioonly = false
   await loadlocalvideo(el, path)
-  syncpreview(el)
   await el.play()
   await waitforvideoframe(el)
   playbackactive = true
   bindkeepalive(el)
-  const stream = await capturefromvideo(el)
+  const audiostream = await captureaudiofromvideo(el)
+  ensurecompositor()
+  setvideosource(el)
+  setcompositoraudio(audiostream)
+  const stream = getcompositorstream()
+  if (!stream) {
+    throw new Error('compositor stream missing')
+  }
   return {
     stream: stream,
     video: el,
@@ -485,8 +486,15 @@ async function startaudiovisualizer(
   })
   playbackactive = true
   bindaudiokeepalive(result.audio)
+  ensurecompositor()
+  setvisualizersource(result.canvas)
+  setcompositoraudio(result.audiostream)
+  const stream = getcompositorstream()
+  if (!stream) {
+    throw new Error('compositor stream missing')
+  }
   return {
-    stream: result.stream,
+    stream: stream,
     video: null,
     audio: result.audio,
     canvas: result.canvas,

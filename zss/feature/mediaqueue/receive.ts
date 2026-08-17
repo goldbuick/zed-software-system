@@ -1,5 +1,5 @@
 import type { DataConnection } from 'peerjs'
-import { apierror, apilog, vmmediaqueueboard, workstatus } from 'zss/device/api'
+import { apierror, apilog, vmmediaqueueboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
@@ -34,7 +34,6 @@ import {
   mediaqueuereadstate,
   mediaqueueshiftcurrent,
 } from 'zss/feature/mediaqueue/queue'
-import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
   readnetworkpeerid,
@@ -112,14 +111,6 @@ function mediaqueuestatusdetail(detail?: string): string {
   return ` ${trimmed}`
 }
 
-function mediaqueueworkstatus(label: string) {
-  const player = mediaqueuereadlistenplayer()
-  if (!player) {
-    return
-  }
-  workstatus(SOFTWARE, player, label)
-}
-
 function syncboardhelperlayer(
   player: string,
   boardid: string,
@@ -186,36 +177,7 @@ function handlehelperdata(data: unknown) {
         const detail = mediaqueuestatusdetail(data.detail)
         const player = mediaqueuereadlistenplayer()
         mediaqueueapplynowplayingstatus(data.status, data.detail)
-        const worklabel = mediaqueuestatusworklabel(data.status, data.detail)
-        if (worklabel || data.status === 'playing') {
-          mediaqueueworkstatus(worklabel)
-        }
-        if (data.status === 'waiting-for-url') {
-          apilog(SOFTWARE, player, 'media: waiting for queue URL')
-        } else if (data.status === 'downloading') {
-          apilog(SOFTWARE, player, `media: downloading${detail}`)
-        } else if (data.status === 'extracting') {
-          apilog(SOFTWARE, player, `media: extracting${detail}`)
-        } else if (data.status === 'download-progress') {
-          const parts = (data.detail ?? '').split('|')
-          const pct = Number(parts[0])
-          if (
-            Number.isFinite(pct) &&
-            (pct === 0 || pct >= 99 || pct % 5 === 0)
-          ) {
-            const eta = parts[1] ? ` eta ${parts[1]}` : ''
-            apilog(
-              SOFTWARE,
-              player,
-              `media: download ${Math.round(pct)}%${eta}`,
-            )
-          }
-        } else if (data.status === 'transcoding') {
-          apilog(SOFTWARE, player, 'media: processing')
-        } else if (data.status === 'buffering') {
-          apilog(SOFTWARE, player, `media: buffering${detail}`)
-        } else if (data.status === 'playback-ended') {
-          apilog(SOFTWARE, player, 'media: finished, advancing')
+        if (data.status === 'playback-ended') {
           if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
@@ -229,13 +191,8 @@ function handlehelperdata(data: unknown) {
           if (mediaqueueislistening() && helperdatalinkup()) {
             mediaqueueadvanceafterplayback()
           }
-        } else if (data.status === 'call-stopped') {
-          apilog(SOFTWARE, player, 'media: call stopped (queue kept)')
         } else if (data.status === 'playing') {
           mediaqueueretryplayerconnect()
-          apilog(SOFTWARE, player, `media: playing${detail}`)
-        } else {
-          apilog(SOFTWARE, player, `media: ${data.status}${detail}`)
         }
       }
       break

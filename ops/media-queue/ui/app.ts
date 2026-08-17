@@ -18,6 +18,11 @@ import {
   stopplayback,
 } from './playback'
 import type { MQ_PLAYBACK_RESULT } from './playback'
+import {
+  clearcompositorplayback,
+  ensurecompositor,
+} from './streamcompositor'
+import { readhudstate, sethudstate } from './statushud'
 
 type MQ_PLAYER_CALL = {
   call: MediaConnection
@@ -72,14 +77,11 @@ function readel<T extends HTMLElement>(id: string): T {
 const els = {
   localpeer: readel<HTMLInputElement>('localpeer'),
   copypeer: readel<HTMLButtonElement>('copypeer'),
-  link: readel<HTMLElement>('link'),
-  detail: readel<HTMLElement>('detail'),
   queue: readel<HTMLTextAreaElement>('queue'),
   cookiesbrowser: readel<HTMLSelectElement>('cookiesbrowser'),
   stopcall: readel<HTMLButtonElement>('stopcall'),
   cleardownloads: readel<HTMLButtonElement>('cleardownloads'),
   preview: readel<HTMLVideoElement>('preview'),
-  statusbox: readel<HTMLElement>('statusbox'),
   frame: document.querySelector<HTMLElement>('.frame.mq'),
 }
 
@@ -441,13 +443,20 @@ async function refreshcachebytes() {
   }
 }
 
+function bindcompositorstream() {
+  const stream = ensurecompositor()
+  mediastream = stream
+  setpreviewstream(stream)
+}
+
 function setlink(text: string | null, detail?: string) {
-  els.link.textContent = text
-  els.detail.textContent = detail || ''
-  els.statusbox.classList.toggle('error', text === 'error')
+  const phase = String(text || '')
+  const current = readhudstate()
+  sethudstate(phase, detail || '', current.secondary)
+  bindcompositorstream()
   const cfg = mqdevconfig()
   if (cfg && cfg.statustextfile) {
-    writemqstatus(String(text) + '|' + String(detail || ''))
+    writemqstatus(phase + '|' + String(detail || ''))
   }
   schedulefitwindow()
 }
@@ -589,18 +598,20 @@ function handledownloadprogress(payload: unknown) {
   }
   lastdownloadlabel = dedupekey
   lastdownloadpct = pct
-  setlink(phase, detail)
   if (phase === 'transcoding') {
+    setlink('transcoding', String(pct))
     ensuretranscodepulse()
     sendstatus('transcoding', String(pct))
     return
   }
   cleardownloadpulse()
   if (phase === 'extracting') {
+    setlink('extracting', eta || 'starting')
     sendstatus('extracting', eta || 'starting')
     return
   }
   const progressdetail = String(pct) + (eta ? '|' + eta : '')
+  setlink('download-progress', progressdetail)
   sendstatus('download-progress', progressdetail)
 }
 
@@ -639,24 +650,28 @@ function setpreviewstream(stream: MediaStream | null) {
 }
 
 function syncplayerlinkstatus() {
+  const current = readhudstate()
+  let secondary = ''
+  let phase = current.phase
+  let detail = current.detail
   if (playercalls.size > 0) {
-    const playing = String(playercalls.size) + ' player(s)'
-    setlink('playing', playing)
-    writemqstatus('playing|' + playing)
-    return
+    secondary = String(playercalls.size) + ' player(s)'
+    if (!phase || phase === 'waiting') {
+      phase = 'playing'
+    }
+  } else if (pendingplayercalls.size > 0) {
+    secondary = String(pendingplayercalls.size) + ' player(s) waiting'
+    if (!phase) {
+      phase = 'waiting'
+    }
+  } else if (playbackstarted) {
+    secondary = '0 player(s)'
+    if (!phase) {
+      phase = 'playing'
+    }
   }
-  if (pendingplayercalls.size > 0) {
-    const waiting = String(pendingplayercalls.size) + ' player(s) waiting'
-    setlink('waiting', waiting)
-    writemqstatus('waiting|' + waiting)
-    return
-  }
-  if (playbackstarted && mediastream) {
-    setlink('playing', '0 player(s)')
-    writemqstatus('playing|0 player(s)')
-    return
-  }
-  writemqstatus('idle|')
+  sethudstate(phase, detail, secondary)
+  writemqstatus(phase + '|' + detail + (secondary ? '|' + secondary : ''))
 }
 
 async function fitmainwindow() {
@@ -821,22 +836,14 @@ function handleplayercall(call: MediaConnection) {
 }
 
 function stopmediastream() {
-  if (mediastream) {
-    mediastream.getTracks().forEach(function (t) {
-      t.stop()
-    })
-    mediastream = null
-  }
-  setpreviewstream(null)
+  clearcompositorplayback()
+  bindcompositorstream()
 }
 
 async function endcall(opts?: { natural?: boolean; keepplayers?: boolean }) {
   clearendedlistener()
   const hadcall = Boolean(
-    playercalls.size > 0 ||
-    pendingplayercalls.size > 0 ||
-    mediastream ||
-    playbackstarted,
+    playercalls.size > 0 || pendingplayercalls.size > 0 || playbackstarted,
   )
   const naturalend = Boolean(opts && opts.natural)
   const keepplayers = Boolean(opts && opts.keepplayers)
@@ -882,7 +889,7 @@ async function startplaybackandcall(url: string) {
     setlink('waiting', 'cafe not connected yet')
     return
   }
-  if (mediastream || playbackstarted) {
+  if (playbackstarted) {
     await endcall({ keepplayers: true })
     if (issupersededplaybackerr(null, gen)) {
       return
@@ -937,6 +944,9 @@ async function startplaybackandcall(url: string) {
         lastdownloadlabel = ''
         setlink('extracting', 'starting')
         sendstatus('extracting', 'starting')
+        bindcompositorstream()
+        answerpendingplayercalls()
+        publishstreamtoplayers()
         startdownloadpoll()
         const downloaded = await startdownload(url)
         if (issupersededplaybackerr(null, gen)) {
@@ -1065,7 +1075,7 @@ function handlecafemessage(data: unknown) {
       renderqueue()
       void prunequeuecache()
       void reconcileprep()
-      if (queueurls.length === 0 && (playbackstarted || mediastream)) {
+      if (queueurls.length === 0 && playbackstarted) {
         void endcall()
         setlink('connected', 'queue empty')
       }
@@ -1190,7 +1200,7 @@ async function copypeerid() {
   const cliline = '#queue "' + localpeerid + '"'
   try {
     await invoke('copy_text', { text: cliline })
-    setlink(els.link.textContent, 'copied to clipboard')
+    setlink(readhudstate().phase || 'ready', 'copied to clipboard')
   } catch (err) {
     setlink('error', String(err))
   }
@@ -1231,6 +1241,8 @@ if (els.cleardownloads) {
 function bootfit() {
   setmqondownloadprogress(handledownloadprogress)
   attachpreview(els.preview)
+  bindcompositorstream()
+  setlink('starting', PEER_HOST)
   startwindowfitobserver()
   initcookiessetting()
   renderqueue()

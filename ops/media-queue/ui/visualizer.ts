@@ -10,14 +10,14 @@ type MQ_VISUALIZER_DEPS = {
 }
 
 type MQ_VISUALIZER_RESULT = {
-  stream: MediaStream
+  /** Audio-only stream for the compositor to publish. */
+  audiostream: MediaStream
   audio: HTMLAudioElement
   canvas: HTMLCanvasElement
 }
 
 const CANVAS_WIDTH = 640
 const CANVAS_HEIGHT = 360
-const CAPTURE_FPS = 30
 const BG = '#0a0a12'
 const GREEN = '#00ff41'
 const CYAN = '#00e5ff'
@@ -30,7 +30,6 @@ let bloburl = ''
 let artworkbloburl = ''
 let artworkimage: HTMLImageElement | null = null
 let animframe: number | null = null
-let capturestream: MediaStream | null = null
 let audioctx: AudioContext | null = null
 let analyser: AnalyserNode | null = null
 let timedata: Uint8Array<ArrayBuffer> | null = null
@@ -315,13 +314,6 @@ export function stopvisualizer() {
     window.cancelAnimationFrame(animframe)
     animframe = null
   }
-  if (capturestream) {
-    const tracks = capturestream.getTracks()
-    for (let i = 0; i < tracks.length; i += 1) {
-      tracks[i].stop()
-    }
-    capturestream = null
-  }
   if (audioctx) {
     void audioctx.close().catch(function () {})
     audioctx = null
@@ -401,24 +393,12 @@ export async function start(
   await el.play()
   active = true
   drawframe()
-  capturestream = canvas.captureStream(CAPTURE_FPS)
-  const stream = new MediaStream()
-  const videotracks = capturestream.getVideoTracks()
-  for (let i = 0; i < videotracks.length; i += 1) {
-    stream.addTrack(videotracks[i])
-  }
-  const audiotracks = capturedest.stream.getAudioTracks()
-  for (let i = 0; i < audiotracks.length; i += 1) {
-    stream.addTrack(audiotracks[i])
-  }
-  if (!stream.getVideoTracks().length) {
-    throw new Error('visualizer produced no video track')
-  }
-  if (!stream.getAudioTracks().length) {
+  const audiostream = capturedest.stream
+  if (!audiostream.getAudioTracks().length) {
     throw new Error('visualizer produced no audio track')
   }
   return {
-    stream: stream,
+    audiostream: audiostream,
     audio: el,
     canvas: canvas,
   }
