@@ -69,6 +69,9 @@ export function mediaqueuelayerconnectaction(
   const boundhelper = input.boundhelper.trim()
   const boundboard = input.boundboard.trim()
   if (input.islistening && boundboard && boundboard !== board) {
+    if (layerhelper && layerboard) {
+      return { kind: 'disconnect' }
+    }
     return { kind: 'noop' }
   }
   const activehelper = input.activehelper.trim()

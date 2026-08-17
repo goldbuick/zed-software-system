@@ -117,6 +117,19 @@ describe('mediaqueuelayerconnectaction', () => {
     ).toEqual({ kind: 'noop' })
   })
 
+  it('disconnects a retargeted live layer off the bound board', () => {
+    expect(
+      action({
+        gadgetboard: 'board-b',
+        islistening: true,
+        boundhelper: 'helper-1',
+        boundboard: 'board-a',
+        layerhelper: 'helper-1',
+        layerboard: 'board-b',
+      }),
+    ).toEqual({ kind: 'disconnect' })
+  })
+
   it('reconnects from listen state when returning to the bound board', () => {
     expect(
       action({

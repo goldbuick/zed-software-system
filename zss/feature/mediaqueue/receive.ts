@@ -30,17 +30,22 @@ import {
   ismediaqueuemessage,
 } from 'zss/feature/mediaqueue/protocol'
 import {
+  mediaqueueapplysnapshot,
   mediaqueuecurrenturl,
-  mediaqueuereadstate,
-  mediaqueueshiftcurrent,
+  mediaqueuereadperplayerlimit,
 } from 'zss/feature/mediaqueue/queue'
 import {
   netterminaldataconnect,
+  netterminalregisterpeeropenhandler,
   readnetworkpeerid,
 } from 'zss/feature/netterminal'
+import { write } from 'zss/feature/writeui'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
+const HELPER_RECONNECT_MS = 1000
+
 let helperconnection: MAYBE<DataConnection>
+let helperreconnecttimer: ReturnType<typeof setTimeout> | undefined
 
 function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
   if (!ispresent(helperconnection) || !helperconnection.open) {
@@ -57,36 +62,16 @@ function helperdatalinkup(): boolean {
   )
 }
 
-function mediaqueueadvanceafterplayback() {
-  mediaqueueshiftcurrent()
-  mediaqueuepushqueuesnapshot(true)
-  const listenplayer = mediaqueuereadlistenplayer()
-  if (!listenplayer) {
-    return
-  }
-  if (mediaqueuecurrenturl()) {
-    apilog(SOFTWARE, listenplayer, 'media: advancing queue')
-  } else {
-    apilog(SOFTWARE, listenplayer, 'media: queue empty')
-    mediaqueueclearnowplayingboard()
-  }
+export function mediaqueuehelperdatalinkup(): boolean {
+  return helperdatalinkup()
 }
 
-export function mediaqueuepushqueuesnapshot(gotoplay = false) {
-  const state = mediaqueuereadstate()
-  sendtohelper({
-    type: 'mediaqueue:queue',
-    urls: state.urls,
-    index: state.index,
-  })
-  const url = mediaqueuecurrenturl()
-  if (gotoplay && url) {
-    sendtohelper({
-      type: 'mediaqueue:goto',
-      index: state.index,
-      url,
-    })
+export function mediaqueuesendtohelper(message: MEDIAQUEUE_MESSAGE): boolean {
+  if (!helperdatalinkup()) {
+    return false
   }
+  sendtohelper(message)
+  return true
 }
 
 function mediaqueuerequesthelpercall() {
@@ -150,9 +135,56 @@ function mediaqueueapplynowplayingstatus(status: string, detail?: string) {
     status === 'playback-ended' ||
     status === 'download-failed' ||
     status === 'playback-failed' ||
-    status === 'call-stopped'
+    status === 'call-stopped' ||
+    status === 'queue-cleared'
   ) {
     mediaqueueclearnowplayingboard()
+  }
+}
+
+function toastlistenplayer(ok: boolean, text: string) {
+  const player = mediaqueuereadlistenplayer()
+  if (!player) {
+    return
+  }
+  if (ok) {
+    write(SOFTWARE, player, text)
+    return
+  }
+  apierror(SOFTWARE, player, 'media', text)
+}
+
+function handlequeuestatus(status: string, detail?: string) {
+  if (status === 'queue-added') {
+    toastlistenplayer(true, `media added: ${detail || ''}`.trim())
+    return
+  }
+  if (status === 'queue-skipped') {
+    toastlistenplayer(true, 'queue skipped to next')
+    return
+  }
+  if (status === 'queue-cleared') {
+    toastlistenplayer(true, 'queue cleared')
+    return
+  }
+  if (status === 'queue-limit') {
+    const limit = detail || String(mediaqueuereadperplayerlimit())
+    toastlistenplayer(true, `queue limit: ${limit} per player`)
+    return
+  }
+  if (status === 'queue-error') {
+    if (detail === 'duplicate') {
+      toastlistenplayer(false, 'URL already in queue')
+      return
+    }
+    if (detail === 'limit') {
+      toastlistenplayer(
+        false,
+        `queue limit (${mediaqueuereadperplayerlimit()} per player)`,
+      )
+      return
+    }
+    toastlistenplayer(false, 'usage: #media <url>')
   }
 }
 
@@ -168,8 +200,18 @@ function handlehelperdata(data: unknown) {
           mediaqueuereadlistenplayer(),
           `media connected (${data.peerid})`,
         )
-        mediaqueuepushqueuesnapshot(true)
         mediaqueuerequesthelpercall()
+      }
+      break
+    case 'mediaqueue:queuesnapshot':
+      mediaqueueapplysnapshot({
+        urls: data.urls,
+        names: data.names,
+        index: data.index,
+        limit: data.limit,
+      })
+      if (!mediaqueuecurrenturl()) {
+        mediaqueueclearnowplayingboard()
       }
       break
     case 'mediaqueue:status':
@@ -177,20 +219,11 @@ function handlehelperdata(data: unknown) {
         const detail = mediaqueuestatusdetail(data.detail)
         const player = mediaqueuereadlistenplayer()
         mediaqueueapplynowplayingstatus(data.status, data.detail)
-        if (data.status === 'playback-ended') {
-          if (mediaqueueislistening() && helperdatalinkup()) {
-            mediaqueueadvanceafterplayback()
-          }
-        } else if (data.status === 'download-failed') {
+        handlequeuestatus(data.status, data.detail)
+        if (data.status === 'download-failed') {
           apierror(SOFTWARE, player, 'media', `download failed${detail}`)
-          if (mediaqueueislistening() && helperdatalinkup()) {
-            mediaqueueadvanceafterplayback()
-          }
         } else if (data.status === 'playback-failed') {
           apierror(SOFTWARE, player, 'media', `playback failed${detail}`)
-          if (mediaqueueislistening() && helperdatalinkup()) {
-            mediaqueueadvanceafterplayback()
-          }
         } else if (data.status === 'playing') {
           mediaqueueretryplayerconnect()
         } else if (data.status === 'audio-probe') {
@@ -203,14 +236,59 @@ function handlehelperdata(data: unknown) {
   }
 }
 
-function wirehelperconnection(conn: DataConnection) {
-  if (ispresent(helperconnection) && helperconnection !== conn) {
-    helperconnection.close()
+function clearhelperreconnecttimer() {
+  if (ispresent(helperreconnecttimer)) {
+    clearTimeout(helperreconnecttimer)
+    helperreconnecttimer = undefined
   }
+}
+
+function mediaqueuereconnecthelper() {
+  if (!mediaqueueislistening()) {
+    return
+  }
+  const helper = mediaqueuereadhelperpeerid().trim()
+  if (!helper) {
+    return
+  }
+  if (helperdatalinkup()) {
+    return
+  }
+  const conn = netterminaldataconnect(helper)
+  if (ispresent(conn)) {
+    wirehelperconnection(conn)
+  }
+}
+
+function schedulehelperreconnect() {
+  if (!mediaqueueislistening()) {
+    return
+  }
+  if (helperdatalinkup()) {
+    return
+  }
+  if (ispresent(helperreconnecttimer)) {
+    return
+  }
+  helperreconnecttimer = setTimeout(() => {
+    helperreconnecttimer = undefined
+    mediaqueuereconnecthelper()
+  }, HELPER_RECONNECT_MS)
+}
+
+function wirehelperconnection(conn: DataConnection) {
+  const previous = helperconnection
   helperconnection = conn
   mediaqueuesethelperconnected(conn.open)
+  if (ispresent(previous) && previous !== conn) {
+    previous.close()
+  }
   conn.on('data', handlehelperdata)
   conn.on('open', () => {
+    if (helperconnection !== conn) {
+      return
+    }
+    clearhelperreconnecttimer()
     mediaqueuesethelperconnected(true)
     sendtohelper({
       type: 'mediaqueue:hello',
@@ -218,22 +296,27 @@ function wirehelperconnection(conn: DataConnection) {
       role: 'cafe',
       peerid: readnetworkpeerid() ?? '',
     })
-    mediaqueuepushqueuesnapshot(true)
     mediaqueuerequesthelpercall()
   })
   conn.on('close', () => {
     if (helperconnection === conn) {
       helperconnection = undefined
       mediaqueuesethelperconnected(false)
+      schedulehelperreconnect()
     }
   })
   conn.on('error', () => {
     if (helperconnection === conn) {
       helperconnection = undefined
       mediaqueuesethelperconnected(false)
+      schedulehelperreconnect()
     }
   })
 }
+
+netterminalregisterpeeropenhandler(() => {
+  mediaqueuereconnecthelper()
+})
 
 /**
  * Connect to the desktop helper's Peer id and bind media to the player's
@@ -341,10 +424,13 @@ export function mediaqueuelisten(
 export function mediaqueuestop(player: string): void {
   const boundboardid = mediaqueuereadboundboardid()
   mediaqueuesetlistenplayer(player)
+  clearhelperreconnecttimer()
+  mediaqueuesetlistening(false)
   if (ispresent(helperconnection)) {
-    helperconnection.close()
+    const conn = helperconnection
     helperconnection = undefined
     mediaqueuesethelperconnected(false)
+    conn.close()
   }
   if (boundboardid) {
     syncboardhelperlayer(player, boundboardid, undefined)

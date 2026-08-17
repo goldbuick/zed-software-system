@@ -12,7 +12,7 @@ Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-t
 | Media | PeerJS `MediaConnection` (`peer.call`, video + audio tracks) |
 | Signaling | `terminal.zed.cafe` (same PeerServer as netterminal) |
 
-Cafe: **`#media`** queue list and **`#media <url>`** submit. Admin binds with **`#queue <peerid>`**; **`#queue`** admin menu or **`#queue skip|clear|stop|limit`** for queue control.
+Cafe: **`#media`** queue list (projection of the helper snapshot) and **`#media <url>`** submit (RPC). Admin binds with **`#queue <peerid>`**; **`#queue`** admin menu or **`#queue skip|clear|stop|limit`** for queue control. The helper PeerJS id is prefixed `mq_`. After this ships, re-bind once if you still have an unprefixed id.
 
 ## Build
 
@@ -54,12 +54,12 @@ Fixture clip: `ops/fixtures/media/test.mp4`.
 
 ## Use
 
-1. Open this app -- it starts a PeerJS peer and shows **Your peer id** (sticky across restarts; seed in app userData `mq-netid`, same `createinfohash` as netterminal).
+1. Open this app -- it starts a PeerJS peer and shows **Your peer id** (sticky across restarts; seed in app userData `mq-netid`, advertised id is `mq_` + `createinfohash(seed)`). Queue + limit persist in userData `queue.json`.
 2. Copy peer id and in cafe run `#queue <peerid>` (admin).
-3. In cafe: `#media <url>` (players, after bind). Queue autoplays; admin may `#queue` (menu), `#queue skip`, `#queue clear`, or `#queue limit <N>`.
-4. The helper downloads via yt-dlp, plays the merged file, and starts the Peer call when cafe advances the queue.
+3. In cafe: `#media <url>` (players, after bind). The helper owns the queue and autoplays; admin may `#queue` (menu), `#queue skip`, `#queue clear`, or `#queue limit <N>`.
+4. The helper downloads via yt-dlp, plays the merged file, and answers player MediaConnections. Signaling blips reconnect the control plane without stopping local playback.
 5. While an item plays, the helper **pre-downloads the next queue URL** in the background (`[prep N%]` / `[ready]` in the queue list). Advance is near-instant when prep finishes in time.
-6. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. `#queue stop` disconnects the helper; `#queue clear` stops playback and empties the queue. **Clear downloads** wipes the local cache.
+6. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. `#queue stop` disconnects the helper; `#queue clear` stops playback and empties the helper queue. **Clear downloads** wipes the local cache.
 
 ## Download note
 

@@ -24,15 +24,10 @@ import {
   ismediaqueuemessage,
 } from 'zss/feature/mediaqueue/protocol'
 import {
-  mediaqueueadd,
-  mediaqueueclear,
-  mediaqueuecountforplayer,
+  mediaqueueapplysnapshot,
   mediaqueuecurrenturl,
   mediaqueuereadperplayerlimit,
   mediaqueuereadstate,
-  mediaqueuesetperplayerlimit,
-  mediaqueueshiftcurrent,
-  mediaqueueskip,
 } from 'zss/feature/mediaqueue/queue'
 import { mediaqueueroompeerids } from 'zss/feature/mediaqueue/roompeers'
 import {
@@ -76,64 +71,66 @@ describe('mediaqueue url normalize', () => {
   })
 })
 
-describe('mediaqueue queue', () => {
+describe('mediaqueue queue projection', () => {
   beforeEach(() => {
-    mediaqueueclear()
-    mediaqueuesetperplayerlimit(3)
+    mediaqueueapplysnapshot({
+      urls: [],
+      names: [],
+      index: 0,
+      limit: 5,
+    })
   })
 
-  it('adds urls for a player and plays fifo front', () => {
-    expect(mediaqueueadd('p1', 'goldbuick', 'https://a.example').ok).toBe(true)
-    expect(mediaqueueadd('p2', 'guest', 'https://b.example').ok).toBe(true)
+  it('applies helper snapshot for #media table', () => {
+    mediaqueueapplysnapshot({
+      urls: ['https://a.example', 'https://b.example'],
+      names: ['goldbuick', 'guest'],
+      index: 0,
+      limit: 3,
+    })
     expect(mediaqueuereadstate()).toEqual({
       urls: ['https://a.example', 'https://b.example'],
-      players: ['p1', 'p2'],
       names: ['goldbuick', 'guest'],
       index: 0,
       perplayerlimit: 3,
     })
     expect(mediaqueuecurrenturl()).toBe('https://a.example')
-    mediaqueueskip()
+    mediaqueueapplysnapshot({
+      urls: ['https://b.example'],
+      names: ['guest'],
+      index: 0,
+      limit: 3,
+    })
     expect(mediaqueuecurrenturl()).toBe('https://b.example')
     expect(mediaqueuereadstate().urls).toEqual(['https://b.example'])
   })
 
-  it('rejects duplicate normalized urls', () => {
-    expect(mediaqueueadd('p1', 'goldbuick', 'https://youtu.be/abc123').ok).toBe(
-      true,
-    )
-    expect(
-      mediaqueueadd('p2', 'guest', 'https://www.youtube.com/watch?v=abc123').ok,
-    ).toBe(false)
-  })
-
-  it('enforces per-player limit', () => {
-    expect(mediaqueueadd('p1', 'goldbuick', 'https://a.example').ok).toBe(true)
-    expect(mediaqueueadd('p1', 'goldbuick', 'https://b.example').ok).toBe(true)
-    expect(mediaqueueadd('p1', 'goldbuick', 'https://c.example').ok).toBe(true)
-    expect(mediaqueueadd('p1', 'goldbuick', 'https://d.example').ok).toBe(false)
-    expect(mediaqueuecountforplayer('p1')).toBe(3)
-  })
-
-  it('clamps limit setter', () => {
-    mediaqueuesetperplayerlimit(99)
+  it('clamps snapshot limit and index', () => {
+    mediaqueueapplysnapshot({
+      urls: ['https://a.example', 'https://b.example'],
+      names: ['a', 'b'],
+      index: 99,
+      limit: 99,
+    })
     expect(mediaqueuereadperplayerlimit()).toBe(20)
-    mediaqueuesetperplayerlimit(0)
+    expect(mediaqueuereadstate().index).toBe(1)
+    mediaqueueapplysnapshot({
+      urls: ['https://a.example'],
+      names: ['a'],
+      index: -1,
+      limit: 0,
+    })
     expect(mediaqueuereadperplayerlimit()).toBe(1)
+    expect(mediaqueuereadstate().index).toBe(0)
   })
 
-  it('shift removes front entry', () => {
-    mediaqueueadd('p1', 'goldbuick', 'https://a.example')
-    mediaqueueadd('p1', 'goldbuick', 'https://b.example')
-    const removed = mediaqueueshiftcurrent()
-    expect(removed?.url).toBe('https://a.example')
-    expect(removed?.name).toBe('goldbuick')
-    expect(mediaqueuecurrenturl()).toBe('https://b.example')
-  })
-
-  it('clearlistenstate does not empty the queue', () => {
-    mediaqueueadd('p1', 'goldbuick', 'https://a.example')
-    mediaqueueadd('p2', 'guest', 'https://b.example')
+  it('clearlistenstate does not empty the projection', () => {
+    mediaqueueapplysnapshot({
+      urls: ['https://a.example', 'https://b.example'],
+      names: ['goldbuick', 'guest'],
+      index: 0,
+      limit: 5,
+    })
     mediaqueueclearlistenstate()
     expect(mediaqueuereadstate().urls).toEqual([
       'https://a.example',
@@ -152,6 +149,28 @@ describe('mediaqueue protocol', () => {
         peerid: 'x',
       }),
     ).toBe(true)
+    expect(
+      ismediaqueuemessage({
+        type: 'mediaqueue:add',
+        url: 'https://a.example',
+        player: 'p1',
+        name: 'goldbuick',
+      }),
+    ).toBe(true)
+    expect(
+      ismediaqueuemessage({
+        type: 'mediaqueue:queuesnapshot',
+        urls: ['https://a.example'],
+        names: ['goldbuick'],
+        index: 0,
+        limit: 5,
+      }),
+    ).toBe(true)
+    expect(ismediaqueuemessage({ type: 'mediaqueue:skip' })).toBe(true)
+    expect(ismediaqueuemessage({ type: 'mediaqueue:clear' })).toBe(true)
+    expect(ismediaqueuemessage({ type: 'mediaqueue:setlimit', limit: 8 })).toBe(
+      true,
+    )
     expect(ismediaqueuemessage({ type: 'nope' })).toBe(false)
     expect(ismediaqueuemessage(null)).toBe(false)
   })

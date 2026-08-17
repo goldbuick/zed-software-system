@@ -19,6 +19,18 @@ import {
   stopplayback,
 } from './playback'
 import type { MQ_PLAYBACK_RESULT } from './playback'
+import {
+  helperqueueadd,
+  helperqueueapplydisk,
+  helperqueueclear,
+  helperqueuecurrenturl,
+  helperqueuereaddisk,
+  helperqueuereadsnapshot,
+  helperqueuesetlimit,
+  helperqueueshift,
+  helperqueueskip,
+  helperqueueurls,
+} from './queue'
 import { readhudstate, sethudstate } from './statushud'
 import { clearcompositorplayback, ensurecompositor } from './streamcompositor'
 
@@ -36,8 +48,12 @@ type MQ_CAFE_MESSAGE = {
   role?: string
   peerid?: string
   urls?: string[]
+  names?: string[]
   index?: number
   url?: string
+  player?: string
+  name?: string
+  limit?: number
 }
 
 type MQ_PREP_VIEW = Partial<MQ_JOB_STATE>
@@ -63,6 +79,7 @@ type MQ_ERRORLIKE = {
 
 const PEER_HOST = 'terminal.zed.cafe'
 const PROTOCOL = 'mediaqueue/v1'
+const SIGNAL_RECONNECT_WAIT_MS = 15000
 
 function readel<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id)
@@ -85,12 +102,11 @@ const els = {
 }
 
 let peer: Peer | null = null
+let signalreconnecttimer: number | null = null
 let dataconnection: DataConnection | null = null
 let mediastream: MediaStream | null = null
 const playercalls = new Map<string, MQ_PLAYER_CALL>()
 const pendingplayercalls = new Map<string, MediaConnection>()
-let queueurls: string[] = []
-let queueindex = 0
 let localpeerid = ''
 let playbackstarted = false
 /** Latest cafe goto URL; coalesced while a start is in flight. */
@@ -532,13 +548,14 @@ function prepbadge(index: number, url: string) {
 }
 
 function renderqueue() {
-  if (!queueurls.length) {
+  const snap = helperqueuereadsnapshot()
+  if (!snap.urls.length) {
     els.queue.value = '(empty)'
   } else {
-    els.queue.value = queueurls
+    els.queue.value = snap.urls
       .map(function (url, i) {
         return (
-          (i === queueindex ? '> ' : '  ') +
+          (i === snap.index ? '> ' : '  ') +
           '[' +
           i +
           '] ' +
@@ -557,7 +574,7 @@ async function prunequeuecache() {
   }
   try {
     await invoke('prune_media_queue_cache', {
-      urls: queueurls,
+      urls: helperqueueurls(),
       playingUrl: currentplaybackurl,
     })
     void refreshcachebytes()
@@ -568,7 +585,8 @@ async function reconcileprep() {
   if (readdevplaybackpath()) {
     return
   }
-  const nexturl = queueurls.length >= 2 ? String(queueurls[1] || '').trim() : ''
+  const urls = helperqueueurls()
+  const nexturl = urls.length >= 2 ? String(urls[1] || '').trim() : ''
   if (!nexturl) {
     preptarget = ''
     prepstate = null
@@ -613,6 +631,66 @@ function send(msg: unknown) {
     return
   }
   dataconnection.send(msg)
+}
+
+function sendqueuesnapshot() {
+  const snap = helperqueuereadsnapshot()
+  send({
+    type: 'mediaqueue:queuesnapshot',
+    urls: snap.urls,
+    names: snap.names,
+    index: snap.index,
+    limit: snap.limit,
+  })
+}
+
+async function persistqueue() {
+  try {
+    await invoke('write_media_queue', helperqueuereaddisk())
+  } catch (err) {
+    setlink('error', 'queue save failed: ' + String(err))
+  }
+}
+
+function afterqueuemutate() {
+  renderqueue()
+  sendqueuesnapshot()
+  void persistqueue()
+  void prunequeuecache()
+  void reconcileprep()
+}
+
+function helloandresume() {
+  send({
+    type: 'mediaqueue:hello',
+    protocol: PROTOCOL,
+    role: 'helper',
+    peerid: localpeerid,
+  })
+  sendqueuesnapshot()
+  if (playbackstarted) {
+    answerpendingplayercalls()
+    publishstreamtoplayers()
+    syncplayerlinkstatus()
+    const playinglabel = playbacklabel(
+      currentplaybacktitle,
+      currentplaybackurl,
+      '',
+    )
+    sendstatus('playing', playinglabel)
+  }
+}
+
+async function advancenextitem() {
+  helperqueueshift()
+  afterqueuemutate()
+  const next = helperqueuecurrenturl()
+  if (next) {
+    void maybeautostartaftergoto(next)
+    return
+  }
+  await endcall({ natural: true, keepplayers: true })
+  setlink('connected', 'queue empty')
 }
 
 function handledownloadprogress(payload: unknown) {
@@ -954,7 +1032,9 @@ function wireplaybackended(sourcevideo: MQ_ENDED_MEDIA | null) {
   function onended() {
     clearendedlistener()
     sendstatus('playback-ended', '')
-    void endcall({ natural: true })
+    void endcall({ natural: true, keepplayers: true }).then(function () {
+      void advancenextitem()
+    })
     setlink('connected', 'playback ended')
   }
   sourcevideo.__mqonended = onended
@@ -965,10 +1045,6 @@ async function startplaybackandcall(url: string) {
   const gen = ++playbackgeneration
   if (!peer || !peer.open) {
     setlink('error', 'peer not ready')
-    return
-  }
-  if (!dataconnection || !dataconnection.open) {
-    setlink('waiting', 'cafe not connected yet')
     return
   }
   if (playbackstarted) {
@@ -1068,10 +1144,10 @@ async function startplaybackandcall(url: string) {
     const message = shortenerr(err)
     setlink('error', phase + ': ' + message)
     sendstatus(phase, message)
-    // Keep cafe player calls open so the next goto can publishstreamtoplayers
-    // into the same PeerConnection. Closing here leaves board TV with no A/V
-    // until a full reconnect (often never if activecall is a zombie).
+    // Keep cafe player calls open so the next item can publishstreamtoplayers
+    // into the same PeerConnection.
     await endcall({ keepplayers: true })
+    void advancenextitem()
     return
   } finally {
     if (!readdevplaybackpath()) {
@@ -1152,38 +1228,65 @@ function handlecafemessage(data: unknown) {
   switch (msg.type) {
     case 'mediaqueue:hello':
       setlink('connected', 'cafe hello')
-      send({
-        type: 'mediaqueue:hello',
-        protocol: PROTOCOL,
-        role: 'helper',
-        peerid: localpeerid,
-      })
-      sendstatus('waiting-for-url', 'add a URL in cafe #media <url>')
+      helloandresume()
       maybeautostartdevfixture()
       break
-    case 'mediaqueue:queue':
-      queueurls = Array.isArray(msg.urls) ? msg.urls.slice() : []
-      queueindex = typeof msg.index === 'number' ? msg.index : 0
-      renderqueue()
-      void prunequeuecache()
-      void reconcileprep()
-      if (queueurls.length === 0 && playbackstarted) {
-        void endcall()
+    case 'mediaqueue:add': {
+      const url = String(msg.url || '').trim()
+      const result = helperqueueadd(
+        String(msg.player || ''),
+        String(msg.name || ''),
+        url,
+      )
+      if (!result.ok) {
+        sendstatus('queue-error', result.reason)
+        sendqueuesnapshot()
+        break
+      }
+      sendstatus('queue-added', url)
+      afterqueuemutate()
+      if (!playbackstarted) {
+        const current = helperqueuecurrenturl()
+        if (current) {
+          void maybeautostartaftergoto(current)
+        }
+      }
+      break
+    }
+    case 'mediaqueue:skip': {
+      helperqueueskip()
+      sendstatus('queue-skipped')
+      afterqueuemutate()
+      const next = helperqueuecurrenturl()
+      if (next) {
+        void maybeautostartaftergoto(next)
+      } else {
+        void endcall({ keepplayers: true })
         setlink('connected', 'queue empty')
       }
       break
-    case 'mediaqueue:goto':
-      queueindex = typeof msg.index === 'number' ? msg.index : queueindex
-      renderqueue()
-      if (playbackstarted && msg.url && msg.url === currentplaybackurl) {
-        break
-      }
-      void maybeautostartaftergoto(msg.url)
+    }
+    case 'mediaqueue:clear':
+      helperqueueclear()
+      sendstatus('queue-cleared')
+      afterqueuemutate()
+      void endcall()
+      setlink('connected', 'queue empty')
       break
+    case 'mediaqueue:setlimit': {
+      const limit = helperqueuesetlimit(Number(msg.limit))
+      sendstatus('queue-limit', String(limit))
+      afterqueuemutate()
+      break
+    }
     case 'mediaqueue:requestcall':
-      if (!playbackstarted && queueurls[queueindex]) {
-        void maybeautostartaftergoto(queueurls[queueindex])
-      } else if (!playbackstarted) {
+      if (playbackstarted) {
+        answerpendingplayercalls()
+        publishstreamtoplayers()
+        syncplayerlinkstatus()
+      } else if (helperqueuecurrenturl()) {
+        void maybeautostartaftergoto(helperqueuecurrenturl())
+      } else {
         sendstatus('waiting-for-url', 'queue a URL in cafe first')
         maybeautostartdevfixture()
       }
@@ -1203,12 +1306,7 @@ function wiredataconnection(conn: DataConnection) {
   conn.on('open', function () {
     setlink('connected', 'data open')
     writemqstatus('connected|data open')
-    send({
-      type: 'mediaqueue:hello',
-      protocol: PROTOCOL,
-      role: 'helper',
-      peerid: localpeerid,
-    })
+    helloandresume()
     maybeautostartdevfixture()
   })
   conn.on('data', handlecafemessage)
@@ -1216,8 +1314,7 @@ function wiredataconnection(conn: DataConnection) {
     if (dataconnection === conn) {
       dataconnection = null
     }
-    void endcall()
-    setlink('ready', 'waiting for cafe')
+    setlink('waiting', 'waiting for cafe')
   })
   conn.on('error', function (err) {
     setlink('error', String(err))
@@ -1225,6 +1322,10 @@ function wiredataconnection(conn: DataConnection) {
 }
 
 function destroypeer() {
+  if (signalreconnecttimer) {
+    clearTimeout(signalreconnecttimer)
+    signalreconnecttimer = null
+  }
   void endcall()
   if (dataconnection) {
     try {
@@ -1263,6 +1364,10 @@ async function startpeerasync() {
   }
   peer = requestedpeerid ? new Peer(requestedpeerid, opts) : new Peer(opts)
   peer.on('open', function (id) {
+    if (signalreconnecttimer) {
+      clearTimeout(signalreconnecttimer)
+      signalreconnecttimer = null
+    }
     localpeerid = id
     els.localpeer.value = id
     els.copypeer.disabled = false
@@ -1281,7 +1386,17 @@ async function startpeerasync() {
       peer!.reconnect()
     } catch (_) {
       startpeer()
+      return
     }
+    if (signalreconnecttimer) {
+      clearTimeout(signalreconnecttimer)
+    }
+    signalreconnecttimer = window.setTimeout(function () {
+      signalreconnecttimer = null
+      if (peer && peer.disconnected && !peer.destroyed) {
+        startpeer()
+      }
+    }, SIGNAL_RECONNECT_WAIT_MS)
   })
 }
 
@@ -1338,7 +1453,17 @@ function bootfit() {
   startwindowfitobserver()
   initcookiessetting()
   renderqueue()
-  startpeer()
+  void invoke('read_media_queue')
+    .then(function (disk) {
+      helperqueueapplydisk(disk)
+      renderqueue()
+    })
+    .catch(function (err) {
+      setlink('error', 'queue load failed: ' + String(err))
+    })
+    .then(function () {
+      startpeer()
+    })
   void refreshcachebytes()
   if (window.__TAURI__ && window.__TAURI__.event) {
     void window.__TAURI__.event.listen(

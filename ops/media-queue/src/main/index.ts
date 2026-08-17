@@ -13,6 +13,7 @@ import {
 } from 'electron'
 
 import type { MQ_EMIT, MQ_INVOKE_COMMAND, MQ_INVOKE_MAP } from '../shared/ipc'
+import { mqqueuedefault, mqqueueparsedisk } from '../shared/queue'
 
 import { DownloadManager } from './lib/download'
 import { resolvemqpeerid } from './lib/peerid'
@@ -39,6 +40,28 @@ function mqnetidfilepath(): string {
     return override
   }
   return path.join(app.getPath('userData'), 'mq-netid')
+}
+
+function mqqueuefilepath(): string {
+  const override = String(process.env.MQ_QUEUE_FILE || '').trim()
+  if (override) {
+    return override
+  }
+  return path.join(app.getPath('userData'), 'queue.json')
+}
+
+function readmediaqueuefromdisk() {
+  const filepath = mqqueuefilepath()
+  try {
+    const text = fs.readFileSync(filepath, 'utf8')
+    return mqqueueparsedisk(JSON.parse(text) as unknown)
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code
+    if (code === 'ENOENT') {
+      return mqqueuedefault()
+    }
+    throw err
+  }
 }
 
 function iconpath(): string {
@@ -265,6 +288,16 @@ function wireipc(): void {
 
   handleinvoke('resolve_mq_peer_id', () => {
     return resolvemqpeerid(mqnetidfilepath(), process.env.MQ_PEER_ID || '')
+  })
+
+  handleinvoke('read_media_queue', () => readmediaqueuefromdisk())
+
+  handleinvoke('write_media_queue', (args) => {
+    const disk = mqqueueparsedisk(args)
+    const filepath = mqqueuefilepath()
+    fs.mkdirSync(path.dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, JSON.stringify(disk), 'utf8')
+    return true
   })
 
   handleinvoke('get_mq_dev_config', () => ({
