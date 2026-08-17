@@ -70,5 +70,9 @@
     "tsx": "^4.19.0",
     "typescript": "^5.9.0",
     "vite": "^7.2.2"
+  },
+  "dependencies": {
+    "butterchurn": "^2.6.7",
+    "butterchurn-presets": "2.4.7"
   }
 }

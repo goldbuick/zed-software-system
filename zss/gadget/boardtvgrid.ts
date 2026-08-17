@@ -1,4 +1,9 @@
-import { BOARD_TV_COLS, BOARD_TV_ROWS } from 'zss/feature/mediaqueue/constants'
+import {
+  BOARD_TV_COLS,
+  BOARD_TV_COMPOSITOR_HEIGHT,
+  BOARD_TV_COMPOSITOR_WIDTH,
+  BOARD_TV_ROWS,
+} from 'zss/feature/mediaqueue/constants'
 import { boardtvmarqueewindow } from 'zss/gadget/boardtvmarqueewindow'
 import { buildboxframe } from 'zss/gadget/boxframe'
 import { type TILE_DATA, writetile } from 'zss/gadget/tiles'
@@ -69,8 +74,9 @@ export function boardtvvideofit(
   videoheight: number,
   rect: { width: number; height: number; centerx: number; centery: number },
 ): { width: number; height: number; centerx: number; centery: number } {
-  const vw = Math.max(1, videowidth || 640)
-  const vh = Math.max(1, videoheight || 480)
+  // Compositor canvas matches inner 38x13 cells; use that until metadata lands.
+  const vw = Math.max(1, videowidth || BOARD_TV_COMPOSITOR_WIDTH)
+  const vh = Math.max(1, videoheight || BOARD_TV_COMPOSITOR_HEIGHT)
   const scale = Math.min(rect.width / vw, rect.height / vh)
   return {
     width: vw * scale,

@@ -41,9 +41,7 @@ if (process.platform !== 'darwin') {
 }
 
 if (!existsSync(stockapp) && !existsSync(brandedapp)) {
-  console.error(
-    `missing ${stockapp} -- run yarn install in ops/media-queue`,
-  )
+  console.error(`missing ${stockapp} -- run yarn install in ops/media-queue`)
   process.exit(1)
 }
 
@@ -61,9 +59,7 @@ const electronpkg = JSON.parse(
 ) as ELECTRON_PACKAGE
 
 const stampvalue = `${electronpkg.version}:${STAMP_BRAND}`
-const pathcontents = existsSync(pathfile)
-  ? readFileSync(pathfile, 'utf8')
-  : ''
+const pathcontents = existsSync(pathfile) ? readFileSync(pathfile, 'utf8') : ''
 
 if (
   existsSync(stampfile) &&
@@ -116,7 +112,10 @@ plist = plist.replace(
 )
 writeFileSync(infoplist, plist)
 
-cpSync(iconicns, path.join(brandedapp, 'Contents', 'Resources', 'electron.icns'))
+cpSync(
+  iconicns,
+  path.join(brandedapp, 'Contents', 'Resources', 'electron.icns'),
+)
 
 writeFileSync(stampfile, `${stampvalue}\n`)
 console.log(`staged dev app -> ${brandedapp}`)

@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DoubleSide, Euler, VideoTexture } from 'three'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
@@ -64,8 +64,8 @@ function BoardTvPlane({
       position={[fit.centerx, fit.centery, z]}
       scale-y={flipvertical ? -1 : 1}
     >
-      <mesh>
-        <planeGeometry args={[fit.width, fit.height]} />
+      <mesh scale={[fit.width, fit.height, 1]}>
+        <planeGeometry args={[1, 1]} />
         {/* toneMapped: video texture should not pass through renderer tone mapping */}
         {/* eslint-disable-next-line react/no-unknown-property -- three.js Material.toneMapped via R3F */}
         <meshBasicMaterial map={texture} toneMapped={false} side={DoubleSide} />
@@ -167,9 +167,30 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     null
 
   const gridstore = useTiles(BOARD_TV_COLS, BOARD_TV_ROWS, 0, 0, 0)
+  const [videosize, setvideosize] = useState({ w: 0, h: 0 })
   const marqueeacc = useRef(0)
   const marqueeoffset = useRef(0)
   const lastmarqueedraw = useRef('')
+
+  useEffect(() => {
+    if (!video) {
+      setvideosize({ w: 0, h: 0 })
+      return
+    }
+    const syncsize = () => {
+      setvideosize({
+        w: video.videoWidth || 0,
+        h: video.videoHeight || 0,
+      })
+    }
+    syncsize()
+    video.addEventListener('loadedmetadata', syncsize)
+    video.addEventListener('resize', syncsize)
+    return () => {
+      video.removeEventListener('loadedmetadata', syncsize)
+      video.removeEventListener('resize', syncsize)
+    }
+  }, [video])
 
   // One texture shared by both faces; a second VideoTexture would upload the
   // same frame twice each tick.
@@ -205,9 +226,6 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
       state.bg[i] = grid.bg[i]
     }
     state.changed()
-  }, [gridstore])
-
-  useEffect(() => {
     marqueeoffset.current = 0
     marqueeacc.current = 0
     lastmarqueedraw.current = ''
@@ -222,6 +240,11 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   useFrame((_, delta) => {
     if (videotexture) {
       videotexture.needsUpdate = true
+    }
+    const w = video?.videoWidth || 0
+    const h = video?.videoHeight || 0
+    if (w !== videosize.w || h !== videosize.h) {
+      setvideosize({ w, h })
     }
     const trimmed = nowplayinglabel.trim()
     if (!trimmed) {
@@ -253,11 +276,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const centerx = BOARD_WIDTH * drawwidth * 0.5
   const centery = BOARD_HEIGHT * drawheight * 0.5
   const z = boardtvlayerz(graphics, drawheight)
-  const fit = boardtvvideofit(
-    video?.videoWidth ?? 0,
-    video?.videoHeight ?? 0,
-    videorect,
-  )
+  const fit = boardtvvideofit(videosize.w, videosize.h, videorect)
   // Each face pushes out along its own normal, so the pair reads as a slab
   // instead of two coplanar surfaces fighting for depth.
   const depth = layout.backface ? layout.videoz : 0

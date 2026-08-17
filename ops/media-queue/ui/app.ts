@@ -8,6 +8,7 @@ import type {
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
 
+import { probeaudiostream } from './audioprobe'
 import { mqpeerserveroptions } from './peerserver'
 import {
   attachpreview,
@@ -18,11 +19,8 @@ import {
   stopplayback,
 } from './playback'
 import type { MQ_PLAYBACK_RESULT } from './playback'
-import {
-  clearcompositorplayback,
-  ensurecompositor,
-} from './streamcompositor'
 import { readhudstate, sethudstate } from './statushud'
+import { clearcompositorplayback, ensurecompositor } from './streamcompositor'
 
 type MQ_PLAYER_CALL = {
   call: MediaConnection
@@ -82,6 +80,7 @@ const els = {
   stopcall: readel<HTMLButtonElement>('stopcall'),
   cleardownloads: readel<HTMLButtonElement>('cleardownloads'),
   preview: readel<HTMLVideoElement>('preview'),
+  players: readel<HTMLElement>('players'),
   frame: document.querySelector<HTMLElement>('.frame.mq'),
 }
 
@@ -106,6 +105,9 @@ let downloadinflight = false
 let lastdownloadpct = -1
 let lastdownloadlabel = ''
 let transcodepulsetimer: number | null = null
+let extractpulsetimer: number | null = null
+let extractstartedat = 0
+let extractstep = 'starting'
 let downloadpolltimer: number | null = null
 let preppolltimer: number | null = null
 let endedvideo: MQ_ENDED_MEDIA | null = null
@@ -288,11 +290,65 @@ function cleardownloadpulse() {
     clearInterval(transcodepulsetimer)
     transcodepulsetimer = null
   }
+  if (extractpulsetimer) {
+    clearInterval(extractpulsetimer)
+    extractpulsetimer = null
+  }
+}
+
+function sanitizeextractstep(raw: string) {
+  const trimmed = String(raw || '')
+    .replace(/[^a-zA-Z0-9 ._\-:/]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!trimmed) {
+    return 'starting'
+  }
+  return trimmed.slice(0, 24)
+}
+
+function extractdetaillabel() {
+  const secs = extractstartedat
+    ? Math.max(0, Math.floor((Date.now() - extractstartedat) / 1000))
+    : 0
+  return secs + 's|' + sanitizeextractstep(extractstep)
+}
+
+function beginextractphase(step: string) {
+  if (!extractstartedat) {
+    extractstartedat = Date.now()
+  }
+  extractstep = sanitizeextractstep(step)
+}
+
+function clearextractphase() {
+  extractstartedat = 0
+  extractstep = 'starting'
+}
+
+function ensureextractpulse() {
+  if (extractpulsetimer) {
+    return
+  }
+  extractpulsetimer = setInterval(function () {
+    if (!downloadinflight) {
+      cleardownloadpulse()
+      return
+    }
+    const detail = extractdetaillabel()
+    setlink('extracting', detail)
+    sendstatus('extracting', detail)
+  }, 1000)
 }
 
 function ensuretranscodepulse() {
   if (transcodepulsetimer) {
     return
+  }
+  clearextractphase()
+  if (extractpulsetimer) {
+    clearInterval(extractpulsetimer)
+    extractpulsetimer = null
   }
   transcodepulsetimer = setInterval(function () {
     if (!downloadinflight) {
@@ -559,15 +615,6 @@ function send(msg: unknown) {
   dataconnection.send(msg)
 }
 
-function formatdownloadprogress(percent: number, eta: string, phase: string) {
-  const pct = Math.max(0, Math.min(100, Math.round(percent || 0)))
-  let line = (phase || 'downloading') + ' ' + pct + '%'
-  if (eta) {
-    line += ' eta ' + eta
-  }
-  return line
-}
-
 function handledownloadprogress(payload: unknown) {
   if (!downloadinflight) {
     return
@@ -588,29 +635,40 @@ function handledownloadprogress(payload: unknown) {
           ? 'downloading'
           : rawstatus
   const pct = Math.round(percent || 0)
-  const detail =
-    phase === 'extracting'
-      ? eta || 'starting'
-      : formatdownloadprogress(percent, eta, phase)
-  const dedupekey = phase + '|' + detail
+  if (phase === 'transcoding') {
+    clearextractphase()
+    const dedupekey = 'transcoding|' + pct
+    if (dedupekey !== lastdownloadlabel) {
+      lastdownloadlabel = dedupekey
+      lastdownloadpct = pct
+      setlink('transcoding', String(pct))
+      sendstatus('transcoding', String(pct))
+    }
+    ensuretranscodepulse()
+    return
+  }
+  if (phase === 'extracting') {
+    beginextractphase(eta || 'starting')
+    const detail = extractdetaillabel()
+    const dedupekey = 'extracting|' + detail
+    if (dedupekey !== lastdownloadlabel) {
+      lastdownloadlabel = dedupekey
+      lastdownloadpct = pct
+      setlink('extracting', detail)
+      sendstatus('extracting', detail)
+    }
+    ensureextractpulse()
+    return
+  }
+  clearextractphase()
+  cleardownloadpulse()
+  const progressdetail = String(pct) + (eta ? '|' + eta : '')
+  const dedupekey = phase + '|' + progressdetail
   if (dedupekey === lastdownloadlabel) {
     return
   }
   lastdownloadlabel = dedupekey
   lastdownloadpct = pct
-  if (phase === 'transcoding') {
-    setlink('transcoding', String(pct))
-    ensuretranscodepulse()
-    sendstatus('transcoding', String(pct))
-    return
-  }
-  cleardownloadpulse()
-  if (phase === 'extracting') {
-    setlink('extracting', eta || 'starting')
-    sendstatus('extracting', eta || 'starting')
-    return
-  }
-  const progressdetail = String(pct) + (eta ? '|' + eta : '')
   setlink('download-progress', progressdetail)
   sendstatus('download-progress', progressdetail)
 }
@@ -653,23 +711,29 @@ function syncplayerlinkstatus() {
   const current = readhudstate()
   let secondary = ''
   let phase = current.phase
-  let detail = current.detail
+  const detail = current.detail
+  let playerslabel = '0 players'
   if (playercalls.size > 0) {
     secondary = String(playercalls.size) + ' player(s)'
+    playerslabel = String(playercalls.size) + ' players connected'
     if (!phase || phase === 'waiting') {
       phase = 'playing'
     }
   } else if (pendingplayercalls.size > 0) {
     secondary = String(pendingplayercalls.size) + ' player(s) waiting'
+    playerslabel = String(pendingplayercalls.size) + ' players waiting'
     if (!phase) {
       phase = 'waiting'
     }
   } else if (playbackstarted) {
     secondary = '0 player(s)'
+    playerslabel = '0 players connected'
     if (!phase) {
       phase = 'playing'
     }
   }
+  els.players.textContent = playerslabel
+  // secondary stays in hudstate for MQ_STATUS_TEXT_FILE only -- not drawn on overlay
   sethudstate(phase, detail, secondary)
   writemqstatus(phase + '|' + detail + (secondary ? '|' + secondary : ''))
 }
@@ -764,12 +828,30 @@ function publishstreamtoplayers() {
       return
     }
     const senders = pc.getSenders()
+    const transceivers =
+      typeof pc.getTransceivers === 'function' ? pc.getTransceivers() : []
     mediastream!.getTracks().forEach(function (track) {
       let sender: RTCRtpSender | null = null
       for (let i = 0; i < senders.length; ++i) {
         if (senders[i].track && senders[i].track!.kind === track.kind) {
           sender = senders[i]
           break
+        }
+      }
+      // Answer-time placeholder may have been cleared; still reuse that sender.
+      if (!sender) {
+        for (let i = 0; i < transceivers.length; ++i) {
+          const tr = transceivers[i]
+          if (!tr.sender) {
+            continue
+          }
+          const senderkind = tr.sender.track ? tr.sender.track.kind : ''
+          const receiverkind =
+            tr.receiver && tr.receiver.track ? tr.receiver.track.kind : ''
+          if (senderkind === track.kind || receiverkind === track.kind) {
+            sender = tr.sender
+            break
+          }
         }
       }
       if (sender && sender.track === track) {
@@ -942,8 +1024,12 @@ async function startplaybackandcall(url: string) {
         downloadinflight = true
         lastdownloadpct = -1
         lastdownloadlabel = ''
-        setlink('extracting', 'starting')
-        sendstatus('extracting', 'starting')
+        clearextractphase()
+        beginextractphase('starting')
+        const extractdetail = extractdetaillabel()
+        setlink('extracting', extractdetail)
+        sendstatus('extracting', extractdetail)
+        ensureextractpulse()
         bindcompositorstream()
         answerpendingplayercalls()
         publishstreamtoplayers()
@@ -991,6 +1077,7 @@ async function startplaybackandcall(url: string) {
     if (!readdevplaybackpath()) {
       downloadinflight = false
       lastdownloadpct = -1
+      clearextractphase()
       cleardownloadpulse()
       cleardownloadpoll()
     }
@@ -1020,6 +1107,11 @@ async function startplaybackandcall(url: string) {
   syncplayerlinkstatus()
   const playinglabel = playbacklabel(currentplaybacktitle, url, path)
   sendstatus('playing', playinglabel)
+  // Category A: outbound PCM energy (clone probe -- does not steal WebRTC track).
+  void probeaudiostream(mediastream, 'mq-out').then(function (detail) {
+    console.log('[mq audio probe]', detail)
+    sendstatus('audio-probe', detail)
+  })
   void reconcileprep()
 }
 

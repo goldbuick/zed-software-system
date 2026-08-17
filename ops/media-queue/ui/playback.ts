@@ -5,15 +5,16 @@ import type {
   MQ_INVOKE_MAP,
 } from '../src/shared/ipc'
 
-import { readaudio, start, stopvisualizer } from './visualizer'
 import {
   clearcompositorplayback,
   ensurecompositor,
   getcompositorstream,
   setcompositoraudio,
+  setplaybackmedia,
   setvideosource,
   setvisualizersource,
 } from './streamcompositor'
+import { readaudio, start, stopvisualizer } from './visualizer'
 
 export type MQ_PLAYBACK_RESULT = {
   stream: MediaStream
@@ -457,6 +458,7 @@ async function startvideoplayback(path: string): Promise<MQ_PLAYBACK_RESULT> {
   const audiostream = await captureaudiofromvideo(el)
   ensurecompositor()
   setvideosource(el)
+  setplaybackmedia(el)
   setcompositoraudio(audiostream)
   const stream = getcompositorstream()
   if (!stream) {
@@ -488,6 +490,7 @@ async function startaudiovisualizer(
   bindaudiokeepalive(result.audio)
   ensurecompositor()
   setvisualizersource(result.canvas)
+  setplaybackmedia(result.audio)
   setcompositoraudio(result.audiostream)
   const stream = getcompositorstream()
   if (!stream) {

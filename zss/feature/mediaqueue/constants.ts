@@ -1,3 +1,4 @@
+import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 
 /** Default board TV speaker trim (0-100); scaled by #vol main. */
@@ -19,6 +20,16 @@ export function boardtvinnerpixels(cw: number, ch: number) {
     height: BOARD_TV_INNER_ROWS * ch,
   }
 }
+
+/**
+ * Helper compositor / visualizer canvas matches default DRAW_CHAR_SCALE.
+ * Keep ops/media-queue/ui/tvcanvas.ts in lockstep.
+ */
+export const BOARD_TV_COMPOSITOR_SCALE = 2
+export const BOARD_TV_COMPOSITOR_WIDTH =
+  BOARD_TV_INNER_COLS * CHAR_WIDTH * BOARD_TV_COMPOSITOR_SCALE
+export const BOARD_TV_COMPOSITOR_HEIGHT =
+  BOARD_TV_INNER_ROWS * CHAR_HEIGHT * BOARD_TV_COMPOSITOR_SCALE
 
 /** Z for board TV: just above floor tiles, below sprites. */
 export function boardtvlayerz(graphics: string, drawheight: number): number {

@@ -2,6 +2,9 @@ import { buildboxframe } from 'zss/gadget/boxframe'
 import {
   BOARD_TV_BORDER_CELLS,
   BOARD_TV_COLS,
+  BOARD_TV_COMPOSITOR_HEIGHT,
+  BOARD_TV_COMPOSITOR_SCALE,
+  BOARD_TV_COMPOSITOR_WIDTH,
   BOARD_TV_INNER_COLS,
   BOARD_TV_INNER_ROWS,
   BOARD_TV_ROWS,
@@ -37,5 +40,15 @@ describe('board tv inner viewport', () => {
       width: 38 * 16,
       height: 13 * 28,
     })
+  })
+
+  it('compositor canvas matches inner pixels at default draw scale', () => {
+    expect(BOARD_TV_COMPOSITOR_SCALE).toBe(2)
+    expect(boardtvinnerpixels(16, 28)).toEqual({
+      width: BOARD_TV_COMPOSITOR_WIDTH,
+      height: BOARD_TV_COMPOSITOR_HEIGHT,
+    })
+    expect(BOARD_TV_COMPOSITOR_WIDTH).toBe(608)
+    expect(BOARD_TV_COMPOSITOR_HEIGHT).toBe(364)
   })
 })

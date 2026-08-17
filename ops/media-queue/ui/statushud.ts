@@ -7,12 +7,14 @@ export type MQ_HUD_STATE = {
 }
 
 const FONT = '16px "IBM EGA 8x14", ui-monospace, "Courier New", monospace'
-const GREEN = '#55ff55'
 const CYAN = '#55ffff'
 const YELLOW = '#ffff55'
 const RED = '#ff5555'
-const WHITE = '#ffffff'
 const BAR_BG = 'rgba(0, 0, 0, 0.72)'
+const PROGRESS_TRACK = 'rgba(0, 0, 0, 0.82)'
+const PROGRESS_FILL = '#ff00aa'
+const PROGRESS_EDGE = '#55ffff'
+const PROGRESS_HEIGHT = 8
 
 const EMPTY_HUD: MQ_HUD_STATE = {
   phase: '',
@@ -53,6 +55,15 @@ export function hudphaselabel(phase: string, detail?: string): string {
     return 'media fetch'
   }
   if (status === 'extracting') {
+    const parts = String(detail || '').split('|')
+    const elapsed = parts[0] ? parts[0].trim() : ''
+    const step = parts[1] ? parts[1].trim() : ''
+    if (elapsed && step) {
+      return 'media extract ' + elapsed + ' ' + step
+    }
+    if (elapsed) {
+      return 'media extract ' + elapsed
+    }
     return 'media extract'
   }
   if (status === 'download-progress') {
@@ -70,11 +81,9 @@ export function hudphaselabel(phase: string, detail?: string): string {
     }
     return 'media process'
   }
-  if (status === 'buffering') {
-    return 'media buffer'
-  }
-  if (status === 'playing') {
-    return 'media playing'
+  if (status === 'buffering' || status === 'playing') {
+    // A/V is on the TV -- progress bar covers playback; hide phase chrome.
+    return ''
   }
   if (status === 'error') {
     return 'media error'
@@ -107,9 +116,6 @@ function labelcolor(phase: string): string {
   if (phase === 'error') {
     return RED
   }
-  if (phase === 'playing') {
-    return GREEN
-  }
   if (
     phase === 'downloading' ||
     phase === 'extracting' ||
@@ -122,63 +128,68 @@ function labelcolor(phase: string): string {
   return CYAN
 }
 
-function truncate(text: string, maxlen: number) {
-  const s = String(text || '')
-  if (s.length <= maxlen) {
-    return s
+/** 0..1 playback fraction, or -1 when unknown / not playing. */
+export function readmediaprogress(media: HTMLMediaElement | null): number {
+  if (!media) {
+    return -1
   }
-  return s.slice(0, Math.max(0, maxlen - 3)) + '...'
+  const duration = media.duration
+  const current = media.currentTime
+  if (!Number.isFinite(duration) || duration <= 0) {
+    return -1
+  }
+  if (!Number.isFinite(current) || current < 0) {
+    return 0
+  }
+  return Math.max(0, Math.min(1, current / duration))
 }
 
+export function drawplaybackprogress(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  progress: number,
+) {
+  if (!(progress >= 0)) {
+    return
+  }
+  const bary = height - PROGRESS_HEIGHT
+  ctx.fillStyle = PROGRESS_TRACK
+  ctx.fillRect(0, bary, width, PROGRESS_HEIGHT)
+  ctx.fillStyle = PROGRESS_EDGE
+  ctx.fillRect(0, bary, width, 1)
+  const fillw = Math.floor(width * progress)
+  if (fillw > 0) {
+    ctx.fillStyle = PROGRESS_FILL
+    ctx.fillRect(0, bary + 1, fillw, PROGRESS_HEIGHT - 1)
+  }
+}
+
+/** Overlay: phase label (prep) and/or thin playback progress at the bottom. */
 export function drawhud(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
   state?: MQ_HUD_STATE,
+  progress?: number,
 ) {
   const current = state || hudstate
   const phase = current.phase
   const label = hudphaselabel(phase, current.detail)
-  if (!label && !current.detail && !current.secondary) {
-    return
-  }
-
-  const pad = 10
-  const lineh = 20
-  const lines: { text: string; color: string }[] = []
   if (label) {
-    lines.push({ text: label, color: labelcolor(phase) })
+    const pad = 10
+    const lineh = 20
+    const barh = pad * 2 + lineh
+    const bary = height - barh
+    ctx.fillStyle = BAR_BG
+    ctx.fillRect(0, bary, width, barh)
+    ctx.font = FONT
+    ctx.textBaseline = 'top'
+    ctx.textAlign = 'left'
+    ctx.fillStyle = labelcolor(phase)
+    ctx.fillText(label, pad, bary + pad)
   }
-  if (current.detail) {
-    let detail = current.detail
-    if (phase === 'download-progress') {
-      const parts = detail.split('|')
-      const pct = Number(parts[0])
-      const eta = parts[1] ? String(parts[1]).trim() : ''
-      if (Number.isFinite(pct)) {
-        detail = Math.round(pct) + '%' + (eta ? ' eta ' + eta : '')
-      }
-    } else if (phase === 'transcoding' && Number.isFinite(Number(detail))) {
-      detail = Math.round(Number(detail)) + '%'
-    }
-    lines.push({ text: truncate(detail, 56), color: WHITE })
-  }
-  if (current.secondary) {
-    lines.push({ text: truncate(current.secondary, 56), color: GREEN })
-  }
-  if (!lines.length) {
-    return
-  }
-
-  const barh = pad * 2 + lines.length * lineh
-  const bary = height - barh
-  ctx.fillStyle = BAR_BG
-  ctx.fillRect(0, bary, width, barh)
-  ctx.font = FONT
-  ctx.textBaseline = 'top'
-  ctx.textAlign = 'left'
-  for (let i = 0; i < lines.length; i += 1) {
-    ctx.fillStyle = lines[i].color
-    ctx.fillText(lines[i].text, pad, bary + pad + i * lineh)
+  if (typeof progress === 'number') {
+    drawplaybackprogress(ctx, width, height, progress)
   }
 }

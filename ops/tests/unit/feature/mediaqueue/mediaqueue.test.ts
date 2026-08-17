@@ -5,6 +5,8 @@ import {
 } from 'zss/feature/mediaqueue/callmetadata'
 import {
   BOARD_TV_COLS,
+  BOARD_TV_COMPOSITOR_HEIGHT,
+  BOARD_TV_COMPOSITOR_WIDTH,
   BOARD_TV_ROWS,
   boardtvlayout,
   boardtvisupright,
@@ -223,15 +225,15 @@ describe('mediaqueue board tv', () => {
     expect(tall.centery).toBe(-5)
   })
 
-  it('boardtvvideofit falls back to 4:3 before metadata lands', () => {
+  it('boardtvvideofit falls back to inner compositor size before metadata lands', () => {
     const fit = boardtvvideofit(0, 0, {
-      width: 640,
-      height: 480,
+      width: BOARD_TV_COMPOSITOR_WIDTH,
+      height: BOARD_TV_COMPOSITOR_HEIGHT,
       centerx: 0,
       centery: 0,
     })
-    expect(fit.width).toBeCloseTo(640)
-    expect(fit.height).toBeCloseTo(480)
+    expect(fit.width).toBeCloseTo(BOARD_TV_COMPOSITOR_WIDTH)
+    expect(fit.height).toBeCloseTo(BOARD_TV_COMPOSITOR_HEIGHT)
   })
 
   it('boardtvscreenrows keeps video off the marquee row', () => {

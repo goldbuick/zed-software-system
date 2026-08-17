@@ -2,6 +2,7 @@ import type { MediaConnection } from 'peerjs'
 import { apilog } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import { mediaqueueprobeaudiostream } from 'zss/feature/mediaqueue/audioprobe'
 import {
   mediaqueuebindremotevideo,
   mediaqueueclearremotevideo,
@@ -119,8 +120,16 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
   apilog(
     SOFTWARE,
     player,
-    `media board TV attached v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length}`,
+    `media board TV attached v=${stream.getVideoTracks().length} a=${stream.getAudioTracks().length} muted=${video.muted} vol=${video.volume}`,
   )
+  // Category A: inbound PCM energy + element mute/volume.
+  void mediaqueueprobeaudiostream(stream, 'mq-in').then((detail) => {
+    apilog(
+      SOFTWARE,
+      player,
+      `media audio probe ${detail} el.muted=${video.muted} el.vol=${video.volume}`,
+    )
+  })
 }
 
 export type MEDIAQUEUE_PLAYER_SINK_TEARDOWN = {

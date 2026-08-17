@@ -1,9 +1,15 @@
-import { drawhud, readhudstate } from './statushud'
+import { drawhud, readhudstate, readmediaprogress } from './statushud'
+import {
+  MQ_CANVAS_CSS_HEIGHT,
+  MQ_CANVAS_CSS_WIDTH,
+  MQ_CANVAS_HEIGHT,
+  MQ_CANVAS_WIDTH,
+} from './tvcanvas'
 
 export type MQ_COMPOSITOR_MODE = 'placard' | 'video' | 'audio'
 
-const CANVAS_WIDTH = 640
-const CANVAS_HEIGHT = 360
+const CANVAS_WIDTH = MQ_CANVAS_WIDTH
+const CANVAS_HEIGHT = MQ_CANVAS_HEIGHT
 const CAPTURE_FPS = 30
 const BG = '#0a0a12'
 
@@ -14,7 +20,10 @@ let animframe: number | null = null
 let mode: MQ_COMPOSITOR_MODE = 'placard'
 let videosource: HTMLVideoElement | null = null
 let visualizersource: HTMLCanvasElement | null = null
+let playbackmedia: HTMLMediaElement | null = null
 let active = false
+let placeholderctx: AudioContext | null = null
+let placeholderaudio: MediaStreamTrack | null = null
 
 function ensurecanvas(): HTMLCanvasElement {
   if (canvasel) {
@@ -26,13 +35,50 @@ function ensurecanvas(): HTMLCanvasElement {
   canvasel.style.position = 'fixed'
   canvasel.style.left = '0'
   canvasel.style.top = '0'
-  canvasel.style.width = '320px'
-  canvasel.style.height = '180px'
+  canvasel.style.width = `${MQ_CANVAS_CSS_WIDTH}px`
+  canvasel.style.height = `${MQ_CANVAS_CSS_HEIGHT}px`
   canvasel.style.opacity = '0'
   canvasel.style.pointerEvents = 'none'
   canvasel.style.zIndex = '-1'
   document.body.appendChild(canvasel)
   return canvasel
+}
+
+/**
+ * Silent audio track kept on the compositor from first answer so PeerJS
+ * negotiates audio up front. Real playback audio is swapped in via replaceTrack.
+ */
+function ensuresilentaudiotrack(): MediaStreamTrack {
+  if (placeholderaudio && placeholderaudio.readyState === 'live') {
+    return placeholderaudio
+  }
+  if (!placeholderctx) {
+    placeholderctx = new AudioContext()
+  }
+  const dest = placeholderctx.createMediaStreamDestination()
+  const osc = placeholderctx.createOscillator()
+  const gain = placeholderctx.createGain()
+  gain.gain.value = 0
+  osc.connect(gain)
+  gain.connect(dest)
+  osc.start()
+  void placeholderctx.resume().catch(function () {})
+  const tracks = dest.stream.getAudioTracks()
+  if (!tracks.length) {
+    throw new Error('compositor silent audio track missing')
+  }
+  placeholderaudio = tracks[0]
+  return placeholderaudio
+}
+
+function ensureoutstreamaudio() {
+  if (!outstream) {
+    return
+  }
+  if (outstream.getAudioTracks().length > 0) {
+    return
+  }
+  outstream.addTrack(ensuresilentaudiotrack())
 }
 
 function drawcontain(
@@ -74,7 +120,13 @@ function drawframe() {
     ctx.fillStyle = BG
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
   }
-  drawhud(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, readhudstate())
+  drawhud(
+    ctx,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    readhudstate(),
+    readmediaprogress(playbackmedia),
+  )
   animframe = window.requestAnimationFrame(drawframe)
 }
 
@@ -116,6 +168,7 @@ export function ensurecompositor(): MediaStream {
       outstream.addTrack(videotracks[i])
     }
   }
+  ensureoutstreamaudio()
   startloop()
   return outstream
 }
@@ -151,13 +204,22 @@ export function setvisualizersource(canvas: HTMLCanvasElement | null) {
   ensurecompositor()
 }
 
+export function setplaybackmedia(el: HTMLMediaElement | null) {
+  playbackmedia = el
+  ensurecompositor()
+}
+
 export function setcompositoraudio(stream: MediaStream | null) {
   ensurecompositor()
   clearaudiotracks()
-  if (!stream || !outstream) {
+  if (!outstream) {
     return
   }
-  const tracks = stream.getAudioTracks()
+  const tracks = stream ? stream.getAudioTracks() : []
+  if (!tracks.length) {
+    outstream.addTrack(ensuresilentaudiotrack())
+    return
+  }
   for (let i = 0; i < tracks.length; i += 1) {
     outstream.addTrack(tracks[i])
   }
@@ -166,6 +228,7 @@ export function setcompositoraudio(stream: MediaStream | null) {
 export function clearcompositorplayback() {
   videosource = null
   visualizersource = null
+  playbackmedia = null
   mode = 'placard'
   clearaudiotracks()
   ensurecompositor()
@@ -176,7 +239,13 @@ export function stopcompositor() {
   clearaudiotracks()
   videosource = null
   visualizersource = null
+  playbackmedia = null
   mode = 'placard'
+  placeholderaudio = null
+  if (placeholderctx) {
+    void placeholderctx.close().catch(function () {})
+    placeholderctx = null
+  }
   if (canvascapture) {
     const tracks = canvascapture.getTracks()
     for (let i = 0; i < tracks.length; i += 1) {

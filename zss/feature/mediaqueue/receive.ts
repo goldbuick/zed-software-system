@@ -193,6 +193,8 @@ function handlehelperdata(data: unknown) {
           }
         } else if (data.status === 'playing') {
           mediaqueueretryplayerconnect()
+        } else if (data.status === 'audio-probe') {
+          apilog(SOFTWARE, player, `media audio probe ${detail || ''}`.trim())
         }
       }
       break
