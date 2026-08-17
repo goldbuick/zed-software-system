@@ -824,6 +824,9 @@ export class DownloadManager {
   playback: MQ_DOWNLOAD_JOB
   prep: MQ_DOWNLOAD_JOB
   registry: Map<string, MQ_REGISTRY_ENTRY>
+  /** Active decode path; survives job reset so removepartialfiles cannot wipe mid-load. */
+  playingpath: string
+  playingartwork: string
   prepretrytimer: NodeJS.Timeout | null
   prepretryattempt: number
   prepemit: MQ_EMIT | null
@@ -839,11 +842,25 @@ export class DownloadManager {
     this.prep.readyevent = 'mq-prep-ready'
     this.prep.errorevent = 'mq-prep-error'
     this.registry = new Map()
+    this.playingpath = ''
+    this.playingartwork = ''
     this.prepretrytimer = null
     this.prepretryattempt = 0
     this.prepemit = null
     fs.mkdirSync(cachedir, { recursive: true })
     fs.mkdirSync(this.ytdlphome, { recursive: true })
+  }
+
+  claimplayingmedia(filepath: string, artwork?: string): void {
+    const media = String(filepath || '').trim()
+    this.playingpath = media
+    const art = String(artwork || '').trim()
+    this.playingartwork = art || (media ? resolveartworkpath(media) : '')
+  }
+
+  clearplayingmedia(): void {
+    this.playingpath = ''
+    this.playingartwork = ''
   }
 
   setcookiesbrowser(browser: string): void {
@@ -898,6 +915,12 @@ export class DownloadManager {
       if (entry.artwork) {
         paths.push(entry.artwork)
       }
+    }
+    if (this.playingpath) {
+      paths.push(this.playingpath)
+    }
+    if (this.playingartwork) {
+      paths.push(this.playingartwork)
     }
     if (this.playback.filepath) {
       paths.push(this.playback.filepath)
@@ -954,6 +977,9 @@ export class DownloadManager {
     if (!entry) {
       return null
     }
+    // Claim before dropping registry so cancelprep / download retries cannot
+    // removepartialfiles the file while the renderer is still opening it.
+    this.claimplayingmedia(entry.path, entry.artwork)
     this.registry.delete(trimmed)
     if (this.prep.url === trimmed) {
       resetjob(this.prep)
@@ -1083,6 +1109,7 @@ export class DownloadManager {
     this.canceldownload()
     this.cancelprep()
     this.registry.clear()
+    this.clearplayingmedia()
     this.playback.filepath = ''
     this.playback.error = ''
     const before = mediafilebytes(this.cachedir)
@@ -1250,6 +1277,9 @@ export class DownloadManager {
           audioOnly: audioonly,
           artwork: resolveartworkpath(result.outpath),
           duration: 0,
+        }
+        if (job === this.playback) {
+          this.claimplayingmedia(payload.path, payload.artwork)
         }
         emit(job.readyevent, payload)
         return payload

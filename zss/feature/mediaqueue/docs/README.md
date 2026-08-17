@@ -30,6 +30,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper.
 |---------|------|
 | `#media` | Queue list (user names, index, url) |
 | `#media <url>` | Submit URL (deduped, per-player limit default 3) |
+| bare chat URL | Pasting a whole-message allowlisted http(s) URL is equivalent to `#media <url>` (speaker required; see `mediaischatqueueurl`) |
 | `#queue` | Admin: control menu (skip / clear / stop links + limit line) |
 | `#queue <peerid>` | Admin: bind helper on current board |
 | `#queue skip` | Admin: skip current item |

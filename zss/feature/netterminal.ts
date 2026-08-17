@@ -842,6 +842,10 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         case 'disconnected':
         case 'peer-unavailable':
           return
+        case 'webrtc':
+          // Media-call renegotiation (replaceTrack / skip / type switch) often
+          // emits empty native WebRTC errors; not a signaling failure.
+          return
         case 'invalid-id':
         case 'unavailable-id':
           netterminalclearallschedule()

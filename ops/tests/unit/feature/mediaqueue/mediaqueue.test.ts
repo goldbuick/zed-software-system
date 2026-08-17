@@ -37,7 +37,7 @@ import {
   mediaqueuesetplayerlayerstate,
   mediaqueueclearplayerlayerstate,
 } from 'zss/feature/mediaqueue/playerlayerstate'
-import { mediaqueuenormalizeurl, mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
+import { mediaqueuenormalizeurl, mediaisqueueurl, mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 
 describe('mediaqueue url normalize', () => {
@@ -55,6 +55,22 @@ describe('mediaqueue url normalize', () => {
     const b = mediaqueuenormalizeurl('https://youtu.be/abc123')
     expect(a).toBe('youtube:abc123')
     expect(b).toBe('youtube:abc123')
+  })
+
+  it('chat shortcut allowlists whole-message media hosts only', () => {
+    expect(mediaischatqueueurl('https://youtu.be/abc123')).toBe(true)
+    expect(mediaischatqueueurl('  https://www.youtube.com/watch?v=abc  ')).toBe(
+      true,
+    )
+    expect(mediaischatqueueurl('https://soundcloud.com/a/b')).toBe(true)
+    expect(mediaischatqueueurl('https://m.soundcloud.com/a/b')).toBe(true)
+    expect(mediaischatqueueurl('https://audiomack.com/a/song')).toBe(true)
+    expect(mediaischatqueueurl('https://hearthis.at/a/b')).toBe(true)
+    expect(mediaischatqueueurl('https://archive.org/details/foo')).toBe(true)
+    expect(mediaischatqueueurl('https://example.com/x')).toBe(false)
+    expect(mediaischatqueueurl('check this https://youtu.be/x')).toBe(false)
+    expect(mediaischatqueueurl('https://youtu.be/x please')).toBe(false)
+    expect(mediaischatqueueurl('')).toBe(false)
   })
 })
 

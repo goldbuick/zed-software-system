@@ -76,6 +76,21 @@ function main() {
     'takeprepready returns artwork path',
   )
   assert(!mgr.readregistryready('https://b.example'), 'registry entry consumed')
+  assert(
+    mgr.protectedpaths().includes(keepb),
+    'taken path stays protected after registry consume',
+  )
+  assert(
+    mgr.protectedpaths().includes(keepbart),
+    'taken artwork stays protected after registry consume',
+  )
+
+  const orphan = path.join(work, 'mq-orphan.mp4')
+  writeFileSync(orphan, 'orphan')
+  mgr.cancelprep()
+  assert(existsSync(keepb), 'cancelprep must not delete claimed playing media')
+  assert(existsSync(keepbart), 'cancelprep must not delete claimed artwork')
+  assert(!existsSync(orphan), 'cancelprep still removes unprotected mq media')
 
   rmSync(work, { recursive: true, force: true })
   console.log('ok prep-cache tests passed')

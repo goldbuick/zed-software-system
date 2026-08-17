@@ -92,7 +92,11 @@ let queueurls: string[] = []
 let queueindex = 0
 let localpeerid = ''
 let playbackstarted = false
-let pendinggoto = false
+/** Latest cafe goto URL; coalesced while a start is in flight. */
+let pendinggotourl = ''
+let gotodraining = false
+/** Bumped on each start and when a newer goto supersedes an in-flight one. */
+let playbackgeneration = 0
 let currentplaybackurl = ''
 let currentplaybacktitle = ''
 let cachebytes = 0
@@ -169,10 +173,25 @@ function readdevplaybackpath() {
 
 function maybeautostartdevfixture() {
   const devpath = readdevplaybackpath()
-  if (!devpath || playbackstarted || pendinggoto || !dataconnection) {
+  if (!devpath || playbackstarted || gotodraining || !dataconnection) {
     return
   }
   void startplaybackandcall('dev://fixture')
+}
+
+function issupersededplaybackerr(err: unknown, gen: number) {
+  if (gen !== playbackgeneration) {
+    return true
+  }
+  if (!err || typeof err !== 'object') {
+    return false
+  }
+  const name = (err as { name?: string }).name
+  return name === 'AbortError'
+}
+
+function cancelinflightdownload() {
+  void invoke('cancel_media_download').catch(function () {})
 }
 
 function clearendedlistener() {
@@ -854,6 +873,7 @@ function wireplaybackended(sourcevideo: MQ_ENDED_MEDIA | null) {
 }
 
 async function startplaybackandcall(url: string) {
+  const gen = ++playbackgeneration
   if (!peer || !peer.open) {
     setlink('error', 'peer not ready')
     return
@@ -864,6 +884,9 @@ async function startplaybackandcall(url: string) {
   }
   if (mediastream || playbackstarted) {
     await endcall({ keepplayers: true })
+    if (issupersededplaybackerr(null, gen)) {
+      return
+    }
   }
   let path = ''
   let playback: MQ_PLAYBACK_RESULT | null = null
@@ -876,6 +899,10 @@ async function startplaybackandcall(url: string) {
       setlink('buffering', path)
       sendstatus('buffering', path)
       playback = await startplayback(path)
+      if (issupersededplaybackerr(null, gen)) {
+        await stopplayback()
+        return
+      }
       mediastream = playback.stream
     } else {
       let ready: MQ_READY_EVENT | null = null
@@ -885,6 +912,9 @@ async function startplaybackandcall(url: string) {
         })
       } catch (_) {
         ready = null
+      }
+      if (issupersededplaybackerr(null, gen)) {
+        return
       }
       if (ready && ready.path) {
         path = ready.path
@@ -896,6 +926,10 @@ async function startplaybackandcall(url: string) {
           audioOnly: Boolean(ready.audioOnly),
           artwork: ready.artwork ? String(ready.artwork).trim() : '',
         })
+        if (issupersededplaybackerr(null, gen)) {
+          await stopplayback()
+          return
+        }
         mediastream = playback.stream
       } else {
         downloadinflight = true
@@ -905,6 +939,9 @@ async function startplaybackandcall(url: string) {
         sendstatus('extracting', 'starting')
         startdownloadpoll()
         const downloaded = await startdownload(url)
+        if (issupersededplaybackerr(null, gen)) {
+          return
+        }
         path = downloaded && downloaded.path ? downloaded.path : ''
         currentplaybacktitle =
           downloaded && downloaded.title ? String(downloaded.title).trim() : ''
@@ -920,10 +957,17 @@ async function startplaybackandcall(url: string) {
               ? String(downloaded.artwork).trim()
               : '',
         })
+        if (issupersededplaybackerr(null, gen)) {
+          await stopplayback()
+          return
+        }
         mediastream = playback.stream
       }
     }
   } catch (err) {
+    if (issupersededplaybackerr(err, gen)) {
+      return
+    }
     const phase = path ? 'playback-failed' : 'download-failed'
     const message = shortenerr(err)
     setlink('error', phase + ': ' + message)
@@ -940,6 +984,10 @@ async function startplaybackandcall(url: string) {
       cleardownloadpulse()
       cleardownloadpoll()
     }
+  }
+  if (issupersededplaybackerr(null, gen)) {
+    await endcall({ keepplayers: true })
+    return
   }
   playbackstarted = true
   currentplaybackurl = url
@@ -966,17 +1014,31 @@ async function startplaybackandcall(url: string) {
 }
 
 async function maybeautostartaftergoto(url?: string) {
-  if (pendinggoto || !url) {
+  if (!url) {
     return
   }
-  pendinggoto = true
+  pendinggotourl = url
+  if (gotodraining) {
+    // Abort in-flight start/download so skip / type-switch can take over.
+    playbackgeneration += 1
+    cancelinflightdownload()
+    return
+  }
+  gotodraining = true
   try {
-    await startplaybackandcall(url)
+    while (pendinggotourl) {
+      const next = pendinggotourl
+      pendinggotourl = ''
+      await startplaybackandcall(next)
+    }
   } catch (err) {
     setlink('error', String(err))
     sendstatus('download-failed', String(err))
   } finally {
-    pendinggoto = false
+    gotodraining = false
+    if (pendinggotourl) {
+      void maybeautostartaftergoto(pendinggotourl)
+    }
   }
 }
 

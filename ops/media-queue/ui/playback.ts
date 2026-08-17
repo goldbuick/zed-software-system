@@ -186,6 +186,11 @@ function waitforcanplay(el: HTMLMediaElement) {
     }
     function onerror() {
       cleanup()
+      // stopvideo() clears src / removes the element mid-load on skip.
+      if (!el.isConnected || !el.getAttribute('src')) {
+        reject(new DOMException('playback superseded', 'AbortError'))
+        return
+      }
       let detail = 'video load failed'
       if (el.error) {
         detail += ' (code ' + el.error.code + ')'

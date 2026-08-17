@@ -32,6 +32,31 @@ function collapsewhitespace(value: string): string {
   return value.trim().replace(/\s+/g, ' ')
 }
 
+/** Hosts that turn a bare chat-line URL into `#media` (exact or subdomain). */
+export const MEDIA_QUEUE_CHAT_HOSTS = [
+  'youtube.com',
+  'youtu.be',
+  'soundcloud.com',
+  'bandcamp.com',
+  'twitch.tv',
+  'vimeo.com',
+  'tiktok.com',
+  'mixcloud.com',
+  'audiomack.com',
+  'hearthis.at',
+  'archive.org',
+] as const
+
+function mediaischathost(hostname: string): boolean {
+  const host = hostname.toLowerCase()
+  for (const allowed of MEDIA_QUEUE_CHAT_HOSTS) {
+    if (host === allowed || host.endsWith(`.${allowed}`)) {
+      return true
+    }
+  }
+  return false
+}
+
 /** True when a #media arg should queue a URL (not bind a helper peer id). */
 export function mediaisqueueurl(raw: string): boolean {
   const trimmed = raw.trim()
@@ -44,6 +69,29 @@ export function mediaisqueueurl(raw: string): boolean {
   try {
     const parsed = new URL(trimmed)
     return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * True when the whole trimmed message is one http(s) URL on an allowlisted host.
+ * Used for chat → `#media` shortcut; explicit `#media` still uses mediaisqueueurl.
+ */
+export function mediaischatqueueurl(raw: string): boolean {
+  const trimmed = raw.trim()
+  if (!trimmed || /\s/.test(trimmed)) {
+    return false
+  }
+  if (!mediaisqueueurl(trimmed)) {
+    return false
+  }
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false
+    }
+    return mediaischathost(parsed.hostname)
   } catch {
     return false
   }

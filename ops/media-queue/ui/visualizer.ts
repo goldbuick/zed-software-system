@@ -131,6 +131,10 @@ function waitforcanplay(el: HTMLMediaElement) {
     }
     function onerror() {
       cleanup()
+      if (!el.isConnected || !el.getAttribute('src')) {
+        reject(new DOMException('playback superseded', 'AbortError'))
+        return
+      }
       let detail = 'audio load failed'
       if (el.error) {
         detail += ' (code ' + el.error.code + ')'
