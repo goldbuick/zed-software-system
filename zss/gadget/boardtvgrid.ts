@@ -70,6 +70,23 @@ export function boardtvvideorect(
   return { width, height, centerx, centery }
 }
 
+/** Letterbox the stream inside the screen rect, keeping source aspect. */
+export function boardtvvideofit(
+  videowidth: number,
+  videoheight: number,
+  rect: { width: number; height: number; centerx: number; centery: number },
+): { width: number; height: number; centerx: number; centery: number } {
+  const vw = Math.max(1, videowidth || 640)
+  const vh = Math.max(1, videoheight || 480)
+  const scale = Math.min(rect.width / vw, rect.height / vh)
+  return {
+    width: vw * scale,
+    height: vh * scale,
+    centerx: rect.centerx,
+    centery: rect.centery,
+  }
+}
+
 export function drawboardtvmarqueerow(
   state: TILE_DATA,
   row: number,

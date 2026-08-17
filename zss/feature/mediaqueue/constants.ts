@@ -50,12 +50,16 @@ export type BOARD_TV_LAYOUT = {
   scrollstep: number
   videoflipvertical: boolean
   videoz: number
+  backface: boolean
 }
 
 /**
  * Board tiles render with +Y down-screen in every mode, so the TV chrome needs
  * no per-mode flips -- only the upright rotation differs. Video z separation
  * must clear depth-buffer precision in the perspective / tilted modes.
+ *
+ * backface: fpv walks the player around the TV, so the far side gets its own
+ * turned-around copy -- a double-sided plane would read mirrored from behind.
  */
 export function boardtvlayout(
   graphics: string,
@@ -67,5 +71,6 @@ export function boardtvlayout(
     scrollstep: 1,
     videoflipvertical: true,
     videoz: mode === 'flat' ? 0.001 : drawheight * 0.05,
+    backface: mode === 'fpv',
   }
 }

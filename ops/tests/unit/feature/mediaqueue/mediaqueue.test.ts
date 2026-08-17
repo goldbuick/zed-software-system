@@ -10,7 +10,7 @@ import {
   boardtvisupright,
   boardtvlayerz,
 } from 'zss/feature/mediaqueue/constants'
-import { boardtvscreenrows } from 'zss/gadget/boardtvgrid'
+import { boardtvscreenrows, boardtvvideofit } from 'zss/gadget/boardtvgrid'
 import {
   mediaqueueclearlistenstate,
   mediaqueuesethelperconnected,
@@ -183,6 +183,35 @@ describe('mediaqueue board tv', () => {
     expect(boardtvlayout('mode7', 28).videoz).toBeCloseTo(1.4)
     expect(boardtvlayout('iso', 28).videoz).toBeCloseTo(1.4)
     expect(boardtvlayout('fpv', 28).videoz).toBeCloseTo(1.4)
+  })
+
+  it('boardtvlayout gives only fpv a turned-around second face', () => {
+    expect(boardtvlayout('fpv', 28).backface).toBe(true)
+    expect(boardtvlayout('iso', 28).backface).toBe(false)
+    expect(boardtvlayout('flat', 28).backface).toBe(false)
+    expect(boardtvlayout('mode7', 28).backface).toBe(false)
+  })
+
+  it('boardtvvideofit letterboxes inside the screen rect', () => {
+    const rect = { width: 400, height: 100, centerx: 0, centery: -5 }
+    const wide = boardtvvideofit(800, 100, rect)
+    expect(wide.width).toBeCloseTo(400)
+    expect(wide.height).toBeCloseTo(50)
+    const tall = boardtvvideofit(100, 400, rect)
+    expect(tall.width).toBeCloseTo(25)
+    expect(tall.height).toBeCloseTo(100)
+    expect(tall.centery).toBe(-5)
+  })
+
+  it('boardtvvideofit falls back to 4:3 before metadata lands', () => {
+    const fit = boardtvvideofit(0, 0, {
+      width: 640,
+      height: 480,
+      centerx: 0,
+      centery: 0,
+    })
+    expect(fit.width).toBeCloseTo(640)
+    expect(fit.height).toBeCloseTo(480)
   })
 
   it('boardtvscreenrows keeps video off the marquee row', () => {
