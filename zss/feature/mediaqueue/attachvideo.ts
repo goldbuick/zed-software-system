@@ -45,11 +45,7 @@ function wirestreamtracks(stream: MediaStream) {
       return
     }
     const player = registerreadplayer()
-    apilog(
-      SOFTWARE,
-      player,
-      `media board TV track added: ${evt.track.kind}`,
-    )
+    apilog(SOFTWARE, player, `media board TV track added: ${evt.track.kind}`)
     remotevideo.srcObject = stream
     mediaqueuebindremotevideo(remotevideo)
   }

@@ -56,7 +56,7 @@ export async function runpageevaluate<T, A>(
   fn: (arg: A) => Promise<T>,
   arg: A,
 ): Promise<T> {
-  return page.evaluate(fn, arg)
+  return page.evaluate(fn as never, arg as never)
 }
 
 export { stopparityvite }

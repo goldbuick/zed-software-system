@@ -13,6 +13,7 @@ export function createwasmsynthadapter(synth: WASM_SYNTH): SynthBackend {
     addbgplay: (buffer, quantize) => synth.addbgplay(buffer, quantize),
     stopplay: () => synth.stopplay(),
     setplayvolume: (volume) => synth.setplayvolume(volume),
+    setmainvolume: (volume) => synth.setplayvolume(volume),
     setbgplayvolume: (volume) => synth.setbgplayvolume(volume),
     setttsvolume: (volume) => {
       synth.setttsvolume(volume)

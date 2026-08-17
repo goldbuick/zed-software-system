@@ -91,8 +91,14 @@ const pctracklisteners = new Map<
   (evt: RTCTrackEvent) => void
 >()
 const pcstatelisteners = new Map<MediaConnection, () => void>()
-const calltrackpollers = new Map<MediaConnection, ReturnType<typeof setInterval>>()
-const calltracksynctimers = new Map<MediaConnection, ReturnType<typeof setTimeout>>()
+const calltrackpollers = new Map<
+  MediaConnection,
+  ReturnType<typeof setInterval>
+>()
+const calltracksynctimers = new Map<
+  MediaConnection,
+  ReturnType<typeof setTimeout>
+>()
 
 function retryplayerconnectfromlayer() {
   const layer = mediaqueuereadplayerlayerstate()
@@ -108,21 +114,6 @@ function streamhasmedia(stream: MediaStream): boolean {
   return (
     stream.getVideoTracks().length > 0 || stream.getAudioTracks().length > 0
   )
-}
-
-function streamfromreceivers(pc: RTCPeerConnection): MediaStream | undefined {
-  const receivers = pc.getReceivers?.() ?? []
-  const tracks: MediaStreamTrack[] = []
-  for (let i = 0; i < receivers.length; ++i) {
-    const track = receivers[i]?.track
-    if (track) {
-      tracks.push(track)
-    }
-  }
-  if (tracks.length === 0) {
-    return undefined
-  }
-  return new MediaStream(tracks)
 }
 
 function streamtrackids(stream: MediaStream): string {
@@ -291,7 +282,7 @@ function scheduletracksynctimeout(call: MediaConnection, helperpeerid: string) {
 function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
   clearpctracklistener(call)
 
-  const ontrack = (_evt: RTCTrackEvent) => {
+  const ontrack = () => {
     if (activecall !== call) {
       return
     }
@@ -360,7 +351,7 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
   }
   wirecalltrackbridge(call, helperpeerid)
   scheduletracksynctimeout(call, helperpeerid)
-  call.on('stream', (_stream) => {
+  call.on('stream', () => {
     if (activecall !== call) {
       return
     }
@@ -384,15 +375,13 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
     }
     const player = registerreadplayer()
     const message =
-      err && typeof err === 'object' && 'message' in err
-        ? String((err as { message?: unknown }).message ?? err)
-        : String(err)
-    apierror(
-      SOFTWARE,
-      player,
-      'media',
-      `call ${helperpeerid}: ${message}`,
-    )
+      err &&
+      typeof err === 'object' &&
+      'message' in err &&
+      typeof (err as { message: unknown }).message === 'string'
+        ? (err as { message: string }).message
+        : 'unknown error'
+    apierror(SOFTWARE, player, 'media', `call ${helperpeerid}: ${message}`)
     clearpctracklistener(call)
     teardownactivecall()
     const layer = mediaqueuereadplayerlayerstate()
@@ -417,8 +406,9 @@ function teardownactivecall() {
 }
 
 function headedtrace(message: string) {
-  const fn = (globalThis as unknown as { __mqheadedlog?: (msg: string) => void })
-    .__mqheadedlog
+  const fn = (
+    globalThis as unknown as { __mqheadedlog?: (msg: string) => void }
+  ).__mqheadedlog
   if (typeof fn === 'function') {
     fn(message)
   }
@@ -447,7 +437,9 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
   const call = netterminalmediacall(trimmed, playerofferstream(), metadata)
   if (!ispresent(call)) {
     mediaqueuesetplayerlayerpending(true)
-    headedtrace(`tryplayerconnect failed netterminalmediacall helper=${trimmed}`)
+    headedtrace(
+      `tryplayerconnect failed netterminalmediacall helper=${trimmed}`,
+    )
     apierror(
       SOFTWARE,
       player,
@@ -477,8 +469,7 @@ export function mediaqueueconnectifonboard(
 ) {
   mediaqueuebootstrap()
   mediaqueueensurevideosink()
-  const trimmed =
-    helperpeerid.trim() || mediaqueuereadhelperpeerid().trim()
+  const trimmed = helperpeerid.trim() || mediaqueuereadhelperpeerid().trim()
   const board = readconnectboard(gadgetboard)
   if (!trimmed || !board) {
     if (

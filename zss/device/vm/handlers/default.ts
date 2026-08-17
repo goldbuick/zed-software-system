@@ -229,7 +229,14 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       break
     }
     case 'queue': {
-      const managepaths = new Set(['menu', 'bind', 'skip', 'clear', 'stop', 'limit'])
+      const managepaths = new Set([
+        'menu',
+        'bind',
+        'skip',
+        'clear',
+        'stop',
+        'limit',
+      ])
       if (
         managepaths.has(path) &&
         !mediarequiremanageonvm(message.player, 'queue')

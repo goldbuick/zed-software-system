@@ -16,7 +16,10 @@ const QUEUE_RESERVED = new Set(['skip', 'limit', 'clear', 'stop'])
 export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
     'queue',
-    [ARG_TYPE.MAYBE_NAME, 'Media queue admin menu, bind helper, or manage queue'],
+    [
+      ARG_TYPE.MAYBE_NAME,
+      'Media queue admin menu, bind helper, or manage queue',
+    ],
     (_, words) => {
       const [first, iii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus

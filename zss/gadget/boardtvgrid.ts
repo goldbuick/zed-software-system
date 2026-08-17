@@ -1,9 +1,6 @@
-import {
-  BOARD_TV_COLS,
-  BOARD_TV_ROWS,
-} from 'zss/feature/mediaqueue/constants'
-import { buildboxframe } from 'zss/gadget/boxframe'
+import { BOARD_TV_COLS, BOARD_TV_ROWS } from 'zss/feature/mediaqueue/constants'
 import { boardtvmarqueewindow } from 'zss/gadget/boardtvmarqueewindow'
+import { buildboxframe } from 'zss/gadget/boxframe'
 import { type TILE_DATA, writetile } from 'zss/gadget/tiles'
 import { COLOR } from 'zss/words/types'
 
@@ -23,10 +20,7 @@ export function initboardtvgrid(): {
   for (let y = 0; y < BOARD_TV_ROWS; ++y) {
     for (let x = 0; x < BOARD_TV_COLS; ++x) {
       const isborder =
-        x === 0 ||
-        x === BOARD_TV_COLS - 1 ||
-        y === 0 ||
-        y === BOARD_TV_ROWS - 1
+        x === 0 || x === BOARD_TV_COLS - 1 || y === 0 || y === BOARD_TV_ROWS - 1
       const i = x + y * BOARD_TV_COLS
       frame.bg[i] = COLOR.BLACK
       if (!isborder) {
@@ -65,8 +59,7 @@ export function boardtvvideorect(
   const width = innercols * drawwidth
   const height = count * drawheight
   const centerx = 0
-  const centery =
-    -tvdrawheight * 0.5 + start * drawheight + height * 0.5
+  const centery = -tvdrawheight * 0.5 + start * drawheight + height * 0.5
   return { width, height, centerx, centery }
 }
 

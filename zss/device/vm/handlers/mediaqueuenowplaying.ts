@@ -6,7 +6,10 @@ import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
-export function handlemediaqueuenowplaying(_vm: DEVICE, message: MESSAGE): void {
+export function handlemediaqueuenowplaying(
+  _vm: DEVICE,
+  message: MESSAGE,
+): void {
   void _vm
   const data = message.data as
     | { boardid?: unknown; title?: unknown; action?: unknown }

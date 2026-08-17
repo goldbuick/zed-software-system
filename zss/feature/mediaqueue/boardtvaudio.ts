@@ -85,9 +85,12 @@ function playremotevideo(video: HTMLVideoElement) {
       }
       const player = registerreadplayer()
       const message =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message?: unknown }).message ?? err)
-          : String(err)
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as { message: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : 'unknown error'
       apilog(SOFTWARE, player, `media board TV play blocked: ${message}`)
     })
 }

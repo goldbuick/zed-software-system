@@ -64,13 +64,7 @@ const COVER_ART_VIDEO_CODECS = new Set([
   'rawvideo',
 ])
 
-const AUDIO_FILE_EXTENSIONS = new Set([
-  '.m4a',
-  '.mp3',
-  '.opus',
-  '.ogg',
-  '.aac',
-])
+const AUDIO_FILE_EXTENSIONS = new Set(['.m4a', '.mp3', '.opus', '.ogg', '.aac'])
 
 type MQ_RESOLVED_BINS = {
   ytdlp: string

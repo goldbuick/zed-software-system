@@ -8,19 +8,20 @@
  * Media URL: defaults to YouTube (yt-dlp). Override with MQ_TVSINK_MEDIA_URL.
  * Fast local loop: MQ_TVSINK_USE_FIXTURE=1 (skips yt-dlp, uses ops/fixtures/media/test.mp4).
  */
-import { spawn, type ChildProcess } from 'node:child_process'
-import { createServer, type Server } from 'node:http'
+/* eslint-disable no-console -- headed proof script progress logs */
+import { type ChildProcess, spawn } from 'node:child_process'
 import fs from 'node:fs'
+import { type Server, createServer } from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 
 import type { Page } from '@playwright/test'
 import { waittvsink } from 'ops/lib/mediaqueue-parity/tvsink-assert'
-import type { HeadedPlaywrightContext } from 'tasks/lib/playwright/runheadedscript'
 import {
   PARITY_RENDER_SCRIPT_TIMEOUT_MS,
   withscripttimeout,
 } from 'tasks/lib/parity/parity-timeouts'
+import type { HeadedPlaywrightContext } from 'tasks/lib/playwright/runheadedscript'
 
 const HELPER_SPAWN_TIMEOUT_MS = 180_000
 const HOST_BIND_TIMEOUT_MS = 120_000
@@ -30,7 +31,6 @@ const SCRIPT_TIMEOUT_MS = 300_000
 const YOUTUBE_DOWNLOAD_TIMEOUT_MS = 600_000
 const BOOT_WAIT_MS = 15_000
 const JOIN_HOST_READY_MS = 45_000
-const BOOK_FIXTURE_PATH = '/fixtures/books/example-coolregionsbow.book.json'
 const DEFAULT_TVSINK_MEDIA_URL =
   'https://youtu.be/uB1D9wWxd2w?si=BYrXxUwAIFp2l7Q7'
 
@@ -159,7 +159,7 @@ async function readtapecopy(page: Page, root: string): Promise<string> {
       )
       const logs = useTape.getState().terminal.logs ?? []
       return logs
-        .map((row) => tokenizeandstriptextformat(String(row)))
+        .map((row: unknown) => tokenizeandstriptextformat(String(row)))
         .join('\n')
     } catch {
       return ''
@@ -205,7 +205,7 @@ async function waitforplayeronboard(
           )
           const logs = useTape.getState().terminal.logs ?? []
           const buffer = logs
-            .map((row) => tokenizeandstriptextformat(String(row)))
+            .map((row: unknown) => tokenizeandstriptextformat(String(row)))
             .join('\n')
             .toLowerCase()
           if (buffer.includes(`login from ${player.toLowerCase()}`)) {
@@ -282,12 +282,7 @@ async function bindqueue(
   await sleep(2000)
 }
 
-async function addmediaurl(
-  page: Page,
-  root: string,
-  playerid: string,
-  url: string,
-) {
+async function addmediaurl(page: Page, root: string, url: string) {
   const trimmed = url.trim()
   await runcli(page, `#media "${trimmed}"`, root)
   console.log(`addmediaurl ok: ${trimmed}`)
@@ -500,7 +495,9 @@ function unregisterhelperpid(pid: number | undefined) {
   if (!pid) {
     return
   }
-  writehelperpidregistry(readhelperpidregistry().filter((entry) => entry !== pid))
+  writehelperpidregistry(
+    readhelperpidregistry().filter((entry) => entry !== pid),
+  )
 }
 
 function helperelectronbin(root: string): string {
@@ -677,11 +674,11 @@ async function startjoinhost(page: Page, root: string) {
 
 function parsejoinurl(raw: string, baseurl: string): string {
   const trimmed = raw.trim()
-  const absolute = trimmed.match(/https?:\/\/[^\s]+\/join\/#[A-Za-z0-9-]+/)
+  const absolute = /https?:\/\/[^\s]+\/join\/#[A-Za-z0-9-]+/.exec(trimmed)
   if (absolute) {
     return absolute[0]
   }
-  const relative = trimmed.match(/\/join\/#[A-Za-z0-9-]+/)
+  const relative = /\/join\/#[A-Za-z0-9-]+/.exec(trimmed)
   if (relative) {
     return `${new URL(baseurl).origin}${relative[0]}`
   }
@@ -709,7 +706,7 @@ async function computejoinurl(
         return ''
       }
       const netid = await storagereadnetid()
-      const stickypeerid = (netid ?? '') || player
+      const stickypeerid = netid && netid.length > 0 ? netid : player
       return createinfohash(stickypeerid)
     } catch (err) {
       return err instanceof Error ? err.message : String(err)
@@ -791,8 +788,10 @@ async function runflow(ctx: HeadedPlaywrightContext) {
       helperenv.MQ_DEV_PLAYBACK_PATH = fixturepath
     } else {
       delete helperenv.MQ_DEV_PLAYBACK_PATH
+      const cookiesbrowser =
+        process.env.MQ_COOKIES_BROWSER?.trim().toLowerCase()
       helperenv.MQ_COOKIES_BROWSER =
-        process.env.MQ_COOKIES_BROWSER?.trim().toLowerCase() || 'chrome'
+        cookiesbrowser && cookiesbrowser.length > 0 ? cookiesbrowser : 'chrome'
       console.log(`youtube cookies=${helperenv.MQ_COOKIES_BROWSER}`)
     }
     helperenv.MQ_STATUS_TEXT_FILE = statusfile
@@ -826,10 +825,9 @@ async function runflow(ctx: HeadedPlaywrightContext) {
     const browser = ctx.browser
     const hostcontext = await browser.newContext({ ignoreHTTPSErrors: true })
     await hostcontext.grantPermissions(['clipboard-read', 'clipboard-write'])
-    await hostcontext.grantPermissions(
-      ['camera', 'microphone'],
-      { origin: ctx.baseurl },
-    )
+    await hostcontext.grantPermissions(['camera', 'microphone'], {
+      origin: ctx.baseurl,
+    })
     await hostcontext.exposeFunction('__mqheadedlog', (msg: string) => {
       console.log(`cafe: ${msg}`)
     })
@@ -897,10 +895,7 @@ async function runflow(ctx: HeadedPlaywrightContext) {
         await addmediaurl(
           hostpage,
           ctx.root,
-          boot.bookplayer,
-          mediasource.usedevfixture
-            ? fixtureserver!.url
-            : mediasource.mediaurl,
+          mediasource.usedevfixture ? fixtureserver!.url : mediasource.mediaurl,
         )
         await pollplayingstatus(statusfile, mediasource.downloadtimeoutms)
         const statusaftermedia = fs.existsSync(statusfile)
@@ -908,14 +903,14 @@ async function runflow(ctx: HeadedPlaywrightContext) {
           : ''
         console.log(`helper status after media=${statusaftermedia}`)
         try {
-          await pollfile(
-            statusfile,
-            60_000,
-            (text) => /playing\|[1-9]/.test(text),
+          await pollfile(statusfile, 60_000, (text) =>
+            /playing\|[1-9]/.test(text),
           )
           console.log('helper has player stream connection')
         } catch {
-          console.log('helper still reports 0 player(s) before host_stream assert')
+          console.log(
+            'helper still reports 0 player(s) before host_stream assert',
+          )
         }
         await focusgame(hostpage)
         await hostpage.keyboard.press('ArrowUp')
@@ -935,7 +930,10 @@ async function runflow(ctx: HeadedPlaywrightContext) {
         const joincontext = await browser.newContext({
           ignoreHTTPSErrors: true,
         })
-        await joincontext.grantPermissions(['clipboard-read', 'clipboard-write'])
+        await joincontext.grantPermissions([
+          'clipboard-read',
+          'clipboard-write',
+        ])
         const joinpage = await joincontext.newPage()
         joinpage.setDefaultTimeout(PARITY_RENDER_SCRIPT_TIMEOUT_MS)
         await joinpage.goto(joinmatch, {
@@ -945,10 +943,8 @@ async function runflow(ctx: HeadedPlaywrightContext) {
         await joinpage.waitForSelector('#frame', { timeout: 60_000 })
         await sleep(BOOT_WAIT_MS)
 
-        await pollfile(
-          statusfile,
-          JOIN_CONNECT_TIMEOUT_MS,
-          (text) => text.includes('2 player'),
+        await pollfile(statusfile, JOIN_CONNECT_TIMEOUT_MS, (text) =>
+          text.includes('2 player'),
         )
 
         console.log('stage=join_stream')

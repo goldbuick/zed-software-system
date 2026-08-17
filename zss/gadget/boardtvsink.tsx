@@ -1,37 +1,37 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { DoubleSide, Euler, VideoTexture } from 'three'
-import type { StoreApi } from 'zustand'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueuehasvideo,
   useBoardTvVisible,
 } from 'zss/feature/mediaqueue/boardtvvisible'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
-  type BOARD_TV_LAYOUT,
   BOARD_TV_COLS,
+  type BOARD_TV_LAYOUT,
   BOARD_TV_ROWS,
-  boardtvlayout,
   boardtvisupright,
   boardtvlayerz,
+  boardtvlayout,
 } from 'zss/feature/mediaqueue/constants'
-import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   boardtvvideofit,
   boardtvvideorect,
   drawboardtvmarqueerow,
   initboardtvgrid,
 } from 'zss/gadget/boardtvgrid'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
+import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { updateTexture } from 'zss/gadget/display/textures'
+import { useMedia } from 'zss/gadget/media'
 import { type TILE_DATA, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
-import { useMedia } from 'zss/gadget/media'
-import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { isstring } from 'zss/mapping/types'
+import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { SCROLL_SPEED } from 'zss/screens/scroll/marqueebuffer'
+import type { StoreApi } from 'zustand'
 
 /** Upright modes rotate the board plane onto the world XZ wall plane. */
 const BOARD_TV_UPRIGHT_ROTATION = new Euler(-Math.PI * 0.5, 0, 0)
@@ -104,7 +104,9 @@ function BoardTvFace({
   const lifty = upright ? -tvdrawheight * 0.5 : 0
   return (
     <group rotation-z={spin}>
-      <group rotation={upright ? BOARD_TV_UPRIGHT_ROTATION : BOARD_TV_FLAT_ROTATION}>
+      <group
+        rotation={upright ? BOARD_TV_UPRIGHT_ROTATION : BOARD_TV_FLAT_ROTATION}
+      >
         <group position={[0, lifty, depth]}>
           <group position={[-tvdrawwidth * 0.5, -tvdrawheight * 0.5, 0]}>
             <TilesData store={gridstore}>

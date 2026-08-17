@@ -465,13 +465,7 @@ export function memorycanruncommand(player: string, command: string): boolean {
     )
     return false
   }
-  apierror(
-    SOFTWARE,
-    player,
-    'permissions',
-    `(deny)`,
-    `${family} - ${command}`,
-  )
+  apierror(SOFTWARE, player, 'permissions', `(deny)`, `${family} - ${command}`)
   return false
 }
 

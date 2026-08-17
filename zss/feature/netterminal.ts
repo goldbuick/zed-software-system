@@ -271,11 +271,20 @@ function registernetterminalunload() {
  * with no explanation of what went wrong.
  */
 function peererrortext(err: unknown): string {
-  if (!ispresent(err) || typeof err !== 'object') {
-    return String(err)
+  if (typeof err === 'string') {
+    return err
   }
-  const type = String((err as { type?: unknown }).type ?? 'error')
-  const message = String((err as { message?: unknown }).message ?? '').trim()
+  if (!ispresent(err) || typeof err !== 'object') {
+    return typeof err === 'number' ||
+      typeof err === 'boolean' ||
+      typeof err === 'bigint'
+      ? String(err)
+      : 'error'
+  }
+  const typevalue = (err as { type?: unknown }).type
+  const type = typeof typevalue === 'string' ? typevalue : 'error'
+  const messagevalue = (err as { message?: unknown }).message
+  const message = typeof messagevalue === 'string' ? messagevalue.trim() : ''
   return message ? `${type}: ${message}` : type
 }
 

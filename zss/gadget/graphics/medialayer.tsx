@@ -7,13 +7,13 @@ import {
   mediaqueuereadhelperpeerid,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
-  mediaqueuelayerconnectaction,
-  mediaqueuereadplayerlayerstate,
-} from 'zss/feature/mediaqueue/playerlayerstate'
-import {
   mediaqueueconnectifonboard,
   mediaqueuedisconnect,
 } from 'zss/feature/mediaqueue/playerconnect'
+import {
+  mediaqueuelayerconnectaction,
+  mediaqueuereadplayerlayerstate,
+} from 'zss/feature/mediaqueue/playerlayerstate'
 import { PALETTE } from 'zss/feature/palette'
 import { createbitmapfromarray } from 'zss/gadget/data/bitmap'
 import {

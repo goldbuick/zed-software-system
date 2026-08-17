@@ -3,11 +3,6 @@ import { apierror, apilog, vmmediaqueueboard, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
-  mediaqueueconnectifonboard,
-  mediaqueuedisconnect,
-  mediaqueueretryplayerconnect,
-} from 'zss/feature/mediaqueue/playerconnect'
-import {
   mediaqueueclearlistenstate,
   mediaqueuehelperconnected,
   mediaqueueislistening,
@@ -21,6 +16,15 @@ import {
   mediaqueuesetlistenplayer,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
+  mediaqueueformatnowplayinglabel,
+  mediaqueuesyncnowplayingboard,
+} from 'zss/feature/mediaqueue/nowplayinglabel'
+import {
+  mediaqueueconnectifonboard,
+  mediaqueuedisconnect,
+  mediaqueueretryplayerconnect,
+} from 'zss/feature/mediaqueue/playerconnect'
+import {
   type MEDIAQUEUE_MESSAGE,
   MEDIAQUEUE_PROTOCOL,
   ismediaqueuemessage,
@@ -30,10 +34,6 @@ import {
   mediaqueuereadstate,
   mediaqueueshiftcurrent,
 } from 'zss/feature/mediaqueue/queue'
-import {
-  mediaqueueformatnowplayinglabel,
-  mediaqueuesyncnowplayingboard,
-} from 'zss/feature/mediaqueue/nowplayinglabel'
 import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
@@ -134,10 +134,7 @@ function mediaqueuesyncnowplayingfromstatus(detail?: string) {
   if (!player || !boardid) {
     return
   }
-  const label = mediaqueueformatnowplayinglabel(
-    detail,
-    mediaqueuecurrenturl(),
-  )
+  const label = mediaqueueformatnowplayinglabel(detail, mediaqueuecurrenturl())
   if (!label) {
     return
   }
@@ -233,11 +230,7 @@ function handlehelperdata(data: unknown) {
             mediaqueueadvanceafterplayback()
           }
         } else if (data.status === 'call-stopped') {
-          apilog(
-            SOFTWARE,
-            player,
-            'media: call stopped (queue kept)',
-          )
+          apilog(SOFTWARE, player, 'media: call stopped (queue kept)')
         } else if (data.status === 'playing') {
           mediaqueueretryplayerconnect()
           apilog(SOFTWARE, player, `media: playing${detail}`)
@@ -282,9 +275,6 @@ function wirehelperconnection(conn: DataConnection) {
     }
   })
 }
-
-/** Wire board TV sink; players connect to helper via MEDIA layer. */
-export { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 
 /**
  * Connect to the desktop helper's Peer id and bind media to the player's
