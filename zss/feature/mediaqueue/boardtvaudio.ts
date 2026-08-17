@@ -6,11 +6,14 @@ import {
   storagereadconfigstring,
   storagewriteconfigstring,
 } from 'zss/feature/storage'
+import { WASM_DEFAULT_MAIN_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
+import { readmainvolumeconfig } from 'zss/feature/synth/volumeconfig'
 import { isnumber, ispresent } from 'zss/mapping/types'
 
 let remotevideo: HTMLVideoElement | undefined
 let gesturehandler: (() => void) | undefined
 let mediavolume = MEDIAQUEUE_DEFAULT_TV_VOLUME
+let mainvolume = WASM_DEFAULT_MAIN_VOLUME
 
 function parsemediavol(raw: string | undefined): number | undefined {
   if (raw === undefined || raw.trim() === '') {
@@ -24,14 +27,14 @@ function parsemediavol(raw: string | undefined): number | undefined {
 }
 
 function mediaqueueaudiogain(): number {
-  return Math.max(0, Math.min(1, mediavolume / 100))
+  return Math.max(0, Math.min(1, (mediavolume / 100) * (mainvolume / 100)))
 }
 
 function applyremotevideovolume() {
   mediaqueueunlockremotevideo()
 }
 
-/** Unmute board TV, enable audio tracks, apply #mediavol gain. */
+/** Unmute board TV, enable audio tracks, apply #mediavol x #vol main gain. */
 export function mediaqueueunlockremotevideo(video?: HTMLVideoElement) {
   const target = video ?? remotevideo
   if (!ispresent(target)) {
@@ -132,7 +135,7 @@ function unwireaudiogestureretry() {
   gesturehandler = undefined
 }
 
-/** Board TV speaker level (#mediavol, 0-100). Not synth #vol. */
+/** Board TV speaker trim (#mediavol, 0-100). Scaled by #vol main. */
 export function mediaqueuesetmediavolume(volume: number) {
   mediavolume = volume
   applyremotevideovolume()
@@ -140,6 +143,16 @@ export function mediaqueuesetmediavolume(volume: number) {
 
 export function mediaqueuereadmediavolume(): number {
   return mediavolume
+}
+
+/** CLI #vol main scale for board TV (0-100). */
+export function mediaqueuesetmainvolume(volume: number) {
+  mainvolume = volume
+  applyremotevideovolume()
+}
+
+export function mediaqueuereadmainvolume(): number {
+  return mainvolume
 }
 
 export function storemediavolconfig(volume: number) {
@@ -150,6 +163,11 @@ export async function restoremediavolfromstorage() {
   const raw = await storagereadconfigstring('mediavol')
   const volume = parsemediavol(raw) ?? MEDIAQUEUE_DEFAULT_TV_VOLUME
   mediaqueuesetmediavolume(volume)
+}
+
+export async function restoremainvolfromstorage() {
+  const volume = await readmainvolumeconfig()
+  mediaqueuesetmainvolume(volume)
 }
 
 export function mediaqueueclearremotevideo() {

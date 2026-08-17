@@ -196,9 +196,11 @@ All firmware commands and their descriptions. Commands are available depending o
 | `ttsengine` | List TTS engines (no args) or set engine and config |
 | `tts` | Text with voice (or clear queue) |
 | `ttsqueue` | TTS phrase |
-| `vol` | Main volume |
+| `vol` | Main volume (scales play, bgplay, TTS, media) |
+| `playvol` | Play volume |
 | `bgvol` | Bgplay volume |
 | `ttsvol` | TTS volume |
+| `mediavol` | Board TV volume |
 | `play` | Music notes |
 | `bgplay` | #play but for sound effects |
 | `bgplayon64n` | Bgplay on 64n |

@@ -31,8 +31,10 @@ title: audio.ts
 | `play` | [buffer] | Play audio buffer (can reference chip variable) |
 | `bgplay` | [buffer] | Play background audio |
 | `bgplayon64n` … `bgplayon1n` | [buffer] | Same as `bgplay` but snaps to the next `@subdiv` on the synth boot beat grid (136 BPM) |
-| `vol` | `volume` | Set foreground playback volume |
+| `vol` | `volume` | Set main volume (scales all audio) |
+| `playvol` | `volume` | Set foreground play volume |
 | `bgvol` | `volume` | Set background playback volume |
+| `mediavol` | `volume` | Set board TV volume |
 
 ### Synthesis
 

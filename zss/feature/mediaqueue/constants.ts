@@ -1,6 +1,6 @@
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 
-/** Default board TV speaker level (0-100); separate from #vol / synth play. */
+/** Default board TV speaker trim (0-100); scaled by #vol main. */
 export const MEDIAQUEUE_DEFAULT_TV_VOLUME = 25
 
 /** useMedia.screen key for board TV remote stream. */

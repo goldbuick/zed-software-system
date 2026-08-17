@@ -20,10 +20,12 @@ export type MQ_DOWNLOAD_RESULT = {
   title: string
   audioOnly: boolean
   duration: number
+  artwork: string
 }
 
 type MQ_PLAYBACK_OPTS = {
   audioOnly?: boolean
+  artwork?: string
 }
 
 type MQ_KEEPALIVE_VIDEO = HTMLVideoElement & {
@@ -462,7 +464,10 @@ async function startvideoplayback(path: string): Promise<MQ_PLAYBACK_RESULT> {
   }
 }
 
-async function startaudiovisualizer(path: string): Promise<MQ_PLAYBACK_RESULT> {
+async function startaudiovisualizer(
+  path: string,
+  artwork: string,
+): Promise<MQ_PLAYBACK_RESULT> {
   if (playbackpath !== path || !playbackaudioonly) {
     stopvideo()
     playbackpath = path
@@ -471,6 +476,7 @@ async function startaudiovisualizer(path: string): Promise<MQ_PLAYBACK_RESULT> {
   const result = await start(path, {
     invoke: invoke,
     tobytes: tobytes,
+    artwork: artwork,
   })
   playbackactive = true
   bindaudiokeepalive(result.audio)
@@ -492,8 +498,9 @@ export async function startplayback(
     throw new Error('missing download path')
   }
   const audioonly = Boolean(opts && opts.audioOnly)
+  const artwork = opts && opts.artwork ? String(opts.artwork).trim() : ''
   if (audioonly) {
-    return startaudiovisualizer(path)
+    return startaudiovisualizer(path, artwork)
   }
   return startvideoplayback(path)
 }

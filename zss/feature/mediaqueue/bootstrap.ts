@@ -1,5 +1,8 @@
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
-import { restoremediavolfromstorage } from 'zss/feature/mediaqueue/boardtvaudio'
+import {
+  restoremainvolfromstorage,
+  restoremediavolfromstorage,
+} from 'zss/feature/mediaqueue/boardtvaudio'
 import { netterminalregisterpeeropenhandler } from 'zss/feature/netterminal'
 
 let bootstrapped = false
@@ -9,6 +12,7 @@ export function mediaqueuebootstrap() {
     return
   }
   bootstrapped = true
+  void restoremainvolfromstorage()
   void restoremediavolfromstorage()
   mediaqueueensurevideosink()
 }

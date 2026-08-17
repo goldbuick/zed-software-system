@@ -131,6 +131,7 @@ export function initdaisydrumsab(maxi: SabEngine, strikes?: number[]) {
 }
 
 export type DAISY_SYNTH_HOOKS = {
+  setmainvolume?: (volume: number) => void
   setplayvolume?: (volume: number) => void
   setbgplayvolume?: (volume: number) => void
   setttsvolume?: (volume: number) => void
@@ -508,6 +509,10 @@ export function createdaisysynth(
     pacercount = 0
   }
 
+  function setmainvolume(volume: number) {
+    hooks.setmainvolume?.(volume)
+  }
+
   function setplayvolume(volume: number) {
     playvolume = volume
     hooks.setplayvolume?.(volume)
@@ -614,6 +619,7 @@ export function createdaisysynth(
     addplay,
     addbgplay,
     stopplay,
+    setmainvolume,
     setplayvolume,
     setbgplayvolume,
     setttsvolume,

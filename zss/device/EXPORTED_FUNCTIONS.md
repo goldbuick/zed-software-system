@@ -187,7 +187,8 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 ### Playback
 - `synthplay(device, player, board, buffer)` - Play audio buffer on board
 - `synthbgplay(device, player, board, buffer, quantize)` - Play background audio
-- `synthplayvolume(device, player, board, volume)` - Set playback volume
+- `synthmainvolume(device, player, board, volume)` - Set main volume
+- `synthplayvolume(device, player, board, volume)` - Set play bus volume
 - `synthbgplayvolume(device, player, board, volume)` - Set background volume
 
 ### Text-to-Speech (TTS)
@@ -233,6 +234,8 @@ Functions for network operations, streaming, and external service integration.
 - `netterminalpeerroster(device, player, entries)` - Host broadcasts join clique roster `[{ player, peerid }, ...]` (`netterminal:peerroster`)
 
 ### Peer Connection
+- `bridgemainvol(device, player, volume)` - Apply CLI #vol main scale to board TV
+- `bridgemediavol(device, player, volume)` - Set board TV #mediavol trim
 - `bridgestart(device, player, hidden)` - Start peer server
 - `bridgetab(device, player, hidden)` - Open join tab
 - `bridgetabopen(device, player)` - Open join URL in new tab

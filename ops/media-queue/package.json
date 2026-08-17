@@ -9,16 +9,15 @@
   "license": "MIT",
   "scripts": {
     "fetch-binaries": "tsx scripts/fetch-binaries.ts",
-    "fetch-peerjs": "tsx scripts/fetch-peerjs.ts",
     "verify-download": "tsx scripts/verify-download.ts",
     "test-prep-cache": "tsx scripts/test-prep-cache.ts",
     "stage-electron-resources": "tsx scripts/stage-electron-resources.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.web.json --noEmit",
     "lint": "cd ../.. && ./node_modules/.bin/eslint 'ops/media-queue/**/*.ts' 'ops/media-queue/**/*.d.ts' --report-unused-disable-directives --max-warnings 0",
     "build": "electron-vite build",
-    "prestart": "tsx scripts/fetch-peerjs.ts && tsx scripts/fetch-binaries.ts && tsx scripts/stage-icon.ts && tsx scripts/stage-dev-app.ts",
+    "prestart": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-icon.ts && tsx scripts/stage-dev-app.ts",
     "start": "tsx scripts/run-electron.ts",
-    "predist": "tsx scripts/fetch-peerjs.ts && tsx scripts/fetch-binaries.ts && tsx scripts/stage-electron-resources.ts && tsx scripts/stage-icon.ts && electron-vite build",
+    "predist": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-electron-resources.ts && tsx scripts/stage-icon.ts && electron-vite build",
     "dist": "tsx scripts/run-builder.ts",
     "dist:mac": "tsx scripts/run-builder.ts --mac",
     "dist:win": "tsx scripts/run-builder.ts --win"

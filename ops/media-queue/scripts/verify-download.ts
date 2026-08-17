@@ -21,6 +21,7 @@ import {
   FFMPEG_POST_ARGS_TRANSCODE,
   YTDLP_AUDIO_FORMAT,
   YTDLP_FORMAT,
+  resolveartworkpath,
 } from '../src/main/lib/download'
 
 import { MQ_ROOT } from './lib/paths'
@@ -192,6 +193,9 @@ function download(
   }
   args.push(
     '--no-playlist',
+    '--write-thumbnail',
+    '--convert-thumbnails',
+    'jpg',
     '--ffmpeg-location',
     ffmpegdir,
     '-o',
@@ -310,6 +314,12 @@ async function main() {
       process.exit(0)
     }
     if (probe.hasAudio) {
+      const artwork = resolveartworkpath(result.outpath)
+      if (artwork) {
+        console.log(`artwork ${artwork} (${statSync(artwork).size} bytes)`)
+      } else {
+        console.log('artwork missing')
+      }
       console.log('mode audio-only')
       process.exit(0)
     }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' blob:; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost"
     />
     <title>zed.cafe Media Queue</title>
     <link rel="icon" type="image/png" href="./icon.png" />
@@ -68,7 +68,6 @@
         Playback auto-starts on the first URL via yt-dlp download.
       </div>
     </div>
-    <script src="./peerjs.min.js"></script>
     <script type="module" src="./app.ts"></script>
   </body>
 </html>

@@ -144,6 +144,14 @@ const synthdevice = createdevice('synth', [], (message) => {
         }
       }
       break
+    case 'mainvolume':
+      if (isarray(message.data) && backend) {
+        const [, volume] = message.data as [string, number]
+        if (isnumber(volume)) {
+          backend.setmainvolume(volume)
+        }
+      }
+      break
     case 'bgplayvolume':
       if (isarray(message.data) && backend) {
         const [, volume] = message.data as [string, number]

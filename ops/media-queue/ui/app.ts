@@ -1,4 +1,4 @@
-import type { DataConnection, MediaConnection } from 'peerjs'
+import Peer, { DataConnection, MediaConnection } from 'peerjs'
 
 import type {
   MQ_DEV_CONFIG,
@@ -83,7 +83,7 @@ const els = {
   frame: document.querySelector<HTMLElement>('.frame.mq'),
 }
 
-let peer: MQPeer | null = null
+let peer: Peer | null = null
 let dataconnection: DataConnection | null = null
 let mediastream: MediaStream | null = null
 const playercalls = new Map<string, MQ_PLAYER_CALL>()
@@ -894,6 +894,7 @@ async function startplaybackandcall(url: string) {
         sendstatus('buffering', label)
         playback = await startplayback(path, {
           audioOnly: Boolean(ready.audioOnly),
+          artwork: ready.artwork ? String(ready.artwork).trim() : '',
         })
         mediastream = playback.stream
       } else {
@@ -914,6 +915,10 @@ async function startplaybackandcall(url: string) {
         sendstatus('buffering', label)
         playback = await startplayback(path, {
           audioOnly: Boolean(downloaded && downloaded.audioOnly),
+          artwork:
+            downloaded && downloaded.artwork
+              ? String(downloaded.artwork).trim()
+              : '',
         })
         mediastream = playback.stream
       }

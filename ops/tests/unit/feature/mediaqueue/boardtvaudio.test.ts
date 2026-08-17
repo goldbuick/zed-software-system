@@ -12,12 +12,15 @@ import { MEDIAQUEUE_DEFAULT_TV_VOLUME } from 'zss/feature/mediaqueue/constants'
 import {
   mediaqueuebindremotevideo,
   mediaqueueclearremotevideo,
+  mediaqueuereadmainvolume,
   mediaqueuereadmediavolume,
   mediaqueueresumeaudio,
+  mediaqueuesetmainvolume,
   mediaqueuesetmediavolume,
   restoremediavolfromstorage,
   storemediavolconfig,
 } from 'zss/feature/mediaqueue/boardtvaudio'
+import { WASM_DEFAULT_MAIN_VOLUME } from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import {
   storagereadconfigstring,
   storagewriteconfigstring,
@@ -41,15 +44,17 @@ function playblockedlogs(): string[] {
 describe('board TV audio volume', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mediaqueuesetmainvolume(WASM_DEFAULT_MAIN_VOLUME)
     mediaqueuesetmediavolume(MEDIAQUEUE_DEFAULT_TV_VOLUME)
     mediaqueueclearremotevideo()
     HTMLMediaElement.prototype.play = jest.fn().mockResolvedValue(undefined)
     HTMLMediaElement.prototype.pause = jest.fn()
   })
 
-  it('defaults board TV volume below synth play volume', () => {
-    expect(MEDIAQUEUE_DEFAULT_TV_VOLUME).toBeLessThan(50)
+  it('defaults board TV volume below synth play trim', () => {
+    expect(MEDIAQUEUE_DEFAULT_TV_VOLUME).toBeLessThan(90)
     expect(mediaqueuereadmediavolume()).toBe(25)
+    expect(mediaqueuereadmainvolume()).toBe(50)
   })
 
   it('storemediavolconfig writes config_mediavol', () => {
@@ -71,12 +76,24 @@ describe('board TV audio volume', () => {
 
   it('mediaqueuesetmediavolume updates active remote video gain', () => {
     const video = document.createElement('video')
+    mediaqueuesetmainvolume(100)
     mediaqueuebindremotevideo(video)
     mediaqueuesetmediavolume(50)
     expect(video.volume).toBe(0.5)
     expect(video.muted).toBe(false)
     mediaqueuesetmediavolume(0)
     expect(video.volume).toBe(0)
+    mediaqueueclearremotevideo()
+  })
+
+  it('main volume scales board TV gain with mediavol', () => {
+    const video = document.createElement('video')
+    mediaqueuesetmainvolume(50)
+    mediaqueuesetmediavolume(50)
+    mediaqueuebindremotevideo(video)
+    expect(video.volume).toBe(0.25)
+    mediaqueuesetmainvolume(100)
+    expect(video.volume).toBe(0.5)
     mediaqueueclearremotevideo()
   })
 })

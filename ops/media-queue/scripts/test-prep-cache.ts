@@ -23,12 +23,16 @@ function main() {
   const mgr = new DownloadManager(root, work)
 
   const keepa = path.join(work, 'mq-keep-a.mp4')
+  const keepaart = path.join(work, 'mq-keep-a.jpg')
   const keepb = path.join(work, 'mq-keep-b.mp4')
+  const keepbart = path.join(work, 'mq-keep-b.jpg')
   const stray = path.join(work, 'mq-stray.mp4')
   const partial = path.join(work, 'mq-next.part')
 
   writeFileSync(keepa, 'video-a')
+  writeFileSync(keepaart, 'art-a')
   writeFileSync(keepb, 'video-b')
+  writeFileSync(keepbart, 'art-b')
   writeFileSync(stray, 'stray')
   writeFileSync(partial, 'partial')
 
@@ -36,14 +40,16 @@ function main() {
     path: keepa,
     title: 'a',
     audioOnly: false,
+    artwork: keepaart,
   })
   mgr.seedregistryready('https://b.example', {
     path: keepb,
     title: 'b',
     audioOnly: false,
+    artwork: keepbart,
   })
 
-  removepartialfiles(work, [keepa, keepb, stray])
+  removepartialfiles(work, [keepa, keepb, keepaart, keepbart, stray])
   assert(existsSync(keepa), 'keepa survives partial cleanup')
   assert(existsSync(keepb), 'keepb survives partial cleanup')
   assert(
@@ -57,12 +63,18 @@ function main() {
   assert(existsSync(keepb), 'canceldownload keeps registry file b')
 
   const pruned = mgr.prunequeuecache(['https://b.example'], 'https://b.example')
-  assert(pruned.deletedCount === 1, 'prune removes one shifted-off url')
+  assert(pruned.deletedCount === 2, 'prune removes media and artwork for url a')
   assert(!existsSync(keepa), 'pruned file a deleted')
+  assert(!existsSync(keepaart), 'pruned artwork a deleted')
   assert(existsSync(keepb), 'pruned keeps still-queued url b')
+  assert(existsSync(keepbart), 'pruned keeps artwork for url b')
 
   const taken = mgr.takeprepready('https://b.example')
   assert(taken && taken.path === keepb, 'takeprepready returns ready entry')
+  assert(
+    taken && taken.artwork === keepbart,
+    'takeprepready returns artwork path',
+  )
   assert(!mgr.readregistryready('https://b.example'), 'registry entry consumed')
 
   rmSync(work, { recursive: true, force: true })

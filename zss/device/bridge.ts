@@ -28,6 +28,7 @@ import {
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
+  mediaqueuesetmainvolume,
   mediaqueuesetmediavolume,
   storemediavolconfig,
 } from 'zss/feature/mediaqueue/boardtvaudio'
@@ -648,6 +649,15 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       mediaqueuesetmediavolume(volume)
       storemediavolconfig(volume)
+      break
+    }
+    case 'mainvol': {
+      const volume = Number(message.data)
+      if (!Number.isFinite(volume)) {
+        apierror(bridge, message.player, 'bridge', 'mainvol: need a number')
+        break
+      }
+      mediaqueuesetmainvolume(volume)
       break
     }
   }

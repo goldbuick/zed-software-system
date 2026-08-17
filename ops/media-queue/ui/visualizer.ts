@@ -6,6 +6,7 @@ type MQ_VISUALIZER_DEPS = {
     args?: MQ_INVOKE_MAP[K]['args'],
   ) => Promise<MQ_INVOKE_MAP[K]['result']>
   tobytes: (raw: unknown) => Uint8Array<ArrayBuffer>
+  artwork?: string
 }
 
 type MQ_VISUALIZER_RESULT = {
@@ -21,10 +22,13 @@ const BG = '#0a0a12'
 const GREEN = '#00ff41'
 const CYAN = '#00e5ff'
 const MAGENTA = '#ff00aa'
+const ARTWORK_DIM = 'rgba(10, 10, 18, 0.72)'
 
 let canvasel: HTMLCanvasElement | null = null
 let audioel: HTMLAudioElement | null = null
 let bloburl = ''
+let artworkbloburl = ''
+let artworkimage: HTMLImageElement | null = null
 let animframe: number | null = null
 let capturestream: MediaStream | null = null
 let audioctx: AudioContext | null = null
@@ -53,6 +57,9 @@ function mimetypefrompath(filepath: string) {
       return 'audio/ogg'
     case 'aac':
       return 'audio/aac'
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg'
     default:
       return 'audio/mp4'
   }
@@ -63,6 +70,14 @@ function revokebloburl() {
     URL.revokeObjectURL(bloburl)
     bloburl = ''
   }
+}
+
+function revokeartworkbloburl() {
+  if (artworkbloburl) {
+    URL.revokeObjectURL(artworkbloburl)
+    artworkbloburl = ''
+  }
+  artworkimage = null
 }
 
 function ensurecanvas(): HTMLCanvasElement {
@@ -128,6 +143,68 @@ function waitforcanplay(el: HTMLMediaElement) {
     el.addEventListener('canplay', onready)
     el.addEventListener('error', onerror)
   })
+}
+
+function waitforimageload(img: HTMLImageElement) {
+  if (img.complete && img.naturalWidth > 0) {
+    return Promise.resolve()
+  }
+  return new Promise<void>(function (resolve, reject) {
+    function cleanup() {
+      img.removeEventListener('load', onready)
+      img.removeEventListener('error', onerror)
+    }
+    function onready() {
+      cleanup()
+      resolve()
+    }
+    function onerror() {
+      cleanup()
+      reject(new Error('artwork load failed'))
+    }
+    img.addEventListener('load', onready)
+    img.addEventListener('error', onerror)
+  })
+}
+
+async function loadartwork(
+  artworkpath: string,
+  invoke: MQ_VISUALIZER_DEPS['invoke'],
+  tobytes: MQ_VISUALIZER_DEPS['tobytes'],
+): Promise<HTMLImageElement | null> {
+  const trimmed = String(artworkpath || '').trim()
+  if (!trimmed) {
+    return null
+  }
+  revokeartworkbloburl()
+  const raw = await invoke('read_media_file', { path: trimmed })
+  const bytes = tobytes(raw)
+  if (!bytes.length) {
+    return null
+  }
+  const blob = new Blob([bytes], { type: mimetypefrompath(trimmed) })
+  artworkbloburl = URL.createObjectURL(blob)
+  const img = new Image()
+  img.src = artworkbloburl
+  await waitforimageload(img)
+  artworkimage = img
+  return img
+}
+
+function drawartwork(ctx: CanvasRenderingContext2D, img: HTMLImageElement) {
+  const iw = img.naturalWidth || img.width
+  const ih = img.naturalHeight || img.height
+  if (iw <= 0 || ih <= 0) {
+    return
+  }
+  const scale = Math.max(CANVAS_WIDTH / iw, CANVAS_HEIGHT / ih)
+  const dw = iw * scale
+  const dh = ih * scale
+  const dx = (CANVAS_WIDTH - dw) / 2
+  const dy = (CANVAS_HEIGHT - dh) / 2
+  ctx.drawImage(img, dx, dy, dw, dh)
+  ctx.fillStyle = ARTWORK_DIM
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 }
 
 function drawscanlines(ctx: CanvasRenderingContext2D) {
@@ -219,6 +296,9 @@ function drawframe() {
   }
   ctx.fillStyle = BG
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  if (artworkimage) {
+    drawartwork(ctx, artworkimage)
+  }
   drawscanlines(ctx)
   drawspectrum(ctx, analyser, peakhold!, peakdecay!)
   drawscope(ctx, analyser)
@@ -261,6 +341,7 @@ export function stopvisualizer() {
     canvasel = null
   }
   revokebloburl()
+  revokeartworkbloburl()
 }
 
 async function loadlocalaudio(
@@ -290,6 +371,11 @@ export async function start(
   const invoke = deps.invoke
   const tobytes = deps.tobytes
   const el = await loadlocalaudio(path, invoke, tobytes)
+  try {
+    await loadartwork(deps.artwork || '', invoke, tobytes)
+  } catch (_) {
+    revokeartworkbloburl()
+  }
   const canvas = ensurecanvas()
   audioctx = new AudioContext()
   analyser = audioctx.createAnalyser()

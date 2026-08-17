@@ -12,6 +12,7 @@ export function createdaisysynthadapter(synth: DAISY_SYNTH): SynthBackend {
     addplay: (buffer) => synth.addplay(buffer),
     addbgplay: (buffer, quantize) => synth.addbgplay(buffer, quantize),
     stopplay: () => synth.stopplay(),
+    setmainvolume: (volume) => synth.setmainvolume(volume),
     setplayvolume: (volume) => synth.setplayvolume(volume),
     setbgplayvolume: (volume) => synth.setbgplayvolume(volume),
     setttsvolume: (volume) => {

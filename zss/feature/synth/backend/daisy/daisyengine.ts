@@ -11,10 +11,12 @@ import { initwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import { wirewasmmainchain } from 'zss/feature/synth/backend/wasm/wasmmainchain'
 import {
   WASM_DEFAULT_BGPLAY_VOLUME,
+  WASM_DEFAULT_MAIN_VOLUME,
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
   initwasmmainsab,
   pushwasmmainsab,
+  effectivemainvolume,
 } from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import { MAYBE } from 'zss/mapping/types'
 
@@ -36,6 +38,7 @@ let daisybroadcasttap: MAYBE<GainNode>
 let daisyttssource: MAYBE<AudioBufferSourceNode>
 let daisykeepalive: MAYBE<ConstantSourceNode>
 
+let daisyvol = WASM_DEFAULT_MAIN_VOLUME
 let daisyplayvolume = WASM_DEFAULT_PLAY_VOLUME
 let daisybgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME
 let daisyttsvolume = WASM_DEFAULT_TTS_VOLUME
@@ -75,9 +78,9 @@ function daisymainbussabtail(): [number, number] {
 function pushdaisymainvolumes(maxi: DaisyEngine) {
   const [compbypass, scbypass] = daisymainbussabtail()
   pushwasmmainsab(maxi, [
-    daisyplayvolume,
-    daisybgplayvolume,
-    daisyttsvolume,
+    effectivemainvolume(daisyplayvolume, daisyvol),
+    effectivemainvolume(daisybgplayvolume, daisyvol),
+    effectivemainvolume(daisyttsvolume, daisyvol),
     compbypass,
     scbypass,
   ])
@@ -276,9 +279,9 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
   const [compbypass, scbypass] = daisymainbussabtail()
   initwasmmainsab(
     engine,
-    daisyplayvolume,
-    daisybgplayvolume,
-    daisyttsvolume,
+    effectivemainvolume(daisyplayvolume, daisyvol),
+    effectivemainvolume(daisybgplayvolume, daisyvol),
+    effectivemainvolume(daisyttsvolume, daisyvol),
     compbypass,
     scbypass,
   )
@@ -333,6 +336,8 @@ export function startisolateddaisydsp(
   daisyplayvolume = playvolume
   daisybgplayvolume = bgplayvolume
   daisyttsvolume = ttsvolume
+  // Offline / parity: write absolute SAB levels (main scale = unity).
+  daisyvol = 100
   const [compbypass, scbypass] = daisymainbussabtail()
   initwasmmainsab(
     engine,
@@ -364,6 +369,14 @@ export function getdaisyaudiocontext(): MAYBE<AudioContext> {
     return ctx as AudioContext
   }
   return getunlockedaudiocontext()
+}
+
+export function setdaisysynthmainvolume(volume: number) {
+  daisyvol = volume
+  const engine = daisyengine
+  if (engine) {
+    pushdaisymainvolumes(engine)
+  }
 }
 
 export function setdaisysynthplayvolume(volume: number) {

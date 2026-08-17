@@ -43,8 +43,10 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | `bgplayon4n` | Play background audio quantized to quarter note |
 | `bgplayon2n` | Play background audio quantized to half note |
 | `bgplayon1n` | Play background audio quantized to whole note |
-| `vol` | Set playback volume |
+| `vol` | Set main volume |
+| `playvol` | Set play volume |
 | `bgvol` | Set background playback volume |
+| `mediavol` | Set board TV volume |
 
 #### Synthesis
 | Command | Description |

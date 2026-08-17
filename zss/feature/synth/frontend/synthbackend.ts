@@ -15,6 +15,7 @@ export type SynthBackend = {
   addplay(buffer: string): void
   addbgplay(buffer: string, quantize: string): void
   stopplay(): void
+  setmainvolume(volume: number): void
   setplayvolume(volume: number): void
   setbgplayvolume(volume: number): void
   setttsvolume(volume: number): void

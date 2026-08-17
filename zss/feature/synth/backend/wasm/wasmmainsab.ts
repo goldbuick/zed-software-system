@@ -15,15 +15,28 @@ export const WASM_MAIN_IDX = {
   SC_BYPASS: 4,
 } as const
 
-export const WASM_DEFAULT_PLAY_VOLUME = 50
-export const WASM_DEFAULT_BGPLAY_VOLUME = 50
-export const WASM_DEFAULT_TTS_VOLUME = 100
+/** CLI `#vol` main scale (0-100). Multiplies bus trims before SAB push. */
+export const WASM_DEFAULT_MAIN_VOLUME = 50
+/** CLI `#playvol` trim (0-100). */
+export const WASM_DEFAULT_PLAY_VOLUME = 90
+/** CLI `#bgvol` trim (0-100). */
+export const WASM_DEFAULT_BGPLAY_VOLUME = 90
+/** CLI `#ttsvol` trim (0-100). */
+export const WASM_DEFAULT_TTS_VOLUME = 90
+
+/** Apply main scale to a bus trim for SAB / HTMLMediaElement gain. */
+export function effectivemainvolume(
+  trim: number,
+  main = WASM_DEFAULT_MAIN_VOLUME,
+): number {
+  return (trim * main) / 100
+}
 
 export function defaultwasmmainsab(): number[] {
   return [
-    WASM_DEFAULT_PLAY_VOLUME,
-    WASM_DEFAULT_BGPLAY_VOLUME,
-    WASM_DEFAULT_TTS_VOLUME,
+    effectivemainvolume(WASM_DEFAULT_PLAY_VOLUME),
+    effectivemainvolume(WASM_DEFAULT_BGPLAY_VOLUME),
+    effectivemainvolume(WASM_DEFAULT_TTS_VOLUME),
     0,
     0,
   ]
@@ -35,9 +48,9 @@ export function pushwasmmainsab(maxi: SabEngine, sab: number[]) {
 
 export function initwasmmainsab(
   maxi: SabEngine,
-  playvolume = WASM_DEFAULT_PLAY_VOLUME,
-  bgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME,
-  ttsvolume = WASM_DEFAULT_TTS_VOLUME,
+  playvolume = effectivemainvolume(WASM_DEFAULT_PLAY_VOLUME),
+  bgplayvolume = effectivemainvolume(WASM_DEFAULT_BGPLAY_VOLUME),
+  ttsvolume = effectivemainvolume(WASM_DEFAULT_TTS_VOLUME),
   compbypass = 0,
   scbypass = 0,
 ) {

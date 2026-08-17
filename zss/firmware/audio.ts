@@ -1,9 +1,11 @@
 import { CHIP } from 'zss/chip'
 import {
+  bridgemainvol,
   bridgemediavol,
   synthbgplay,
   synthbgplayvolume,
   synthflush,
+  synthmainvolume,
   synthplayvolume,
   synthrecord,
   synthtts,
@@ -351,13 +353,25 @@ export const AUDIO_FIRMWARE = createfirmware()
   )
   .command('vol', [ARG_TYPE.NUMBER, 'main volume'], (_, words) => {
     const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
+    synthmainvolume(
+      SOFTWARE,
+      READ_CONTEXT.elementfocus,
+      READ_CONTEXT.board?.id ?? '',
+      volume,
+    )
+    bridgemainvol(SOFTWARE, READ_CONTEXT.elementfocus, volume)
+    storevolumeconfig('vol', volume)
+    return 0
+  })
+  .command('playvol', [ARG_TYPE.NUMBER, 'play volume'], (_, words) => {
+    const [volume] = readargs(words, 0, [ARG_TYPE.NUMBER])
     synthplayvolume(
       SOFTWARE,
       READ_CONTEXT.elementfocus,
       READ_CONTEXT.board?.id ?? '',
       volume,
     )
-    storevolumeconfig('vol', volume)
+    storevolumeconfig('playvol', volume)
     return 0
   })
   .command('mediavol', [ARG_TYPE.NUMBER, 'board TV volume'], (_, words) => {

@@ -37,6 +37,7 @@ type MQ_REGISTRY_META = {
   path: string
   title: string
   audioOnly: boolean
+  artwork: string
 }
 
 type MQ_REGISTRY_ENTRY = MQ_REGISTRY_META & {
@@ -102,11 +103,15 @@ const MQ_MEDIA_EXTENSIONS = new Set([
   '.aac',
   '.ogg',
 ])
+// Scope to Merger/Remuxer/Convertor only -- never use bare `ffmpeg:` / `FFmpeg:`.
+// That prefix hits ThumbnailsConvertor too and breaks --convert-thumbnails jpg
+// (ERROR: Preprocessing: Conversion failed!).
 export const FFMPEG_POST_ARGS_COPY =
-  'ffmpeg:-c:v copy -c:a copy -movflags +faststart'
+  'Merger+VideoRemuxer:-c:v copy -c:a copy -movflags +faststart'
 export const FFMPEG_POST_ARGS_TRANSCODE =
-  'ffmpeg:-c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart'
-export const FFMPEG_POST_ARGS_AUDIO = 'ffmpeg:-c:a aac -b:a 128k'
+  'Merger+VideoRemuxer+VideoConvertor:-c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart'
+export const FFMPEG_POST_ARGS_AUDIO =
+  'ExtractAudio+FixupM4a:-c:a aac -b:a 128k'
 const YOUTUBE_PLAYER_CLIENTS = [
   'default,-android_sdkless',
   'default,-android_vr',
@@ -188,6 +193,39 @@ export function ismqmediafile(name: string): boolean {
   return MQ_MEDIA_EXTENSIONS.has(ext)
 }
 
+const MQ_ARTWORK_EXTENSIONS = new Set(['.jpg', '.jpeg'])
+
+export function ismqartworkfile(name: string): boolean {
+  if (!name.startsWith('mq-')) {
+    return false
+  }
+  const ext = path.extname(name).toLowerCase()
+  return MQ_ARTWORK_EXTENSIONS.has(ext)
+}
+
+/** Resolve yt-dlp sidecar thumbnail next to a downloaded media file. */
+export function resolveartworkpath(mediapath: string): string {
+  const trimmed = String(mediapath || '').trim()
+  if (!trimmed) {
+    return ''
+  }
+  const dir = path.dirname(trimmed)
+  const base = path.basename(trimmed, path.extname(trimmed))
+  if (!base.startsWith('mq-')) {
+    return ''
+  }
+  const candidates = [
+    path.join(dir, `${base}.jpg`),
+    path.join(dir, `${base}.jpeg`),
+  ]
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate
+    }
+  }
+  return ''
+}
+
 function ispartialfilename(name: string): boolean {
   return (
     name.endsWith('.part') || name.endsWith('.ytdl') || name.endsWith('.temp')
@@ -250,6 +288,11 @@ function removemqmediafiles(
   for (const name of fs.readdirSync(cachedir)) {
     const filepath = path.join(cachedir, name)
     if (!fs.statSync(filepath).isFile()) {
+      continue
+    }
+    if (ismqartworkfile(name)) {
+      fs.rmSync(filepath, { force: true })
+      deleted += 1
       continue
     }
     if (!ismqmediafile(name)) {
@@ -552,6 +595,9 @@ function buildytdlpargs(
     '--no-playlist',
     '--progress',
     '--newline',
+    '--write-thumbnail',
+    '--convert-thumbnails',
+    'jpg',
     '--ffmpeg-location',
     ctx.ffdir,
     '-o',
@@ -791,12 +837,23 @@ export class DownloadManager {
       if (entry.path) {
         paths.push(entry.path)
       }
+      if (entry.artwork) {
+        paths.push(entry.artwork)
+      }
     }
     if (this.playback.filepath) {
       paths.push(this.playback.filepath)
+      const playbackart = resolveartworkpath(this.playback.filepath)
+      if (playbackart) {
+        paths.push(playbackart)
+      }
     }
     if (this.prep.filepath) {
       paths.push(this.prep.filepath)
+      const prepart = resolveartworkpath(this.prep.filepath)
+      if (prepart) {
+        paths.push(prepart)
+      }
     }
     return paths
   }
@@ -806,6 +863,7 @@ export class DownloadManager {
       path: meta.path,
       title: meta.title,
       audioOnly: meta.audioOnly,
+      artwork: meta.artwork || '',
       state: 'ready',
     })
   }
@@ -820,6 +878,9 @@ export class DownloadManager {
       return null
     }
     if (!fs.existsSync(entry.path)) {
+      if (entry.artwork) {
+        removefilepath(entry.artwork)
+      }
       this.registry.delete(trimmed)
       return null
     }
@@ -843,6 +904,7 @@ export class DownloadManager {
       path: entry.path,
       title: entry.title,
       audioOnly: entry.audioOnly,
+      artwork: entry.artwork || '',
       duration: 0,
     }
   }
@@ -868,6 +930,11 @@ export class DownloadManager {
       }
       if (entry.path) {
         if (removefilepath(entry.path)) {
+          deleted += 1
+        }
+      }
+      if (entry.artwork) {
+        if (removefilepath(entry.artwork)) {
           deleted += 1
         }
       }
@@ -1121,6 +1188,7 @@ export class DownloadManager {
           path: result.outpath,
           title: result.title,
           audioOnly: audioonly,
+          artwork: resolveartworkpath(result.outpath),
           duration: 0,
         }
         emit(job.readyevent, payload)

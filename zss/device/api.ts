@@ -135,6 +135,14 @@ export function bridgemediavol(
   device.emit(player, 'bridge:mediavol', volume)
 }
 
+export function bridgemainvol(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'bridge:mainvol', volume)
+}
+
 export function bridgestart(
   device: DEVICELIKE,
   player: string,
@@ -648,6 +656,15 @@ export function synthplayvolume(
   volume: number,
 ) {
   device.emit(player, 'synth:playvolume', [board, volume])
+}
+
+export function synthmainvolume(
+  device: DEVICELIKE,
+  player: string,
+  board: MAYBE<string>,
+  volume: number,
+) {
+  device.emit(player, 'synth:mainvolume', [board, volume])
 }
 
 export function synthrecord(

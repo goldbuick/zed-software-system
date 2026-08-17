@@ -51,6 +51,8 @@ export type MQ_READY_EVENT = {
   title: string
   audioOnly: boolean
   duration: number
+  /** Absolute path to sidecar cover art, or empty when absent. */
+  artwork: string
 }
 
 export type MQ_ERROR_EVENT = {

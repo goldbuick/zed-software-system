@@ -17,6 +17,7 @@ export const CONFIG_STRING_KEYS = [
   'ttsengineconfig',
   'ttsenginemodel',
   'vol',
+  'playvol',
   'bgvol',
   'ttsvol',
   'mediavol',

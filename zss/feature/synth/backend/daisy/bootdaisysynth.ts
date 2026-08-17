@@ -1,7 +1,9 @@
 import {
   WASM_DEFAULT_BGPLAY_VOLUME,
+  WASM_DEFAULT_MAIN_VOLUME,
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
+  effectivemainvolume,
   initwasmmainsab,
 } from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import {
@@ -12,6 +14,7 @@ import {
 import {
   ensuredaisysynthwasm,
   setdaisysynthbgplayvolume,
+  setdaisysynthmainvolume,
   setdaisysynthplayvolume,
   setdaisysynthttsvolume,
 } from './daisyengine'
@@ -23,15 +26,16 @@ export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   const engine = await ensuredaisysynthwasm()
   initwasmmainsab(
     engine,
-    WASM_DEFAULT_PLAY_VOLUME,
-    WASM_DEFAULT_BGPLAY_VOLUME,
-    WASM_DEFAULT_TTS_VOLUME,
+    effectivemainvolume(WASM_DEFAULT_PLAY_VOLUME, WASM_DEFAULT_MAIN_VOLUME),
+    effectivemainvolume(WASM_DEFAULT_BGPLAY_VOLUME, WASM_DEFAULT_MAIN_VOLUME),
+    effectivemainvolume(WASM_DEFAULT_TTS_VOLUME, WASM_DEFAULT_MAIN_VOLUME),
     isdaisymaincompbypass() ? 1 : 0,
     isdaisysidechainbypass() ? 1 : 0,
   )
   const synth = createdaisysynth(
     engine,
     {
+      setmainvolume: setdaisysynthmainvolume,
       setplayvolume: setdaisysynthplayvolume,
       setbgplayvolume: setdaisysynthbgplayvolume,
       setttsvolume: setdaisysynthttsvolume,
