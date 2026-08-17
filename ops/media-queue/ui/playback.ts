@@ -497,7 +497,16 @@ export async function startplayback(
   if (!path) {
     throw new Error('missing download path')
   }
-  const audioonly = Boolean(opts && opts.audioOnly)
+  const ext = path.includes('.')
+    ? '.' + path.split('.').pop()!.toLowerCase()
+    : ''
+  const audioext =
+    ext === '.m4a' ||
+    ext === '.mp3' ||
+    ext === '.opus' ||
+    ext === '.ogg' ||
+    ext === '.aac'
+  const audioonly = Boolean(opts && opts.audioOnly) || audioext
   const artwork = opts && opts.artwork ? String(opts.artwork).trim() : ''
   if (audioonly) {
     return startaudiovisualizer(path, artwork)

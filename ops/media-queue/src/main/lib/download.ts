@@ -53,6 +53,25 @@ type MQ_MEDIA_PROBE = {
   hasAudio: boolean
 }
 
+/** Cover / still image streams ffprobe reports as video -- not Chromium-playable A/V. */
+const COVER_ART_VIDEO_CODECS = new Set([
+  'mjpeg',
+  'png',
+  'bmp',
+  'gif',
+  'webp',
+  'tiff',
+  'rawvideo',
+])
+
+const AUDIO_FILE_EXTENSIONS = new Set([
+  '.m4a',
+  '.mp3',
+  '.opus',
+  '.ogg',
+  '.aac',
+])
+
 type MQ_RESOLVED_BINS = {
   ytdlp: string
   jspath: string
@@ -359,25 +378,65 @@ function probemediafile(ffprobe: string, filepath: string): MQ_MEDIA_PROBE {
         '-loglevel',
         'error',
         '-show_entries',
-        'stream=codec_type',
+        'stream=codec_name,codec_type',
         '-of',
         'csv=p=0',
         filepath,
       ],
       { encoding: 'utf8' },
     )
-    const types = out
+    let hasvideo = false
+    let hasaudio = false
+    const lines = out
       .trim()
       .split('\n')
       .map((line) => line.trim())
       .filter(Boolean)
-    return {
-      hasVideo: types.includes('video'),
-      hasAudio: types.includes('audio'),
+    for (let i = 0; i < lines.length; ++i) {
+      const parts = lines[i].split(',')
+      const codec = String(parts[0] || '')
+        .trim()
+        .toLowerCase()
+      const kind = String(parts[1] || parts[0] || '')
+        .trim()
+        .toLowerCase()
+      if (kind === 'audio' || codec === 'audio') {
+        hasaudio = true
+        continue
+      }
+      if (kind === 'video' || (parts.length === 1 && codec === 'video')) {
+        // codec_type-only lines from older probes; treat as real video.
+        if (parts.length === 1) {
+          hasvideo = true
+          continue
+        }
+        if (!COVER_ART_VIDEO_CODECS.has(codec)) {
+          hasvideo = true
+        }
+      }
     }
+    return { hasVideo: hasvideo, hasAudio: hasaudio }
   } catch (_) {
     return { hasVideo: false, hasAudio: false }
   }
+}
+
+function mediaisaudioonly(
+  filepath: string,
+  probe: MQ_MEDIA_PROBE,
+  profile: MQ_YTDLP_PROFILE,
+): boolean {
+  if (!probe.hasAudio) {
+    return false
+  }
+  if (profile === 'audio') {
+    return true
+  }
+  const ext = path.extname(filepath).toLowerCase()
+  if (AUDIO_FILE_EXTENSIONS.has(ext)) {
+    return true
+  }
+  return !probe.hasVideo
 }
 
 function ytdlpneedsaudiofallback(message: string): boolean {
@@ -1142,6 +1201,7 @@ export class DownloadManager {
         url: trimmed,
       }
 
+      let profile: MQ_YTDLP_PROFILE = 'video'
       let result = await runytdlpdownload(job, emit, ctx, 'video')
       if (
         !result.success &&
@@ -1156,6 +1216,7 @@ export class DownloadManager {
           eta: 'audio-only',
           status: 'extracting',
         })
+        profile = 'audio'
         result = await runytdlpdownload(job, emit, ctx, 'audio')
       }
 
@@ -1171,7 +1232,7 @@ export class DownloadManager {
           lastmessage = 'downloaded file failed media validation'
           continue
         }
-        const audioonly = probe.hasAudio && !probe.hasVideo
+        const audioonly = mediaisaudioonly(result.outpath, probe, profile)
         job.filepath = result.outpath
         job.title = result.title
         job.percent = 100
