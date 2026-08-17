@@ -5,7 +5,10 @@ import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import { mediaqueueislistening, mediaqueuereadboundboardid } from 'zss/feature/mediaqueue/listenstate'
-import { mediareadcanmanagefrompayload } from 'zss/feature/mediaqueue/mediaguards'
+import {
+  mediareadcanmanagefrompayload,
+  mediareaddisplaynamefrompayload,
+} from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
 import { showqueuemenu } from 'zss/feature/mediaqueue/queuemenu'
 import { mediaqueuesyncnowplayingboard } from 'zss/feature/mediaqueue/nowplayinglabel'
@@ -121,8 +124,13 @@ export function handlemediapanel(
         apierror(SOFTWARE, player, 'media', 'use #queue <peerid> first')
         return
       }
+      const displayname = mediareaddisplaynamefrompayload(message.data)
+      if (!displayname) {
+        apierror(SOFTWARE, player, 'media', 'submitter name missing')
+        return
+      }
       const hadqueue = mediaqueuereadstate().urls.length > 0
-      const result = mediaqueueadd(player, url)
+      const result = mediaqueueadd(player, displayname, url)
       if (!result.ok) {
         if (result.reason === 'duplicate') {
           apierror(SOFTWARE, player, 'media', 'URL already in queue')

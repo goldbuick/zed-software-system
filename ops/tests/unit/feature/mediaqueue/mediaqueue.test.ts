@@ -65,11 +65,12 @@ describe('mediaqueue queue', () => {
   })
 
   it('adds urls for a player and plays fifo front', () => {
-    expect(mediaqueueadd('p1', 'https://a.example').ok).toBe(true)
-    expect(mediaqueueadd('p2', 'https://b.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'goldbuick', 'https://a.example').ok).toBe(true)
+    expect(mediaqueueadd('p2', 'guest', 'https://b.example').ok).toBe(true)
     expect(mediaqueuereadstate()).toEqual({
       urls: ['https://a.example', 'https://b.example'],
       players: ['p1', 'p2'],
+      names: ['goldbuick', 'guest'],
       index: 0,
       perplayerlimit: 3,
     })
@@ -80,17 +81,19 @@ describe('mediaqueue queue', () => {
   })
 
   it('rejects duplicate normalized urls', () => {
-    expect(mediaqueueadd('p1', 'https://youtu.be/abc123').ok).toBe(true)
-    expect(mediaqueueadd('p2', 'https://www.youtube.com/watch?v=abc123').ok).toBe(
-      false,
+    expect(mediaqueueadd('p1', 'goldbuick', 'https://youtu.be/abc123').ok).toBe(
+      true,
     )
+    expect(
+      mediaqueueadd('p2', 'guest', 'https://www.youtube.com/watch?v=abc123').ok,
+    ).toBe(false)
   })
 
   it('enforces per-player limit', () => {
-    expect(mediaqueueadd('p1', 'https://a.example').ok).toBe(true)
-    expect(mediaqueueadd('p1', 'https://b.example').ok).toBe(true)
-    expect(mediaqueueadd('p1', 'https://c.example').ok).toBe(true)
-    expect(mediaqueueadd('p1', 'https://d.example').ok).toBe(false)
+    expect(mediaqueueadd('p1', 'goldbuick', 'https://a.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'goldbuick', 'https://b.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'goldbuick', 'https://c.example').ok).toBe(true)
+    expect(mediaqueueadd('p1', 'goldbuick', 'https://d.example').ok).toBe(false)
     expect(mediaqueuecountforplayer('p1')).toBe(3)
   })
 
@@ -102,16 +105,17 @@ describe('mediaqueue queue', () => {
   })
 
   it('shift removes front entry', () => {
-    mediaqueueadd('p1', 'https://a.example')
-    mediaqueueadd('p1', 'https://b.example')
+    mediaqueueadd('p1', 'goldbuick', 'https://a.example')
+    mediaqueueadd('p1', 'goldbuick', 'https://b.example')
     const removed = mediaqueueshiftcurrent()
     expect(removed?.url).toBe('https://a.example')
+    expect(removed?.name).toBe('goldbuick')
     expect(mediaqueuecurrenturl()).toBe('https://b.example')
   })
 
   it('clearlistenstate does not empty the queue', () => {
-    mediaqueueadd('p1', 'https://a.example')
-    mediaqueueadd('p2', 'https://b.example')
+    mediaqueueadd('p1', 'goldbuick', 'https://a.example')
+    mediaqueueadd('p2', 'guest', 'https://b.example')
     mediaqueueclearlistenstate()
     expect(mediaqueuereadstate().urls).toEqual([
       'https://a.example',

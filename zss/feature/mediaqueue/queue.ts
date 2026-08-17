@@ -5,12 +5,15 @@ import { mediaqueuenormalizeurl } from 'zss/feature/mediaqueue/urlnormalize'
 export type MEDIAQUEUE_ENTRY = {
   url: string
   player: string
+  /** Submitter display name, resolved on the VM where player flags live. */
+  name: string
   key: string
 }
 
 export type MEDIAQUEUE_STATE = {
   urls: string[]
   players: string[]
+  names: string[]
   index: number
   perplayerlimit: number
 }
@@ -30,6 +33,7 @@ export function mediaqueuereadstate(): MEDIAQUEUE_STATE {
   return {
     urls: entries.map((entry) => entry.url),
     players: entries.map((entry) => entry.player),
+    names: entries.map((entry) => entry.name),
     index: 0,
     perplayerlimit: perplayerlimit,
   }
@@ -56,6 +60,7 @@ export function mediaqueuecountforplayer(player: string): number {
 
 export function mediaqueueadd(
   player: string,
+  name: string,
   url: string,
 ): MEDIAQUEUE_ADD_RESULT {
   const trimmed = url.trim()
@@ -69,7 +74,7 @@ export function mediaqueueadd(
   if (mediaqueuecountforplayer(player) >= perplayerlimit) {
     return { ok: false, reason: 'limit' }
   }
-  entries = [...entries, { url: trimmed, player, key }]
+  entries = [...entries, { url: trimmed, player, name, key }]
   return { ok: true }
 }
 

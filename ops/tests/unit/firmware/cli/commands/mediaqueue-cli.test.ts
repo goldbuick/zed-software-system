@@ -52,16 +52,30 @@ describe('panel.ts split', () => {
 })
 
 describe('mediamenu.ts queue list', () => {
-  it('shows queue table with user display names only', () => {
+  it('renders stored submitter names without touching bridge MEMORY', () => {
     const src = readFileSync(
       join(process.cwd(), 'zss/feature/mediaqueue/mediamenu.ts'),
       'utf8',
     )
-    expect(src).toContain('mediaplayerdisplayname')
+    expect(src).toContain('state.names[i]')
     expect(src).toContain('zsstexttablelines')
+    // Menu renders on the bridge, where player flags do not exist.
+    expect(src).not.toContain('mediaplayerdisplayname')
+    expect(src).not.toContain('memoryreadflags')
     expect(src).not.toContain('zsszedlinkline')
     expect(src).not.toContain('shortplayerid')
     expect(src).not.toContain('canmanage')
+  })
+})
+
+describe('mediaguards.ts payload', () => {
+  it('resolves the submitter name on the VM side of the bridge hop', () => {
+    const src = readFileSync(
+      join(process.cwd(), 'zss/feature/mediaqueue/mediaguards.ts'),
+      'utf8',
+    )
+    expect(src).toContain('mediaplayerdisplayname(player)')
+    expect(src).toContain('displayname')
   })
 })
 

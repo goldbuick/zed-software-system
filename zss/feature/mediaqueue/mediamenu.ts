@@ -1,5 +1,4 @@
 import { SOFTWARE } from 'zss/device/session'
-import { mediaplayerdisplayname } from 'zss/feature/mediaqueue/playerdisplayname'
 import { mediaqueuereadstate } from 'zss/feature/mediaqueue/queue'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import {
@@ -20,7 +19,9 @@ export function showmediamenu(player: string) {
   } else {
     for (let i = 0; i < state.urls.length; ++i) {
       const url = state.urls[i]
-      const who = mediaplayerdisplayname(state.players[i])
+      // Names are resolved on the VM at submit time; this menu renders on the
+      // bridge, where player flags are not available.
+      const who = state.names[i]
       const mark = i === state.index ? '>' : ' '
       const short = url.length > 44 ? `${url.slice(0, 41)}...` : url
       queuerows.push([mark, String(i), who, short])
