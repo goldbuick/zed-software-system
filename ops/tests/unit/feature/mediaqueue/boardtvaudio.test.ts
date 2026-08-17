@@ -53,7 +53,7 @@ describe('board TV audio volume', () => {
 
   it('defaults board TV volume below synth play trim', () => {
     expect(MEDIAQUEUE_DEFAULT_TV_VOLUME).toBeLessThan(90)
-    expect(mediaqueuereadmediavolume()).toBe(25)
+    expect(mediaqueuereadmediavolume()).toBe(20)
     expect(mediaqueuereadmainvolume()).toBe(50)
   })
 

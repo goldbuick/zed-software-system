@@ -2,7 +2,7 @@ import { CHAR_HEIGHT, CHAR_WIDTH } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 
 /** Default board TV speaker trim (0-100); scaled by #vol main. */
-export const MEDIAQUEUE_DEFAULT_TV_VOLUME = 25
+export const MEDIAQUEUE_DEFAULT_TV_VOLUME = 20
 
 /** useMedia.screen key for board TV remote stream. */
 export const MEDIAQUEUE_PEER_LABEL = 'mediaqueue'

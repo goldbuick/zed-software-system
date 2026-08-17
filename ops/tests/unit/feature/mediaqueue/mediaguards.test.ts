@@ -1,23 +1,29 @@
 import { apierror } from 'zss/device/api'
 import {
   mediacanmanagequeue,
+  mediapayloadwithboardhelper,
   mediapayloadwithmanage,
+  mediareadhelperpeeridfrompayload,
   mediareaddisplaynamefrompayload,
+  mediarequireboardhelper,
 } from 'zss/feature/mediaqueue/mediaguards'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
 import {
+  memorycreatecodepage,
+  memoryreadcodepagedata,
+} from 'zss/memory/codepageoperations'
+import {
   memoryapplypermissionconfig,
   memorysetplayertotoken,
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
-import {
-  memoryresetbooks,
-  memorywritesoftwarebook,
-} from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
+import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
+import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 jest.mock('zss/device/api', () => ({
   apierror: jest.fn(),
@@ -29,6 +35,11 @@ describe('mediaguards', () => {
   beforeEach(() => {
     mockapierror.mockClear()
     memoryapplypermissionconfig('creative')
+  })
+
+  afterEach(() => {
+    memoryboundariesclear()
+    memoryresetbooks([])
   })
 
   it('mediapayloadwithmanage does not deny speaker-only players', () => {
@@ -70,6 +81,49 @@ describe('mediaguards', () => {
   it('mediareaddisplaynamefrompayload rejects a payload without a name', () => {
     expect(mediareaddisplaynamefrompayload({ canmanage: true })).toBe('')
     expect(mediareaddisplaynamefrompayload(undefined)).toBe('')
-    expect(mediareaddisplaynamefrompayload({ displayname: ' zed ' })).toBe('zed')
+    expect(mediareaddisplaynamefrompayload({ displayname: ' zed ' })).toBe(
+      'zed',
+    )
+  })
+
+  it('mediareadhelperpeeridfrompayload reads the stamped helper id', () => {
+    expect(mediareadhelperpeeridfrompayload(undefined)).toBe('')
+    expect(mediareadhelperpeeridfrompayload({ helperpeerid: ' mq_ab ' })).toBe(
+      'mq_ab',
+    )
+  })
+
+  it('mediapayloadwithboardhelper uses current board runtime helper', () => {
+    const boarda = memorycreatecodepage('@board bound\n', {})
+    const boardb = memorycreatecodepage('@board other\n', {})
+    const book = memorycreatebook([boarda, boardb])
+    memoryresetbooks([book])
+    memorywritesoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    const bound = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boarda)!
+    const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
+    bound.id = boarda.id
+    other.id = boardb.id
+    memoryensureboardruntime(bound).mediaqueuehelperpeerid = 'mq_helper1'
+    memorywritebookflag(book, 'p1', 'board', bound.id)
+    memorywritebookflag(book, 'p1', 'user', 'goldbuick')
+    expect(mediarequireboardhelper('p1')).toBe('mq_helper1')
+    expect(
+      mediapayloadwithboardhelper('p1', { url: 'https://a.example' }),
+    ).toEqual({
+      url: 'https://a.example',
+      helperpeerid: 'mq_helper1',
+      boardid: bound.id,
+      canmanage: false,
+      displayname: 'goldbuick',
+    })
+    memorywritebookflag(book, 'p1', 'board', other.id)
+    expect(mediarequireboardhelper('p1')).toBe('')
+    expect(mediapayloadwithboardhelper('p1')).toBeUndefined()
+    expect(mockapierror).toHaveBeenCalledWith(
+      expect.anything(),
+      'p1',
+      'media',
+      'not on a board with media',
+    )
   })
 })

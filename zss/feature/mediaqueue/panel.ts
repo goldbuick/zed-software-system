@@ -4,10 +4,14 @@ import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
-import { mediaqueueislistening } from 'zss/feature/mediaqueue/listenstate'
+import {
+  mediaqueueislistening,
+  mediaqueuereadhelperpeerid,
+} from 'zss/feature/mediaqueue/listenstate'
 import {
   mediareadcanmanagefrompayload,
   mediareaddisplaynamefrompayload,
+  mediareadhelperpeeridfrompayload,
 } from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
 import { showqueuemenu } from 'zss/feature/mediaqueue/queuemenu'
@@ -83,6 +87,23 @@ function requirehelper(player: string, noun: string): boolean {
   return true
 }
 
+function requirepayloadhelper(player: string, message: MESSAGE): boolean {
+  const helperpeerid = mediareadhelperpeeridfrompayload(message.data)
+  if (!helperpeerid) {
+    apierror(SOFTWARE, player, 'media', 'not on a board with media')
+    return false
+  }
+  if (helperpeerid !== mediaqueuereadhelperpeerid()) {
+    apierror(SOFTWARE, player, 'media', 'use #queue <peerid> first')
+    return false
+  }
+  if (!mediaqueuehelperdatalinkup()) {
+    apierror(SOFTWARE, player, 'media', 'helper not connected')
+    return false
+  }
+  return true
+}
+
 function mediabind(
   player: string,
   peerid: string,
@@ -116,6 +137,9 @@ export function handlemediapanel(
   void vm
   switch (NAME(path)) {
     case 'menu':
+      if (!requirepayloadhelper(player, message)) {
+        return
+      }
       showmediamenu(player)
       break
     case 'add': {
@@ -124,7 +148,7 @@ export function handlemediapanel(
         apierror(SOFTWARE, player, 'media', 'usage: #media <url>')
         return
       }
-      if (!requirehelper(player, 'media')) {
+      if (!requirepayloadhelper(player, message)) {
         return
       }
       const displayname = mediareaddisplaynamefrompayload(message.data)
