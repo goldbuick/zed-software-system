@@ -175,6 +175,7 @@ describe('mediaqueue room peers', () => {
 describe('mediaqueue board tv', () => {
   beforeEach(() => {
     mediaqueueclearlistenstate()
+    mediaqueueclearplayerlayerstate()
   })
 
   it('boardtvisupright is true for fpv and iso', () => {
@@ -261,10 +262,13 @@ describe('mediaqueue board tv', () => {
     mediaqueueclearplayerlayerstate()
   })
 
-  it('boardtvshouldshow shows video when player has direct helper stream', () => {
+  it('boardtvshouldshow does not follow join players off the connected board', () => {
     mediaqueueclearlistenstate()
-    expect(boardtvshouldshow('any-board', true)).toBe(true)
+    expect(boardtvshouldshow('any-board', true)).toBe(false)
     expect(boardtvshouldshow('any-board', false)).toBe(false)
+    mediaqueuesetplayerlayerstate('helper-1', 'board-a', false)
+    expect(boardtvshouldshow('board-a', true)).toBe(true)
+    expect(boardtvshouldshow('board-b', true)).toBe(false)
   })
 
   it('uses landscape tv size constants', () => {

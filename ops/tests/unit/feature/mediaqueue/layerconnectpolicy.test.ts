@@ -57,7 +57,7 @@ describe('mediaqueuelayerconnectaction', () => {
     expect(action({ gadgetboard: '' })).toEqual({ kind: 'noop' })
   })
 
-  it('no-ops empty gadget board even with a live layer connection', () => {
+  it('disconnects empty gadget board with a live layer connection', () => {
     expect(
       action({
         gadgetboard: '',
@@ -67,7 +67,7 @@ describe('mediaqueuelayerconnectaction', () => {
         layerhelper: 'helper-1',
         layerboard: 'board-a',
       }),
-    ).toEqual({ kind: 'noop' })
+    ).toEqual({ kind: 'disconnect' })
   })
 
   it('disconnects when leaving the connected board', () => {
@@ -77,6 +77,29 @@ describe('mediaqueuelayerconnectaction', () => {
         islistening: true,
         boundhelper: 'helper-1',
         boundboard: 'board-a',
+        layerhelper: 'helper-1',
+        layerboard: 'board-a',
+      }),
+    ).toEqual({ kind: 'disconnect' })
+  })
+
+  it('disconnects join players leaving the connected board', () => {
+    expect(
+      action({
+        gadgetboard: 'board-b',
+        islistening: false,
+        layerhelper: 'helper-1',
+        layerboard: 'board-a',
+      }),
+    ).toEqual({ kind: 'disconnect' })
+  })
+
+  it('does not retarget connect when helper layer is still painted off-board', () => {
+    expect(
+      action({
+        gadgetboard: 'board-b',
+        activehelper: 'helper-1',
+        islistening: false,
         layerhelper: 'helper-1',
         layerboard: 'board-a',
       }),

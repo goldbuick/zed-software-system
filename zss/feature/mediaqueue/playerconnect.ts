@@ -473,6 +473,12 @@ export function mediaqueueconnectifonboard(
 ) {
   mediaqueuebootstrap()
   mediaqueueensurevideosink()
+  const requested = gadgetboard.trim()
+  const bound = mediaqueuereadboundboardid().trim()
+  if (mediaqueueislistening() && requested && bound && requested !== bound) {
+    mediaqueuedisconnect()
+    return
+  }
   const trimmed = helperpeerid.trim() || mediaqueuereadhelperpeerid().trim()
   const board = readconnectboard(gadgetboard)
   if (!trimmed || !board) {
@@ -524,15 +530,7 @@ export function mediaqueueretryplayerconnect() {
   }
   if (layer.helperpeerid && layer.board) {
     tryplayerconnect(layer.helperpeerid, layer.board)
-    return
   }
-  const helper = mediaqueuereadhelperpeerid()
-  const board = mediaqueuereadboundboardid()
-  if (!helper || !board) {
-    return
-  }
-  mediaqueuesetplayerlayerstate(helper, board, true)
-  tryplayerconnect(helper, board)
 }
 
 export function mediaqueuedisconnect() {
