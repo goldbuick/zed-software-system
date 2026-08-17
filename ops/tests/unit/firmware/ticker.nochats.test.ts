@@ -5,6 +5,7 @@ import { ELEMENT_FIRMWARE } from 'zss/firmware/element'
 import { RUNTIME_FIRMWARE } from 'zss/firmware/runtime'
 import { gadgetcheckqueue } from 'zss/gadget/data/api'
 import { memoryreadflags } from 'zss/memory/flags'
+import { memorycanruncommand } from 'zss/memory/permissions'
 import { READ_CONTEXT } from 'zss/words/reader'
 
 jest.mock('zss/device/api', () => ({
@@ -30,11 +31,19 @@ jest.mock('zss/memory/flags', () => ({
   memoryreadflags: jest.fn(() => ({ user: 'alice' })),
 }))
 
-const chip = {} as CHIP
+jest.mock('zss/memory/permissions', () => ({
+  ...jest.requireActual('zss/memory/permissions'),
+  memorycanruncommand: jest.fn(() => true),
+}))
+
+const chip = {
+  command: jest.fn(() => 0),
+} as unknown as CHIP
 
 describe('ticker without chat', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.mocked(memorycanruncommand).mockReturnValue(true)
     READ_CONTEXT.timestamp = 42
     READ_CONTEXT.board = { id: 'board1' } as typeof READ_CONTEXT.board
     READ_CONTEXT.element = {
@@ -102,6 +111,80 @@ describe('ticker without chat', () => {
       'text',
       'chat:message:player',
       'alice:hello world',
+    )
+  })
+
+  it('player bare allowlisted URL issues #media and skips chat', () => {
+    READ_CONTEXT.elementisplayer = true
+    READ_CONTEXT.elementid = 'pid_player1'
+    READ_CONTEXT.element = {
+      id: 'pid_player1',
+      kind: 'player',
+    } as typeof READ_CONTEXT.element
+
+    const url = 'https://youtu.be/abc123'
+    const handler = CLI_FIRMWARE.getcommand('text')
+    expect(handler).toBeDefined()
+    handler!(chip, [url])
+
+    expect(chip.command).toHaveBeenCalledWith('media', url)
+    expect(apichat).not.toHaveBeenCalled()
+    expect(vmloader).not.toHaveBeenCalled()
+    expect(READ_CONTEXT.element?.tickertext).toBeUndefined()
+  })
+
+  it('player non-allowlisted URL still chats', () => {
+    READ_CONTEXT.elementisplayer = true
+    READ_CONTEXT.elementid = 'pid_player1'
+    READ_CONTEXT.element = {
+      id: 'pid_player1',
+      kind: 'player',
+    } as typeof READ_CONTEXT.element
+    jest.mocked(memoryreadflags).mockReturnValue({ user: 'alice' } as ReturnType<
+      typeof memoryreadflags
+    >)
+
+    const url = 'https://example.com/x'
+    const handler = CLI_FIRMWARE.getcommand('text')
+    handler!(chip, [url])
+
+    expect(chip.command).not.toHaveBeenCalled()
+    expect(apichat).toHaveBeenCalled()
+    expect(vmloader).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_player1',
+      undefined,
+      'text',
+      'chat:message:player',
+      `alice:${url}`,
+    )
+  })
+
+  it('player allowlisted URL chats when media permission denied', () => {
+    READ_CONTEXT.elementisplayer = true
+    READ_CONTEXT.elementid = 'pid_player1'
+    READ_CONTEXT.element = {
+      id: 'pid_player1',
+      kind: 'player',
+    } as typeof READ_CONTEXT.element
+    jest.mocked(memorycanruncommand).mockReturnValue(false)
+    jest.mocked(memoryreadflags).mockReturnValue({ user: 'alice' } as ReturnType<
+      typeof memoryreadflags
+    >)
+
+    const url = 'https://youtu.be/abc123'
+    const handler = CLI_FIRMWARE.getcommand('text')
+    handler!(chip, [url])
+
+    expect(chip.command).not.toHaveBeenCalled()
+    expect(apichat).toHaveBeenCalled()
+    expect(vmloader).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_player1',
+      undefined,
+      'text',
+      'chat:message:player',
+      `alice:${url}`,
     )
   })
 })

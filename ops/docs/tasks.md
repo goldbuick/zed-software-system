@@ -254,11 +254,14 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run ops:zns:docs:publish` | Publish zss/rom/refscroll/*.md to docs ZNS namespace (ZNS_EMAIL + ZNS_TOKEN from shell or cafe/.env.local; --dry-run) | `deploy` | — | — |
 
 
-## relay
+## mediaqueue
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run relay:build` | Install youtube-rtmp-relay deps and fetch MediaMTX/ffmpeg binaries | `deploy` | — | — |
-| `yarn task run relay:build:desktop` | Build YouTube relay Electron installers for current host OS | `deploy` | `relay:build` | — |
-| `yarn task run relay:build:desktop:mac` | Build YouTube relay macOS dmg (arm64 + x64) | `deploy` | `relay:build` | — |
-| `yarn task run relay:build:desktop:win` | Build YouTube relay Windows nsis installer (x64) | `deploy` | `relay:build` | — |
+| `yarn task run mediaqueue:build` | Install media-queue Electron helper deps | `deploy` | — | — |
+| `yarn task run mediaqueue:build:desktop` | Build media-queue desktop installers (Electron) for current host OS | `deploy` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:build:desktop:mac` | Build media-queue macOS dmg (Electron) | `deploy` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:build:desktop:win` | Build media-queue Windows nsis installer (Electron) | `deploy` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:dev` | Run media-queue Electron helper in dev mode | `dev` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:lint` | ESLint + typecheck media-queue Electron helper | `ci` | `mediaqueue:build` | — |
+| `yarn task run mediaqueue:test` | Run media-queue prep-cache unit checks | `ci` | `mediaqueue:build` | — |

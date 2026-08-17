@@ -1,0 +1,18 @@
+# SignPath GitHub policy for the "release-signing" signing policy.
+#
+# Path must match SignPath project + policy slugs in
+# .github/workflows/on-push-tag-release.yml:
+#   project-slug: zed-cafe-desktop
+#   signing-policy-slug: release-signing
+#
+# Takes effect from the repository default branch only. Changes on other
+# branches are inert until merged to main.
+#
+# Approval mode (automatic vs manual) is configured in the SignPath dashboard,
+# not in this file.
+
+github-policies:
+  runners:
+    # Tag releases build on windows-latest / macos-latest. Requiring GitHub-hosted
+    # runners blocks self-hosted runners from producing signed builds.
+    require_github_hosted: true

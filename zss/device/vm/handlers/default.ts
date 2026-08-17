@@ -1,6 +1,8 @@
 import { parsetarget } from 'zss/device'
 import type { DEVICE } from 'zss/device'
 import {
+  bridgemediapanel,
+  bridgequeuepanel,
   registercopy,
   vmcli,
   vmloader,
@@ -11,6 +13,10 @@ import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
+import {
+  mediapayloadwithmanage,
+  mediarequiremanageonvm,
+} from 'zss/feature/mediaqueue/mediaguards'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
@@ -209,6 +215,56 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     case 'bookmarkscroll':
       handlebookmarkscrollpanel(vm, message, path)
       break
+    case 'media': {
+      const payload =
+        message.data && typeof message.data === 'object'
+          ? (message.data as Record<string, unknown>)
+          : undefined
+      bridgemediapanel(
+        SOFTWARE,
+        message.player,
+        path,
+        mediapayloadwithmanage(message.player, payload),
+      )
+      break
+    }
+    case 'queue': {
+      const managepaths = new Set([
+        'menu',
+        'bind',
+        'skip',
+        'clear',
+        'stop',
+        'limit',
+      ])
+      if (
+        managepaths.has(path) &&
+        !mediarequiremanageonvm(message.player, 'queue')
+      ) {
+        break
+      }
+      if (path === 'bind') {
+        const board = memoryreadplayerboard(message.player)
+        const payload = (message.data ?? {}) as Record<string, unknown>
+        bridgequeuepanel(SOFTWARE, message.player, path, {
+          ...mediapayloadwithmanage(message.player, payload),
+          boardid: board?.id ?? payload.boardid ?? '',
+          boardname: board?.name ?? payload.boardname ?? '',
+        })
+      } else {
+        const payload =
+          message.data && typeof message.data === 'object'
+            ? (message.data as Record<string, unknown>)
+            : undefined
+        bridgequeuepanel(
+          SOFTWARE,
+          message.player,
+          path,
+          mediapayloadwithmanage(message.player, payload),
+        )
+      }
+      break
+    }
     default: {
       // expect that the chip: prefix is already removed from the path
       if (NAME(target) === 'self' || !path) {

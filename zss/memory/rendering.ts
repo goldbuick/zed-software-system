@@ -201,6 +201,20 @@ export function memoryconverttogadgetcontrollayer(
  */
 const memoryconverttogadgetlayerscache = new Map<string, LAYER[]>()
 
+/** Drop incremental MID/UNDER/OVER cache rows for a board (media bind, palette, etc.). */
+export function memoryinvalidategadgetlayerscacheforboard(boardid: string) {
+  const trimmed = boardid.trim()
+  if (!trimmed) {
+    return
+  }
+  const needle = `:${trimmed}:`
+  for (const key of memoryconverttogadgetlayerscache.keys()) {
+    if (key.includes(needle)) {
+      memoryconverttogadgetlayerscache.delete(key)
+    }
+  }
+}
+
 /** Gate for incremental layer cache reuse; exported for unit tests. */
 export function memoryincrementallayerscachestable(
   boardruntime: MAYBE<{
@@ -235,11 +249,36 @@ function memoryattachdrawdirtycellstotiles(board: BOARD, tiles: LAYER_TILES) {
   }
 }
 
+/** Append live object ticker strips for a board. Kept outside layer cache. */
+export function memoryappendboardtickers(
+  board: MAYBE<BOARD>,
+  tickers: TICKER[],
+): void {
+  if (!ispresent(board?.objects)) {
+    return
+  }
+  const boardobjects = Object.values(board.objects)
+  for (let i = 0; i < boardobjects.length; ++i) {
+    const object = boardobjects[i]
+    if (
+      isstring(object.tickertext) &&
+      isnumber(object.tickertime) &&
+      object.tickertext.length &&
+      isstring(object.id)
+    ) {
+      tickers.push({
+        id: object.id,
+        text: `${memoryelementtotickerprefix(object)}${object.tickertext}`,
+        tickertime: object.tickertime,
+      })
+    }
+  }
+}
+
 export function memoryconverttogadgetlayers(
   graphics: string,
   index: number,
   board: MAYBE<BOARD>,
-  tickers: TICKER[],
   whichlayer: DIR.UNDER | DIR.MID | DIR.OVER,
   multi = false,
 ): LAYER[] {
@@ -414,24 +453,6 @@ export function memoryconverttogadgetlayers(
     objects.sprites.push(sprite)
   }
 
-  // process ticker messages
-  for (let i = 0; i < boardobjects.length; ++i) {
-    const object = boardobjects[i]
-    // write ticker messages
-    if (
-      isstring(object.tickertext) &&
-      isnumber(object.tickertime) &&
-      object.tickertext.length &&
-      isstring(object.id)
-    ) {
-      tickers.push({
-        id: object.id,
-        text: `${memoryelementtotickerprefix(object)}${object.tickertext}`,
-        tickertime: object.tickertime,
-      })
-    }
-  }
-
   // layers for display media
   if (whichlayer === DIR.MID) {
     const boardruntime = memoryreadboardruntime(board)
@@ -480,6 +501,26 @@ export function memoryconverttogadgetlayers(
           ),
         )
       }
+    }
+    if (isstring(boardruntime?.mediaqueuehelperpeerid)) {
+      layers.push(
+        createcachedmedia(
+          cacheowner,
+          iiii++,
+          'text/mediaqueue-helper',
+          boardruntime.mediaqueuehelperpeerid,
+        ),
+      )
+    }
+    if (isstring(boardruntime?.mediaqueuenowplayingtitle)) {
+      layers.push(
+        createcachedmedia(
+          cacheowner,
+          iiii++,
+          'text/mediaqueue-nowplaying',
+          boardruntime.mediaqueuenowplayingtitle,
+        ),
+      )
     }
     // add media layer to list peer ids
     const pids = Object.keys(board.objects).filter(ispid)
@@ -633,17 +674,14 @@ function memoryreadgadgetlayersbody(
     id4all.push(underboard.id)
   }
 
-  // compose layers
-  under.push(
-    ...memoryconverttogadgetlayers(graphics, 0, underboard, tickers, DIR.UNDER),
-  )
+  // compose layers (tickers collected separately so layer cache hits cannot drop them)
+  under.push(...memoryconverttogadgetlayers(graphics, 0, underboard, DIR.UNDER))
   const multi = ispresent(overboard)
   layers.push(
     ...memoryconverttogadgetlayers(
       graphics,
       under.length,
       board,
-      tickers,
       DIR.MID,
       multi,
     ),
@@ -653,11 +691,13 @@ function memoryreadgadgetlayersbody(
       graphics,
       under.length + layers.length,
       overboard,
-      tickers,
       DIR.OVER,
       multi,
     ),
   )
+  memoryappendboardtickers(underboard, tickers)
+  memoryappendboardtickers(board, tickers)
+  memoryappendboardtickers(overboard, tickers)
 
   // scan for media layers
   const media = layersreadmedia(layers)

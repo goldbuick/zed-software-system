@@ -22,8 +22,8 @@ jobs:
         with:
           body: ${{steps.github_release.outputs.changelog}}
 
-  relay-macos:
-    name: Build YouTube relay (macOS)
+  mediaqueue-macos:
+    name: Build media queue (macOS)
     needs: release
     runs-on: macos-latest
     permissions:
@@ -41,21 +41,26 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build macOS installers
-        run: yarn task run relay:build:desktop:mac
+        run: yarn task run mediaqueue:build:desktop:mac
 
       - name: Upload macOS artifacts to release
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            ops/youtube-rtmp-relay/dist/*.dmg
-            ops/youtube-rtmp-relay/dist/*.zip
+            ops/media-queue/dist/*.dmg
 
-  relay-windows:
-    name: Build YouTube relay (Windows)
+  mediaqueue-windows:
+    name: Build media queue (Windows)
     needs: release
     runs-on: windows-latest
     permissions:
       contents: write
+      actions: read
+      id-token: write
+    env:
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      SIGNPATH_ORG_ID: ${{ secrets.SIGNPATH_ORG_ID }}
+      MEDIAQUEUE_NSIS_DIR: ops/media-queue/dist
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -69,11 +74,49 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build Windows installer
-        run: yarn task run relay:build:desktop:win
+        run: yarn task run mediaqueue:build:desktop:win
 
-      - name: Upload Windows artifacts to release
+      - name: Locate NSIS installer
+        id: locate-installer
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path $env:MEDIAQUEUE_NSIS_DIR -Filter "*.exe" | Select-Object -First 1
+          if (-not $installer) {
+            throw "NSIS installer not found under $env:MEDIAQUEUE_NSIS_DIR"
+          }
+          "installer_path=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Upload unsigned installer for SignPath
+        id: upload-unsigned-artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: media-queue-windows-installer
+          path: ${{ steps.locate-installer.outputs.installer_path }}
+          archive: false
+
+      - name: Sign Windows installer (SignPath)
+        if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORG_ID != ''
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ env.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORG_ID }}
+          project-slug: zed-cafe-desktop
+          signing-policy-slug: release-signing
+          artifact-configuration-slug: media-queue-nsis
+          github-artifact-id: ${{ steps.upload-unsigned-artifact.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: ${{ github.workspace }}/signed-artifacts
+          skip-decompress: true
+
+      - name: Upload signed Windows installer to release
+        if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORG_ID != ''
         uses: softprops/action-gh-release@v3
         with:
-          files: |
-            ops/youtube-rtmp-relay/dist/*.exe
-            ops/youtube-rtmp-relay/dist/*.yml
+          files: signed-artifacts/*.exe
+
+      - name: Upload unsigned Windows installer to release
+        if: env.SIGNPATH_API_TOKEN == '' || env.SIGNPATH_ORG_ID == ''
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ${{ steps.locate-installer.outputs.installer_path }}

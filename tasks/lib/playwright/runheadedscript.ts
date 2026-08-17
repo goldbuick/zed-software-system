@@ -87,15 +87,17 @@ export async function runheadedplaywrightscript(
     throw new Error(`${scriptpath} must default-export an async function`)
   }
 
+  const scripttimeoutms = scriptpath.includes('tvsink-headed')
+    ? 1_200_000
+    : PARITY_RENDER_SCRIPT_TIMEOUT_MS
+
   const browser = await launchparitybrowser()
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true })
     const page = await context.newPage()
     page.setDefaultTimeout(PARITY_RENDER_SCRIPT_TIMEOUT_MS)
-    await withscripttimeout(
-      'headed-playwright-script',
-      PARITY_RENDER_SCRIPT_TIMEOUT_MS,
-      () => script({ browser, page, baseurl, root }),
+    await withscripttimeout('headed-playwright-script', scripttimeoutms, () =>
+      script({ browser, page, baseurl, root }),
     )
     return 0
   } finally {

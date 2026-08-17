@@ -1,4 +1,4 @@
-import { LAYER_TYPE, type TICKER } from 'zss/gadget/data/types'
+import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import {
@@ -8,6 +8,7 @@ import {
 import {
   memoryconverttogadgetlayers,
   memoryincrementallayerscachestable,
+  memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
 import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { BOARD_WIDTH } from 'zss/memory/types'
@@ -81,20 +82,51 @@ describe('PERF_INCREMENTAL_LAYERS regression', () => {
       'pid_player',
     )
     const player = board.objects.pid_player!
-    const tickers: TICKER[] = []
 
     memoryupdatedrawdirty(board, 1)
-    let layers = memoryconverttogadgetlayers('iso', 0, board, tickers, DIR.MID)
+    let layers = memoryconverttogadgetlayers('iso', 0, board, DIR.MID)
     expect(readplayersprite(layers)).toMatchObject({ x: 5, y: 5 })
 
     memoryupdatedrawdirty(board, 2)
-    layers = memoryconverttogadgetlayers('iso', 0, board, tickers, DIR.MID)
+    layers = memoryconverttogadgetlayers('iso', 0, board, DIR.MID)
     expect(readplayersprite(layers)).toMatchObject({ x: 5, y: 5 })
 
     player.x = 6
     player.y = 6
     memoryupdatedrawdirty(board, 3)
-    layers = memoryconverttogadgetlayers('iso', 0, board, tickers, DIR.MID)
+    layers = memoryconverttogadgetlayers('iso', 0, board, DIR.MID)
     expect(readplayersprite(layers)).toMatchObject({ x: 6, y: 6 })
+  })
+
+  it('keeps player tickertext across warm incremental layer cache hits', () => {
+    const board = memorycreateboard()
+    board.id = 'board_ticker_cache'
+    memorycreateboardobjectfromkind(
+      board,
+      { x: 5, y: 5 },
+      'player',
+      'pid_player',
+    )
+    const player = board.objects.pid_player!
+    player.tickertext = 'hello tape'
+    player.tickertime = 1
+
+    memoryupdatedrawdirty(board, 1)
+    let layers = memoryreadgadgetlayers('flat', board)
+    expect(layers.tickers.some((t) => t.id === 'pid_player')).toBe(true)
+    expect(layers.tickers.find((t) => t.id === 'pid_player')?.text).toContain(
+      'hello tape',
+    )
+
+    // no position/fp change -> stable layer cache; tickers must still be emitted
+    memoryupdatedrawdirty(board, 2)
+    expect(
+      memoryincrementallayerscachestable(memoryreadboardruntime(board)),
+    ).toBe(true)
+    layers = memoryreadgadgetlayers('flat', board)
+    expect(layers.tickers.some((t) => t.id === 'pid_player')).toBe(true)
+    expect(layers.tickers.find((t) => t.id === 'pid_player')?.text).toContain(
+      'hello tape',
+    )
   })
 })

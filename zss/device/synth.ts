@@ -1,5 +1,6 @@
 import { createdevice } from 'zss/device'
 import { doasync } from 'zss/device/doasync'
+import { mediaqueueresumeaudio } from 'zss/feature/mediaqueue/boardtvaudio'
 import { createsynthbackend } from 'zss/feature/synth/backend/synthbackendfactory'
 import {
   getliveaudiocontext,
@@ -53,6 +54,7 @@ let backend: MAYBE<SynthBackend>
 export function enableaudio() {
   // Always drive unlock/resume on the gesture turn (Firefox drops resume after awaits).
   unlockaudiocontext()
+  mediaqueueresumeaudio()
   if (enabled || locked) {
     return
   }
@@ -139,6 +141,14 @@ const synthdevice = createdevice('synth', [], (message) => {
         const [, volume] = message.data as [string, number]
         if (isnumber(volume)) {
           backend.setplayvolume(volume)
+        }
+      }
+      break
+    case 'mainvolume':
+      if (isarray(message.data) && backend) {
+        const [, volume] = message.data as [string, number]
+        if (isnumber(volume)) {
+          backend.setmainvolume(volume)
         }
       }
       break

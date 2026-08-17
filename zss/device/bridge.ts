@@ -28,6 +28,16 @@ import {
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
+  mediaqueuesetmainvolume,
+  mediaqueuesetmediavolume,
+  storemediavolconfig,
+} from 'zss/feature/mediaqueue/boardtvaudio'
+import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
+import {
+  handlemediapanel,
+  handlequeuepanel,
+} from 'zss/feature/mediaqueue/panel'
+import {
   netterminalhost,
   netterminaljoin,
   readsubscribetopic,
@@ -267,6 +277,7 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'start':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
+        mediaqueuebootstrap()
         // show join code
         bridgeshowjoincode(SOFTWARE, message.player, !!message.data)
       })
@@ -274,6 +285,7 @@ const bridge = createdevice('bridge', [], (message) => {
     case 'tab':
       doasync(bridge, message.player, async () => {
         await netterminalhost()
+        mediaqueuebootstrap()
         // open a join tab
         bridgetabopen(SOFTWARE, message.player)
       })
@@ -285,6 +297,7 @@ const bridge = createdevice('bridge', [], (message) => {
     }
     case 'join':
       if (isstring(message.data)) {
+        mediaqueuebootstrap()
         netterminaljoin(message.data)
       }
       break
@@ -609,5 +622,46 @@ const bridge = createdevice('bridge', [], (message) => {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')
       }
       break
+    case 'mediapanel': {
+      const payload = message.data as
+        | { path?: unknown; data?: unknown }
+        | undefined
+      if (!payload || !isstring(payload.path)) {
+        apierror(bridge, message.player, 'bridge', 'media panel: need path')
+        break
+      }
+      handlemediapanel(bridge, { ...message, data: payload.data }, payload.path)
+      break
+    }
+    case 'queuepanel': {
+      const payload = message.data as
+        | { path?: unknown; data?: unknown }
+        | undefined
+      if (!payload || !isstring(payload.path)) {
+        apierror(bridge, message.player, 'bridge', 'queue panel: need path')
+        break
+      }
+      handlequeuepanel(bridge, { ...message, data: payload.data }, payload.path)
+      break
+    }
+    case 'mediavol': {
+      const volume = Number(message.data)
+      if (!Number.isFinite(volume)) {
+        apierror(bridge, message.player, 'bridge', 'mediavol: need a number')
+        break
+      }
+      mediaqueuesetmediavolume(volume)
+      storemediavolconfig(volume)
+      break
+    }
+    case 'mainvol': {
+      const volume = Number(message.data)
+      if (!Number.isFinite(volume)) {
+        apierror(bridge, message.player, 'bridge', 'mainvol: need a number')
+        break
+      }
+      mediaqueuesetmainvolume(volume)
+      break
+    }
   }
 })

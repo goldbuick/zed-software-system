@@ -7,7 +7,8 @@ import {
   Vector3,
 } from 'three'
 import { FLAT_CAMERA_ORTHO_ASSERT, RUNTIME } from 'zss/config'
-import { readgadgetcontrol } from 'zss/gadget/data/types'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
+import { LAYER_TYPE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { BOARD_INSPECTOR_Z_BUFFER } from 'zss/gadget/graphics/boardinspectorz'
 import {
@@ -335,14 +336,27 @@ export const FlatGraphics = memo(function FlatGraphics({
           <group ref={zoomref}>
             <group ref={cornerref}>
               <group ref={liveboardref}>
-                {layers.map((layer, i) => (
-                  <FlatLayer
-                    key={layer.id}
-                    from="layers"
-                    id={layer.id}
-                    z={1 + i * 2}
-                  />
-                ))}
+                {layers.map((layer, i) =>
+                  layer.type !== LAYER_TYPE.SPRITES ? (
+                    <FlatLayer
+                      key={layer.id}
+                      from="layers"
+                      id={layer.id}
+                      z={1 + i * 2}
+                    />
+                  ) : null,
+                )}
+                <BoardTvSink graphics="flat" />
+                {layers.map((layer, i) =>
+                  layer.type === LAYER_TYPE.SPRITES ? (
+                    <FlatLayer
+                      key={layer.id}
+                      from="layers"
+                      id={layer.id}
+                      z={1 + i * 2}
+                    />
+                  ) : null,
+                )}
                 {over.map((layer, i) => (
                   <FlatLayer
                     key={layer.id}

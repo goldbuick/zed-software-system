@@ -31,3 +31,7 @@ Shorthand: `./task cafe dev` (or `yarn task cafe dev`) is equivalent to `yarn ta
 Press **`Ctrl+I`** (or run `#perf` in the terminal) to toggle the in-game perf overlay; see [`zss/perf/README.md`](zss/perf/README.md).
 
 Production build: `yarn task run cafe:build` (Vite app + Blume docs at `cafe/dist/docs/`). Chip scripts compile via the TypeScript lang backend. Per-area docs live under `zss/**/docs/` and selected `ops/docs/` pages (mounted into the docs site).
+
+## Desktop helpers (Releases)
+
+Electron installers for the media-queue helper attach to [GitHub Releases](https://github.com/goldbuick/zed-software-system/releases) on `v*` tags. Windows signing: free code signing provided by SignPath.io, certificate by SignPath Foundation ([setup](ops/docs/desktop-signing.md)).

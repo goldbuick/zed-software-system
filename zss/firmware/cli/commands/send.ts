@@ -10,12 +10,14 @@ import {
   vmmakeitscroll,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelements } from 'zss/memory/gamesend'
+import { memorycanruncommand } from 'zss/memory/permissions'
 import { memoryelementtologprefix } from 'zss/memory/rendering'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
@@ -73,7 +75,7 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       )
       return 0
     })
-    .command('text', ['text on element or in sidebar'], (_, words) => {
+    .command('text', ['text on element or in sidebar'], (chip, words) => {
       let ticker = readscrolltextfromwords(words)
 
       if (hasbonk(ticker)) {
@@ -114,6 +116,15 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       }
 
       if (diverted) {
+        return 0
+      }
+
+      if (
+        READ_CONTEXT.elementisplayer &&
+        mediaischatqueueurl(ticker) &&
+        memorycanruncommand(READ_CONTEXT.elementfocus, 'media')
+      ) {
+        chip.command('media', ticker)
         return 0
       }
 

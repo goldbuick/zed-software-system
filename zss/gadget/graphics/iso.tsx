@@ -9,7 +9,8 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
+import { LAYER_TYPE, VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { boardinspectorzfromgadgetstacks } from 'zss/gadget/graphics/boardinspectorz'
 import {
@@ -367,14 +368,27 @@ export const IsoGraphics = memo(function IsoGraphics({
                 <group ref={zoomref}>
                   <group ref={cornerref}>
                     <group ref={liveboardref}>
-                      {layers.map((layer) => (
-                        <IsoLayer
-                          key={layer.id}
-                          id={layer.id}
-                          from="layers"
-                          z={maptolayerz(layer, 'iso')}
-                        />
-                      ))}
+                      {layers.map((layer) =>
+                        layer.type !== LAYER_TYPE.SPRITES ? (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            from="layers"
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ) : null,
+                      )}
+                      <BoardTvSink graphics="iso" />
+                      {layers.map((layer) =>
+                        layer.type === LAYER_TYPE.SPRITES ? (
+                          <IsoLayer
+                            key={layer.id}
+                            id={layer.id}
+                            from="layers"
+                            z={maptolayerz(layer, 'iso')}
+                          />
+                        ) : null,
+                      )}
                       {over.map((layer) => (
                         <IsoLayer
                           key={layer.id}

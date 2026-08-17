@@ -31,6 +31,10 @@ export async function launchparitybrowser(
     headless: process.env.PLAYWRIGHT_HEADLESS === '1',
     channel: 'chrome',
     timeout: timeoutms,
+    args: [
+      '--use-fake-device-for-media-stream',
+      '--use-fake-ui-for-media-stream',
+    ],
   })
 }
 
@@ -52,7 +56,7 @@ export async function runpageevaluate<T, A>(
   fn: (arg: A) => Promise<T>,
   arg: A,
 ): Promise<T> {
-  return page.evaluate(fn, arg)
+  return page.evaluate(fn as never, arg as never)
 }
 
 export { stopparityvite }

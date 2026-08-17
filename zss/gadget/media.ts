@@ -105,15 +105,18 @@ export const useMedia = create<MEDIA_DATA>((set) => ({
   },
   setscreen(peer, screen) {
     set((state) => {
-      if (isequal(state.screen, screen)) {
+      if (state.screen[peer] === screen) {
         return state
+      }
+      const next = { ...state.screen }
+      if (ispresent(screen)) {
+        next[peer] = screen
+      } else {
+        delete next[peer]
       }
       return {
         ...state,
-        screen: {
-          ...state.screen,
-          [peer]: screen,
-        } as Record<string, HTMLVideoElement>,
+        screen: next,
       }
     })
   },

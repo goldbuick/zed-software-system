@@ -1,0 +1,7 @@
+node_modules/
+out/
+vendor/
+resources/bin/
+resources/dev/
+dist/
+.verify-download/

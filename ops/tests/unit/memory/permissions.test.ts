@@ -6,6 +6,7 @@ import {
   memoryapplypermissionconfig,
   memorycanruncommand,
   memorymapcommandtofamily,
+  memoryplayerallowedcommand,
   memoryreadallowlistbreakdownbyrole,
   memoryreadallowlistbyrole,
   memoryreadpermissionconfig,
@@ -163,6 +164,33 @@ describe('permissions', () => {
       expect(memorycanruncommand('player1', 'dev')).toBe(true)
       expect(memorycanruncommand('player1', 'save')).toBe(false)
       expect(memorycanruncommand('player1', 'nuke')).toBe(false)
+    })
+
+    it('creative player can submit media but not manage queue', () => {
+      memoryapplypermissionconfig('creative')
+      memorysetplayertotoken('player1', 'token-a')
+      memorysetrolefortoken('token-a', 'player')
+      expect(memorymapcommandtofamily('media')).toBe('speaker')
+      expect(memorycanruncommand('player1', 'media')).toBe(true)
+      expect(memorycanruncommand('player1', 'mediamanage')).toBe(false)
+    })
+
+    it('memoryplayerallowedcommand probes mediamanage without apierror', () => {
+      memoryapplypermissionconfig('creative')
+      memorysetplayertotoken('player1', 'token-a')
+      memorysetrolefortoken('token-a', 'player')
+      mockapierror.mockClear()
+      expect(memoryplayerallowedcommand('player1', 'media')).toBe(true)
+      expect(memoryplayerallowedcommand('player1', 'mediamanage')).toBe(false)
+      expect(mockapierror).not.toHaveBeenCalled()
+    })
+
+    it('creative mod can submit and manage media queue', () => {
+      memoryapplypermissionconfig('creative')
+      memorysetplayertotoken('mod1', 'token-mod')
+      memorysetrolefortoken('token-mod', 'mod')
+      expect(memorycanruncommand('mod1', 'media')).toBe(true)
+      expect(memorycanruncommand('mod1', 'mediamanage')).toBe(true)
     })
 
     it('memoryapplypermissionconfig open gives all roles non-risk groups including persist', () => {

@@ -163,8 +163,10 @@ $whiteplay music
 $whitebackground play  
 #bgplayon64n $26 #bgplayon1n  
 $whitequantized bg play  
-#vol / #bgvol <volume>  
-$whiteset volume
+#vol <volume>  
+$whitemain volume  
+#playvol / #bgvol / #ttsvol / #mediavol <volume>  
+$whiteset bus / TV volume
 
 ## audio - synthesis
 

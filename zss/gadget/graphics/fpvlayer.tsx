@@ -1,7 +1,12 @@
 import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/registerplayer'
+import {
+  mediaqueuehasvideo,
+  useBoardTvVisible,
+} from 'zss/feature/mediaqueue/boardtvvisible'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
 import { BOARD_WIDTH } from 'zss/memory/types'
 import { recordfilterrebuild } from 'zss/perf/renderupdatestats'
@@ -46,6 +51,10 @@ export function FPVLayer({
 
   const drawwidth = RUNTIME.DRAW_CHAR_WIDTH()
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
+  const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
+  const hasvideo = useMedia((state) => mediaqueuehasvideo(state.screen))
+  // Same gate as BoardTvSink: bound board + helper or stream, not sim MEMORY.
+  const skipceiling = useBoardTvVisible(gadgetboard, hasvideo)
 
   const control = layersreadcontrol(
     useGadgetClient.getState().gadget.layers ?? [],
@@ -100,17 +109,19 @@ export function FPVLayer({
                 bg={walls.bg}
               />
             </group>
-            <group position-z={drawheight + 0.5}>
-              <Tiles
-                width={layer.width}
-                height={layer.height}
-                char={sky.char}
-                color={sky.color}
-                bg={sky.bg}
-                dirtycells={layer.dirtycells}
-              />
-            </group>
-            {!multi && (
+            {!skipceiling && (
+              <group position-z={drawheight + 0.5}>
+                <Tiles
+                  width={layer.width}
+                  height={layer.height}
+                  char={sky.char}
+                  color={sky.color}
+                  bg={sky.bg}
+                  dirtycells={layer.dirtycells}
+                />
+              </group>
+            )}
+            {!multi && !skipceiling && (
               <group position-z={drawheight + 0.5}>
                 <PillarwMeshes
                   width={BOARD_WIDTH}

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' blob:; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost"
+    />
+    <title>zed.cafe Media Queue</title>
+    <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="stylesheet" href="./theme.css" />
+    <link rel="stylesheet" href="./mq.css" />
+  </head>
+  <body>
+    <div class="frame mq">
+      <h1>zed.cafe <span>Media Queue</span></h1>
+      <div class="sub">PeerJS helper for cafe board TV queue</div>
+
+      <label for="localpeer">Your peer id</label>
+      <div class="peerbox">
+        <input
+          id="localpeer"
+          type="text"
+          readonly
+          spellcheck="false"
+          autocomplete="off"
+          value="starting..."
+        />
+        <button id="copypeer" type="button" class="action" disabled>
+          Copy
+        </button>
+      </div>
+
+      <label for="status">status</label>
+      <div id="statusbox" class="status">
+        <div>
+          <span class="label">link</span>
+          <span id="link" class="value">starting</span>
+        </div>
+        <div id="detail" class="mono"></div>
+      </div>
+
+      <label for="queue">queue (from cafe)</label>
+      <textarea id="queue" readonly></textarea>
+
+      <label for="cookiesbrowser">youtube cookies</label>
+      <select id="cookiesbrowser">
+        <option value="">off</option>
+        <option value="safari">safari</option>
+        <option value="chrome">chrome</option>
+        <option value="firefox">firefox</option>
+        <option value="brave">brave</option>
+        <option value="edge">edge</option>
+      </select>
+
+      <div class="row">
+        <button id="stopcall" class="danger" type="button">Stop call</button>
+        <button id="cleardownloads" type="button" class="action">
+          Clear downloads
+        </button>
+      </div>
+
+      <video id="preview" muted playsinline autoplay></video>
+
+      <div class="help">
+        Cafe: <code>#queue &lt;peerid&gt;</code> to bind --
+        <code>#media</code> for queue list, <code>#queue</code> for admin menu.
+        Playback auto-starts on the first URL via yt-dlp download.
+      </div>
+    </div>
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>

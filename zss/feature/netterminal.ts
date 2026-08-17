@@ -1,4 +1,4 @@
-import Peer, { DataConnection } from 'peerjs'
+import Peer, { DataConnection, MediaConnection } from 'peerjs'
 import { createdevice, createmessage, parsetarget } from 'zss/device'
 import {
   apierror,
@@ -19,6 +19,7 @@ import {
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
+import { peerserveroptions } from 'zss/feature/peerserver'
 import {
   decodepeerwire,
   encodepeerwire,
@@ -58,6 +59,122 @@ export function readnetworkpeerid(): string | undefined {
   return undefined
 }
 
+export type NETTERMINAL_PEER_ROSTER_ENTRY = {
+  player: string
+  peerid: string
+}
+
+/** Snapshot of player -> peerid clique roster (host + joins). */
+export function readpeerroster(): NETTERMINAL_PEER_ROSTER_ENTRY[] {
+  return rosterentries()
+}
+
+type MEDIACALL_HANDLER = (call: MediaConnection) => void
+type ROSTER_CHANGE_HANDLER = () => void
+type PEER_OPEN_HANDLER = () => void
+
+let mediacallhandler: MAYBE<MEDIACALL_HANDLER>
+let rosterchangehandler: MAYBE<ROSTER_CHANGE_HANDLER>
+const peeropenhandlers: PEER_OPEN_HANDLER[] = []
+
+function runpeeropenhandlers() {
+  for (let i = 0; i < peeropenhandlers.length; ++i) {
+    peeropenhandlers[i]()
+  }
+}
+
+/** MediaConnection answer path (media queue board room). Not game DataConnection. */
+export function netterminalregistermediacallhandler(
+  handler: MEDIACALL_HANDLER,
+) {
+  mediacallhandler = handler
+}
+
+export function netterminalregisterrosterchangehandler(
+  handler: ROSTER_CHANGE_HANDLER,
+) {
+  rosterchangehandler = handler
+}
+
+/** Run when the clique Peer opens (host or join) so media can answer room calls. */
+export function netterminalregisterpeeropenhandler(handler: PEER_OPEN_HANDLER) {
+  peeropenhandlers.push(handler)
+  if (netterminalpeerisopen()) {
+    handler()
+  }
+}
+
+/** Outbound MediaConnection from the clique Peer (e.g. direct helper connect). */
+export function netterminalmediacall(
+  peerid: string,
+  stream: MediaStream,
+  metadata?: object,
+): MAYBE<MediaConnection> {
+  if (!ispresent(networkpeer) || !networkpeer.open || !peerid) {
+    return undefined
+  }
+  return networkpeer.call(peerid, stream, metadata ? { metadata } : undefined)
+}
+
+export function netterminalpeerisopen(): boolean {
+  return ispresent(networkpeer) && networkpeer.open
+}
+
+/** Start hosting if needed and wait until the clique Peer is open (for #media, etc.). */
+export async function netterminalensurehostready(
+  timeoutms = SIGNAL_HANDSHAKE_TIMEOUT_MS,
+): Promise<boolean> {
+  if (netterminalpeerisopen()) {
+    return true
+  }
+  const player = registerreadplayer()
+  if (!ispresent(networkpeer)) {
+    apilog(SOFTWARE, player, 'starting netterminal for cafe session')
+    await netterminalhost()
+  }
+  if (netterminalpeerisopen()) {
+    return true
+  }
+  const peer = networkpeer
+  if (!ispresent(peer)) {
+    apierror(SOFTWARE, player, 'netterminal', 'peer failed to start')
+    return false
+  }
+  return await new Promise<boolean>((resolve) => {
+    let settled = false
+    const finish = (ok: boolean) => {
+      if (settled) {
+        return
+      }
+      settled = true
+      clearTimeout(timer)
+      peer.off('open', onopen)
+      peer.off('error', onerror)
+      resolve(ok)
+    }
+    const onopen = () => finish(true)
+    const onerror = () => finish(false)
+    const timer = setTimeout(() => {
+      apierror(SOFTWARE, player, 'netterminal', 'peer handshake timed out')
+      finish(false)
+    }, timeoutms)
+    peer.on('open', onopen)
+    peer.on('error', onerror)
+    if (peer.open) {
+      onopen()
+    }
+  })
+}
+
+/** Outbound DataConnection on the clique Peer (media queue helper control plane). */
+export function netterminaldataconnect(peerid: string): MAYBE<DataConnection> {
+  const trimmed = peerid.trim()
+  if (!netterminalpeerisopen() || !trimmed) {
+    return undefined
+  }
+  return networkpeer?.connect(trimmed, { reliable: true })
+}
+
 const SIGNAL_HANDSHAKE_TIMEOUT_MS = 20_000
 const SIGNAL_RETRY_BASE_MS = 1_000
 const SIGNAL_RETRY_MAX_MS = 60_000
@@ -73,10 +190,7 @@ let netterminalunloadregistered = false
 
 const NETTERMINAL_MAX_JOINS = 10
 
-type PEER_ROSTER_ENTRY = {
-  player: string
-  peerid: string
-}
+type PEER_ROSTER_ENTRY = NETTERMINAL_PEER_ROSTER_ENTRY
 
 function shoulddialpeer(selfpeerid: string, otherpeerid: string): boolean {
   if (!selfpeerid || !otherpeerid || selfpeerid === otherpeerid) {
@@ -149,6 +263,29 @@ function registernetterminalunload() {
     networkpeer?.disconnect()
     networkpeer = undefined
   })
+}
+
+/**
+ * PeerJS errors carry `type` plus a standard Error `message`; `message` and
+ * `stack` are non-enumerable, so JSON.stringify alone yields `{"type":"..."}`
+ * with no explanation of what went wrong.
+ */
+function peererrortext(err: unknown): string {
+  if (typeof err === 'string') {
+    return err
+  }
+  if (!ispresent(err) || typeof err !== 'object') {
+    return typeof err === 'number' ||
+      typeof err === 'boolean' ||
+      typeof err === 'bigint'
+      ? String(err)
+      : 'error'
+  }
+  const typevalue = (err as { type?: unknown }).type
+  const type = typeof typevalue === 'string' ? typevalue : 'error'
+  const messagevalue = (err as { message?: unknown }).message
+  const message = typeof messagevalue === 'string' ? messagevalue.trim() : ''
+  return message ? `${type}: ${message}` : type
 }
 
 function issignalrecoverableerrortype(type: string) {
@@ -477,6 +614,7 @@ function handledataconnection(dataconnection: DataConnection) {
             playerbypeer[hellopeer] = helloplayer
             ensurehostselfonroster()
             broadcastpeerroster()
+            rosterchangehandler?.()
           }
           return
         }
@@ -497,7 +635,7 @@ function handledataconnection(dataconnection: DataConnection) {
       SOFTWARE,
       player,
       `netterminal`,
-      `dataconnection ${dataconnection.peer} - ${JSON.stringify(err)}`,
+      `dataconnection ${dataconnection.peer} - ${peererrortext(err)}`,
     )
   })
 
@@ -522,6 +660,7 @@ createdevice('netterminal', [], (message) => {
         `peer roster ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`,
       )
       ensurejoinclique()
+      rosterchangehandler?.()
       break
     }
     case 'peerhello':
@@ -543,15 +682,6 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
   subscribetopic = topicpeerid
   clearpeercliquestate()
   vmtopic(SOFTWARE, player, subscribetopic)
-
-  function peerserveroptions() {
-    return {
-      debug: import.meta.env.DEV ? 2 : 0,
-      host: 'terminal.zed.cafe',
-      secure: true,
-      port: 443,
-    }
-  }
 
   function sessionstillactive() {
     return sessionserial === netterminalsessionserial
@@ -616,6 +746,13 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
 
     workstatus(SOFTWARE, player, 'peer dial')
 
+    networkpeer.on('call', (call) => {
+      if (!sessionstillactive()) {
+        return
+      }
+      mediacallhandler?.(call)
+    })
+
     signalhandshaketimer = setTimeout(() => {
       signalhandshaketimer = undefined
       if (!sessionstillactive() || !ispresent(networkpeer)) {
@@ -637,6 +774,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
       signalretryattempt = 0
       apilog(SOFTWARE, player, `connected to netterminal`)
       apilog(SOFTWARE, player, 'peer connected')
+      runpeeropenhandlers()
       if (topicpeerid !== peerid) {
         if (!joinoutsignalconnectdone) {
           joinoutsignalconnectdone = true
@@ -713,6 +851,10 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         case 'disconnected':
         case 'peer-unavailable':
           return
+        case 'webrtc':
+          // Media-call renegotiation (replaceTrack / skip / type switch) often
+          // emits empty native WebRTC errors; not a signaling failure.
+          return
         case 'invalid-id':
         case 'unavailable-id':
           netterminalclearallschedule()
@@ -730,7 +872,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
           SOFTWARE,
           player,
           `netterminal`,
-          `${networkpeer?.id} - ${JSON.stringify(err)}`,
+          `${networkpeer?.id} - ${peererrortext(err)}; reconnecting`,
         )
         requestfullsignalingrestart(err.type)
         return
@@ -739,7 +881,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
         SOFTWARE,
         player,
         `netterminal`,
-        `${networkpeer?.id} - ${JSON.stringify(err)}`,
+        `${networkpeer?.id} - ${peererrortext(err)}`,
       )
     })
   }

@@ -9,7 +9,8 @@ import {
   Vector3,
 } from 'three'
 import { RUNTIME } from 'zss/config'
-import { VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
+import { BoardTvSink } from 'zss/gadget/boardtvsink'
+import { LAYER_TYPE, VIEWSCALE, readgadgetcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { DepthFog } from 'zss/gadget/fx/depthfog'
@@ -457,15 +458,29 @@ export const FPVGraphics = memo(function FPVGraphics({
           >
             <group ref={dofboardref} position={[centerx, centery, 0]}>
               <group ref={liveboardref}>
-                {layers.map((layer) => (
-                  <FPVLayer
-                    key={layer.id}
-                    id={layer.id}
-                    from="layers"
-                    z={maptolayerz(layer, 'fpv')}
-                    multi={multi}
-                  />
-                ))}
+                {layers.map((layer) =>
+                  layer.type !== LAYER_TYPE.SPRITES ? (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      from="layers"
+                      z={maptolayerz(layer, 'fpv')}
+                      multi={multi}
+                    />
+                  ) : null,
+                )}
+                <BoardTvSink graphics="fpv" />
+                {layers.map((layer) =>
+                  layer.type === LAYER_TYPE.SPRITES ? (
+                    <FPVLayer
+                      key={layer.id}
+                      id={layer.id}
+                      from="layers"
+                      z={maptolayerz(layer, 'fpv')}
+                      multi={multi}
+                    />
+                  ) : null,
+                )}
                 {over.map((layer) => (
                   <FPVLayer
                     key={layer.id}

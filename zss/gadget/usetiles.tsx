@@ -1,5 +1,6 @@
 import { useContext } from 'react'
 import type { Plane } from 'three'
+import { type TILES_MEDIA_SOURCE } from 'zss/gadget/gadgetmedia'
 import { TILE_DATA, TilesContext } from 'zss/gadget/tiles'
 import { recordtilerenderrun } from 'zss/perf/renderupdatestats'
 import { StoreApi, useStore } from 'zustand'
@@ -21,6 +22,7 @@ type TilesRenderProps = {
   height: number
   clippingplanes?: Plane[]
   skipraycast?: boolean
+  mediasource?: TILES_MEDIA_SOURCE
 }
 
 export function TilesRender({
@@ -29,6 +31,7 @@ export function TilesRender({
   height,
   clippingplanes,
   skipraycast,
+  mediasource = 'ui',
 }: TilesRenderProps) {
   const store = useContext(TilesContext)
   const [char, color, bg, render] = useStore(
@@ -49,7 +52,7 @@ export function TilesRender({
         height={height}
         clippingplanes={clippingplanes}
         skipraycast={skipraycast}
-        mediasource="ui"
+        mediasource={mediasource}
       />
     )
   )

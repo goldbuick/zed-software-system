@@ -1,0 +1,74 @@
+{
+  "name": "zed-cafe-media-queue",
+  "productName": "Zed Cafe Media Queue",
+  "private": true,
+  "version": "1.12.19",
+  "main": "out/main/index.js",
+  "description": "Electron media-queue helper for zed.cafe",
+  "author": "zed.cafe",
+  "license": "MIT",
+  "scripts": {
+    "fetch-binaries": "tsx scripts/fetch-binaries.ts",
+    "verify-download": "tsx scripts/verify-download.ts",
+    "test-prep-cache": "tsx scripts/test-prep-cache.ts",
+    "test": "tsx scripts/test-prep-cache.ts",
+    "stage-electron-resources": "tsx scripts/stage-electron-resources.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "lint": "cd ../.. && ./node_modules/.bin/eslint 'ops/media-queue/**/*.ts' 'ops/media-queue/**/*.d.ts' --report-unused-disable-directives --max-warnings 0",
+    "build": "electron-vite build",
+    "prestart": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-icon.ts && tsx scripts/stage-dev-app.ts",
+    "start": "tsx scripts/run-electron.ts",
+    "predist": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-electron-resources.ts && tsx scripts/stage-icon.ts && electron-vite build",
+    "dist": "tsx scripts/run-builder.ts",
+    "dist:mac": "tsx scripts/run-builder.ts --mac",
+    "dist:win": "tsx scripts/run-builder.ts --win"
+  },
+  "build": {
+    "appId": "cafe.zed.media-queue",
+    "productName": "Zed Cafe Media Queue",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "resources/icons/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "resources/icons/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^5.0.0",
+    "peerjs": "1.5.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.2.2"
+  }
+}

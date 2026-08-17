@@ -32,8 +32,9 @@ export function handleworkstatus(_device: DEVICE, message: MESSAGE): void {
     clearTimeout(readworkstatustimer())
     useTape.setState({ workstatus: message.data })
     if (message.data) {
+      const hold = message.data.startsWith('media ') ? 10_000 : 2_000
       setworkstatustimer(
-        setTimeout(() => useTape.setState({ workstatus: '' }), 2_000),
+        setTimeout(() => useTape.setState({ workstatus: '' }), hold),
       )
     }
   }

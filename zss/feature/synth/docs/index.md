@@ -34,7 +34,8 @@ Creates and returns a full synth instance (`AUDIO_SYNTH`).
 | `addplay(buffer)`                  | Parse notation and schedule playback |
 | `addbgplay(buffer, quantize)`      | Schedule background SFX              |
 | `stopplay()`                       | Clear scheduled notes                |
-| `setplayvolume(v)`                 | Main playback volume (0-100)         |
+| `setmainvolume(v)`                 | Main scale for all buses (0-100)     |
+| `setplayvolume(v)`                 | Play bus trim (0-100)                |
 | `setbgplayvolume(v)`               | Background SFX volume                |
 | `setttsvolume(v)`                  | TTS volume                           |
 | `addaudiobuffer(buffer)`           | Play external audio (e.g. TTS)       |

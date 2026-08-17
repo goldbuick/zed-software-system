@@ -109,6 +109,40 @@ export function bridgeshowjoincode(
   device.emit(player, 'bridge:showjoincode', hidden)
 }
 
+export function bridgemediapanel(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+  data?: unknown,
+) {
+  device.emit(player, 'bridge:mediapanel', { path, data })
+}
+
+export function bridgequeuepanel(
+  device: DEVICELIKE,
+  player: string,
+  path: string,
+  data?: unknown,
+) {
+  device.emit(player, 'bridge:queuepanel', { path, data })
+}
+
+export function bridgemediavol(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'bridge:mediavol', volume)
+}
+
+export function bridgemainvol(
+  device: DEVICELIKE,
+  player: string,
+  volume: number,
+) {
+  device.emit(player, 'bridge:mainvol', volume)
+}
+
 export function bridgestart(
   device: DEVICELIKE,
   player: string,
@@ -624,6 +658,15 @@ export function synthplayvolume(
   device.emit(player, 'synth:playvolume', [board, volume])
 }
 
+export function synthmainvolume(
+  device: DEVICELIKE,
+  player: string,
+  board: MAYBE<string>,
+  volume: number,
+) {
+  device.emit(player, 'synth:mainvolume', [board, volume])
+}
+
 export function synthrecord(
   device: DEVICELIKE,
   player: string,
@@ -918,6 +961,32 @@ export function vmoperator(device: DEVICELIKE, player: string) {
 
 export function vmpage(device: DEVICELIKE, player: string, codepage: any) {
   device.emit(player, 'vm:page', codepage)
+}
+
+export function vmmediaqueueboard(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+  helperpeerid: string | undefined,
+) {
+  device.emit(player, 'vm:mediaqueueboard', {
+    action: helperpeerid ? 'bind' : 'clear',
+    boardid,
+    helperpeerid: helperpeerid ?? '',
+  })
+}
+
+export function vmmediaqueuenowplaying(
+  device: DEVICELIKE,
+  player: string,
+  boardid: string,
+  title: string | undefined,
+) {
+  device.emit(player, 'vm:mediaqueuenowplaying', {
+    action: title ? 'set' : 'clear',
+    boardid,
+    title: title ?? '',
+  })
 }
 
 export function vmplayermovetoboard(
