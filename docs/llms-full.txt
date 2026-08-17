@@ -1799,7 +1799,7 @@ Source: https://zed.cafe/docs/features/audio-synth
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
 | #play / #bgplay | Creator | Play note sequences foreground or background. | `#play` |
-| #vol / #bgvol | Creator | Set play and background volume levels. | `#vol` |
+| #vol / #playvol / #bgvol | Creator | Main volume and play/bg bus trims. | `#vol` |
 | #synth / #synth1–5 | Creator | Configure Daisy multi-voice synth for #play/bgplay. | `#synth` |
 | Daisy WASM backend | Dev | Production synth: AudioWorklet + shared-array-buffer path. | `zss/feature/synth/backend/daisy/` |
 | #synthrecord / #synthflush | Creator | Record synth output to file or clear saved notes. | `#synthrecord` |
@@ -2024,8 +2024,10 @@ Source: https://zed.cafe/docs/firmware/audio
 | `play` | [buffer] | Play audio buffer (can reference chip variable) |
 | `bgplay` | [buffer] | Play background audio |
 | `bgplayon64n` … `bgplayon1n` | [buffer] | Same as `bgplay` but snaps to the next `@subdiv` on the synth boot beat grid (136 BPM) |
-| `vol` | `volume` | Set foreground playback volume |
+| `vol` | `volume` | Set main volume (scales all audio) |
+| `playvol` | `volume` | Set foreground play volume |
 | `bgvol` | `volume` | Set background playback volume |
+| `mediavol` | `volume` | Set board TV volume |
 
 ### Synthesis
 
@@ -2289,7 +2291,9 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
-| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip youtube <local-bearer>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `media` | Board TV media queue: `#media` (queue list), `#media <url>` (speaker) |
+| `queue` | Media helper admin: `#queue` (menu), `#queue <peerid>` (bind), `#queue skip` / `clear` / `stop` / `limit <N>` (bridge admin) |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
 | `access` | Set base preset: `lockdown`, `creative`, or `open` (overrides preserved) |
 | `allow` | Grant a permission family for a role (`admin` / `mod` / `player`); use a family name or any command that maps to that family |
@@ -2435,9 +2439,11 @@ All firmware commands and their descriptions. Commands are available depending o
 | `ttsengine` | List TTS engines (no args) or set engine and config |
 | `tts` | Text with voice (or clear queue) |
 | `ttsqueue` | TTS phrase |
-| `vol` | Main volume |
+| `vol` | Main volume (scales play, bgplay, TTS, media) |
+| `playvol` | Play volume |
 | `bgvol` | Bgplay volume |
 | `ttsvol` | TTS volume |
+| `mediavol` | Board TV volume |
 | `play` | Music notes |
 | `bgplay` | #play but for sound effects |
 | `bgplayon64n` | Bgplay on 64n |
@@ -6531,6 +6537,100 @@ Frame C — settled; W and e2 removed together
 
 ---
 
+# Desktop helper signing
+Source: https://zed.cafe/docs/ops/desktop-signing
+
+# Desktop helper signing
+
+Windows installers for the Electron media-queue helper ship on GitHub Releases (`v*` tags). macOS builds are unsigned until an Apple Developer ID is configured.
+
+## Windows (SignPath OSS)
+
+Free code signing for eligible open-source projects: [SignPath open source](https://signpath.io/solutions/open-source-community).
+
+**Attribution (required on project home / Releases):**
+
+> Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+### 1. Apply
+
+1. Apply at https://signpath.io/solutions/open-source-community
+2. Point at `https://github.com/goldbuick/zed-software-system`
+3. Describe the helper:
+   - **Media queue** (`ops/media-queue`) -- PeerJS `video.captureStream()` for `#media` board TV
+4. Note SmartScreen / download warnings on unsigned Windows `.exe` installers
+5. Confirm OSI license, public repo, free GitHub Releases distribution
+
+Approval is usually a few business days.
+
+### 2. SignPath dashboard (after approval)
+
+| Setting | Value |
+|---------|-------|
+| Project slug | `zed-cafe-desktop` |
+| Signing policy slug | `release-signing` |
+| Trusted build system | GitHub.com |
+| Repository | `goldbuick/zed-software-system` |
+| Workflow | `.github/workflows/on-push-tag-release.yml` |
+| Branch/tag pattern | `refs/tags/v*` |
+| Approval mode | Automatic (OSS Foundation default) |
+
+Artifact configuration:
+
+| App | Artifact configuration slug | Import XML |
+|-----|----------------------------|------------|
+| Media queue | `media-queue-nsis` | [`.signpath/artifact-configuration-media-queue-nsis.xml`](../../.signpath/artifact-configuration-media-queue-nsis.xml) |
+
+Upload a sample unsigned NSIS `.exe` from a local `yarn task run mediaqueue:build:desktop:win` build if the XML import is not offered.
+
+Install the **SignPath GitHub App** on the repo (read access to Actions artifacts).
+
+Policy file (default branch): [`.signpath/policies/zed-cafe-desktop/release-signing.yml`](../../.signpath/policies/zed-cafe-desktop/release-signing.yml)
+
+### 3. GitHub repository secrets
+
+| Secret | Source |
+|--------|--------|
+| `SIGNPATH_API_TOKEN` | SignPath user with submit permission on `release-signing` |
+| `SIGNPATH_ORG_ID` | SignPath organization UUID |
+
+Until both secrets exist, tag releases upload **unsigned** Windows `.exe` installers.
+
+### 4. Verify a release
+
+After pushing a tag (e.g. `v1.12.20`):
+
+1. Open the release asset: `Zed Cafe Media Queue_*_x64-setup.exe`
+2. Windows: file **Properties** -> **Digital Signatures** -> SignPath Foundation
+3. Optional on a Windows machine:
+
+```powershell
+signtool verify /pa /v "Zed Cafe Media Queue_*_x64-setup.exe"
+```
+
+### CI behavior
+
+`.github/workflows/on-push-tag-release.yml` runs a Windows job:
+
+| Job | Build task | SignPath artifact slug |
+|-----|------------|------------------------|
+| `mediaqueue-windows` | `mediaqueue:build:desktop:win` | `media-queue-nsis` |
+
+The job builds the Electron NSIS installer, uploads the unsigned `.exe` as a named workflow artifact, and when secrets are set submits to SignPath (`signpath/github-action-submit-signing-request@v2`). The signed `.exe` is attached to the GitHub Release.
+
+## macOS
+
+Public distribution without Gatekeeper warnings needs an Apple Developer Program membership ($99/year), Developer ID Application cert, and notarization. Not wired in CI yet; users use **Open Anyway** on first launch.
+
+## Related
+
+- Release workflow: [`.github/workflows/on-push-tag-release.yml`](../../.github/workflows/on-push-tag-release.yml)
+- Media queue: [`ops/media-queue/README.md`](../media-queue/README.md)
+- Helpers design: [`local-media-helpers-tauri.mdx`](local-media-helpers-tauri.mdx)
+- SignPath GitHub docs: https://docs.signpath.io/trusted-build-systems/github
+
+---
+
 # LiveKit Ingress (WHIP) → YouTube Live
 Source: https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live
 
@@ -6649,6 +6749,76 @@ Consult current docs for the request shape:
 - [livekit/egress](https://github.com/livekit/egress) — Room/track output including RTMP to YouTube.
 - [LiveKit docs](https://docs.livekit.io) — Server, cloud, and API details.
 - [ZSS in-app web broadcast → LiveKit](./web-broadcast-livekit.mdx) — migrating from Amazon IVS / Twitch-style ingest to LiveKit in the terminal broadcast flow.
+
+---
+
+# Local media helpers on Electron
+Source: https://zed.cafe/docs/ops/local-media-helpers-tauri
+
+**Purpose:** Ship cafe's **media-queue helper** as a local **Electron** (Chromium) desktop app. The helper PeerJS-calls cafe for board TV playback. Cafe stays a website; the helper ships as a local binary on GitHub Releases.
+
+**Status:** Electron is the desktop stack for the media-queue helper. Media-queue + cafe `#media` queue list / `#queue` admin menu / board TV receive path live under [`ops/media-queue/`](../media-queue/README.md) and [`zss/feature/mediaqueue/`](../../zss/feature/mediaqueue/docs/README.md). Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
+
+## Product shape
+
+| Helper | Job | Cafe side |
+|--------|-----|-----------|
+| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` queue list; `#queue` admin menu; **board TV** sink via direct helper connect -- **no tape overlay** |
+
+The helper ships as an Electron app on GitHub Releases (`v*` tags).
+
+```mermaid
+flowchart TB
+  subgraph cafe [zed.cafe browser]
+    CLI["#media / #queue …"]
+    Peer["PeerJS peer on terminal.zed.cafe"]
+    TV["Board TV MediaStream sink"]
+  end
+
+  subgraph helpers [Electron local app]
+    MQ["Media queue: yt-dlp + video.captureStream"]
+  end
+
+  CLI -->|queue RPCs DataConnection| MQ
+  MQ -->|MediaConnection per player on board| Peer
+  Peer --> TV
+```
+
+## Why Electron
+
+- **Chromium** provides `HTMLVideoElement.captureStream()` for media-queue WebRTC (WKWebView on Tauri macOS does not).
+- Playback path: download MP4 → `<video>.play()` → `video.captureStream()` → PeerJS.
+
+## Media-queue helper
+
+1. Register a Peer on `terminal.zed.cafe` (same PeerServer as [`netterminal.ts`](../../zss/feature/netterminal.ts)).
+2. Cafe `#media <url>` and `#queue` admin commands mutate a host-owned FIFO queue and push updates over a **DataConnection** (control plane). `#queue <peerid>` bind writes the helper peer id onto the bound board as a synced gadget MEDIA layer (`text/mediaqueue-helper`).
+3. On queue advance, the helper runs **yt-dlp** into a local cache file, plays it in Chromium, and publishes **`video.captureStream()`** to each player tab that calls the helper via **`MediaConnection`** (host admin and joins use the same path).
+4. Leaving the bound board tears down the player call and board TV sink (video + speaker audio).
+
+## Build / dev
+
+```bash
+yarn task run mediaqueue:build:desktop
+yarn task run mediaqueue:dev
+```
+
+Installers land under `ops/media-queue/dist/` (electron-builder).
+
+## Explicitly out
+
+| Approach | Why out |
+|----------|---------|
+| WHEP / tape overlay / Chromium sidecar | Wrong UX for board TV; PeerJS is the cafe clique |
+| Cloudflare Worker / yt-dlp | Cannot run PeerJS media in a Worker |
+| Cafe itself as a desktop app | Product stays https://zed.cafe |
+| Canvas re-capture on macOS | Replaced by Electron `video.captureStream()` |
+
+## Related
+
+- Media queue: [`ops/media-queue/`](../media-queue/README.md)
+- PeerJS baseline: [`zss/feature/docs/netterminal.md`](../../zss/feature/docs/netterminal.md)
+- Windows signing: [`desktop-signing.md`](desktop-signing.md)
 
 ---
 
@@ -6982,7 +7152,8 @@ Creates and returns a full synth instance (`AUDIO_SYNTH`).
 | `addplay(buffer)`                  | Parse notation and schedule playback |
 | `addbgplay(buffer, quantize)`      | Schedule background SFX              |
 | `stopplay()`                       | Clear scheduled notes                |
-| `setplayvolume(v)`                 | Main playback volume (0-100)         |
+| `setmainvolume(v)`                 | Main scale for all buses (0-100)     |
+| `setplayvolume(v)`                 | Play bus trim (0-100)                |
 | `setbgplayvolume(v)`               | Background SFX volume                |
 | `setttsvolume(v)`                  | TTS volume                           |
 | `addaudiobuffer(buffer)`           | Play external audio (e.g. TTS)       |
@@ -7587,25 +7758,30 @@ flowchart LR
 
   MIX --> MC[main compressor]
   MC --> RZ[razzle]
-  RZ --> MV["x readmainvolume #vol"]
+  RZ --> MV["x readmainvolume #playvol"]
   MV --> OUT["clamp +/-1"]
 ```
 
-**Naming trap:** `#vol` / `playvolume` is the **post-chain master fader** (`readmainvolume()`),
-not a trim on the play bus into the mix. Play stem level is fixed at `kPlayBusGain`.
+**Naming trap:** Native `readmainvolume()` is the **play-bus post-chain fader** (SAB PLAY),
+driven by `#playvol` after `#vol` main scale (`effective = playvol * vol / 100`).
+CLI `#vol` is the outer main multiplier for play, bgplay, TTS, and board TV -- not the DSP fader name.
+Play stem into the mix is still fixed at `kPlayBusGain`.
 
 ## User faders (SAB `zss_main`, 0-100)
 
 Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
+SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**).
 
-| Control | SAB slot | Default | dB law | Linear @ default | Notes |
-|---------|----------|---------|--------|------------------|-------|
-| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**2.22** @ offset -15 | Master after razzle |
-| `#bgvol` / bgplayvolume | BGPLAY (1) | **50** | `20*log10(vol) - 35` | ~**0.89** | bgplay stem |
-| `#ttsvol` / ttsvolume | TTS (2) | **100** | same as bg | ~**1.78** | TTS sample level |
-| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | **1.0** | Per-voice via `#synthN` |
+| Control | SAB slot | Trim default | dB law | Notes |
+|---------|----------|--------------|--------|-------|
+| `#vol` main | (JS scale) | **50** | multiplies all bus trims + board TV | Outer main |
+| `#playvol` | PLAY (0) | **90** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`) |
+| `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
+| `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
+| `#mediavol` | (HTML video) | **25** | linear `mediavol/100 * vol/100` | Board TV only |
+| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
-CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#bgvol`, `#ttsvol`).
+CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
 
 ## Master / bus constants (`zss_config.h`)
 
@@ -7613,7 +7789,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (default `#vol 50` ~2.22 linear) |
+| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (SAB play after main scale) |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
@@ -7702,7 +7878,7 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
 | Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
 | Idle play too hot | `kScMakeupDb`, `kScMix` | `ops:daisy:sidechain:parity:calibrate` |
-| Player quick trim | `#vol`, `#bgvol`, `#ttsvol`, `#fx N` | -- |
+| Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy
 

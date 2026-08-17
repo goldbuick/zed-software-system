@@ -153,8 +153,10 @@
 
 - [Built-in scroll validation](https://zed.cafe/docs/ops/scroll-validation)
 - [Design: directional board-grid pan (global board space)](https://zed.cafe/docs/ops/design-directional-board-grid-pan)
+- [Desktop helper signing](https://zed.cafe/docs/ops/desktop-signing)
 - [Firmware commands summary](https://zed.cafe/docs/ops/commands-summary)
 - [LiveKit Ingress (WHIP) → YouTube Live](https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live)
+- [Local media helpers on Electron](https://zed.cafe/docs/ops/local-media-helpers-tauri)
 - [Web broadcast → LiveKit migration (ZSS)](https://zed.cafe/docs/ops/web-broadcast-livekit)
 
 ## Parse

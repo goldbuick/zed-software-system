@@ -38,25 +38,30 @@ flowchart LR
 
   MIX --> MC[main compressor]
   MC --> RZ[razzle]
-  RZ --> MV["x readmainvolume #vol"]
+  RZ --> MV["x readmainvolume #playvol"]
   MV --> OUT["clamp +/-1"]
 ```
 
-**Naming trap:** `#vol` / `playvolume` is the **post-chain master fader** (`readmainvolume()`),
-not a trim on the play bus into the mix. Play stem level is fixed at `kPlayBusGain`.
+**Naming trap:** Native `readmainvolume()` is the **play-bus post-chain fader** (SAB PLAY),
+driven by `#playvol` after `#vol` main scale (`effective = playvol * vol / 100`).
+CLI `#vol` is the outer main multiplier for play, bgplay, TTS, and board TV -- not the DSP fader name.
+Play stem into the mix is still fixed at `kPlayBusGain`.
 
 ## User faders (SAB `zss_main`, 0-100)
 
 Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
+SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**).
 
-| Control | SAB slot | Default | dB law | Linear @ default | Notes |
-|---------|----------|---------|--------|------------------|-------|
-| `#vol` / playvolume | PLAY (0) | **50** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | ~**2.22** @ offset -15 | Master after razzle |
-| `#bgvol` / bgplayvolume | BGPLAY (1) | **50** | `20*log10(vol) - 35` | ~**0.89** | bgplay stem |
-| `#ttsvol` / ttsvolume | TTS (2) | **100** | same as bg | ~**1.78** | TTS sample level |
-| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | **1.0** | Per-voice via `#synthN` |
+| Control | SAB slot | Trim default | dB law | Notes |
+|---------|----------|--------------|--------|-------|
+| `#vol` main | (JS scale) | **50** | multiplies all bus trims + board TV | Outer main |
+| `#playvol` | PLAY (0) | **90** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`) |
+| `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
+| `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
+| `#mediavol` | (HTML video) | **25** | linear `mediavol/100 * vol/100` | Board TV only |
+| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
-CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#bgvol`, `#ttsvol`).
+CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
 
 ## Master / bus constants (`zss_config.h`)
 
@@ -64,7 +69,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (default `#vol 50` ~2.22 linear) |
+| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (SAB play after main scale) |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
@@ -153,7 +158,7 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
 | Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
 | Idle play too hot | `kScMakeupDb`, `kScMix` | `ops:daisy:sidechain:parity:calibrate` |
-| Player quick trim | `#vol`, `#bgvol`, `#ttsvol`, `#fx N` | -- |
+| Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy
 
