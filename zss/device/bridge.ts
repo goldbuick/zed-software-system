@@ -20,6 +20,7 @@ import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
 import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
 import { doasync } from 'zss/device/doasync'
+import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
   createwebbroadcastclient,
@@ -196,7 +197,7 @@ function pushchatline(
     undefined,
     'text',
     `${prefix}:${routekey}`,
-    `${user}:${text}`,
+    formatchatmessagebody(user, '', text),
   )
   chatpresencetouch(routekey, user, Date.now())
   emitchatroster(player, routekey, false)

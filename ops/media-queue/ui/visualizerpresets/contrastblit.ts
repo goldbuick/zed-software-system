@@ -2,7 +2,7 @@ import { MQ_CANVAS_HEIGHT, MQ_CANVAS_WIDTH } from '../tvcanvas'
 
 import { CLASSIC_BG, drawartwork } from './classicshared'
 
-const VIZ_OVER_ARTWORK_ALPHA = 0.72
+const VIZ_OVER_ARTWORK_ALPHA = 0.67
 
 /**
  * Pull washed WebGL frames down for board TV: crush highlights first, then

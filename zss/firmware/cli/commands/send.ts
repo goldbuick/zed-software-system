@@ -10,6 +10,7 @@ import {
   vmmakeitscroll,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -136,15 +137,14 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementid,
           `${memoryelementtologprefix(READ_CONTEXT.element)}${ticker}`,
         )
-        const { user } = memoryreadflags(READ_CONTEXT.elementid)
-        const withuser = isstring(user) ? user : 'player'
+        const { user, voice } = memoryreadflags(READ_CONTEXT.elementid)
         vmloader(
           SOFTWARE,
           READ_CONTEXT.elementid,
           undefined,
           'text',
           `chat:message:player`,
-          `${withuser}:${ticker}`,
+          formatchatmessagebody(user, voice, ticker),
         )
       }
       return 0

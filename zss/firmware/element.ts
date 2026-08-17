@@ -1,5 +1,10 @@
 import { CHIP } from 'zss/chip'
-import { apitoast, registerstickyuser, vmlogout } from 'zss/device/api'
+import {
+  apitoast,
+  registerstickyuser,
+  registerstickyvoice,
+  vmlogout,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { createfirmware } from 'zss/firmware'
 import {
@@ -577,6 +582,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
         case 'user': {
           if (isstring(value)) {
             registerstickyuser(SOFTWARE, player, value)
+          }
+          break
+        }
+        case 'voice': {
+          if (isstring(value) || isnumber(value)) {
+            registerstickyvoice(SOFTWARE, player, value)
           }
           break
         }

@@ -53,7 +53,7 @@ import {
 } from './memoryfs'
 import { handleready } from './ready'
 import { handlesecond } from './second'
-import { handlestickyuser, handletoken } from './storage'
+import { handlestickyuser, handlestickyvoice, handletoken } from './storage'
 import { handlechat, handlelog, handletoast, handleworkstatus } from './tape'
 import { handleterminalclose } from './terminal/close'
 import { handleterminalfull } from './terminal/full'
@@ -88,6 +88,7 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   input: handleinput,
   token: handletoken,
   stickyuser: handlestickyuser,
+  stickyvoice: handlestickyvoice,
   copy: handlecopy,
   downloadjsonfile: handledownloadjsonfile,
   downloadbinaryfile: handledownloadbinaryfile,

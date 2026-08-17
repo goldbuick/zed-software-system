@@ -179,17 +179,18 @@ function download(
       FFMPEG_POST_ARGS_AUDIO,
     )
   } else {
-    const postargs =
-      attempt === 1 ? FFMPEG_POST_ARGS_COPY : FFMPEG_POST_ARGS_TRANSCODE
     args.push(
       '-f',
       YTDLP_FORMAT,
       '--merge-output-format',
       'mp4',
       '--force-overwrites',
-      '--postprocessor-args',
-      postargs,
     )
+    const postargs =
+      attempt === 1 ? [FFMPEG_POST_ARGS_COPY] : FFMPEG_POST_ARGS_TRANSCODE
+    for (let i = 0; i < postargs.length; i += 1) {
+      args.push('--postprocessor-args', postargs[i])
+    }
   }
   args.push(
     '--no-playlist',

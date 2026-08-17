@@ -19,7 +19,7 @@ jest.mock('zss/device/doasync', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { handlestickyuser } from 'zss/device/register/handlers/storage'
+import { handlestickyuser, handlestickyvoice } from 'zss/device/register/handlers/storage'
 import type { MESSAGE } from 'zss/device/types'
 
 describe('handlestickyuser', () => {
@@ -45,6 +45,47 @@ describe('handlestickyuser', () => {
     handlestickyuser(device, {
       player: 'pid_join',
       data: undefined,
+    } as MESSAGE)
+    expect(storagewritevar).not.toHaveBeenCalled()
+  })
+})
+
+describe('handlestickyvoice', () => {
+  const device = { emit: jest.fn() } as unknown as DEVICE
+
+  beforeEach(() => {
+    storagewritevar.mockClear()
+  })
+
+  it('writes string voice hints', () => {
+    handlestickyvoice(device, {
+      player: 'pid_join',
+      data: 'F1',
+    } as MESSAGE)
+    expect(storagewritevar).toHaveBeenCalledWith('voice', 'F1')
+  })
+
+  it('writes numeric voice hints including zero', () => {
+    handlestickyvoice(device, {
+      player: 'pid_join',
+      data: 3,
+    } as MESSAGE)
+    handlestickyvoice(device, {
+      player: 'pid_join',
+      data: 0,
+    } as MESSAGE)
+    expect(storagewritevar).toHaveBeenNthCalledWith(1, 'voice', 3)
+    expect(storagewritevar).toHaveBeenNthCalledWith(2, 'voice', 0)
+  })
+
+  it('ignores non-string non-number values', () => {
+    handlestickyvoice(device, {
+      player: 'pid_join',
+      data: undefined,
+    } as MESSAGE)
+    handlestickyvoice(device, {
+      player: 'pid_join',
+      data: { id: 'x' },
     } as MESSAGE)
     expect(storagewritevar).not.toHaveBeenCalled()
   })

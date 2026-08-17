@@ -110,7 +110,57 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      'alice:hello world',
+      'alice::hello world',
+    )
+  })
+
+  it('player #text includes string voice hint', () => {
+    READ_CONTEXT.elementisplayer = true
+    READ_CONTEXT.elementid = 'pid_player1'
+    READ_CONTEXT.element = {
+      id: 'pid_player1',
+      kind: 'player',
+    } as typeof READ_CONTEXT.element
+    jest.mocked(memoryreadflags).mockReturnValue({
+      user: 'alice',
+      voice: 'F1',
+    } as ReturnType<typeof memoryreadflags>)
+
+    const handler = CLI_FIRMWARE.getcommand('text')
+    handler!(chip, ['hello', 'world'])
+
+    expect(vmloader).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_player1',
+      undefined,
+      'text',
+      'chat:message:player',
+      'alice:F1:hello world',
+    )
+  })
+
+  it('player #text includes numeric voice hint', () => {
+    READ_CONTEXT.elementisplayer = true
+    READ_CONTEXT.elementid = 'pid_player1'
+    READ_CONTEXT.element = {
+      id: 'pid_player1',
+      kind: 'player',
+    } as typeof READ_CONTEXT.element
+    jest.mocked(memoryreadflags).mockReturnValue({
+      user: 'alice',
+      voice: 3,
+    } as ReturnType<typeof memoryreadflags>)
+
+    const handler = CLI_FIRMWARE.getcommand('text')
+    handler!(chip, ['hello', 'world'])
+
+    expect(vmloader).toHaveBeenCalledWith(
+      expect.anything(),
+      'pid_player1',
+      undefined,
+      'text',
+      'chat:message:player',
+      'alice:3:hello world',
     )
   })
 
@@ -156,7 +206,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      `alice:${url}`,
+      `alice::${url}`,
     )
   })
 
@@ -184,7 +234,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      `alice:${url}`,
+      `alice::${url}`,
     )
   })
 })

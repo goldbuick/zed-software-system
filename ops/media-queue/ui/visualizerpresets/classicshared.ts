@@ -4,7 +4,7 @@ export const CLASSIC_BG = '#0a0a12'
 export const CLASSIC_GREEN = '#00ff41'
 export const CLASSIC_CYAN = '#00e5ff'
 export const CLASSIC_MAGENTA = '#ff00aa'
-export const CLASSIC_ARTWORK_DIM = 'rgba(10, 10, 18, 0.82)'
+export const CLASSIC_ARTWORK_DIM = 'rgba(10, 10, 18, 0.35)'
 export const CLASSIC_BAR_COUNT = 48
 
 export function drawartwork(
