@@ -241,8 +241,8 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     if (videotexture) {
       videotexture.needsUpdate = true
     }
-    const w = video?.videoWidth || 0
-    const h = video?.videoHeight || 0
+    const w = video?.videoWidth ?? 0
+    const h = video?.videoHeight ?? 0
     if (w !== videosize.w || h !== videosize.h) {
       setvideosize({ w, h })
     }

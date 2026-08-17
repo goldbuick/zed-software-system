@@ -156,7 +156,7 @@ function toastlistenplayer(ok: boolean, text: string) {
 
 function handlequeuestatus(status: string, detail?: string) {
   if (status === 'queue-added') {
-    toastlistenplayer(true, `media added: ${detail || ''}`.trim())
+    toastlistenplayer(true, `media added: ${detail ?? ''}`.trim())
     return
   }
   if (status === 'queue-skipped') {
@@ -168,7 +168,8 @@ function handlequeuestatus(status: string, detail?: string) {
     return
   }
   if (status === 'queue-limit') {
-    const limit = detail || String(mediaqueuereadperplayerlimit())
+    const limit =
+      (detail ?? '').trim() || String(mediaqueuereadperplayerlimit())
     toastlistenplayer(true, `queue limit: ${limit} per player`)
     return
   }

@@ -80,7 +80,9 @@ export function mqqueueparsedisk(raw: unknown): MQ_QUEUE_DISK {
     players.push('')
   }
   const indexraw = Number(data.index)
-  const index = Number.isFinite(indexraw) ? Math.max(0, Math.floor(indexraw)) : 0
+  const index = Number.isFinite(indexraw)
+    ? Math.max(0, Math.floor(indexraw))
+    : 0
   const limitraw = Number(data.limit)
   const limit = Number.isFinite(limitraw)
     ? mqqueueclamplimit(limitraw)
