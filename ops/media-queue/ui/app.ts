@@ -29,6 +29,7 @@ import {
   helperqueuesetlimit,
   helperqueueshift,
   helperqueueskip,
+  helperqueuenexturl,
   helperqueueurls,
 } from './queue'
 import { readhudstate, sethudstate } from './statushud'
@@ -534,7 +535,8 @@ function setlink(text: string | null, detail?: string) {
 }
 
 function prepbadge(index: number, url: string) {
-  if (index !== 1 || !url || url !== preptarget) {
+  const nextindex = helperqueuereadsnapshot().index + 1
+  if (index !== nextindex || !url || url !== preptarget) {
     return ''
   }
   if (prepstate && prepstate.phase === 'ready') {
@@ -585,8 +587,7 @@ async function reconcileprep() {
   if (readdevplaybackpath()) {
     return
   }
-  const urls = helperqueueurls()
-  const nexturl = urls.length >= 2 ? String(urls[1] || '').trim() : ''
+  const nexturl = helperqueuenexturl()
   if (!nexturl) {
     preptarget = ''
     prepstate = null
@@ -668,6 +669,7 @@ function helloandresume() {
     peerid: localpeerid,
   })
   sendqueuesnapshot()
+  void reconcileprep()
   if (playbackstarted) {
     answerpendingplayercalls()
     publishstreamtoplayers()
@@ -1047,6 +1049,9 @@ async function startplaybackandcall(url: string) {
     setlink('error', 'peer not ready')
     return
   }
+  // Prep the following item while this one downloads / buffers -- same overlap
+  // as the old cafe queue snapshot + goto pair.
+  void reconcileprep()
   if (playbackstarted) {
     await endcall({ keepplayers: true })
     if (issupersededplaybackerr(null, gen)) {
@@ -1457,6 +1462,7 @@ function bootfit() {
     .then(function (disk) {
       helperqueueapplydisk(disk)
       renderqueue()
+      void reconcileprep()
     })
     .catch(function (err) {
       setlink('error', 'queue load failed: ' + String(err))

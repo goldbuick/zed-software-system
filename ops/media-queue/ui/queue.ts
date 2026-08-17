@@ -38,6 +38,11 @@ export function helperqueueurls(): string[] {
   return mqqueueurls(helperqueue)
 }
 
+export function helperqueuenexturl(): string {
+  const snap = mqqueuereadsnapshot(helperqueue)
+  return String(snap.urls[snap.index + 1] || '').trim()
+}
+
 export function helperqueueadd(
   player: string,
   name: string,
