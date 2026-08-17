@@ -58,7 +58,7 @@ SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, b
 | `#playvol` | PLAY (0) | **90** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`) |
 | `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
-| `#mediavol` | (HTML video) | **25** | linear `mediavol/100 * vol/100` | Board TV only |
+| `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
 CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).

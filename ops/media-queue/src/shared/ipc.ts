@@ -73,6 +73,14 @@ export type MQ_PEER_ID = {
   peerid: string
 }
 
+export type MQ_QUEUE_DISK = {
+  urls: string[]
+  names: string[]
+  players: string[]
+  index: number
+  limit: number
+}
+
 /** Main -> renderer push channels. */
 export type MQ_EVENT_NAME =
   | 'mq-download-progress'
@@ -109,6 +117,8 @@ export type MQ_INVOKE_MAP = {
   read_media_file: { args: { path: string }; result: Uint8Array }
   write_text_file: { args: { path: string; text: string }; result: boolean }
   resolve_mq_peer_id: { args: void; result: MQ_PEER_ID }
+  read_media_queue: { args: void; result: MQ_QUEUE_DISK }
+  write_media_queue: { args: MQ_QUEUE_DISK; result: boolean }
   get_mq_dev_config: { args: void; result: MQ_DEV_CONFIG }
   mq_dev_peer_open: { args: { id: string }; result: boolean }
   mq_dev_status: { args: { text: string }; result: boolean }

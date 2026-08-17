@@ -6,26 +6,19 @@ import type { MESSAGE } from 'zss/device/types'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueueislistening,
-  mediaqueuereadboundboardid,
+  mediaqueuereadhelperpeerid,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
   mediareadcanmanagefrompayload,
   mediareaddisplaynamefrompayload,
+  mediareadhelperpeeridfrompayload,
 } from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
-import { mediaqueuesyncnowplayingboard } from 'zss/feature/mediaqueue/nowplayinglabel'
-import {
-  mediaqueueadd,
-  mediaqueueclear,
-  mediaqueuereadperplayerlimit,
-  mediaqueuereadstate,
-  mediaqueuesetperplayerlimit,
-  mediaqueueskip,
-} from 'zss/feature/mediaqueue/queue'
 import { showqueuemenu } from 'zss/feature/mediaqueue/queuemenu'
 import {
+  mediaqueuehelperdatalinkup,
   mediaqueuelisten,
-  mediaqueuepushqueuesnapshot,
+  mediaqueuesendtohelper,
   mediaqueuestop,
 } from 'zss/feature/mediaqueue/receive'
 import { netterminalensurehostready } from 'zss/feature/netterminal'
@@ -82,6 +75,35 @@ function requiremanage(player: string, message: MESSAGE): boolean {
   return false
 }
 
+function requirehelper(player: string, noun: string): boolean {
+  if (!mediaqueueislistening()) {
+    apierror(SOFTWARE, player, noun, 'use #queue <peerid> first')
+    return false
+  }
+  if (!mediaqueuehelperdatalinkup()) {
+    apierror(SOFTWARE, player, noun, 'helper not connected')
+    return false
+  }
+  return true
+}
+
+function requirepayloadhelper(player: string, message: MESSAGE): boolean {
+  const helperpeerid = mediareadhelperpeeridfrompayload(message.data)
+  if (!helperpeerid) {
+    apierror(SOFTWARE, player, 'media', 'not on a board with media')
+    return false
+  }
+  if (helperpeerid !== mediaqueuereadhelperpeerid()) {
+    apierror(SOFTWARE, player, 'media', 'use #queue <peerid> first')
+    return false
+  }
+  if (!mediaqueuehelperdatalinkup()) {
+    apierror(SOFTWARE, player, 'media', 'helper not connected')
+    return false
+  }
+  return true
+}
+
 function mediabind(
   player: string,
   peerid: string,
@@ -105,7 +127,7 @@ function mediabind(
   })
 }
 
-/** CLI actions for #media (MAIN thread via bridge:mediapanel). */
+/** CLI actions for #media (host MAIN thread via bridge:mediapanel). */
 export function handlemediapanel(
   vm: DEVICE,
   message: MESSAGE,
@@ -115,6 +137,9 @@ export function handlemediapanel(
   void vm
   switch (NAME(path)) {
     case 'menu':
+      if (!requirepayloadhelper(player, message)) {
+        return
+      }
       showmediamenu(player)
       break
     case 'add': {
@@ -123,8 +148,7 @@ export function handlemediapanel(
         apierror(SOFTWARE, player, 'media', 'usage: #media <url>')
         return
       }
-      if (!mediaqueueislistening()) {
-        apierror(SOFTWARE, player, 'media', 'use #queue <peerid> first')
+      if (!requirepayloadhelper(player, message)) {
         return
       }
       const displayname = mediareaddisplaynamefrompayload(message.data)
@@ -132,25 +156,12 @@ export function handlemediapanel(
         apierror(SOFTWARE, player, 'media', 'submitter name missing')
         return
       }
-      const hadqueue = mediaqueuereadstate().urls.length > 0
-      const result = mediaqueueadd(player, displayname, url)
-      if (!result.ok) {
-        if (result.reason === 'duplicate') {
-          apierror(SOFTWARE, player, 'media', 'URL already in queue')
-        } else if (result.reason === 'limit') {
-          apierror(
-            SOFTWARE,
-            player,
-            'media',
-            `queue limit (${mediaqueuereadperplayerlimit()} per player)`,
-          )
-        } else {
-          apierror(SOFTWARE, player, 'media', 'usage: #media <url>')
-        }
-        return
-      }
-      mediaqueuepushqueuesnapshot(!hadqueue)
-      write(SOFTWARE, player, `media added: ${url}`)
+      mediaqueuesendtohelper({
+        type: 'mediaqueue:add',
+        url,
+        player,
+        name: displayname,
+      })
       break
     }
     default:
@@ -158,7 +169,7 @@ export function handlemediapanel(
   }
 }
 
-/** CLI actions for #queue (MAIN thread via bridge:queuepanel). */
+/** CLI actions for #queue (host MAIN thread via bridge:queuepanel). */
 export function handlequeuepanel(
   vm: DEVICE,
   message: MESSAGE,
@@ -195,13 +206,17 @@ export function handlequeuepanel(
       if (!requiremanage(player, message)) {
         return
       }
-      mediaqueueskip()
-      mediaqueuepushqueuesnapshot(true)
-      write(SOFTWARE, player, 'queue skipped to next')
+      if (!requirehelper(player, 'queue')) {
+        return
+      }
+      mediaqueuesendtohelper({ type: 'mediaqueue:skip' })
       break
     }
     case 'limit': {
       if (!requiremanage(player, message)) {
+        return
+      }
+      if (!requirehelper(player, 'queue')) {
         return
       }
       const limit = readlimitfrompayload(message)
@@ -209,25 +224,17 @@ export function handlequeuepanel(
         apierror(SOFTWARE, player, 'queue', 'usage: #queue limit <N>')
         return
       }
-      mediaqueuesetperplayerlimit(limit)
-      write(
-        SOFTWARE,
-        player,
-        `queue limit: ${mediaqueuereadperplayerlimit()} per player`,
-      )
+      mediaqueuesendtohelper({ type: 'mediaqueue:setlimit', limit })
       break
     }
     case 'clear': {
       if (!requiremanage(player, message)) {
         return
       }
-      mediaqueueclear()
-      mediaqueuepushqueuesnapshot()
-      const boundboard = mediaqueuereadboundboardid()
-      if (boundboard) {
-        mediaqueuesyncnowplayingboard(player, boundboard, undefined)
+      if (!requirehelper(player, 'queue')) {
+        return
       }
-      write(SOFTWARE, player, 'queue cleared')
+      mediaqueuesendtohelper({ type: 'mediaqueue:clear' })
       break
     }
     case 'stop': {

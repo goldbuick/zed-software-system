@@ -48,6 +48,29 @@ describe('forward peer predicates', () => {
         createmessage('s', 'p', 'x', 'netterminal:peerroster'),
       ),
     ).toBe(true)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'register:stickyuser'),
+      ),
+    ).toBe(true)
+  })
+
+  it('shouldforwardservertoclient keeps media queue panels on the host', () => {
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'bridge:mediapanel'),
+      ),
+    ).toBe(false)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'bridge:queuepanel'),
+      ),
+    ).toBe(false)
+    expect(
+      shouldforwardservertoclient(
+        createmessage('s', 'p', 'x', 'bridge:showjoincode'),
+      ),
+    ).toBe(true)
   })
 
   it('shouldforwardservertoclient allows synth audiobytes but not tts paths', () => {

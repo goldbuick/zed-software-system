@@ -1,97 +1,64 @@
-/** Host-owned media URL queue (cafe side). */
-
-import { mediaqueuenormalizeurl } from 'zss/feature/mediaqueue/urlnormalize'
-
-export type MEDIAQUEUE_ENTRY = {
-  url: string
-  player: string
-  /** Submitter display name, resolved on the VM where player flags live. */
-  name: string
-  key: string
-}
+/** Cafe projection of the helper-owned media URL queue. */
 
 export type MEDIAQUEUE_STATE = {
   urls: string[]
-  players: string[]
   names: string[]
   index: number
   perplayerlimit: number
 }
 
-export type MEDIAQUEUE_ADD_RESULT =
-  | { ok: true }
-  | { ok: false; reason: 'empty' | 'duplicate' | 'limit' }
+export type MEDIAQUEUE_SNAPSHOT = {
+  urls: string[]
+  names: string[]
+  index: number
+  limit: number
+}
 
-const DEFAULT_PER_PLAYER_LIMIT = 3
-const MIN_PER_PLAYER_LIMIT = 1
-const MAX_PER_PLAYER_LIMIT = 20
+const DEFAULT_PER_PLAYER_LIMIT = 5
 
-let entries: MEDIAQUEUE_ENTRY[] = []
+let urls: string[] = []
+let names: string[] = []
+let index = 0
 let perplayerlimit = DEFAULT_PER_PLAYER_LIMIT
 
 export function mediaqueuereadstate(): MEDIAQUEUE_STATE {
   return {
-    urls: entries.map((entry) => entry.url),
-    players: entries.map((entry) => entry.player),
-    names: entries.map((entry) => entry.name),
-    index: 0,
-    perplayerlimit: perplayerlimit,
+    urls: urls.slice(),
+    names: names.slice(),
+    index,
+    perplayerlimit,
   }
 }
 
-export function mediaqueueclear() {
-  entries = []
+export function mediaqueueapplysnapshot(snapshot: MEDIAQUEUE_SNAPSHOT) {
+  const nexturls = Array.isArray(snapshot.urls)
+    ? snapshot.urls.map((url) => String(url))
+    : []
+  const nextnames = Array.isArray(snapshot.names)
+    ? snapshot.names.map((name) => String(name))
+    : []
+  while (nextnames.length < nexturls.length) {
+    nextnames.push('')
+  }
+  urls = nexturls
+  names = nextnames.slice(0, nexturls.length)
+  const n = Number(snapshot.index)
+  index =
+    nexturls.length === 0
+      ? 0
+      : Number.isFinite(n)
+        ? Math.max(0, Math.min(Math.floor(n), nexturls.length - 1))
+        : 0
+  const limit = Number(snapshot.limit)
+  perplayerlimit = Number.isFinite(limit)
+    ? Math.max(1, Math.min(20, Math.floor(limit)))
+    : DEFAULT_PER_PLAYER_LIMIT
 }
 
 export function mediaqueuereadperplayerlimit(): number {
   return perplayerlimit
 }
 
-export function mediaqueuesetperplayerlimit(limit: number) {
-  perplayerlimit = Math.max(
-    MIN_PER_PLAYER_LIMIT,
-    Math.min(MAX_PER_PLAYER_LIMIT, Math.floor(limit)),
-  )
-}
-
-export function mediaqueuecountforplayer(player: string): number {
-  return entries.filter((entry) => entry.player === player).length
-}
-
-export function mediaqueueadd(
-  player: string,
-  name: string,
-  url: string,
-): MEDIAQUEUE_ADD_RESULT {
-  const trimmed = url.trim()
-  if (!trimmed) {
-    return { ok: false, reason: 'empty' }
-  }
-  const key = mediaqueuenormalizeurl(trimmed)
-  if (entries.some((entry) => entry.key === key)) {
-    return { ok: false, reason: 'duplicate' }
-  }
-  if (mediaqueuecountforplayer(player) >= perplayerlimit) {
-    return { ok: false, reason: 'limit' }
-  }
-  entries = [...entries, { url: trimmed, player, name, key }]
-  return { ok: true }
-}
-
-export function mediaqueueshiftcurrent(): MEDIAQUEUE_ENTRY | undefined {
-  if (entries.length === 0) {
-    return undefined
-  }
-  const [removed, ...rest] = entries
-  entries = rest
-  return removed
-}
-
-export function mediaqueueskip(): string | undefined {
-  mediaqueueshiftcurrent()
-  return mediaqueuecurrenturl()
-}
-
 export function mediaqueuecurrenturl(): string | undefined {
-  return entries[0]?.url
+  return urls[index]
 }

@@ -6,7 +6,9 @@ import {
   mediaqueueensurevideosink,
   mediaqueueteardownplayersink,
 } from 'zss/feature/mediaqueue/attachvideo'
+import { mediaqueuereadaudiogain } from 'zss/feature/mediaqueue/boardtvaudio'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
+import { mediaqueuesyncbroadcastaudio } from 'zss/feature/mediaqueue/broadcastaudio'
 import { mediaqueuecallmetadata } from 'zss/feature/mediaqueue/callmetadata'
 import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
 import {
@@ -100,12 +102,76 @@ const calltracksynctimers = new Map<
   ReturnType<typeof setTimeout>
 >()
 
-function retryplayerconnectfromlayer() {
-  const layer = mediaqueuereadplayerlayerstate()
-  if (!layer.helperpeerid || !layer.board || ispresent(activecall)) {
+function iceisdead(call: MediaConnection): boolean {
+  const pc = call.peerConnection
+  if (!pc) {
+    return false
+  }
+  return (
+    pc.iceConnectionState === 'failed' ||
+    pc.iceConnectionState === 'closed' ||
+    pc.connectionState === 'failed' ||
+    pc.connectionState === 'closed'
+  )
+}
+
+function remotestreamusable(stream: MAYBE<MediaStream>): boolean {
+  if (!ispresent(stream) || !streamhasmedia(stream)) {
+    return false
+  }
+  return stream.getTracks().some((track) => track.readyState !== 'ended')
+}
+
+function iceisconnecting(call: MediaConnection): boolean {
+  const pc = call.peerConnection
+  if (!pc) {
+    return true
+  }
+  return (
+    pc.iceConnectionState === 'new' ||
+    pc.iceConnectionState === 'checking' ||
+    pc.connectionState === 'new' ||
+    pc.connectionState === 'connecting'
+  )
+}
+
+function activecalliszombie(): boolean {
+  if (!ispresent(activecall)) {
+    return false
+  }
+  if (iceisdead(activecall)) {
+    return true
+  }
+  if (remotestreamusable(activestream)) {
+    return false
+  }
+  if (iceisconnecting(activecall)) {
+    return false
+  }
+  const helper =
+    activecall.peer || mediaqueuereadplayerlayerstate().helperpeerid
+  if (helper && synccallstream(activecall, helper)) {
+    return false
+  }
+  return true
+}
+
+function teardownzombieandredial(helperpeerid: string, board: string) {
+  if (ispresent(activecall) && activecalliszombie()) {
+    teardownactivecall()
+  }
+  if (ispresent(activecall)) {
     return
   }
-  tryplayerconnect(layer.helperpeerid, layer.board)
+  tryplayerconnect(helperpeerid, board)
+}
+
+function retryplayerconnectfromlayer() {
+  const layer = mediaqueuereadplayerlayerstate()
+  if (!layer.helperpeerid || !layer.board) {
+    return
+  }
+  teardownzombieandredial(layer.helperpeerid, layer.board)
 }
 
 netterminalregisterpeeropenhandler(retryplayerconnectfromlayer)
@@ -218,6 +284,7 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
     clearcalltracksynctimer(activecall)
   }
   mediaqueueattachvideosink(MEDIAQUEUE_PEER_LABEL, stream)
+  mediaqueuesyncbroadcastaudio(stream, mediaqueuereadaudiogain())
   mediaqueuesetplayerlayerpending(false)
   const player = registerreadplayer()
   const videocount = stream.getVideoTracks().length
@@ -393,16 +460,19 @@ function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
 }
 
 function teardownactivecall() {
-  if (ispresent(activecall)) {
-    clearpctracklistener(activecall)
-  }
-  mediaqueueteardownplayersink({
-    call: activecall,
-    stream: activestream,
-    peerkey: MEDIAQUEUE_PEER_LABEL,
-  })
+  const call = activecall
+  const stream = activestream
   activecall = undefined
   activestream = undefined
+  if (ispresent(call)) {
+    clearpctracklistener(call)
+  }
+  mediaqueueteardownplayersink({
+    call,
+    stream,
+    peerkey: MEDIAQUEUE_PEER_LABEL,
+  })
+  mediaqueuesyncbroadcastaudio(undefined, mediaqueuereadaudiogain())
 }
 
 function headedtrace(message: string) {
@@ -469,6 +539,12 @@ export function mediaqueueconnectifonboard(
 ) {
   mediaqueuebootstrap()
   mediaqueueensurevideosink()
+  const requested = gadgetboard.trim()
+  const bound = mediaqueuereadboundboardid().trim()
+  if (mediaqueueislistening() && requested && bound && requested !== bound) {
+    mediaqueuedisconnect()
+    return
+  }
   const trimmed = helperpeerid.trim() || mediaqueuereadhelperpeerid().trim()
   const board = readconnectboard(gadgetboard)
   if (!trimmed || !board) {
@@ -488,6 +564,11 @@ export function mediaqueueconnectifonboard(
     ispresent(activecall)
   mediaqueuesetplayerlayerstate(trimmed, board, layer.pendingconnect)
   if (samelayer) {
+    if (activecalliszombie()) {
+      teardownactivecall()
+      tryplayerconnect(trimmed, board)
+      return
+    }
     if (!ispresent(activestream) && ispresent(activecall)) {
       synccallstream(activecall, trimmed)
     }
@@ -502,38 +583,26 @@ export function mediaqueueconnectifonboard(
 /** Retry outbound helper MediaConnection when control plane says playback started. */
 export function mediaqueueretryplayerconnect() {
   const layer = mediaqueuereadplayerlayerstate()
-  if (ispresent(activecall)) {
-    const helper =
-      layer.helperpeerid ||
-      mediaqueuereadhelperpeerid() ||
-      activecall.peer ||
-      ''
-    if (helper && !ispresent(activestream)) {
-      if (synccallstream(activecall, helper)) {
-        return
-      }
-      // Call still open but no usable remote media -- drop and re-dial.
-      teardownactivecall()
-    } else {
-      return
-    }
-  }
-  if (layer.helperpeerid && layer.board) {
-    tryplayerconnect(layer.helperpeerid, layer.board)
+  if (!layer.helperpeerid || !layer.board) {
     return
   }
-  const helper = mediaqueuereadhelperpeerid()
-  const board = mediaqueuereadboundboardid()
-  if (!helper || !board) {
-    return
-  }
-  mediaqueuesetplayerlayerstate(helper, board, true)
-  tryplayerconnect(helper, board)
+  teardownzombieandredial(layer.helperpeerid, layer.board)
 }
 
 export function mediaqueuedisconnect() {
-  teardownactivecall()
   mediaqueueclearplayerlayerstate()
+  teardownactivecall()
+}
+
+/** Audio tracks from the active helper MediaStream, if any. */
+export function mediaqueuereadaudiostream(): MediaStream | undefined {
+  if (!ispresent(activestream)) {
+    return undefined
+  }
+  if (activestream.getAudioTracks().length === 0) {
+    return undefined
+  }
+  return activestream
 }
 
 export function mediaqueuereadplayerconnectstate() {

@@ -19,22 +19,21 @@ export function boardtvshouldshow(
   gadgetboard: string,
   hasvideo: boolean,
 ): boolean {
+  const board = gadgetboard.trim()
+  if (!board) {
+    return false
+  }
   const layer = mediaqueuereadplayerlayerstate()
-  if (layer.helperpeerid && layer.board === gadgetboard) {
+  if (layer.helperpeerid && layer.board === board) {
     return true
   }
 
   const bound = mediaqueuereadboundboardid()
   const listening = mediaqueueislistening()
-  const helperup = mediaqueuehelperconnected()
-
-  if (!listening || !bound) {
-    return hasvideo
-  }
-  if (gadgetboard !== bound) {
+  if (!listening || !bound || board !== bound) {
     return false
   }
-  return helperup || hasvideo
+  return mediaqueuehelperconnected() || hasvideo
 }
 
 /** Re-renders when helper listen / connect state changes (module singleton). */

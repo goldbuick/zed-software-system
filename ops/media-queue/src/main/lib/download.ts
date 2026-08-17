@@ -16,6 +16,9 @@ import type {
 
 import { ffmpegdir, resolvedeno, resolveffmpeg, resolveytdlp } from './bins'
 
+/** Reject media with unknown duration or longer than this (yt-dlp --match-filter). */
+const MQ_MAX_DURATION_SEC = 10 * 60
+
 type MQ_DOWNLOAD_JOB = {
   url: string
   phase: MQ_JOB_PHASE
@@ -116,13 +119,20 @@ const MQ_MEDIA_EXTENSIONS = new Set([
   '.aac',
   '.ogg',
 ])
-// Scope to Merger/Remuxer/Convertor only -- never use bare `ffmpeg:` / `FFmpeg:`.
+// Scope to named PPs only -- never use bare `ffmpeg:` / `FFmpeg:`.
 // That prefix hits ThumbnailsConvertor too and breaks --convert-thumbnails jpg
 // (ERROR: Preprocessing: Conversion failed!).
+// yt-dlp --ppa NAME:ARGS allows at most two names (`PP` or `PP+EXE`). Three
+// names (Merger+VideoRemuxer+VideoConvertor) fail the parse and apply to every
+// post-processor. Split transcode across two --ppa flags.
 export const FFMPEG_POST_ARGS_COPY =
   'Merger+VideoRemuxer:-c:v copy -c:a copy -movflags +faststart'
-export const FFMPEG_POST_ARGS_TRANSCODE =
-  'Merger+VideoRemuxer+VideoConvertor:-c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart'
+const FFMPEG_TRANSCODE_FLAGS =
+  '-c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart'
+export const FFMPEG_POST_ARGS_TRANSCODE = [
+  `Merger+VideoRemuxer:${FFMPEG_TRANSCODE_FLAGS}`,
+  `VideoConvertor:${FFMPEG_TRANSCODE_FLAGS}`,
+]
 export const FFMPEG_POST_ARGS_AUDIO = 'ExtractAudio+FixupM4a:-c:a aac -b:a 128k'
 const YOUTUBE_PLAYER_CLIENTS = [
   'default,-android_sdkless',
@@ -536,6 +546,17 @@ function ytdlplogdetail(line: string): string {
 }
 
 function formatytdlperror(errlines: string[], code: number | null): string {
+  const joined = errlines.join('\n').toLowerCase()
+  if (
+    joined.includes('match filter') ||
+    joined.includes('does not pass filter') ||
+    (joined.includes('skipping') && joined.includes('duration'))
+  ) {
+    const mins = Math.round(MQ_MAX_DURATION_SEC / 60)
+    return (
+      'media duration unknown or longer than ' + mins + ' minutes (rejected)'
+    )
+  }
   const picked = errlines.filter((line) => {
     if (line.includes('WARNING: --paths is ignored')) {
       return false
@@ -603,6 +624,7 @@ function applyytdlpbaseargs(
 
 function applyytdlpdownloadargs(args: string[], attempt: number): void {
   args.push('--retries', '10', '--fragment-retries', '10')
+  args.push('--match-filter', 'duration <= ' + MQ_MAX_DURATION_SEC)
   if (attempt > 1) {
     args.push('--sleep-requests', '1')
   }
@@ -611,6 +633,16 @@ function applyytdlpdownloadargs(args: string[], attempt: number): void {
 function applyytdlpcookies(args: string[], browser: string): void {
   if (browser) {
     args.push('--cookies-from-browser', browser)
+  }
+}
+
+function pushpostprocessorargs(
+  args: string[],
+  ppas: string | readonly string[],
+) {
+  const list = typeof ppas === 'string' ? [ppas] : ppas
+  for (let i = 0; i < list.length; i += 1) {
+    args.push('--postprocessor-args', list[i])
   }
 }
 
@@ -623,24 +655,19 @@ function buildytdlpargs(
   applyytdlpdownloadargs(args, ctx.attempt)
   applyytdlpcookies(args, ctx.cookiesbrowser)
   if (profile === 'audio') {
-    args.push(
-      '-f',
-      YTDLP_AUDIO_FORMAT,
-      '--force-overwrites',
-      '--postprocessor-args',
-      FFMPEG_POST_ARGS_AUDIO,
-    )
+    args.push('-f', YTDLP_AUDIO_FORMAT, '--force-overwrites')
+    pushpostprocessorargs(args, FFMPEG_POST_ARGS_AUDIO)
   } else {
-    const postargs =
-      ctx.attempt === 1 ? FFMPEG_POST_ARGS_COPY : FFMPEG_POST_ARGS_TRANSCODE
     args.push(
       '-f',
       YTDLP_FORMAT,
       '--merge-output-format',
       'mp4',
       '--force-overwrites',
-      '--postprocessor-args',
-      postargs,
+    )
+    pushpostprocessorargs(
+      args,
+      ctx.attempt === 1 ? FFMPEG_POST_ARGS_COPY : FFMPEG_POST_ARGS_TRANSCODE,
     )
   }
   args.push(

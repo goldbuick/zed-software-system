@@ -8,6 +8,7 @@ import type {
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
 
+import { probeaudiostream } from './audioprobe'
 import { mqpeerserveroptions } from './peerserver'
 import {
   attachpreview,
@@ -18,6 +19,21 @@ import {
   stopplayback,
 } from './playback'
 import type { MQ_PLAYBACK_RESULT } from './playback'
+import {
+  helperqueueadd,
+  helperqueueapplydisk,
+  helperqueueclear,
+  helperqueuecurrenturl,
+  helperqueuenexturl,
+  helperqueuereaddisk,
+  helperqueuereadsnapshot,
+  helperqueuesetlimit,
+  helperqueueshift,
+  helperqueueskip,
+  helperqueueurls,
+} from './queue'
+import { readhudstate, sethudstate } from './statushud'
+import { clearcompositorplayback, ensurecompositor } from './streamcompositor'
 
 type MQ_PLAYER_CALL = {
   call: MediaConnection
@@ -33,8 +49,12 @@ type MQ_CAFE_MESSAGE = {
   role?: string
   peerid?: string
   urls?: string[]
+  names?: string[]
   index?: number
   url?: string
+  player?: string
+  name?: string
+  limit?: number
 }
 
 type MQ_PREP_VIEW = Partial<MQ_JOB_STATE>
@@ -60,6 +80,7 @@ type MQ_ERRORLIKE = {
 
 const PEER_HOST = 'terminal.zed.cafe'
 const PROTOCOL = 'mediaqueue/v1'
+const SIGNAL_RECONNECT_WAIT_MS = 15000
 
 function readel<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id)
@@ -72,24 +93,21 @@ function readel<T extends HTMLElement>(id: string): T {
 const els = {
   localpeer: readel<HTMLInputElement>('localpeer'),
   copypeer: readel<HTMLButtonElement>('copypeer'),
-  link: readel<HTMLElement>('link'),
-  detail: readel<HTMLElement>('detail'),
   queue: readel<HTMLTextAreaElement>('queue'),
   cookiesbrowser: readel<HTMLSelectElement>('cookiesbrowser'),
   stopcall: readel<HTMLButtonElement>('stopcall'),
   cleardownloads: readel<HTMLButtonElement>('cleardownloads'),
   preview: readel<HTMLVideoElement>('preview'),
-  statusbox: readel<HTMLElement>('statusbox'),
+  players: readel<HTMLElement>('players'),
   frame: document.querySelector<HTMLElement>('.frame.mq'),
 }
 
 let peer: Peer | null = null
+let signalreconnecttimer: number | null = null
 let dataconnection: DataConnection | null = null
 let mediastream: MediaStream | null = null
 const playercalls = new Map<string, MQ_PLAYER_CALL>()
 const pendingplayercalls = new Map<string, MediaConnection>()
-let queueurls: string[] = []
-let queueindex = 0
 let localpeerid = ''
 let playbackstarted = false
 /** Latest cafe goto URL; coalesced while a start is in flight. */
@@ -104,6 +122,9 @@ let downloadinflight = false
 let lastdownloadpct = -1
 let lastdownloadlabel = ''
 let transcodepulsetimer: number | null = null
+let extractpulsetimer: number | null = null
+let extractstartedat = 0
+let extractstep = 'starting'
 let downloadpolltimer: number | null = null
 let preppolltimer: number | null = null
 let endedvideo: MQ_ENDED_MEDIA | null = null
@@ -286,11 +307,65 @@ function cleardownloadpulse() {
     clearInterval(transcodepulsetimer)
     transcodepulsetimer = null
   }
+  if (extractpulsetimer) {
+    clearInterval(extractpulsetimer)
+    extractpulsetimer = null
+  }
+}
+
+function sanitizeextractstep(raw: string) {
+  const trimmed = String(raw || '')
+    .replace(/[^a-zA-Z0-9 ._\-:/]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!trimmed) {
+    return 'starting'
+  }
+  return trimmed.slice(0, 24)
+}
+
+function extractdetaillabel() {
+  const secs = extractstartedat
+    ? Math.max(0, Math.floor((Date.now() - extractstartedat) / 1000))
+    : 0
+  return secs + 's|' + sanitizeextractstep(extractstep)
+}
+
+function beginextractphase(step: string) {
+  if (!extractstartedat) {
+    extractstartedat = Date.now()
+  }
+  extractstep = sanitizeextractstep(step)
+}
+
+function clearextractphase() {
+  extractstartedat = 0
+  extractstep = 'starting'
+}
+
+function ensureextractpulse() {
+  if (extractpulsetimer) {
+    return
+  }
+  extractpulsetimer = setInterval(function () {
+    if (!downloadinflight) {
+      cleardownloadpulse()
+      return
+    }
+    const detail = extractdetaillabel()
+    setlink('extracting', detail)
+    sendstatus('extracting', detail)
+  }, 1000)
 }
 
 function ensuretranscodepulse() {
   if (transcodepulsetimer) {
     return
+  }
+  clearextractphase()
+  if (extractpulsetimer) {
+    clearInterval(extractpulsetimer)
+    extractpulsetimer = null
   }
   transcodepulsetimer = setInterval(function () {
     if (!downloadinflight) {
@@ -441,19 +516,27 @@ async function refreshcachebytes() {
   }
 }
 
+function bindcompositorstream() {
+  const stream = ensurecompositor()
+  mediastream = stream
+  setpreviewstream(stream)
+}
+
 function setlink(text: string | null, detail?: string) {
-  els.link.textContent = text
-  els.detail.textContent = detail || ''
-  els.statusbox.classList.toggle('error', text === 'error')
+  const phase = String(text || '')
+  const current = readhudstate()
+  sethudstate(phase, detail || '', current.secondary)
+  bindcompositorstream()
   const cfg = mqdevconfig()
   if (cfg && cfg.statustextfile) {
-    writemqstatus(String(text) + '|' + String(detail || ''))
+    writemqstatus(phase + '|' + String(detail || ''))
   }
   schedulefitwindow()
 }
 
 function prepbadge(index: number, url: string) {
-  if (index !== 1 || !url || url !== preptarget) {
+  const nextindex = helperqueuereadsnapshot().index + 1
+  if (index !== nextindex || !url || url !== preptarget) {
     return ''
   }
   if (prepstate && prepstate.phase === 'ready') {
@@ -467,13 +550,14 @@ function prepbadge(index: number, url: string) {
 }
 
 function renderqueue() {
-  if (!queueurls.length) {
+  const snap = helperqueuereadsnapshot()
+  if (!snap.urls.length) {
     els.queue.value = '(empty)'
   } else {
-    els.queue.value = queueurls
+    els.queue.value = snap.urls
       .map(function (url, i) {
         return (
-          (i === queueindex ? '> ' : '  ') +
+          (i === snap.index ? '> ' : '  ') +
           '[' +
           i +
           '] ' +
@@ -492,7 +576,7 @@ async function prunequeuecache() {
   }
   try {
     await invoke('prune_media_queue_cache', {
-      urls: queueurls,
+      urls: helperqueueurls(),
       playingUrl: currentplaybackurl,
     })
     void refreshcachebytes()
@@ -503,7 +587,7 @@ async function reconcileprep() {
   if (readdevplaybackpath()) {
     return
   }
-  const nexturl = queueurls.length >= 2 ? String(queueurls[1] || '').trim() : ''
+  const nexturl = helperqueuenexturl()
   if (!nexturl) {
     preptarget = ''
     prepstate = null
@@ -550,13 +634,65 @@ function send(msg: unknown) {
   dataconnection.send(msg)
 }
 
-function formatdownloadprogress(percent: number, eta: string, phase: string) {
-  const pct = Math.max(0, Math.min(100, Math.round(percent || 0)))
-  let line = (phase || 'downloading') + ' ' + pct + '%'
-  if (eta) {
-    line += ' eta ' + eta
+function sendqueuesnapshot() {
+  const snap = helperqueuereadsnapshot()
+  send({
+    type: 'mediaqueue:queuesnapshot',
+    urls: snap.urls,
+    names: snap.names,
+    index: snap.index,
+    limit: snap.limit,
+  })
+}
+
+async function persistqueue() {
+  try {
+    await invoke('write_media_queue', helperqueuereaddisk())
+  } catch (err) {
+    setlink('error', 'queue save failed: ' + String(err))
   }
-  return line
+}
+
+function afterqueuemutate() {
+  renderqueue()
+  sendqueuesnapshot()
+  void persistqueue()
+  void prunequeuecache()
+  void reconcileprep()
+}
+
+function helloandresume() {
+  send({
+    type: 'mediaqueue:hello',
+    protocol: PROTOCOL,
+    role: 'helper',
+    peerid: localpeerid,
+  })
+  sendqueuesnapshot()
+  void reconcileprep()
+  if (playbackstarted) {
+    answerpendingplayercalls()
+    publishstreamtoplayers()
+    syncplayerlinkstatus()
+    const playinglabel = playbacklabel(
+      currentplaybacktitle,
+      currentplaybackurl,
+      '',
+    )
+    sendstatus('playing', playinglabel)
+  }
+}
+
+async function advancenextitem() {
+  helperqueueshift()
+  afterqueuemutate()
+  const next = helperqueuecurrenturl()
+  if (next) {
+    void maybeautostartaftergoto(next)
+    return
+  }
+  await endcall({ natural: true, keepplayers: true })
+  setlink('connected', 'queue empty')
 }
 
 function handledownloadprogress(payload: unknown) {
@@ -579,28 +715,41 @@ function handledownloadprogress(payload: unknown) {
           ? 'downloading'
           : rawstatus
   const pct = Math.round(percent || 0)
-  const detail =
-    phase === 'extracting'
-      ? eta || 'starting'
-      : formatdownloadprogress(percent, eta, phase)
-  const dedupekey = phase + '|' + detail
+  if (phase === 'transcoding') {
+    clearextractphase()
+    const dedupekey = 'transcoding|' + pct
+    if (dedupekey !== lastdownloadlabel) {
+      lastdownloadlabel = dedupekey
+      lastdownloadpct = pct
+      setlink('transcoding', String(pct))
+      sendstatus('transcoding', String(pct))
+    }
+    ensuretranscodepulse()
+    return
+  }
+  if (phase === 'extracting') {
+    beginextractphase(eta || 'starting')
+    const detail = extractdetaillabel()
+    const dedupekey = 'extracting|' + detail
+    if (dedupekey !== lastdownloadlabel) {
+      lastdownloadlabel = dedupekey
+      lastdownloadpct = pct
+      setlink('extracting', detail)
+      sendstatus('extracting', detail)
+    }
+    ensureextractpulse()
+    return
+  }
+  clearextractphase()
+  cleardownloadpulse()
+  const progressdetail = String(pct) + (eta ? '|' + eta : '')
+  const dedupekey = phase + '|' + progressdetail
   if (dedupekey === lastdownloadlabel) {
     return
   }
   lastdownloadlabel = dedupekey
   lastdownloadpct = pct
-  setlink(phase, detail)
-  if (phase === 'transcoding') {
-    ensuretranscodepulse()
-    sendstatus('transcoding', String(pct))
-    return
-  }
-  cleardownloadpulse()
-  if (phase === 'extracting') {
-    sendstatus('extracting', eta || 'starting')
-    return
-  }
-  const progressdetail = String(pct) + (eta ? '|' + eta : '')
+  setlink('download-progress', progressdetail)
   sendstatus('download-progress', progressdetail)
 }
 
@@ -639,24 +788,34 @@ function setpreviewstream(stream: MediaStream | null) {
 }
 
 function syncplayerlinkstatus() {
+  const current = readhudstate()
+  let secondary = ''
+  let phase = current.phase
+  const detail = current.detail
+  let playerslabel = '0 players'
   if (playercalls.size > 0) {
-    const playing = String(playercalls.size) + ' player(s)'
-    setlink('playing', playing)
-    writemqstatus('playing|' + playing)
-    return
+    secondary = String(playercalls.size) + ' player(s)'
+    playerslabel = String(playercalls.size) + ' players connected'
+    if (!phase || phase === 'waiting') {
+      phase = 'playing'
+    }
+  } else if (pendingplayercalls.size > 0) {
+    secondary = String(pendingplayercalls.size) + ' player(s) waiting'
+    playerslabel = String(pendingplayercalls.size) + ' players waiting'
+    if (!phase) {
+      phase = 'waiting'
+    }
+  } else if (playbackstarted) {
+    secondary = '0 player(s)'
+    playerslabel = '0 players connected'
+    if (!phase) {
+      phase = 'playing'
+    }
   }
-  if (pendingplayercalls.size > 0) {
-    const waiting = String(pendingplayercalls.size) + ' player(s) waiting'
-    setlink('waiting', waiting)
-    writemqstatus('waiting|' + waiting)
-    return
-  }
-  if (playbackstarted && mediastream) {
-    setlink('playing', '0 player(s)')
-    writemqstatus('playing|0 player(s)')
-    return
-  }
-  writemqstatus('idle|')
+  els.players.textContent = playerslabel
+  // secondary stays in hudstate for MQ_STATUS_TEXT_FILE only -- not drawn on overlay
+  sethudstate(phase, detail, secondary)
+  writemqstatus(phase + '|' + detail + (secondary ? '|' + secondary : ''))
 }
 
 async function fitmainwindow() {
@@ -749,12 +908,30 @@ function publishstreamtoplayers() {
       return
     }
     const senders = pc.getSenders()
+    const transceivers =
+      typeof pc.getTransceivers === 'function' ? pc.getTransceivers() : []
     mediastream!.getTracks().forEach(function (track) {
       let sender: RTCRtpSender | null = null
       for (let i = 0; i < senders.length; ++i) {
         if (senders[i].track && senders[i].track!.kind === track.kind) {
           sender = senders[i]
           break
+        }
+      }
+      // Answer-time placeholder may have been cleared; still reuse that sender.
+      if (!sender) {
+        for (let i = 0; i < transceivers.length; ++i) {
+          const tr = transceivers[i]
+          if (!tr.sender) {
+            continue
+          }
+          const senderkind = tr.sender.track ? tr.sender.track.kind : ''
+          const receiverkind =
+            tr.receiver && tr.receiver.track ? tr.receiver.track.kind : ''
+          if (senderkind === track.kind || receiverkind === track.kind) {
+            sender = tr.sender
+            break
+          }
         }
       }
       if (sender && sender.track === track) {
@@ -821,22 +998,14 @@ function handleplayercall(call: MediaConnection) {
 }
 
 function stopmediastream() {
-  if (mediastream) {
-    mediastream.getTracks().forEach(function (t) {
-      t.stop()
-    })
-    mediastream = null
-  }
-  setpreviewstream(null)
+  clearcompositorplayback()
+  bindcompositorstream()
 }
 
 async function endcall(opts?: { natural?: boolean; keepplayers?: boolean }) {
   clearendedlistener()
   const hadcall = Boolean(
-    playercalls.size > 0 ||
-    pendingplayercalls.size > 0 ||
-    mediastream ||
-    playbackstarted,
+    playercalls.size > 0 || pendingplayercalls.size > 0 || playbackstarted,
   )
   const naturalend = Boolean(opts && opts.natural)
   const keepplayers = Boolean(opts && opts.keepplayers)
@@ -865,7 +1034,9 @@ function wireplaybackended(sourcevideo: MQ_ENDED_MEDIA | null) {
   function onended() {
     clearendedlistener()
     sendstatus('playback-ended', '')
-    void endcall({ natural: true })
+    void endcall({ natural: true, keepplayers: true }).then(function () {
+      void advancenextitem()
+    })
     setlink('connected', 'playback ended')
   }
   sourcevideo.__mqonended = onended
@@ -878,11 +1049,10 @@ async function startplaybackandcall(url: string) {
     setlink('error', 'peer not ready')
     return
   }
-  if (!dataconnection || !dataconnection.open) {
-    setlink('waiting', 'cafe not connected yet')
-    return
-  }
-  if (mediastream || playbackstarted) {
+  // Prep the following item while this one downloads / buffers -- same overlap
+  // as the old cafe queue snapshot + goto pair.
+  void reconcileprep()
+  if (playbackstarted) {
     await endcall({ keepplayers: true })
     if (issupersededplaybackerr(null, gen)) {
       return
@@ -935,8 +1105,15 @@ async function startplaybackandcall(url: string) {
         downloadinflight = true
         lastdownloadpct = -1
         lastdownloadlabel = ''
-        setlink('extracting', 'starting')
-        sendstatus('extracting', 'starting')
+        clearextractphase()
+        beginextractphase('starting')
+        const extractdetail = extractdetaillabel()
+        setlink('extracting', extractdetail)
+        sendstatus('extracting', extractdetail)
+        ensureextractpulse()
+        bindcompositorstream()
+        answerpendingplayercalls()
+        publishstreamtoplayers()
         startdownloadpoll()
         const downloaded = await startdownload(url)
         if (issupersededplaybackerr(null, gen)) {
@@ -972,15 +1149,16 @@ async function startplaybackandcall(url: string) {
     const message = shortenerr(err)
     setlink('error', phase + ': ' + message)
     sendstatus(phase, message)
-    // Keep cafe player calls open so the next goto can publishstreamtoplayers
-    // into the same PeerConnection. Closing here leaves board TV with no A/V
-    // until a full reconnect (often never if activecall is a zombie).
+    // Keep cafe player calls open so the next item can publishstreamtoplayers
+    // into the same PeerConnection.
     await endcall({ keepplayers: true })
+    void advancenextitem()
     return
   } finally {
     if (!readdevplaybackpath()) {
       downloadinflight = false
       lastdownloadpct = -1
+      clearextractphase()
       cleardownloadpulse()
       cleardownloadpoll()
     }
@@ -1010,6 +1188,11 @@ async function startplaybackandcall(url: string) {
   syncplayerlinkstatus()
   const playinglabel = playbacklabel(currentplaybacktitle, url, path)
   sendstatus('playing', playinglabel)
+  // Category A: outbound PCM energy (clone probe -- does not steal WebRTC track).
+  void probeaudiostream(mediastream, 'mq-out').then(function (detail) {
+    console.log('[mq audio probe]', detail)
+    sendstatus('audio-probe', detail)
+  })
   void reconcileprep()
 }
 
@@ -1050,38 +1233,65 @@ function handlecafemessage(data: unknown) {
   switch (msg.type) {
     case 'mediaqueue:hello':
       setlink('connected', 'cafe hello')
-      send({
-        type: 'mediaqueue:hello',
-        protocol: PROTOCOL,
-        role: 'helper',
-        peerid: localpeerid,
-      })
-      sendstatus('waiting-for-url', 'add a URL in cafe #media <url>')
+      helloandresume()
       maybeautostartdevfixture()
       break
-    case 'mediaqueue:queue':
-      queueurls = Array.isArray(msg.urls) ? msg.urls.slice() : []
-      queueindex = typeof msg.index === 'number' ? msg.index : 0
-      renderqueue()
-      void prunequeuecache()
-      void reconcileprep()
-      if (queueurls.length === 0 && (playbackstarted || mediastream)) {
-        void endcall()
+    case 'mediaqueue:add': {
+      const url = String(msg.url || '').trim()
+      const result = helperqueueadd(
+        String(msg.player || ''),
+        String(msg.name || ''),
+        url,
+      )
+      if (!result.ok) {
+        sendstatus('queue-error', result.reason)
+        sendqueuesnapshot()
+        break
+      }
+      sendstatus('queue-added', url)
+      afterqueuemutate()
+      if (!playbackstarted) {
+        const current = helperqueuecurrenturl()
+        if (current) {
+          void maybeautostartaftergoto(current)
+        }
+      }
+      break
+    }
+    case 'mediaqueue:skip': {
+      helperqueueskip()
+      sendstatus('queue-skipped')
+      afterqueuemutate()
+      const next = helperqueuecurrenturl()
+      if (next) {
+        void maybeautostartaftergoto(next)
+      } else {
+        void endcall({ keepplayers: true })
         setlink('connected', 'queue empty')
       }
       break
-    case 'mediaqueue:goto':
-      queueindex = typeof msg.index === 'number' ? msg.index : queueindex
-      renderqueue()
-      if (playbackstarted && msg.url && msg.url === currentplaybackurl) {
-        break
-      }
-      void maybeautostartaftergoto(msg.url)
+    }
+    case 'mediaqueue:clear':
+      helperqueueclear()
+      sendstatus('queue-cleared')
+      afterqueuemutate()
+      void endcall()
+      setlink('connected', 'queue empty')
       break
+    case 'mediaqueue:setlimit': {
+      const limit = helperqueuesetlimit(Number(msg.limit))
+      sendstatus('queue-limit', String(limit))
+      afterqueuemutate()
+      break
+    }
     case 'mediaqueue:requestcall':
-      if (!playbackstarted && queueurls[queueindex]) {
-        void maybeautostartaftergoto(queueurls[queueindex])
-      } else if (!playbackstarted) {
+      if (playbackstarted) {
+        answerpendingplayercalls()
+        publishstreamtoplayers()
+        syncplayerlinkstatus()
+      } else if (helperqueuecurrenturl()) {
+        void maybeautostartaftergoto(helperqueuecurrenturl())
+      } else {
         sendstatus('waiting-for-url', 'queue a URL in cafe first')
         maybeautostartdevfixture()
       }
@@ -1101,12 +1311,7 @@ function wiredataconnection(conn: DataConnection) {
   conn.on('open', function () {
     setlink('connected', 'data open')
     writemqstatus('connected|data open')
-    send({
-      type: 'mediaqueue:hello',
-      protocol: PROTOCOL,
-      role: 'helper',
-      peerid: localpeerid,
-    })
+    helloandresume()
     maybeautostartdevfixture()
   })
   conn.on('data', handlecafemessage)
@@ -1114,8 +1319,7 @@ function wiredataconnection(conn: DataConnection) {
     if (dataconnection === conn) {
       dataconnection = null
     }
-    void endcall()
-    setlink('ready', 'waiting for cafe')
+    setlink('waiting', 'waiting for cafe')
   })
   conn.on('error', function (err) {
     setlink('error', String(err))
@@ -1123,6 +1327,10 @@ function wiredataconnection(conn: DataConnection) {
 }
 
 function destroypeer() {
+  if (signalreconnecttimer) {
+    clearTimeout(signalreconnecttimer)
+    signalreconnecttimer = null
+  }
   void endcall()
   if (dataconnection) {
     try {
@@ -1161,6 +1369,10 @@ async function startpeerasync() {
   }
   peer = requestedpeerid ? new Peer(requestedpeerid, opts) : new Peer(opts)
   peer.on('open', function (id) {
+    if (signalreconnecttimer) {
+      clearTimeout(signalreconnecttimer)
+      signalreconnecttimer = null
+    }
     localpeerid = id
     els.localpeer.value = id
     els.copypeer.disabled = false
@@ -1179,7 +1391,17 @@ async function startpeerasync() {
       peer!.reconnect()
     } catch (_) {
       startpeer()
+      return
     }
+    if (signalreconnecttimer) {
+      clearTimeout(signalreconnecttimer)
+    }
+    signalreconnecttimer = window.setTimeout(function () {
+      signalreconnecttimer = null
+      if (peer && peer.disconnected && !peer.destroyed) {
+        startpeer()
+      }
+    }, SIGNAL_RECONNECT_WAIT_MS)
   })
 }
 
@@ -1190,7 +1412,7 @@ async function copypeerid() {
   const cliline = '#queue "' + localpeerid + '"'
   try {
     await invoke('copy_text', { text: cliline })
-    setlink(els.link.textContent, 'copied to clipboard')
+    setlink(readhudstate().phase || 'ready', 'copied to clipboard')
   } catch (err) {
     setlink('error', String(err))
   }
@@ -1231,10 +1453,23 @@ if (els.cleardownloads) {
 function bootfit() {
   setmqondownloadprogress(handledownloadprogress)
   attachpreview(els.preview)
+  bindcompositorstream()
+  setlink('starting', PEER_HOST)
   startwindowfitobserver()
   initcookiessetting()
   renderqueue()
-  startpeer()
+  void invoke('read_media_queue')
+    .then(function (disk) {
+      helperqueueapplydisk(disk)
+      renderqueue()
+      void reconcileprep()
+    })
+    .catch(function (err) {
+      setlink('error', 'queue load failed: ' + String(err))
+    })
+    .then(function () {
+      startpeer()
+    })
   void refreshcachebytes()
   if (window.__TAURI__ && window.__TAURI__.event) {
     void window.__TAURI__.event.listen(

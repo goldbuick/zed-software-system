@@ -1,6 +1,6 @@
 import { apierror, bridgemediapanel } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { mediapayloadwithmanage } from 'zss/feature/mediaqueue/mediaguards'
+import { mediapayloadwithboardhelper } from 'zss/feature/mediaqueue/mediaguards'
 import { mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
@@ -15,12 +15,11 @@ export function registermediacommands(fw: FIRMWARE): FIRMWARE {
       const [first, iii] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
       const player = READ_CONTEXT.elementfocus
       if (!first) {
-        bridgemediapanel(
-          SOFTWARE,
-          player,
-          'menu',
-          mediapayloadwithmanage(player),
-        )
+        const payload = mediapayloadwithboardhelper(player)
+        if (!payload) {
+          return 0
+        }
+        bridgemediapanel(SOFTWARE, player, 'menu', payload)
         return 0
       }
       if (!mediaisqueueurl(String(first))) {
@@ -35,12 +34,11 @@ export function registermediacommands(fw: FIRMWARE): FIRMWARE {
       const url = Array.isArray(urlwords)
         ? urlwords.join(' ')
         : String(urlwords ?? '')
-      bridgemediapanel(
-        SOFTWARE,
-        player,
-        'add',
-        mediapayloadwithmanage(player, { url }),
-      )
+      const payload = mediapayloadwithboardhelper(player, { url })
+      if (!payload) {
+        return 0
+      }
+      bridgemediapanel(SOFTWARE, player, 'add', payload)
       return 0
     },
   )

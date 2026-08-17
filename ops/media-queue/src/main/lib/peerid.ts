@@ -109,18 +109,31 @@ export function writemqnetid(filepath: string, seed: string): boolean {
   return true
 }
 
+const MQ_PEER_PREFIX = 'mq_'
+
+function withmqprefix(peerid: string): string {
+  const trimmed = String(peerid || '').trim()
+  if (!trimmed) {
+    return trimmed
+  }
+  if (trimmed.startsWith(MQ_PEER_PREFIX)) {
+    return trimmed
+  }
+  return MQ_PEER_PREFIX + trimmed
+}
+
 export function resolvemqpeerid(
   filepath: string,
   overridepeerid?: string,
 ): MQ_PEER_ID {
   const forced = String(overridepeerid || '').trim()
   if (forced) {
-    return { seed: '', peerid: forced }
+    return { seed: '', peerid: withmqprefix(forced) }
   }
   let seed = readmqnetid(filepath)
   if (!seed) {
     seed = crypto.randomUUID()
     writemqnetid(filepath, seed)
   }
-  return { seed, peerid: createinfohash(seed) }
+  return { seed, peerid: withmqprefix(createinfohash(seed)) }
 }

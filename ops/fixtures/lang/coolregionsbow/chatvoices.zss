@@ -1,11 +1,14 @@
 @loader chatvoices
 @event chat:message
-#readline "(.*?):(.*)" chatuser chatmessage
+#readline "(.*?):(.*?):(.*)" chatuser chatvoice chatmessage
 
+#if chatvoice do
+#ttsqueue chatvoice chatmessage
+#else do
 #set ttsvoice (pickwith chatuser 
 "en-US-AriaNeural" "en-US-AnaNeural" "en-US-ChristopherNeural"
 "en-US-EricNeural" "en-US-GuyNeural" "en-US-JennyNeural"
 "en-US-MichelleNeural" "en-US-RogerNeural" "en-US-SteffanNeural"
 "fr-FR-DeniseNeural")
-
 #ttsqueue ttsvoice chatmessage
+#done

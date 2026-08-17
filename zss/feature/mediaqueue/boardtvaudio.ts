@@ -1,6 +1,7 @@
 import { apilog } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
+import { mediaqueuesetbroadcastaudiogain } from 'zss/feature/mediaqueue/broadcastaudio'
 import { MEDIAQUEUE_DEFAULT_TV_VOLUME } from 'zss/feature/mediaqueue/constants'
 import {
   storagereadconfigstring,
@@ -30,8 +31,14 @@ function mediaqueueaudiogain(): number {
   return Math.max(0, Math.min(1, (mediavolume / 100) * (mainvolume / 100)))
 }
 
+/** Board TV gain (0-1) from #mediavol x #vol main. */
+export function mediaqueuereadaudiogain(): number {
+  return mediaqueueaudiogain()
+}
+
 function applyremotevideovolume() {
   mediaqueueunlockremotevideo()
+  mediaqueuesetbroadcastaudiogain(mediaqueueaudiogain())
 }
 
 /** Unmute board TV, enable audio tracks, apply #mediavol x #vol main gain. */

@@ -7,7 +7,7 @@ First-party browser broadcast client under `zss/feature/broadcast/`. Replaces th
 - **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 60fps**, ~3.5 Mbps cap).
 - **Audio:** Web Audio graph mixes attached `MediaStream` inputs into one outbound audio track.
 
-Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()`.
+Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()` + board TV media-queue audio (`mediaqueue` layer) when the player is on the bound board.
 
 ## Transports
 

@@ -99,9 +99,6 @@ export function MediaLayers() {
       media.setpalette(usepalette)
       media.setcharset(usecharset)
     }
-    if (!gadgetboard) {
-      return
-    }
     const activehelper = helperpeerid || helperfromloop
     const layer = mediaqueuereadplayerlayerstate()
     const action = mediaqueuelayerconnectaction({

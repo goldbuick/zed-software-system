@@ -14,6 +14,7 @@ import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import {
+  mediapayloadwithboardhelper,
   mediapayloadwithmanage,
   mediarequiremanageonvm,
 } from 'zss/feature/mediaqueue/mediaguards'
@@ -216,16 +217,15 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       handlebookmarkscrollpanel(vm, message, path)
       break
     case 'media': {
-      const payload =
+      const incoming =
         message.data && typeof message.data === 'object'
           ? (message.data as Record<string, unknown>)
           : undefined
-      bridgemediapanel(
-        SOFTWARE,
-        message.player,
-        path,
-        mediapayloadwithmanage(message.player, payload),
-      )
+      const payload = mediapayloadwithboardhelper(message.player, incoming)
+      if (!payload) {
+        break
+      }
+      bridgemediapanel(SOFTWARE, message.player, path, payload)
       break
     }
     case 'queue': {

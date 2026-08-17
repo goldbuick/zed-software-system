@@ -12,7 +12,7 @@ Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-t
 | Media | PeerJS `MediaConnection` (`peer.call`, video + audio tracks) |
 | Signaling | `terminal.zed.cafe` (same PeerServer as netterminal) |
 
-Cafe: **`#media`** queue list and **`#media <url>`** submit. Admin binds with **`#queue <peerid>`**; **`#queue`** admin menu or **`#queue skip|clear|stop|limit`** for queue control.
+Cafe: **`#media`** queue list (projection of the helper snapshot) and **`#media <url>`** submit (RPC). Admin binds with **`#queue <peerid>`**; **`#queue`** admin menu or **`#queue skip|clear|stop|limit`** for queue control. The helper PeerJS id is prefixed `mq_`. After this ships, re-bind once if you still have an unprefixed id.
 
 ## Build
 
@@ -54,12 +54,12 @@ Fixture clip: `ops/fixtures/media/test.mp4`.
 
 ## Use
 
-1. Open this app -- it starts a PeerJS peer and shows **Your peer id** (sticky across restarts; seed in app userData `mq-netid`, same `createinfohash` as netterminal).
+1. Open this app -- it starts a PeerJS peer and shows **Your peer id** (sticky across restarts; seed in app userData `mq-netid`, advertised id is `mq_` + `createinfohash(seed)`). Queue + limit persist in userData `queue.json`.
 2. Copy peer id and in cafe run `#queue <peerid>` (admin).
-3. In cafe: `#media <url>` (players, after bind). Queue autoplays; admin may `#queue` (menu), `#queue skip`, `#queue clear`, or `#queue limit <N>`.
-4. The helper downloads via yt-dlp, plays the merged file, and starts the Peer call when cafe advances the queue.
+3. In cafe: `#media <url>` (players, after bind). The helper owns the queue and autoplays; admin may `#queue` (menu), `#queue skip`, `#queue clear`, or `#queue limit <N>`.
+4. The helper downloads via yt-dlp, plays the merged file, and answers player MediaConnections. Signaling blips reconnect the control plane without stopping local playback.
 5. While an item plays, the helper **pre-downloads the next queue URL** in the background (`[prep N%]` / `[ready]` in the queue list). Advance is near-instant when prep finishes in time.
-6. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. `#queue stop` disconnects the helper; `#queue clear` stops playback and empties the queue. **Clear downloads** wipes the local cache.
+6. Video appears on the board TV and audio on speakers for the host and for **other players on the bound board**. `#queue stop` disconnects the helper; `#queue clear` stops playback and empties the helper queue. **Clear downloads** wipes the local cache.
 
 ## Download note
 
@@ -68,10 +68,14 @@ Fixture clip: `ops/fixtures/media/test.mp4`.
 | yt-dlp | Extract + merge video/audio, or audio-only fallback for SoundCloud etc. |
 | deno | JavaScript runtime for YouTube challenge solving (bundled) |
 | ffmpeg | Merge streams (bundled next to yt-dlp) |
+
+Media with **unknown duration** or longer than **10 minutes** is rejected before download.
 | Local cache | `app cache/media-queue/` until **Clear downloads** |
 
 YouTube downloads pass `--js-runtimes deno:<bundled>` and `--remote-components ejs:github` (fetches yt-dlp-ejs solver scripts on first use). If YouTube asks you to sign in, set **youtube cookies** in the helper (defaults to Safari on macOS) so yt-dlp can read your browser session. On 403 the helper retries with rotated `player_client` values, fragment retries, and cache clear. ffmpeg then **transcodes to H.264 + AAC** for Chromium playback and `video.captureStream()`. Use **Clear downloads** before retrying if an old file is cached.
 
-**Audio-only URLs** (SoundCloud, etc.): when yt-dlp finds no video formats, the helper falls back to `bestaudio`, tags the file `audioOnly`, and plays it through a **Winamp-style canvas visualizer** (`canvas.captureStream()` supplies the board TV video track; audio goes to speakers). yt-dlp also writes a JPEG thumbnail sidecar when available; the visualizer draws it dimmed under the spectrum/scope. Track title scrolls on the board TV marquee as for video items -- not drawn on the visualizer.
+**Audio-only URLs** (SoundCloud, etc.): when yt-dlp finds no video formats, the helper falls back to `bestaudio`, tags the file `audioOnly`, and plays it through a **random classic Winamp-style visualizer** (spectrum/scope Canvas 2D, or MilkDrop via [Butterchurn](https://github.com/jberg/butterchurn)). The compositor canvas (`608×364`, see `ui/tvcanvas.ts`) is captured for the board TV video track; audio goes to speakers. Presets draw a dimmed JPEG thumbnail sidecar under the viz when artwork is present. Track title scrolls on the board TV marquee as for video items -- not drawn on the visualizer.
+
+Credits: [Ryan Geiss / Geisswerks](https://www.geisswerks.com/geiss/) (MilkDrop), [Butterchurn](https://github.com/jberg/butterchurn) (WebGL MilkDrop), and MilkDrop preset authors (Flexi, Martin, Geiss, and others).
 
 Unsupported URLs fail loud (`download-failed`). No Screen Recording permission is required.

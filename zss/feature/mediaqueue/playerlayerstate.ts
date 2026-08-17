@@ -50,26 +50,38 @@ export type MEDIAQUEUE_LAYER_CONNECT_INPUT = {
   layerboard: string
 }
 
-/** MediaLayers connect/disconnect policy (join-safe during layer paint races). */
+/** MediaLayers connect/disconnect: leave the connected board hangs up. */
 export function mediaqueuelayerconnectaction(
   input: MEDIAQUEUE_LAYER_CONNECT_INPUT,
 ): MEDIAQUEUE_LAYER_CONNECT_ACTION {
   const board = input.gadgetboard.trim()
+  const layerhelper = input.layerhelper.trim()
+  const layerboard = input.layerboard.trim()
   if (!board) {
+    if (layerhelper && layerboard) {
+      return { kind: 'disconnect' }
+    }
+    return { kind: 'noop' }
+  }
+  if (layerhelper && layerboard && layerboard !== board) {
+    return { kind: 'disconnect' }
+  }
+  const boundhelper = input.boundhelper.trim()
+  const boundboard = input.boundboard.trim()
+  if (input.islistening && boundboard && boundboard !== board) {
+    if (layerhelper && layerboard) {
+      return { kind: 'disconnect' }
+    }
     return { kind: 'noop' }
   }
   const activehelper = input.activehelper.trim()
   if (activehelper) {
     return { kind: 'connect', helperpeerid: activehelper }
   }
-  const boundhelper = input.boundhelper.trim()
-  const boundboard = input.boundboard.trim()
   if (input.islistening && boundhelper && boundboard === board) {
     return { kind: 'connect', helperpeerid: boundhelper }
   }
-  const layerhelper = input.layerhelper.trim()
-  const layerboard = input.layerboard.trim()
-  if (layerhelper && layerboard === board) {
+  if (layerhelper && layerboard) {
     return { kind: 'disconnect' }
   }
   return { kind: 'noop' }

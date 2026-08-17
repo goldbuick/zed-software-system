@@ -20,6 +20,7 @@ import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
 import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
 import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
 import { doasync } from 'zss/device/doasync'
+import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
   createwebbroadcastclient,
@@ -28,15 +29,21 @@ import {
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
 import { withclipboard } from 'zss/feature/keyboard'
 import {
+  mediaqueuereadaudiogain,
   mediaqueuesetmainvolume,
   mediaqueuesetmediavolume,
   storemediavolconfig,
 } from 'zss/feature/mediaqueue/boardtvaudio'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
+  mediaqueuesetbroadcastclient,
+  mediaqueuesyncbroadcastaudio,
+} from 'zss/feature/mediaqueue/broadcastaudio'
+import {
   handlemediapanel,
   handlequeuepanel,
 } from 'zss/feature/mediaqueue/panel'
+import { mediaqueuereadaudiostream } from 'zss/feature/mediaqueue/playerconnect'
 import {
   netterminalhost,
   netterminaljoin,
@@ -72,6 +79,7 @@ let broadcastlive = false
 function setbroadcastclient(client: MAYBE<WebBroadcastClient>) {
   broadcastclient = client
   setbroadcastactive(ispresent(broadcastclient))
+  mediaqueuesetbroadcastclient(client)
 }
 
 async function runnetworkfetch(
@@ -189,7 +197,7 @@ function pushchatline(
     undefined,
     'text',
     `${prefix}:${routekey}`,
-    `${user}:${text}`,
+    formatchatmessagebody(user, '', text),
   )
   chatpresencetouch(routekey, user, Date.now())
   emitchatroster(player, routekey, false)
@@ -241,9 +249,13 @@ const bridge = createdevice('bridge', [], (message) => {
     return
   }
 
-  // player filter
+  // player filter -- mediapanel/queuepanel stay on the listening host
+  // even when the CLI player is a join (queue state is not on the join tab)
   const player = registerreadplayer()
   switch (message.target) {
+    case 'mediapanel':
+    case 'queuepanel':
+      break
     default:
       if (message.player !== player) {
         return
@@ -575,6 +587,11 @@ const bridge = createdevice('bridge', [], (message) => {
             clearIvsBroadcastClient()
             return
           }
+
+          mediaqueuesyncbroadcastaudio(
+            mediaqueuereadaudiostream(),
+            mediaqueuereadaudiogain(),
+          )
 
           apilog(bridge, message.player, `created client`)
         }

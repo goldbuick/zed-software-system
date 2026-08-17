@@ -92,7 +92,11 @@ jest.mock('zss/feature/mediaqueue/listenstate', () => ({
 
 jest.mock('zss/feature/mediaqueue/attachvideo', () => ({
   mediaqueueensurevideosink: jest.fn(),
-  mediaqueueteardownplayersink: jest.fn(),
+  mediaqueueteardownplayersink: jest.fn(
+    (opts: { call?: { close?: () => void } } = {}) => {
+      opts.call?.close?.()
+    },
+  ),
 }))
 
 import { mediaqueueteardownplayersink } from 'zss/feature/mediaqueue/attachvideo'
@@ -102,6 +106,7 @@ import {
   mediaqueuereadplayerconnectstate,
   mediaqueueretryplayerconnect,
 } from 'zss/feature/mediaqueue/playerconnect'
+import { mediaqueuesetplayerlayerstate } from 'zss/feature/mediaqueue/playerlayerstate'
 import { mediaqueueattachvideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import {
   mediaqueueislistening,
@@ -115,7 +120,15 @@ import {
 
 describe('mediaqueue player connect', () => {
   beforeEach(() => {
+    mediaqueuedisconnect()
     jest.clearAllMocks()
+    jest.mocked(netterminalmediacall).mockReset()
+    jest.mocked(mediaqueueislistening).mockReturnValue(false)
+    jest.mocked(mediaqueuereadboundboardid).mockReturnValue('')
+    jest.mocked(mediaqueuereadhelperpeerid).mockReturnValue('')
+  })
+
+  afterEach(() => {
     mediaqueuedisconnect()
   })
 
@@ -192,18 +205,39 @@ describe('mediaqueue player connect', () => {
     )
   })
 
-  it('retries player connect from listen state when playback starts', () => {
+  it('retries player connect from existing layer state when playback starts', () => {
     const call = { on: jest.fn(), close: jest.fn() }
     jest.mocked(netterminalmediacall).mockReturnValue(call as never)
-    jest.mocked(mediaqueueislistening).mockReturnValue(true)
-    jest.mocked(mediaqueuereadhelperpeerid).mockReturnValue('helper-peer')
-    jest.mocked(mediaqueuereadboundboardid).mockReturnValue('board-a')
+    mediaqueuesetplayerlayerstate('helper-peer', 'board-a', true)
     mediaqueueretryplayerconnect()
     expect(netterminalmediacall).toHaveBeenCalledWith(
       'helper-peer',
       expect.any(MockMediaStream),
       { kind: 'mediaqueue', source: 'player' },
     )
+  })
+
+  it('does not redial from listen state when layer state is empty', () => {
+    const call = { on: jest.fn(), close: jest.fn() }
+    jest.mocked(netterminalmediacall).mockReturnValue(call as never)
+    jest.mocked(mediaqueueislistening).mockReturnValue(true)
+    jest.mocked(mediaqueuereadhelperpeerid).mockReturnValue('helper-peer')
+    jest.mocked(mediaqueuereadboundboardid).mockReturnValue('board-a')
+    mediaqueueretryplayerconnect()
+    expect(netterminalmediacall).not.toHaveBeenCalled()
+  })
+
+  it('disconnects when connecting off the bound board while listening', () => {
+    const call = { on: jest.fn(), close: jest.fn() }
+    jest.mocked(netterminalmediacall).mockReturnValue(call as never)
+    jest.mocked(mediaqueueislistening).mockReturnValue(true)
+    jest.mocked(mediaqueuereadhelperpeerid).mockReturnValue('helper-peer')
+    jest.mocked(mediaqueuereadboundboardid).mockReturnValue('board-a')
+    mediaqueueconnectifonboard('helper-peer', 'board-a')
+    mediaqueueconnectifonboard('helper-peer', 'board-b')
+    expect(mediaqueueteardownplayersink).toHaveBeenCalled()
+    expect(mediaqueuereadplayerconnectstate().hascall).toBe(false)
+    expect(netterminalmediacall).toHaveBeenCalledTimes(1)
   })
 
   it('attaches stream from helper call when tracks are present', () => {
@@ -329,17 +363,86 @@ describe('mediaqueue player connect', () => {
     expect(last.getVideoTracks()).toEqual([{ kind: 'video' }])
   })
 
-  it('retries from bound board without listen state for join tabs', () => {
+  it('does not redial join tabs from listen state without layer state', () => {
     const call = { on: jest.fn(), close: jest.fn() }
     jest.mocked(netterminalmediacall).mockReturnValue(call as never)
     jest.mocked(mediaqueueislistening).mockReturnValue(false)
     jest.mocked(mediaqueuereadhelperpeerid).mockReturnValue('helper-peer')
     jest.mocked(mediaqueuereadboundboardid).mockReturnValue('board-a')
     mediaqueueretryplayerconnect()
-    expect(netterminalmediacall).toHaveBeenCalledWith(
-      'helper-peer',
-      expect.any(MockMediaStream),
-      { kind: 'mediaqueue', source: 'player' },
-    )
+    expect(netterminalmediacall).not.toHaveBeenCalled()
+  })
+
+  it('does not redial when disconnect close fires synchronously', () => {
+    const handlers: Record<string, () => void> = {}
+    let closed = false
+    const call = {
+      on: jest.fn((event: string, fn: () => void) => {
+        handlers[event] = fn
+      }),
+      close: jest.fn(() => {
+        if (closed) {
+          return
+        }
+        closed = true
+        handlers.close?.()
+      }),
+    }
+    jest.mocked(netterminalmediacall).mockReturnValue(call as never)
+    mediaqueueconnectifonboard('helper-peer', 'board-a')
+    mediaqueuedisconnect()
+    expect(netterminalmediacall).toHaveBeenCalledTimes(1)
+    expect(mediaqueuereadplayerconnectstate().hascall).toBe(false)
+  })
+
+  it('redials when helper closes the call while still on the board', () => {
+    const handlers: Record<string, () => void> = {}
+    let closed = false
+    const call = {
+      on: jest.fn((event: string, fn: () => void) => {
+        handlers[event] = fn
+      }),
+      close: jest.fn(() => {
+        if (closed) {
+          return
+        }
+        closed = true
+        handlers.close?.()
+      }),
+    }
+    const second = { on: jest.fn(), close: jest.fn() }
+    jest
+      .mocked(netterminalmediacall)
+      .mockReturnValueOnce(call as never)
+      .mockReturnValueOnce(second as never)
+    mediaqueueconnectifonboard('helper-peer', 'board-a')
+    handlers.close?.()
+    expect(netterminalmediacall).toHaveBeenCalledTimes(2)
+    expect(mediaqueuereadplayerconnectstate().hascall).toBe(true)
+  })
+
+  it('tears down a dead MediaConnection and redials', () => {
+    const first = {
+      on: jest.fn(),
+      close: jest.fn(),
+      peer: 'helper-peer',
+      peerConnection: {
+        iceConnectionState: 'failed',
+        connectionState: 'failed',
+        getReceivers: jest.fn(() => []),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      },
+    }
+    const second = { on: jest.fn(), close: jest.fn(), peer: 'helper-peer' }
+    jest
+      .mocked(netterminalmediacall)
+      .mockReturnValueOnce(first as never)
+      .mockReturnValueOnce(second as never)
+    mediaqueueconnectifonboard('helper-peer', 'board-a')
+    expect(netterminalmediacall).toHaveBeenCalledTimes(1)
+    mediaqueueretryplayerconnect()
+    expect(mediaqueueteardownplayersink).toHaveBeenCalled()
+    expect(netterminalmediacall).toHaveBeenCalledTimes(2)
   })
 })

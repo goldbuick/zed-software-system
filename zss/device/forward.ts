@@ -75,11 +75,18 @@ export function shouldforwardservertoclient(message: MESSAGE): boolean {
           }
           return true
         case 'modem':
-        case 'bridge':
         case 'register':
         case 'gadgetclient':
         case 'perfreport':
         case 'netterminal':
+          return true
+        case 'bridge':
+          // Queue lives on the listening host tab. Join CLI still emits
+          // with the join player id; host bridge handles it. Forwarding
+          // would run handlemediapanel where mediaqueueislistening is false.
+          if (route.path === 'mediapanel' || route.path === 'queuepanel') {
+            return false
+          }
           return true
       }
       switch (route.path) {

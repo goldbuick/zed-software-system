@@ -28,6 +28,13 @@
   margin: 0;
 }
 
+.players {
+  margin: 0;
+  padding: 0;
+  color: var(--hint);
+  line-height: var(--row);
+}
+
 .frame.mq .row {
   display: flex;
   gap: 8px;
@@ -42,7 +49,8 @@
 #preview {
   display: none;
   width: 100%;
-  height: 140px;
+  height: auto;
+  aspect-ratio: 608 / 364;
   margin: 0;
   background: #000;
   border: none;

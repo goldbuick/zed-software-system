@@ -1,4 +1,4 @@
-/** Map helper mediaqueue:status strings to tape workstatus badge labels. */
+/** Map helper mediaqueue:status strings to short HUD / badge labels. */
 export function mediaqueuestatusworklabel(
   status: string,
   detail?: string,

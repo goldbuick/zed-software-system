@@ -123,12 +123,14 @@ describe('WebBroadcastClient lifecycle', () => {
       createGain: () => ({
         gain: { value: 1 },
         connect: jest.fn(),
+        disconnect: jest.fn(),
       }),
       createMediaStreamDestination: () => ({
         stream: { getAudioTracks: () => [{ kind: 'audio' }] },
       }),
       createMediaStreamSource: () => ({
         connect: jest.fn(),
+        disconnect: jest.fn(),
       }),
     })) as unknown as typeof AudioContext
   })
@@ -171,6 +173,19 @@ describe('WebBroadcastClient lifecycle', () => {
 
     client.stop()
     expect(active).toHaveBeenCalledWith(false)
+  })
+
+  it('removes a named audio input without throwing when missing', async () => {
+    const client = createwebbroadcastclient()
+    await client.addaudioinputdevice(
+      { getAudioTracks: () => [{ kind: 'audio' }] } as MediaStream,
+      'audio',
+    )
+    expect(client.hasaudioinputdevice('audio')).toBe(true)
+    client.removeaudioinputdevice('audio')
+    expect(client.hasaudioinputdevice('audio')).toBe(false)
+    client.removeaudioinputdevice('audio')
+    client.setaudioinputgain('missing', 0.5)
   })
 
   it('rejects duplicate start', async () => {

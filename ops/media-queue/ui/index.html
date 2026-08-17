@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' blob:; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost"
+      content="default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' blob:; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://asset.localhost; media-src 'self' blob: mediastream: https://asset.localhost"
     />
     <title>zed.cafe Media Queue</title>
     <link rel="icon" type="image/png" href="./icon.png" />
@@ -30,15 +30,7 @@
           Copy
         </button>
       </div>
-
-      <label for="status">status</label>
-      <div id="statusbox" class="status">
-        <div>
-          <span class="label">link</span>
-          <span id="link" class="value">starting</span>
-        </div>
-        <div id="detail" class="mono"></div>
-      </div>
+      <div id="players" class="players">0 players</div>
 
       <label for="queue">queue (from cafe)</label>
       <textarea id="queue" readonly></textarea>
