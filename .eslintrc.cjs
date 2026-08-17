@@ -186,6 +186,33 @@ module.exports = {
   },
   overrides: [
     {
+      // Standalone Electron helper: own tsconfig + node_modules (electron types
+      // are not installed at the repo root), so lint style here and leave types
+      // to `yarn typecheck` inside ops/media-queue.
+      files: ['ops/media-queue/**/*.ts', 'ops/media-queue/**/*.d.ts'],
+      extends: ['plugin:@typescript-eslint/disable-type-checked'],
+      env: {
+        browser: true,
+        node: true,
+        es2022: true,
+      },
+      rules: {
+        'no-console': 'off',
+        // Mechanical JS->TS conversion keeps intentional empty catch blocks.
+        'no-empty': ['error', { allowEmptyCatch: true }],
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+            caughtErrorsIgnorePattern: '^_',
+          },
+        ],
+        // Window / ambient augmentation requires interface merging.
+        '@typescript-eslint/consistent-type-definitions': 'off',
+      },
+    },
+    {
       files: ['ops/infra/**/*.js', 'ops/infra/**/*.mjs'],
       env: {
         browser: false,

@@ -1,20 +1,17 @@
-#!/usr/bin/env node
 /**
  * Unit checks for media-queue prep cache: dual slots, targeted cancel, prune.
  */
-import { mkdtempSync, writeFileSync, existsSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { createRequire } from 'node:module'
 
-const require = createRequire(import.meta.url)
-const { DownloadManager, removepartialfiles } = require('../src/lib/download.cjs')
+import { DownloadManager, removepartialfiles } from '../src/main/lib/download'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const root = path.join(__dirname, '..')
+import { MQ_ROOT } from './lib/paths'
 
-function assert(condition, message) {
+const root = MQ_ROOT
+
+function assert(condition: unknown, message: string) {
   if (!condition) {
     console.error('FAIL:', message)
     process.exit(1)
@@ -49,7 +46,10 @@ function main() {
   removepartialfiles(work, [keepa, keepb, stray])
   assert(existsSync(keepa), 'keepa survives partial cleanup')
   assert(existsSync(keepb), 'keepb survives partial cleanup')
-  assert(existsSync(stray), 'unprotected finished file survives partial cleanup')
+  assert(
+    existsSync(stray),
+    'unprotected finished file survives partial cleanup',
+  )
   assert(!existsSync(partial), 'partial file removed')
 
   mgr.canceldownload()

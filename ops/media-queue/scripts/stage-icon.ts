@@ -1,14 +1,13 @@
-#!/usr/bin/env node
 /**
  * Stage zed.cafe app icons for Media Queue from cafe/favicon.ico (64x64 PNG).
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const mqroot = path.join(__dirname, '..')
+import { MQ_ROOT } from './lib/paths'
+
+const mqroot = MQ_ROOT
 const repo = path.join(mqroot, '..', '..')
 const source = path.join(repo, 'cafe', 'favicon.ico')
 const iconsdir = path.join(mqroot, 'resources', 'icons')
@@ -40,14 +39,16 @@ print('staged media-queue icons from cafe/favicon.ico')
 `
 
 writeFileSync(path.join(mqroot, '.stage-icon.py'), py)
-execFileSync('python3', [path.join(mqroot, '.stage-icon.py')], { stdio: 'inherit' })
+execFileSync('python3', [path.join(mqroot, '.stage-icon.py')], {
+  stdio: 'inherit',
+})
 rmSync(path.join(mqroot, '.stage-icon.py'), { force: true })
 
 if (process.platform === 'darwin') {
   const iconset = path.join(iconsdir, 'icon.iconset')
   rmSync(iconset, { recursive: true, force: true })
   mkdirSync(iconset)
-  const entries = [
+  const entries: [number, string][] = [
     [16, 'icon_16x16.png'],
     [32, 'icon_16x16@2x.png'],
     [32, 'icon_32x32.png'],

@@ -1,22 +1,25 @@
-#!/usr/bin/env node
 /**
  * macOS dev: copy Electron.app with zed.cafe name + icon so Dock/Cmd+Tab
  * show "Zed Cafe Media Queue" instead of generic Electron.
  */
 import { execFileSync } from 'node:child_process'
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
-  cpSync,
 } from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const root = path.join(__dirname, '..')
+import { MQ_ROOT, binpath } from './lib/paths'
+
+type ELECTRON_PACKAGE = {
+  version: string
+}
+
+const root = MQ_ROOT
 const productname = 'Zed Cafe Media Queue'
 const bundleid = 'cafe.zed.media-queue.dev'
 const appname = `${productname}.app`
@@ -42,7 +45,7 @@ if (!existsSync(electronapp)) {
 }
 
 if (!existsSync(iconicns)) {
-  execFileSync('node', [path.join(__dirname, 'stage-icon.mjs')], {
+  execFileSync(binpath('tsx'), [path.join(root, 'scripts', 'stage-icon.ts')], {
     stdio: 'inherit',
     cwd: root,
   })
@@ -50,12 +53,14 @@ if (!existsSync(iconicns)) {
 
 const STAMP_BRAND = '3'
 
-const electronversion = JSON.parse(
+const electronpkg = JSON.parse(
   readFileSync(
     path.join(root, 'node_modules', 'electron', 'package.json'),
     'utf8',
   ),
-).version
+) as ELECTRON_PACKAGE
+
+const electronversion = electronpkg.version
 
 const stampvalue = `${electronversion}:${STAMP_BRAND}`
 
@@ -88,10 +93,7 @@ plist = plist.replace(
 )
 writeFileSync(infoplist, plist)
 
-cpSync(
-  iconicns,
-  path.join(devapp, 'Contents', 'Resources', 'electron.icns'),
-)
+cpSync(iconicns, path.join(devapp, 'Contents', 'Resources', 'electron.icns'))
 
 try {
   execFileSync(

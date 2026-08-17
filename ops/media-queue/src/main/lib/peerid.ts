@@ -1,15 +1,27 @@
-'use strict'
-
-const crypto = require('node:crypto')
-const fs = require('node:fs')
-const path = require('node:path')
+import crypto from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const PEER_ID_LENGTH = 20
 const HEX_CHARS =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-function Alea() {
-  return (function alea(args) {
+type MQ_ALEA_SEED = string | number
+
+type MQ_ALEA_RANDOM = {
+  (): number
+  next: MQ_ALEA_RANDOM
+}
+
+type MQ_MASH_FN = (data: MQ_ALEA_SEED) => number
+
+type MQ_PEER_ID = {
+  seed: string
+  peerid: string
+}
+
+function Alea(...seeds: MQ_ALEA_SEED[]): MQ_ALEA_RANDOM {
+  return (function alea(args: MQ_ALEA_SEED[]): MQ_ALEA_RANDOM {
     let s0 = 0
     let s1 = 0
     let s2 = 0
@@ -18,7 +30,7 @@ function Alea() {
     if (args.length === 0) {
       args = [Date.now()]
     }
-    let mash = mashfn()
+    let mash: MQ_MASH_FN | null = mashfn()
     s0 = mash(' ')
     s1 = mash(' ')
     s2 = mash(' ')
@@ -39,23 +51,24 @@ function Alea() {
     }
     mash = null
 
-    function random() {
+    function random(): number {
       const t = 2091639 * s0 + c * 2.3283064365386963e-10
       s0 = s1
       s1 = s2
       return (s2 = t - (c = t | 0))
     }
-    random.next = random
-    return random
-  })(Array.prototype.slice.call(arguments))
+    const rng = random as MQ_ALEA_RANDOM
+    rng.next = rng
+    return rng
+  })(seeds)
 }
 
-function mashfn() {
+function mashfn(): MQ_MASH_FN {
   let n = 0xefc8249d
-  return function mash(data) {
-    data = data.toString()
-    for (let i = 0; i < data.length; i++) {
-      n += data.charCodeAt(i)
+  return function mash(data: MQ_ALEA_SEED): number {
+    const text = data.toString()
+    for (let i = 0; i < text.length; i++) {
+      n += text.charCodeAt(i)
       let h = 0.02519603282416938 * n
       n = h >>> 0
       h -= n
@@ -69,16 +82,16 @@ function mashfn() {
 }
 
 /** Same algorithm as zss/mapping/guid.ts createinfohash (netterminal peer ids). */
-function createinfohash(source) {
+export function createinfohash(source: string): string {
   const rng = Alea(source)
-  const chars = []
+  const chars: string[] = []
   for (let i = 0; i < PEER_ID_LENGTH; i++) {
     chars.push(HEX_CHARS[Math.floor(rng() * HEX_CHARS.length)])
   }
   return chars.join('')
 }
 
-function readmqnetid(filepath) {
+export function readmqnetid(filepath: string): string {
   try {
     return fs.readFileSync(filepath, 'utf8').trim()
   } catch {
@@ -86,7 +99,7 @@ function readmqnetid(filepath) {
   }
 }
 
-function writemqnetid(filepath, seed) {
+export function writemqnetid(filepath: string, seed: string): boolean {
   const trimmed = String(seed || '').trim()
   if (!trimmed) {
     return false
@@ -96,7 +109,10 @@ function writemqnetid(filepath, seed) {
   return true
 }
 
-function resolvemqpeerid(filepath, overridepeerid) {
+export function resolvemqpeerid(
+  filepath: string,
+  overridepeerid?: string,
+): MQ_PEER_ID {
   const forced = String(overridepeerid || '').trim()
   if (forced) {
     return { seed: '', peerid: forced }
@@ -107,11 +123,4 @@ function resolvemqpeerid(filepath, overridepeerid) {
     writemqnetid(filepath, seed)
   }
   return { seed, peerid: createinfohash(seed) }
-}
-
-module.exports = {
-  createinfohash,
-  readmqnetid,
-  writemqnetid,
-  resolvemqpeerid,
 }
