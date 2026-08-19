@@ -78,7 +78,14 @@ type MQ_RESOLVED_BINS = {
 
 type MQ_YTDLP_PROFILE = 'video' | 'audio'
 
-type MQ_YTDLP_CTX = {
+export type MQ_YTDLP_FORMAT_TRY = {
+  profile: MQ_YTDLP_PROFILE
+  format: string
+  soundcloudformats: string
+  label: string
+}
+
+export type MQ_YTDLP_CTX = {
   ytdlp: string
   jspath: string
   ytdlphome: string
@@ -106,10 +113,41 @@ type MQ_CLEAR_RESULT = {
   freedBytes: number
 }
 
-const MAX_DOWNLOAD_ATTEMPTS = 4
 export const YTDLP_FORMAT =
   'best[height<=720][vcodec^=avc][ext=mp4][acodec^=mp4a]/bestvideo[vcodec^=avc1][height<=720][ext=mp4]+bestaudio[acodec^=mp4a][ext=m4a]/bestvideo[vcodec^=avc][height<=720]+bestaudio/best[height<=720]'
-export const YTDLP_AUDIO_FORMAT = 'bestaudio[ext=m4a]/bestaudio/best'
+export const YTDLP_AUDIO_FORMAT =
+  'bestaudio[ext=m4a]/bestaudio[acodec^=mp4a]/bestaudio'
+export const SOUNDCLOUD_FORMATS_AAC =
+  'http_aac,hls_aac,http_opus,hls_opus,http_mp3,hls_mp3'
+export const SOUNDCLOUD_FORMATS_MP3 = 'http_mp3,hls_mp3'
+export const SOUNDCLOUD_FORMATS_OPUS_MP3 = 'http_opus,hls_opus,http_mp3,hls_mp3'
+/** Preferred then fallbacks. Later SoundCloud tries omit hls_aac so a 404 there cannot abort extract. */
+export const YTDLP_FORMAT_TRIES: readonly MQ_YTDLP_FORMAT_TRY[] = [
+  {
+    profile: 'video',
+    format: YTDLP_FORMAT,
+    soundcloudformats: SOUNDCLOUD_FORMATS_AAC,
+    label: 'video',
+  },
+  {
+    profile: 'audio',
+    format: YTDLP_AUDIO_FORMAT,
+    soundcloudformats: SOUNDCLOUD_FORMATS_AAC,
+    label: 'audio-aac',
+  },
+  {
+    profile: 'audio',
+    format: 'bestaudio[ext=mp3]/bestaudio',
+    soundcloudformats: SOUNDCLOUD_FORMATS_MP3,
+    label: 'audio-mp3',
+  },
+  {
+    profile: 'audio',
+    format: 'bestaudio/best',
+    soundcloudformats: SOUNDCLOUD_FORMATS_OPUS_MP3,
+    label: 'audio-opus-mp3',
+  },
+]
 const MQ_MEDIA_EXTENSIONS = new Set([
   '.mp4',
   '.m4a',
@@ -149,62 +187,9 @@ const COOKIE_BROWSERS = [
   'chromium',
 ]
 
-function sleep(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms))
-}
-
 function youtubeplayerclient(attempt: number): string {
   const idx = (attempt - 1) % YOUTUBE_PLAYER_CLIENTS.length
   return `youtube:player_client=${YOUTUBE_PLAYER_CLIENTS[idx]}`
-}
-
-function defaultcookiefallbacks(): string[] {
-  if (process.platform === 'darwin') {
-    return ['safari', 'chrome', 'firefox']
-  }
-  if (process.platform === 'win32') {
-    return ['firefox']
-  }
-  return ['chrome', 'firefox']
-}
-
-function ytdlpneedscookiesauth(message: string): boolean {
-  const lower = String(message).toLowerCase()
-  return (
-    lower.includes('sign in') ||
-    lower.includes('cookies-from-browser') ||
-    lower.includes('use --cookies')
-  )
-}
-
-function resolvecookiesbrowser(
-  attempt: number,
-  userbrowser: string,
-  lastmessage: string,
-): string {
-  if (userbrowser) {
-    return userbrowser
-  }
-  if (attempt === 1) {
-    return ''
-  }
-  const fallbacks = defaultcookiefallbacks()
-  if (ytdlpneedscookiesauth(lastmessage)) {
-    const idx = (attempt - 2) % fallbacks.length
-    return fallbacks[idx]
-  }
-  if (attempt > 4) {
-    const idx = (attempt - 5) % fallbacks.length
-    return fallbacks[idx]
-  }
-  return ''
-}
-
-function clearytdlpextractorcache(ytdlphome: string): void {
-  const cache = path.join(ytdlphome, 'yt-dlp')
-  if (fs.existsSync(cache)) {
-    fs.rmSync(cache, { recursive: true, force: true })
-  }
 }
 
 export function ismqmediafile(name: string): boolean {
@@ -443,17 +428,6 @@ function mediaisaudioonly(
   return !probe.hasVideo
 }
 
-function ytdlpneedsaudiofallback(message: string): boolean {
-  const lower = String(message).toLowerCase()
-  return (
-    lower.includes('requested format is not available') ||
-    lower.includes('no video formats') ||
-    lower.includes('does not contain a video') ||
-    lower.includes('format is not available') ||
-    lower.includes('only images are available')
-  )
-}
-
 function validatemediafile(filepath: string, probe: MQ_MEDIA_PROBE): boolean {
   if (!fs.existsSync(filepath)) {
     return false
@@ -610,6 +584,7 @@ function applyytdlpbaseargs(
   jspath: string,
   _ytdlphome: string,
   attempt: number,
+  soundcloudformats: string,
 ): void {
   args.push(
     '--no-update',
@@ -619,6 +594,8 @@ function applyytdlpbaseargs(
     'ejs:github',
     '--extractor-args',
     youtubeplayerclient(attempt),
+    '--extractor-args',
+    `soundcloud:formats=${soundcloudformats}`,
   )
 }
 
@@ -646,21 +623,27 @@ function pushpostprocessorargs(
   }
 }
 
-function buildytdlpargs(
-  profile: MQ_YTDLP_PROFILE,
+export function buildytdlpargs(
   ctx: MQ_YTDLP_CTX,
+  formattry: MQ_YTDLP_FORMAT_TRY,
 ): string[] {
   const args: string[] = []
-  applyytdlpbaseargs(args, ctx.jspath, ctx.ytdlphome, ctx.attempt)
+  applyytdlpbaseargs(
+    args,
+    ctx.jspath,
+    ctx.ytdlphome,
+    ctx.attempt,
+    formattry.soundcloudformats,
+  )
   applyytdlpdownloadargs(args, ctx.attempt)
   applyytdlpcookies(args, ctx.cookiesbrowser)
-  if (profile === 'audio') {
-    args.push('-f', YTDLP_AUDIO_FORMAT, '--force-overwrites')
+  if (formattry.profile === 'audio') {
+    args.push('-f', formattry.format, '--force-overwrites')
     pushpostprocessorargs(args, FFMPEG_POST_ARGS_AUDIO)
   } else {
     args.push(
       '-f',
-      YTDLP_FORMAT,
+      formattry.format,
       '--merge-output-format',
       'mp4',
       '--force-overwrites',
@@ -694,9 +677,9 @@ async function runytdlpdownload(
   job: MQ_DOWNLOAD_JOB,
   emit: MQ_EMIT,
   ctx: MQ_YTDLP_CTX,
-  profile: MQ_YTDLP_PROFILE,
+  formattry: MQ_YTDLP_FORMAT_TRY,
 ): Promise<MQ_YTDLP_RESULT> {
-  const args = buildytdlpargs(profile, ctx)
+  const args = buildytdlpargs(ctx, formattry)
   const child = spawn(ctx.ytdlp, args, {
     cwd: ctx.cachedir,
     env: { ...process.env, XDG_CACHE_HOME: ctx.ytdlphome },
@@ -1203,83 +1186,62 @@ export class DownloadManager {
     const ffdir = bins.ffdir
     const ffprobe = bins.ffprobe
 
-    let lastmessage = ''
-    const usercookies = this.cookiesbrowser
+    if (job.cancelled) {
+      job.phase = 'idle'
+      return null
+    }
 
-    for (let attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt += 1) {
+    const cookiesbrowser = this.cookiesbrowser
+    const ctx: MQ_YTDLP_CTX = {
+      ytdlp,
+      jspath,
+      ytdlphome: this.ytdlphome,
+      ffdir,
+      cachedir: this.cachedir,
+      attempt: 1,
+      cookiesbrowser,
+      url: trimmed,
+    }
+
+    let profile: MQ_YTDLP_PROFILE = 'video'
+    let result: MQ_YTDLP_RESULT = {
+      success: false,
+      outpath: '',
+      title: '',
+      message: '',
+      errlines: [],
+    }
+    for (let ti = 0; ti < YTDLP_FORMAT_TRIES.length; ti += 1) {
       if (job.cancelled) {
-        job.phase = 'idle'
-        return null
+        break
       }
-
-      if (attempt > 1) {
+      const formattry = YTDLP_FORMAT_TRIES[ti]
+      if (ti > 0) {
         removepartialfiles(this.cachedir, this.protectedpaths())
-        if (lastmessage.includes('403') || ytdlpneedscookiesauth(lastmessage)) {
-          clearytdlpextractorcache(this.ytdlphome)
-        }
-        await sleep(
-          lastmessage.includes('403') || ytdlpneedscookiesauth(lastmessage)
-            ? 3000
-            : 1500,
-        )
       }
-
-      const cookiesbrowser = resolvecookiesbrowser(
-        attempt,
-        usercookies,
-        lastmessage,
-      )
-      job.percent = 0
       job.status = 'extracting'
-      job.detail = 'starting'
+      job.detail = formattry.label
       emit(job.progressevent, {
         percent: 0,
-        eta: 'starting',
+        eta: formattry.label,
         status: 'extracting',
       })
-
-      const ctx: MQ_YTDLP_CTX = {
-        ytdlp,
-        jspath,
-        ytdlphome: this.ytdlphome,
-        ffdir,
-        cachedir: this.cachedir,
-        attempt,
-        cookiesbrowser,
-        url: trimmed,
+      profile = formattry.profile
+      result = await runytdlpdownload(job, emit, ctx, formattry)
+      if (result.success) {
+        break
       }
+    }
 
-      let profile: MQ_YTDLP_PROFILE = 'video'
-      let result = await runytdlpdownload(job, emit, ctx, 'video')
-      if (
-        !result.success &&
-        ytdlpneedsaudiofallback(result.message) &&
-        !job.cancelled
-      ) {
-        removepartialfiles(this.cachedir, this.protectedpaths())
-        job.status = 'extracting'
-        job.detail = 'audio-only'
-        emit(job.progressevent, {
-          percent: 0,
-          eta: 'audio-only',
-          status: 'extracting',
-        })
-        profile = 'audio'
-        result = await runytdlpdownload(job, emit, ctx, 'audio')
-      }
+    if (job.cancelled) {
+      job.phase = 'idle'
+      return null
+    }
 
-      if (job.cancelled) {
-        job.phase = 'idle'
-        return null
-      }
-
-      const outpathexists = result.outpath && fs.existsSync(result.outpath)
-      if (result.success && outpathexists) {
-        const probe = probemediafile(ffprobe, result.outpath)
-        if (!validatemediafile(result.outpath, probe)) {
-          lastmessage = 'downloaded file failed media validation'
-          continue
-        }
+    const outpathexists = result.outpath && fs.existsSync(result.outpath)
+    if (result.success && outpathexists) {
+      const probe = probemediafile(ffprobe, result.outpath)
+      if (validatemediafile(result.outpath, probe)) {
         const audioonly = mediaisaudioonly(result.outpath, probe, profile)
         job.filepath = result.outpath
         job.title = result.title
@@ -1305,13 +1267,12 @@ export class DownloadManager {
         emit(job.readyevent, payload)
         return payload
       }
-
-      lastmessage = result.message
+      result.message = 'downloaded file failed media validation'
     }
 
-    job.error = lastmessage
+    job.error = result.message
     job.phase = 'error'
-    emit(job.errorevent, { message: lastmessage } satisfies MQ_ERROR_EVENT)
+    emit(job.errorevent, { message: result.message } satisfies MQ_ERROR_EVENT)
     return null
   }
 
