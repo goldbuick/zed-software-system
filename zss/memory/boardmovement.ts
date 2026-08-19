@@ -54,9 +54,7 @@ function memoryidstillatxy(
     if (ispid(object.id)) {
       return object.id
     }
-    if (!found) {
-      found = object.id
-    }
+    found ??= object.id
   }
   return found
 }
@@ -363,7 +361,10 @@ export function memorymoveobject(
       }
       // Breakable projectiles must leave lookup even when the chip skips :thud
       // #die. A leftover id after a wall thud would block later bullets.
-      const deletestamp = READ_CONTEXT.timestamp || book?.timestamp || 1
+      const contextstamp = READ_CONTEXT.timestamp
+      const bookstamp = book?.timestamp ?? 0
+      const deletestamp =
+        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
       if (memoryreadelementstat(element, 'breakable')) {
         memorysafedeleteelement(board, element, deletestamp)
       }
