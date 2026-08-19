@@ -22,33 +22,6 @@ jobs:
         with:
           body: ${{steps.github_release.outputs.changelog}}
 
-  mediaqueue-macos:
-    name: Build media queue (macOS)
-    needs: release
-    runs-on: macos-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-
-      - name: Install root dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build macOS installers
-        run: yarn task run mediaqueue:build:desktop:mac
-
-      - name: Upload macOS artifacts to release
-        uses: softprops/action-gh-release@v3
-        with:
-          files: |
-            ops/media-queue/dist/*.dmg
-
   mediaqueue-windows:
     name: Build media queue (Windows)
     needs: release

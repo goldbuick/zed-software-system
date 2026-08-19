@@ -100,6 +100,7 @@ const els = {
   copypeer: readel<HTMLButtonElement>('copypeer'),
   queue: readel<HTMLTextAreaElement>('queue'),
   cookiesbrowser: readel<HTMLSelectElement>('cookiesbrowser'),
+  cookieshint: readel<HTMLElement>('cookieshint'),
   stopcall: readel<HTMLButtonElement>('stopcall'),
   cleardownloads: readel<HTMLButtonElement>('cleardownloads'),
   preview: readel<HTMLVideoElement>('preview'),
@@ -440,10 +441,64 @@ function urlfallbacklabel(url: string) {
   }
 }
 
+function cookiesplatform(): 'mac' | 'win' | 'other' {
+  const ua = navigator.userAgent || ''
+  if (/Mac/i.test(ua)) {
+    return 'mac'
+  }
+  if (/Win/i.test(ua)) {
+    return 'win'
+  }
+  return 'other'
+}
+
+function cookiesbrowseroptions(platform: 'mac' | 'win' | 'other'): string[] {
+  if (platform === 'win') {
+    return ['firefox']
+  }
+  if (platform === 'mac') {
+    return ['chrome', 'safari', 'firefox']
+  }
+  return ['chrome', 'firefox']
+}
+
+function defaultcookiesbrowser(): string {
+  return cookiesplatform() === 'win' ? 'firefox' : 'chrome'
+}
+
+function cookieshinttext(platform: 'mac' | 'win' | 'other'): string {
+  if (platform === 'win') {
+    return 'YouTube cookies can only be read from Firefox. Sign in to YouTube in Firefox, then leave this set to firefox.'
+  }
+  if (platform === 'mac') {
+    return 'Sign in to YouTube in the browser you pick (Chrome recommended). The helper reads that browser\'s cookies.'
+  }
+  return 'Sign in to YouTube in the browser you pick. The helper reads that browser\'s cookies.'
+}
+
+function fillcookiesbrowserselect(platform: 'mac' | 'win' | 'other') {
+  const select = els.cookiesbrowser
+  select.replaceChildren()
+  const off = document.createElement('option')
+  off.value = ''
+  off.textContent = 'off'
+  select.appendChild(off)
+  const names = cookiesbrowseroptions(platform)
+  for (let i = 0; i < names.length; ++i) {
+    const opt = document.createElement('option')
+    opt.value = names[i]
+    opt.textContent = names[i]
+    select.appendChild(opt)
+  }
+}
+
 function shortenerr(message: unknown) {
   const text = String(message)
   const lower = text.toLowerCase()
   if (lower.includes('sign in') || lower.includes('cookies-from-browser')) {
+    if (cookiesplatform() === 'win') {
+      return 'youtube needs firefox login -- pick youtube cookies below'
+    }
     return 'youtube needs browser login -- pick youtube cookies below'
   }
   if (text.length > 140) {
@@ -452,20 +507,7 @@ function shortenerr(message: unknown) {
   return text
 }
 
-function defaultcookiesbrowser() {
-  if (/Mac/i.test(navigator.userAgent || '')) {
-    return 'safari'
-  }
-  if (/Win/i.test(navigator.userAgent || '')) {
-    return 'chrome'
-  }
-  return 'chrome'
-}
-
 async function synccookiessetting() {
-  if (!els.cookiesbrowser) {
-    return
-  }
   const browser = els.cookiesbrowser.value || ''
   try {
     await invoke('set_media_cookies_browser', { browser: browser })
@@ -475,11 +517,16 @@ async function synccookiessetting() {
 }
 
 function initcookiessetting() {
-  if (!els.cookiesbrowser) {
-    return
-  }
+  const platform = cookiesplatform()
+  fillcookiesbrowserselect(platform)
+  els.cookieshint.textContent = cookieshinttext(platform)
+  const allowed = cookiesbrowseroptions(platform)
   const saved = localStorage.getItem('mq-cookies-browser')
-  els.cookiesbrowser.value = saved != null ? saved : defaultcookiesbrowser()
+  if (saved === '' || (saved != null && allowed.includes(saved))) {
+    els.cookiesbrowser.value = saved
+  } else {
+    els.cookiesbrowser.value = defaultcookiesbrowser()
+  }
   els.cookiesbrowser.addEventListener('change', function () {
     void synccookiessetting()
   })

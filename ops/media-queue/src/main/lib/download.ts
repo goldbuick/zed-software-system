@@ -163,7 +163,7 @@ function defaultcookiefallbacks(): string[] {
     return ['safari', 'chrome', 'firefox']
   }
   if (process.platform === 'win32') {
-    return ['chrome', 'edge', 'firefox']
+    return ['firefox']
   }
   return ['chrome', 'firefox']
 }

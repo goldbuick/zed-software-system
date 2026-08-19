@@ -1,6 +1,6 @@
 # Desktop helper signing
 
-Windows installers for the Electron media-queue helper ship on GitHub Releases (`v*` tags). macOS builds are unsigned until an Apple Developer ID is configured.
+Windows installers for the Electron media-queue helper ship on GitHub Releases (`v*` tags). Tag CI builds Windows only. macOS `.dmg` is local (`yarn task run mediaqueue:build:desktop:mac`) until an Apple Developer ID and notarization exist.
 
 ## Windows (SignPath OSS)
 
@@ -78,7 +78,9 @@ The job builds the Electron NSIS installer, uploads the unsigned `.exe` as a nam
 
 ## macOS
 
-Public distribution without Gatekeeper warnings needs an Apple Developer Program membership ($99/year), Developer ID Application cert, and notarization. Not wired in CI yet; users use **Open Anyway** on first launch.
+Apple does not offer a SignPath-style free Developer ID for open source. An unsigned or ad-hoc `.app` downloaded in a browser is quarantined; Gatekeeper on Apple Silicon reports it as damaged (no Open Anyway). Tag CI therefore does not upload macOS artifacts.
+
+Local pack remains `yarn task run mediaqueue:build:desktop:mac`. Public GitHub `.dmg` needs an Apple Developer Program membership ($99/year), Developer ID Application cert, notarization, and a staple step in CI.
 
 ## Related
 
