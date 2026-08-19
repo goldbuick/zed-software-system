@@ -6,6 +6,9 @@ const root = MQ_ROOT
 delete process.env.ELECTRON_RUN_AS_NODE
 
 const args = process.argv.slice(2)
+if (!args.includes('--publish')) {
+  args.push('--publish', 'never')
+}
 const child = spawn(binpath('electron-builder'), args, {
   cwd: root,
   stdio: 'inherit',

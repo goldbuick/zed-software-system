@@ -1,7 +1,13 @@
 /**
  * Unit checks for media-queue prep cache: dual slots, targeted cancel, prune.
  */
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -18,7 +24,27 @@ function assert(condition: unknown, message: string) {
   }
 }
 
+function assertdistscripts() {
+  const pkg = JSON.parse(
+    readFileSync(path.join(root, 'package.json'), 'utf8'),
+  ) as { scripts?: Record<string, string> }
+  const scripts = pkg.scripts ?? {}
+  assert(
+    String(scripts['prepare:dist'] || '').includes('electron-vite build'),
+    'prepare:dist must run electron-vite build',
+  )
+  for (const name of ['dist', 'dist:mac', 'dist:win']) {
+    const script = scripts[name]
+    assert(typeof script === 'string', `${name} script exists`)
+    assert(
+      script.includes('prepare:dist'),
+      `${name} must run prepare:dist so out/main/index.js exists before pack`,
+    )
+  }
+}
+
 function main() {
+  assertdistscripts()
   const work = mkdtempSync(path.join(tmpdir(), 'mq-prep-test-'))
   const mgr = new DownloadManager(root, work)
 

@@ -25,7 +25,7 @@ yarn task run mediaqueue:build
 yarn task run mediaqueue:build:desktop
 ```
 
-`yarn start` / `yarn dist` run `fetch-binaries` automatically. Installers land under `ops/media-queue/dist/`.
+`yarn start` / `yarn dist` / `yarn dist:mac` / `yarn dist:win` run `fetch-binaries` and `electron-vite build` automatically. Installers land under `ops/media-queue/dist/`.
 
 ## Dev
 

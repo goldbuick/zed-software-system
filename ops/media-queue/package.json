@@ -18,10 +18,10 @@
     "build": "electron-vite build",
     "prestart": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-icon.ts && tsx scripts/stage-dev-app.ts",
     "start": "tsx scripts/run-electron.ts",
-    "predist": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-electron-resources.ts && tsx scripts/stage-icon.ts && electron-vite build",
-    "dist": "tsx scripts/run-builder.ts",
-    "dist:mac": "tsx scripts/run-builder.ts --mac",
-    "dist:win": "tsx scripts/run-builder.ts --win"
+    "prepare:dist": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-electron-resources.ts && tsx scripts/stage-icon.ts && electron-vite build",
+    "dist": "yarn prepare:dist && tsx scripts/run-builder.ts",
+    "dist:mac": "yarn prepare:dist && tsx scripts/run-builder.ts --mac",
+    "dist:win": "yarn prepare:dist && tsx scripts/run-builder.ts --win"
   },
   "build": {
     "appId": "cafe.zed.media-queue",
