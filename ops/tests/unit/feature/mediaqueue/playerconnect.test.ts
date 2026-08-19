@@ -304,6 +304,56 @@ describe('mediaqueue player connect', () => {
     })
   })
 
+  it('does not attach muted placeholder receiver tracks', () => {
+    const unmutevideo = jest.fn()
+    const unmuteaudio = jest.fn()
+    const pc = {
+      iceConnectionState: 'new',
+      connectionState: 'new',
+      getReceivers: jest.fn(() => [
+        {
+          track: {
+            kind: 'video',
+            id: 'v-placeholder',
+            muted: true,
+            readyState: 'live',
+            addEventListener: unmutevideo,
+          },
+        },
+        {
+          track: {
+            kind: 'audio',
+            id: 'a-placeholder',
+            muted: true,
+            readyState: 'live',
+            addEventListener: unmuteaudio,
+          },
+        },
+      ]),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    }
+    const call = {
+      on: jest.fn(),
+      close: jest.fn(),
+      peerConnection: pc,
+    }
+    jest.mocked(netterminalmediacall).mockReturnValue(call as never)
+    mediaqueueconnectifonboard('mq_dead', 'board-a')
+    expect(mediaqueueattachvideosink).not.toHaveBeenCalled()
+    expect(mediaqueuereadplayerconnectstate().hasstream).toBe(false)
+    expect(unmutevideo).toHaveBeenCalledWith(
+      'unmute',
+      expect.any(Function),
+      expect.objectContaining({ once: true }),
+    )
+    expect(unmuteaudio).toHaveBeenCalledWith(
+      'unmute',
+      expect.any(Function),
+      expect.objectContaining({ once: true }),
+    )
+  })
+
   it('probes remoteStream before track events', () => {
     const stream = new MockMediaStream()
     stream.addtrack({ kind: 'video' }, 'video')

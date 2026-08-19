@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { apierror } from 'zss/device/api'
+import { apierror, registercopy } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
@@ -14,6 +14,11 @@ import {
   mediareadhelperpeeridfrompayload,
 } from 'zss/feature/mediaqueue/mediaguards'
 import { showmediamenu } from 'zss/feature/mediaqueue/mediamenu'
+import {
+  mediaqueueclipitemsfromstate,
+  mediaqueuecliplines,
+} from 'zss/feature/mediaqueue/playlistcopy'
+import { mediaqueuereadstate } from 'zss/feature/mediaqueue/queue'
 import { showqueuemenu } from 'zss/feature/mediaqueue/queuemenu'
 import {
   mediaqueuehelperdatalinkup,
@@ -57,6 +62,19 @@ function readlimitfrompayload(message: MESSAGE): number | undefined {
   const raw = readstringarg(message)
   const limit = Number(raw)
   return Number.isFinite(limit) ? limit : undefined
+}
+
+function readindexfrompayload(message: MESSAGE): number | undefined {
+  const payload = message.data as { index?: unknown } | undefined
+  if (payload?.index !== undefined) {
+    const index = Number(payload.index)
+    if (Number.isFinite(index)) {
+      return Math.floor(index)
+    }
+  }
+  const raw = readstringarg(message)
+  const index = Number(raw)
+  return Number.isFinite(index) ? Math.floor(index) : undefined
 }
 
 function readpeeridfrompayload(message: MESSAGE): string {
@@ -164,6 +182,18 @@ export function handlemediapanel(
       })
       break
     }
+    case 'playlist': {
+      if (!requirepayloadhelper(player, message)) {
+        return
+      }
+      const items = mediaqueueclipitemsfromstate(mediaqueuereadstate())
+      if (items.length === 0) {
+        apierror(SOFTWARE, player, 'media', 'playlist empty')
+        return
+      }
+      registercopy(SOFTWARE, player, mediaqueuecliplines(items))
+      break
+    }
     default:
       break
   }
@@ -235,6 +265,26 @@ export function handlequeuepanel(
         return
       }
       mediaqueuesendtohelper({ type: 'mediaqueue:clear' })
+      break
+    }
+    case 'approve':
+    case 'reject': {
+      if (!requiremanage(player, message)) {
+        return
+      }
+      if (!requirehelper(player, 'queue')) {
+        return
+      }
+      const index = readindexfrompayload(message)
+      if (index === undefined) {
+        apierror(SOFTWARE, player, 'queue', `usage: #queue ${NAME(path)} <N>`)
+        return
+      }
+      mediaqueuesendtohelper({
+        type:
+          NAME(path) === 'approve' ? 'mediaqueue:approve' : 'mediaqueue:reject',
+        index,
+      })
       break
     }
     case 'stop': {

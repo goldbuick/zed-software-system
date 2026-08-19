@@ -221,12 +221,19 @@ function wireipc(): void {
 
   handleinvoke('start_media_download', async (args) => {
     const url = String((args && args.url) || '')
-    return requiredownloads().startdownload(url, emitto)
+    const allowlong = Boolean(args && args.allowlong)
+    return requiredownloads().startdownload(url, emitto, allowlong)
   })
 
   handleinvoke('start_media_prep', async (args) => {
     const url = String((args && args.url) || '')
-    return requiredownloads().startprep(url, emitto)
+    const allowlong = Boolean(args && args.allowlong)
+    return requiredownloads().startprep(url, emitto, allowlong)
+  })
+
+  handleinvoke('probe_media_meta', async (args) => {
+    const url = String((args && args.url) || '')
+    return requiredownloads().probeduration(url)
   })
 
   handleinvoke('cancel_media_download', () => {

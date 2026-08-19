@@ -77,6 +77,14 @@
   padding-bottom: 4px;
 }
 
+.cookieshint {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+
 .frame.mq select {
   display: block;
   width: 100%;

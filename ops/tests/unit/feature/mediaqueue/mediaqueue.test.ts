@@ -91,8 +91,18 @@ describe('mediaqueue queue projection', () => {
     expect(mediaqueuereadstate()).toEqual({
       urls: ['https://a.example', 'https://b.example'],
       names: ['goldbuick', 'guest'],
+      titles: ['', ''],
+      submittedats: [0, 0],
       index: 0,
       perplayerlimit: 3,
+      pendingurls: [],
+      pendingnames: [],
+      pendingtitles: [],
+      pendingdurations: [],
+      playedurls: [],
+      playednames: [],
+      playedtitles: [],
+      playedsubmittedats: [],
     })
     expect(mediaqueuecurrenturl()).toBe('https://a.example')
     mediaqueueapplysnapshot({
@@ -169,6 +179,12 @@ describe('mediaqueue protocol', () => {
     expect(ismediaqueuemessage({ type: 'mediaqueue:skip' })).toBe(true)
     expect(ismediaqueuemessage({ type: 'mediaqueue:clear' })).toBe(true)
     expect(ismediaqueuemessage({ type: 'mediaqueue:setlimit', limit: 8 })).toBe(
+      true,
+    )
+    expect(ismediaqueuemessage({ type: 'mediaqueue:approve', index: 0 })).toBe(
+      true,
+    )
+    expect(ismediaqueuemessage({ type: 'mediaqueue:reject', index: 1 })).toBe(
       true,
     )
     expect(ismediaqueuemessage({ type: 'nope' })).toBe(false)

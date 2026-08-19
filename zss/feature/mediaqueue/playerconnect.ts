@@ -115,11 +115,19 @@ function iceisdead(call: MediaConnection): boolean {
   )
 }
 
+function trackisremoteusable(track: MediaStreamTrack): boolean {
+  if (track.readyState === 'ended') {
+    return false
+  }
+  // Chrome creates muted recv tracks as soon as we offer; those are not helper media.
+  return track.muted !== true
+}
+
 function remotestreamusable(stream: MAYBE<MediaStream>): boolean {
   if (!ispresent(stream) || !streamhasmedia(stream)) {
     return false
   }
-  return stream.getTracks().some((track) => track.readyState !== 'ended')
+  return stream.getTracks().some(trackisremoteusable)
 }
 
 function iceisconnecting(call: MediaConnection): boolean {
@@ -258,6 +266,22 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
   if (!streamhasmedia(stream)) {
     return false
   }
+  if (!remotestreamusable(stream)) {
+    for (const track of stream.getTracks()) {
+      if (track.muted) {
+        track.addEventListener(
+          'unmute',
+          () => {
+            if (activestream === stream || !ispresent(activestream)) {
+              attachplayerstream(stream, helperpeerid)
+            }
+          },
+          { once: true },
+        )
+      }
+    }
+    return false
+  }
   if (
     ispresent(activestream) &&
     streammatches(activestream, stream) &&
@@ -265,19 +289,6 @@ function attachplayerstream(stream: MediaStream, helperpeerid: string) {
     stream.getVideoTracks().length === activestream.getVideoTracks().length
   ) {
     return true
-  }
-  for (const track of stream.getTracks()) {
-    if (track.muted) {
-      track.addEventListener(
-        'unmute',
-        () => {
-          if (activestream === stream || !ispresent(activestream)) {
-            attachplayerstream(stream, helperpeerid)
-          }
-        },
-        { once: true },
-      )
-    }
   }
   activestream = stream
   if (ispresent(activecall)) {
@@ -337,10 +348,11 @@ function scheduletracksynctimeout(call: MediaConnection, helperpeerid: string) {
     const pc = call.peerConnection
     const ice = pc?.iceConnectionState ?? '?'
     const conn = pc?.connectionState ?? '?'
-    apilog(
+    apierror(
       SOFTWARE,
       player,
-      `media no tracks from ${helperpeerid} after ${TRACK_SYNC_TIMEOUT_MS}ms ice=${ice} conn=${conn}`,
+      'media',
+      `no tracks from ${helperpeerid} after ${TRACK_SYNC_TIMEOUT_MS}ms ice=${ice} conn=${conn}`,
     )
   }, TRACK_SYNC_TIMEOUT_MS)
   calltracksynctimers.set(call, timer)
@@ -413,7 +425,7 @@ function wirecalltrackbridge(call: MediaConnection, helperpeerid: string) {
 
 function wirecallhandlers(call: MediaConnection, helperpeerid: string) {
   const remote = readcallstream(call)
-  if (ispresent(remote) && streamhasmedia(remote)) {
+  if (ispresent(remote) && remotestreamusable(remote)) {
     attachplayerstream(remote, helperpeerid)
   }
   wirecalltrackbridge(call, helperpeerid)

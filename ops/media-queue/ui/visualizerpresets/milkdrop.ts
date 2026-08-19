@@ -54,13 +54,9 @@ export const MILKDROP_PRESET_NAMES = [
   'Zylot - Star Ornament',
 ]
 
-function pickpresetname(): string {
-  const idx = Math.floor(Math.random() * MILKDROP_PRESET_NAMES.length)
-  return MILKDROP_PRESET_NAMES[idx]
-}
-
 async function startmilkdrop(
   opts: MQ_VISUALIZER_PRESET_OPTS,
+  name: string,
 ): Promise<MQ_VISUALIZER_PRESET_HANDLE> {
   const outcanvas = opts.canvas
   const outctx = outcanvas.getContext('2d')
@@ -82,7 +78,6 @@ async function startmilkdrop(
   visualizer.setRendererSize(MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
 
   const all = butterchurnPresets.getPresets()
-  const name = pickpresetname()
   const preset = all[name]
   if (!preset) {
     throw new Error('milkdrop preset missing: ' + name)
@@ -121,7 +116,13 @@ async function startmilkdrop(
   }
 }
 
-export const milkdroppreset: MQ_VISUALIZER_PRESET = {
-  id: 'milkdrop',
-  start: startmilkdrop,
+export const MILKDROP_PRESETS: MQ_VISUALIZER_PRESET[] = []
+for (let i = 0; i < MILKDROP_PRESET_NAMES.length; ++i) {
+  const name = MILKDROP_PRESET_NAMES[i]
+  MILKDROP_PRESETS.push({
+    id: 'milkdrop:' + name,
+    start: function (opts) {
+      return startmilkdrop(opts, name)
+    },
+  })
 }

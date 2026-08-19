@@ -8,7 +8,7 @@ import {
 } from './tvcanvas'
 import { classicbarspreset } from './visualizerpresets/classicbars'
 import { classicscopepreset } from './visualizerpresets/classicscope'
-import { milkdroppreset } from './visualizerpresets/milkdrop'
+import { MILKDROP_PRESETS } from './visualizerpresets/milkdrop'
 import type {
   MQ_VISUALIZER_PRESET,
   MQ_VISUALIZER_PRESET_HANDLE,
@@ -32,8 +32,12 @@ type MQ_VISUALIZER_RESULT = {
 
 const PRESET_POOL: MQ_VISUALIZER_PRESET[] = [
   classicbarspreset,
+  classicbarspreset,
+  classicbarspreset,
   classicscopepreset,
-  milkdroppreset,
+  classicscopepreset,
+  classicscopepreset,
+  ...MILKDROP_PRESETS,
 ]
 
 let canvasel: HTMLCanvasElement | null = null
