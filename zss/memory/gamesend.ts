@@ -41,12 +41,13 @@ function playerpartyinteraction(
     fromelementplayer = fromelement.id ?? ''
   }
 
-  const toelementpartyisplayer = ispid(toelement.party ?? toelement.id)
+  const fromparty = fromelement.party ?? fromelement.id ?? ''
+  const toparty = toelement.party ?? toelement.id ?? ''
   const toelementisobjectorscroll =
     toelement.kind === 'object' || toelement.kind === 'scroll'
-
   const sameparty =
-    fromelementpartyisplayer === toelementpartyisplayer &&
+    fromparty !== '' &&
+    fromparty === toparty &&
     !toelementisobjectorscroll &&
     !fromelementisobjecorscroll
 
@@ -134,7 +135,12 @@ export function memorysendtoelement(
         fromelement,
         toelement,
       )
-      if (sameparty && memoryboardelementisobject(toelement)) {
+      const playerbulletatplayer =
+        ispid(fromelement.party ?? fromelement.id) && istoplayer
+      if (
+        (sameparty || playerbulletatplayer) &&
+        memoryboardelementisobject(toelement)
+      ) {
         withlabel = 'partyshot'
       } else {
         withplayer = fromelementplayer

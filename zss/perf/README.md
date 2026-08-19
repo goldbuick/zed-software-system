@@ -37,7 +37,7 @@ Browser builds expose these via `vite.config.ts` `zssprocessenvkeys` (set in the
 | Env | Default | Effect |
 |-----|---------|--------|
 | `ZSS_PERF_SPATIAL_INDEX` | `true` | Spatial-index path in draw-dirty allowids |
-| `ZSS_PERF_INCREMENTAL_LAYERS` | `true` | Skip full layer rebuild when drawallowids is empty |
+| `ZSS_PERF_INCREMENTAL_LAYERS` | `false` | Skip full layer rebuild when drawallowids is empty. Off by default; set `true` to A/B the cache on. |
 | `ZSS_PERF_TILE_SUBIMAGE` | `false` | Partial tile DataTexture uploads when `dirtycells` is passed |
 
 When `PERF_TILE_SUBIMAGE` is enabled, [`Tiles`](../gadget/graphics/tiles.tsx) passes sim `drawdirtycells` through to [`updateTilemapDataTexture`](../gadget/display/tiles.ts) for partial GPU uploads.
@@ -111,6 +111,6 @@ When adding sim-side layer caches or main-thread render memoization:
 | `yarn jest ops/tests/unit/memory/incrementallayerscache --config ops/jest.config.ts --no-coverage` | Regression gate for incremental layer cache + sprite rebuild after player move. |
 | `yarn tsc --noEmit -p tsconfig.json` after graphics TSX edits | Jest skips the R3F bundle. |
 | `yarn task run cafe:build` + `cafe:preview` -- move on an iso board | Prod inlines perf flags; dev server alone is insufficient. |
-| A/B `ZSS_PERF_INCREMENTAL_LAYERS=false` in `cafe/.env.local` | Isolates incremental layer path from other render bugs. |
+| A/B `ZSS_PERF_INCREMENTAL_LAYERS=true` in `cafe/.env.local` | Isolates incremental layer path from other render bugs. |
 
 Design rules and failure modes: [`docs/render-gadget-optimizations.md`](docs/render-gadget-optimizations.md) (invariant under optimization 1B).
