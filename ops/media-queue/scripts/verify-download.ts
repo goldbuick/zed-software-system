@@ -15,10 +15,10 @@ import {
 import path from 'node:path'
 
 import {
+  type MQ_YTDLP_FORMAT_TRY,
   buildytdlpargs,
   resolveartworkpath,
   ytdlpformattriesforurl,
-  type MQ_YTDLP_FORMAT_TRY,
 } from '../src/main/lib/download'
 
 import { MQ_ROOT } from './lib/paths'
@@ -204,16 +204,7 @@ function main() {
         rmSync(path.join(mediadir, name), { force: true })
       }
     }
-    result = download(
-      ytdlp,
-      deno,
-      vend,
-      mediadir,
-      ytdlphome,
-      url,
-      1,
-      formattry,
-    )
+    result = download(ytdlp, deno, vend, mediadir, ytdlphome, url, 1, formattry)
     if (result.ok) {
       break
     }

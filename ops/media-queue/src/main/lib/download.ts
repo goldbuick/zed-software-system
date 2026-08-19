@@ -1104,7 +1104,13 @@ export class DownloadManager {
     }
     const denopath = fs.realpathSync(deno)
     const args: string[] = []
-    applyytdlpbaseargs(args, `deno:${denopath}`, this.ytdlphome, 1)
+    applyytdlpbaseargs(
+      args,
+      `deno:${denopath}`,
+      this.ytdlphome,
+      1,
+      SOUNDCLOUD_FORMATS_AAC,
+    )
     args.push(
       '--skip-download',
       '--print',
