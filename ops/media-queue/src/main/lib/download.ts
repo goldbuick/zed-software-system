@@ -12,12 +12,12 @@ import type {
   MQ_EVENT_NAME,
   MQ_JOB_PHASE,
   MQ_JOB_STATE,
+  MQ_PROBE_META,
 } from '../../shared/ipc'
+import { MQ_MAX_DURATION_SEC } from '../../shared/queue'
+import { mqismusicyoutubeurl } from '../../shared/urlnormalize'
 
 import { ffmpegdir, resolvedeno, resolveffmpeg, resolveytdlp } from './bins'
-
-/** Reject media with unknown duration or longer than this (yt-dlp --match-filter). */
-const MQ_MAX_DURATION_SEC = 10 * 60
 
 type MQ_DOWNLOAD_JOB = {
   url: string
@@ -94,6 +94,7 @@ export type MQ_YTDLP_CTX = {
   attempt: number
   cookiesbrowser: string
   url: string
+  allowlong?: boolean
 }
 
 type MQ_YTDLP_RESULT = {
@@ -148,6 +149,14 @@ export const YTDLP_FORMAT_TRIES: readonly MQ_YTDLP_FORMAT_TRY[] = [
     label: 'audio-opus-mp3',
   },
 ]
+export function ytdlpformattriesforurl(
+  url: string,
+): readonly MQ_YTDLP_FORMAT_TRY[] {
+  if (mqismusicyoutubeurl(url)) {
+    return YTDLP_FORMAT_TRIES.filter((entry) => entry.profile === 'audio')
+  }
+  return YTDLP_FORMAT_TRIES
+}
 const MQ_MEDIA_EXTENSIONS = new Set([
   '.mp4',
   '.m4a',
@@ -599,9 +608,15 @@ function applyytdlpbaseargs(
   )
 }
 
-function applyytdlpdownloadargs(args: string[], attempt: number): void {
+function applyytdlpdownloadargs(
+  args: string[],
+  attempt: number,
+  allowlong: boolean,
+): void {
   args.push('--retries', '10', '--fragment-retries', '10')
-  args.push('--match-filter', 'duration <= ' + MQ_MAX_DURATION_SEC)
+  if (!allowlong) {
+    args.push('--match-filter', 'duration <= ' + MQ_MAX_DURATION_SEC)
+  }
   if (attempt > 1) {
     args.push('--sleep-requests', '1')
   }
@@ -635,7 +650,7 @@ export function buildytdlpargs(
     ctx.attempt,
     formattry.soundcloudformats,
   )
-  applyytdlpdownloadargs(args, ctx.attempt)
+  applyytdlpdownloadargs(args, ctx.attempt, ctx.allowlong === true)
   applyytdlpcookies(args, ctx.cookiesbrowser)
   if (formattry.profile === 'audio') {
     args.push('-f', formattry.format, '--force-overwrites')
@@ -668,6 +683,30 @@ export function buildytdlpargs(
     'title',
     '--print',
     'after_move:filepath',
+    ctx.url,
+  )
+  return args
+}
+
+const MQ_PROBE_TIMEOUT_MS = 45_000
+
+export function buildytdlpprobeargs(ctx: MQ_YTDLP_CTX): string[] {
+  const args: string[] = []
+  applyytdlpbaseargs(
+    args,
+    ctx.jspath,
+    ctx.ytdlphome,
+    ctx.attempt,
+    SOUNDCLOUD_FORMATS_AAC,
+  )
+  applyytdlpcookies(args, ctx.cookiesbrowser)
+  args.push(
+    '--no-playlist',
+    '--skip-download',
+    '--print',
+    'title',
+    '--print',
+    'duration',
     ctx.url,
   )
   return args
@@ -834,6 +873,7 @@ export class DownloadManager {
   prepretrytimer: NodeJS.Timeout | null
   prepretryattempt: number
   prepemit: MQ_EMIT | null
+  prepallowlong: boolean
 
   constructor(resourceroot: string, cachedir: string) {
     this.resourceroot = resourceroot
@@ -851,6 +891,7 @@ export class DownloadManager {
     this.prepretrytimer = null
     this.prepretryattempt = 0
     this.prepemit = null
+    this.prepallowlong = false
     fs.mkdirSync(cachedir, { recursive: true })
     fs.mkdirSync(this.ytdlphome, { recursive: true })
   }
@@ -1051,7 +1092,7 @@ export class DownloadManager {
       if (this.prep.url !== url || this.prep.phase === 'ready') {
         return
       }
-      void this.startprep(url, emit)
+      void this.startprep(url, emit, this.prepallowlong)
     }, delay)
   }
 
@@ -1159,6 +1200,7 @@ export class DownloadManager {
     job: MQ_DOWNLOAD_JOB,
     url: string,
     emit: MQ_EMIT,
+    allowlong = false,
   ): Promise<MQ_READY_PAYLOAD | null> {
     const trimmed = String(url || '').trim()
     if (!trimmed) {
@@ -1201,6 +1243,7 @@ export class DownloadManager {
       attempt: 1,
       cookiesbrowser,
       url: trimmed,
+      allowlong,
     }
 
     let profile: MQ_YTDLP_PROFILE = 'video'
@@ -1211,11 +1254,12 @@ export class DownloadManager {
       message: '',
       errlines: [],
     }
-    for (let ti = 0; ti < YTDLP_FORMAT_TRIES.length; ti += 1) {
+    const formattries = ytdlpformattriesforurl(trimmed)
+    for (let ti = 0; ti < formattries.length; ti += 1) {
       if (job.cancelled) {
         break
       }
-      const formattry = YTDLP_FORMAT_TRIES[ti]
+      const formattry = formattries[ti]
       if (ti > 0) {
         removepartialfiles(this.cachedir, this.protectedpaths())
       }
@@ -1276,7 +1320,76 @@ export class DownloadManager {
     return null
   }
 
-  async startdownload(url: string, emit: MQ_EMIT): Promise<MQ_DOWNLOAD_STATE> {
+  async probeduration(url: string): Promise<MQ_PROBE_META> {
+    const empty: MQ_PROBE_META = { title: '', durationsec: 0 }
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      return empty
+    }
+    const bins = this.resolvebinaries()
+    const ctx: MQ_YTDLP_CTX = {
+      ytdlp: bins.ytdlp,
+      jspath: bins.jspath,
+      ytdlphome: this.ytdlphome,
+      ffdir: bins.ffdir,
+      cachedir: this.cachedir,
+      attempt: 1,
+      cookiesbrowser: this.cookiesbrowser,
+      url: trimmed,
+    }
+    const args = buildytdlpprobeargs(ctx)
+    return await new Promise((resolve) => {
+      const child = spawn(ctx.ytdlp, args, {
+        cwd: ctx.cachedir,
+        env: { ...process.env, XDG_CACHE_HOME: ctx.ytdlphome },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      let stdout = ''
+      let settled = false
+      const timer = setTimeout(() => {
+        if (settled) {
+          return
+        }
+        settled = true
+        child.kill()
+        resolve(empty)
+      }, MQ_PROBE_TIMEOUT_MS)
+      child.stdout?.on('data', (chunk: Buffer | string) => {
+        stdout += String(chunk)
+      })
+      child.on('close', () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        const lines = stdout
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+        const title = lines[0] || ''
+        const durationsec = Number(lines[1])
+        resolve({
+          title,
+          durationsec: Number.isFinite(durationsec) ? durationsec : 0,
+        })
+      })
+      child.on('error', () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        resolve(empty)
+      })
+    })
+  }
+
+  async startdownload(
+    url: string,
+    emit: MQ_EMIT,
+    allowlong = false,
+  ): Promise<MQ_DOWNLOAD_STATE> {
     const trimmed = String(url || '').trim()
     if (this.prep.url === trimmed) {
       this.cancelprep()
@@ -1290,7 +1403,7 @@ export class DownloadManager {
     this.playback.errorevent = 'mq-download-error'
 
     const run = async (): Promise<void> => {
-      await this.runjobdownload(this.playback, url, emit)
+      await this.runjobdownload(this.playback, url, emit, allowlong)
     }
 
     this.playback.activethread = run().catch((err: unknown) => {
@@ -1305,7 +1418,11 @@ export class DownloadManager {
     return this.readstate()
   }
 
-  async startprep(url: string, emit: MQ_EMIT): Promise<MQ_JOB_STATE> {
+  async startprep(
+    url: string,
+    emit: MQ_EMIT,
+    allowlong = false,
+  ): Promise<MQ_JOB_STATE> {
     const trimmed = String(url || '').trim()
     if (!trimmed) {
       return this.readprepstate()
@@ -1331,6 +1448,7 @@ export class DownloadManager {
     }
 
     this.prepemit = emit
+    this.prepallowlong = allowlong
     this.clearprepretry()
     resetjob(this.prep)
     this.prep.url = trimmed
@@ -1339,7 +1457,12 @@ export class DownloadManager {
     this.prep.errorevent = 'mq-prep-error'
 
     const run = async (): Promise<void> => {
-      const payload = await this.runjobdownload(this.prep, trimmed, emit)
+      const payload = await this.runjobdownload(
+        this.prep,
+        trimmed,
+        emit,
+        allowlong,
+      )
       if (jobcancelled(this.prep)) {
         return
       }

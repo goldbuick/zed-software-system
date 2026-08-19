@@ -7,8 +7,8 @@ import type {
   MQ_JOB_STATE,
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
+import { mqqueueneedspending } from '../src/shared/queue'
 
-import { probeaudiostream } from './audioprobe'
 import { mqpeerserveroptions } from './peerserver'
 import {
   attachpreview,
@@ -26,12 +26,16 @@ import {
 } from './playercallice'
 import {
   helperqueueadd,
+  helperqueueallowlong,
   helperqueueapplydisk,
+  helperqueueapprove,
   helperqueueclear,
   helperqueuecurrenturl,
   helperqueuenexturl,
+  helperqueuepend,
   helperqueuereaddisk,
   helperqueuereadsnapshot,
+  helperqueuereject,
   helperqueuesetlimit,
   helperqueueshift,
   helperqueueskip,
@@ -471,9 +475,9 @@ function cookieshinttext(platform: 'mac' | 'win' | 'other'): string {
     return 'YouTube cookies can only be read from Firefox. Sign in to YouTube in Firefox, then leave this set to firefox.'
   }
   if (platform === 'mac') {
-    return 'Sign in to YouTube in the browser you pick (Chrome recommended). The helper reads that browser\'s cookies.'
+    return "Sign in to YouTube in the browser you pick (Chrome recommended). The helper reads that browser's cookies."
   }
-  return 'Sign in to YouTube in the browser you pick. The helper reads that browser\'s cookies.'
+  return "Sign in to YouTube in the browser you pick. The helper reads that browser's cookies."
 }
 
 function fillcookiesbrowserselect(platform: 'mac' | 'win' | 'other') {
@@ -673,7 +677,10 @@ async function reconcileprep() {
     }
     preptarget = nexturl
     prepstate = { url: nexturl, phase: 'downloading', percent: 0 }
-    await invoke('start_media_prep', { url: nexturl })
+    await invoke('start_media_prep', {
+      url: nexturl,
+      allowlong: helperqueueallowlong(nexturl),
+    })
     startpreppoll()
     renderqueue()
   } catch (_) {
@@ -694,8 +701,18 @@ function sendqueuesnapshot() {
     type: 'mediaqueue:queuesnapshot',
     urls: snap.urls,
     names: snap.names,
+    titles: snap.titles,
+    submittedats: snap.submittedats,
     index: snap.index,
     limit: snap.limit,
+    pendingurls: snap.pendingurls,
+    pendingnames: snap.pendingnames,
+    pendingtitles: snap.pendingtitles,
+    pendingdurations: snap.pendingdurations,
+    playedurls: snap.playedurls,
+    playednames: snap.playednames,
+    playedtitles: snap.playedtitles,
+    playedsubmittedats: snap.playedsubmittedats,
   })
 }
 
@@ -1266,7 +1283,7 @@ async function startplaybackandcall(url: string) {
         answerpendingplayercalls()
         publishstreamtoplayers()
         startdownloadpoll()
-        const downloaded = await startdownload(url)
+        const downloaded = await startdownload(url, helperqueueallowlong(url))
         if (issupersededplaybackerr(null, gen)) {
           return
         }
@@ -1339,11 +1356,6 @@ async function startplaybackandcall(url: string) {
   syncplayerlinkstatus()
   const playinglabel = playbacklabel(currentplaybacktitle, url, path)
   sendstatus('playing', playinglabel)
-  // Category A: outbound PCM energy (clone probe -- does not steal WebRTC track).
-  void probeaudiostream(mediastream, 'mq-out').then(function (detail) {
-    console.log('[mq audio probe]', detail)
-    sendstatus('audio-probe', detail)
-  })
   void reconcileprep()
 }
 
@@ -1389,17 +1401,61 @@ function handlecafemessage(data: unknown) {
       break
     case 'mediaqueue:add': {
       const url = String(msg.url || '').trim()
-      const result = helperqueueadd(
-        String(msg.player || ''),
-        String(msg.name || ''),
-        url,
-      )
-      if (!result.ok) {
-        sendstatus('queue-error', result.reason)
+      const player = String(msg.player || '')
+      const name = String(msg.name || '')
+      void (async () => {
+        let title = ''
+        let durationsec = 0
+        try {
+          const meta = await invoke('probe_media_meta', { url: url })
+          title = String(meta && meta.title ? meta.title : '').trim()
+          durationsec = Number(meta && meta.durationsec)
+        } catch (_) {
+          title = ''
+          durationsec = 0
+        }
+        const submittedat = Date.now()
+        const payload = {
+          title,
+          durationsec: Number.isFinite(durationsec) ? durationsec : 0,
+          submittedat,
+        }
+        if (mqqueueneedspending(payload.durationsec)) {
+          const result = helperqueuepend(player, name, url, payload)
+          if (!result.ok) {
+            sendstatus('queue-error', result.reason)
+            sendqueuesnapshot()
+            return
+          }
+          sendstatus('queue-pending', url)
+          afterqueuemutate()
+          return
+        }
+        const result = helperqueueadd(player, name, url, payload)
+        if (!result.ok) {
+          sendstatus('queue-error', result.reason)
+          sendqueuesnapshot()
+          return
+        }
+        sendstatus('queue-added', url)
+        afterqueuemutate()
+        if (!playbackstarted) {
+          const current = helperqueuecurrenturl()
+          if (current) {
+            void maybeautostartaftergoto(current)
+          }
+        }
+      })()
+      break
+    }
+    case 'mediaqueue:approve': {
+      const entry = helperqueueapprove(Number(msg.index))
+      if (!entry) {
+        sendstatus('queue-error', 'approve')
         sendqueuesnapshot()
         break
       }
-      sendstatus('queue-added', url)
+      sendstatus('queue-approved', entry.url)
       afterqueuemutate()
       if (!playbackstarted) {
         const current = helperqueuecurrenturl()
@@ -1407,6 +1463,17 @@ function handlecafemessage(data: unknown) {
           void maybeautostartaftergoto(current)
         }
       }
+      break
+    }
+    case 'mediaqueue:reject': {
+      const entry = helperqueuereject(Number(msg.index))
+      if (!entry) {
+        sendstatus('queue-error', 'reject')
+        sendqueuesnapshot()
+        break
+      }
+      sendstatus('queue-rejected', entry.url)
+      afterqueuemutate()
       break
     }
     case 'mediaqueue:skip': {

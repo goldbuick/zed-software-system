@@ -5,6 +5,7 @@ import {
   YTDLP_FORMAT,
   YTDLP_FORMAT_TRIES,
   buildytdlpargs,
+  ytdlpformattriesforurl,
 } from 'ops/media-queue/src/main/lib/download'
 
 describe('yt-dlp format try ladder', () => {
@@ -48,5 +49,55 @@ describe('yt-dlp format try ladder', () => {
     expect(args).toContain('soundcloud:formats=http_mp3,hls_mp3')
     expect(args).toContain('-f')
     expect(args).toContain(YTDLP_FORMAT_TRIES[2].format)
+  })
+
+  it('omits duration match-filter when allowlong is set', () => {
+    const args = buildytdlpargs(
+      {
+        ytdlp: 'yt-dlp',
+        jspath: 'deno:deno',
+        ytdlphome: '/tmp/ytdlp',
+        ffdir: '/tmp/ff',
+        cachedir: '/tmp/media',
+        attempt: 1,
+        cookiesbrowser: '',
+        url: 'https://youtu.be/long',
+        allowlong: true,
+      },
+      YTDLP_FORMAT_TRIES[0],
+    )
+    expect(args.join(' ')).not.toMatch(/duration <=/)
+  })
+
+  it('keeps duration match-filter by default', () => {
+    const args = buildytdlpargs(
+      {
+        ytdlp: 'yt-dlp',
+        jspath: 'deno:deno',
+        ytdlphome: '/tmp/ytdlp',
+        ffdir: '/tmp/ff',
+        cachedir: '/tmp/media',
+        attempt: 1,
+        cookiesbrowser: '',
+        url: 'https://youtu.be/short',
+      },
+      YTDLP_FORMAT_TRIES[0],
+    )
+    expect(args).toContain('--match-filter')
+    expect(args).toContain('duration <= 600')
+  })
+
+  it('skips video tries for YouTube Music urls', () => {
+    const tries = ytdlpformattriesforurl(
+      'https://music.youtube.com/watch?v=abc123',
+    )
+    expect(tries.map((entry) => entry.label)).toEqual([
+      'audio-aac',
+      'audio-mp3',
+      'audio-opus-mp3',
+    ])
+    expect(
+      ytdlpformattriesforurl('https://www.youtube.com/watch?v=abc123'),
+    ).toBe(YTDLP_FORMAT_TRIES)
   })
 })

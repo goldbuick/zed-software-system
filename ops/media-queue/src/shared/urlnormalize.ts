@@ -8,6 +8,15 @@ function istrackingparam(key: string): boolean {
   return lower.startsWith('utm_')
 }
 
+export function mqismusicyoutubeurl(raw: string): boolean {
+  try {
+    const host = new URL(raw.trim()).hostname.toLowerCase()
+    return host === 'music.youtube.com' || host.endsWith('.music.youtube.com')
+  } catch {
+    return false
+  }
+}
+
 function youtubeidfromurl(parsed: URL): string | undefined {
   const host = parsed.hostname.toLowerCase()
   if (host === 'youtu.be') {

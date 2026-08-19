@@ -1,5 +1,5 @@
 import type { DataConnection } from 'peerjs'
-import { apierror, apilog, vmmediaqueueboard } from 'zss/device/api'
+import { apierror, apilog, apitoast, vmmediaqueueboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
@@ -156,7 +156,10 @@ function toastlistenplayer(ok: boolean, text: string) {
 
 function handlequeuestatus(status: string, detail?: string) {
   if (status === 'queue-added') {
-    toastlistenplayer(true, `media added: ${detail ?? ''}`.trim())
+    const player = mediaqueuereadlistenplayer()
+    if (player) {
+      apitoast(SOFTWARE, player, `media added: ${detail ?? ''}`.trim())
+    }
     return
   }
   if (status === 'queue-skipped') {
@@ -186,6 +189,18 @@ function handlequeuestatus(status: string, detail?: string) {
       return
     }
     toastlistenplayer(false, 'usage: #media <url>')
+    return
+  }
+  if (status === 'queue-pending') {
+    toastlistenplayer(true, `needs approval: ${detail ?? ''}`.trim())
+    return
+  }
+  if (status === 'queue-approved') {
+    toastlistenplayer(true, `approved: ${detail ?? ''}`.trim())
+    return
+  }
+  if (status === 'queue-rejected') {
+    toastlistenplayer(true, `rejected: ${detail ?? ''}`.trim())
   }
 }
 
@@ -208,8 +223,18 @@ function handlehelperdata(data: unknown) {
       mediaqueueapplysnapshot({
         urls: data.urls,
         names: data.names,
+        titles: data.titles,
+        submittedats: data.submittedats,
         index: data.index,
         limit: data.limit,
+        pendingurls: data.pendingurls,
+        pendingnames: data.pendingnames,
+        pendingtitles: data.pendingtitles,
+        pendingdurations: data.pendingdurations,
+        playedurls: data.playedurls,
+        playednames: data.playednames,
+        playedtitles: data.playedtitles,
+        playedsubmittedats: data.playedsubmittedats,
       })
       if (!mediaqueuecurrenturl()) {
         mediaqueueclearnowplayingboard()
@@ -227,8 +252,6 @@ function handlehelperdata(data: unknown) {
           apierror(SOFTWARE, player, 'media', `playback failed${detail}`)
         } else if (data.status === 'playing') {
           mediaqueueretryplayerconnect()
-        } else if (data.status === 'audio-probe') {
-          apilog(SOFTWARE, player, `media audio probe ${detail || ''}`.trim())
         }
       }
       break

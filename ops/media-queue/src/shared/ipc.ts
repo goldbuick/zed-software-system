@@ -4,6 +4,8 @@
  * rather than restating them.
  */
 
+import type { MQ_QUEUE_DISK } from './queue'
+
 export type MQ_JOB_PHASE = 'idle' | 'downloading' | 'ready' | 'error'
 
 /** Progress snapshot for one download job (playback or background prep). */
@@ -73,12 +75,9 @@ export type MQ_PEER_ID = {
   peerid: string
 }
 
-export type MQ_QUEUE_DISK = {
-  urls: string[]
-  names: string[]
-  players: string[]
-  index: number
-  limit: number
+export type MQ_PROBE_META = {
+  title: string
+  durationsec: number
 }
 
 /** Main -> renderer push channels. */
@@ -99,8 +98,15 @@ export type MQ_INVOKE_MAP = {
   copy_text: { args: { text: string }; result: boolean }
   resize_main_window: { args: { contentHeight: number }; result: null }
   set_media_cookies_browser: { args: { browser: string }; result: string }
-  start_media_download: { args: { url: string }; result: MQ_DOWNLOAD_STATE }
-  start_media_prep: { args: { url: string }; result: MQ_JOB_STATE }
+  start_media_download: {
+    args: { url: string; allowlong?: boolean }
+    result: MQ_DOWNLOAD_STATE
+  }
+  start_media_prep: {
+    args: { url: string; allowlong?: boolean }
+    result: MQ_JOB_STATE
+  }
+  probe_media_meta: { args: { url: string }; result: MQ_PROBE_META }
   cancel_media_download: { args: void; result: MQ_DOWNLOAD_STATE }
   cancel_media_prep: { args: void; result: MQ_JOB_STATE }
   read_media_prep_state: { args: void; result: MQ_JOB_STATE }

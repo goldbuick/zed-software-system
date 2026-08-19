@@ -10,7 +10,14 @@ import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
-const QUEUE_RESERVED = new Set(['skip', 'limit', 'clear', 'stop'])
+const QUEUE_RESERVED = new Set([
+  'skip',
+  'limit',
+  'clear',
+  'stop',
+  'approve',
+  'reject',
+])
 
 /** `#queue` admin menu; `#queue <peerid>` binds helper; `#queue skip|clear|stop|limit` admin. */
 export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
@@ -54,6 +61,19 @@ export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         bridgequeuepanel(SOFTWARE, player, cmd, mediapayloadwithmanage(player))
+        return 0
+      }
+      if (cmd === 'approve' || cmd === 'reject') {
+        if (!mediarequiremanageonvm(player, 'queue')) {
+          return 0
+        }
+        const [indexarg] = readargs(words, iii, [ARG_TYPE.NUMBER])
+        bridgequeuepanel(
+          SOFTWARE,
+          player,
+          cmd,
+          mediapayloadwithmanage(player, { index: String(indexarg) }),
+        )
         return 0
       }
       if (QUEUE_RESERVED.has(cmd)) {

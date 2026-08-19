@@ -436,10 +436,10 @@ function waitfordownload(timeoutms: number) {
   })
 }
 
-export async function startdownload(url: string) {
+export async function startdownload(url: string, allowlong = false) {
   await invoke('cancel_media_download')
   const pending = waitfordownload(600000)
-  await invoke('start_media_download', { url: url })
+  await invoke('start_media_download', { url: url, allowlong: allowlong })
   return pending
 }
 

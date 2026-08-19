@@ -6,9 +6,10 @@ import {
   zsstextline,
   zsstexttablelines,
   zsstexttape,
+  zsszedlinkline,
 } from 'zss/feature/zsstextui'
 
-/** Terminal #media menu (queue table only). */
+/** Terminal #media menu (queue table + copy URLs). */
 export function showmediamenu(player: string) {
   const state = mediaqueuereadstate()
   const rows: string[] = [...zssheaderlines('MEDIA')]
@@ -19,16 +20,17 @@ export function showmediamenu(player: string) {
   } else {
     for (let i = 0; i < state.urls.length; ++i) {
       const url = state.urls[i]
-      // Names are resolved on the VM at submit time; this menu renders on the
-      // bridge, where player flags are not available.
       const who = state.names[i]
-      const mark = i === state.index ? '>' : ' '
+      const color = i === state.index ? '$yellow' : '$white'
       const short = url.length > 44 ? `${url.slice(0, 41)}...` : url
-      queuerows.push([mark, String(i), who, short])
+      queuerows.push([`${color}${who}`, `${color}${short}`])
     }
     rows.push('$white  queue')
-    rows.push(...zsstexttablelines(queuerows, ['', 'index', 'who', 'url']))
+    rows.push(...zsstexttablelines(queuerows, ['who', 'url']))
   }
+
+  rows.push('$32')
+  rows.push(zsszedlinkline('media playlist', 'Copy URLs'))
 
   terminalwritelines(SOFTWARE, player, zsstexttape(...rows))
 }

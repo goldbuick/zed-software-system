@@ -15,9 +15,9 @@ import {
 import path from 'node:path'
 
 import {
-  YTDLP_FORMAT_TRIES,
   buildytdlpargs,
   resolveartworkpath,
+  ytdlpformattriesforurl,
   type MQ_YTDLP_FORMAT_TRY,
 } from '../src/main/lib/download'
 
@@ -195,8 +195,9 @@ function main() {
     outpath: '',
     lines: [] as string[],
   }
-  for (let ti = 0; ti < YTDLP_FORMAT_TRIES.length; ti += 1) {
-    const formattry = YTDLP_FORMAT_TRIES[ti]
+  const formattries = ytdlpformattriesforurl(url)
+  for (let ti = 0; ti < formattries.length; ti += 1) {
+    const formattry = formattries[ti]
     console.log(`try ${formattry.label}`)
     for (const name of readdirSync(mediadir)) {
       if (name.startsWith('mq-')) {

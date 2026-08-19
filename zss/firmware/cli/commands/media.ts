@@ -4,7 +4,7 @@ import { mediapayloadwithboardhelper } from 'zss/feature/mediaqueue/mediaguards'
 import { mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
-import { ARG_TYPE } from 'zss/words/types'
+import { ARG_TYPE, NAME } from 'zss/words/types'
 
 /** `#media` queue list; `#media <url>` submits a URL. */
 export function registermediacommands(fw: FIRMWARE): FIRMWARE {
@@ -20,6 +20,14 @@ export function registermediacommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         bridgemediapanel(SOFTWARE, player, 'menu', payload)
+        return 0
+      }
+      if (NAME(String(first)) === 'playlist') {
+        const payload = mediapayloadwithboardhelper(player)
+        if (!payload) {
+          return 0
+        }
+        bridgemediapanel(SOFTWARE, player, 'playlist', payload)
         return 0
       }
       if (!mediaisqueueurl(String(first))) {

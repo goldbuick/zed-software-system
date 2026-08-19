@@ -111,7 +111,14 @@ export const TTS_FISH_MODEL_KEYWORDS = [
 
 export const BROADCAST_HEAD_KEYWORDS = ['stop', 'whip'] as const
 
-export const QUEUE_ACTION_KEYWORDS = ['skip', 'limit', 'clear', 'stop'] as const
+export const QUEUE_ACTION_KEYWORDS = [
+  'skip',
+  'limit',
+  'clear',
+  'stop',
+  'approve',
+  'reject',
+] as const
 
 export const BROADCAST_WHIP_ALIASES = ['twitch', 'ivs'] as const
 

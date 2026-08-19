@@ -43,12 +43,32 @@ export type MEDIAQUEUE_SET_LIMIT = {
   limit: number
 }
 
+export type MEDIAQUEUE_APPROVE = {
+  type: 'mediaqueue:approve'
+  index: number
+}
+
+export type MEDIAQUEUE_REJECT = {
+  type: 'mediaqueue:reject'
+  index: number
+}
+
 export type MEDIAQUEUE_QUEUE_SNAPSHOT = {
   type: 'mediaqueue:queuesnapshot'
   urls: string[]
   names: string[]
+  titles?: string[]
+  submittedats?: number[]
   index: number
   limit: number
+  pendingurls?: string[]
+  pendingnames?: string[]
+  pendingtitles?: string[]
+  pendingdurations?: number[]
+  playedurls?: string[]
+  playednames?: string[]
+  playedtitles?: string[]
+  playedsubmittedats?: number[]
 }
 
 /** Helper -> cafe status strings (mediaqueue:status). Includes playback-ended. */
@@ -70,6 +90,8 @@ export type MEDIAQUEUE_MESSAGE =
   | MEDIAQUEUE_SKIP
   | MEDIAQUEUE_CLEAR
   | MEDIAQUEUE_SET_LIMIT
+  | MEDIAQUEUE_APPROVE
+  | MEDIAQUEUE_REJECT
   | MEDIAQUEUE_QUEUE_SNAPSHOT
   | MEDIAQUEUE_STATUS
   | MEDIAQUEUE_REQUEST_CALL
@@ -87,6 +109,8 @@ export function ismediaqueuemessage(data: unknown): data is MEDIAQUEUE_MESSAGE {
     type === 'mediaqueue:skip' ||
     type === 'mediaqueue:clear' ||
     type === 'mediaqueue:setlimit' ||
+    type === 'mediaqueue:approve' ||
+    type === 'mediaqueue:reject' ||
     type === 'mediaqueue:queuesnapshot' ||
     type === 'mediaqueue:status' ||
     type === 'mediaqueue:requestcall'
