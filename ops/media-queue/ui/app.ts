@@ -20,6 +20,11 @@ import {
 } from './playback'
 import type { MQ_PLAYBACK_RESULT } from './playback'
 import {
+  PLAYER_CALL_DISCONNECT_MS,
+  type PLAYER_CALL_PC_SLICE,
+  playercallpcreason,
+} from './playercallice'
+import {
   helperqueueadd,
   helperqueueapplydisk,
   helperqueueclear,
@@ -108,6 +113,8 @@ let dataconnection: DataConnection | null = null
 let mediastream: MediaStream | null = null
 const playercalls = new Map<string, MQ_PLAYER_CALL>()
 const pendingplayercalls = new Map<string, MediaConnection>()
+const playercalldroptimers = new Map<MediaConnection, number>()
+const playercallpcwired = new WeakSet<RTCPeerConnection>()
 let localpeerid = ''
 let playbackstarted = false
 /** Latest cafe goto URL; coalesced while a start is in flight. */
@@ -843,7 +850,113 @@ function startwindowfitobserver() {
   observer.observe(els.frame)
 }
 
+function clearplayercalldroptimer(call: MediaConnection) {
+  const timer = playercalldroptimers.get(call)
+  if (timer) {
+    clearTimeout(timer)
+    playercalldroptimers.delete(call)
+  }
+}
+
+function clearallplayercalldroptimers() {
+  playercalldroptimers.forEach(function (timer) {
+    clearTimeout(timer)
+  })
+  playercalldroptimers.clear()
+}
+
+function forgetplayercall(peerid: string, call: MediaConnection) {
+  clearplayercalldroptimer(call)
+  const entry = playercalls.get(peerid)
+  if (entry && entry.call === call) {
+    playercalls.delete(peerid)
+  }
+  if (pendingplayercalls.get(peerid) === call) {
+    pendingplayercalls.delete(peerid)
+  }
+  syncplayerlinkstatus()
+}
+
+function dropplayercall(peerid: string, call: MediaConnection) {
+  forgetplayercall(peerid, call)
+  try {
+    call.close()
+  } catch (_) {}
+}
+
+function scheduleplayercalldrop(peerid: string, call: MediaConnection) {
+  if (playercalldroptimers.has(call)) {
+    return
+  }
+  const timer = window.setTimeout(function () {
+    playercalldroptimers.delete(call)
+    dropplayercall(peerid, call)
+  }, PLAYER_CALL_DISCONNECT_MS)
+  playercalldroptimers.set(call, timer)
+}
+
+function applyplayercallpcreason(
+  peerid: string,
+  call: MediaConnection,
+  slice?: PLAYER_CALL_PC_SLICE,
+) {
+  const reason = playercallpcreason(slice ?? call.peerConnection)
+  if (reason === 'up' || reason === 'connecting') {
+    clearplayercalldroptimer(call)
+    return
+  }
+  if (reason === 'dead') {
+    dropplayercall(peerid, call)
+    return
+  }
+  if (reason === 'disconnected') {
+    scheduleplayercalldrop(peerid, call)
+  }
+}
+
+function wireplayercallcleanup(call: MediaConnection, peerid: string) {
+  call.on('close', function () {
+    forgetplayercall(peerid, call)
+  })
+  call.on('error', function () {
+    forgetplayercall(peerid, call)
+  })
+  call.on('iceStateChanged', function (state) {
+    wireplayercallpc(call, peerid)
+    applyplayercallpcreason(peerid, call, {
+      iceConnectionState: state,
+      connectionState: call.peerConnection?.connectionState,
+    })
+  })
+}
+
+function wireplayercallpc(call: MediaConnection, peerid: string) {
+  const pc = call.peerConnection
+  if (!pc || playercallpcwired.has(pc)) {
+    return
+  }
+  playercallpcwired.add(pc)
+  const onstate = function () {
+    applyplayercallpcreason(peerid, call)
+  }
+  pc.addEventListener('iceconnectionstatechange', onstate)
+  pc.addEventListener('connectionstatechange', onstate)
+  onstate()
+}
+
+function droppreviousplayercall(peerid: string, next: MediaConnection) {
+  const entry = playercalls.get(peerid)
+  if (entry && entry.call !== next) {
+    dropplayercall(peerid, entry.call)
+  }
+  const pending = pendingplayercalls.get(peerid)
+  if (pending && pending !== next) {
+    dropplayercall(peerid, pending)
+  }
+}
+
 function closeplayercalls() {
+  clearallplayercalldroptimers()
   playercalls.forEach(function (entry) {
     try {
       entry.call.close()
@@ -854,6 +967,7 @@ function closeplayercalls() {
 
 function closependingplayercalls() {
   pendingplayercalls.forEach(function (call) {
+    clearplayercalldroptimer(call)
     try {
       call.close()
     } catch (_) {}
@@ -861,26 +975,15 @@ function closependingplayercalls() {
   pendingplayercalls.clear()
 }
 
-function wireplayercallcleanup(call: MediaConnection, peerid: string) {
-  call.on('close', function () {
-    playercalls.delete(peerid)
-    pendingplayercalls.delete(peerid)
-    syncplayerlinkstatus()
-  })
-  call.on('error', function () {
-    playercalls.delete(peerid)
-    pendingplayercalls.delete(peerid)
-    syncplayerlinkstatus()
-  })
-}
-
 function answerplayercall(call: MediaConnection) {
   if (!mediastream) {
     return false
   }
+  droppreviousplayercall(call.peer, call)
   call.answer(mediastream)
   playercalls.set(call.peer, { call: call, answerstream: mediastream })
   pendingplayercalls.delete(call.peer)
+  wireplayercallpc(call, call.peer)
   return true
 }
 
@@ -987,6 +1090,7 @@ function handleplayercall(call: MediaConnection) {
   if (meta.kind !== 'mediaqueue') {
     return
   }
+  droppreviousplayercall(call.peer, call)
   wireplayercallcleanup(call, call.peer)
   if (answerplayercall(call)) {
     publishstreamtoplayers()

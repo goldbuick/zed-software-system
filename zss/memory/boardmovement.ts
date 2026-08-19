@@ -2,6 +2,7 @@ import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { dirfrompts, ptapplydir } from 'zss/words/dir'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 import {
@@ -10,7 +11,10 @@ import {
   memoryreadterrain,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
-import { memorydeleteboardobject } from './boardlifecycle'
+import {
+  memorydeleteboardobject,
+  memorysafedeleteelement,
+} from './boardlifecycle'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import {
   memoryplayerblockedbyedge,
@@ -27,6 +31,35 @@ import {
   BOOK,
   CODE_PAGE_TYPE,
 } from './types'
+
+function memoryidstillatxy(
+  board: BOARD,
+  x: number,
+  y: number,
+  skipid: string,
+): string | undefined {
+  const objects = Object.values(board.objects)
+  let found: string | undefined
+  for (let i = 0; i < objects.length; ++i) {
+    const object = objects[i]
+    if (
+      object.x !== x ||
+      object.y !== y ||
+      !ispresent(object.id) ||
+      object.id === skipid ||
+      ispresent(object.removed)
+    ) {
+      continue
+    }
+    if (ispid(object.id)) {
+      return object.id
+    }
+    if (!found) {
+      found = object.id
+    }
+  }
+  return found
+}
 
 export function memorycheckblockedboardobject(
   board: MAYBE<BOARD>,
@@ -212,16 +245,27 @@ export function memorymoveboardobject(
     return { ...mayberterrain, x: dest.x, y: dest.y }
   }
 
+  const startx = movingelement.x
+  const starty = movingelement.y
+
   // update object location
   movingelement.x = dest.x
   movingelement.y = dest.y
 
-  // if not removed, update lookup
+  // if not removed, update lookup without stealing another occupant
   if (!ispresent(movingelement.removed)) {
-    // blank current lookup
-    lookup[startidx] = undefined
-    // update lookup at dest
-    lookup[destidx] = movingelement.id ?? ''
+    if (lookup[startidx] === movingelement.id) {
+      lookup[startidx] = memoryidstillatxy(
+        board,
+        startx,
+        starty,
+        movingelement.id ?? '',
+      )
+    }
+    const destowner = lookup[destidx]
+    if (!destowner || destowner === movingelement.id) {
+      lookup[destidx] = movingelement.id ?? ''
+    }
   }
 
   // no interaction
@@ -316,6 +360,21 @@ export function memorymoveobject(
         }
         memorysendtoelement(blocked, element, 'thud')
         memorysendtoelement(element, blocked, 'shot')
+      }
+      // Breakable projectiles must leave lookup even when the chip skips :thud
+      // #die. A leftover id after a wall thud would block later bullets.
+      const deletestamp = READ_CONTEXT.timestamp || book?.timestamp || 1
+      if (memoryreadelementstat(element, 'breakable')) {
+        memorysafedeleteelement(board, element, deletestamp)
+      }
+      if (blockedisbullet && ispresent(blocked.id)) {
+        const blockedobject = memoryreadobject(board, blocked.id)
+        if (
+          ispresent(blockedobject) &&
+          memoryreadelementstat(blockedobject, 'breakable')
+        ) {
+          memorysafedeleteelement(board, blockedobject, deletestamp)
+        }
       }
     } else {
       if (blockedbyplayer) {

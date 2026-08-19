@@ -177,7 +177,7 @@ Regression tests: [`incrementallayerscache.test.ts`](../../../ops/tests/unit/mem
 
 ### Related: incremental layer rebuild
 
-[`PERF_INCREMENTAL_LAYERS`](../../config.ts) (default **`true`**) skips full [`memoryconverttogadgetlayers`](../../memory/rendering.ts) rebuild when `drawallowids` is empty, `drawdirtycells` is empty, and `drawneedfull` is false. Empty `drawallowids` alone is insufficient: player movement updates `drawdirtycells` without `:drawdisplay` allow entries. Documented in [`rendering.ts`](../../memory/rendering.ts) cache comment block. Disable with `ZSS_PERF_INCREMENTAL_LAYERS=false` to A/B.
+[`PERF_INCREMENTAL_LAYERS`](../../config.ts) (default **`false`**) skips full [`memoryconverttogadgetlayers`](../../memory/rendering.ts) rebuild when `drawallowids` is empty, `drawdirtycells` is empty, and `drawneedfull` is false. Empty `drawallowids` alone is insufficient: player movement updates `drawdirtycells` without `:drawdisplay` allow entries. Documented in [`rendering.ts`](../../memory/rendering.ts) cache comment block. Enable with `ZSS_PERF_INCREMENTAL_LAYERS=true` to A/B.
 
 ---
 

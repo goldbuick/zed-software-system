@@ -280,6 +280,7 @@ export function memorytickobject(
   READ_CONTEXT.book = book
   READ_CONTEXT.board = board
   READ_CONTEXT.element = object
+  READ_CONTEXT.timestamp = book.timestamp
 
   READ_CONTEXT.elementid = object.id ?? ''
   READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
