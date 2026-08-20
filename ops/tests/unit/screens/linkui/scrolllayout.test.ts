@@ -6,6 +6,10 @@ import { linkexpandrowheight } from 'zss/screens/linkui/linktypes'
 import { scrollvisiblewindow } from 'zss/screens/linkui/scrolllayout'
 import type { PANEL_ITEM } from 'zss/gadget/data/types'
 
+function plainitems(n: number): PANEL_ITEM[] {
+  return Array.from({ length: n }, (_, i) => `line ${i}`)
+}
+
 describe('scrollvisiblewindow', () => {
   afterEach(() => {
     clearlinkeditingkey()
@@ -58,12 +62,45 @@ describe('scrollvisiblewindow', () => {
     expect(expandh).toBeGreaterThan(1)
     expect(win.visible).toContainEqual(editor)
     const editorindex = win.visible.findIndex(
-      (item) => item === editor || (Array.isArray(item) && item[3] === 'coloredit'),
+      (item) =>
+        item === editor || (Array.isArray(item) && item[3] === 'coloredit'),
     )
     expect(editorindex).toBeGreaterThanOrEqual(0)
     expect(win.selectedrowy).toBe(win.rowys[editorindex])
     if (editorindex + 1 < win.rowys.length) {
       expect(win.rowys[editorindex + 1] - win.rowys[editorindex]).toBe(expandh)
     }
+  })
+
+  it('centers the cursor mid-list', () => {
+    const panelheight = 17
+    const items = plainitems(40)
+    const cursor = 20
+    const win = scrollvisiblewindow(items, cursor, panelheight, '')
+    const idealabove = Math.floor((panelheight - 1) / 2)
+    expect(win.selectedrowy).toBe(idealabove)
+    expect(win.offset).toBe(cursor - idealabove)
+    expect(win.visible).toHaveLength(panelheight)
+  })
+
+  it('pins near the top at list start', () => {
+    const panelheight = 17
+    const items = plainitems(40)
+    const win = scrollvisiblewindow(items, 0, panelheight, '')
+    expect(win.offset).toBe(0)
+    expect(win.selectedrowy).toBe(0)
+    expect(win.visible[0]).toBe(items[0])
+    expect(win.visible).toHaveLength(panelheight)
+  })
+
+  it('pins near the bottom at list end and keeps the window full', () => {
+    const panelheight = 17
+    const items = plainitems(40)
+    const cursor = items.length - 1
+    const win = scrollvisiblewindow(items, cursor, panelheight, '')
+    expect(win.visible).toHaveLength(panelheight)
+    expect(win.visible[win.visible.length - 1]).toBe(items[cursor])
+    expect(win.selectedrowy).toBe(panelheight - 1)
+    expect(win.offset).toBe(items.length - panelheight)
   })
 })

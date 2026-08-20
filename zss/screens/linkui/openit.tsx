@@ -73,13 +73,13 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
       ? '$black$onltgray'
       : '$black$ondkcyan'
     tokenizeandwritetextformat(
-      `${badgebg}${badge}${tcolor}$onclear ${surface.label}`,
+      `${badgebg}${badge}${tcolor}$onclear ${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
       surface.context,
       true,
     )
   } else {
     tokenizeandwritetextformat(
-      `${linkactionprefix(surface)}$purple$16 $yellowOPENIT ${tcolor}${surface.label}`,
+      `${linkactionprefix(surface)}$purple$16 $yellowOPENIT ${tcolor}${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
       surface.context,
       true,
     )

@@ -74,9 +74,10 @@ export type ScrollVisibleWindow = {
 }
 
 /**
- * Cursor-anchored height-budget viewport. Always includes the cursor item
- * (even when expanded taller than the panel), then grows upward / downward
- * while the sum of row heights fits in `panelheight`.
+ * Mid-viewport height-budget window (terminal-style clamp). Always includes the
+ * cursor item (even when expanded taller than the panel). Grows upward toward
+ * vertical center, then fills downward, then upward again near list end so the
+ * panel stays full without empty padding rows.
  */
 export function scrollvisiblewindow(
   items: PANEL_ITEM[],
@@ -101,22 +102,37 @@ export function scrollvisiblewindow(
   let start = safeCursor
   let end = safeCursor
   let used = cursorh
+  const idealabove = Math.floor((panelheight - cursorh) / 2)
 
+  // Phase 1: grow up toward mid-viewport.
+  let above = 0
   while (start > 0) {
     const nexth = heights[start - 1] ?? 1
-    if (used + nexth > panelheight) {
+    if (above + nexth > idealabove || used + nexth > panelheight) {
       break
     }
     start -= 1
+    above += nexth
     used += nexth
   }
 
+  // Phase 2: fill remaining budget downward.
   while (end < items.length - 1) {
     const nexth = heights[end + 1] ?? 1
     if (used + nexth > panelheight) {
       break
     }
     end += 1
+    used += nexth
+  }
+
+  // Phase 3: near list end, pull more content above so the window stays full.
+  while (start > 0) {
+    const nexth = heights[start - 1] ?? 1
+    if (used + nexth > panelheight) {
+      break
+    }
+    start -= 1
     used += nexth
   }
 

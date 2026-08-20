@@ -54,7 +54,7 @@ export function PanelComponent({
         ymargin,
         xmargin,
         width - xmargin - 1,
-        height - ymargin,
+        height - ymargin - 1,
       ),
       ...store.getState(),
       padlineright: true,
