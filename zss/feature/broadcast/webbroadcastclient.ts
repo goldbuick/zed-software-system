@@ -16,6 +16,7 @@ import type {
 } from 'zss/feature/broadcast/webbroadcasttypes'
 import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
+import { broadcasthiddenrendertick } from 'zss/gadget/broadcasthiddenrender'
 
 export type WebBroadcastClientConfig = {
   streamConfig?: StreamConfig
@@ -139,7 +140,10 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
       throw new Error('web broadcast client: stream is already started')
     }
     await this.compositor.unlockaudio()
-    this.compositor.start()
+    this.compositor.setonrender(() => {
+      broadcasthiddenrendertick()
+    })
+    await this.compositor.start()
     const tracks = this.collecttracks()
     if (!tracks.length) {
       throw new Error('web broadcast client: no media tracks attached')
@@ -171,6 +175,7 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
     } else {
       this.lowlatency.stop()
     }
+    this.compositor.setonrender(undefined)
     this.compositor.stop()
     this.started = false
     this.active = false

@@ -56,8 +56,9 @@ export function TerminalComponent() {
       sessionlogs,
       maxwidth: logsrowmaxwidth,
       edge,
+      mode: terminalmode,
     })
-  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editingkey])
+  }, [pinlines, sessionlogs, logsrowmaxwidth, edge, editingkey, terminalmode])
 
   const logrowtotalheight = useMemo(
     () =>

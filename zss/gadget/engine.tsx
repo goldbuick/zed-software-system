@@ -149,12 +149,19 @@ export function Engine() {
         islowrez,
         islandscape,
         showtouchcontrols,
+        crtactive: !!shouldcrt,
         usemobiletextcapture,
         sidebaropen,
         sidebarclosing: false,
       }
     })
-  }, [islowrez, islandscape, showtouchcontrols, usemobiletextcapture])
+  }, [
+    islowrez,
+    islandscape,
+    showtouchcontrols,
+    shouldcrt,
+    usemobiletextcapture,
+  ])
 
   return (
     <>

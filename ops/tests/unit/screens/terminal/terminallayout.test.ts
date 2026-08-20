@@ -28,9 +28,11 @@ describe('readterminallayout', () => {
       sessionlogs: ['$WHITE log'],
       maxwidth: 79,
       edge,
+      mode: 'cli',
     })
     expect(layout.contentbottom).toBe(22)
     expect(layout.sessionstackbottom).toBe(22)
+    expect(layout.visiblepinlines).toEqual(['$WHITE a', '$WHITE b'])
     expect(
       readsesslogrowycoords(layout.sessionheights, layout.sessionstackbottom),
     ).toEqual([22])
@@ -50,9 +52,50 @@ describe('readterminallayout', () => {
       sessionlogs: [],
       maxwidth: 79,
       edge,
+      mode: 'cli',
     })
     expect(layout.naturalpinstarty).toBe(21)
     expect(readnaturalpinstarty(22, 0, 2)).toBe(21)
+  })
+
+  it('hides pins in quick mode', () => {
+    const layout = readterminallayout({
+      pinlines: ['$WHITE a', '$WHITE b'],
+      sessionlogs: ['$WHITE log'],
+      maxwidth: 79,
+      edge,
+      mode: 'quick',
+    })
+    expect(layout.visiblepinlines).toEqual([])
+    expect(layout.pinareaheight).toBe(0)
+    expect(layout.pinheights).toEqual([])
+  })
+
+  it('leaves session row Y coords unchanged when quick mode drops pins', () => {
+    const withpins = readterminallayout({
+      pinlines: ['$WHITE a', '$WHITE b'],
+      sessionlogs: ['$WHITE log'],
+      maxwidth: 79,
+      edge,
+      mode: 'quick',
+    })
+    const nopins = readterminallayout({
+      pinlines: [],
+      sessionlogs: ['$WHITE log'],
+      maxwidth: 79,
+      edge,
+      mode: 'cli',
+    })
+    expect(
+      readsesslogrowycoords(
+        withpins.sessionheights,
+        withpins.sessionstackbottom,
+      ),
+    ).toEqual(
+      readsesslogrowycoords(nopins.sessionheights, nopins.sessionstackbottom),
+    )
+    expect(withpins.naturalpinstarty).toBe(nopins.naturalpinstarty)
+    expect(withpins.pinareaheight).toBe(0)
   })
 })
 

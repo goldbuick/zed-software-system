@@ -5,9 +5,19 @@ import type {
   MQ_INVOKE_COMMAND,
   MQ_INVOKE_MAP,
   MQ_JOB_STATE,
+  MQ_PLAYLIST_ENTRY,
+  MQ_PLAYLIST_EXPAND,
+  MQ_PROBE_BATCH,
+  MQ_PROBE_BATCH_ENTRY,
+  MQ_PROBE_META,
+  MQ_PROBE_PROGRESS,
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
 import { mqqueueneedspending } from '../src/shared/queue'
+import {
+  mqqueuenormalizeurl,
+  mqurlisplaylistcontainer,
+} from '../src/shared/urlnormalize'
 
 import { mqpeerserveroptions } from './peerserver'
 import {
@@ -29,8 +39,11 @@ import {
   helperqueueallowlong,
   helperqueueapplydisk,
   helperqueueapprove,
+  helperqueueaudioonly,
   helperqueueclear,
+  helperqueuecountplayer,
   helperqueuecurrenturl,
+  helperqueuelimit,
   helperqueuenexturl,
   helperqueuepend,
   helperqueuereaddisk,
@@ -680,6 +693,7 @@ async function reconcileprep() {
     await invoke('start_media_prep', {
       url: nexturl,
       allowlong: helperqueueallowlong(nexturl),
+      audioonly: helperqueueaudioonly(nexturl),
     })
     startpreppoll()
     renderqueue()
@@ -1283,7 +1297,11 @@ async function startplaybackandcall(url: string) {
         answerpendingplayercalls()
         publishstreamtoplayers()
         startdownloadpoll()
-        const downloaded = await startdownload(url, helperqueueallowlong(url))
+        const downloaded = await startdownload(
+          url,
+          helperqueueallowlong(url),
+          helperqueueaudioonly(url),
+        )
         if (issupersededplaybackerr(null, gen)) {
           return
         }
@@ -1407,22 +1425,6 @@ function handlecafemessage(data: unknown) {
         const hudbefore = readhudstate()
         setlink('queue-probe', url)
         sendstatus('queue-probe', url)
-        let title = ''
-        let durationsec = 0
-        try {
-          const meta = await invoke('probe_media_meta', { url: url })
-          title = String(meta && meta.title ? meta.title : '').trim()
-          durationsec = Number(meta && meta.durationsec)
-        } catch (_) {
-          title = ''
-          durationsec = 0
-        }
-        const submittedat = Date.now()
-        const payload = {
-          title,
-          durationsec: Number.isFinite(durationsec) ? durationsec : 0,
-          submittedat,
-        }
         const restorehud = () => {
           if (downloadinflight) {
             return
@@ -1440,30 +1442,315 @@ function handlecafemessage(data: unknown) {
               : 'connected'
           setlink(phase, hudbefore.detail)
         }
-        if (mqqueueneedspending(payload.durationsec)) {
-          const result = helperqueuepend(player, name, url, payload)
+
+        type ENQUEUE_OUTCOME =
+          | { kind: 'added' }
+          | { kind: 'pending' }
+          | { kind: 'limit' }
+          | { kind: 'unplayable'; reason: string }
+          | { kind: 'error'; reason: string }
+
+        const probeentry = async (entryurl: string): Promise<MQ_PROBE_META> => {
+          try {
+            return await invoke('probe_media_meta', { url: entryurl })
+          } catch (_) {
+            return {
+              title: '',
+              durationsec: 0,
+              failed: true,
+              error: 'probe failed',
+              audioonly: false,
+            }
+          }
+        }
+
+        const listenprobeprogress = (
+          onprogress: (progress: MQ_PROBE_PROGRESS) => void,
+        ): Promise<() => void> => {
+          if (!window.__TAURI__ || !window.__TAURI__.event) {
+            return Promise.resolve(() => {})
+          }
+          return window.__TAURI__.event.listen(
+            'mq-probe-progress',
+            function (event) {
+              const payload = event && event.payload ? event.payload : null
+              if (payload) {
+                onprogress(payload as MQ_PROBE_PROGRESS)
+              }
+            },
+          )
+        }
+
+        const probebatch = async (
+          playlisturl: string,
+          count: number,
+        ): Promise<MQ_PROBE_BATCH> => {
+          if (count < 1) {
+            return { entries: [], error: '' }
+          }
+          try {
+            return await invoke('probe_media_batch', {
+              url: playlisturl,
+              count,
+            })
+          } catch (_) {
+            return { entries: [], error: 'probe failed' }
+          }
+        }
+
+        const enqueueone = (
+          entryurl: string,
+          fallbacktitle: string,
+          meta: MQ_PROBE_META,
+        ): ENQUEUE_OUTCOME => {
+          if (helperqueuecountplayer(player) >= helperqueuelimit()) {
+            return { kind: 'limit' }
+          }
+          if (meta.failed) {
+            return { kind: 'unplayable', reason: meta.error }
+          }
+          let title = String(meta.title || '').trim()
+          if (!title && fallbacktitle) {
+            title = fallbacktitle
+          }
+          const durationsec = Number(meta.durationsec)
+          const payload = {
+            title,
+            durationsec: Number.isFinite(durationsec) ? durationsec : 0,
+            submittedat: Date.now(),
+            audioonly: meta.audioonly === true,
+          }
+          if (mqqueueneedspending(payload.durationsec)) {
+            const result = helperqueuepend(player, name, entryurl, payload)
+            if (!result.ok) {
+              return result.reason === 'limit'
+                ? { kind: 'limit' }
+                : { kind: 'error', reason: result.reason }
+            }
+            return { kind: 'pending' }
+          }
+          const result = helperqueueadd(player, name, entryurl, payload)
           if (!result.ok) {
-            sendstatus('queue-error', result.reason)
+            return result.reason === 'limit'
+              ? { kind: 'limit' }
+              : { kind: 'error', reason: result.reason }
+          }
+          return { kind: 'added' }
+        }
+
+        const finishsingle = (outcome: ENQUEUE_OUTCOME, entryurl: string) => {
+          if (outcome.kind === 'added') {
+            sendstatus('queue-added', entryurl)
+            restorehud()
+            afterqueuemutate()
+            if (!playbackstarted) {
+              const current = helperqueuecurrenturl()
+              if (current) {
+                void maybeautostartaftergoto(current)
+              }
+            }
+            return
+          }
+          if (outcome.kind === 'pending') {
+            sendstatus('queue-pending', entryurl)
+            restorehud()
+            afterqueuemutate()
+            return
+          }
+          if (outcome.kind === 'limit') {
+            sendstatus('queue-error', 'limit')
             restorehud()
             sendqueuesnapshot()
             return
           }
-          sendstatus('queue-pending', url)
+          if (outcome.kind === 'unplayable') {
+            sendstatus('queue-unplayable', outcome.reason || entryurl)
+            restorehud()
+            sendqueuesnapshot()
+            return
+          }
+          sendstatus('queue-error', outcome.reason)
           restorehud()
-          afterqueuemutate()
+          sendqueuesnapshot()
+        }
+
+        if (!mqurlisplaylistcontainer(url)) {
+          finishsingle(enqueueone(url, '', await probeentry(url)), url)
           return
         }
-        const result = helperqueueadd(player, name, url, payload)
-        if (!result.ok) {
-          sendstatus('queue-error', result.reason)
+
+        let expanded: MQ_PLAYLIST_EXPAND = { kind: 'single' }
+        try {
+          expanded = await invoke('expand_media_playlist', { url })
+        } catch (_) {
+          expanded = { kind: 'single' }
+        }
+        if (expanded.kind !== 'playlist' || expanded.entries.length < 2) {
+          finishsingle(enqueueone(url, '', await probeentry(url)), url)
+          return
+        }
+
+        const entries = expanded.entries
+        let added = 0
+        let pending = 0
+        let skipped = 0
+        let unplayable = 0
+        let duplicate = 0
+        let firstreason = ''
+        // Only read metadata for entries the limit can still accept.
+        const slots = helperqueuelimit() - helperqueuecountplayer(player)
+        if (slots <= 0) {
+          // A full queue is not the same as an unplayable playlist -- say which
+          // one it is, and skip the metadata pass that has nowhere to put its
+          // results. Entries awaiting approval hold slots too, so this fires
+          // even when nothing is playing.
+          sendstatus('queue-error', 'limit')
+          sendstatus(
+            'queue-playlist',
+            `added=0 pending=0 skipped=${entries.length}`,
+          )
           restorehud()
           sendqueuesnapshot()
           return
         }
-        sendstatus('queue-added', url)
+        const wanted = entries.slice(0, slots)
+        skipped += entries.length - wanted.length
+        setlink('queue-probe', `0/${wanted.length}`)
+        // Index the listing on both ids -- a flat listing may only know an api
+        // url while the metadata pass reports the canonical page url, so
+        // neither alone joins every extractor.
+        const listedbykey = new Map<string, MQ_PLAYLIST_ENTRY>()
+        for (const entry of wanted) {
+          if (entry.id) {
+            listedbykey.set(`id:${entry.id}`, entry)
+          }
+          if (entry.url) {
+            listedbykey.set(mqqueuenormalizeurl(entry.url), entry)
+          }
+        }
+        const resolvedkeys = new Set<string>()
+        const takenkeys = new Set<string>()
+        // maybeautostartaftergoto treats a second call as a skip and cancels the
+        // download in flight, so kick it once and let the rest just append.
+        let autostartkicked = false
+
+        const takeentry = (found: MQ_PROBE_BATCH_ENTRY, index: number) => {
+          const batchkey = found.id
+            ? `id:${found.id}`
+            : mqqueuenormalizeurl(found.url)
+          if (takenkeys.has(batchkey)) {
+            return
+          }
+          takenkeys.add(batchkey)
+          const listed =
+            listedbykey.get(`id:${found.id}`) ??
+            listedbykey.get(mqqueuenormalizeurl(found.url))
+          if (listed) {
+            resolvedkeys.add(mqqueuenormalizeurl(listed.url))
+          }
+          const label = `${index}/${wanted.length} ${found.title}`.trim()
+          // Leave a running playback label alone -- restorehud owns it.
+          if (!downloadinflight && !playbackstarted) {
+            setlink('queue-probe', label)
+          }
+          sendstatus('queue-probe', label)
+          // The listing owns the queue url. The metadata pass rewrites
+          // music.youtube.com to www.youtube.com, which would drop the
+          // audio-only format ladder these art tracks want.
+          const outcome = enqueueone(
+            listed ? listed.url : found.url,
+            listed ? listed.title : '',
+            {
+              title: found.title,
+              durationsec: found.durationsec,
+              failed: false,
+              error: '',
+              audioonly: found.audioonly,
+            },
+          )
+          if (outcome.kind === 'added') {
+            ++added
+          } else if (outcome.kind === 'pending') {
+            ++pending
+          } else if (outcome.kind === 'unplayable') {
+            ++unplayable
+            if (!firstreason) {
+              firstreason = outcome.reason
+            }
+            return
+          } else {
+            if (outcome.kind === 'error' && outcome.reason === 'duplicate') {
+              ++duplicate
+            }
+            ++skipped
+            return
+          }
+          // Publish as each track lands so the set fills while the scan runs.
+          afterqueuemutate()
+          if (!playbackstarted && !autostartkicked) {
+            const current = helperqueuecurrenturl()
+            if (current) {
+              autostartkicked = true
+              void maybeautostartaftergoto(current)
+            }
+          }
+        }
+
+        // The scan takes tens of seconds, so queue each entry as yt-dlp
+        // resolves it rather than leaving the set empty until the whole
+        // playlist lands.
+        const unlistenprobe = await listenprobeprogress((progress) => {
+          takeentry(progress.entry, progress.index)
+        })
+        // One yt-dlp pass for the whole slice. Spawning one probe per track ran
+        // roughly ten times slower and drew per-host throttling that timed out
+        // probes for tracks that were actually playable.
+        let batch: MQ_PROBE_BATCH
+        try {
+          batch = await probebatch(url, wanted.length)
+        } finally {
+          unlistenprobe()
+        }
+        // The completed run is the authority: a kill on timeout can leave a
+        // trailing line that never reached the stream. Already-taken entries
+        // drop out here.
+        for (let i = 0; i < batch.entries.length; ++i) {
+          takeentry(batch.entries[i], i + 1)
+        }
+        // yt-dlp prints nothing for an entry it cannot extract, so whatever the
+        // scan never reported is unplayable.
+        for (const entry of wanted) {
+          if (resolvedkeys.has(mqqueuenormalizeurl(entry.url))) {
+            continue
+          }
+          ++unplayable
+          if (!firstreason) {
+            firstreason = batch.error || 'could not read this track'
+          }
+        }
+        // One error for the batch -- a DRM album would otherwise emit one per track.
+        // A playlist that queued nothing must still reach the player as an error;
+        // the summary line below is too quiet to read as a failure.
+        if (unplayable > 0) {
+          sendstatus(
+            'queue-unplayable',
+            `${unplayable} of ${wanted.length} unplayable: ${firstreason}`,
+          )
+        } else if (added + pending === 0) {
+          sendstatus(
+            'queue-unplayable',
+            duplicate > 0
+              ? `all ${entries.length} already in queue`
+              : `nothing queued from ${entries.length} tracks`,
+          )
+        }
+        sendstatus(
+          'queue-playlist',
+          `added=${added} pending=${pending} skipped=${skipped + unplayable}`,
+        )
         restorehud()
         afterqueuemutate()
-        if (!playbackstarted) {
+        if (!playbackstarted && !autostartkicked && added + pending > 0) {
           const current = helperqueuecurrenturl()
           if (current) {
             void maybeautostartaftergoto(current)

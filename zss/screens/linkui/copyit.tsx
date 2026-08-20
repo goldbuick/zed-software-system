@@ -21,7 +21,7 @@ export function LinkCopyIt({ surface }: LinkWidgetProps) {
 
   const tcolor = inputcolor(!!surface.active)
   tokenizeandwritetextformat(
-    `${linkactionprefix(surface)}$purple$16 $yellowCOPYIT ${tcolor}${surface.label}`,
+    `${linkactionprefix(surface)}$purple$16 $yellowCOPYIT ${tcolor}${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
     surface.context,
     true,
   )

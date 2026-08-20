@@ -328,6 +328,19 @@ describe('mediaqueue workstatus labels', () => {
     expect(mediaqueuestatusworklabel('buffering')).toBe('media buffer')
     expect(mediaqueuestatusworklabel('playing')).toBe('')
   })
+
+  it('counts playlist scan progress and leaves a single add alone', () => {
+    expect(mediaqueuestatusworklabel('queue-probe', '3/18 Purgatory')).toBe(
+      'media 3/18',
+    )
+    // A single #media add sends the url as its detail, not a count.
+    expect(
+      mediaqueuestatusworklabel(
+        'queue-probe',
+        'https://www.youtube.com/watch?v=abc',
+      ),
+    ).toBe('media request')
+  })
 })
 
 describe('mediaqueue call metadata', () => {

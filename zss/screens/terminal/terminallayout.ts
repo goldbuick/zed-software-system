@@ -1,3 +1,4 @@
+import type { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import { measurerowcached } from 'zss/screens/terminal/measurerowcache'
 import { textformatreadedges } from 'zss/words/textformat'
 
@@ -88,6 +89,8 @@ export function readstickypinstarty(
 export type TerminalLayout = {
   /** Natural (unscrolled) pin block start Y. */
   naturalpinstarty: number
+  /** Pin lines actually measured / drawn (empty in quick mode). */
+  visiblepinlines: string[]
   pinheights: number[]
   /** Natural pin row Y coords (before scroll / sticky clamp). */
   pinycoords: number[]
@@ -108,11 +111,14 @@ export function readterminallayout(args: {
   sessionlogs: string[]
   maxwidth: number
   edge: TextEdge
+  mode: TERMINAL_MODE
 }): TerminalLayout {
-  const { pinlines, sessionlogs, maxwidth, edge } = args
+  const { pinlines, sessionlogs, maxwidth, edge, mode } = args
   const inputreserved = readinputreservedrows()
   const contentbottom = edge.bottom - edge.top - inputreserved
-  const pinheights = readpinrowheights(pinlines, maxwidth, edge.height)
+  // Quick mode is a transient overlay -- bookmarks stay out of it.
+  const visiblepinlines = mode === 'quick' ? [] : pinlines
+  const pinheights = readpinrowheights(visiblepinlines, maxwidth, edge.height)
   const pinareaheight = readpinareaheight(pinheights)
   const sessionheights = readsessionrowheights(
     sessionlogs,
@@ -133,6 +139,7 @@ export function readterminallayout(args: {
   const sessionstackbottom = contentbottom
   return {
     naturalpinstarty,
+    visiblepinlines,
     pinheights,
     pinycoords,
     pinareaheight,

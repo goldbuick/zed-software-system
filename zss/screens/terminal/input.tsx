@@ -196,6 +196,7 @@ export function TerminalInput({
         sessionlogs,
         maxwidth: logsrowmaxwidth,
         edge,
+        mode: terminalmode,
       }),
     [
       tapeycursor,
@@ -204,6 +205,7 @@ export function TerminalInput({
       sessionlogs,
       logsrowmaxwidth,
       edge,
+      terminalmode,
     ],
   )
 
@@ -714,7 +716,8 @@ export function TerminalInput({
                   case 'b': {
                     const rowi = activerowindex
                     const sessioncount = sessionlogs.length
-                    const pincount = pinlines.length
+                    // Quick mode hides pins, so do not target a bookmark delete.
+                    const pincount = quickterminal ? 0 : pinlines.length
                     if (
                       !inputstateactive &&
                       rowi !== undefined &&

@@ -74,6 +74,10 @@ describe('WebBroadcastClient lifecycle', () => {
   const originalcaf = global.cancelAnimationFrame
   const originaldocument = global.document
   const originalmediastream = global.MediaStream
+  const originalaudiocontext = global.AudioContext
+  const originalaudioworkletnode = (global as { AudioWorkletNode?: unknown })
+    .AudioWorkletNode
+  const originalurl = global.URL
 
   beforeEach(() => {
     global.MediaStream = jest.fn((tracks?: MediaStreamTrack[]) => ({
@@ -110,15 +114,35 @@ describe('WebBroadcastClient lifecycle', () => {
         }
         return canvas
       }),
+      hidden: false,
+      visibilityState: 'visible',
     } as unknown as Document
+
+    class MockAudioWorkletNode {
+      port = { onmessage: null as ((ev: MessageEvent) => void) | null }
+      connect = jest.fn()
+      disconnect = jest.fn()
+    }
+    ;(global as { AudioWorkletNode: unknown }).AudioWorkletNode =
+      MockAudioWorkletNode
+
+    global.URL.createObjectURL = jest.fn(() => 'blob:mock-worklet')
+    global.URL.revokeObjectURL = jest.fn()
 
     global.AudioContext = jest.fn().mockImplementation(() => ({
       state: 'running',
       resume: jest.fn(async () => {}),
       close: jest.fn(async () => {}),
+      destination: {},
+      audioWorklet: {
+        addModule: jest.fn(async () => {}),
+      },
       createConstantSource: () => ({
+        offset: { value: 0 },
         connect: jest.fn(),
+        disconnect: jest.fn(),
         start: jest.fn(),
+        stop: jest.fn(),
       }),
       createGain: () => ({
         gain: { value: 1 },
@@ -142,6 +166,10 @@ describe('WebBroadcastClient lifecycle', () => {
     global.cancelAnimationFrame = originalcaf
     global.document = originaldocument
     global.MediaStream = originalmediastream
+    global.AudioContext = originalaudiocontext
+    ;(global as { AudioWorkletNode?: unknown }).AudioWorkletNode =
+      originalaudioworkletnode
+    global.URL = originalurl
     jest.restoreAllMocks()
   })
 

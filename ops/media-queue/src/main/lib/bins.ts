@@ -16,10 +16,8 @@ function binpath(resourceroot: string, name: string): string {
   if (fs.existsSync(packagedbin)) {
     return packagedbin
   }
-  const staged = path.join(resourceroot, 'resources', 'bin', name)
-  if (fs.existsSync(staged)) {
-    return staged
-  }
+  // Unpackaged: vendor/ is what fetch-binaries refreshes. resources/bin is only
+  // electron-builder staging input, so preferring it pins dev to the last dist.
   return path.join(resourceroot, 'vendor', platformdir(), name)
 }
 

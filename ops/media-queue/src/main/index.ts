@@ -222,18 +222,35 @@ function wireipc(): void {
   handleinvoke('start_media_download', async (args) => {
     const url = String((args && args.url) || '')
     const allowlong = Boolean(args && args.allowlong)
-    return requiredownloads().startdownload(url, emitto, allowlong)
+    const audioonly = Boolean(args && args.audioonly)
+    return requiredownloads().startdownload(url, emitto, allowlong, audioonly)
   })
 
   handleinvoke('start_media_prep', async (args) => {
     const url = String((args && args.url) || '')
     const allowlong = Boolean(args && args.allowlong)
-    return requiredownloads().startprep(url, emitto, allowlong)
+    const audioonly = Boolean(args && args.audioonly)
+    return requiredownloads().startprep(url, emitto, allowlong, audioonly)
   })
 
   handleinvoke('probe_media_meta', async (args) => {
     const url = String((args && args.url) || '')
     return requiredownloads().probeduration(url)
+  })
+
+  handleinvoke('probe_media_batch', async (args) => {
+    const url = String((args && args.url) || '')
+    const count = Number((args && args.count) || 0)
+    return requiredownloads().probebatch(
+      url,
+      Math.max(Math.trunc(count), 0),
+      emitto,
+    )
+  })
+
+  handleinvoke('expand_media_playlist', async (args) => {
+    const url = String((args && args.url) || '')
+    return requiredownloads().expandplaylist(url)
   })
 
   handleinvoke('cancel_media_download', () => {

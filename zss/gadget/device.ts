@@ -26,6 +26,8 @@ export type DEVICE_DATA = {
   keyboardctrl: boolean
   keyboardshift: boolean
   showtouchcontrols: boolean
+  /** CRT post chain is mounted; content may need to pre-compensate for it. */
+  crtactive: boolean
   /** Tier A: hidden input + IME sync (strict touch-primary). */
   usemobiletextcapture: boolean
   /** Tier A capture textarea focused (soft keyboard / typing). */
@@ -50,6 +52,7 @@ export const useDeviceData = create<DEVICE_DATA>(() => ({
   keyboardctrl: false,
   keyboardshift: false,
   showtouchcontrols: false,
+  crtactive: false,
   usemobiletextcapture: false,
   textcapturefocused: false,
   touchpads: null,

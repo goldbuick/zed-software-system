@@ -55,7 +55,10 @@ export function runpanelpostpass(
   const bottom = Math.min(opts.bottom, context.height - 1)
   const fillc = context.panelcarrycolor ?? opts.defaultcolor
   const fillb = context.panelcarrybg ?? opts.defaultbg
-  const fillstart = context.y
+  // Remainder fill starts on the next empty row. Widgets that omit a trailing
+  // newline leave the pen on the content row (x past leftedge); do not wipe it.
+  const contentleft = context.reset.leftedge ?? 0
+  const fillstart = context.x > contentleft ? context.y + 1 : context.y
   const rightpad = context.width - 1
   let touched = false
   if (fillstart <= bottom) {

@@ -11,6 +11,8 @@ type WirePick = {
   frameW?: number
   frameH?: number
   packetsLost?: number
+  framesEncoded?: number
+  framesSent?: number
 }
 
 let wirepick: WirePick = {}
@@ -46,6 +48,8 @@ export type IvsBroadcastStatsSnapshot = {
   frameW?: number
   frameH?: number
   packetsLost?: number
+  framesEncoded?: number
+  framesSent?: number
   detail?: string
 }
 
@@ -53,8 +57,13 @@ function shallowpickwirestats(report: RTCStatsReport): WirePick {
   const out: WirePick = {}
   report.forEach((entry) => {
     const record = entry as unknown as Record<string, unknown>
+    const isvideooutbound =
+      record.type === 'outbound-rtp' &&
+      (record.kind === 'video' || record.mediaType === 'video')
     if (typeof record.bytesSent === 'number') {
-      out.bytesSent = record.bytesSent
+      if (isvideooutbound || out.bytesSent == null) {
+        out.bytesSent = record.bytesSent
+      }
     }
     if (typeof record.framesPerSecond === 'number') {
       out.fps = record.framesPerSecond
@@ -67,6 +76,12 @@ function shallowpickwirestats(report: RTCStatsReport): WirePick {
     }
     if (typeof record.packetsLost === 'number') {
       out.packetsLost = record.packetsLost
+    }
+    if (typeof record.framesEncoded === 'number' && isvideooutbound) {
+      out.framesEncoded = record.framesEncoded
+    }
+    if (typeof record.framesSent === 'number' && isvideooutbound) {
+      out.framesSent = record.framesSent
     }
   })
   return out
@@ -134,6 +149,8 @@ export function readIvsBroadcastStatsSnapshot(): IvsBroadcastStatsSnapshot | nul
       frameW: wirepick.frameW,
       frameH: wirepick.frameH,
       packetsLost: wirepick.packetsLost,
+      framesEncoded: wirepick.framesEncoded,
+      framesSent: wirepick.framesSent,
     }
   } catch {
     return {
