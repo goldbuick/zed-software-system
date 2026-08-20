@@ -91,6 +91,9 @@ export function hudphaselabel(phase: string, detail?: string): string {
   if (status === 'waiting' || status === 'waiting-for-url') {
     return 'media waiting'
   }
+  if (status === 'queue-probe') {
+    return 'media request'
+  }
   if (status === 'ready') {
     return 'media ready'
   }
@@ -121,7 +124,8 @@ function labelcolor(phase: string): string {
     phase === 'extracting' ||
     phase === 'transcoding' ||
     phase === 'buffering' ||
-    phase === 'download-progress'
+    phase === 'download-progress' ||
+    phase === 'queue-probe'
   ) {
     return YELLOW
   }

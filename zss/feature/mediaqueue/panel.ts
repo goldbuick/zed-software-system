@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { apierror, registercopy } from 'zss/device/api'
+import { apierror, apitoast, registercopy, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
@@ -174,12 +174,16 @@ export function handlemediapanel(
         apierror(SOFTWARE, player, 'media', 'submitter name missing')
         return
       }
-      mediaqueuesendtohelper({
+      const sent = mediaqueuesendtohelper({
         type: 'mediaqueue:add',
         url,
         player,
         name: displayname,
       })
+      if (sent) {
+        apitoast(SOFTWARE, player, `media requested: ${url}`)
+        workstatus(SOFTWARE, player, 'media request')
+      }
       break
     }
     case 'playlist': {
