@@ -21,6 +21,7 @@ const config: Config = {
     '^zss/perf/ui$': '<rootDir>/ops/lib/test/mocks/perfui.ts',
     '^zss/perf/ticktimingstats$':
       '<rootDir>/ops/lib/test/mocks/ticktimingstats.ts',
+    '^@react-three/fiber$': '<rootDir>/ops/lib/test/mocks/reactthreefiber.ts',
     '^ops/lib/daisy-parity/(.*)$': '<rootDir>/ops/lib/daisy-parity/$1',
     '^ops/lib/test/(.*)$': '<rootDir>/ops/lib/test/$1',
     '^ops/archive/(.*)$': '<rootDir>/ops/archive/$1',

@@ -1,3 +1,11 @@
+import { BroadcastFrameClock } from 'zss/feature/broadcast/broadcastframeclock'
+import type { BroadcastFrameStage } from 'zss/feature/broadcast/broadcastframeclock'
+import {
+  broadcasthiddendiagmarkraf,
+  broadcasthiddendiagmarkrequestframe,
+  broadcasthiddendiagstart,
+  broadcasthiddendiagstop,
+} from 'zss/feature/broadcast/broadcasthiddendiag'
 import { computedrawregion } from 'zss/feature/broadcast/webbroadcastdraw'
 import type {
   CanvasDimensions,
@@ -28,9 +36,8 @@ export class WebBroadcastCompositor {
   private readonly audiodestination: MediaStreamAudioDestinationNode
   private readonly videolayers: VideoLayer[] = []
   private readonly audiolayers: AudioLayer[] = []
+  private readonly frameclock = new BroadcastFrameClock()
   private running = false
-  private rafid = 0
-  private nextmix = 0
 
   constructor(streamconfig: StreamConfig) {
     this.streamconfig = streamconfig
@@ -52,6 +59,10 @@ export class WebBroadcastCompositor {
     this.audiocontext = new AudioContext()
     this.audiodestination = this.audiocontext.createMediaStreamDestination()
     this.setupsilence()
+    this.frameclock.setoncapture((now) => {
+      broadcasthiddendiagmarkraf()
+      this.drawcomposite(now)
+    })
   }
 
   private setupsilence() {
@@ -69,32 +80,31 @@ export class WebBroadcastCompositor {
     }
   }
 
-  start() {
+  setonrender(stage: BroadcastFrameStage | undefined) {
+    this.frameclock.setonrender(stage)
+  }
+
+  async start() {
     if (this.running) {
       return
     }
     this.running = true
-    this.nextmix = performance.now()
-    const tick = (now: number) => {
-      if (!this.running) {
-        return
-      }
-      this.drawcomposite(now)
-      this.rafid = requestAnimationFrame(tick)
-    }
-    this.rafid = requestAnimationFrame(tick)
+    void broadcasthiddendiagstart(this.audiocontext)
+    await this.frameclock.start(
+      this.audiocontext,
+      this.streamconfig.maxFramerate,
+    )
   }
 
   stop() {
     this.running = false
-    if (this.rafid) {
-      cancelAnimationFrame(this.rafid)
-      this.rafid = 0
-    }
+    broadcasthiddendiagstop()
+    this.frameclock.stop()
   }
 
   delete() {
     this.stop()
+    this.frameclock.delete()
     for (const layer of this.audiolayers) {
       layer.audiotracksource.disconnect()
       layer.gainnode.disconnect()
@@ -191,21 +201,7 @@ export class WebBroadcastCompositor {
     layer.gainnode.gain.value = Math.max(0, Math.min(1, gain))
   }
 
-  private shouldmix(now: number) {
-    if (now < this.nextmix) {
-      return false
-    }
-    const interval = 1000 / this.streamconfig.maxFramerate
-    while (this.nextmix <= now) {
-      this.nextmix += interval
-    }
-    return true
-  }
-
-  private drawcomposite(now: number) {
-    if (!this.shouldmix(now)) {
-      return
-    }
+  private drawcomposite(_now: number) {
     const { width, height } = this.compositeel
     this.compositecontext.clearRect(0, 0, width, height)
     this.compositecontext.fillStyle = '#000000'
@@ -248,6 +244,7 @@ export class WebBroadcastCompositor {
     }
     if (typeof stream.requestFrame === 'function') {
       stream.requestFrame()
+      broadcasthiddendiagmarkrequestframe()
       return
     }
     const track = this.getvideotrack()
@@ -257,6 +254,7 @@ export class WebBroadcastCompositor {
       typeof track.requestFrame === 'function'
     ) {
       track.requestFrame()
+      broadcasthiddendiagmarkrequestframe()
     }
   }
 }
