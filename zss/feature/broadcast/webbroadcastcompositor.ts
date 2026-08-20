@@ -59,9 +59,9 @@ export class WebBroadcastCompositor {
     this.audiocontext = new AudioContext()
     this.audiodestination = this.audiocontext.createMediaStreamDestination()
     this.setupsilence()
-    this.frameclock.setoncapture((now) => {
+    this.frameclock.setoncapture(() => {
       broadcasthiddendiagmarkraf()
-      this.drawcomposite(now)
+      this.drawcomposite()
     })
   }
 
@@ -201,7 +201,7 @@ export class WebBroadcastCompositor {
     layer.gainnode.gain.value = Math.max(0, Math.min(1, gain))
   }
 
-  private drawcomposite(_now: number) {
+  private drawcomposite() {
     const { width, height } = this.compositeel
     this.compositecontext.clearRect(0, 0, width, height)
     this.compositecontext.fillStyle = '#000000'

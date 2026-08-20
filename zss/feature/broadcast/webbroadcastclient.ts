@@ -140,7 +140,7 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
       throw new Error('web broadcast client: stream is already started')
     }
     await this.compositor.unlockaudio()
-    this.compositor.setonrender((_now) => {
+    this.compositor.setonrender(() => {
       broadcasthiddenrendertick()
     })
     await this.compositor.start()

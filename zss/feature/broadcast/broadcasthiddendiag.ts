@@ -145,8 +145,7 @@ function emitlog() {
   workerticks = 0
   const wire = wireframedeltas()
   const tickboards = tickboardsdelta()
-  const kbps =
-    wire.videokbps != null ? wire.videokbps.toFixed(1) : 'n/a'
+  const kbps = wire.videokbps != null ? wire.videokbps.toFixed(1) : 'n/a'
   // eslint-disable-next-line no-console -- dev-only broadcast visibility diagnosis
   console.log(
     `[zss broadcast diag] visibility=${visibility} hidden=${hidden}` +
