@@ -173,7 +173,8 @@ function mediaqueueapplyworkstatus(status: string, detail?: string) {
     status === 'playback-ended' ||
     status === 'queue-added' ||
     status === 'queue-pending' ||
-    status === 'queue-error'
+    status === 'queue-error' ||
+    status === 'queue-playlist'
   ) {
     workstatus(SOFTWARE, player, '')
     return
@@ -227,6 +228,10 @@ function handlequeuestatus(status: string, detail?: string) {
   }
   if (status === 'queue-pending') {
     toastlistenplayer(true, `needs approval: ${detail ?? ''}`.trim())
+    return
+  }
+  if (status === 'queue-playlist') {
+    toastlistenplayer(true, `playlist: ${detail ?? ''}`.trim())
     return
   }
   if (status === 'queue-approved') {

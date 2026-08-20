@@ -80,6 +80,16 @@ export type MQ_PROBE_META = {
   durationsec: number
 }
 
+export type MQ_PLAYLIST_ENTRY = {
+  url: string
+  title: string
+  durationsec: number
+}
+
+export type MQ_PLAYLIST_EXPAND =
+  | { kind: 'single' }
+  | { kind: 'playlist'; entries: MQ_PLAYLIST_ENTRY[] }
+
 /** Main -> renderer push channels. */
 export type MQ_EVENT_NAME =
   | 'mq-download-progress'
@@ -107,6 +117,7 @@ export type MQ_INVOKE_MAP = {
     result: MQ_JOB_STATE
   }
   probe_media_meta: { args: { url: string }; result: MQ_PROBE_META }
+  expand_media_playlist: { args: { url: string }; result: MQ_PLAYLIST_EXPAND }
   cancel_media_download: { args: void; result: MQ_DOWNLOAD_STATE }
   cancel_media_prep: { args: void; result: MQ_JOB_STATE }
   read_media_prep_state: { args: void; result: MQ_JOB_STATE }

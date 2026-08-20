@@ -236,6 +236,11 @@ function wireipc(): void {
     return requiredownloads().probeduration(url)
   })
 
+  handleinvoke('expand_media_playlist', async (args) => {
+    const url = String((args && args.url) || '')
+    return requiredownloads().expandplaylist(url)
+  })
+
   handleinvoke('cancel_media_download', () => {
     requiredownloads().canceldownload()
     return requiredownloads().readstate()

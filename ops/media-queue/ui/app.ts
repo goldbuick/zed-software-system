@@ -5,9 +5,11 @@ import type {
   MQ_INVOKE_COMMAND,
   MQ_INVOKE_MAP,
   MQ_JOB_STATE,
+  MQ_PLAYLIST_EXPAND,
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
 import { mqqueueneedspending } from '../src/shared/queue'
+import { mqurlisplaylistcontainer } from '../src/shared/urlnormalize'
 
 import { mqpeerserveroptions } from './peerserver'
 import {
@@ -30,7 +32,9 @@ import {
   helperqueueapplydisk,
   helperqueueapprove,
   helperqueueclear,
+  helperqueuecountplayer,
   helperqueuecurrenturl,
+  helperqueuelimit,
   helperqueuenexturl,
   helperqueuepend,
   helperqueuereaddisk,
@@ -1407,22 +1411,6 @@ function handlecafemessage(data: unknown) {
         const hudbefore = readhudstate()
         setlink('queue-probe', url)
         sendstatus('queue-probe', url)
-        let title = ''
-        let durationsec = 0
-        try {
-          const meta = await invoke('probe_media_meta', { url: url })
-          title = String(meta && meta.title ? meta.title : '').trim()
-          durationsec = Number(meta && meta.durationsec)
-        } catch (_) {
-          title = ''
-          durationsec = 0
-        }
-        const submittedat = Date.now()
-        const payload = {
-          title,
-          durationsec: Number.isFinite(durationsec) ? durationsec : 0,
-          submittedat,
-        }
         const restorehud = () => {
           if (downloadinflight) {
             return
@@ -1440,30 +1428,134 @@ function handlecafemessage(data: unknown) {
               : 'connected'
           setlink(phase, hudbefore.detail)
         }
-        if (mqqueueneedspending(payload.durationsec)) {
-          const result = helperqueuepend(player, name, url, payload)
+
+        const enqueueone = async (
+          entryurl: string,
+          fallbacktitle: string,
+        ): Promise<
+          | { kind: 'added' }
+          | { kind: 'pending' }
+          | { kind: 'limit' }
+          | { kind: 'error'; reason: string }
+        > => {
+          if (helperqueuecountplayer(player) >= helperqueuelimit()) {
+            return { kind: 'limit' }
+          }
+          let title = ''
+          let durationsec = 0
+          try {
+            const meta = await invoke('probe_media_meta', { url: entryurl })
+            title = String(meta && meta.title ? meta.title : '').trim()
+            durationsec = Number(meta && meta.durationsec)
+          } catch (_) {
+            title = ''
+            durationsec = 0
+          }
+          if (!title && fallbacktitle) {
+            title = fallbacktitle
+          }
+          const payload = {
+            title,
+            durationsec: Number.isFinite(durationsec) ? durationsec : 0,
+            submittedat: Date.now(),
+          }
+          if (mqqueueneedspending(payload.durationsec)) {
+            const result = helperqueuepend(player, name, entryurl, payload)
+            if (!result.ok) {
+              return result.reason === 'limit'
+                ? { kind: 'limit' }
+                : { kind: 'error', reason: result.reason }
+            }
+            return { kind: 'pending' }
+          }
+          const result = helperqueueadd(player, name, entryurl, payload)
           if (!result.ok) {
-            sendstatus('queue-error', result.reason)
+            return result.reason === 'limit'
+              ? { kind: 'limit' }
+              : { kind: 'error', reason: result.reason }
+          }
+          return { kind: 'added' }
+        }
+
+        const finishsingle = (
+          outcome: Awaited<ReturnType<typeof enqueueone>>,
+          entryurl: string,
+        ) => {
+          if (outcome.kind === 'added') {
+            sendstatus('queue-added', entryurl)
+            restorehud()
+            afterqueuemutate()
+            if (!playbackstarted) {
+              const current = helperqueuecurrenturl()
+              if (current) {
+                void maybeautostartaftergoto(current)
+              }
+            }
+            return
+          }
+          if (outcome.kind === 'pending') {
+            sendstatus('queue-pending', entryurl)
+            restorehud()
+            afterqueuemutate()
+            return
+          }
+          if (outcome.kind === 'limit') {
+            sendstatus('queue-error', 'limit')
             restorehud()
             sendqueuesnapshot()
             return
           }
-          sendstatus('queue-pending', url)
-          restorehud()
-          afterqueuemutate()
-          return
-        }
-        const result = helperqueueadd(player, name, url, payload)
-        if (!result.ok) {
-          sendstatus('queue-error', result.reason)
+          sendstatus('queue-error', outcome.reason)
           restorehud()
           sendqueuesnapshot()
+        }
+
+        if (!mqurlisplaylistcontainer(url)) {
+          const outcome = await enqueueone(url, '')
+          finishsingle(outcome, url)
           return
         }
-        sendstatus('queue-added', url)
+
+        let expanded: MQ_PLAYLIST_EXPAND = { kind: 'single' }
+        try {
+          expanded = await invoke('expand_media_playlist', { url })
+        } catch (_) {
+          expanded = { kind: 'single' }
+        }
+        if (expanded.kind !== 'playlist' || expanded.entries.length < 2) {
+          const outcome = await enqueueone(url, '')
+          finishsingle(outcome, url)
+          return
+        }
+
+        let added = 0
+        let pending = 0
+        let skipped = 0
+        for (let i = 0; i < expanded.entries.length; ++i) {
+          if (helperqueuecountplayer(player) >= helperqueuelimit()) {
+            skipped += expanded.entries.length - i
+            break
+          }
+          const entry = expanded.entries[i]
+          const outcome = await enqueueone(entry.url, entry.title)
+          if (outcome.kind === 'added') {
+            ++added
+          } else if (outcome.kind === 'pending') {
+            ++pending
+          } else if (outcome.kind === 'limit') {
+            skipped += expanded.entries.length - i
+            break
+          } else {
+            ++skipped
+          }
+        }
+        sendstatus(
+          'queue-playlist',
+          `added=${added} pending=${pending} skipped=${skipped}`,
+        )
         restorehud()
         afterqueuemutate()
-        if (!playbackstarted) {
+        if (!playbackstarted && added + pending > 0) {
           const current = helperqueuecurrenturl()
           if (current) {
             void maybeautostartaftergoto(current)

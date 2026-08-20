@@ -10,6 +10,7 @@ import {
   mqqueueapplydisk,
   mqqueueapprove,
   mqqueueclear,
+  mqqueuecountplayer,
   mqqueuecreate,
   mqqueuecurrenturl,
   mqqueuepend,
@@ -93,4 +94,12 @@ export function helperqueueclear(): void {
 
 export function helperqueuesetlimit(limit: number): number {
   return mqqueuesetlimit(helperqueue, limit)
+}
+
+export function helperqueuecountplayer(player: string): number {
+  return mqqueuecountplayer(helperqueue, player)
+}
+
+export function helperqueuelimit(): number {
+  return helperqueue.limit
 }

@@ -12,10 +12,14 @@ import type {
   MQ_EVENT_NAME,
   MQ_JOB_PHASE,
   MQ_JOB_STATE,
+  MQ_PLAYLIST_EXPAND,
   MQ_PROBE_META,
 } from '../../shared/ipc'
 import { MQ_MAX_DURATION_SEC } from '../../shared/queue'
-import { mqismusicyoutubeurl } from '../../shared/urlnormalize'
+import {
+  mqismusicyoutubeurl,
+  mqparseplaylistflatstdout,
+} from '../../shared/urlnormalize'
 
 import { ffmpegdir, resolvedeno, resolveffmpeg, resolveytdlp } from './bins'
 
@@ -114,8 +118,35 @@ type MQ_CLEAR_RESULT = {
   freedBytes: number
 }
 
-export const YTDLP_FORMAT =
-  'best[height<=720][vcodec^=avc][ext=mp4][acodec^=mp4a]/bestvideo[vcodec^=avc1][height<=720][ext=mp4]+bestaudio[acodec^=mp4a][ext=m4a]/bestvideo[vcodec^=avc][height<=720]+bestaudio/best[height<=720]'
+// YouTube reports avc1/mp4a, TikTok reports h264/aac -- both decode as h264+aac.
+const VCODEC_H264 = "vcodec~='^(avc|h264)'"
+const ACODEC_AAC = "acodec~='^(mp4a|aac)'"
+// Portrait sources (TikTok, Shorts) run 576x1024, so a height-only cap rejects
+// every video format and silently drops the job onto the audio-only ladder.
+// Cap whichever axis is the short side by trying both.
+const YTDLP_SIZE_CAPS = ['height<=720', 'width<=720']
+
+function ytdlpformatladder(cap: string): string[] {
+  return [
+    `best[${cap}][${VCODEC_H264}][ext=mp4][${ACODEC_AAC}]`,
+    `bestvideo[${cap}][${VCODEC_H264}][ext=mp4]+bestaudio[${ACODEC_AAC}][ext=m4a]`,
+    `bestvideo[${cap}][${VCODEC_H264}]+bestaudio`,
+    `best[${cap}]`,
+  ]
+}
+
+function buildytdlpformat(): string {
+  const ladders = YTDLP_SIZE_CAPS.map(ytdlpformatladder)
+  const branches: string[] = []
+  for (let tier = 0; tier < ladders[0].length; tier += 1) {
+    for (let i = 0; i < ladders.length; i += 1) {
+      branches.push(ladders[i][tier])
+    }
+  }
+  return branches.join('/')
+}
+
+export const YTDLP_FORMAT = buildytdlpformat()
 export const YTDLP_AUDIO_FORMAT =
   'bestaudio[ext=m4a]/bestaudio[acodec^=mp4a]/bestaudio'
 export const SOUNDCLOUD_FORMATS_AAC =
@@ -707,6 +738,29 @@ export function buildytdlpprobeargs(ctx: MQ_YTDLP_CTX): string[] {
     'title',
     '--print',
     'duration',
+    ctx.url,
+  )
+  return args
+}
+
+const MQ_PLAYLIST_EXPAND_TIMEOUT_MS = 90_000
+
+/** Flat playlist listing: webpage_url, url, id, title, duration (tab-separated). */
+export function buildytdlpplaylistargs(ctx: MQ_YTDLP_CTX): string[] {
+  const args: string[] = []
+  applyytdlpbaseargs(
+    args,
+    ctx.jspath,
+    ctx.ytdlphome,
+    ctx.attempt,
+    SOUNDCLOUD_FORMATS_AAC,
+  )
+  applyytdlpcookies(args, ctx.cookiesbrowser)
+  args.push(
+    '--flat-playlist',
+    '--skip-download',
+    '--print',
+    '%(webpage_url)s\t%(url)s\t%(id)s\t%(title)s\t%(duration)s',
     ctx.url,
   )
   return args
@@ -1387,6 +1441,67 @@ export class DownloadManager {
         settled = true
         clearTimeout(timer)
         resolve(empty)
+      })
+    })
+  }
+
+  async expandplaylist(url: string): Promise<MQ_PLAYLIST_EXPAND> {
+    const single: MQ_PLAYLIST_EXPAND = { kind: 'single' }
+    const trimmed = String(url || '').trim()
+    if (!trimmed) {
+      return single
+    }
+    const bins = this.resolvebinaries()
+    const ctx: MQ_YTDLP_CTX = {
+      ytdlp: bins.ytdlp,
+      jspath: bins.jspath,
+      ytdlphome: this.ytdlphome,
+      ffdir: bins.ffdir,
+      cachedir: this.cachedir,
+      attempt: 1,
+      cookiesbrowser: this.cookiesbrowser,
+      url: trimmed,
+    }
+    const args = buildytdlpplaylistargs(ctx)
+    return await new Promise((resolve) => {
+      const child = spawn(ctx.ytdlp, args, {
+        cwd: ctx.cachedir,
+        env: { ...process.env, XDG_CACHE_HOME: ctx.ytdlphome },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      let stdout = ''
+      let settled = false
+      const timer = setTimeout(() => {
+        if (settled) {
+          return
+        }
+        settled = true
+        child.kill()
+        resolve(single)
+      }, MQ_PLAYLIST_EXPAND_TIMEOUT_MS)
+      child.stdout?.on('data', (chunk: Buffer | string) => {
+        stdout += String(chunk)
+      })
+      child.on('close', () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        const entries = mqparseplaylistflatstdout(stdout, trimmed)
+        if (entries.length < 2) {
+          resolve(single)
+          return
+        }
+        resolve({ kind: 'playlist', entries })
+      })
+      child.on('error', () => {
+        if (settled) {
+          return
+        }
+        settled = true
+        clearTimeout(timer)
+        resolve(single)
       })
     })
   }

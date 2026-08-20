@@ -19,7 +19,10 @@ import {
 } from 'ops/media-queue/src/shared/queue'
 import {
   mqismusicyoutubeurl,
+  mqparseplaylistflatstdout,
+  mqplaylistentryurl,
   mqqueuenormalizeurl,
+  mqurlisplaylistcontainer,
 } from 'ops/media-queue/src/shared/urlnormalize'
 
 describe('helper queue owner', () => {
@@ -194,5 +197,84 @@ describe('helper url normalize', () => {
     expect(mqismusicyoutubeurl('https://www.youtube.com/watch?v=abc123')).toBe(
       false,
     )
+  })
+})
+
+describe('mqurlisplaylistcontainer', () => {
+  it('expands youtube playlist pages and list-only urls', () => {
+    expect(
+      mqurlisplaylistcontainer(
+        'https://www.youtube.com/playlist?list=PLabc123',
+      ),
+    ).toBe(true)
+    expect(
+      mqurlisplaylistcontainer('https://www.youtube.com/watch?list=PLabc123'),
+    ).toBe(true)
+  })
+
+  it('keeps watch and watch+list as single items', () => {
+    expect(
+      mqurlisplaylistcontainer('https://www.youtube.com/watch?v=abc123'),
+    ).toBe(false)
+    expect(
+      mqurlisplaylistcontainer(
+        'https://www.youtube.com/watch?v=abc123&list=PLabc123',
+      ),
+    ).toBe(false)
+    expect(
+      mqurlisplaylistcontainer('https://youtu.be/abc123?list=PLabc123'),
+    ).toBe(false)
+    expect(
+      mqurlisplaylistcontainer('https://www.youtube.com/shorts/abc123xyz'),
+    ).toBe(false)
+  })
+
+  it('expands soundcloud sets but not tracks', () => {
+    expect(
+      mqurlisplaylistcontainer('https://soundcloud.com/artist/sets/my-set'),
+    ).toBe(true)
+    expect(
+      mqurlisplaylistcontainer('https://soundcloud.com/artist/cool-track'),
+    ).toBe(false)
+  })
+})
+
+describe('mqparseplaylistflatstdout', () => {
+  const playlist = 'https://www.youtube.com/playlist?list=PLabc123'
+
+  it('parses multi-entry flat lines and builds watch urls from ids', () => {
+    const stdout = [
+      'NA\tNA\tidAAA111\tFirst\t120',
+      'https://www.youtube.com/watch?v=idBBB222\tidBBB222\tidBBB222\tSecond\tNA',
+    ].join('\n')
+    const entries = mqparseplaylistflatstdout(stdout, playlist)
+    expect(entries).toEqual([
+      {
+        url: 'https://www.youtube.com/watch?v=idAAA111',
+        title: 'First',
+        durationsec: 120,
+      },
+      {
+        url: 'https://www.youtube.com/watch?v=idBBB222',
+        title: 'Second',
+        durationsec: 0,
+      },
+    ])
+  })
+
+  it('skips rows with no resolvable url', () => {
+    expect(
+      mqparseplaylistflatstdout('NA\tNA\tNA\tNope\t1\n', playlist),
+    ).toEqual([])
+    expect(mqplaylistentryurl('NA', 'NA', '', playlist)).toBe('')
+  })
+
+  it('returns one entry for a single line', () => {
+    const entries = mqparseplaylistflatstdout(
+      'https://www.youtube.com/watch?v=only1\tonly1\tonly1\tSolo\t30\n',
+      playlist,
+    )
+    expect(entries).toHaveLength(1)
+    expect(entries[0].url).toContain('only1')
   })
 })

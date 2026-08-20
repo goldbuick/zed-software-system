@@ -87,6 +87,20 @@ describe('yt-dlp format try ladder', () => {
     expect(args).toContain('duration <= 600')
   })
 
+  it('caps the short axis so portrait sources still match a video format', () => {
+    const branches = YTDLP_FORMAT.split('/')
+    expect(branches.some((branch) => branch.includes('height<=720'))).toBe(true)
+    expect(branches.some((branch) => branch.includes('width<=720'))).toBe(true)
+    for (let i = 0; i < branches.length; i += 1) {
+      expect(branches[i]).toMatch(/(width|height)<=720/)
+    }
+  })
+
+  it('matches avc1 and h264 codec namings', () => {
+    expect(YTDLP_FORMAT).toContain("vcodec~='^(avc|h264)'")
+    expect(YTDLP_FORMAT).toContain("acodec~='^(mp4a|aac)'")
+  })
+
   it('skips video tries for YouTube Music urls', () => {
     const tries = ytdlpformattriesforurl(
       'https://music.youtube.com/watch?v=abc123',

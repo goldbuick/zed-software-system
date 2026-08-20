@@ -31,7 +31,7 @@ type YTDLP_ASSET = {
 
 const root = MQ_ROOT
 
-const YTDLP_VERSION = '2026.07.04'
+const YTDLP_VERSION = '2026.08.19'
 const DENO_VERSION = 'v2.3.3'
 
 function platformkey(
