@@ -51,8 +51,25 @@ describe('panel.ts split', () => {
     expect(src).toContain('showqueuemenu')
     expect(src).toContain('mediaqueue:approve')
     expect(src).toContain('registercopy')
+    expect(src).toContain('media requested:')
+    expect(src).toContain("workstatus(SOFTWARE, player, 'media request')")
     expect(src).not.toContain('usage: #media add')
     expect(src).not.toContain('usage: #media limit')
+  })
+})
+
+describe('receive.ts status UX', () => {
+  it('toasts on helper accept and drives workstatus from progress', () => {
+    const src = readFileSync(
+      join(process.cwd(), 'zss/feature/mediaqueue/receive.ts'),
+      'utf8',
+    )
+    expect(src).toContain('mediaqueueapplyworkstatus')
+    expect(src).toContain('mediaqueuestatusworklabel')
+    expect(src).toContain("workstatus(SOFTWARE, player, '')")
+    expect(src).toContain("status === 'queue-added'")
+    expect(src).toContain('apitoast')
+    expect(src).toContain('media added:')
   })
 })
 

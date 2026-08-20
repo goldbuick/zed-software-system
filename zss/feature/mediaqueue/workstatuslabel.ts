@@ -3,6 +3,9 @@ export function mediaqueuestatusworklabel(
   status: string,
   detail?: string,
 ): string {
+  if (status === 'queue-probe') {
+    return 'media request'
+  }
   if (status === 'downloading') {
     return 'media fetch'
   }

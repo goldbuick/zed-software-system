@@ -1404,6 +1404,9 @@ function handlecafemessage(data: unknown) {
       const player = String(msg.player || '')
       const name = String(msg.name || '')
       void (async () => {
+        const hudbefore = readhudstate()
+        setlink('queue-probe', url)
+        sendstatus('queue-probe', url)
         let title = ''
         let durationsec = 0
         try {
@@ -1420,24 +1423,45 @@ function handlecafemessage(data: unknown) {
           durationsec: Number.isFinite(durationsec) ? durationsec : 0,
           submittedat,
         }
+        const restorehud = () => {
+          if (downloadinflight) {
+            return
+          }
+          if (playbackstarted) {
+            setlink(
+              'playing',
+              playbacklabel(currentplaybacktitle, currentplaybackurl, ''),
+            )
+            return
+          }
+          const phase =
+            hudbefore.phase && hudbefore.phase !== 'queue-probe'
+              ? hudbefore.phase
+              : 'connected'
+          setlink(phase, hudbefore.detail)
+        }
         if (mqqueueneedspending(payload.durationsec)) {
           const result = helperqueuepend(player, name, url, payload)
           if (!result.ok) {
             sendstatus('queue-error', result.reason)
+            restorehud()
             sendqueuesnapshot()
             return
           }
           sendstatus('queue-pending', url)
+          restorehud()
           afterqueuemutate()
           return
         }
         const result = helperqueueadd(player, name, url, payload)
         if (!result.ok) {
           sendstatus('queue-error', result.reason)
+          restorehud()
           sendqueuesnapshot()
           return
         }
         sendstatus('queue-added', url)
+        restorehud()
         afterqueuemutate()
         if (!playbackstarted) {
           const current = helperqueuecurrenturl()

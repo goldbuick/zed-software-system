@@ -315,6 +315,7 @@ describe('mediaqueue board tv', () => {
 
 describe('mediaqueue workstatus labels', () => {
   it('maps helper status to badge text', () => {
+    expect(mediaqueuestatusworklabel('queue-probe')).toBe('media request')
     expect(mediaqueuestatusworklabel('downloading')).toBe('media fetch')
     expect(mediaqueuestatusworklabel('extracting')).toBe('media extract')
     expect(mediaqueuestatusworklabel('download-progress', '42|1:23')).toBe(
