@@ -9,6 +9,7 @@ import {
   mqqueueallowlongforurl,
   mqqueueapplydisk,
   mqqueueapprove,
+  mqqueueaudioonlyforurl,
   mqqueueclear,
   mqqueuecountplayer,
   mqqueuecreate,
@@ -47,6 +48,10 @@ export function helperqueueurls(): string[] {
 
 export function helperqueueallowlong(url: string): boolean {
   return mqqueueallowlongforurl(helperqueue, url)
+}
+
+export function helperqueueaudioonly(url: string): boolean {
+  return mqqueueaudioonlyforurl(helperqueue, url)
 }
 
 export function helperqueuenexturl(): string {

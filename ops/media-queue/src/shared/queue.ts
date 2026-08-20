@@ -15,6 +15,8 @@ export type MQ_QUEUE_ENTRY = {
   durationsec: number
   submittedat: number
   allowlong: boolean
+  /** Video track is a still frame, so fetch audio only. */
+  audioonly: boolean
 }
 
 export type MQ_QUEUE_META = {
@@ -22,6 +24,7 @@ export type MQ_QUEUE_META = {
   durationsec?: number
   submittedat?: number
   allowlong?: boolean
+  audioonly?: boolean
 }
 
 export type MQ_QUEUE_SNAPSHOT = {
@@ -49,6 +52,7 @@ export type MQ_QUEUE_DISK = {
   durations: number[]
   submittedats: number[]
   allowlongs: boolean[]
+  audioonlys: boolean[]
   index: number
   limit: number
   pendingurls: string[]
@@ -90,6 +94,7 @@ export function mqqueuedefault(): MQ_QUEUE_DISK {
     durations: [],
     submittedats: [],
     allowlongs: [],
+    audioonlys: [],
     index: 0,
     limit: MQ_DEFAULT_PER_PLAYER_LIMIT,
     pendingurls: [],
@@ -172,6 +177,7 @@ function mqqueueentry(
         ? Math.floor(submittedat)
         : Date.now(),
     allowlong: meta?.allowlong === true,
+    audioonly: meta?.audioonly === true,
   }
 }
 
@@ -183,6 +189,7 @@ function mqqueueentriesfromdisk(
   durations: number[],
   submittedats: number[],
   allowlongs: boolean[],
+  audioonlys: boolean[],
   startindex: number,
 ): MQ_QUEUE_ENTRY[] {
   const entries: MQ_QUEUE_ENTRY[] = []
@@ -197,6 +204,7 @@ function mqqueueentriesfromdisk(
         durationsec: durations[i],
         submittedat: submittedats[i],
         allowlong: allowlongs[i] === true,
+        audioonly: audioonlys[i] === true,
       }),
     )
   }
@@ -215,6 +223,7 @@ export function mqqueueparsedisk(raw: unknown): MQ_QUEUE_DISK {
   const durations = asnumberarray(data.durations, urls.length)
   const submittedats = asnumberarray(data.submittedats, urls.length)
   const allowlongs = asbooleanarray(data.allowlongs, urls.length)
+  const audioonlys = asbooleanarray(data.audioonlys, urls.length)
   const pendingurls = asstringarray(data.pendingurls)
   const pendingnames = padstrings(
     asstringarray(data.pendingnames),
@@ -265,6 +274,7 @@ export function mqqueueparsedisk(raw: unknown): MQ_QUEUE_DISK {
     durations,
     submittedats,
     allowlongs,
+    audioonlys,
     index: urls.length === 0 ? 0 : Math.min(index, urls.length - 1),
     limit,
     pendingurls,
@@ -298,6 +308,7 @@ export function mqqueueapplydisk(queue: MQ_QUEUE, disk: MQ_QUEUE_DISK): void {
     disk.durations,
     disk.submittedats,
     disk.allowlongs,
+    disk.audioonlys,
     disk.index,
   )
   queue.pending = mqqueueentriesfromdisk(
@@ -308,6 +319,7 @@ export function mqqueueapplydisk(queue: MQ_QUEUE, disk: MQ_QUEUE_DISK): void {
     disk.pendingdurations,
     disk.pendingsubmittedats,
     disk.pendingurls.map(() => false),
+    disk.pendingurls.map(() => false),
     0,
   )
   queue.played = mqqueueentriesfromdisk(
@@ -317,6 +329,7 @@ export function mqqueueapplydisk(queue: MQ_QUEUE, disk: MQ_QUEUE_DISK): void {
     disk.playedtitles,
     disk.playedurls.map(() => 0),
     disk.playedsubmittedats,
+    disk.playedurls.map(() => false),
     disk.playedurls.map(() => false),
     0,
   )
@@ -332,6 +345,7 @@ export function mqqueuereaddisk(queue: MQ_QUEUE): MQ_QUEUE_DISK {
     durations: queue.entries.map((entry) => entry.durationsec),
     submittedats: queue.entries.map((entry) => entry.submittedat),
     allowlongs: queue.entries.map((entry) => entry.allowlong),
+    audioonlys: queue.entries.map((entry) => entry.audioonly),
     index: 0,
     limit: queue.limit,
     pendingurls: queue.pending.map((entry) => entry.url),
@@ -385,6 +399,12 @@ export function mqqueueallowlongforurl(queue: MQ_QUEUE, url: string): boolean {
   const key = mqqueuenormalizeurl(url)
   const entry = queue.entries.find((item) => item.key === key)
   return entry?.allowlong === true
+}
+
+export function mqqueueaudioonlyforurl(queue: MQ_QUEUE, url: string): boolean {
+  const key = mqqueuenormalizeurl(url)
+  const entry = queue.entries.find((item) => item.key === key)
+  return entry?.audioonly === true
 }
 
 function mqqueuehaskey(queue: MQ_QUEUE, key: string): boolean {

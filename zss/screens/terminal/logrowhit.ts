@@ -1,3 +1,4 @@
+import type { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import {
   type TextEdge,
   readpinrowycoords,
@@ -16,13 +17,16 @@ export function findterminalrowindexforcursor(args: {
   sessionlogs: string[]
   maxwidth: number
   edge: TextEdge
+  mode: TERMINAL_MODE
 }): number | undefined {
-  const { tapeycursor, scroll, pinlines, sessionlogs, maxwidth, edge } = args
+  const { tapeycursor, scroll, pinlines, sessionlogs, maxwidth, edge, mode } =
+    args
   const layout = readterminallayout({
     pinlines,
     sessionlogs,
     maxwidth,
     edge,
+    mode,
   })
   const drawpinstarty = readstickypinstarty(
     layout.naturalpinstarty,

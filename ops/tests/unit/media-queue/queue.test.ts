@@ -20,9 +20,11 @@ import {
 import {
   mqismusicyoutubeurl,
   mqparseplaylistflatstdout,
+  mqparseprobebatchstdout,
   mqplaylistentryurl,
   mqqueuenormalizeurl,
   mqurlisplaylistcontainer,
+  mqurlwantscookies,
 } from 'ops/media-queue/src/shared/urlnormalize'
 
 describe('helper queue owner', () => {
@@ -250,11 +252,13 @@ describe('mqparseplaylistflatstdout', () => {
     const entries = mqparseplaylistflatstdout(stdout, playlist)
     expect(entries).toEqual([
       {
+        id: 'idAAA111',
         url: 'https://www.youtube.com/watch?v=idAAA111',
         title: 'First',
         durationsec: 120,
       },
       {
+        id: 'idBBB222',
         url: 'https://www.youtube.com/watch?v=idBBB222',
         title: 'Second',
         durationsec: 0,
@@ -278,3 +282,82 @@ describe('mqparseplaylistflatstdout', () => {
     expect(entries[0].url).toContain('only1')
   })
 })
+
+describe('mqurlwantscookies', () => {
+  it('is true for youtube hosts', () => {
+    expect(mqurlwantscookies('https://youtu.be/abc')).toBe(true)
+    expect(mqurlwantscookies('https://www.youtube.com/watch?v=abc')).toBe(true)
+    expect(mqurlwantscookies('https://music.youtube.com/watch?v=abc')).toBe(true)
+  })
+
+  it('is false for soundcloud and junk', () => {
+    expect(mqurlwantscookies('https://soundcloud.com/kimpetras/demons')).toBe(
+      false,
+    )
+    expect(mqurlwantscookies('not a url')).toBe(false)
+    expect(mqurlwantscookies('')).toBe(false)
+  })
+})
+
+describe('mqparseprobebatchstdout', () => {
+  it('parses id, canonical url, title, duration and video shape', () => {
+    // Audio-only hosts print NA for the video fields.
+    const stdout = [
+      '686180068\thttps://soundcloud.com/kimpetras/everybody-dies\tEverybody Dies\t30.0\tNA\tNA\t0',
+      'LC_BUIpYIso\thttps://www.youtube.com/watch?v=LC_BUIpYIso\tPurgatory\t165.0\t1080\t1080\t48.822',
+    ].join('\n')
+    expect(mqparseprobebatchstdout(stdout)).toEqual([
+      {
+        id: '686180068',
+        url: 'https://soundcloud.com/kimpetras/everybody-dies',
+        title: 'Everybody Dies',
+        durationsec: 30,
+        width: 0,
+        height: 0,
+        vbrkbps: 0,
+      },
+      {
+        id: 'LC_BUIpYIso',
+        url: 'https://www.youtube.com/watch?v=LC_BUIpYIso',
+        title: 'Purgatory',
+        durationsec: 165,
+        width: 1080,
+        height: 1080,
+        vbrkbps: 48.822,
+      },
+    ])
+  })
+
+  it('parses a single line on its own', () => {
+    // The scan reports progress per line as yt-dlp prints it, so each line has
+    // to stand alone rather than needing the whole stdout buffer.
+    expect(
+      mqparseprobebatchstdout(
+        'LC_BUIpYIso\thttps://www.youtube.com/watch?v=LC_BUIpYIso\tPurgatory\t165.0\t1080\t1080\t48.822',
+      ),
+    ).toHaveLength(1)
+  })
+
+  it('joins a flat api url entry back by id', () => {
+    // SoundCloud flat listings report api-v2 urls for some entries while the
+    // metadata pass reports the permalink, so only the id lines them up.
+    const flat = mqparseplaylistflatstdout(
+      'https://api-v2.soundcloud.com/tracks/911128207\thttps://api-v2.soundcloud.com/tracks/911128207\t911128207\tNA\tNA\n',
+      'https://soundcloud.com/kimpetras/sets/turn-off-the-light-9',
+    )
+    const batch = mqparseprobebatchstdout(
+      '911128207\thttps://soundcloud.com/kimpetras/party-till-i-die\tParty Till I Die\t30.0\n',
+    )
+    expect(flat[0].id).toBe('911128207')
+    expect(mqqueuenormalizeurl(flat[0].url)).not.toBe(
+      mqqueuenormalizeurl(batch[0].url),
+    )
+    expect(batch[0].id).toBe(flat[0].id)
+  })
+
+  it('treats NA fields as empty and skips rows with no id or url', () => {
+    expect(mqparseprobebatchstdout('NA\tNA\tNA\tNA\n')).toEqual([])
+    expect(mqparseprobebatchstdout('\n \n')).toEqual([])
+  })
+})
+

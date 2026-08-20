@@ -78,17 +78,56 @@ export type MQ_PEER_ID = {
 export type MQ_PROBE_META = {
   title: string
   durationsec: number
+  /** True when extraction itself failed (DRM, private, geo-block, deleted). */
+  failed: boolean
+  /** Compact reason for the tape when failed is true. */
+  error: string
+  /** True when the video track is a still frame, so only audio is worth fetching. */
+  audioonly: boolean
 }
 
 export type MQ_PLAYLIST_ENTRY = {
+  /** Extractor-native id, used to join batch metadata back to this entry. */
+  id: string
   url: string
   title: string
   durationsec: number
 }
 
+export type MQ_PROBE_BATCH_ENTRY = {
+  id: string
+  /** Canonical page url -- flat listings sometimes only carry an api url. */
+  url: string
+  title: string
+  durationsec: number
+  /** True when the video track is a still frame, so only audio is worth fetching. */
+  audioonly: boolean
+}
+
+/**
+ * Metadata for the leading entries of a playlist, read in one yt-dlp pass.
+ * yt-dlp prints nothing for an entry it cannot extract, so an entry absent
+ * from `entries` is unplayable and takes `error` as its reason.
+ */
+export type MQ_PROBE_BATCH = {
+  entries: MQ_PROBE_BATCH_ENTRY[]
+  error: string
+}
+
 export type MQ_PLAYLIST_EXPAND =
   | { kind: 'single' }
   | { kind: 'playlist'; entries: MQ_PLAYLIST_ENTRY[] }
+
+/**
+ * One resolved playlist entry during the batch metadata scan. yt-dlp prints a
+ * line per entry as it reads it, so these arrive while the scan is still running.
+ */
+export type MQ_PROBE_PROGRESS = {
+  /** 1-based count of entries resolved so far. */
+  index: number
+  total: number
+  entry: MQ_PROBE_BATCH_ENTRY
+}
 
 /** Main -> renderer push channels. */
 export type MQ_EVENT_NAME =
@@ -98,6 +137,7 @@ export type MQ_EVENT_NAME =
   | 'mq-prep-progress'
   | 'mq-prep-ready'
   | 'mq-prep-error'
+  | 'mq-probe-progress'
 
 /** Emit callback handed to DownloadManager so it can push job updates. */
 export type MQ_EMIT = (event: MQ_EVENT_NAME, payload: unknown) => void
@@ -109,14 +149,18 @@ export type MQ_INVOKE_MAP = {
   resize_main_window: { args: { contentHeight: number }; result: null }
   set_media_cookies_browser: { args: { browser: string }; result: string }
   start_media_download: {
-    args: { url: string; allowlong?: boolean }
+    args: { url: string; allowlong?: boolean; audioonly?: boolean }
     result: MQ_DOWNLOAD_STATE
   }
   start_media_prep: {
-    args: { url: string; allowlong?: boolean }
+    args: { url: string; allowlong?: boolean; audioonly?: boolean }
     result: MQ_JOB_STATE
   }
   probe_media_meta: { args: { url: string }; result: MQ_PROBE_META }
+  probe_media_batch: {
+    args: { url: string; count: number }
+    result: MQ_PROBE_BATCH
+  }
   expand_media_playlist: { args: { url: string }; result: MQ_PLAYLIST_EXPAND }
   cancel_media_download: { args: void; result: MQ_DOWNLOAD_STATE }
   cancel_media_prep: { args: void; result: MQ_JOB_STATE }

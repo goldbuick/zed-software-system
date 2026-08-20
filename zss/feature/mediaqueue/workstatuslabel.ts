@@ -4,6 +4,11 @@ export function mediaqueuestatusworklabel(
   detail?: string,
 ): string {
   if (status === 'queue-probe') {
+    // A playlist scan reports `index/total title`; a single add sends its url.
+    const scan = /^(\d+)\/(\d+)/.exec((detail ?? '').trim())
+    if (scan) {
+      return `media ${scan[1]}/${scan[2]}`
+    }
     return 'media request'
   }
   if (status === 'downloading') {

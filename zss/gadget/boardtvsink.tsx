@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { DoubleSide, Euler, VideoTexture } from 'three'
+import { Euler, VideoTexture } from 'three'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
@@ -10,6 +10,10 @@ import {
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   BOARD_TV_COLS,
+  BOARD_TV_CRT_VIDEO_CEILING,
+  BOARD_TV_CRT_VIDEO_SATURATION,
+  BOARD_TV_FLAT_VIDEO_CEILING,
+  BOARD_TV_FLAT_VIDEO_SATURATION,
   type BOARD_TV_LAYOUT,
   BOARD_TV_ROWS,
   boardtvisupright,
@@ -24,6 +28,8 @@ import {
 } from 'zss/gadget/boardtvgrid'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { useDeviceData } from 'zss/gadget/device'
+import { createboardtvvideomaterial } from 'zss/gadget/display/boardtvvideo'
 import { updateTexture } from 'zss/gadget/display/textures'
 import { useMedia } from 'zss/gadget/media'
 import { type TILE_DATA, useTiles } from 'zss/gadget/tiles'
@@ -59,6 +65,20 @@ function BoardTvPlane({
   z: number
   flipvertical: boolean
 }) {
+  const crtactive = useDeviceData((state) => state.crtactive)
+  const material = useMemo(() => createboardtvvideomaterial(), [])
+  useEffect(() => () => material.dispose(), [material])
+  useEffect(() => {
+    material.uniforms.map.value = texture
+  }, [material, texture])
+  useEffect(() => {
+    material.uniforms.ceiling.value = crtactive
+      ? BOARD_TV_CRT_VIDEO_CEILING
+      : BOARD_TV_FLAT_VIDEO_CEILING
+    material.uniforms.saturation.value = crtactive
+      ? BOARD_TV_CRT_VIDEO_SATURATION
+      : BOARD_TV_FLAT_VIDEO_SATURATION
+  }, [material, crtactive])
   return (
     <group
       position={[fit.centerx, fit.centery, z]}
@@ -66,9 +86,7 @@ function BoardTvPlane({
     >
       <mesh scale={[fit.width, fit.height, 1]}>
         <planeGeometry args={[1, 1]} />
-        {/* toneMapped: video texture should not pass through renderer tone mapping */}
-        {/* eslint-disable-next-line react/no-unknown-property -- three.js Material.toneMapped via R3F */}
-        <meshBasicMaterial map={texture} toneMapped={false} side={DoubleSide} />
+        <primitive object={material} attach="material" />
       </mesh>
     </group>
   )

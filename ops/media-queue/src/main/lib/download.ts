@@ -13,12 +13,17 @@ import type {
   MQ_JOB_PHASE,
   MQ_JOB_STATE,
   MQ_PLAYLIST_EXPAND,
+  MQ_PROBE_BATCH,
+  MQ_PROBE_BATCH_ENTRY,
   MQ_PROBE_META,
+  MQ_PROBE_PROGRESS,
 } from '../../shared/ipc'
 import { MQ_MAX_DURATION_SEC } from '../../shared/queue'
 import {
   mqismusicyoutubeurl,
   mqparseplaylistflatstdout,
+  mqparseprobebatchstdout,
+  mqurlwantscookies,
 } from '../../shared/urlnormalize'
 
 import { ffmpegdir, resolvedeno, resolveffmpeg, resolveytdlp } from './bins'
@@ -182,11 +187,36 @@ export const YTDLP_FORMAT_TRIES: readonly MQ_YTDLP_FORMAT_TRY[] = [
 ]
 export function ytdlpformattriesforurl(
   url: string,
+  audioonly = false,
 ): readonly MQ_YTDLP_FORMAT_TRY[] {
-  if (mqismusicyoutubeurl(url)) {
+  if (audioonly || mqismusicyoutubeurl(url)) {
     return YTDLP_FORMAT_TRIES.filter((entry) => entry.profile === 'audio')
   }
   return YTDLP_FORMAT_TRIES
+}
+
+/**
+ * Bits per pixel below which a "video" is really a still image -- album-art
+ * tracks, podcast uploads, anything that pairs one frame with audio.
+ * Measured: a 1080x1080 art track runs 0.04, a 1920x1080 video runs 2.5.
+ */
+const MQ_STATIC_FRAME_BITS_PER_PIXEL = 0.15
+
+/** True when the video stream is a still frame, so only the audio is worth fetching. */
+export function isstaticframevideo(
+  width: number,
+  height: number,
+  vbrkbps: number,
+): boolean {
+  const pixels = width * height
+  // No video stream at all (audio-only host); the ladder already handles it.
+  if (!Number.isFinite(pixels) || pixels <= 0) {
+    return false
+  }
+  if (!Number.isFinite(vbrkbps) || vbrkbps <= 0) {
+    return false
+  }
+  return (vbrkbps * 1000) / pixels < MQ_STATIC_FRAME_BITS_PER_PIXEL
 }
 const MQ_MEDIA_EXTENSIONS = new Set([
   '.mp4',
@@ -653,8 +683,8 @@ function applyytdlpdownloadargs(
   }
 }
 
-function applyytdlpcookies(args: string[], browser: string): void {
-  if (browser) {
+function applyytdlpcookies(args: string[], browser: string, url: string): void {
+  if (browser && mqurlwantscookies(url)) {
     args.push('--cookies-from-browser', browser)
   }
 }
@@ -682,7 +712,7 @@ export function buildytdlpargs(
     formattry.soundcloudformats,
   )
   applyytdlpdownloadargs(args, ctx.attempt, ctx.allowlong === true)
-  applyytdlpcookies(args, ctx.cookiesbrowser)
+  applyytdlpcookies(args, ctx.cookiesbrowser, ctx.url)
   if (formattry.profile === 'audio') {
     args.push('-f', formattry.format, '--force-overwrites')
     pushpostprocessorargs(args, FFMPEG_POST_ARGS_AUDIO)
@@ -720,6 +750,45 @@ export function buildytdlpargs(
 }
 
 const MQ_PROBE_TIMEOUT_MS = 45_000
+const MQ_PROBE_ERROR_MAX = 90
+
+function probefailure(error: string): MQ_PROBE_META {
+  return {
+    title: '',
+    durationsec: 0,
+    failed: true,
+    error,
+    audioonly: false,
+  }
+}
+
+/**
+ * One-line reason from yt-dlp stderr for the tape. Drops the
+ * `ERROR: [extractor] id:` prefix and the report-this-issue tail, and rewrites
+ * yt-dlp's generic "This video" -- it says that for SoundCloud audio too.
+ */
+export function probeerrormessage(stderr: string, code: number | null): string {
+  const lines = String(stderr || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const picked = lines.find((line) => line.includes('ERROR:')) ?? lines.pop()
+  if (!picked) {
+    return `probe failed with status ${code ?? -1}`
+  }
+  const text =
+    picked
+      .replace(/^ERROR:\s*/, '')
+      .replace(/^\[[^\]]+\]\s*/, '')
+      .replace(/^[\w-]+:\s*/, '')
+      .replace(/;\s*please report this issue.*$/i, '')
+      .replace(/^this video\b/i, 'this track')
+      .trim() || picked
+  if (text.length <= MQ_PROBE_ERROR_MAX) {
+    return text
+  }
+  return `${text.slice(0, MQ_PROBE_ERROR_MAX - 3)}...`
+}
 
 export function buildytdlpprobeargs(ctx: MQ_YTDLP_CTX): string[] {
   const args: string[] = []
@@ -730,7 +799,7 @@ export function buildytdlpprobeargs(ctx: MQ_YTDLP_CTX): string[] {
     ctx.attempt,
     SOUNDCLOUD_FORMATS_AAC,
   )
-  applyytdlpcookies(args, ctx.cookiesbrowser)
+  applyytdlpcookies(args, ctx.cookiesbrowser, ctx.url)
   args.push(
     '--no-playlist',
     '--skip-download',
@@ -738,6 +807,68 @@ export function buildytdlpprobeargs(ctx: MQ_YTDLP_CTX): string[] {
     'title',
     '--print',
     'duration',
+    '--print',
+    'width',
+    '--print',
+    'height',
+    '--print',
+    'vbr',
+    ctx.url,
+  )
+  return args
+}
+
+const MQ_PROBE_BATCH_BASE_MS = 30_000
+const MQ_PROBE_BATCH_PER_ENTRY_MS = 6_000
+const MQ_PROBE_BATCH_MAX_MS = 180_000
+
+function probebatchentries(stdout: string): MQ_PROBE_BATCH_ENTRY[] {
+  return mqparseprobebatchstdout(stdout).map((line) => ({
+    id: line.id,
+    url: line.url,
+    title: line.title,
+    durationsec: line.durationsec,
+    audioonly: isstaticframevideo(line.width, line.height, line.vbrkbps),
+  }))
+}
+
+/** Ceiling for the batch metadata pass; scales with how many entries it reads. */
+export function probebatchtimeoutms(count: number): number {
+  const scaled =
+    MQ_PROBE_BATCH_BASE_MS + Math.max(count, 1) * MQ_PROBE_BATCH_PER_ENTRY_MS
+  return Math.min(scaled, MQ_PROBE_BATCH_MAX_MS)
+}
+
+/**
+ * Metadata for the first `count` playlist entries in one pass:
+ * webpage_url, title, duration (tab-separated).
+ *
+ * One yt-dlp run reads a whole set roughly ten times faster than one run per
+ * track, and avoids the per-host throttling that made parallel single probes
+ * blow through MQ_PROBE_TIMEOUT_MS. `--ignore-errors` keeps the run going past
+ * entries that fail, so the playable ones still report.
+ */
+export function buildytdlpprobebatchargs(
+  ctx: MQ_YTDLP_CTX,
+  count: number,
+): string[] {
+  const args: string[] = []
+  applyytdlpbaseargs(
+    args,
+    ctx.jspath,
+    ctx.ytdlphome,
+    ctx.attempt,
+    SOUNDCLOUD_FORMATS_AAC,
+  )
+  applyytdlpcookies(args, ctx.cookiesbrowser, ctx.url)
+  args.push(
+    '--ignore-errors',
+    '--yes-playlist',
+    '-I',
+    `1:${Math.max(count, 1)}`,
+    '--skip-download',
+    '--print',
+    '%(id)s\t%(webpage_url)s\t%(title)s\t%(duration)s\t%(width)s\t%(height)s\t%(vbr)s',
     ctx.url,
   )
   return args
@@ -755,7 +886,7 @@ export function buildytdlpplaylistargs(ctx: MQ_YTDLP_CTX): string[] {
     ctx.attempt,
     SOUNDCLOUD_FORMATS_AAC,
   )
-  applyytdlpcookies(args, ctx.cookiesbrowser)
+  applyytdlpcookies(args, ctx.cookiesbrowser, ctx.url)
   args.push(
     '--flat-playlist',
     '--skip-download',
@@ -928,6 +1059,7 @@ export class DownloadManager {
   prepretryattempt: number
   prepemit: MQ_EMIT | null
   prepallowlong: boolean
+  prepaudioonly: boolean
 
   constructor(resourceroot: string, cachedir: string) {
     this.resourceroot = resourceroot
@@ -946,6 +1078,7 @@ export class DownloadManager {
     this.prepretryattempt = 0
     this.prepemit = null
     this.prepallowlong = false
+    this.prepaudioonly = false
     fs.mkdirSync(cachedir, { recursive: true })
     fs.mkdirSync(this.ytdlphome, { recursive: true })
   }
@@ -1146,7 +1279,7 @@ export class DownloadManager {
       if (this.prep.url !== url || this.prep.phase === 'ready') {
         return
       }
-      void this.startprep(url, emit, this.prepallowlong)
+      void this.startprep(url, emit, this.prepallowlong, this.prepaudioonly)
     }, delay)
   }
 
@@ -1261,6 +1394,7 @@ export class DownloadManager {
     url: string,
     emit: MQ_EMIT,
     allowlong = false,
+    audioonly = false,
   ): Promise<MQ_READY_PAYLOAD | null> {
     const trimmed = String(url || '').trim()
     if (!trimmed) {
@@ -1314,7 +1448,7 @@ export class DownloadManager {
       message: '',
       errlines: [],
     }
-    const formattries = ytdlpformattriesforurl(trimmed)
+    const formattries = ytdlpformattriesforurl(trimmed, audioonly)
     for (let ti = 0; ti < formattries.length; ti += 1) {
       if (job.cancelled) {
         break
@@ -1381,10 +1515,9 @@ export class DownloadManager {
   }
 
   async probeduration(url: string): Promise<MQ_PROBE_META> {
-    const empty: MQ_PROBE_META = { title: '', durationsec: 0 }
     const trimmed = String(url || '').trim()
     if (!trimmed) {
-      return empty
+      return probefailure('url required')
     }
     const bins = this.resolvebinaries()
     const ctx: MQ_YTDLP_CTX = {
@@ -1405,42 +1538,147 @@ export class DownloadManager {
         stdio: ['ignore', 'pipe', 'pipe'],
       })
       let stdout = ''
+      let stderr = ''
       let settled = false
-      const timer = setTimeout(() => {
+      let timer: ReturnType<typeof setTimeout> | null = null
+      const settle = (meta: MQ_PROBE_META) => {
         if (settled) {
           return
         }
         settled = true
+        if (timer) {
+          clearTimeout(timer)
+          timer = null
+        }
+        resolve(meta)
+      }
+      timer = setTimeout(() => {
         child.kill()
-        resolve(empty)
+        settle(probefailure('probe timed out'))
       }, MQ_PROBE_TIMEOUT_MS)
       child.stdout?.on('data', (chunk: Buffer | string) => {
         stdout += String(chunk)
       })
-      child.on('close', () => {
-        if (settled) {
+      child.stderr?.on('data', (chunk: Buffer | string) => {
+        stderr += String(chunk)
+      })
+      child.on('close', (code) => {
+        if (code !== 0) {
+          settle(probefailure(probeerrormessage(stderr, code)))
           return
         }
-        settled = true
-        clearTimeout(timer)
         const lines = stdout
           .split(/\r?\n/)
           .map((line) => line.trim())
           .filter(Boolean)
         const title = lines[0] || ''
         const durationsec = Number(lines[1])
-        resolve({
+        settle({
           title,
           durationsec: Number.isFinite(durationsec) ? durationsec : 0,
+          failed: false,
+          error: '',
+          audioonly: isstaticframevideo(
+            Number(lines[2]),
+            Number(lines[3]),
+            Number(lines[4]),
+          ),
         })
       })
-      child.on('error', () => {
+      child.on('error', (err: unknown) => {
+        settle(probefailure(err instanceof Error ? err.message : String(err)))
+      })
+    })
+  }
+
+  async probebatch(
+    url: string,
+    count: number,
+    emit: MQ_EMIT,
+  ): Promise<MQ_PROBE_BATCH> {
+    const trimmed = String(url || '').trim()
+    if (!trimmed || count < 1) {
+      return { entries: [], error: 'url required' }
+    }
+    const bins = this.resolvebinaries()
+    const ctx: MQ_YTDLP_CTX = {
+      ytdlp: bins.ytdlp,
+      jspath: bins.jspath,
+      ytdlphome: this.ytdlphome,
+      ffdir: bins.ffdir,
+      cachedir: this.cachedir,
+      attempt: 1,
+      cookiesbrowser: this.cookiesbrowser,
+      url: trimmed,
+    }
+    const args = buildytdlpprobebatchargs(ctx, count)
+    return await new Promise((resolve) => {
+      const child = spawn(ctx.ytdlp, args, {
+        cwd: ctx.cachedir,
+        env: { ...process.env, XDG_CACHE_HOME: ctx.ytdlphome },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      let stdout = ''
+      let stderr = ''
+      let partial = ''
+      let resolved = 0
+      let settled = false
+      let timer: ReturnType<typeof setTimeout> | null = null
+      const settle = (batch: MQ_PROBE_BATCH) => {
         if (settled) {
           return
         }
         settled = true
-        clearTimeout(timer)
-        resolve(empty)
+        if (timer) {
+          clearTimeout(timer)
+          timer = null
+        }
+        resolve(batch)
+      }
+      timer = setTimeout(() => {
+        child.kill()
+        // Keep whatever resolved before the ceiling; the rest report as unread.
+        settle({
+          entries: probebatchentries(stdout),
+          error: 'metadata scan timed out',
+        })
+      }, probebatchtimeoutms(count))
+      child.stdout?.on('data', (chunk: Buffer | string) => {
+        const text = String(chunk)
+        stdout += text
+        // yt-dlp prints a line the moment it resolves an entry, so report each
+        // one instead of leaving the queue silent for the whole scan.
+        partial += text
+        const split = partial.split(/\r?\n/)
+        partial = split.pop() ?? ''
+        for (const line of split) {
+          for (const entry of probebatchentries(line)) {
+            resolved += 1
+            emit('mq-probe-progress', {
+              index: resolved,
+              total: count,
+              entry,
+            } satisfies MQ_PROBE_PROGRESS)
+          }
+        }
+      })
+      child.stderr?.on('data', (chunk: Buffer | string) => {
+        stderr += String(chunk)
+      })
+      child.on('close', (code) => {
+        const entries = probebatchentries(stdout)
+        // --ignore-errors exits non-zero when any entry failed, so a bad code
+        // describes the missing entries rather than the run as a whole.
+        const error = stderr.includes('ERROR:')
+          ? probeerrormessage(stderr, code)
+          : ''
+        settle({ entries, error })
+      })
+      child.on('error', (err: unknown) => {
+        settle({
+          entries: [],
+          error: err instanceof Error ? err.message : String(err),
+        })
       })
     })
   }
@@ -1510,6 +1748,7 @@ export class DownloadManager {
     url: string,
     emit: MQ_EMIT,
     allowlong = false,
+    audioonly = false,
   ): Promise<MQ_DOWNLOAD_STATE> {
     const trimmed = String(url || '').trim()
     if (this.prep.url === trimmed) {
@@ -1524,7 +1763,7 @@ export class DownloadManager {
     this.playback.errorevent = 'mq-download-error'
 
     const run = async (): Promise<void> => {
-      await this.runjobdownload(this.playback, url, emit, allowlong)
+      await this.runjobdownload(this.playback, url, emit, allowlong, audioonly)
     }
 
     this.playback.activethread = run().catch((err: unknown) => {
@@ -1543,6 +1782,7 @@ export class DownloadManager {
     url: string,
     emit: MQ_EMIT,
     allowlong = false,
+    audioonly = false,
   ): Promise<MQ_JOB_STATE> {
     const trimmed = String(url || '').trim()
     if (!trimmed) {
@@ -1570,6 +1810,7 @@ export class DownloadManager {
 
     this.prepemit = emit
     this.prepallowlong = allowlong
+    this.prepaudioonly = audioonly
     this.clearprepretry()
     resetjob(this.prep)
     this.prep.url = trimmed
@@ -1583,6 +1824,7 @@ export class DownloadManager {
         trimmed,
         emit,
         allowlong,
+        audioonly,
       )
       if (jobcancelled(this.prep)) {
         return
