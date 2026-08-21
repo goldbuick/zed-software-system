@@ -11,8 +11,8 @@ import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   mediaqueueclearboardhelper,
   mediaqueueclearlistenstate,
-  mediaqueuehelperconnected,
   mediaqueuehasanybind,
+  mediaqueuehelperconnected,
   mediaqueueislistening,
   mediaqueuereadboardsforhelper,
   mediaqueuereadboundboardids,
@@ -72,11 +72,7 @@ function helperdatalinkup(peerid: string): boolean {
     return false
   }
   const conn = helperconnections.get(trimmed)
-  return (
-    mediaqueuehelperconnected(trimmed) &&
-    ispresent(conn) &&
-    conn.open
-  )
+  return mediaqueuehelperconnected(trimmed) && ispresent(conn) && conn.open
 }
 
 export function mediaqueuehelperdatalinkup(peerid?: string): boolean {

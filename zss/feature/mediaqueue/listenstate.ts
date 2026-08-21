@@ -148,5 +148,7 @@ export function mediaqueuehasactivestream(): boolean {
 }
 
 export function mediaqueueislistenhost(player: string): boolean {
-  return Boolean(listenplayer && listenplayer === player && boardhelpers.size > 0)
+  return Boolean(
+    listenplayer && listenplayer === player && boardhelpers.size > 0,
+  )
 }
