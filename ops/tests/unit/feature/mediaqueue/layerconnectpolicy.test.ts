@@ -4,14 +4,11 @@ import {
 } from 'zss/feature/mediaqueue/playerlayerstate'
 
 describe('mediaqueuelayerconnectaction', () => {
-  function action(
-    overrides: Partial<MEDIAQUEUE_LAYER_CONNECT_INPUT> = {},
-  ) {
+  function action(overrides: Partial<MEDIAQUEUE_LAYER_CONNECT_INPUT> = {}) {
     const input: MEDIAQUEUE_LAYER_CONNECT_INPUT = {
       gadgetboard: 'board-a',
       activehelper: '',
       islistening: false,
-      boundboard: '',
       boundhelper: '',
       layerhelper: '',
       layerboard: '',
@@ -32,7 +29,6 @@ describe('mediaqueuelayerconnectaction', () => {
       action({
         islistening: true,
         boundhelper: 'helper-1',
-        boundboard: 'board-a',
       }),
     ).toEqual({
       kind: 'connect',
@@ -63,7 +59,6 @@ describe('mediaqueuelayerconnectaction', () => {
         gadgetboard: '',
         islistening: true,
         boundhelper: 'helper-1',
-        boundboard: 'board-a',
         layerhelper: 'helper-1',
         layerboard: 'board-a',
       }),
@@ -75,8 +70,7 @@ describe('mediaqueuelayerconnectaction', () => {
       action({
         gadgetboard: 'board-b',
         islistening: true,
-        boundhelper: 'helper-1',
-        boundboard: 'board-a',
+        boundhelper: '',
         layerhelper: 'helper-1',
         layerboard: 'board-a',
       }),
@@ -106,15 +100,28 @@ describe('mediaqueuelayerconnectaction', () => {
     ).toEqual({ kind: 'disconnect' })
   })
 
-  it('no-ops on another board after layer state is cleared', () => {
+  it('no-ops on another unbound board after layer state is cleared', () => {
     expect(
       action({
         gadgetboard: 'board-b',
         islistening: true,
-        boundhelper: 'helper-1',
-        boundboard: 'board-a',
+        boundhelper: '',
       }),
     ).toEqual({ kind: 'noop' })
+  })
+
+  it('connects when walking onto another bound board after leave disconnect', () => {
+    expect(
+      action({
+        gadgetboard: 'board-b',
+        islistening: true,
+        boundhelper: 'helper-2',
+        activehelper: 'helper-2',
+      }),
+    ).toEqual({
+      kind: 'connect',
+      helperpeerid: 'helper-2',
+    })
   })
 
   it('disconnects a retargeted live layer off the bound board', () => {
@@ -122,8 +129,7 @@ describe('mediaqueuelayerconnectaction', () => {
       action({
         gadgetboard: 'board-b',
         islistening: true,
-        boundhelper: 'helper-1',
-        boundboard: 'board-a',
+        boundhelper: '',
         layerhelper: 'helper-1',
         layerboard: 'board-b',
       }),
@@ -136,7 +142,6 @@ describe('mediaqueuelayerconnectaction', () => {
         gadgetboard: 'board-a',
         islistening: true,
         boundhelper: 'helper-1',
-        boundboard: 'board-a',
       }),
     ).toEqual({
       kind: 'connect',

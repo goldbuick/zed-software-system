@@ -20,16 +20,16 @@ function durationlabel(sec: number): string {
 }
 
 /** Terminal #queue admin menu (control links + per-player limit). */
-export function showqueuemenu(player: string) {
-  const limit = mediaqueuereadperplayerlimit()
-  const state = mediaqueuereadstate()
+export function showqueuemenu(player: string, helperpeerid: string) {
+  const limit = mediaqueuereadperplayerlimit(helperpeerid)
+  const state = mediaqueuereadstate(helperpeerid)
   const rows: string[] = [
     ...zssheaderlines('QUEUE'),
     zsstextline(`limit: ${limit} per player (use #queue limit <N>)`),
     '$32',
     zsszedlinkline('queue skip', 'Skip'),
     zsszedlinkline('queue clear', 'Clear queue'),
-    zsszedlinkline('queue stop', 'Stop helper'),
+    zsszedlinkline('queue stop', 'Unbind this board'),
   ]
   if (state.pendingurls.length > 0) {
     rows.push('$32')

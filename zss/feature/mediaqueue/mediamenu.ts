@@ -10,8 +10,8 @@ import {
 } from 'zss/feature/zsstextui'
 
 /** Terminal #media menu (queue table + copy URLs). */
-export function showmediamenu(player: string) {
-  const state = mediaqueuereadstate()
+export function showmediamenu(player: string, helperpeerid: string) {
+  const state = mediaqueuereadstate(helperpeerid)
   const rows: string[] = [...zssheaderlines('MEDIA')]
 
   const queuerows: string[][] = []

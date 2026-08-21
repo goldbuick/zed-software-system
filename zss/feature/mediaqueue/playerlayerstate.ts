@@ -44,7 +44,7 @@ export type MEDIAQUEUE_LAYER_CONNECT_INPUT = {
   gadgetboard: string
   activehelper: string
   islistening: boolean
-  boundboard: string
+  /** Helper peer id bound to gadgetboard on the host, if any. */
   boundhelper: string
   layerhelper: string
   layerboard: string
@@ -66,19 +66,12 @@ export function mediaqueuelayerconnectaction(
   if (layerhelper && layerboard && layerboard !== board) {
     return { kind: 'disconnect' }
   }
-  const boundhelper = input.boundhelper.trim()
-  const boundboard = input.boundboard.trim()
-  if (input.islistening && boundboard && boundboard !== board) {
-    if (layerhelper && layerboard) {
-      return { kind: 'disconnect' }
-    }
-    return { kind: 'noop' }
-  }
   const activehelper = input.activehelper.trim()
   if (activehelper) {
     return { kind: 'connect', helperpeerid: activehelper }
   }
-  if (input.islistening && boundhelper && boundboard === board) {
+  const boundhelper = input.boundhelper.trim()
+  if (input.islistening && boundhelper) {
     return { kind: 'connect', helperpeerid: boundhelper }
   }
   if (layerhelper && layerboard) {

@@ -6,7 +6,7 @@ import type { MESSAGE } from 'zss/device/types'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueueislistening,
-  mediaqueuereadhelperpeerid,
+  mediaqueuereadhelperforboard,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
   mediareadcanmanagefrompayload,
@@ -85,6 +85,14 @@ function readpeeridfrompayload(message: MESSAGE): string {
   return readstringarg(message)?.trim() ?? ''
 }
 
+function readboardidfrompayload(message: MESSAGE): string {
+  const payload = message.data as { boardid?: unknown } | undefined
+  if (isstring(payload?.boardid)) {
+    return payload.boardid.trim()
+  }
+  return ''
+}
+
 function requiremanage(player: string, message: MESSAGE): boolean {
   if (mediareadcanmanagefrompayload(message.data)) {
     return true
@@ -93,33 +101,35 @@ function requiremanage(player: string, message: MESSAGE): boolean {
   return false
 }
 
-function requirehelper(player: string, noun: string): boolean {
-  if (!mediaqueueislistening()) {
-    apierror(SOFTWARE, player, noun, 'use #queue <peerid> first')
-    return false
+function resolveboardhelper(
+  player: string,
+  message: MESSAGE,
+  noun: string,
+): string {
+  const boardid = readboardidfrompayload(message)
+  const helper = mediaqueuereadhelperforboard(boardid)
+  if (!boardid || !helper) {
+    apierror(SOFTWARE, player, noun, 'use #queue <peerid> on this board first')
+    return ''
   }
-  if (!mediaqueuehelperdatalinkup()) {
+  if (!mediaqueuehelperdatalinkup(helper)) {
     apierror(SOFTWARE, player, noun, 'helper not connected')
-    return false
+    return ''
   }
-  return true
+  return helper
 }
 
-function requirepayloadhelper(player: string, message: MESSAGE): boolean {
+function requirepayloadhelper(player: string, message: MESSAGE): string {
   const helperpeerid = mediareadhelperpeeridfrompayload(message.data)
   if (!helperpeerid) {
     apierror(SOFTWARE, player, 'media', 'not on a board with media')
-    return false
+    return ''
   }
-  if (helperpeerid !== mediaqueuereadhelperpeerid()) {
+  if (!mediaqueueislistening() || !mediaqueuehelperdatalinkup(helperpeerid)) {
     apierror(SOFTWARE, player, 'media', 'use #queue <peerid> first')
-    return false
+    return ''
   }
-  if (!mediaqueuehelperdatalinkup()) {
-    apierror(SOFTWARE, player, 'media', 'helper not connected')
-    return false
-  }
-  return true
+  return helperpeerid
 }
 
 function mediabind(
@@ -141,7 +151,7 @@ function mediabind(
       return
     }
     mediaqueuelisten(player, trimmed, boardid, boardname)
-    showqueuemenu(player)
+    showqueuemenu(player, trimmed)
   })
 }
 
@@ -154,19 +164,22 @@ export function handlemediapanel(
   const player = message.player
   void vm
   switch (NAME(path)) {
-    case 'menu':
-      if (!requirepayloadhelper(player, message)) {
+    case 'menu': {
+      const helper = requirepayloadhelper(player, message)
+      if (!helper) {
         return
       }
-      showmediamenu(player)
+      showmediamenu(player, helper)
       break
+    }
     case 'add': {
       const url = readurlfrompayload(message)
       if (!url) {
         apierror(SOFTWARE, player, 'media', 'usage: #media <url>')
         return
       }
-      if (!requirepayloadhelper(player, message)) {
+      const helper = requirepayloadhelper(player, message)
+      if (!helper) {
         return
       }
       const displayname = mediareaddisplaynamefrompayload(message.data)
@@ -174,12 +187,15 @@ export function handlemediapanel(
         apierror(SOFTWARE, player, 'media', 'submitter name missing')
         return
       }
-      const sent = mediaqueuesendtohelper({
-        type: 'mediaqueue:add',
-        url,
-        player,
-        name: displayname,
-      })
+      const sent = mediaqueuesendtohelper(
+        {
+          type: 'mediaqueue:add',
+          url,
+          player,
+          name: displayname,
+        },
+        helper,
+      )
       if (sent) {
         apitoast(SOFTWARE, player, `media requested: ${url}`)
         workstatus(SOFTWARE, player, 'media request')
@@ -187,10 +203,11 @@ export function handlemediapanel(
       break
     }
     case 'playlist': {
-      if (!requirepayloadhelper(player, message)) {
+      const helper = requirepayloadhelper(player, message)
+      if (!helper) {
         return
       }
-      const items = mediaqueueclipitemsfromstate(mediaqueuereadstate())
+      const items = mediaqueueclipitemsfromstate(mediaqueuereadstate(helper))
       if (items.length === 0) {
         apierror(SOFTWARE, player, 'media', 'playlist empty')
         return
@@ -216,7 +233,11 @@ export function handlequeuepanel(
       if (!requiremanage(player, message)) {
         return
       }
-      showqueuemenu(player)
+      const helper = resolveboardhelper(player, message, 'queue')
+      if (!helper) {
+        return
+      }
+      showqueuemenu(player, helper)
       break
     }
     case 'bind': {
@@ -240,17 +261,19 @@ export function handlequeuepanel(
       if (!requiremanage(player, message)) {
         return
       }
-      if (!requirehelper(player, 'queue')) {
+      const helper = resolveboardhelper(player, message, 'queue')
+      if (!helper) {
         return
       }
-      mediaqueuesendtohelper({ type: 'mediaqueue:skip' })
+      mediaqueuesendtohelper({ type: 'mediaqueue:skip' }, helper)
       break
     }
     case 'limit': {
       if (!requiremanage(player, message)) {
         return
       }
-      if (!requirehelper(player, 'queue')) {
+      const helper = resolveboardhelper(player, message, 'queue')
+      if (!helper) {
         return
       }
       const limit = readlimitfrompayload(message)
@@ -258,17 +281,18 @@ export function handlequeuepanel(
         apierror(SOFTWARE, player, 'queue', 'usage: #queue limit <N>')
         return
       }
-      mediaqueuesendtohelper({ type: 'mediaqueue:setlimit', limit })
+      mediaqueuesendtohelper({ type: 'mediaqueue:setlimit', limit }, helper)
       break
     }
     case 'clear': {
       if (!requiremanage(player, message)) {
         return
       }
-      if (!requirehelper(player, 'queue')) {
+      const helper = resolveboardhelper(player, message, 'queue')
+      if (!helper) {
         return
       }
-      mediaqueuesendtohelper({ type: 'mediaqueue:clear' })
+      mediaqueuesendtohelper({ type: 'mediaqueue:clear' }, helper)
       break
     }
     case 'approve':
@@ -276,7 +300,8 @@ export function handlequeuepanel(
       if (!requiremanage(player, message)) {
         return
       }
-      if (!requirehelper(player, 'queue')) {
+      const helper = resolveboardhelper(player, message, 'queue')
+      if (!helper) {
         return
       }
       const index = readindexfrompayload(message)
@@ -284,19 +309,29 @@ export function handlequeuepanel(
         apierror(SOFTWARE, player, 'queue', `usage: #queue ${NAME(path)} <N>`)
         return
       }
-      mediaqueuesendtohelper({
-        type:
-          NAME(path) === 'approve' ? 'mediaqueue:approve' : 'mediaqueue:reject',
-        index,
-      })
+      mediaqueuesendtohelper(
+        {
+          type:
+            NAME(path) === 'approve'
+              ? 'mediaqueue:approve'
+              : 'mediaqueue:reject',
+          index,
+        },
+        helper,
+      )
       break
     }
     case 'stop': {
       if (!requiremanage(player, message)) {
         return
       }
-      mediaqueuestop(player)
-      write(SOFTWARE, player, 'queue stopped')
+      const boardid = readboardidfrompayload(message)
+      if (!boardid) {
+        apierror(SOFTWARE, player, 'queue', 'need an active board to stop')
+        return
+      }
+      mediaqueuestop(player, boardid)
+      write(SOFTWARE, player, 'queue unbound')
       break
     }
     default:
