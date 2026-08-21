@@ -132,10 +132,14 @@ const ACODEC_AAC = "acodec~='^(mp4a|aac)'"
 const YTDLP_SIZE_CAPS = ['height<=720', 'width<=720']
 
 function ytdlpformatladder(cap: string): string[] {
+  // Prefer DASH video+audio merges over progressive `best` (itag 18). Progressive
+  // often selects successfully then 403s on googlevideo, and yt-dlp will not walk
+  // the `/` fallbacks after a selected format fails mid-download -- so the whole
+  // video try dies and the job silently falls through to audio-only.
   return [
-    `best[${cap}][${VCODEC_H264}][ext=mp4][${ACODEC_AAC}]`,
     `bestvideo[${cap}][${VCODEC_H264}][ext=mp4]+bestaudio[${ACODEC_AAC}][ext=m4a]`,
     `bestvideo[${cap}][${VCODEC_H264}]+bestaudio`,
+    `best[${cap}][${VCODEC_H264}][ext=mp4][${ACODEC_AAC}]`,
     `best[${cap}]`,
   ]
 }
@@ -243,10 +247,12 @@ export const FFMPEG_POST_ARGS_TRANSCODE = [
 ]
 export const FFMPEG_POST_ARGS_AUDIO = 'ExtractAudio+FixupM4a:-c:a aac -b:a 128k'
 const YOUTUBE_PLAYER_CLIENTS = [
-  'default,-android_sdkless',
-  'default,-android_vr',
+  // Exclude android_vr: its googlevideo URLs often 403 while still listing
+  // formats, which made the video try fail and fall through to audio-only.
+  'default,-android_sdkless,-android_vr',
   'tv,web_creator',
   'web,web_creator',
+  'mweb',
 ]
 const COOKIE_BROWSERS = [
   'safari',

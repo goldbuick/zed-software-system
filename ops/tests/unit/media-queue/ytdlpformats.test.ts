@@ -216,6 +216,21 @@ describe('yt-dlp format try ladder', () => {
     }
   })
 
+  it('prefers DASH video+audio merges before progressive best', () => {
+    // Progressive itag 18 often selects then 403s; yt-dlp will not walk `/`
+    // fallbacks after a mid-download failure, so putting it first forced the
+    // audio-only ladder (visualizer) for real videos like aq4G-7v-_xI.
+    const branches = YTDLP_FORMAT.split('/')
+    const firstdash = branches.findIndex((branch) =>
+      branch.startsWith('bestvideo['),
+    )
+    const firstprogressive = branches.findIndex((branch) =>
+      branch.startsWith('best['),
+    )
+    expect(firstdash).toBeGreaterThanOrEqual(0)
+    expect(firstprogressive).toBeGreaterThan(firstdash)
+  })
+
   it('matches avc1 and h264 codec namings', () => {
     expect(YTDLP_FORMAT).toContain("vcodec~='^(avc|h264)'")
     expect(YTDLP_FORMAT).toContain("acodec~='^(mp4a|aac)'")
