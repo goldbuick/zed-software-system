@@ -3,8 +3,7 @@ import { loadcharsetfrombytes, loadpalettefrombytes } from 'zss/feature/bytes'
 import { CHARSET } from 'zss/feature/charset'
 import {
   mediaqueueislistening,
-  mediaqueuereadboundboardid,
-  mediaqueuereadhelperpeerid,
+  mediaqueuereadhelperforboard,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
   mediaqueueconnectifonboard,
@@ -105,8 +104,7 @@ export function MediaLayers() {
       gadgetboard,
       activehelper,
       islistening: mediaqueueislistening(),
-      boundboard: mediaqueuereadboundboardid(),
-      boundhelper: mediaqueuereadhelperpeerid(),
+      boundhelper: mediaqueuereadhelperforboard(gadgetboard),
       layerhelper: layer.helperpeerid,
       layerboard: layer.board,
     })

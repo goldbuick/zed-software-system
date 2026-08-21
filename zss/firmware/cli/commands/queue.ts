@@ -19,6 +19,15 @@ const QUEUE_RESERVED = new Set([
   'reject',
 ])
 
+function queueboardpayload(player: string, data?: Record<string, unknown>) {
+  const board = memoryreadplayerboard(player)
+  return mediapayloadwithmanage(player, {
+    ...data,
+    boardid: board?.id ?? '',
+    boardname: board?.name ?? '',
+  })
+}
+
 /** `#queue` admin menu; `#queue <peerid>` binds helper; `#queue skip|clear|stop|limit` admin. */
 export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
   return fw.command(
@@ -34,12 +43,7 @@ export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
         if (!mediarequiremanageonvm(player, 'queue')) {
           return 0
         }
-        bridgequeuepanel(
-          SOFTWARE,
-          player,
-          'menu',
-          mediapayloadwithmanage(player),
-        )
+        bridgequeuepanel(SOFTWARE, player, 'menu', queueboardpayload(player))
         return 0
       }
       const cmd = NAME(String(first))
@@ -52,7 +56,7 @@ export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
           SOFTWARE,
           player,
           'limit',
-          mediapayloadwithmanage(player, { limit: String(limitarg) }),
+          queueboardpayload(player, { limit: String(limitarg) }),
         )
         return 0
       }
@@ -60,7 +64,7 @@ export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
         if (!mediarequiremanageonvm(player, 'queue')) {
           return 0
         }
-        bridgequeuepanel(SOFTWARE, player, cmd, mediapayloadwithmanage(player))
+        bridgequeuepanel(SOFTWARE, player, cmd, queueboardpayload(player))
         return 0
       }
       if (cmd === 'approve' || cmd === 'reject') {
@@ -72,12 +76,12 @@ export function registerqueuecommands(fw: FIRMWARE): FIRMWARE {
           SOFTWARE,
           player,
           cmd,
-          mediapayloadwithmanage(player, { index: String(indexarg) }),
+          queueboardpayload(player, { index: String(indexarg) }),
         )
         return 0
       }
       if (QUEUE_RESERVED.has(cmd)) {
-        bridgequeuepanel(SOFTWARE, player, cmd, mediapayloadwithmanage(player))
+        bridgequeuepanel(SOFTWARE, player, cmd, queueboardpayload(player))
         return 0
       }
       if (!mediarequiremanageonvm(player, 'queue')) {

@@ -2,10 +2,10 @@ import { ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 
 let listenplayer = ''
-let listenboardid = ''
-let helperpeerid = ''
-let listening = false
-let helperconnected = false
+/** board id -> helper peer id */
+const boardhelpers = new Map<string, string>()
+/** helper peer ids with an open DataConnection */
+const connectedhelpers = new Set<string>()
 let hasactiveroomstream = false
 let boardtvgateepoch = 0
 const boardtvgatesubs = new Set<() => void>()
@@ -41,52 +41,94 @@ export function mediaqueuesetlistenplayer(player: string) {
   listenplayer = player
 }
 
-export function mediaqueuereadboundboardid(): string {
-  return listenboardid
+export function mediaqueuereadboundboardids(): string[] {
+  return Array.from(boardhelpers.keys())
 }
 
-export function mediaqueuesetlistenboardid(boardid: string) {
-  listenboardid = boardid
+export function mediaqueueisboundboard(boardid: string): boolean {
+  const trimmed = boardid.trim()
+  return trimmed !== '' && boardhelpers.has(trimmed)
+}
+
+export function mediaqueuereadhelperforboard(boardid: string): string {
+  const trimmed = boardid.trim()
+  if (!trimmed) {
+    return ''
+  }
+  return boardhelpers.get(trimmed) ?? ''
+}
+
+export function mediaqueuereadboardsforhelper(peerid: string): string[] {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    return []
+  }
+  const boards: string[] = []
+  for (const [boardid, helper] of boardhelpers) {
+    if (helper === trimmed) {
+      boards.push(boardid)
+    }
+  }
+  return boards
+}
+
+export function mediaqueuesetboardhelper(boardid: string, peerid: string) {
+  const board = boardid.trim()
+  const helper = peerid.trim()
+  if (!board || !helper) {
+    return
+  }
+  boardhelpers.set(board, helper)
   bumpboardtvgate()
 }
 
-export function mediaqueuereadhelperpeerid(): string {
-  return helperpeerid
+/** Returns the helper peer id that was bound, if any. */
+export function mediaqueueclearboardhelper(boardid: string): string {
+  const board = boardid.trim()
+  if (!board) {
+    return ''
+  }
+  const previous = boardhelpers.get(board) ?? ''
+  boardhelpers.delete(board)
+  bumpboardtvgate()
+  return previous
 }
 
-export function mediaqueuesethelperpeerid(peerid: string) {
-  helperpeerid = peerid
+export function mediaqueuehasanybind(): boolean {
+  return boardhelpers.size > 0
 }
 
 export function mediaqueueclearlistenstate() {
-  helperpeerid = ''
-  listenboardid = ''
-  listening = false
-  helperconnected = false
+  boardhelpers.clear()
+  connectedhelpers.clear()
+  listenplayer = ''
   hasactiveroomstream = false
   bumpboardtvgate()
 }
 
-export function mediaqueuesetlistening(active: boolean) {
-  listening = active
+export function mediaqueuesethelperconnected(peerid: string, active: boolean) {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    return
+  }
+  if (active) {
+    connectedhelpers.add(trimmed)
+  } else {
+    connectedhelpers.delete(trimmed)
+  }
   bumpboardtvgate()
 }
 
-export function mediaqueuesethelperconnected(active: boolean) {
-  helperconnected = active
-  bumpboardtvgate()
+export function mediaqueuehelperconnected(peerid?: string): boolean {
+  const trimmed = (peerid ?? '').trim()
+  if (trimmed) {
+    return connectedhelpers.has(trimmed)
+  }
+  return connectedhelpers.size > 0
 }
 
 export function mediaqueuesethasactiveroomstream(active: boolean) {
   hasactiveroomstream = active
-}
-
-export function mediaqueuereadpeerid(): string | undefined {
-  const trimmed = helperpeerid.trim()
-  if (trimmed) {
-    return trimmed
-  }
-  return undefined
 }
 
 export function mediaqueuereadboundboardlabel(boardid: string): string {
@@ -98,11 +140,7 @@ export function mediaqueuereadboundboardlabel(boardid: string): string {
 }
 
 export function mediaqueueislistening(): boolean {
-  return listening
-}
-
-export function mediaqueuehelperconnected(): boolean {
-  return helperconnected
+  return boardhelpers.size > 0
 }
 
 export function mediaqueuehasactivestream(): boolean {
@@ -110,5 +148,5 @@ export function mediaqueuehasactivestream(): boolean {
 }
 
 export function mediaqueueislistenhost(player: string): boolean {
-  return Boolean(listenplayer && listenplayer === player && listening)
+  return Boolean(listenplayer && listenplayer === player && boardhelpers.size > 0)
 }

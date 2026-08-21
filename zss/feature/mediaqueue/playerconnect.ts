@@ -12,9 +12,9 @@ import { mediaqueuesyncbroadcastaudio } from 'zss/feature/mediaqueue/broadcastau
 import { mediaqueuecallmetadata } from 'zss/feature/mediaqueue/callmetadata'
 import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
 import {
+  mediaqueueisboundboard,
   mediaqueueislistening,
-  mediaqueuereadboundboardid,
-  mediaqueuereadhelperpeerid,
+  mediaqueuereadhelperforboard,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
   mediaqueueclearplayerlayerstate,
@@ -538,11 +538,7 @@ function tryplayerconnect(helperpeerid: string, gadgetboard: string): boolean {
 }
 
 function readconnectboard(gadgetboard: string): string {
-  const trimmed = gadgetboard.trim()
-  if (trimmed) {
-    return trimmed
-  }
-  return mediaqueuereadboundboardid().trim()
+  return gadgetboard.trim()
 }
 
 export function mediaqueueconnectifonboard(
@@ -552,19 +548,19 @@ export function mediaqueueconnectifonboard(
   mediaqueuebootstrap()
   mediaqueueensurevideosink()
   const requested = gadgetboard.trim()
-  const bound = mediaqueuereadboundboardid().trim()
-  if (mediaqueueislistening() && requested && bound && requested !== bound) {
+  if (
+    mediaqueueislistening() &&
+    requested &&
+    !mediaqueueisboundboard(requested)
+  ) {
     mediaqueuedisconnect()
     return
   }
-  const trimmed = helperpeerid.trim() || mediaqueuereadhelperpeerid().trim()
   const board = readconnectboard(gadgetboard)
+  const trimmed =
+    helperpeerid.trim() || mediaqueuereadhelperforboard(board).trim()
   if (!trimmed || !board) {
-    if (
-      !mediaqueueislistening() ||
-      !mediaqueuereadhelperpeerid() ||
-      !mediaqueuereadboundboardid()
-    ) {
+    if (!mediaqueueislistening() || !mediaqueueisboundboard(board)) {
       mediaqueuedisconnect()
     }
     return

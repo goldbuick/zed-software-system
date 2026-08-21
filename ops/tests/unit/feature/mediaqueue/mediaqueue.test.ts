@@ -15,9 +15,8 @@ import {
 import { boardtvscreenrows, boardtvvideofit } from 'zss/gadget/boardtvgrid'
 import {
   mediaqueueclearlistenstate,
+  mediaqueuesetboardhelper,
   mediaqueuesethelperconnected,
-  mediaqueuesetlistenboardid,
-  mediaqueuesetlistening,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
   MEDIAQUEUE_PROTOCOL,
@@ -72,23 +71,31 @@ describe('mediaqueue url normalize', () => {
 })
 
 describe('mediaqueue queue projection', () => {
+  const helper = 'helper-peer-1'
+
   beforeEach(() => {
-    mediaqueueapplysnapshot({
-      urls: [],
-      names: [],
-      index: 0,
-      limit: 5,
-    })
+    mediaqueueapplysnapshot(
+      {
+        urls: [],
+        names: [],
+        index: 0,
+        limit: 5,
+      },
+      helper,
+    )
   })
 
   it('applies helper snapshot for #media table', () => {
-    mediaqueueapplysnapshot({
-      urls: ['https://a.example', 'https://b.example'],
-      names: ['goldbuick', 'guest'],
-      index: 0,
-      limit: 3,
-    })
-    expect(mediaqueuereadstate()).toEqual({
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://a.example', 'https://b.example'],
+        names: ['goldbuick', 'guest'],
+        index: 0,
+        limit: 3,
+      },
+      helper,
+    )
+    expect(mediaqueuereadstate(helper)).toEqual({
       urls: ['https://a.example', 'https://b.example'],
       names: ['goldbuick', 'guest'],
       titles: ['', ''],
@@ -104,48 +111,83 @@ describe('mediaqueue queue projection', () => {
       playedtitles: [],
       playedsubmittedats: [],
     })
-    expect(mediaqueuecurrenturl()).toBe('https://a.example')
-    mediaqueueapplysnapshot({
-      urls: ['https://b.example'],
-      names: ['guest'],
-      index: 0,
-      limit: 3,
-    })
-    expect(mediaqueuecurrenturl()).toBe('https://b.example')
-    expect(mediaqueuereadstate().urls).toEqual(['https://b.example'])
+    expect(mediaqueuecurrenturl(helper)).toBe('https://a.example')
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://b.example'],
+        names: ['guest'],
+        index: 0,
+        limit: 3,
+      },
+      helper,
+    )
+    expect(mediaqueuecurrenturl(helper)).toBe('https://b.example')
+    expect(mediaqueuereadstate(helper).urls).toEqual(['https://b.example'])
   })
 
   it('clamps snapshot limit and index', () => {
-    mediaqueueapplysnapshot({
-      urls: ['https://a.example', 'https://b.example'],
-      names: ['a', 'b'],
-      index: 99,
-      limit: 99,
-    })
-    expect(mediaqueuereadperplayerlimit()).toBe(20)
-    expect(mediaqueuereadstate().index).toBe(1)
-    mediaqueueapplysnapshot({
-      urls: ['https://a.example'],
-      names: ['a'],
-      index: -1,
-      limit: 0,
-    })
-    expect(mediaqueuereadperplayerlimit()).toBe(1)
-    expect(mediaqueuereadstate().index).toBe(0)
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://a.example', 'https://b.example'],
+        names: ['a', 'b'],
+        index: 99,
+        limit: 99,
+      },
+      helper,
+    )
+    expect(mediaqueuereadperplayerlimit(helper)).toBe(20)
+    expect(mediaqueuereadstate(helper).index).toBe(1)
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://a.example'],
+        names: ['a'],
+        index: -1,
+        limit: 0,
+      },
+      helper,
+    )
+    expect(mediaqueuereadperplayerlimit(helper)).toBe(1)
+    expect(mediaqueuereadstate(helper).index).toBe(0)
   })
 
   it('clearlistenstate does not empty the projection', () => {
-    mediaqueueapplysnapshot({
-      urls: ['https://a.example', 'https://b.example'],
-      names: ['goldbuick', 'guest'],
-      index: 0,
-      limit: 5,
-    })
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://a.example', 'https://b.example'],
+        names: ['goldbuick', 'guest'],
+        index: 0,
+        limit: 5,
+      },
+      helper,
+    )
     mediaqueueclearlistenstate()
-    expect(mediaqueuereadstate().urls).toEqual([
+    expect(mediaqueuereadstate(helper).urls).toEqual([
       'https://a.example',
       'https://b.example',
     ])
+  })
+
+  it('keeps separate projections per helper peer', () => {
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://a.example'],
+        names: ['a'],
+        index: 0,
+        limit: 5,
+      },
+      'helper-a',
+    )
+    mediaqueueapplysnapshot(
+      {
+        urls: ['https://b.example'],
+        names: ['b'],
+        index: 0,
+        limit: 5,
+      },
+      'helper-b',
+    )
+    expect(mediaqueuecurrenturl('helper-a')).toBe('https://a.example')
+    expect(mediaqueuecurrenturl('helper-b')).toBe('https://b.example')
   })
 })
 
@@ -278,15 +320,35 @@ describe('mediaqueue board tv', () => {
   })
 
   it('boardtvshouldshow matches bound board when listening', () => {
-    mediaqueuesetlistening(true)
-    mediaqueuesetlistenboardid('board-a')
-    mediaqueuesethelperconnected(true)
+    mediaqueuesetboardhelper('board-a', 'helper-1')
+    mediaqueuesethelperconnected('helper-1', true)
     expect(boardtvshouldshow('board-a', true)).toBe(true)
     expect(boardtvshouldshow('board-b', true)).toBe(false)
     expect(boardtvshouldshow('board-a', false)).toBe(true)
-    mediaqueuesethelperconnected(false)
+    mediaqueuesethelperconnected('helper-1', false)
     expect(boardtvshouldshow('board-a', false)).toBe(false)
     expect(boardtvshouldshow('board-a', true)).toBe(true)
+    mediaqueueclearlistenstate()
+  })
+
+  it('boardtvshouldshow is true for each board sharing a helper', () => {
+    mediaqueuesetboardhelper('board-a', 'helper-1')
+    mediaqueuesetboardhelper('board-b', 'helper-1')
+    mediaqueuesethelperconnected('helper-1', true)
+    expect(boardtvshouldshow('board-a', false)).toBe(true)
+    expect(boardtvshouldshow('board-b', false)).toBe(true)
+    mediaqueueclearlistenstate()
+  })
+
+  it('boardtvshouldshow tracks different helpers per board', () => {
+    mediaqueuesetboardhelper('board-a', 'helper-1')
+    mediaqueuesetboardhelper('board-b', 'helper-2')
+    mediaqueuesethelperconnected('helper-1', true)
+    mediaqueuesethelperconnected('helper-2', false)
+    expect(boardtvshouldshow('board-a', false)).toBe(true)
+    expect(boardtvshouldshow('board-b', false)).toBe(false)
+    expect(boardtvshouldshow('board-b', true)).toBe(true)
+    mediaqueueclearlistenstate()
   })
 
   it('boardtvshouldshow shows mount when synced helper layer is on board', () => {

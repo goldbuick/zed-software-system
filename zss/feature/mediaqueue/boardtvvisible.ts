@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from 'react'
 import {
   mediaqueuehelperconnected,
+  mediaqueueisboundboard,
   mediaqueueislistening,
   mediaqueuereadboardtvgatesnapshot,
-  mediaqueuereadboundboardid,
+  mediaqueuereadhelperforboard,
   mediaqueuesubscribeboardtvgate,
 } from 'zss/feature/mediaqueue/listenstate'
 import { mediaqueuereadplayerlayerstate } from 'zss/feature/mediaqueue/playerlayerstate'
@@ -28,12 +29,11 @@ export function boardtvshouldshow(
     return true
   }
 
-  const bound = mediaqueuereadboundboardid()
-  const listening = mediaqueueislistening()
-  if (!listening || !bound || board !== bound) {
+  if (!mediaqueueislistening() || !mediaqueueisboundboard(board)) {
     return false
   }
-  return mediaqueuehelperconnected() || hasvideo
+  const helper = mediaqueuereadhelperforboard(board)
+  return mediaqueuehelperconnected(helper) || hasvideo
 }
 
 /** Re-renders when helper listen / connect state changes (module singleton). */

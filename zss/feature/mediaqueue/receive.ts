@@ -9,16 +9,18 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
+  mediaqueueclearboardhelper,
   mediaqueueclearlistenstate,
   mediaqueuehelperconnected,
+  mediaqueuehasanybind,
   mediaqueueislistening,
-  mediaqueuereadboundboardid,
-  mediaqueuereadhelperpeerid,
+  mediaqueuereadboardsforhelper,
+  mediaqueuereadboundboardids,
+  mediaqueuereadboundboardlabel,
+  mediaqueuereadhelperforboard,
   mediaqueuereadlistenplayer,
+  mediaqueuesetboardhelper,
   mediaqueuesethelperconnected,
-  mediaqueuesethelperpeerid,
-  mediaqueuesetlistenboardid,
-  mediaqueuesetlistening,
   mediaqueuesetlistenplayer,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
@@ -37,6 +39,7 @@ import {
 } from 'zss/feature/mediaqueue/protocol'
 import {
   mediaqueueapplysnapshot,
+  mediaqueueclearhelpersnapshot,
   mediaqueuecurrenturl,
   mediaqueuereadperplayerlimit,
 } from 'zss/feature/mediaqueue/queue'
@@ -51,38 +54,58 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 const HELPER_RECONNECT_MS = 1000
 
-let helperconnection: MAYBE<DataConnection>
+const helperconnections = new Map<string, DataConnection>()
 let helperreconnecttimer: ReturnType<typeof setTimeout> | undefined
 
-function sendtohelper(message: MEDIAQUEUE_MESSAGE) {
-  if (!ispresent(helperconnection) || !helperconnection.open) {
+function sendtohelper(peerid: string, message: MEDIAQUEUE_MESSAGE) {
+  const trimmed = peerid.trim()
+  const conn = helperconnections.get(trimmed)
+  if (!ispresent(conn) || !conn.open) {
     return
   }
-  void helperconnection.send(message)
+  void conn.send(message)
 }
 
-function helperdatalinkup(): boolean {
+function helperdatalinkup(peerid: string): boolean {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    return false
+  }
+  const conn = helperconnections.get(trimmed)
   return (
-    mediaqueuehelperconnected() &&
-    ispresent(helperconnection) &&
-    helperconnection.open
+    mediaqueuehelperconnected(trimmed) &&
+    ispresent(conn) &&
+    conn.open
   )
 }
 
-export function mediaqueuehelperdatalinkup(): boolean {
-  return helperdatalinkup()
+export function mediaqueuehelperdatalinkup(peerid?: string): boolean {
+  const trimmed = (peerid ?? '').trim()
+  if (trimmed) {
+    return helperdatalinkup(trimmed)
+  }
+  for (const peer of helperconnections.keys()) {
+    if (helperdatalinkup(peer)) {
+      return true
+    }
+  }
+  return false
 }
 
-export function mediaqueuesendtohelper(message: MEDIAQUEUE_MESSAGE): boolean {
-  if (!helperdatalinkup()) {
+export function mediaqueuesendtohelper(
+  message: MEDIAQUEUE_MESSAGE,
+  peerid: string,
+): boolean {
+  const trimmed = peerid.trim()
+  if (!trimmed || !helperdatalinkup(trimmed)) {
     return false
   }
-  sendtohelper(message)
+  sendtohelper(trimmed, message)
   return true
 }
 
-function mediaqueuerequesthelpercall() {
-  sendtohelper({ type: 'mediaqueue:requestcall' })
+function mediaqueuerequesthelpercall(peerid: string) {
+  sendtohelper(peerid, { type: 'mediaqueue:requestcall' })
 }
 
 function mediaqueuestatusdetail(detail?: string): string {
@@ -111,31 +134,57 @@ function syncboardhelperlayer(
   vmmediaqueueboard(SOFTWARE, player, boardid, helperpeerid)
 }
 
-function mediaqueuesyncnowplayingfromstatus(detail?: string) {
+function mediaqueuesyncnowplayingforhelper(peerid: string, detail?: string) {
   const player = mediaqueuereadlistenplayer()
-  const boardid = mediaqueuereadboundboardid()
-  if (!player || !boardid) {
+  const boards = mediaqueuereadboardsforhelper(peerid)
+  if (!player || boards.length === 0) {
     return
   }
-  const label = mediaqueueformatnowplayinglabel(detail, mediaqueuecurrenturl())
+  const label = mediaqueueformatnowplayinglabel(
+    detail,
+    mediaqueuecurrenturl(peerid),
+  )
+  if (!label) {
+    return
+  }
+  for (let i = 0; i < boards.length; ++i) {
+    mediaqueuesyncnowplayingboard(player, boards[i], label)
+  }
+}
+
+function mediaqueueclearnowplayingforhelper(peerid: string) {
+  const player = mediaqueuereadlistenplayer()
+  const boards = mediaqueuereadboardsforhelper(peerid)
+  if (!player || boards.length === 0) {
+    return
+  }
+  for (let i = 0; i < boards.length; ++i) {
+    mediaqueuesyncnowplayingboard(player, boards[i], undefined)
+  }
+}
+
+function mediaqueuecopynowplayingtoboard(
+  player: string,
+  peerid: string,
+  boardid: string,
+) {
+  const label = mediaqueueformatnowplayinglabel(
+    undefined,
+    mediaqueuecurrenturl(peerid),
+  )
   if (!label) {
     return
   }
   mediaqueuesyncnowplayingboard(player, boardid, label)
 }
 
-function mediaqueueclearnowplayingboard() {
-  const player = mediaqueuereadlistenplayer()
-  const boardid = mediaqueuereadboundboardid()
-  if (!player || !boardid) {
-    return
-  }
-  mediaqueuesyncnowplayingboard(player, boardid, undefined)
-}
-
-function mediaqueueapplynowplayingstatus(status: string, detail?: string) {
+function mediaqueueapplynowplayingstatus(
+  peerid: string,
+  status: string,
+  detail?: string,
+) {
   if (status === 'buffering' || status === 'playing') {
-    mediaqueuesyncnowplayingfromstatus(detail)
+    mediaqueuesyncnowplayingforhelper(peerid, detail)
     return
   }
   if (
@@ -145,7 +194,7 @@ function mediaqueueapplynowplayingstatus(status: string, detail?: string) {
     status === 'call-stopped' ||
     status === 'queue-cleared'
   ) {
-    mediaqueueclearnowplayingboard()
+    mediaqueueclearnowplayingforhelper(peerid)
   }
 }
 
@@ -190,7 +239,7 @@ function mediaqueueapplyworkstatus(status: string, detail?: string) {
   }
 }
 
-function handlequeuestatus(status: string, detail?: string) {
+function handlequeuestatus(peerid: string, status: string, detail?: string) {
   if (status === 'queue-added') {
     const player = mediaqueuereadlistenplayer()
     if (player) {
@@ -208,7 +257,7 @@ function handlequeuestatus(status: string, detail?: string) {
   }
   if (status === 'queue-limit') {
     const limit =
-      (detail ?? '').trim() || String(mediaqueuereadperplayerlimit())
+      (detail ?? '').trim() || String(mediaqueuereadperplayerlimit(peerid))
     toastlistenplayer(true, `queue limit: ${limit} per player`)
     return
   }
@@ -220,7 +269,7 @@ function handlequeuestatus(status: string, detail?: string) {
     if (detail === 'limit') {
       toastlistenplayer(
         false,
-        `queue limit (${mediaqueuereadperplayerlimit()} per player)`,
+        `queue limit (${mediaqueuereadperplayerlimit(peerid)} per player)`,
       )
       return
     }
@@ -248,7 +297,7 @@ function handlequeuestatus(status: string, detail?: string) {
   }
 }
 
-function handlehelperdata(data: unknown) {
+function handlehelperdata(peerid: string, data: unknown) {
   if (!ismediaqueuemessage(data)) {
     return
   }
@@ -260,36 +309,39 @@ function handlehelperdata(data: unknown) {
           mediaqueuereadlistenplayer(),
           `media connected (${data.peerid})`,
         )
-        mediaqueuerequesthelpercall()
+        mediaqueuerequesthelpercall(peerid)
       }
       break
     case 'mediaqueue:queuesnapshot':
-      mediaqueueapplysnapshot({
-        urls: data.urls,
-        names: data.names,
-        titles: data.titles,
-        submittedats: data.submittedats,
-        index: data.index,
-        limit: data.limit,
-        pendingurls: data.pendingurls,
-        pendingnames: data.pendingnames,
-        pendingtitles: data.pendingtitles,
-        pendingdurations: data.pendingdurations,
-        playedurls: data.playedurls,
-        playednames: data.playednames,
-        playedtitles: data.playedtitles,
-        playedsubmittedats: data.playedsubmittedats,
-      })
-      if (!mediaqueuecurrenturl()) {
-        mediaqueueclearnowplayingboard()
+      mediaqueueapplysnapshot(
+        {
+          urls: data.urls,
+          names: data.names,
+          titles: data.titles,
+          submittedats: data.submittedats,
+          index: data.index,
+          limit: data.limit,
+          pendingurls: data.pendingurls,
+          pendingnames: data.pendingnames,
+          pendingtitles: data.pendingtitles,
+          pendingdurations: data.pendingdurations,
+          playedurls: data.playedurls,
+          playednames: data.playednames,
+          playedtitles: data.playedtitles,
+          playedsubmittedats: data.playedsubmittedats,
+        },
+        peerid,
+      )
+      if (!mediaqueuecurrenturl(peerid)) {
+        mediaqueueclearnowplayingforhelper(peerid)
       }
       break
     case 'mediaqueue:status':
       if (mediaqueuereadlistenplayer()) {
         const detail = mediaqueuestatusdetail(data.detail)
         const player = mediaqueuereadlistenplayer()
-        mediaqueueapplynowplayingstatus(data.status, data.detail)
-        handlequeuestatus(data.status, data.detail)
+        mediaqueueapplynowplayingstatus(peerid, data.status, data.detail)
+        handlequeuestatus(peerid, data.status, data.detail)
         mediaqueueapplyworkstatus(data.status, data.detail)
         if (data.status === 'download-failed') {
           apierror(SOFTWARE, player, 'media', `download failed${detail}`)
@@ -312,20 +364,44 @@ function clearhelperreconnecttimer() {
   }
 }
 
-function mediaqueuereconnecthelper() {
+function closehelperconnection(peerid: string) {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    return
+  }
+  const conn = helperconnections.get(trimmed)
+  helperconnections.delete(trimmed)
+  mediaqueuesethelperconnected(trimmed, false)
+  mediaqueueclearhelpersnapshot(trimmed)
+  if (ispresent(conn)) {
+    try {
+      conn.close()
+    } catch {
+      // ignore
+    }
+  }
+}
+
+function mediaqueuereconnecthelpers() {
   if (!mediaqueueislistening()) {
     return
   }
-  const helper = mediaqueuereadhelperpeerid().trim()
-  if (!helper) {
-    return
+  const peers = new Set<string>()
+  const bound = mediaqueuereadboundboardids()
+  for (let i = 0; i < bound.length; ++i) {
+    const helper = mediaqueuereadhelperforboard(bound[i])
+    if (helper) {
+      peers.add(helper)
+    }
   }
-  if (helperdatalinkup()) {
-    return
-  }
-  const conn = netterminaldataconnect(helper)
-  if (ispresent(conn)) {
-    wirehelperconnection(conn)
+  for (const helper of peers) {
+    if (helperdatalinkup(helper)) {
+      continue
+    }
+    const conn = netterminaldataconnect(helper)
+    if (ispresent(conn)) {
+      wirehelperconnection(conn, helper)
+    }
   }
 }
 
@@ -333,63 +409,141 @@ function schedulehelperreconnect() {
   if (!mediaqueueislistening()) {
     return
   }
-  if (helperdatalinkup()) {
-    return
-  }
   if (ispresent(helperreconnecttimer)) {
     return
   }
   helperreconnecttimer = setTimeout(() => {
     helperreconnecttimer = undefined
-    mediaqueuereconnecthelper()
+    mediaqueuereconnecthelpers()
   }, HELPER_RECONNECT_MS)
 }
 
-function wirehelperconnection(conn: DataConnection) {
-  const previous = helperconnection
-  helperconnection = conn
-  mediaqueuesethelperconnected(conn.open)
-  if (ispresent(previous) && previous !== conn) {
-    previous.close()
+function wirehelperconnection(conn: DataConnection, peerid: string) {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    return
   }
-  conn.on('data', handlehelperdata)
+  const previous = helperconnections.get(trimmed)
+  helperconnections.set(trimmed, conn)
+  mediaqueuesethelperconnected(trimmed, conn.open)
+  if (ispresent(previous) && previous !== conn) {
+    try {
+      previous.close()
+    } catch {
+      // ignore
+    }
+  }
+  conn.on('data', (data: unknown) => {
+    handlehelperdata(trimmed, data)
+  })
   conn.on('open', () => {
-    if (helperconnection !== conn) {
+    if (helperconnections.get(trimmed) !== conn) {
       return
     }
     clearhelperreconnecttimer()
-    mediaqueuesethelperconnected(true)
-    sendtohelper({
+    mediaqueuesethelperconnected(trimmed, true)
+    sendtohelper(trimmed, {
       type: 'mediaqueue:hello',
       protocol: MEDIAQUEUE_PROTOCOL,
       role: 'cafe',
       peerid: readnetworkpeerid() ?? '',
     })
-    mediaqueuerequesthelpercall()
+    mediaqueuerequesthelpercall(trimmed)
   })
   conn.on('close', () => {
-    if (helperconnection === conn) {
-      helperconnection = undefined
-      mediaqueuesethelperconnected(false)
-      schedulehelperreconnect()
+    if (helperconnections.get(trimmed) === conn) {
+      helperconnections.delete(trimmed)
+      mediaqueuesethelperconnected(trimmed, false)
+      if (mediaqueuereadboardsforhelper(trimmed).length > 0) {
+        schedulehelperreconnect()
+      }
     }
   })
   conn.on('error', () => {
-    if (helperconnection === conn) {
-      helperconnection = undefined
-      mediaqueuesethelperconnected(false)
-      schedulehelperreconnect()
+    if (helperconnections.get(trimmed) === conn) {
+      helperconnections.delete(trimmed)
+      mediaqueuesethelperconnected(trimmed, false)
+      if (mediaqueuereadboardsforhelper(trimmed).length > 0) {
+        schedulehelperreconnect()
+      }
     }
   })
 }
 
+function ensurehelperconnection(peerid: string): MAYBE<DataConnection> {
+  const trimmed = peerid.trim()
+  if (!trimmed) {
+    return undefined
+  }
+  if (helperdatalinkup(trimmed)) {
+    return helperconnections.get(trimmed)
+  }
+  const conn = netterminaldataconnect(trimmed)
+  if (ispresent(conn)) {
+    wirehelperconnection(conn, trimmed)
+  }
+  return conn
+}
+
 netterminalregisterpeeropenhandler(() => {
-  mediaqueuereconnecthelper()
+  mediaqueuereconnecthelpers()
 })
 
+function openorreusehelper(
+  player: string,
+  peerid: string,
+  boardid: string,
+  boardname: string,
+  replaced: boolean,
+): void {
+  syncboardhelperlayer(player, boardid, peerid)
+  const boundcount = mediaqueuereadboardsforhelper(peerid).length
+  const label = boardname || boardid
+  if (replaced) {
+    apilog(
+      SOFTWARE,
+      player,
+      `media replaced helper ${peerid} on board ${label}`,
+    )
+  } else if (boundcount > 1) {
+    apilog(
+      SOFTWARE,
+      player,
+      `media bound to helper ${peerid} on board ${label} (${boundcount} boards)`,
+    )
+  } else {
+    apilog(
+      SOFTWARE,
+      player,
+      `media bound to helper ${peerid} on board ${label}`,
+    )
+  }
+  if (helperdatalinkup(peerid)) {
+    mediaqueuecopynowplayingtoboard(player, peerid, boardid)
+    mediaqueueconnectifonboard(peerid, boardid)
+    return
+  }
+  apilog(
+    SOFTWARE,
+    player,
+    'waiting for Media Queue app to accept the connection',
+  )
+  const conn = ensurehelperconnection(peerid)
+  if (ispresent(conn)) {
+    mediaqueueconnectifonboard(peerid, boardid)
+  } else {
+    apierror(SOFTWARE, player, 'media', 'could not open helper data connection')
+    mediaqueueclearboardhelper(boardid)
+    syncboardhelperlayer(player, boardid, undefined)
+    if (!mediaqueuehasanybind()) {
+      mediaqueueclearlistenstate()
+    }
+  }
+}
+
 /**
- * Connect to the desktop helper's Peer id and bind media to the player's
- * current board (helper peer id projected on board for direct player connects).
+ * Bind a desktop helper Peer id to a board. Same helper may bind many boards;
+ * a different helper replaces that board only. Multiple helpers can stay open.
  */
 export function mediaqueuelisten(
   player: string,
@@ -421,90 +575,76 @@ export function mediaqueuelisten(
   }
 
   mediaqueuesetlistenplayer(player)
+  const previous = mediaqueuereadhelperforboard(boundboardid)
+  const label = boardname ?? boundboardid
 
-  if (mediaqueueislistening()) {
-    if (
-      mediaqueuereadhelperpeerid() === trimmed &&
-      mediaqueuereadboundboardid() === boundboardid
-    ) {
-      if (helperdatalinkup()) {
-        apilog(
-          SOFTWARE,
-          player,
-          `media already listening to helper ${trimmed} on board ${boardname ?? boundboardid}`,
-        )
-        mediaqueueretryplayerconnect()
-        return
-      }
+  if (previous === trimmed) {
+    if (helperdatalinkup(trimmed)) {
       apilog(
         SOFTWARE,
         player,
-        `media reconnecting to helper ${trimmed} on board ${boardname ?? boundboardid}`,
+        `media already listening to helper ${trimmed} on board ${label}`,
       )
-      syncboardhelperlayer(player, boundboardid, trimmed)
-      const conn = netterminaldataconnect(trimmed)
-      if (ispresent(conn)) {
-        wirehelperconnection(conn)
-        mediaqueueconnectifonboard(trimmed, boundboardid)
-      } else {
-        apierror(
-          SOFTWARE,
-          player,
-          'media',
-          'could not reopen helper data connection',
-        )
-      }
+      mediaqueueretryplayerconnect()
       return
     }
-    apierror(
+    apilog(
       SOFTWARE,
       player,
-      'media',
-      `already listening to helper ${mediaqueuereadhelperpeerid() || '?'} on board ${mediaqueuereadboundboardid() || '?'} -- use #queue stop first`,
+      `media reconnecting to helper ${trimmed} on board ${label}`,
     )
+    openorreusehelper(player, trimmed, boundboardid, label, false)
     return
   }
 
-  mediaqueuesethelperpeerid(trimmed)
-  mediaqueuesetlistenboardid(boundboardid)
-  mediaqueuesetlistening(true)
-  syncboardhelperlayer(player, boundboardid, trimmed)
-  apilog(
-    SOFTWARE,
-    player,
-    `media bound to helper ${mediaqueuereadhelperpeerid()} on board ${boardname ?? boundboardid}`,
-  )
-  apilog(
-    SOFTWARE,
-    player,
-    'waiting for Media Queue app to accept the connection',
-  )
-  const conn = netterminaldataconnect(mediaqueuereadhelperpeerid())
-  if (ispresent(conn)) {
-    wirehelperconnection(conn)
-    mediaqueueconnectifonboard(trimmed, boundboardid)
-  } else {
-    apierror(SOFTWARE, player, 'media', 'could not open helper data connection')
-    syncboardhelperlayer(player, boundboardid, undefined)
-    mediaqueueclearlistenstate()
+  if (previous && previous !== trimmed) {
+    mediaqueuesetboardhelper(boundboardid, trimmed)
+    mediaqueuesyncnowplayingboard(player, boundboardid, undefined)
+    if (mediaqueuereadboardsforhelper(previous).length === 0) {
+      mediaqueueclearnowplayingforhelper(previous)
+      closehelperconnection(previous)
+    }
+    openorreusehelper(player, trimmed, boundboardid, label, true)
+    return
   }
+
+  mediaqueuesetboardhelper(boundboardid, trimmed)
+  openorreusehelper(player, trimmed, boundboardid, label, false)
 }
 
-export function mediaqueuestop(player: string): void {
-  const boundboardid = mediaqueuereadboundboardid()
+/**
+ * Unbind the given board. When it was the last bound board, tear down helpers
+ * and the local MediaConnection.
+ */
+export function mediaqueuestop(player: string, boardid: string): void {
   mediaqueuesetlistenplayer(player)
-  clearhelperreconnecttimer()
-  mediaqueuesetlistening(false)
-  if (ispresent(helperconnection)) {
-    const conn = helperconnection
-    helperconnection = undefined
-    mediaqueuesethelperconnected(false)
-    conn.close()
+  const boundboardid = boardid.trim()
+  if (!boundboardid) {
+    apierror(SOFTWARE, player, 'media', 'need an active board to stop')
+    return
   }
-  if (boundboardid) {
-    syncboardhelperlayer(player, boundboardid, undefined)
-  }
+  const helper = mediaqueueclearboardhelper(boundboardid)
+  syncboardhelperlayer(player, boundboardid, undefined)
+  mediaqueuesyncnowplayingboard(player, boundboardid, undefined)
   mediaqueuedisconnect()
-  mediaqueueclearlistenstate()
-  apilog(SOFTWARE, player, 'media stopped')
+
+  if (helper && mediaqueuereadboardsforhelper(helper).length === 0) {
+    closehelperconnection(helper)
+  }
+
+  if (!mediaqueuehasanybind()) {
+    clearhelperreconnecttimer()
+    for (const peer of Array.from(helperconnections.keys())) {
+      closehelperconnection(peer)
+    }
+    mediaqueueclearlistenstate()
+    apilog(SOFTWARE, player, 'media stopped')
+    return
+  }
+
+  apilog(
+    SOFTWARE,
+    player,
+    `media unbound from board ${mediaqueuereadboundboardlabel(boundboardid)}`,
+  )
 }
