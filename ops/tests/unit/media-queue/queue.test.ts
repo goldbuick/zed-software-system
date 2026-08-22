@@ -1,5 +1,7 @@
 import {
   MQ_MAX_DURATION_SEC,
+  MQ_SHORT_FORM_MAX_TOTAL_SEC,
+  MQ_SHORT_FORM_PLAY_COUNT,
   mqqueueadd,
   mqqueueallowlongforurl,
   mqqueueapplydisk,
@@ -16,6 +18,7 @@ import {
   mqqueuesetlimit,
   mqqueueshift,
   mqqueueskip,
+  mqshortformplaycount,
 } from 'ops/media-queue/src/shared/queue'
 import {
   mqismusicyoutubeurl,
@@ -361,3 +364,27 @@ describe('mqparseprobebatchstdout', () => {
   })
 })
 
+
+describe('mqshortformplaycount', () => {
+  it('plays short clips up to three times within the 30s cap', () => {
+    expect(mqshortformplaycount(10)).toBe(3)
+    expect(mqshortformplaycount(5)).toBe(3)
+  })
+
+  it('drops a replay when another play would exceed 30s', () => {
+    expect(mqshortformplaycount(12)).toBe(2)
+    expect(mqshortformplaycount(20)).toBe(1)
+  })
+
+  it('stays one-shot for long or unknown durations', () => {
+    expect(mqshortformplaycount(90)).toBe(1)
+    expect(mqshortformplaycount(0)).toBe(1)
+    expect(mqshortformplaycount(-1)).toBe(1)
+    expect(mqshortformplaycount(Number.NaN)).toBe(1)
+  })
+
+  it('matches the shared play-count and total-sec constants', () => {
+    expect(MQ_SHORT_FORM_PLAY_COUNT).toBe(3)
+    expect(MQ_SHORT_FORM_MAX_TOTAL_SEC).toBe(30)
+  })
+})
