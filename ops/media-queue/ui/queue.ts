@@ -13,6 +13,7 @@ import {
   mqqueueclear,
   mqqueuecountplayer,
   mqqueuecreate,
+  mqqueuecurrententry,
   mqqueuecurrenturl,
   mqqueuepend,
   mqqueuereaddisk,
@@ -40,6 +41,10 @@ export function helperqueuereadsnapshot(): MQ_QUEUE_SNAPSHOT {
 
 export function helperqueuecurrenturl(): string | undefined {
   return mqqueuecurrenturl(helperqueue)
+}
+
+export function helperqueuecurrententry(): MQ_QUEUE_ENTRY | undefined {
+  return mqqueuecurrententry(helperqueue)
 }
 
 export function helperqueueurls(): string[] {

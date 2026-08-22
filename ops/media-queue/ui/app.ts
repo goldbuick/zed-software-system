@@ -13,7 +13,10 @@ import type {
   MQ_PROBE_PROGRESS,
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
-import { mqqueueneedspending } from '../src/shared/queue'
+import {
+  mqqueueneedspending,
+  mqshortformplaycount,
+} from '../src/shared/queue'
 import {
   mqqueuenormalizeurl,
   mqurlisplaylistcontainer,
@@ -42,6 +45,7 @@ import {
   helperqueueaudioonly,
   helperqueueclear,
   helperqueuecountplayer,
+  helperqueuecurrententry,
   helperqueuecurrenturl,
   helperqueuelimit,
   helperqueuenexturl,
@@ -153,6 +157,8 @@ let extractstep = 'starting'
 let downloadpolltimer: number | null = null
 let preppolltimer: number | null = null
 let endedvideo: MQ_ENDED_MEDIA | null = null
+/** Replays left for short clips (0 = advance on next ended). */
+let shortformplaysremaining = 0
 let prepstate: MQ_PREP_VIEW | null = null
 let preptarget = ''
 
@@ -1202,6 +1208,7 @@ async function endcall(opts?: { natural?: boolean; keepplayers?: boolean }) {
   }
   currentplaybackurl = ''
   currentplaybacktitle = ''
+  shortformplaysremaining = 0
   if (hadcall && !naturalend) {
     sendstatus('call-stopped')
   }
@@ -1214,6 +1221,18 @@ function wireplaybackended(sourcevideo: MQ_ENDED_MEDIA | null) {
   }
   endedvideo = sourcevideo
   function onended() {
+    if (shortformplaysremaining > 0) {
+      shortformplaysremaining -= 1
+      try {
+        sourcevideo.currentTime = 0
+      } catch (_) {}
+      const playresult = sourcevideo.play()
+      if (playresult && typeof playresult.catch === 'function') {
+        playresult.catch(function () {})
+      }
+      // ended listener stays attached for the next finish
+      return
+    }
     clearendedlistener()
     sendstatus('playback-ended', '')
     void endcall({ natural: true, keepplayers: true }).then(function () {
@@ -1362,13 +1381,26 @@ async function startplaybackandcall(url: string) {
     setpreviewstream(mediastream)
   }
   void refreshcachebytes()
-  wireplaybackended(
+  const endedel =
     playback && playback.video
       ? playback.video
       : playback && playback.audio
         ? playback.audio
-        : readendedelement(),
-  )
+        : readendedelement()
+  let durationsec = 0
+  const entry = helperqueuecurrententry()
+  if (entry && entry.url === url && Number.isFinite(entry.durationsec)) {
+    durationsec = entry.durationsec
+  }
+  if (
+    (!Number.isFinite(durationsec) || durationsec <= 0) &&
+    endedel &&
+    Number.isFinite(endedel.duration)
+  ) {
+    durationsec = endedel.duration
+  }
+  shortformplaysremaining = mqshortformplaycount(durationsec) - 1
+  wireplaybackended(endedel)
   answerpendingplayercalls()
   publishstreamtoplayers()
   syncplayerlinkstatus()

@@ -2,9 +2,30 @@ import { mqqueuenormalizeurl } from './urlnormalize'
 
 export const MQ_DEFAULT_PER_PLAYER_LIMIT = 5
 export const MQ_MIN_PER_PLAYER_LIMIT = 1
-export const MQ_MAX_PER_PLAYER_LIMIT = 20
+export const MQ_MAX_PER_PLAYER_LIMIT = 50
 export const MQ_MAX_DURATION_SEC = 10 * 60
 export const MQ_PLAYED_CAP = 100
+/** Max times a short clip may play before the queue advances. */
+export const MQ_SHORT_FORM_PLAY_COUNT = 3
+/** Do not schedule another play if cumulative time would exceed this. */
+export const MQ_SHORT_FORM_MAX_TOTAL_SEC = 30
+
+/**
+ * How many times a clip of `durationsec` may play (at least 1).
+ * Caps at MQ_SHORT_FORM_PLAY_COUNT and cumulative MQ_SHORT_FORM_MAX_TOTAL_SEC.
+ */
+export function mqshortformplaycount(durationsec: number): number {
+  if (!Number.isFinite(durationsec) || durationsec <= 0) {
+    return 1
+  }
+  return Math.max(
+    1,
+    Math.min(
+      MQ_SHORT_FORM_PLAY_COUNT,
+      Math.floor(MQ_SHORT_FORM_MAX_TOTAL_SEC / durationsec),
+    ),
+  )
+}
 
 export type MQ_QUEUE_ENTRY = {
   url: string

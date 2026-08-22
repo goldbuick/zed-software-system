@@ -151,7 +151,7 @@ export function mediaqueueapplysnapshot(
           ? Math.max(0, Math.min(Math.floor(n), nexturls.length - 1))
           : 0,
     perplayerlimit: Number.isFinite(limit)
-      ? Math.max(1, Math.min(20, Math.floor(limit)))
+      ? Math.max(1, Math.min(50, Math.floor(limit)))
       : DEFAULT_PER_PLAYER_LIMIT,
     pendingurls: nextpending,
     pendingnames: asstrings(snapshot.pendingnames, nextpending.length),
