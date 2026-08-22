@@ -93,7 +93,7 @@ describe('helper queue owner', () => {
 
   it('clamps limit setter', () => {
     const queue = mqqueuecreate()
-    expect(mqqueuesetlimit(queue, 99)).toBe(20)
+    expect(mqqueuesetlimit(queue, 99)).toBe(50)
     expect(mqqueuesetlimit(queue, 0)).toBe(1)
   })
 

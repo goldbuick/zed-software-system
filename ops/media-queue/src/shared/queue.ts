@@ -2,7 +2,7 @@ import { mqqueuenormalizeurl } from './urlnormalize'
 
 export const MQ_DEFAULT_PER_PLAYER_LIMIT = 5
 export const MQ_MIN_PER_PLAYER_LIMIT = 1
-export const MQ_MAX_PER_PLAYER_LIMIT = 20
+export const MQ_MAX_PER_PLAYER_LIMIT = 50
 export const MQ_MAX_DURATION_SEC = 10 * 60
 export const MQ_PLAYED_CAP = 100
 

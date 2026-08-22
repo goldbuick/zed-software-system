@@ -5,6 +5,7 @@ import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueuehasvideo,
+  useBoardTvSlideGate,
   useBoardTvVisible,
 } from 'zss/feature/mediaqueue/boardtvvisible'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
@@ -26,6 +27,7 @@ import {
   drawboardtvmarqueerow,
   initboardtvgrid,
 } from 'zss/gadget/boardtvgrid'
+import { BoardTvSlide } from 'zss/gadget/boardtvslide'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
@@ -179,7 +181,8 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
 
   const screen = useMedia((state) => state.screen)
   const hasvideo = mediaqueuehasvideo(screen)
-  const shouldshow = useBoardTvVisible(gadgetboard, hasvideo)
+  const wantshow = useBoardTvVisible(gadgetboard, hasvideo)
+  const slide = useBoardTvSlideGate(wantshow)
   const video =
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null
@@ -236,6 +239,9 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   )
 
   useEffect(() => {
+    if (!slide.active) {
+      return
+    }
     const grid = initboardtvgrid()
     const state = gridstore.getState()
     for (let i = 0; i < grid.char.length; ++i) {
@@ -253,9 +259,12 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
       nowplayinglabel,
       0,
     )
-  }, [gridstore, nowplayinglabel, layout.marqueerow])
+  }, [gridstore, nowplayinglabel, layout.marqueerow, slide.active])
 
   useFrame((_, delta) => {
+    if (!slide.active) {
+      return
+    }
     if (videotexture) {
       videotexture.needsUpdate = true
     }
@@ -287,7 +296,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     )
   })
 
-  if (!shouldshow) {
+  if (!slide.active) {
     return null
   }
 
@@ -298,33 +307,41 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   // Each face pushes out along its own normal, so the pair reads as a slab
   // instead of two coplanar surfaces fighting for depth.
   const depth = layout.backface ? layout.videoz : 0
+  // Rise from below the mount (negative local Y).
+  const edgeoff = -tvdrawheight
 
   return (
     <group position={[centerx, centery, z]}>
-      <BoardTvFace
-        gridstore={gridstore}
-        texture={videotexture}
-        fit={fit}
-        layout={layout}
-        upright={upright}
-        spin={0}
-        depth={depth}
-        tvdrawwidth={tvdrawwidth}
-        tvdrawheight={tvdrawheight}
-      />
-      {layout.backface ? (
+      <BoardTvSlide
+        shouldclose={slide.shouldclose}
+        edgeoff={edgeoff}
+        onclosed={slide.onclosed}
+      >
         <BoardTvFace
           gridstore={gridstore}
           texture={videotexture}
           fit={fit}
           layout={layout}
           upright={upright}
-          spin={Math.PI}
+          spin={0}
           depth={depth}
           tvdrawwidth={tvdrawwidth}
           tvdrawheight={tvdrawheight}
         />
-      ) : null}
+        {layout.backface ? (
+          <BoardTvFace
+            gridstore={gridstore}
+            texture={videotexture}
+            fit={fit}
+            layout={layout}
+            upright={upright}
+            spin={Math.PI}
+            depth={depth}
+            tvdrawwidth={tvdrawwidth}
+            tvdrawheight={tvdrawheight}
+          />
+        ) : null}
+      </BoardTvSlide>
     </group>
   )
 }
