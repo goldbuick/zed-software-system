@@ -3,18 +3,14 @@ import { type ReactNode, useLayoutEffect, useRef } from 'react'
 import { Group } from 'three'
 import { ispresent } from 'zss/mapping/types'
 import {
-  SLIDE_CLOSE_FAILSAFE_MS,
-  SLIDE_CLOSE_VELOCITY,
   SLIDE_OPEN_VELOCITY,
   animpositiontotarget,
   animsnapy,
 } from 'zss/screens/scroll/anim'
 
 export type BoardTvSlideProps = {
-  shouldclose: boolean
   /** Local-Y off-screen edge (negative = below mount). */
   edgeoff: number
-  onclosed: () => void
   children: ReactNode
 }
 
@@ -25,63 +21,33 @@ function seedy(group: Group, value: number) {
 }
 
 /**
- * Board-local Y slide for the TV mount. Same damp lifecycle as PanelSlide,
- * without viewport-edge math (TV lives in board space).
+ * Board-local Y slide-in for the TV mount. Seeds off-screen once, damps to 0.
+ * Hide is instant unmount (no slide-out).
  */
-export function BoardTvSlide({
-  shouldclose,
-  edgeoff,
-  onclosed,
-  children,
-}: BoardTvSlideProps) {
+export function BoardTvSlide({ edgeoff, children }: BoardTvSlideProps) {
   const groupref = useRef<Group>(null)
-  const closedref = useRef(false)
-  const wasclosedref = useRef(true)
-  const edgeoffref = useRef(animsnapy(edgeoff))
-  const onclosedref = useRef(onclosed)
-  onclosedref.current = onclosed
+  const seededref = useRef(false)
   const snapped = animsnapy(edgeoff)
 
-  function finishclose() {
-    if (closedref.current) {
-      return
-    }
-    closedref.current = true
-    onclosedref.current()
-  }
-
   useLayoutEffect(() => {
-    edgeoffref.current = snapped
-    if (shouldclose) {
-      wasclosedref.current = true
-      closedref.current = false
+    if (seededref.current || !groupref.current) {
       return
     }
-    if (wasclosedref.current && groupref.current) {
-      wasclosedref.current = false
-      seedy(groupref.current, snapped)
-    }
-  }, [shouldclose, snapped])
-
-  useLayoutEffect(() => {
-    if (!shouldclose) {
-      return
-    }
-    const timer = setTimeout(finishclose, SLIDE_CLOSE_FAILSAFE_MS)
-    return () => clearTimeout(timer)
-  }, [shouldclose])
+    seededref.current = true
+    seedy(groupref.current, snapped)
+  }, [snapped])
 
   useFrame((_, delta) => {
     if (!ispresent(groupref.current)) {
       return
     }
-    const target = shouldclose ? edgeoffref.current : 0
-    const velocity = shouldclose ? SLIDE_CLOSE_VELOCITY : SLIDE_OPEN_VELOCITY
-    if (animpositiontotarget(groupref.current, 'y', target, delta, velocity)) {
-      if (shouldclose) {
-        finishclose()
-      }
-    }
+    animpositiontotarget(
+      groupref.current,
+      'y',
+      0,
+      delta,
+      SLIDE_OPEN_VELOCITY,
+    )
   })
 
   return <group ref={groupref}>{children}</group>

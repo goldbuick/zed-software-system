@@ -5,7 +5,6 @@ import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
 import {
   mediaqueuehasvideo,
-  useBoardTvSlideGate,
   useBoardTvVisible,
 } from 'zss/feature/mediaqueue/boardtvvisible'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
@@ -154,8 +153,9 @@ function BoardTvFace({
 }
 
 /**
- * Board-space MediaStream sink (#media). Parent must be the live board group
- * so the TV pans/tilts with the board. Not a tape overlay.
+ * Board-space MediaStream sink (#media). Parent should be the focus/corner
+ * frame (sibling of liveboard), not liveboard itself -- edge-pan offsets the
+ * live board. Slide-in on mount; hide is instant unmount. Not a tape overlay.
  */
 export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
@@ -182,7 +182,6 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const screen = useMedia((state) => state.screen)
   const hasvideo = mediaqueuehasvideo(screen)
   const wantshow = useBoardTvVisible(gadgetboard, hasvideo)
-  const slide = useBoardTvSlideGate(wantshow)
   const video =
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null
@@ -239,7 +238,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   )
 
   useEffect(() => {
-    if (!slide.active) {
+    if (!wantshow) {
       return
     }
     const grid = initboardtvgrid()
@@ -259,10 +258,10 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
       nowplayinglabel,
       0,
     )
-  }, [gridstore, nowplayinglabel, layout.marqueerow, slide.active])
+  }, [gridstore, nowplayinglabel, layout.marqueerow, wantshow])
 
   useFrame((_, delta) => {
-    if (!slide.active) {
+    if (!wantshow) {
       return
     }
     if (videotexture) {
@@ -296,7 +295,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     )
   })
 
-  if (!slide.active) {
+  if (!wantshow) {
     return null
   }
 
@@ -312,11 +311,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
 
   return (
     <group position={[centerx, centery, z]}>
-      <BoardTvSlide
-        shouldclose={slide.shouldclose}
-        edgeoff={edgeoff}
-        onclosed={slide.onclosed}
-      >
+      <BoardTvSlide edgeoff={edgeoff}>
         <BoardTvFace
           gridstore={gridstore}
           texture={videotexture}

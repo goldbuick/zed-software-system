@@ -2,7 +2,7 @@ import { RUNTIME } from 'zss/config'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import {
   mediaqueuehasvideo,
-  useBoardTvSkipCeiling,
+  useBoardTvVisible,
 } from 'zss/feature/mediaqueue/boardtvvisible'
 import { LAYER, LAYER_TYPE, layersreadcontrol } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
@@ -53,9 +53,8 @@ export function FPVLayer({
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
   const hasvideo = useMedia((state) => mediaqueuehasvideo(state.screen))
-  // Same gate as BoardTvSink (including mid-close slide) so the ceiling does
-  // not pop in while the TV is still exiting.
-  const skipceiling = useBoardTvSkipCeiling(gadgetboard, hasvideo)
+  // Same gate as BoardTvSink: bound board + helper or stream.
+  const skipceiling = useBoardTvVisible(gadgetboard, hasvideo)
 
   const control = layersreadcontrol(
     useGadgetClient.getState().gadget.layers ?? [],

@@ -469,7 +469,6 @@ export const FPVGraphics = memo(function FPVGraphics({
                     />
                   ) : null,
                 )}
-                <BoardTvSink graphics="fpv" />
                 {layers.map((layer) =>
                   layer.type === LAYER_TYPE.SPRITES ? (
                     <FPVLayer
@@ -492,6 +491,8 @@ export const FPVGraphics = memo(function FPVGraphics({
                 ))}
                 <InspectorComponent z={inspectorz} />
               </group>
+              {/* Outside liveboard so edge-pan board offset does not steal the slide-out. */}
+              <BoardTvSink graphics="fpv" />
               {exitpreviewgroups.map(({ key, preview, position }) => {
                 if (preview.layers.length > 0) {
                   return (
