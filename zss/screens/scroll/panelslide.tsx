@@ -3,16 +3,13 @@ import { type ReactNode, useLayoutEffect, useRef } from 'react'
 import { Group } from 'three'
 import { ispresent } from 'zss/mapping/types'
 import {
+  SLIDE_CLOSE_FAILSAFE_MS,
+  SLIDE_CLOSE_VELOCITY,
+  SLIDE_OPEN_VELOCITY,
   animpositiontotarget,
   animsnapx,
   animsnapy,
 } from 'zss/screens/scroll/anim'
-
-// 4th arg to animpositiontotarget / maath damp: higher is faster with our
-// maxSpeed + rsqw setup (open ~160ms at 2.8; close ~425ms at 1.4).
-const SLIDE_OPEN_VELOCITY = 2.8
-const SLIDE_CLOSE_VELOCITY = 1.4
-const SLIDE_CLOSE_FAILSAFE_MS = 5000
 
 export type PanelSlideProps = {
   shouldclose: boolean

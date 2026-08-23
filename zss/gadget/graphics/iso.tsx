@@ -378,7 +378,6 @@ export const IsoGraphics = memo(function IsoGraphics({
                           />
                         ) : null,
                       )}
-                      <BoardTvSink graphics="iso" />
                       {layers.map((layer) =>
                         layer.type === LAYER_TYPE.SPRITES ? (
                           <IsoLayer
@@ -399,6 +398,8 @@ export const IsoGraphics = memo(function IsoGraphics({
                       ))}
                       <InspectorComponent z={inspectorz} />
                     </group>
+                    {/* Outside liveboard so edge-pan board offset does not steal the slide-out. */}
+                    <BoardTvSink graphics="iso" />
                     {exitpreviewgroups.map(({ key, preview, position }) =>
                       preview.layers.length > 0 ? (
                         <group

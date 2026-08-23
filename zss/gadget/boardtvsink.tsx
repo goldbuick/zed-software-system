@@ -26,6 +26,7 @@ import {
   drawboardtvmarqueerow,
   initboardtvgrid,
 } from 'zss/gadget/boardtvgrid'
+import { BoardTvSlide } from 'zss/gadget/boardtvslide'
 import { LAYER_TYPE } from 'zss/gadget/data/types'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
@@ -152,8 +153,9 @@ function BoardTvFace({
 }
 
 /**
- * Board-space MediaStream sink (#media). Parent must be the live board group
- * so the TV pans/tilts with the board. Not a tape overlay.
+ * Board-space MediaStream sink (#media). Parent should be the focus/corner
+ * frame (sibling of liveboard), not liveboard itself -- edge-pan offsets the
+ * live board. Slide-in on mount; hide is instant unmount. Not a tape overlay.
  */
 export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
@@ -179,7 +181,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
 
   const screen = useMedia((state) => state.screen)
   const hasvideo = mediaqueuehasvideo(screen)
-  const shouldshow = useBoardTvVisible(gadgetboard, hasvideo)
+  const wantshow = useBoardTvVisible(gadgetboard, hasvideo)
   const video =
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null
@@ -236,6 +238,9 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   )
 
   useEffect(() => {
+    if (!wantshow) {
+      return
+    }
     const grid = initboardtvgrid()
     const state = gridstore.getState()
     for (let i = 0; i < grid.char.length; ++i) {
@@ -253,9 +258,12 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
       nowplayinglabel,
       0,
     )
-  }, [gridstore, nowplayinglabel, layout.marqueerow])
+  }, [gridstore, nowplayinglabel, layout.marqueerow, wantshow])
 
   useFrame((_, delta) => {
+    if (!wantshow) {
+      return
+    }
     if (videotexture) {
       videotexture.needsUpdate = true
     }
@@ -287,7 +295,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     )
   })
 
-  if (!shouldshow) {
+  if (!wantshow) {
     return null
   }
 
@@ -298,33 +306,37 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   // Each face pushes out along its own normal, so the pair reads as a slab
   // instead of two coplanar surfaces fighting for depth.
   const depth = layout.backface ? layout.videoz : 0
+  // Rise from below the mount (negative local Y).
+  const edgeoff = -tvdrawheight
 
   return (
     <group position={[centerx, centery, z]}>
-      <BoardTvFace
-        gridstore={gridstore}
-        texture={videotexture}
-        fit={fit}
-        layout={layout}
-        upright={upright}
-        spin={0}
-        depth={depth}
-        tvdrawwidth={tvdrawwidth}
-        tvdrawheight={tvdrawheight}
-      />
-      {layout.backface ? (
+      <BoardTvSlide edgeoff={edgeoff}>
         <BoardTvFace
           gridstore={gridstore}
           texture={videotexture}
           fit={fit}
           layout={layout}
           upright={upright}
-          spin={Math.PI}
+          spin={0}
           depth={depth}
           tvdrawwidth={tvdrawwidth}
           tvdrawheight={tvdrawheight}
         />
-      ) : null}
+        {layout.backface ? (
+          <BoardTvFace
+            gridstore={gridstore}
+            texture={videotexture}
+            fit={fit}
+            layout={layout}
+            upright={upright}
+            spin={Math.PI}
+            depth={depth}
+            tvdrawwidth={tvdrawwidth}
+            tvdrawheight={tvdrawheight}
+          />
+        ) : null}
+      </BoardTvSlide>
     </group>
   )
 }

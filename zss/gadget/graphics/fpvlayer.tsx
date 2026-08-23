@@ -53,7 +53,7 @@ export function FPVLayer({
   const drawheight = RUNTIME.DRAW_CHAR_HEIGHT()
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
   const hasvideo = useMedia((state) => mediaqueuehasvideo(state.screen))
-  // Same gate as BoardTvSink: bound board + helper or stream, not sim MEMORY.
+  // Same gate as BoardTvSink: bound board + helper or stream.
   const skipceiling = useBoardTvVisible(gadgetboard, hasvideo)
 
   const control = layersreadcontrol(

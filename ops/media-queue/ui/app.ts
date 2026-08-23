@@ -43,6 +43,7 @@ import {
   helperqueueclear,
   helperqueuecountplayer,
   helperqueuecurrenturl,
+  helperqueuedurationforurl,
   helperqueuelimit,
   helperqueuenexturl,
   helperqueuepend,
@@ -838,8 +839,17 @@ function handledownloadprogress(payload: unknown) {
   sendstatus('download-progress', progressdetail)
 }
 
-function sendstatus(status: string, detail?: string) {
-  send({ type: 'mediaqueue:status', status: status, detail: detail })
+function sendstatus(status: string, detail?: string, player?: string) {
+  const payload: {
+    type: 'mediaqueue:status'
+    status: string
+    detail?: string
+    player?: string
+  } = { type: 'mediaqueue:status', status: status, detail: detail }
+  if (player) {
+    payload.player = player
+  }
+  send(payload)
 }
 
 function measurecontentheight() {
@@ -1362,13 +1372,13 @@ async function startplaybackandcall(url: string) {
     setpreviewstream(mediastream)
   }
   void refreshcachebytes()
-  wireplaybackended(
+  const endedel =
     playback && playback.video
       ? playback.video
       : playback && playback.audio
         ? playback.audio
-        : readendedelement(),
-  )
+        : readendedelement()
+  wireplaybackended(endedel)
   answerpendingplayercalls()
   publishstreamtoplayers()
   syncplayerlinkstatus()
@@ -1513,7 +1523,13 @@ function handlecafemessage(data: unknown) {
           if (!title && fallbacktitle) {
             title = fallbacktitle
           }
-          const durationsec = Number(meta.durationsec)
+          let durationsec = Number(meta.durationsec)
+          if (!Number.isFinite(durationsec) || durationsec <= 0) {
+            const known = helperqueuedurationforurl(entryurl)
+            if (known > 0) {
+              durationsec = known
+            }
+          }
           const payload = {
             title,
             durationsec: Number.isFinite(durationsec) ? durationsec : 0,
@@ -1540,7 +1556,7 @@ function handlecafemessage(data: unknown) {
 
         const finishsingle = (outcome: ENQUEUE_OUTCOME, entryurl: string) => {
           if (outcome.kind === 'added') {
-            sendstatus('queue-added', entryurl)
+            sendstatus('queue-added', entryurl, player)
             restorehud()
             afterqueuemutate()
             if (!playbackstarted) {
@@ -1552,24 +1568,24 @@ function handlecafemessage(data: unknown) {
             return
           }
           if (outcome.kind === 'pending') {
-            sendstatus('queue-pending', entryurl)
+            sendstatus('queue-pending', entryurl, player)
             restorehud()
             afterqueuemutate()
             return
           }
           if (outcome.kind === 'limit') {
-            sendstatus('queue-error', 'limit')
+            sendstatus('queue-error', 'limit', player)
             restorehud()
             sendqueuesnapshot()
             return
           }
           if (outcome.kind === 'unplayable') {
-            sendstatus('queue-unplayable', outcome.reason || entryurl)
+            sendstatus('queue-unplayable', outcome.reason || entryurl, player)
             restorehud()
             sendqueuesnapshot()
             return
           }
-          sendstatus('queue-error', outcome.reason)
+          sendstatus('queue-error', outcome.reason, player)
           restorehud()
           sendqueuesnapshot()
         }

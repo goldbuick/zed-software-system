@@ -135,7 +135,7 @@ describe('mediaqueue queue projection', () => {
       },
       helper,
     )
-    expect(mediaqueuereadperplayerlimit(helper)).toBe(20)
+    expect(mediaqueuereadperplayerlimit(helper)).toBe(50)
     expect(mediaqueuereadstate(helper).index).toBe(1)
     mediaqueueapplysnapshot(
       {

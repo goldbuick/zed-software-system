@@ -346,7 +346,6 @@ export const FlatGraphics = memo(function FlatGraphics({
                     />
                   ) : null,
                 )}
-                <BoardTvSink graphics="flat" />
                 {layers.map((layer, i) =>
                   layer.type === LAYER_TYPE.SPRITES ? (
                     <FlatLayer
@@ -367,6 +366,8 @@ export const FlatGraphics = memo(function FlatGraphics({
                 ))}
                 <InspectorComponent z={inspectorz} />
               </group>
+              {/* Outside liveboard so edge-pan board offset does not steal the slide-out. */}
+              <BoardTvSink graphics="flat" />
               {exitpreviewgroups.map(({ key, preview, position }) =>
                 preview.layers.length > 0 ? (
                   <group key={`${exitpreviewepoch}-${key}`} position={position}>

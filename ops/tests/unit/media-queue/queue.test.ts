@@ -1,5 +1,6 @@
 import {
   MQ_MAX_DURATION_SEC,
+  MQ_SHORT_FORM_ALLOW_DUP_SEC,
   mqqueueadd,
   mqqueueallowlongforurl,
   mqqueueapplydisk,
@@ -16,6 +17,9 @@ import {
   mqqueuesetlimit,
   mqqueueshift,
   mqqueueskip,
+  mqqueuedurationforallow,
+  mqqueuereaddisk,
+  mqqueueshortformallowsduplicate,
 } from 'ops/media-queue/src/shared/queue'
 import {
   mqismusicyoutubeurl,
@@ -93,7 +97,7 @@ describe('helper queue owner', () => {
 
   it('clamps limit setter', () => {
     const queue = mqqueuecreate()
-    expect(mqqueuesetlimit(queue, 99)).toBe(20)
+    expect(mqqueuesetlimit(queue, 99)).toBe(50)
     expect(mqqueuesetlimit(queue, 0)).toBe(1)
   })
 
@@ -361,3 +365,107 @@ describe('mqparseprobebatchstdout', () => {
   })
 })
 
+
+describe('mqqueueshortformallowsduplicate', () => {
+  it('allows known durations of 30s or less', () => {
+    expect(mqqueueshortformallowsduplicate(10)).toBe(true)
+    expect(mqqueueshortformallowsduplicate(12)).toBe(true)
+    expect(mqqueueshortformallowsduplicate(30)).toBe(true)
+  })
+
+  it('rejects longer or unknown durations', () => {
+    expect(mqqueueshortformallowsduplicate(30.1)).toBe(false)
+    expect(mqqueueshortformallowsduplicate(90)).toBe(false)
+    expect(mqqueueshortformallowsduplicate(0)).toBe(false)
+    expect(mqqueueshortformallowsduplicate(-1)).toBe(false)
+    expect(mqqueueshortformallowsduplicate(Number.NaN)).toBe(false)
+  })
+
+  it('matches the shared allow-dup seconds constant', () => {
+    expect(MQ_SHORT_FORM_ALLOW_DUP_SEC).toBe(30)
+  })
+})
+
+describe('mqqueueadd short-form duplicates', () => {
+  it('allows the same short url twice', () => {
+    const queue = mqqueuecreate()
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/a', {
+        durationsec: 10,
+      }).ok,
+    ).toBe(true)
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/a', {
+        durationsec: 10,
+      }).ok,
+    ).toBe(true)
+    expect(mqqueuereadsnapshot(queue).urls).toEqual([
+      'https://short.example/a',
+      'https://short.example/a',
+    ])
+  })
+
+  it('allows a 30s clip to be re-added', () => {
+    const queue = mqqueuecreate()
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/b', {
+        durationsec: 30,
+      }).ok,
+    ).toBe(true)
+    expect(
+      mqqueueadd(queue, 'p2', 'guest', 'https://short.example/b', {
+        durationsec: 30,
+      }).ok,
+    ).toBe(true)
+  })
+
+
+  it('allows re-add when probe omits duration but queued entry is short', () => {
+    const queue = mqqueuecreate()
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/reuse', {
+        durationsec: 12,
+      }).ok,
+    ).toBe(true)
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/reuse', {
+        durationsec: 0,
+      }).ok,
+    ).toBe(true)
+    expect(mqqueuereadsnapshot(queue).urls.length).toBe(2)
+  })
+
+  it('keeps video shape when re-probe marks the duplicate audio-only', () => {
+    const queue = mqqueuecreate()
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/video', {
+        durationsec: 15,
+        audioonly: false,
+      }).ok,
+    ).toBe(true)
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://short.example/video', {
+        durationsec: 15,
+        audioonly: true,
+      }).ok,
+    ).toBe(true)
+    expect(mqqueuereaddisk(queue).audioonlys).toEqual([false, false])
+    expect(mqqueueallowlongforurl(queue, 'https://short.example/video')).toBe(
+      false,
+    )
+  })
+
+  it('still rejects long duplicates', () => {
+    const queue = mqqueuecreate()
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://long.example/c', {
+        durationsec: 60,
+      }).ok,
+    ).toBe(true)
+    expect(
+      mqqueueadd(queue, 'p1', 'goldbuick', 'https://long.example/c', {
+        durationsec: 60,
+      }),
+    ).toEqual({ ok: false, reason: 'duplicate' })
+  })
+})

@@ -36,7 +36,7 @@ export function boardtvshouldshow(
   return mediaqueuehelperconnected(helper) || hasvideo
 }
 
-/** Re-renders when helper listen / connect state changes (module singleton). */
+/** Re-renders when helper listen / connect state changes. */
 export function useBoardTvVisible(
   gadgetboard: string,
   hasvideo: boolean,

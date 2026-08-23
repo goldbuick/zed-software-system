@@ -76,6 +76,8 @@ export type MEDIAQUEUE_STATUS = {
   type: 'mediaqueue:status'
   status: string
   detail?: string
+  /** Submitting cafe player id for queue outcome toasts. */
+  player?: string
 }
 
 export type MEDIAQUEUE_REQUEST_CALL = {

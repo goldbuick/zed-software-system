@@ -235,11 +235,17 @@ function mediaqueueapplyworkstatus(status: string, detail?: string) {
   }
 }
 
-function handlequeuestatus(peerid: string, status: string, detail?: string) {
+function handlequeuestatus(
+  peerid: string,
+  status: string,
+  detail?: string,
+  submitter?: string,
+) {
+  const toastplayer =
+    String(submitter ?? '').trim() || mediaqueuereadlistenplayer()
   if (status === 'queue-added') {
-    const player = mediaqueuereadlistenplayer()
-    if (player) {
-      apitoast(SOFTWARE, player, `media added: ${detail ?? ''}`.trim())
+    if (toastplayer) {
+      apitoast(SOFTWARE, toastplayer, `media added: ${detail ?? ''}`.trim())
     }
     return
   }
@@ -258,22 +264,28 @@ function handlequeuestatus(peerid: string, status: string, detail?: string) {
     return
   }
   if (status === 'queue-error') {
+    if (!toastplayer) {
+      return
+    }
     if (detail === 'duplicate') {
-      toastlistenplayer(false, 'URL already in queue')
+      apitoast(SOFTWARE, toastplayer, 'URL already in queue')
       return
     }
     if (detail === 'limit') {
-      toastlistenplayer(
-        false,
+      apitoast(
+        SOFTWARE,
+        toastplayer,
         `queue limit (${mediaqueuereadperplayerlimit(peerid)} per player)`,
       )
       return
     }
-    toastlistenplayer(false, 'usage: #media <url>')
+    apitoast(SOFTWARE, toastplayer, 'usage: #media <url>')
     return
   }
   if (status === 'queue-pending') {
-    toastlistenplayer(true, `needs approval: ${detail ?? ''}`.trim())
+    if (toastplayer) {
+      apitoast(SOFTWARE, toastplayer, `needs approval: ${detail ?? ''}`.trim())
+    }
     return
   }
   if (status === 'queue-playlist') {
@@ -332,22 +344,35 @@ function handlehelperdata(peerid: string, data: unknown) {
         mediaqueueclearnowplayingforhelper(peerid)
       }
       break
-    case 'mediaqueue:status':
-      if (mediaqueuereadlistenplayer()) {
+    case 'mediaqueue:status': {
+      const listenplayer = mediaqueuereadlistenplayer()
+      const submitter = String(data.player ?? '').trim()
+      const queueoutcome =
+        data.status === 'queue-added' ||
+        data.status === 'queue-pending' ||
+        data.status === 'queue-error' ||
+        data.status === 'queue-unplayable' ||
+        data.status === 'queue-playlist'
+      if (listenplayer || (queueoutcome && submitter)) {
         const detail = mediaqueuestatusdetail(data.detail)
-        const player = mediaqueuereadlistenplayer()
-        mediaqueueapplynowplayingstatus(peerid, data.status, data.detail)
-        handlequeuestatus(peerid, data.status, data.detail)
-        mediaqueueapplyworkstatus(data.status, data.detail)
-        if (data.status === 'download-failed') {
-          apierror(SOFTWARE, player, 'media', `download failed${detail}`)
-        } else if (data.status === 'playback-failed') {
-          apierror(SOFTWARE, player, 'media', `playback failed${detail}`)
-        } else if (data.status === 'playing') {
-          mediaqueueretryplayerconnect()
+        const player = listenplayer || submitter
+        if (listenplayer) {
+          mediaqueueapplynowplayingstatus(peerid, data.status, data.detail)
+          mediaqueueapplyworkstatus(data.status, data.detail)
+        }
+        handlequeuestatus(peerid, data.status, data.detail, submitter)
+        if (listenplayer) {
+          if (data.status === 'download-failed') {
+            apierror(SOFTWARE, player, 'media', `download failed${detail}`)
+          } else if (data.status === 'playback-failed') {
+            apierror(SOFTWARE, player, 'media', `playback failed${detail}`)
+          } else if (data.status === 'playing') {
+            mediaqueueretryplayerconnect()
+          }
         }
       }
       break
+    }
     default:
       break
   }

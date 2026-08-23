@@ -13,7 +13,9 @@ import {
   mqqueueclear,
   mqqueuecountplayer,
   mqqueuecreate,
+  mqqueuecurrententry,
   mqqueuecurrenturl,
+  mqqueuedurationforkey,
   mqqueuepend,
   mqqueuereaddisk,
   mqqueuereadsnapshot,
@@ -23,6 +25,7 @@ import {
   mqqueueskip,
   mqqueueurls,
 } from '../src/shared/queue'
+import { mqqueuenormalizeurl } from '../src/shared/urlnormalize'
 
 const helperqueue: MQ_QUEUE = mqqueuecreate()
 
@@ -42,6 +45,10 @@ export function helperqueuecurrenturl(): string | undefined {
   return mqqueuecurrenturl(helperqueue)
 }
 
+export function helperqueuecurrententry(): MQ_QUEUE_ENTRY | undefined {
+  return mqqueuecurrententry(helperqueue)
+}
+
 export function helperqueueurls(): string[] {
   return mqqueueurls(helperqueue)
 }
@@ -57,6 +64,11 @@ export function helperqueueaudioonly(url: string): boolean {
 export function helperqueuenexturl(): string {
   const snap = mqqueuereadsnapshot(helperqueue)
   return String(snap.urls[snap.index + 1] || '').trim()
+}
+
+export function helperqueuedurationforurl(url: string): number {
+  const key = mqqueuenormalizeurl(url.trim())
+  return mqqueuedurationforkey(helperqueue, key)
 }
 
 export function helperqueueadd(

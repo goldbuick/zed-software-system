@@ -8,6 +8,11 @@ const CHAR_HEIGHT = 14
 const DRAW_CHAR_WIDTH = CHAR_WIDTH * CHAR_SCALE
 const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
 
+/** Shared by PanelSlide and board TV slide (maath damp + rsqw). */
+export const SLIDE_OPEN_VELOCITY = 2.8
+export const SLIDE_CLOSE_VELOCITY = 1.4
+export const SLIDE_CLOSE_FAILSAFE_MS = 5000
+
 export function animsnapy(value: number) {
   return snap(value, DRAW_CHAR_HEIGHT * 0.5)
 }
