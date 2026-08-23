@@ -125,7 +125,6 @@ export function mqqueuedurationforallow(
   return mqqueuedurationforkey(queue, key)
 }
 
-
 export function mqqueueclamplimit(limit: number): number {
   return Math.max(
     MQ_MIN_PER_PLAYER_LIMIT,

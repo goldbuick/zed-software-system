@@ -13,9 +13,9 @@ import {
   mqqueueclear,
   mqqueuecountplayer,
   mqqueuecreate,
-  mqqueuedurationforkey,
   mqqueuecurrententry,
   mqqueuecurrenturl,
+  mqqueuedurationforkey,
   mqqueuepend,
   mqqueuereaddisk,
   mqqueuereadsnapshot,
@@ -65,7 +65,6 @@ export function helperqueuenexturl(): string {
   const snap = mqqueuereadsnapshot(helperqueue)
   return String(snap.urls[snap.index + 1] || '').trim()
 }
-
 
 export function helperqueuedurationforurl(url: string): number {
   const key = mqqueuenormalizeurl(url.trim())

@@ -41,13 +41,7 @@ export function BoardTvSlide({ edgeoff, children }: BoardTvSlideProps) {
     if (!ispresent(groupref.current)) {
       return
     }
-    animpositiontotarget(
-      groupref.current,
-      'y',
-      0,
-      delta,
-      SLIDE_OPEN_VELOCITY,
-    )
+    animpositiontotarget(groupref.current, 'y', 0, delta, SLIDE_OPEN_VELOCITY)
   })
 
   return <group ref={groupref}>{children}</group>

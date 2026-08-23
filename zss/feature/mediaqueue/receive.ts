@@ -241,7 +241,8 @@ function handlequeuestatus(
   detail?: string,
   submitter?: string,
 ) {
-  const toastplayer = String(submitter || '').trim() || mediaqueuereadlistenplayer()
+  const toastplayer =
+    String(submitter ?? '').trim() || mediaqueuereadlistenplayer()
   if (status === 'queue-added') {
     if (toastplayer) {
       apitoast(SOFTWARE, toastplayer, `media added: ${detail ?? ''}`.trim())
@@ -283,11 +284,7 @@ function handlequeuestatus(
   }
   if (status === 'queue-pending') {
     if (toastplayer) {
-      apitoast(
-        SOFTWARE,
-        toastplayer,
-        `needs approval: ${detail ?? ''}`.trim(),
-      )
+      apitoast(SOFTWARE, toastplayer, `needs approval: ${detail ?? ''}`.trim())
     }
     return
   }
@@ -349,7 +346,7 @@ function handlehelperdata(peerid: string, data: unknown) {
       break
     case 'mediaqueue:status': {
       const listenplayer = mediaqueuereadlistenplayer()
-      const submitter = String(data.player || '').trim()
+      const submitter = String(data.player ?? '').trim()
       const queueoutcome =
         data.status === 'queue-added' ||
         data.status === 'queue-pending' ||
