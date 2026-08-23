@@ -5,25 +5,15 @@ export const MQ_MIN_PER_PLAYER_LIMIT = 1
 export const MQ_MAX_PER_PLAYER_LIMIT = 50
 export const MQ_MAX_DURATION_SEC = 10 * 60
 export const MQ_PLAYED_CAP = 100
-/** Max times a short clip may play before the queue advances. */
-export const MQ_SHORT_FORM_PLAY_COUNT = 3
-/** Do not schedule another play if cumulative time would exceed this. */
-export const MQ_SHORT_FORM_MAX_TOTAL_SEC = 30
+/** Allow another queue entry for the same URL when duration is this many seconds or less. */
+export const MQ_SHORT_FORM_ALLOW_DUP_SEC = 30
 
-/**
- * How many times a clip of `durationsec` may play (at least 1).
- * Caps at MQ_SHORT_FORM_PLAY_COUNT and cumulative MQ_SHORT_FORM_MAX_TOTAL_SEC.
- */
-export function mqshortformplaycount(durationsec: number): number {
-  if (!Number.isFinite(durationsec) || durationsec <= 0) {
-    return 1
-  }
-  return Math.max(
-    1,
-    Math.min(
-      MQ_SHORT_FORM_PLAY_COUNT,
-      Math.floor(MQ_SHORT_FORM_MAX_TOTAL_SEC / durationsec),
-    ),
+/** True when a known short duration may bypass duplicate rejection. */
+export function mqqueueshortformallowsduplicate(durationsec: number): boolean {
+  return (
+    Number.isFinite(durationsec) &&
+    durationsec > 0 &&
+    durationsec <= MQ_SHORT_FORM_ALLOW_DUP_SEC
   )
 }
 
@@ -98,6 +88,43 @@ export type MQ_QUEUE = {
   played: MQ_QUEUE_ENTRY[]
   limit: number
 }
+
+export function mqqueuedurationforkey(queue: MQ_QUEUE, key: string): number {
+  for (let i = 0; i < queue.entries.length; ++i) {
+    const durationsec = Number(queue.entries[i].durationsec)
+    if (
+      queue.entries[i].key === key &&
+      Number.isFinite(durationsec) &&
+      durationsec > 0
+    ) {
+      return durationsec
+    }
+  }
+  for (let i = 0; i < queue.pending.length; ++i) {
+    const durationsec = Number(queue.pending[i].durationsec)
+    if (
+      queue.pending[i].key === key &&
+      Number.isFinite(durationsec) &&
+      durationsec > 0
+    ) {
+      return durationsec
+    }
+  }
+  return 0
+}
+
+/** Prefer probe duration; else known duration already queued under this key. */
+export function mqqueuedurationforallow(
+  queue: MQ_QUEUE,
+  key: string,
+  probedurationsec: number,
+): number {
+  if (mqqueueshortformallowsduplicate(probedurationsec)) {
+    return probedurationsec
+  }
+  return mqqueuedurationforkey(queue, key)
+}
+
 
 export function mqqueueclamplimit(limit: number): number {
   return Math.max(
@@ -435,6 +462,41 @@ function mqqueuehaskey(queue: MQ_QUEUE, key: string): boolean {
   )
 }
 
+function mqqueueentryforkey(
+  queue: MQ_QUEUE,
+  key: string,
+): MQ_QUEUE_ENTRY | undefined {
+  return (
+    queue.entries.find((entry) => entry.key === key) ||
+    queue.pending.find((entry) => entry.key === key)
+  )
+}
+
+/** Stamp short-form re-add meta from the first queued copy of this key. */
+function mqqueuemetaforallowduplicate(
+  queue: MQ_QUEUE,
+  key: string,
+  meta: MQ_QUEUE_META | undefined,
+  durationsec: number,
+): MQ_QUEUE_META | undefined {
+  const existing = mqqueueentryforkey(queue, key)
+  if (!existing) {
+    return meta
+  }
+  const probed = Number(meta?.durationsec)
+  const next: MQ_QUEUE_META = {
+    ...meta,
+    // Re-probe can flip isstaticframevideo and force an audio-only ladder
+    // for the duplicate slot even when the first copy was real video.
+    audioonly: existing.audioonly,
+    allowlong: existing.allowlong === true || meta?.allowlong === true,
+  }
+  if (!Number.isFinite(probed) || probed <= 0) {
+    next.durationsec = durationsec
+  }
+  return next
+}
+
 function mqqueuecountforplayer(queue: MQ_QUEUE, player: string): number {
   let count = 0
   for (let i = 0; i < queue.entries.length; ++i) {
@@ -463,7 +525,15 @@ export function mqqueueadd(
   }
   const key = mqqueuenormalizeurl(trimmed)
   if (mqqueuehaskey(queue, key)) {
-    return { ok: false, reason: 'duplicate' }
+    const durationsec = mqqueuedurationforallow(
+      queue,
+      key,
+      Number(meta?.durationsec),
+    )
+    if (!mqqueueshortformallowsduplicate(durationsec)) {
+      return { ok: false, reason: 'duplicate' }
+    }
+    meta = mqqueuemetaforallowduplicate(queue, key, meta, durationsec)
   }
   if (mqqueuecountforplayer(queue, player) >= queue.limit) {
     return { ok: false, reason: 'limit' }
@@ -485,7 +555,15 @@ export function mqqueuepend(
   }
   const key = mqqueuenormalizeurl(trimmed)
   if (mqqueuehaskey(queue, key)) {
-    return { ok: false, reason: 'duplicate' }
+    const durationsec = mqqueuedurationforallow(
+      queue,
+      key,
+      Number(meta?.durationsec),
+    )
+    if (!mqqueueshortformallowsduplicate(durationsec)) {
+      return { ok: false, reason: 'duplicate' }
+    }
+    meta = mqqueuemetaforallowduplicate(queue, key, meta, durationsec)
   }
   if (mqqueuecountforplayer(queue, player) >= queue.limit) {
     return { ok: false, reason: 'limit' }

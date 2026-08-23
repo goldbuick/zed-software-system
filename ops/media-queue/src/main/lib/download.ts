@@ -1215,10 +1215,11 @@ export class DownloadManager {
     if (!entry) {
       return null
     }
-    // Claim before dropping registry so cancelprep / download retries cannot
+    // Claim playing path so cancelprep / download retries cannot
     // removepartialfiles the file while the renderer is still opening it.
+    // Keep the registry row so a duplicate short-form queue slot can reuse
+    // the same download; prunequeuecache drops it when the URL leaves the queue.
     this.claimplayingmedia(entry.path, entry.artwork)
-    this.registry.delete(trimmed)
     if (this.prep.url === trimmed) {
       resetjob(this.prep)
     }
@@ -1769,6 +1770,27 @@ export class DownloadManager {
     this.playback.errorevent = 'mq-download-error'
 
     const run = async (): Promise<void> => {
+      // Yield so renderer download listeners are attached before ready emit.
+      await Promise.resolve()
+      const cached = this.readregistryready(trimmed)
+      if (cached) {
+        this.playback.url = trimmed
+        this.playback.filepath = cached.path
+        this.playback.title = cached.title
+        this.playback.percent = 100
+        this.playback.status = 'downloading'
+        this.playback.detail = ''
+        this.playback.phase = 'ready'
+        this.claimplayingmedia(cached.path, cached.artwork)
+        emit(this.playback.readyevent, {
+          path: cached.path,
+          title: cached.title,
+          audioOnly: cached.audioOnly,
+          artwork: cached.artwork || '',
+          duration: 0,
+        } satisfies MQ_READY_PAYLOAD)
+        return
+      }
       await this.runjobdownload(this.playback, url, emit, allowlong, audioonly)
     }
 

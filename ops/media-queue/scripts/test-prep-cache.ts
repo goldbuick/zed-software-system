@@ -101,14 +101,22 @@ function main() {
     taken && taken.artwork === keepbart,
     'takeprepready returns artwork path',
   )
-  assert(!mgr.readregistryready('https://b.example'), 'registry entry consumed')
+  assert(
+    !!mgr.readregistryready('https://b.example'),
+    'registry entry kept for duplicate short-form reuse',
+  )
+  const takenagain = mgr.takeprepready('https://b.example')
+  assert(
+    takenagain && takenagain.path === keepb,
+    'second takeprepready reuses same download',
+  )
   assert(
     mgr.protectedpaths().includes(keepb),
-    'taken path stays protected after registry consume',
+    'taken path stays protected while registry entry remains',
   )
   assert(
     mgr.protectedpaths().includes(keepbart),
-    'taken artwork stays protected after registry consume',
+    'taken artwork stays protected while registry entry remains',
   )
 
   const orphan = path.join(work, 'mq-orphan.mp4')

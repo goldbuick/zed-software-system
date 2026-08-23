@@ -13,10 +13,7 @@ import type {
   MQ_PROBE_PROGRESS,
   MQ_READY_EVENT,
 } from '../src/shared/ipc'
-import {
-  mqqueueneedspending,
-  mqshortformplaycount,
-} from '../src/shared/queue'
+import { mqqueueneedspending } from '../src/shared/queue'
 import {
   mqqueuenormalizeurl,
   mqurlisplaylistcontainer,
@@ -39,13 +36,13 @@ import {
 } from './playercallice'
 import {
   helperqueueadd,
+  helperqueuedurationforurl,
   helperqueueallowlong,
   helperqueueapplydisk,
   helperqueueapprove,
   helperqueueaudioonly,
   helperqueueclear,
   helperqueuecountplayer,
-  helperqueuecurrententry,
   helperqueuecurrenturl,
   helperqueuelimit,
   helperqueuenexturl,
@@ -157,8 +154,6 @@ let extractstep = 'starting'
 let downloadpolltimer: number | null = null
 let preppolltimer: number | null = null
 let endedvideo: MQ_ENDED_MEDIA | null = null
-/** Replays left for short clips (0 = advance on next ended). */
-let shortformplaysremaining = 0
 let prepstate: MQ_PREP_VIEW | null = null
 let preptarget = ''
 
@@ -844,8 +839,17 @@ function handledownloadprogress(payload: unknown) {
   sendstatus('download-progress', progressdetail)
 }
 
-function sendstatus(status: string, detail?: string) {
-  send({ type: 'mediaqueue:status', status: status, detail: detail })
+function sendstatus(status: string, detail?: string, player?: string) {
+  const payload: {
+    type: 'mediaqueue:status'
+    status: string
+    detail?: string
+    player?: string
+  } = { type: 'mediaqueue:status', status: status, detail: detail }
+  if (player) {
+    payload.player = player
+  }
+  send(payload)
 }
 
 function measurecontentheight() {
@@ -1208,7 +1212,6 @@ async function endcall(opts?: { natural?: boolean; keepplayers?: boolean }) {
   }
   currentplaybackurl = ''
   currentplaybacktitle = ''
-  shortformplaysremaining = 0
   if (hadcall && !naturalend) {
     sendstatus('call-stopped')
   }
@@ -1221,18 +1224,6 @@ function wireplaybackended(sourcevideo: MQ_ENDED_MEDIA | null) {
   }
   endedvideo = sourcevideo
   function onended() {
-    if (shortformplaysremaining > 0) {
-      shortformplaysremaining -= 1
-      try {
-        sourcevideo.currentTime = 0
-      } catch (_) {}
-      const playresult = sourcevideo.play()
-      if (playresult && typeof playresult.catch === 'function') {
-        playresult.catch(function () {})
-      }
-      // ended listener stays attached for the next finish
-      return
-    }
     clearendedlistener()
     sendstatus('playback-ended', '')
     void endcall({ natural: true, keepplayers: true }).then(function () {
@@ -1387,19 +1378,6 @@ async function startplaybackandcall(url: string) {
       : playback && playback.audio
         ? playback.audio
         : readendedelement()
-  let durationsec = 0
-  const entry = helperqueuecurrententry()
-  if (entry && entry.url === url && Number.isFinite(entry.durationsec)) {
-    durationsec = entry.durationsec
-  }
-  if (
-    (!Number.isFinite(durationsec) || durationsec <= 0) &&
-    endedel &&
-    Number.isFinite(endedel.duration)
-  ) {
-    durationsec = endedel.duration
-  }
-  shortformplaysremaining = mqshortformplaycount(durationsec) - 1
   wireplaybackended(endedel)
   answerpendingplayercalls()
   publishstreamtoplayers()
@@ -1545,7 +1523,13 @@ function handlecafemessage(data: unknown) {
           if (!title && fallbacktitle) {
             title = fallbacktitle
           }
-          const durationsec = Number(meta.durationsec)
+          let durationsec = Number(meta.durationsec)
+          if (!Number.isFinite(durationsec) || durationsec <= 0) {
+            const known = helperqueuedurationforurl(entryurl)
+            if (known > 0) {
+              durationsec = known
+            }
+          }
           const payload = {
             title,
             durationsec: Number.isFinite(durationsec) ? durationsec : 0,
@@ -1572,7 +1556,7 @@ function handlecafemessage(data: unknown) {
 
         const finishsingle = (outcome: ENQUEUE_OUTCOME, entryurl: string) => {
           if (outcome.kind === 'added') {
-            sendstatus('queue-added', entryurl)
+            sendstatus('queue-added', entryurl, player)
             restorehud()
             afterqueuemutate()
             if (!playbackstarted) {
@@ -1584,24 +1568,24 @@ function handlecafemessage(data: unknown) {
             return
           }
           if (outcome.kind === 'pending') {
-            sendstatus('queue-pending', entryurl)
+            sendstatus('queue-pending', entryurl, player)
             restorehud()
             afterqueuemutate()
             return
           }
           if (outcome.kind === 'limit') {
-            sendstatus('queue-error', 'limit')
+            sendstatus('queue-error', 'limit', player)
             restorehud()
             sendqueuesnapshot()
             return
           }
           if (outcome.kind === 'unplayable') {
-            sendstatus('queue-unplayable', outcome.reason || entryurl)
+            sendstatus('queue-unplayable', outcome.reason || entryurl, player)
             restorehud()
             sendqueuesnapshot()
             return
           }
-          sendstatus('queue-error', outcome.reason)
+          sendstatus('queue-error', outcome.reason, player)
           restorehud()
           sendqueuesnapshot()
         }
