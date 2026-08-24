@@ -1,12 +1,6 @@
 import { linepoints, ptdist, pttoindex } from 'zss/mapping/2d'
 import { inorder, pick, shuffle } from 'zss/mapping/array'
-import {
-  MAYBE,
-  deepcopy,
-  isarray,
-  isnumber,
-  ispresent,
-} from 'zss/mapping/types'
+import { MAYBE, isarray, isnumber, ispresent } from 'zss/mapping/types'
 import {
   EVAL_DIR,
   STR_DIR,
