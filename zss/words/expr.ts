@@ -20,11 +20,12 @@ import {
   memoryfindplayerforelement,
   memorylistboardelementsbycolor,
 } from 'zss/memory/spatialqueries'
-import { BOARD_ELEMENT } from 'zss/memory/types'
+import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
 import { isstrcollision, mapstrcollision, readcollision } from './collision'
 import {
+  STR_COLOR,
   isstrcolor,
   mapstrcolor,
   readcolor,
@@ -32,10 +33,44 @@ import {
   readstrcolor,
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { isstrgroup } from './group'
+import { STR_GROUP, isstrgroup } from './group'
 import { READ_CONTEXT, readargs } from './reader'
 import { parsesend } from './send'
-import { ARG_TYPE, DIR, NAME } from './types'
+import { ARG_TYPE, DIR, NAME, PT } from './types'
+
+/** Match color/group against the element at pt for a DIR layer (no reparse). */
+function readdirelementmatch(
+  board: MAYBE<BOARD>,
+  pt: PT,
+  layer: DIR,
+  match: STR_COLOR | STR_GROUP,
+  self: string,
+): MAYBE<BOARD_ELEMENT> {
+  const maybelement =
+    layer === DIR.GROUND
+      ? memoryreadterrain(board, pt.x, pt.y)
+      : memoryreadelement(board, pt)
+  if (!ispresent(maybelement)) {
+    return undefined
+  }
+  if (isstrcolor(match)) {
+    const display = memoryreadelementdisplay(maybelement)
+    const didmatch =
+      readstrcolor(match) === display.color || readstrbg(match) === display.bg
+    return didmatch ? maybelement : undefined
+  }
+  if (isstrgroup(match)) {
+    const didmatch = memoryelementmatchesstrgrouponboard(
+      board,
+      maybelement,
+      self,
+      match,
+      layer === DIR.GROUND,
+    )
+    return didmatch ? maybelement : undefined
+  }
+  return undefined
+}
 
 // consider signaling the end as a pipe | ??
 function readvargs(index: number, maxcount = 0): [any[], number] {
@@ -218,64 +253,33 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.COLOR_OR_GROUP,
           ])
 
-          // read board by eval dir
           const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+          const self = READ_CONTEXT.elementid
           if (dir.targets.length) {
-            const dirstr = DIR[dir.layer]
-            const [maybename, maybecolor] = match
             const matchlist: BOARD_ELEMENT[] = []
             for (let i = 0; i < dir.targets.length; ++i) {
-              const target = dir.targets[i]
-              const anyexpr = [
-                'any',
-                ...(dir.layer !== DIR.MID ? [dirstr] : []),
-                'at',
-                target.x,
-                target.y,
-                ...(isarray(maybecolor) ? maybecolor : []),
-                maybename,
-              ].filter((v) => v !== undefined)
-              const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
-              if (isarray(found) && found.length) {
-                matchlist.push(...found)
+              const found = readdirelementmatch(
+                board,
+                dir.targets[i],
+                dir.layer,
+                match,
+                self,
+              )
+              if (ispresent(found)) {
+                matchlist.push(found)
               }
             }
             return [matchlist, iii]
           }
 
-          // grab dest element from DIR
-          let maybelement: MAYBE<BOARD_ELEMENT>
-          if (dir.layer === DIR.GROUND) {
-            maybelement = memoryreadterrain(board, dir.destpt.x, dir.destpt.y)
-          } else {
-            maybelement = memoryreadelement(board, dir.destpt)
-          }
-
-          if (ispresent(maybelement)) {
-            const display = memoryreadelementdisplay(maybelement)
-
-            // color only match
-            if (isstrcolor(match)) {
-              const didmatch =
-                readstrcolor(match) === display.color ||
-                readstrbg(match) === display.bg
-              return [didmatch ? [maybelement] : [], iii]
-            }
-
-            // group match (display name, @group, stats, color/bg)
-            if (isstrgroup(match)) {
-              const didmatch = memoryelementmatchesstrgrouponboard(
-                board,
-                maybelement,
-                READ_CONTEXT.elementid,
-                match,
-                dir.layer === DIR.GROUND,
-              )
-              return [didmatch ? [maybelement] : [], iii]
-            }
-          }
-
-          return [[], iii]
+          const found = readdirelementmatch(
+            board,
+            dir.destpt,
+            dir.layer,
+            match,
+            self,
+          )
+          return [ispresent(found) ? [found] : [], iii]
         }
 
         // without dir
@@ -315,67 +319,36 @@ export function readexpr(index: number): [any, number] {
             ARG_TYPE.COLOR_OR_GROUP,
           ])
 
-          // read board by eval dir
           const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
+          const self = READ_CONTEXT.elementid
           if (dir.targets.length) {
-            const dirstr = DIR[dir.layer]
             let matchcount = 0
-            const [maybename, maybecolor] = match
             for (let i = 0; i < dir.targets.length; ++i) {
-              const target = dir.targets[i]
-              const anyexpr = [
-                'countof',
-                ...(dir.layer !== DIR.MID ? [dirstr] : []),
-                'at',
-                target.x,
-                target.y,
-                ...(isarray(maybecolor) ? maybecolor : []),
-                maybename,
-              ].filter((v) => v !== undefined)
-              const [found] = readargs(anyexpr, 0, [ARG_TYPE.ANY])
-              if (isnumber(found)) {
-                matchcount += found
+              if (
+                ispresent(
+                  readdirelementmatch(
+                    board,
+                    dir.targets[i],
+                    dir.layer,
+                    match,
+                    self,
+                  ),
+                )
+              ) {
+                matchcount += 1
               }
             }
             return [matchcount, iii]
           }
 
-          // grab dest element from DIR
-          let maybelement: MAYBE<BOARD_ELEMENT>
-          if (dir.layer === DIR.GROUND) {
-            maybelement = memoryreadterrain(board, dir.destpt.x, dir.destpt.y)
-          } else {
-            maybelement = memoryreadelement(board, dir.destpt)
-          }
-
-          if (ispresent(maybelement)) {
-            const display = memoryreadelementdisplay(maybelement)
-
-            // color only match
-            if (isstrcolor(match)) {
-              return [
-                readstrcolor(match) === display.color ||
-                readstrbg(match) === display.bg
-                  ? 1
-                  : 0,
-                iii,
-              ]
-            }
-
-            // group match (display name, @group, stats, color/bg)
-            if (isstrgroup(match)) {
-              const didmatch = memoryelementmatchesstrgrouponboard(
-                board,
-                maybelement,
-                READ_CONTEXT.elementid,
-                match,
-                dir.layer === DIR.GROUND,
-              )
-              return [didmatch ? 1 : 0, iii]
-            }
-          }
-
-          return [0, iii]
+          const found = readdirelementmatch(
+            board,
+            dir.destpt,
+            dir.layer,
+            match,
+            self,
+          )
+          return [ispresent(found) ? 1 : 0, iii]
         }
 
         // without dir
