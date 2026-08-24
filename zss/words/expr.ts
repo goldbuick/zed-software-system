@@ -8,7 +8,10 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
-import { memorylistboardelementsbygroup } from 'zss/memory/boardlifecycle'
+import {
+  memoryelementmatchesstrgrouponboard,
+  memorylistboardelementsbygroup,
+} from 'zss/memory/boardlifecycle'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
@@ -29,7 +32,7 @@ import {
   readstrcolor,
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { isstrgroup, readstrgroupcolor, readstrgroupname } from './group'
+import { isstrgroup } from './group'
 import { READ_CONTEXT, readargs } from './reader'
 import { parsesend } from './send'
 import { ARG_TYPE, DIR, NAME } from './types'
@@ -259,14 +262,16 @@ export function readexpr(index: number): [any, number] {
               return [didmatch ? [maybelement] : [], iii]
             }
 
-            // group match
-            const maybename = NAME(readstrgroupname(match))
-            const maybecolor = readstrgroupcolor(match)
-            const didnotmatch =
-              (maybename.length && maybename !== display.name) ||
-              (ispresent(maybecolor) && maybecolor !== display.color)
-            if (didnotmatch === false) {
-              return [[maybelement], iii]
+            // group match (display name, @group, stats, color/bg)
+            if (isstrgroup(match)) {
+              const didmatch = memoryelementmatchesstrgrouponboard(
+                board,
+                maybelement,
+                READ_CONTEXT.elementid,
+                match,
+                dir.layer === DIR.GROUND,
+              )
+              return [didmatch ? [maybelement] : [], iii]
             }
           }
 
@@ -357,17 +362,16 @@ export function readexpr(index: number): [any, number] {
               ]
             }
 
-            // group match
-            const maybename = NAME(readstrgroupname(match))
-            const maybecolor = readstrgroupcolor(match)
-            const namedoesmatch = maybename.length
-              ? maybename === display.name
-              : true
-            const colordoesmatch = ispresent(maybecolor)
-              ? maybecolor === display.color
-              : true
-            if (namedoesmatch && colordoesmatch) {
-              return [1, iii]
+            // group match (display name, @group, stats, color/bg)
+            if (isstrgroup(match)) {
+              const didmatch = memoryelementmatchesstrgrouponboard(
+                board,
+                maybelement,
+                READ_CONTEXT.elementid,
+                match,
+                dir.layer === DIR.GROUND,
+              )
+              return [didmatch ? 1 : 0, iii]
             }
           }
 

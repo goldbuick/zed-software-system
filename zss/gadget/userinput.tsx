@@ -398,7 +398,6 @@ function handlekeydown(event: KeyboardEvent) {
     case 'h':
       if (mods.ctrl) {
         vmrefscroll(SOFTWARE, player)
-        console.info('refscroll', player)
       }
       break
     case 'f9':

@@ -1,9 +1,13 @@
 import { memoryevaldir } from 'zss/memory/boarddirection'
-import { memorylistboardelementsbygroup } from 'zss/memory/boardlifecycle'
+import {
+  memoryelementmatchesstrgrouponboard,
+  memorylistboardelementsbygroup,
+} from 'zss/memory/boardlifecycle'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { readtransformfilter } from 'zss/firmware/transforms'
+import { readexpr } from 'zss/words/expr'
 import { readgroup } from 'zss/words/group'
 import { readkind } from 'zss/words/kind'
 import { readargs, READ_CONTEXT } from 'zss/words/reader'
@@ -152,6 +156,60 @@ describe('memorylistboardelementsbygroup', () => {
       ['YELLOW'],
     ])
     expect(found.map((el) => el.id)).toEqual(['sid_yellow'])
+  })
+})
+
+describe('memoryelementmatchesstrgrouponboard', () => {
+  it('matches @group on a single object', () => {
+    const prey = makeobject('sid_prey', 5, 6, {
+      name: 'bear',
+      group: 'combat',
+    })
+    const board = makeboard([prey])
+    expect(
+      memoryelementmatchesstrgrouponboard(
+        board,
+        prey,
+        '',
+        ['combat'],
+        false,
+      ),
+    ).toBe(true)
+    expect(
+      memoryelementmatchesstrgrouponboard(board, prey, '', ['gem'], false),
+    ).toBe(false)
+  })
+
+  it('matches display name on a single object', () => {
+    const prey = makeobject('sid_bear', 5, 6, { name: 'bear' })
+    const board = makeboard([prey])
+    expect(
+      memoryelementmatchesstrgrouponboard(board, prey, '', ['bear'], false),
+    ).toBe(true)
+  })
+})
+
+describe('any DIR group match', () => {
+  afterEach(() => {
+    READ_CONTEXT.words = []
+    READ_CONTEXT.board = undefined
+    READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementid = ''
+  })
+
+  it('matches @group at dest via any at x y', () => {
+    const prey = makeobject('sid_prey', 5, 6, {
+      name: 'bear',
+      group: 'combat',
+    })
+    const self = makeobject('sid_self', 1, 1, { name: 'object' })
+    const board = makeboard([prey, self], 'anygroupboard')
+    READ_CONTEXT.board = board
+    READ_CONTEXT.element = self
+    READ_CONTEXT.elementid = self.id!
+    READ_CONTEXT.words = ['any', 'at', 5, 6, 'combat']
+    const [found] = readexpr(0)
+    expect(found).toEqual([prey])
   })
 })
 

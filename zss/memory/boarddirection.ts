@@ -572,7 +572,6 @@ export function memoryevaldir(
             case 'shuffle': {
               if (!ispresent(tracking[groupflag])) {
                 tracking[groupflag] = shuffle(elements).map(memoryreadidorindex)
-                console.info('shuffled', deepcopy(tracking[groupflag]))
               }
               break
             }
@@ -587,7 +586,6 @@ export function memoryevaldir(
               | number
               | undefined
             const nextelement = memoryreadelementbyidorindex(board, target)
-            console.info('picked', target, nextelement)
             if (tracking[groupflag].length < 1) {
               delete tracking[groupflag]
             }
