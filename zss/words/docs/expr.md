@@ -15,6 +15,7 @@ title: expr.ts
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
 - `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor, memorylistboardelementsbykind
+- `zss/memory/boardlifecycle` — memorylistboardelementsbygroup (soft name / `@group` match)
 - `zss/memory/types` — BOARD_ELEMENT
 - `./category` — isstrcategory, mapstrcategory, readcategory
 - `./collision` — isstrcollision, mapstrcollision, readcollision

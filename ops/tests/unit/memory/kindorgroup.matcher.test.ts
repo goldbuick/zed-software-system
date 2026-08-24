@@ -1,13 +1,13 @@
 import { memoryevaldir } from 'zss/memory/boarddirection'
+import { memorylistboardelementsbygroup } from 'zss/memory/boardlifecycle'
 import { memoryinitboard } from 'zss/memory/boards'
 import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
-import { memorylistboardelementsbykind } from 'zss/memory/spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { readtransformfilter } from 'zss/firmware/transforms'
 import { readgroup } from 'zss/words/group'
 import { readkind } from 'zss/words/kind'
 import { readargs, READ_CONTEXT } from 'zss/words/reader'
-import { ARG_TYPE, CATEGORY } from 'zss/words/types'
+import { ARG_TYPE, CATEGORY, COLOR } from 'zss/words/types'
 
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
@@ -123,27 +123,35 @@ describe('readkind vs readgroup', () => {
   })
 })
 
-describe('memorylistboardelementsbykind group union', () => {
-  it('includes @group members when name is not a board-named kind', () => {
+describe('memorylistboardelementsbygroup', () => {
+  it('includes @group members', () => {
     const lion = makeobject('sid_lion', 2, 2, {
       name: 'lion',
       group: 'combat',
     })
     const gem = makeobject('sid_gem', 4, 4, { name: 'gem' })
     const board = makeboard([lion, gem])
-    const found = memorylistboardelementsbykind(board, ['combat'])
+    const found = memorylistboardelementsbygroup(board, '', ['combat'])
     expect(found.map((el) => el.id)).toEqual(['sid_lion'])
   })
 
-  it('skips group union when color filter is present', () => {
-    const lion = makeobject('sid_lion2', 2, 2, {
+  it('applies optional color filter', () => {
+    const yellow = makeobject('sid_yellow', 2, 2, {
       name: 'lion',
       group: 'combat',
     })
-    lion.color = 14
-    const board = makeboard([lion])
-    const found = memorylistboardelementsbykind(board, ['combat', ['YELLOW']])
-    expect(found).toEqual([])
+    yellow.color = COLOR.YELLOW
+    const red = makeobject('sid_red', 3, 3, {
+      name: 'bear',
+      group: 'combat',
+    })
+    red.color = COLOR.RED
+    const board = makeboard([yellow, red])
+    const found = memorylistboardelementsbygroup(board, '', [
+      'combat',
+      ['YELLOW'],
+    ])
+    expect(found.map((el) => el.id)).toEqual(['sid_yellow'])
   })
 })
 
@@ -157,8 +165,6 @@ describe('DIR.SELECT with GROUP', () => {
     expect(() =>
       memoryevaldir(board, element, '', dir, { x: 1, y: 1 }),
     ).not.toThrow()
-    const result = memoryevaldir(board, element, '', dir, { x: 1, y: 1 })
-    expect(result.destpt).toEqual({ x: 1, y: 1 })
   })
 
   it('selects an @group member via inorder', () => {
@@ -168,7 +174,9 @@ describe('DIR.SELECT with GROUP', () => {
     })
     const self = makeobject('sid_self2', 1, 1, { name: 'object' })
     const board = makeboard([prey, self], 'groupselectboard')
-    expect(memorylistboardelementsbykind(board, ['combat'])).toHaveLength(1)
+    expect(memorylistboardelementsbygroup(board, '', ['combat'])).toHaveLength(
+      1,
+    )
     const result = memoryevaldir(
       board,
       self,

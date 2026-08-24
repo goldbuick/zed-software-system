@@ -11,7 +11,6 @@ import {
   ptapplydir,
 } from 'zss/words/dir'
 import { isstrgroup } from 'zss/words/group'
-import { isstrkind } from 'zss/words/kind'
 import { DIR, PT } from 'zss/words/types'
 
 import {
@@ -23,14 +22,11 @@ import {
   memoryreadobjectbypt,
   memoryreadterrain,
 } from './boardaccess'
+import { memorylistboardelementsbygroup } from './boardlifecycle'
 import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadflags } from './flags'
-import {
-  memorylistboardelementsbykind,
-  memorypickboardnearestpt,
-  memoryreadboardpath,
-} from './spatialqueries'
+import { memorypickboardnearestpt, memoryreadboardpath } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 function memoryevaldiraway(
@@ -327,11 +323,15 @@ export function memoryevaldir(
         return { dir, startpt, destpt: pt, layer, targets: [] }
       }
       case DIR.FLEE: {
-        const fleekind = dir[i + 1]
-        if (isstrkind(fleekind) || isstrgroup(fleekind)) {
+        const fleegroup = dir[i + 1]
+        if (isstrgroup(fleegroup)) {
           const nearest = memorypickboardnearestpt(
             pt,
-            memorylistboardelementsbykind(board, fleekind),
+            memorylistboardelementsbygroup(
+              board,
+              element?.id ?? player,
+              fleegroup,
+            ),
           )
           if (ispresent(nearest) && ispt(nearest)) {
             memoryevaldiraway(board, element, pt, nearest.x, nearest.y)
@@ -341,11 +341,15 @@ export function memoryevaldir(
         break
       }
       case DIR.FIND: {
-        const findkind = dir[i + 1]
-        if (isstrkind(findkind) || isstrgroup(findkind)) {
+        const findgroup = dir[i + 1]
+        if (isstrgroup(findgroup)) {
           const nearest = memorypickboardnearestpt(
             pt,
-            memorylistboardelementsbykind(board, findkind),
+            memorylistboardelementsbygroup(
+              board,
+              element?.id ?? player,
+              findgroup,
+            ),
           )
           if (ispresent(nearest) && ispt(nearest)) {
             memoryevaldirtoward(board, element, pt, nearest.x, nearest.y)
@@ -538,16 +542,21 @@ export function memoryevaldir(
         }
       }
       case DIR.SELECT: {
-        const [selectmode, kind] = dir.slice(i + 1)
-        if (isstrkind(kind) || isstrgroup(kind)) {
-          const elements = memorylistboardelementsbykind(board, kind)
+        const [selectmode, group] = dir.slice(i + 1)
+        if (isstrgroup(group)) {
+          debugger
+          const elements = memorylistboardelementsbygroup(
+            board,
+            element?.id ?? player,
+            group,
+          )
           const tracking = memoryreadflags(`tracking_${board.id}`)
-          const [kindname, kindcolor] = kind
-          const kindflag = [...(kindcolor ?? []), kindname].join('_')
+          const [groupname, groupcolor] = group
+          const groupflag = [...(groupcolor ?? []), groupname].join('_')
           switch (selectmode) {
             case 'inorder': {
-              if (!ispresent(tracking[kindflag])) {
-                tracking[kindflag] = inorder(elements, (a, b) => {
+              if (!ispresent(tracking[groupflag])) {
+                tracking[groupflag] = inorder(elements, (a, b) => {
                   const aindex = memoryboardelementindex(board, a)
                   const bindex = memoryboardelementindex(board, b)
                   return aindex - bindex
@@ -556,24 +565,24 @@ export function memoryevaldir(
               break
             }
             case 'shuffle': {
-              if (!ispresent(tracking[kindflag])) {
-                tracking[kindflag] = shuffle(elements).map(memoryreadidorindex)
+              if (!ispresent(tracking[groupflag])) {
+                tracking[groupflag] = shuffle(elements).map(memoryreadidorindex)
               }
               break
             }
             case 'random': {
-              tracking[kindflag] = [memoryreadidorindex(pick(elements))]
+              tracking[groupflag] = [memoryreadidorindex(pick(elements))]
               break
             }
           }
-          if (isarray(tracking[kindflag])) {
-            const target = tracking[kindflag].shift() as
+          if (isarray(tracking[groupflag])) {
+            const target = tracking[groupflag].shift() as
               | string
               | number
               | undefined
             const element = memoryreadelementbyidorindex(board, target)
-            if (tracking[kindflag].length < 1) {
-              delete tracking[kindflag]
+            if (tracking[groupflag].length < 1) {
+              delete tracking[groupflag]
             }
             return {
               dir,

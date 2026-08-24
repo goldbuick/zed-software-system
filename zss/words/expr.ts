@@ -8,6 +8,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import { memorylistboardelementsbygroup } from 'zss/memory/boardlifecycle'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
@@ -29,7 +30,8 @@ import {
   readstrcolor,
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { readstrkindcolor, readstrkindname } from './kind'
+import { isstrgroup } from './group'
+import { isstrkind, readstrkindcolor, readstrkindname } from './kind'
 import { READ_CONTEXT, readargs } from './reader'
 import { parsesend } from './send'
 import { ARG_TYPE, DIR, NAME } from './types'
@@ -206,7 +208,7 @@ export function readexpr(index: number): [any, number] {
       case 'any': {
         // ANY <kind>
         // ANY <color>
-        // ANY <dir> <kind>
+        // ANY <dir> <group>
         // ANY <dir> <color>
         const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (isstrdir(value)) {
@@ -287,17 +289,28 @@ export function readexpr(index: number): [any, number] {
           return [matchedelements, iii]
         }
 
-        // kind check
-        const matchedelements = memorylistboardelementsbykind(
-          READ_CONTEXT.board,
-          match,
-        )
-        return [matchedelements, iii]
+        // group or kind check
+        if (isstrgroup(match)) {
+          const matchedelements = memorylistboardelementsbygroup(
+            READ_CONTEXT.board,
+            READ_CONTEXT.elementid,
+            match,
+          )
+          return [matchedelements, iii]
+        }
+        if (isstrkind(match)) {
+          const matchedelements = memorylistboardelementsbykind(
+            READ_CONTEXT.board,
+            match,
+          )
+          return [matchedelements, iii]
+        }
+        return [[], iii]
       }
       case 'countof': {
         // COUNTOF <kind>
         // COUNTOF <color>
-        // COUNTOF <dir> <kind>
+        // COUNTOF <dir> <group>
         // COUNTOF <dir> <color>
         const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (isstrdir(value)) {
@@ -384,12 +397,23 @@ export function readexpr(index: number): [any, number] {
           return [matchedelements.length, iii]
         }
 
-        // kind check
-        const matchedelements = memorylistboardelementsbykind(
-          READ_CONTEXT.board,
-          match,
-        )
-        return [matchedelements.length, iii]
+        // group or kind check
+        if (isstrgroup(match)) {
+          const matchedelements = memorylistboardelementsbygroup(
+            READ_CONTEXT.board,
+            READ_CONTEXT.elementid,
+            match,
+          )
+          return [matchedelements.length, iii]
+        }
+        if (isstrkind(match)) {
+          const matchedelements = memorylistboardelementsbykind(
+            READ_CONTEXT.board,
+            match,
+          )
+          return [matchedelements.length, iii]
+        }
+        return [0, iii]
       }
       // zss
       // numbers

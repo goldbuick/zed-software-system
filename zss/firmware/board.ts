@@ -22,6 +22,7 @@ import {
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
 import {
+  memorylistboardelementsbygroup,
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
@@ -43,13 +44,11 @@ import {
 } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
-import {
-  memorylistboardelementsbykind,
-  memorylistboardptsbyempty,
-} from 'zss/memory/spatialqueries'
+import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH, MEMORY_LABEL } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
+import { readstrgroupname } from 'zss/words/group'
 import {
   readstrkindbg,
   readstrkindcolor,
@@ -709,7 +708,7 @@ export const BOARD_FIRMWARE = createfirmware()
       chip.set('didfail', 1)
 
       // begin filtering
-      const targetname = readstrkindname(target) ?? ''
+      const targetname = readstrgroupname(target) ?? ''
       if (targetname === 'empty') {
         // empty into something becomes a put
         memorylistboardptsbyempty(READ_CONTEXT.board).forEach((pt) => {
@@ -721,48 +720,50 @@ export const BOARD_FIRMWARE = createfirmware()
       const intoname = readstrkindname(into)
       const intocolor = readstrkindcolor(into)
       const intobg = readstrkindbg(into)
-      memorylistboardelementsbykind(READ_CONTEXT.board, target).forEach(
-        (element) => {
-          // modify existing elements
-          if (ispresent(intocolor)) {
-            element.color = intocolor
-            chip.set('didfail', 0)
-          }
-          if (ispresent(intobg)) {
-            element.bg = intobg
-            chip.set('didfail', 0)
-          }
-          const display = memoryreadelementdisplay(element)
-          if (display.name !== intoname) {
-            const newcolor = memoryreadelementstat(element, 'color')
-            const newbg = memoryreadelementstat(element, 'bg')
-            // erase element
-            memorysafedeleteelement(
+      memorylistboardelementsbygroup(
+        READ_CONTEXT.board,
+        READ_CONTEXT.elementid,
+        target,
+      ).forEach((element) => {
+        // modify existing elements
+        if (ispresent(intocolor)) {
+          element.color = intocolor
+          chip.set('didfail', 0)
+        }
+        if (ispresent(intobg)) {
+          element.bg = intobg
+          chip.set('didfail', 0)
+        }
+        const display = memoryreadelementdisplay(element)
+        if (display.name !== intoname) {
+          const newcolor = memoryreadelementstat(element, 'color')
+          const newbg = memoryreadelementstat(element, 'bg')
+          // erase element
+          memorysafedeleteelement(
+            READ_CONTEXT.board,
+            element,
+            READ_CONTEXT.timestamp,
+          )
+          // create new element
+          if (intoname !== 'empty') {
+            const pt = { x: element.x ?? 0, y: element.y ?? 0 }
+            const newelement = memorywriteelementfromkind(
               READ_CONTEXT.board,
-              element,
-              READ_CONTEXT.timestamp,
+              into,
+              pt,
             )
-            // create new element
-            if (intoname !== 'empty') {
-              const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-              const newelement = memorywriteelementfromkind(
-                READ_CONTEXT.board,
-                into,
-                pt,
-              )
-              if (ispresent(newelement)) {
-                chip.set('didfail', 0)
-                newelement.color = newcolor
-                newelement.bg = newbg
-              } else {
-                chip.set('didfail', 1)
-              }
-            } else {
+            if (ispresent(newelement)) {
               chip.set('didfail', 0)
+              newelement.color = newcolor
+              newelement.bg = newbg
+            } else {
+              chip.set('didfail', 1)
             }
+          } else {
+            chip.set('didfail', 0)
           }
-        },
-      )
+        }
+      })
 
       return 0
     },

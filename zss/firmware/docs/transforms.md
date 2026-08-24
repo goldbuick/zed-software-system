@@ -37,7 +37,7 @@ title: transforms.ts
 Filter controls which elements are affected:
 
 - Built-ins: `all`, `terrain`, `object` (and `self` / `others` where applicable)
-- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name (`memoryreadgroup` / listing union)
+- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistboardelementsbygroup`
 
 ## pickcodepagewithtype
 
