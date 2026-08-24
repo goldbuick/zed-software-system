@@ -178,8 +178,8 @@ export function memoryevaldir(
   }
 
   const pt: PT = {
-    x: element.x ?? 0,
-    y: element.y ?? 0,
+    x: element.x ?? -1,
+    y: element.y ?? -1,
   }
   const step: PT = {
     x: pt.x + (element.stepx ?? 0),
@@ -544,7 +544,6 @@ export function memoryevaldir(
       case DIR.SELECT: {
         const [selectmode, group] = dir.slice(i + 1)
         if (isstrgroup(group)) {
-          debugger
           const elements = memorylistboardelementsbygroup(
             board,
             element?.id ?? player,
@@ -580,14 +579,14 @@ export function memoryevaldir(
               | string
               | number
               | undefined
-            const element = memoryreadelementbyidorindex(board, target)
+            const nextelement = memoryreadelementbyidorindex(board, target)
             if (tracking[groupflag].length < 1) {
               delete tracking[groupflag]
             }
             return {
               dir,
               startpt,
-              destpt: { x: element?.x ?? 0, y: element?.y ?? 0 },
+              destpt: { x: nextelement?.x ?? -1, y: nextelement?.y ?? -1 },
               layer,
               targets: [],
             }

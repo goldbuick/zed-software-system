@@ -222,7 +222,7 @@ export function itemsforargtype(
   switch (t) {
     case ARG_TYPE.COLOR:
       return tagwords(words.colors, 'colors')
-    case ARG_TYPE.COLOR_OR_KIND:
+    case ARG_TYPE.COLOR_OR_GROUP:
       return [
         ...tagwords(words.colors, 'colors'),
         ...tagwords(words.objects, 'objects'),

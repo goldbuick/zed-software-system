@@ -51,7 +51,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_NAME]: number | string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
-  [ARG_TYPE.COLOR_OR_KIND]: STR_COLOR | STR_KIND | STR_GROUP
+  [ARG_TYPE.COLOR_OR_GROUP]: STR_COLOR | STR_GROUP
   [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
   [ARG_TYPE.MAYBE_GROUP]: MAYBE<STR_GROUP>
   [ARG_TYPE.MAYBE_NAME]: MAYBE<string>
@@ -250,37 +250,33 @@ export function readargs<T extends ARG_TYPES>(
         values.push(maybevalue)
         break
       }
-      case ARG_TYPE.COLOR_OR_KIND: {
-        const [kind, iii] = readkind(ii)
-        if (isstrkind(kind)) {
-          ii = iii
-          values.push(kind)
-        } else if (mapstrcolor(words[ii]) === undefined) {
-          // plain string: GROUP matcher; otherwise expr color
-          if (isstring(words[ii])) {
-            const [group, jjj] = readgroup(ii)
-            if (isstrgroup(group)) {
-              ii = jjj
-              values.push(group)
-            } else {
-              didexpect('color or kind', group, words)
-            }
-          } else {
-            const [value, kkk] = readexpr(ii)
-            if (isstrcolor(value)) {
-              ii = kkk
-              values.push(value)
-            } else {
-              didexpect('color', value, words)
-            }
-          }
-        } else {
+      case ARG_TYPE.COLOR_OR_GROUP: {
+        if (mapstrcolor(words[ii]) !== undefined) {
           const [value, jjj] = readcolor(ii)
           if (isstrcolor(value)) {
             ii = jjj
             values.push(value)
           } else {
-            didexpect('color or kind', value, words)
+            didexpect('color or group', value, words)
+          }
+        } else if (isstring(words[ii])) {
+          const [group, jjj] = readgroup(ii)
+          if (isstrgroup(group)) {
+            ii = jjj
+            values.push(group)
+          } else {
+            didexpect('color or group', group, words)
+          }
+        } else {
+          const [value, kkk] = readexpr(ii)
+          if (isstrcolor(value)) {
+            ii = kkk
+            values.push(value)
+          } else if (isstrgroup(value)) {
+            ii = kkk
+            values.push(value)
+          } else {
+            didexpect('color or group', value, words)
           }
         }
         break

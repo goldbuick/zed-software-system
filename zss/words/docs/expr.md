@@ -14,14 +14,14 @@ title: expr.ts
 - `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
-- `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor, memorylistboardelementsbykind
+- `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor
 - `zss/memory/boardlifecycle` — memorylistboardelementsbygroup (soft name / `@group` match)
 - `zss/memory/types` — BOARD_ELEMENT
 - `./category` — isstrcategory, mapstrcategory, readcategory
 - `./collision` — isstrcollision, mapstrcollision, readcollision
 - `./color` — isstrcolor, mapstrcolor, readcolor, readstrbg, readstrcolor
 - `./dir` — isstrdir, mapstrdir, readdir
-- `./kind` — readstrkindcolor, readstrkindname
+- `./group` — isstrgroup, readstrgroupcolor, readstrgroupname
 - `./reader` — ARG_TYPE, READ_CONTEXT, readargs
 - `./send` — parsesend
 - `./types` — DIR, NAME

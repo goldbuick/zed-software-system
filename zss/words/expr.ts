@@ -16,7 +16,6 @@ import { memoryruncodepage } from 'zss/memory/runtime'
 import {
   memoryfindplayerforelement,
   memorylistboardelementsbycolor,
-  memorylistboardelementsbykind,
 } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 
@@ -30,8 +29,7 @@ import {
   readstrcolor,
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
-import { isstrgroup } from './group'
-import { isstrkind, readstrkindcolor, readstrkindname } from './kind'
+import { isstrgroup, readstrgroupcolor, readstrgroupname } from './group'
 import { READ_CONTEXT, readargs } from './reader'
 import { parsesend } from './send'
 import { ARG_TYPE, DIR, NAME } from './types'
@@ -206,7 +204,7 @@ export function readexpr(index: number): [any, number] {
         return [isblocked ? 1 : 0, iii]
       }
       case 'any': {
-        // ANY <kind>
+        // ANY <group>
         // ANY <color>
         // ANY <dir> <group>
         // ANY <dir> <color>
@@ -214,7 +212,7 @@ export function readexpr(index: number): [any, number] {
         if (isstrdir(value)) {
           const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
             ARG_TYPE.DIR,
-            ARG_TYPE.COLOR_OR_KIND,
+            ARG_TYPE.COLOR_OR_GROUP,
           ])
 
           // read board by eval dir
@@ -261,9 +259,9 @@ export function readexpr(index: number): [any, number] {
               return [didmatch ? [maybelement] : [], iii]
             }
 
-            // kind match
-            const maybename = NAME(readstrkindname(match))
-            const maybecolor = readstrkindcolor(match)
+            // group match
+            const maybename = NAME(readstrgroupname(match))
+            const maybecolor = readstrgroupcolor(match)
             const didnotmatch =
               (maybename.length && maybename !== display.name) ||
               (ispresent(maybecolor) && maybecolor !== display.color)
@@ -277,7 +275,7 @@ export function readexpr(index: number): [any, number] {
 
         // without dir
         const [match, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.COLOR_OR_KIND,
+          ARG_TYPE.COLOR_OR_GROUP,
         ])
 
         // color check
@@ -289,7 +287,7 @@ export function readexpr(index: number): [any, number] {
           return [matchedelements, iii]
         }
 
-        // group or kind check
+        // group check
         if (isstrgroup(match)) {
           const matchedelements = memorylistboardelementsbygroup(
             READ_CONTEXT.board,
@@ -298,17 +296,10 @@ export function readexpr(index: number): [any, number] {
           )
           return [matchedelements, iii]
         }
-        if (isstrkind(match)) {
-          const matchedelements = memorylistboardelementsbykind(
-            READ_CONTEXT.board,
-            match,
-          )
-          return [matchedelements, iii]
-        }
         return [[], iii]
       }
       case 'countof': {
-        // COUNTOF <kind>
+        // COUNTOF <group>
         // COUNTOF <color>
         // COUNTOF <dir> <group>
         // COUNTOF <dir> <color>
@@ -316,7 +307,7 @@ export function readexpr(index: number): [any, number] {
         if (isstrdir(value)) {
           const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
             ARG_TYPE.DIR,
-            ARG_TYPE.COLOR_OR_KIND,
+            ARG_TYPE.COLOR_OR_GROUP,
           ])
 
           // read board by eval dir
@@ -366,9 +357,9 @@ export function readexpr(index: number): [any, number] {
               ]
             }
 
-            // kind match
-            const maybename = NAME(readstrkindname(match))
-            const maybecolor = readstrkindcolor(match)
+            // group match
+            const maybename = NAME(readstrgroupname(match))
+            const maybecolor = readstrgroupcolor(match)
             const namedoesmatch = maybename.length
               ? maybename === display.name
               : true
@@ -385,7 +376,7 @@ export function readexpr(index: number): [any, number] {
 
         // without dir
         const [match, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.COLOR_OR_KIND,
+          ARG_TYPE.COLOR_OR_GROUP,
         ])
 
         // color check
@@ -397,18 +388,11 @@ export function readexpr(index: number): [any, number] {
           return [matchedelements.length, iii]
         }
 
-        // group or kind check
+        // group check
         if (isstrgroup(match)) {
           const matchedelements = memorylistboardelementsbygroup(
             READ_CONTEXT.board,
             READ_CONTEXT.elementid,
-            match,
-          )
-          return [matchedelements.length, iii]
-        }
-        if (isstrkind(match)) {
-          const matchedelements = memorylistboardelementsbykind(
-            READ_CONTEXT.board,
             match,
           )
           return [matchedelements.length, iii]
