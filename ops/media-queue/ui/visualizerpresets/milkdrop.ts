@@ -44,7 +44,7 @@ export const MILKDROP_PRESET_NAMES = [
   'Martin - liquid arrows',
   'martin - angel flight',
   'martin - castle in the air',
-  'martin - frosty caves 2',
+  'martin - extreme heat',
   'martin - ghost city',
   'martin - glass corridor',
   'martin - stormy sea (2010 update)',

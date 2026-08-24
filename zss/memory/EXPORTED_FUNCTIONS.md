@@ -82,7 +82,7 @@ Board / object create, delete, import/export.
 - **memorycreateboard(fn?)**, **memorycreateboardobject(board, from)**, **memorycreateboardobjectfromkind(board, pt, kind, id?)**
 - **memorydeleteboardobject(board, id)**, **memorysafedeleteelement(board, element, timestamp)**
 - **memorywriteterrain(board, from)**, **memorywriteterrainfromkind(board, pt, kind)**
-- **memoryreadgroup(board, self, targetgroup)**
+- **memoryreadgroup(board, self, targetgroup)**, **memorylistboardelementsbygroup(board, self, STR_GROUP)**
 - **memoryexportboard(board, strip?)**, **memoryexportboardasjson(board, strip?)**, **memoryimportboard(boardentry)**
 
 ## boardterrainmap.ts

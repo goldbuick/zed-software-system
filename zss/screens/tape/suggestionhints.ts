@@ -31,6 +31,9 @@ export function argsliststring(args: ARG_TYPE[]): string {
       case ARG_TYPE.KIND:
         list.push('<kind>')
         break
+      case ARG_TYPE.GROUP:
+        list.push('<group>')
+        break
       case ARG_TYPE.DIR:
         list.push('<dir>')
         break
@@ -46,11 +49,14 @@ export function argsliststring(args: ARG_TYPE[]): string {
       case ARG_TYPE.NUMBER_OR_STRING:
         list.push('<num|str>')
         break
-      case ARG_TYPE.COLOR_OR_KIND:
-        list.push('<color|kind>')
+      case ARG_TYPE.COLOR_OR_GROUP:
+        list.push('<color|group>')
         break
       case ARG_TYPE.MAYBE_KIND:
         list.push('[kind]')
+        break
+      case ARG_TYPE.MAYBE_GROUP:
+        list.push('[group]')
         break
       case ARG_TYPE.MAYBE_NAME:
         list.push('[name]')

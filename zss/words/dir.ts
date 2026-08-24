@@ -1,6 +1,6 @@
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
 
-import { STR_KIND } from './kind'
+import { STR_GROUP } from './group'
 import { READ_CONTEXT, readargs } from './reader'
 import { ARG_TYPE, DIR, NAME, PT, WORD } from './types'
 
@@ -108,7 +108,7 @@ export const DIR_CONSTS = {
 export type STR_DIR_TYPE = typeof DIR_CONSTS
 export type STR_DIR_KEYS = keyof STR_DIR_TYPE
 export type STR_DIR_CONST = STR_DIR_TYPE[STR_DIR_KEYS]
-export type STR_DIR = (STR_DIR_CONST | STR_KIND | number | string)[]
+export type STR_DIR = (STR_DIR_CONST | STR_GROUP | number | string)[]
 
 export type EVAL_DIR = {
   dir: STR_DIR
@@ -199,8 +199,8 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       }
       case 'FLEE':
       case 'FIND': {
-        const [kind, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
-        strdir.push(kind)
+        const [group, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.GROUP])
+        strdir.push(group)
         ii = iii
         break
       }
@@ -238,11 +238,11 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         break
       }
       case 'SELECT': {
-        const [selectmode, kind, iii] = readargs(READ_CONTEXT.words, ii, [
+        const [selectmode, group, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.STRING,
-          ARG_TYPE.KIND,
+          ARG_TYPE.GROUP,
         ])
-        strdir.push(NAME(selectmode), kind)
+        strdir.push(NAME(selectmode), group)
         ii = iii
         break
       }

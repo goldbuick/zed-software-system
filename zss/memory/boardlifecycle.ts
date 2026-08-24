@@ -7,7 +7,13 @@ import {
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent, noop } from 'zss/mapping/types'
-import { CATEGORY, PT } from 'zss/words/types'
+import {
+  STR_GROUP,
+  readstrgroupbg,
+  readstrgroupcolor,
+  readstrgroupname,
+} from 'zss/words/group'
+import { CATEGORY, NAME, PT } from 'zss/words/types'
 
 import {
   memoryexportboardelement,
@@ -250,6 +256,31 @@ export function memoryreadgroup(
   }
 
   return { objectelements, terrainelements }
+}
+
+export function memorylistboardelementsbygroup(
+  board: MAYBE<BOARD>,
+  self: string,
+  group: STR_GROUP,
+): BOARD_ELEMENT[] {
+  const name = NAME(readstrgroupname(group) ?? '')
+  const color = readstrgroupcolor(group)
+  const bg = readstrgroupbg(group)
+  const { terrainelements, objectelements } = memoryreadgroup(board, self, name)
+  const elements = [...terrainelements, ...objectelements]
+  if (!ispresent(color) && !ispresent(bg)) {
+    return elements
+  }
+  return elements.filter((element) => {
+    const display = memoryreadelementdisplay(element)
+    if (ispresent(color) && color !== display.color) {
+      return false
+    }
+    if (ispresent(bg) && bg !== display.bg) {
+      return false
+    }
+    return true
+  })
 }
 
 export function memorywriteterrain(

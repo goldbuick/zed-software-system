@@ -7,7 +7,6 @@ import {
   vmclearscroll,
   vmcodeaddress,
 } from 'zss/device/api'
-import { doasync } from 'zss/device/doasync'
 import {
   modemdeletekeyswithprefix,
   modemwriteinitstring,
@@ -29,7 +28,7 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { escapedoublequoted } from 'zss/mapping/string'
-import { CYCLE_DEFAULT, waitfor } from 'zss/mapping/tick'
+import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -522,31 +521,16 @@ export function memoryinspectcommand(path: string, player: string) {
     case 'empty':
       memorysafedeleteelement(board, element, mainbook.timestamp)
       break
-    case 'code':
-      doasync(SOFTWARE, player, async () => {
-        const pagetype = 'object'
-
-        // edit path
-        const path = [board.id, element.id]
-
-        // write to modem
-        modemwriteinitstring(
-          vmcodeaddress(mainbook.id, path),
-          element.code ?? '',
-        )
-
-        // close scroll
-        vmclearscroll(SOFTWARE, player)
-
-        // wait a little
-        await waitfor(800)
-
-        // open code editor
-        const prefix = memoryelementtodisplayprefix(element)
-        const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${mainbook.name}`
-        registereditoropen(SOFTWARE, player, mainbook.id, path, pagetype, title)
-      })
+    case 'code': {
+      const pagetype = 'object'
+      const path = [board.id, element.id]
+      modemwriteinitstring(vmcodeaddress(mainbook.id, path), element.code ?? '')
+      vmclearscroll(SOFTWARE, player)
+      const prefix = memoryelementtodisplayprefix(element)
+      const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${mainbook.name}`
+      registereditoropen(SOFTWARE, player, mainbook.id, path, pagetype, title)
       break
+    }
     default:
       apierror(
         SOFTWARE,

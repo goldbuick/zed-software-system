@@ -5,6 +5,7 @@ import {
   MQ_CANVAS_HEIGHT,
   MQ_CANVAS_WIDTH,
 } from './tvcanvas'
+import { readactivepresetlabel } from './visualizer'
 
 export type MQ_COMPOSITOR_MODE = 'placard' | 'video' | 'audio'
 
@@ -113,8 +114,10 @@ function drawframe() {
   if (mode === 'video' && videosource) {
     const vw = videosource.videoWidth || 0
     const vh = videosource.videoHeight || 0
+    ctx.imageSmoothingEnabled = false
     drawcontain(ctx, videosource, vw, vh)
   } else if (mode === 'audio' && visualizersource) {
+    ctx.imageSmoothingEnabled = false
     ctx.drawImage(visualizersource, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
   } else {
     ctx.fillStyle = BG
@@ -126,6 +129,7 @@ function drawframe() {
     CANVAS_HEIGHT,
     readhudstate(),
     readmediaprogress(playbackmedia),
+    mode === 'audio' ? readactivepresetlabel() : '',
   )
   animframe = window.requestAnimationFrame(drawframe)
 }

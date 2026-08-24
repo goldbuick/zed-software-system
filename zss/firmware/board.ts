@@ -1,4 +1,3 @@
-import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
 import { gadgetclientgotofade } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -17,11 +16,13 @@ import {
   memoryreadobject,
   memoryreadobjects,
 } from 'zss/memory/boardaccess'
+import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
 import {
+  memorylistboardelementsbygroup,
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
@@ -43,13 +44,17 @@ import {
 } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import {
-  memorylistboardelementsbykind,
-  memorylistboardptsbyempty,
-} from 'zss/memory/spatialqueries'
-import { BOARD_HEIGHT, BOARD_WIDTH, MEMORY_LABEL } from 'zss/memory/types'
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
+import { type EVAL_DIR, dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
+import { readstrgroupname } from 'zss/words/group'
 import {
   readstrkindbg,
   readstrkindcolor,
@@ -71,6 +76,24 @@ import {
   PT,
   WORD,
 } from 'zss/words/types'
+
+/**
+ * Parse a destination DIR while READ_CONTEXT is still the command runner
+ * (so AT/BY number exprs like p2 resolve against the caller), then evaluate
+ * that STR_DIR from the shove/push target's board cell.
+ */
+function readevaldirfromtarget(
+  words: WORD[],
+  index: number,
+  target: BOARD_ELEMENT,
+  board: BOARD,
+): EVAL_DIR {
+  const [ascaller] = readargs(words, index, [ARG_TYPE.DIR])
+  return memoryevaldir(board, target, READ_CONTEXT.elementfocus, ascaller.dir, {
+    x: target.x ?? 0,
+    y: target.y ?? 0,
+  })
+}
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -551,22 +574,20 @@ export const BOARD_FIRMWARE = createfirmware()
         READ_CONTEXT.board,
       )
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
-      if (memoryboardelementisobject(maybetarget)) {
-        // temp override context
-        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-        READ_CONTEXT.element = maybetarget
-        READ_CONTEXT.elementid = maybetarget?.id ?? ''
-        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-        // eval shovedir
-        const [shovedir] = readargs(words, ii, [ARG_TYPE.DIR])
+      if (
+        ispresent(targetboard) &&
+        ispresent(maybetarget) &&
+        memoryboardelementisobject(maybetarget)
+      ) {
+        const shovedir = readevaldirfromtarget(
+          words,
+          ii,
+          maybetarget,
+          targetboard,
+        )
         memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
           x: shovedir.destpt.x,
           y: shovedir.destpt.y,
-        })
-        // restore context
-        objectKeys(OLD_CONTEXT).forEach((key) => {
-          // @ts-expect-error dont bother me
-          READ_CONTEXT[key] = OLD_CONTEXT[key]
         })
       }
       return 0
@@ -587,24 +608,20 @@ export const BOARD_FIRMWARE = createfirmware()
       )
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (
+        ispresent(targetboard) &&
+        ispresent(maybetarget) &&
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
-        // temp override context
-        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-        READ_CONTEXT.element = maybetarget
-        READ_CONTEXT.elementid = maybetarget?.id ?? ''
-        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-        // eval shovedir
-        const [shovedir] = readargs(words, ii, [ARG_TYPE.DIR])
+        const shovedir = readevaldirfromtarget(
+          words,
+          ii,
+          maybetarget,
+          targetboard,
+        )
         memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
           x: shovedir.destpt.x,
           y: shovedir.destpt.y,
-        })
-        // restore context
-        objectKeys(OLD_CONTEXT).forEach((key) => {
-          // @ts-expect-error dont bother me
-          READ_CONTEXT[key] = OLD_CONTEXT[key]
         })
       }
       return 0
@@ -683,15 +700,15 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'change',
-    [ARG_TYPE.KIND, ARG_TYPE.KIND, 'elements of one kind to another'],
+    [ARG_TYPE.GROUP, ARG_TYPE.KIND, 'elements of a group to another kind'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
         return 0
       }
 
-      // read
-      const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
+      // read: target is GROUP matcher; into is blueprint kind
+      const [target, into] = readargs(words, 0, [ARG_TYPE.GROUP, ARG_TYPE.KIND])
 
       // handle player case
       const [maybetargetname] = target
@@ -709,7 +726,7 @@ export const BOARD_FIRMWARE = createfirmware()
       chip.set('didfail', 1)
 
       // begin filtering
-      const targetname = readstrkindname(target) ?? ''
+      const targetname = readstrgroupname(target) ?? ''
       if (targetname === 'empty') {
         // empty into something becomes a put
         memorylistboardptsbyempty(READ_CONTEXT.board).forEach((pt) => {
@@ -721,48 +738,50 @@ export const BOARD_FIRMWARE = createfirmware()
       const intoname = readstrkindname(into)
       const intocolor = readstrkindcolor(into)
       const intobg = readstrkindbg(into)
-      memorylistboardelementsbykind(READ_CONTEXT.board, target).forEach(
-        (element) => {
-          // modify existing elements
-          if (ispresent(intocolor)) {
-            element.color = intocolor
-            chip.set('didfail', 0)
-          }
-          if (ispresent(intobg)) {
-            element.bg = intobg
-            chip.set('didfail', 0)
-          }
-          const display = memoryreadelementdisplay(element)
-          if (display.name !== intoname) {
-            const newcolor = memoryreadelementstat(element, 'color')
-            const newbg = memoryreadelementstat(element, 'bg')
-            // erase element
-            memorysafedeleteelement(
+      memorylistboardelementsbygroup(
+        READ_CONTEXT.board,
+        READ_CONTEXT.elementid,
+        target,
+      ).forEach((element) => {
+        // modify existing elements
+        if (ispresent(intocolor)) {
+          element.color = intocolor
+          chip.set('didfail', 0)
+        }
+        if (ispresent(intobg)) {
+          element.bg = intobg
+          chip.set('didfail', 0)
+        }
+        const display = memoryreadelementdisplay(element)
+        if (display.name !== intoname) {
+          const newcolor = memoryreadelementstat(element, 'color')
+          const newbg = memoryreadelementstat(element, 'bg')
+          // erase element
+          memorysafedeleteelement(
+            READ_CONTEXT.board,
+            element,
+            READ_CONTEXT.timestamp,
+          )
+          // create new element
+          if (intoname !== 'empty') {
+            const pt = { x: element.x ?? 0, y: element.y ?? 0 }
+            const newelement = memorywriteelementfromkind(
               READ_CONTEXT.board,
-              element,
-              READ_CONTEXT.timestamp,
+              into,
+              pt,
             )
-            // create new element
-            if (intoname !== 'empty') {
-              const pt = { x: element.x ?? 0, y: element.y ?? 0 }
-              const newelement = memorywriteelementfromkind(
-                READ_CONTEXT.board,
-                into,
-                pt,
-              )
-              if (ispresent(newelement)) {
-                chip.set('didfail', 0)
-                newelement.color = newcolor
-                newelement.bg = newbg
-              } else {
-                chip.set('didfail', 1)
-              }
-            } else {
+            if (ispresent(newelement)) {
               chip.set('didfail', 0)
+              newelement.color = newcolor
+              newelement.bg = newbg
+            } else {
+              chip.set('didfail', 1)
             }
+          } else {
+            chip.set('didfail', 0)
           }
-        },
-      )
+        }
+      })
 
       return 0
     },

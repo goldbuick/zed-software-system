@@ -15,6 +15,7 @@ import {
 } from './color'
 import { EVAL_DIR, STR_DIR, isstrdir, mapstrdir, readdir } from './dir'
 import { readexpr } from './expr'
+import { STR_GROUP, isstrgroup, readgroup } from './group'
 import { STR_KIND, isstrkind, readkind } from './kind'
 import { ARG_TYPE, PT, WORD } from './types'
 
@@ -43,14 +44,16 @@ export const READ_CONTEXT = {
 export type ARG_TYPE_MAP = {
   [ARG_TYPE.COLOR]: STR_COLOR
   [ARG_TYPE.KIND]: STR_KIND
+  [ARG_TYPE.GROUP]: STR_GROUP
   [ARG_TYPE.DIR]: EVAL_DIR
   [ARG_TYPE.NAME]: string
   [ARG_TYPE.NUMBER]: number
   [ARG_TYPE.STRING]: string
   [ARG_TYPE.NUMBER_OR_NAME]: number | string
   [ARG_TYPE.NUMBER_OR_STRING]: number | string
-  [ARG_TYPE.COLOR_OR_KIND]: STR_COLOR | STR_KIND
+  [ARG_TYPE.COLOR_OR_GROUP]: STR_COLOR | STR_GROUP
   [ARG_TYPE.MAYBE_KIND]: MAYBE<STR_KIND>
+  [ARG_TYPE.MAYBE_GROUP]: MAYBE<STR_GROUP>
   [ARG_TYPE.MAYBE_NAME]: MAYBE<string>
   [ARG_TYPE.MAYBE_NUMBER]: MAYBE<number>
   [ARG_TYPE.MAYBE_STRING]: MAYBE<string>
@@ -133,6 +136,16 @@ export function readargs<T extends ARG_TYPES>(
           values.push(kind)
         } else {
           didexpect('kind', kind, words)
+        }
+        break
+      }
+      case ARG_TYPE.GROUP: {
+        const [group, iii] = readgroup(ii)
+        if (isstrgroup(group)) {
+          ii = iii
+          values.push(group)
+        } else {
+          didexpect('group', group, words)
         }
         break
       }
@@ -237,27 +250,33 @@ export function readargs<T extends ARG_TYPES>(
         values.push(maybevalue)
         break
       }
-      case ARG_TYPE.COLOR_OR_KIND: {
-        const [kind, iii] = readkind(ii)
-        if (isstrkind(kind)) {
-          ii = iii
-          values.push(kind)
-        } else if (mapstrcolor(words[ii]) === undefined) {
-          // no color const, assume expr
-          const [value, iii] = readexpr(ii)
+      case ARG_TYPE.COLOR_OR_GROUP: {
+        if (mapstrcolor(words[ii]) !== undefined) {
+          const [value, jjj] = readcolor(ii)
           if (isstrcolor(value)) {
-            ii = iii
+            ii = jjj
             values.push(value)
           } else {
-            didexpect('color', value, words)
+            didexpect('color or group', value, words)
+          }
+        } else if (isstring(words[ii])) {
+          const [group, jjj] = readgroup(ii)
+          if (isstrgroup(group)) {
+            ii = jjj
+            values.push(group)
+          } else {
+            didexpect('color or group', group, words)
           }
         } else {
-          const [value, iii] = readcolor(ii)
+          const [value, kkk] = readexpr(ii)
           if (isstrcolor(value)) {
-            ii = iii
+            ii = kkk
+            values.push(value)
+          } else if (isstrgroup(value)) {
+            ii = kkk
             values.push(value)
           } else {
-            didexpect('color or kind', value, words)
+            didexpect('color or group', value, words)
           }
         }
         break
@@ -269,6 +288,15 @@ export function readargs<T extends ARG_TYPES>(
         }
         ii = iii
         values.push(kind)
+        break
+      }
+      case ARG_TYPE.MAYBE_GROUP: {
+        const [group, iii] = readgroup(ii)
+        if (group !== undefined && !isstrgroup(group)) {
+          didexpect('optional group', group, words)
+        }
+        ii = iii
+        values.push(group)
         break
       }
       case ARG_TYPE.MAYBE_NAME: {

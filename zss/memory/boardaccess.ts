@@ -2,7 +2,7 @@ import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
-import { NAME, PT } from 'zss/words/types'
+import { PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
 import { memoryreadboardruntime } from './runtimeboundary'
@@ -102,27 +102,17 @@ export function memoryreadelement(
 
 export function memoryreadelementbyidorindex(
   board: MAYBE<BOARD>,
-  idorindex: string,
+  idorindex: string | number | undefined,
 ) {
-  const maybeobject = memoryreadobject(board, idorindex)
+  if (idorindex === undefined || idorindex === null) {
+    return undefined
+  }
+  const key = `${idorindex}`
+  const maybeobject = memoryreadobject(board, key)
   if (ispresent(maybeobject)) {
     return maybeobject
   }
-  // Chip paths NAME-fold ids (inspect:sid_AbC -> sid_abc); match case-insensitively
-  if (
-    ispresent(board?.objects) &&
-    idorindex.length > 0 &&
-    !/^\d+(\.\d+)?$/.test(idorindex)
-  ) {
-    const folded = NAME(idorindex)
-    const ids = Object.keys(board.objects)
-    for (let i = 0; i < ids.length; ++i) {
-      if (NAME(ids[i]) === folded) {
-        return board.objects[ids[i]]
-      }
-    }
-  }
-  const maybeindex = parseFloat(idorindex)
+  const maybeindex = parseFloat(key)
   const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
   return memoryreadterrain(board, pt.x, pt.y)
 }

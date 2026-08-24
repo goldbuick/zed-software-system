@@ -10,26 +10,16 @@ export const MEDIAQUEUE_PEER_LABEL = 'mediaqueue'
 /** Landscape board TV size in char cells (all graphics modes). */
 export const BOARD_TV_COLS = 40
 export const BOARD_TV_ROWS = 15
-export const BOARD_TV_BORDER_CELLS = 1
-export const BOARD_TV_INNER_COLS = BOARD_TV_COLS - BOARD_TV_BORDER_CELLS * 2
-export const BOARD_TV_INNER_ROWS = BOARD_TV_ROWS - BOARD_TV_BORDER_CELLS * 2
-
-export function boardtvinnerpixels(cw: number, ch: number) {
-  return {
-    width: BOARD_TV_INNER_COLS * cw,
-    height: BOARD_TV_INNER_ROWS * ch,
-  }
-}
 
 /**
  * Helper compositor / visualizer canvas matches default DRAW_CHAR_SCALE.
- * Keep ops/media-queue/ui/tvcanvas.ts in lockstep.
+ * Keep ops/media-queue/ui/tvcanvas.ts in lockstep (40x15 cells -> 640x420).
  */
 export const BOARD_TV_COMPOSITOR_SCALE = 2
 export const BOARD_TV_COMPOSITOR_WIDTH =
-  BOARD_TV_INNER_COLS * CHAR_WIDTH * BOARD_TV_COMPOSITOR_SCALE
+  BOARD_TV_COLS * CHAR_WIDTH * BOARD_TV_COMPOSITOR_SCALE
 export const BOARD_TV_COMPOSITOR_HEIGHT =
-  BOARD_TV_INNER_ROWS * CHAR_HEIGHT * BOARD_TV_COMPOSITOR_SCALE
+  BOARD_TV_ROWS * CHAR_HEIGHT * BOARD_TV_COMPOSITOR_SCALE
 
 /**
  * The CRT halftone pass multiplies every pixel by `prebright` and clamps, which
@@ -77,20 +67,17 @@ export function boardtvisupright(graphics: string): boolean {
 }
 
 export type BOARD_TV_LAYOUT = {
-  marqueerow: number
-  scrollstep: number
   videoflipvertical: boolean
   videoz: number
   backface: boolean
 }
 
 /**
- * Board tiles render with +Y down-screen in every mode, so the TV chrome needs
- * no per-mode flips -- only the upright rotation differs. Video z separation
- * must clear depth-buffer precision in the perspective / tilted modes.
- *
- * backface: fpv walks the player around the TV, so the far side gets its own
+ * Video z separation must clear depth-buffer precision in perspective / tilted
+ * modes. backface: fpv walks around the TV, so the far side gets its own
  * turned-around copy -- a double-sided plane would read mirrored from behind.
+ *
+ * Now-playing text is drawn by the helper compositor overlay, not TV chrome.
  */
 export function boardtvlayout(
   graphics: string,
@@ -98,8 +85,6 @@ export function boardtvlayout(
 ): BOARD_TV_LAYOUT {
   const mode = normalizelayerzvariant(graphics)
   return {
-    marqueerow: BOARD_TV_ROWS - 1,
-    scrollstep: 1,
     videoflipvertical: true,
     videoz: mode === 'flat' ? 0.001 : drawheight * 0.05,
     backface: mode === 'fpv',

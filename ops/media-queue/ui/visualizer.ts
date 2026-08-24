@@ -337,3 +337,24 @@ export function readaudio(): HTMLAudioElement | null {
 export function readactivepresetid(): string {
   return activepresetid
 }
+
+export function readactivepresetlabel(): string {
+  return formatpresetlabel(activepresetid)
+}
+
+function formatpresetlabel(id: string): string {
+  const raw = String(id || '')
+  if (!raw) {
+    return ''
+  }
+  if (raw === 'classicbars') {
+    return 'classic bars'
+  }
+  if (raw === 'classicscope') {
+    return 'classic scope'
+  }
+  if (raw.indexOf('milkdrop:') === 0) {
+    return raw.slice('milkdrop:'.length)
+  }
+  return raw
+}

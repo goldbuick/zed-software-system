@@ -2,12 +2,10 @@ import { MQ_CANVAS_HEIGHT, MQ_CANVAS_WIDTH } from '../tvcanvas'
 
 import { CLASSIC_BG, drawartwork } from './classicshared'
 
-const VIZ_OVER_ARTWORK_ALPHA = 0.67
-
 /**
  * Pull washed WebGL frames down for board TV: crush highlights first, then
  * punch contrast. Plain contrast() on near-white content stays white.
- * When artwork is present, dimmed cover sits under a semi-opaque viz blit.
+ * Viz blits opaque; cover art (if any) is a semi-transparent overlay on top.
  */
 export function blitvizcontrast(
   dest: CanvasRenderingContext2D,
@@ -18,12 +16,10 @@ export function blitvizcontrast(
   dest.globalAlpha = 1
   dest.fillStyle = CLASSIC_BG
   dest.fillRect(0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
+  dest.filter = 'brightness(0.55) contrast(1.85) saturate(1.55)'
+  dest.drawImage(source, 0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
+  dest.filter = 'none'
   if (artwork) {
     drawartwork(dest, artwork)
   }
-  dest.filter = 'brightness(0.55) contrast(1.85) saturate(1.55)'
-  dest.globalAlpha = artwork ? VIZ_OVER_ARTWORK_ALPHA : 1
-  dest.drawImage(source, 0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
-  dest.globalAlpha = 1
-  dest.filter = 'none'
 }
