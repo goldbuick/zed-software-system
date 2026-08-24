@@ -451,28 +451,26 @@ function formatplaybackoverlaylines(
   channel: string,
   audioonly: boolean,
 ): string[] {
-  const lines: string[] = []
-  const titleline = playbacklabel(title, url, path)
-  if (titleline) {
-    lines.push(titleline)
+  const titlepart = playbacklabel(title, url, path)
+  const artistpart = String(artist || '').trim()
+  const albumpart = String(album || '').trim()
+  const channelpart = String(channel || '').trim()
+  const parts: string[] = []
+  if (artistpart) {
+    parts.push(artistpart)
+  } else if (!audioonly && channelpart) {
+    parts.push(channelpart)
   }
-  if (audioonly) {
-    const artistpart = String(artist || '').trim()
-    const albumpart = String(album || '').trim()
-    if (artistpart && albumpart) {
-      lines.push(artistpart + ' - ' + albumpart)
-    } else if (artistpart) {
-      lines.push(artistpart)
-    } else if (albumpart) {
-      lines.push(albumpart)
-    }
-  } else {
-    const channelpart = String(channel || '').trim()
-    if (channelpart) {
-      lines.push(channelpart)
-    }
+  if (albumpart) {
+    parts.push(albumpart)
   }
-  return lines
+  if (titlepart) {
+    parts.push(titlepart)
+  }
+  if (!parts.length) {
+    return []
+  }
+  return [parts.join(' - ')]
 }
 
 function formatplaybackstatuslabel(lines: string[]): string {

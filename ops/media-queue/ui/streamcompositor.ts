@@ -114,8 +114,10 @@ function drawframe() {
   if (mode === 'video' && videosource) {
     const vw = videosource.videoWidth || 0
     const vh = videosource.videoHeight || 0
+    ctx.imageSmoothingEnabled = false
     drawcontain(ctx, videosource, vw, vh)
   } else if (mode === 'audio' && visualizersource) {
+    ctx.imageSmoothingEnabled = false
     ctx.drawImage(visualizersource, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
   } else {
     ctx.fillStyle = BG

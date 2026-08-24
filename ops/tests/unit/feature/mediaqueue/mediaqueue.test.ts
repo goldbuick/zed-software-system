@@ -269,11 +269,9 @@ describe('mediaqueue board tv', () => {
     expect(boardtvlayerz('mode7', 28)).toBeCloseTo(3.36)
   })
 
-  it('boardtvlayout places the marquee identically in every mode', () => {
+  it('boardtvlayout flips video and sets backface per mode', () => {
     for (const mode of ['flat', 'mode7', 'iso', 'fpv'] as const) {
       const layout = boardtvlayout(mode, 28)
-      expect(layout.marqueerow).toBe(BOARD_TV_ROWS - 1)
-      expect(layout.scrollstep).toBe(1)
       expect(layout.videoflipvertical).toBe(true)
     }
   })
@@ -303,7 +301,7 @@ describe('mediaqueue board tv', () => {
     expect(tall.centery).toBe(-5)
   })
 
-  it('boardtvvideofit falls back to inner compositor size before metadata lands', () => {
+  it('boardtvvideofit falls back to compositor size before metadata lands', () => {
     const fit = boardtvvideofit(0, 0, {
       width: BOARD_TV_COMPOSITOR_WIDTH,
       height: BOARD_TV_COMPOSITOR_HEIGHT,
@@ -314,9 +312,8 @@ describe('mediaqueue board tv', () => {
     expect(fit.height).toBeCloseTo(BOARD_TV_COMPOSITOR_HEIGHT)
   })
 
-  it('boardtvscreenrows keeps video off the marquee row', () => {
-    expect(boardtvscreenrows(BOARD_TV_ROWS - 1)).toEqual({ start: 1, count: 13 })
-    expect(boardtvscreenrows(0)).toEqual({ start: 1, count: 13 })
+  it('boardtvscreenrows uses the full tv footprint', () => {
+    expect(boardtvscreenrows()).toEqual({ start: 0, count: BOARD_TV_ROWS })
   })
 
   it('boardtvshouldshow matches bound board when listening', () => {

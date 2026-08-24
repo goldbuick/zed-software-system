@@ -338,27 +338,23 @@ export function readactivepresetid(): string {
   return activepresetid
 }
 
-const PRESET_LABEL_MAX = 48
+export function readactivepresetlabel(): string {
+  return formatpresetlabel(activepresetid)
+}
 
 function formatpresetlabel(id: string): string {
   const raw = String(id || '')
   if (!raw) {
     return ''
   }
-  let label = raw
   if (raw === 'classicbars') {
-    label = 'classic bars'
-  } else if (raw === 'classicscope') {
-    label = 'classic scope'
-  } else if (raw.indexOf('milkdrop:') === 0) {
-    label = raw.slice('milkdrop:'.length)
+    return 'classic bars'
   }
-  if (label.length > PRESET_LABEL_MAX) {
-    return label.slice(0, PRESET_LABEL_MAX) + '...'
+  if (raw === 'classicscope') {
+    return 'classic scope'
   }
-  return label
-}
-
-export function readactivepresetlabel(): string {
-  return formatpresetlabel(activepresetid)
+  if (raw.indexOf('milkdrop:') === 0) {
+    return raw.slice('milkdrop:'.length)
+  }
+  return raw
 }

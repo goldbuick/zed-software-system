@@ -34,9 +34,6 @@ function startclassicbars(
     }
     draw.fillStyle = CLASSIC_BG
     draw.fillRect(0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
-    if (opts.artwork) {
-      drawartwork(draw, opts.artwork)
-    }
     drawscanlines(draw)
     drawmirroredbars(draw, opts.analyser, opts.freqdata, peaks, decay, {
       top: 12,
@@ -47,6 +44,9 @@ function startclassicbars(
       height: MQ_CANVAS_HEIGHT - Math.floor(MQ_CANVAS_HEIGHT * 0.68) - 12,
       lineWidth: 2,
     })
+    if (opts.artwork) {
+      drawartwork(draw, opts.artwork)
+    }
     animframe = window.requestAnimationFrame(drawframe)
   }
 

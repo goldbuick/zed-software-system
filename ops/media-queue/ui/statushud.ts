@@ -7,15 +7,19 @@ export type MQ_HUD_STATE = {
   metalines: string[]
 }
 
-const FONT = '16px "IBM EGA 8x14", ui-monospace, "Courier New", monospace'
-const CYAN = '#55ffff'
+// Sizes are integer multiples of the IBM EGA 8x14 cell (14px tall, 8px wide).
+const FONT = '28px "IBM EGA 8x14", ui-monospace, "Courier New", monospace'
+const FONT_VIZ = '20px "IBM EGA 8x14", ui-monospace, "Courier New", monospace'
+const FONT_STATUS =
+  '24px "IBM EGA 8x14", ui-monospace, "Courier New", monospace'
+const PURPLE = '#ff00aa'
 const YELLOW = '#ffff55'
 const RED = '#ff5555'
-const BAR_BG = 'rgba(0, 0, 0, 0.72)'
+const BAR_BG = 'rgba(0, 0, 0, 0.32)'
 const PROGRESS_TRACK = 'rgba(0, 0, 0, 0.82)'
 const PROGRESS_FILL = '#ff00aa'
-const PROGRESS_EDGE = '#55ffff'
 const PROGRESS_HEIGHT = 8
+const STATUS_BAR_H = 28
 
 const EMPTY_HUD: MQ_HUD_STATE = {
   phase: '',
@@ -155,7 +159,7 @@ function labelcolor(phase: string): string {
   ) {
     return YELLOW
   }
-  return CYAN
+  return PURPLE
 }
 
 /** 0..1 playback fraction, or -1 when unknown / not playing. */
@@ -186,13 +190,72 @@ export function drawplaybackprogress(
   const bary = height - PROGRESS_HEIGHT
   ctx.fillStyle = PROGRESS_TRACK
   ctx.fillRect(0, bary, width, PROGRESS_HEIGHT)
-  ctx.fillStyle = PROGRESS_EDGE
-  ctx.fillRect(0, bary, width, 1)
   const fillw = Math.floor(width * progress)
   if (fillw > 0) {
     ctx.fillStyle = PROGRESS_FILL
-    ctx.fillRect(0, bary + 1, fillw, PROGRESS_HEIGHT - 1)
+    ctx.fillRect(0, bary, fillw, PROGRESS_HEIGHT)
   }
+}
+
+const MARQUEE_PAD_Y = 8
+const MARQUEE_LINE_H = 28
+const MARQUEE_VIZ_LINE_H = 20
+const MARQUEE_GAP_PX = 64
+const MARQUEE_SPEED_PX = 48
+const OUTLINE_DIRS: [number, number][] = [
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+  [-1, 0],
+  [1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+]
+
+function drawmarqueeline(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  y: number,
+  width: number,
+  color: string,
+  font: string,
+  lineh: number,
+) {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) {
+    return
+  }
+  const rowy = Math.floor(y)
+  ctx.font = font
+  ctx.textBaseline = 'top'
+  ctx.textAlign = 'left'
+  ctx.imageSmoothingEnabled = false
+  // Snap scroll to glyph cells so the bitmap font stays on its pixel grid.
+  const cellw = Math.max(1, Math.round(ctx.measureText('M').width))
+  const textw = Math.max(cellw, Math.ceil(ctx.measureText(trimmed).width))
+  const gap = Math.max(cellw, Math.round(MARQUEE_GAP_PX / cellw) * cellw)
+  const vieww = Math.max(1, Math.floor(width))
+  const cycle = textw + gap
+  const raw = Math.floor((performance.now() / 1000) * MARQUEE_SPEED_PX)
+  const offset = Math.floor(raw / cellw) * cellw
+  const x0 = -((offset % cycle) + cycle) % cycle
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(0, rowy, vieww, lineh)
+  ctx.clip()
+  // Black outline puts glyph edges in luma so WebRTC chroma subsample stays crisp.
+  for (let x = x0; x < vieww; x += cycle) {
+    const xi = Math.floor(x)
+    ctx.fillStyle = '#000000'
+    for (let i = 0; i < OUTLINE_DIRS.length; i += 1) {
+      const d = OUTLINE_DIRS[i]
+      ctx.fillText(trimmed, xi + d[0], rowy + d[1])
+    }
+    ctx.fillStyle = color
+    ctx.fillText(trimmed, xi, rowy)
+  }
+  ctx.restore()
 }
 
 /** Overlay: phase label (prep) and/or thin playback progress at the bottom. */
@@ -207,42 +270,45 @@ export function drawhud(
   const current = state || hudstate
   const phase = current.phase
   const label = hudphaselabel(phase, current.detail)
-  const pad = 10
-  const lineh = 20
   const metalines = Array.isArray(current.metalines) ? current.metalines : []
+  const meta = String(metalines[0] || '').trim()
   const viz = String(vizlabel || '').trim()
-  const toplines: string[] = []
-  for (let i = 0; i < metalines.length; i += 1) {
-    const line = String(metalines[i] || '').trim()
-    if (line) {
-      toplines.push(line)
-    }
+  let barh = 0
+  if (meta) {
+    barh += MARQUEE_LINE_H
   }
   if (viz) {
-    toplines.push('viz ' + viz)
+    barh += MARQUEE_VIZ_LINE_H
   }
-  if (toplines.length) {
-    const barh = pad * 2 + lineh * toplines.length
+  if (barh > 0) {
+    barh += MARQUEE_PAD_Y * 2
     ctx.fillStyle = BAR_BG
     ctx.fillRect(0, 0, width, barh)
-    ctx.font = FONT
-    ctx.textBaseline = 'top'
-    ctx.textAlign = 'left'
-    ctx.fillStyle = CYAN
-    for (let i = 0; i < toplines.length; i += 1) {
-      ctx.fillText(toplines[i], pad, pad + i * lineh)
+    let y = MARQUEE_PAD_Y
+    if (meta) {
+      drawmarqueeline(ctx, meta, y, width, PURPLE, FONT, MARQUEE_LINE_H)
+      y += MARQUEE_LINE_H
+    }
+    if (viz) {
+      drawmarqueeline(ctx, viz, y, width, PURPLE, FONT_VIZ, MARQUEE_VIZ_LINE_H)
     }
   }
   if (label) {
-    const barh = pad * 2 + lineh
-    const bary = height - barh
+    const bary = Math.floor(height - STATUS_BAR_H)
     ctx.fillStyle = BAR_BG
-    ctx.fillRect(0, bary, width, barh)
-    ctx.font = FONT
-    ctx.textBaseline = 'top'
+    ctx.fillRect(0, bary, width, STATUS_BAR_H)
+    ctx.font = FONT_STATUS
+    ctx.textBaseline = 'middle'
     ctx.textAlign = 'left'
+    ctx.imageSmoothingEnabled = false
+    const labely = Math.floor(bary + STATUS_BAR_H * 0.5)
+    ctx.fillStyle = '#000000'
+    for (let i = 0; i < OUTLINE_DIRS.length; i += 1) {
+      const d = OUTLINE_DIRS[i]
+      ctx.fillText(label, 4 + d[0], labely + d[1])
+    }
     ctx.fillStyle = labelcolor(phase)
-    ctx.fillText(label, pad, bary + pad)
+    ctx.fillText(label, 4, labely)
   }
   if (typeof progress === 'number') {
     drawplaybackprogress(ctx, width, height, progress)
