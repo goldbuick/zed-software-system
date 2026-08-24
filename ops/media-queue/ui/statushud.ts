@@ -4,6 +4,7 @@ export type MQ_HUD_STATE = {
   phase: string
   detail: string
   secondary: string
+  metalines: string[]
 }
 
 const FONT = '16px "IBM EGA 8x14", ui-monospace, "Courier New", monospace'
@@ -20,6 +21,7 @@ const EMPTY_HUD: MQ_HUD_STATE = {
   phase: '',
   detail: '',
   secondary: '',
+  metalines: [],
 }
 
 let hudstate: MQ_HUD_STATE = { ...EMPTY_HUD }
@@ -37,7 +39,30 @@ export function sethudstate(
     phase: String(phase || ''),
     detail: String(detail || ''),
     secondary: String(secondary || ''),
+    metalines: hudstate.metalines,
   }
+}
+
+export function sethudmetalines(lines: string[]) {
+  const next: string[] = []
+  if (Array.isArray(lines)) {
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = String(lines[i] || '').trim()
+      if (line) {
+        next.push(line)
+      }
+    }
+  }
+  hudstate = {
+    phase: hudstate.phase,
+    detail: hudstate.detail,
+    secondary: hudstate.secondary,
+    metalines: next,
+  }
+}
+
+export function clearhudmetalines() {
+  sethudmetalines([])
 }
 
 export function clearhudsecondary() {
@@ -45,6 +70,7 @@ export function clearhudsecondary() {
     phase: hudstate.phase,
     detail: hudstate.detail,
     secondary: '',
+    metalines: hudstate.metalines,
   }
 }
 
@@ -176,13 +202,38 @@ export function drawhud(
   height: number,
   state?: MQ_HUD_STATE,
   progress?: number,
+  vizlabel?: string,
 ) {
   const current = state || hudstate
   const phase = current.phase
   const label = hudphaselabel(phase, current.detail)
+  const pad = 10
+  const lineh = 20
+  const metalines = Array.isArray(current.metalines) ? current.metalines : []
+  const viz = String(vizlabel || '').trim()
+  const toplines: string[] = []
+  for (let i = 0; i < metalines.length; i += 1) {
+    const line = String(metalines[i] || '').trim()
+    if (line) {
+      toplines.push(line)
+    }
+  }
+  if (viz) {
+    toplines.push('viz ' + viz)
+  }
+  if (toplines.length) {
+    const barh = pad * 2 + lineh * toplines.length
+    ctx.fillStyle = BAR_BG
+    ctx.fillRect(0, 0, width, barh)
+    ctx.font = FONT
+    ctx.textBaseline = 'top'
+    ctx.textAlign = 'left'
+    ctx.fillStyle = CYAN
+    for (let i = 0; i < toplines.length; i += 1) {
+      ctx.fillText(toplines[i], pad, pad + i * lineh)
+    }
+  }
   if (label) {
-    const pad = 10
-    const lineh = 20
     const barh = pad * 2 + lineh
     const bary = height - barh
     ctx.fillStyle = BAR_BG

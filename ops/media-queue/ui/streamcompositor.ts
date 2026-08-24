@@ -5,6 +5,7 @@ import {
   MQ_CANVAS_HEIGHT,
   MQ_CANVAS_WIDTH,
 } from './tvcanvas'
+import { readactivepresetlabel } from './visualizer'
 
 export type MQ_COMPOSITOR_MODE = 'placard' | 'video' | 'audio'
 
@@ -126,6 +127,7 @@ function drawframe() {
     CANVAS_HEIGHT,
     readhudstate(),
     readmediaprogress(playbackmedia),
+    mode === 'audio' ? readactivepresetlabel() : '',
   )
   animframe = window.requestAnimationFrame(drawframe)
 }

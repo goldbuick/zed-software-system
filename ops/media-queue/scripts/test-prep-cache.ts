@@ -65,12 +65,18 @@ function main() {
   mgr.seedregistryready('https://a.example', {
     path: keepa,
     title: 'a',
+    artist: '',
+    album: '',
+    channel: '',
     audioOnly: false,
     artwork: keepaart,
   })
   mgr.seedregistryready('https://b.example', {
     path: keepb,
     title: 'b',
+    artist: '',
+    album: '',
+    channel: '',
     audioOnly: false,
     artwork: keepbart,
   })

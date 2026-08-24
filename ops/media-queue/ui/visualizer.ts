@@ -337,3 +337,28 @@ export function readaudio(): HTMLAudioElement | null {
 export function readactivepresetid(): string {
   return activepresetid
 }
+
+const PRESET_LABEL_MAX = 48
+
+function formatpresetlabel(id: string): string {
+  const raw = String(id || '')
+  if (!raw) {
+    return ''
+  }
+  let label = raw
+  if (raw === 'classicbars') {
+    label = 'classic bars'
+  } else if (raw === 'classicscope') {
+    label = 'classic scope'
+  } else if (raw.indexOf('milkdrop:') === 0) {
+    label = raw.slice('milkdrop:'.length)
+  }
+  if (label.length > PRESET_LABEL_MAX) {
+    return label.slice(0, PRESET_LABEL_MAX) + '...'
+  }
+  return label
+}
+
+export function readactivepresetlabel(): string {
+  return formatpresetlabel(activepresetid)
+}

@@ -27,6 +27,9 @@ export type MQ_PLAYBACK_RESULT = {
 export type MQ_DOWNLOAD_RESULT = {
   path: string
   title: string
+  artist: string
+  album: string
+  channel: string
   audioOnly: boolean
   duration: number
   artwork: string

@@ -25,7 +25,12 @@ import {
   INPUT_SHIFT,
 } from 'zss/gadget/data/types'
 import { useTape } from 'zss/gadget/data/zustandstores'
-import { UserInputContext, user } from 'zss/gadget/userinputcontext'
+import {
+  UserInputContext,
+  user,
+  userfocuspop,
+  userfocuspush,
+} from 'zss/gadget/userinputcontext'
 import type { UserInputMods } from 'zss/gadget/userinputtypes'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
@@ -785,16 +790,12 @@ export function UserFocus({ blockhotkeys, children }: UserFocusProps) {
   // event entry point
   const [current] = useState(() => mitt())
 
-  // re-write entry point
+  // Identity stack: overlapping scroll/editor UserFocus must not restore the
+  // wrong parent when the earlier overlay unmounts after the later one.
   useEffect(() => {
-    const old = user.root
-    const oldconfig = user.ignorehotkeys
-    user.root = current
-    user.ignorehotkeys = !!blockhotkeys
-
+    userfocuspush(current, !!blockhotkeys)
     return () => {
-      user.root = old
-      user.ignorehotkeys = oldconfig
+      userfocuspop(current)
     }
   }, [current, blockhotkeys])
 

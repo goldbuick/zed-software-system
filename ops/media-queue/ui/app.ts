@@ -55,7 +55,7 @@ import {
   helperqueueskip,
   helperqueueurls,
 } from './queue'
-import { readhudstate, sethudstate } from './statushud'
+import { clearhudmetalines, readhudstate, sethudmetalines, sethudstate } from './statushud'
 import { clearcompositorplayback, ensurecompositor } from './streamcompositor'
 
 type MQ_PLAYER_CALL = {
@@ -143,6 +143,10 @@ let gotodraining = false
 let playbackgeneration = 0
 let currentplaybackurl = ''
 let currentplaybacktitle = ''
+let currentplaybackartist = ''
+let currentplaybackalbum = ''
+let currentplaybackchannel = ''
+let currentplaybackaudioonly = false
 let cachebytes = 0
 let downloadinflight = false
 let lastdownloadpct = -1
@@ -434,6 +438,92 @@ function playbacklabel(title: string, url: string, path: string) {
     return fromurl
   }
   return mediabasename(path)
+}
+
+const PLAYBACK_STATUS_LABEL_MAX = 120
+
+function formatplaybackoverlaylines(
+  title: string,
+  url: string,
+  path: string,
+  artist: string,
+  album: string,
+  channel: string,
+  audioonly: boolean,
+): string[] {
+  const lines: string[] = []
+  const titleline = playbacklabel(title, url, path)
+  if (titleline) {
+    lines.push(titleline)
+  }
+  if (audioonly) {
+    const artistpart = String(artist || '').trim()
+    const albumpart = String(album || '').trim()
+    if (artistpart && albumpart) {
+      lines.push(artistpart + ' - ' + albumpart)
+    } else if (artistpart) {
+      lines.push(artistpart)
+    } else if (albumpart) {
+      lines.push(albumpart)
+    }
+  } else {
+    const channelpart = String(channel || '').trim()
+    if (channelpart) {
+      lines.push(channelpart)
+    }
+  }
+  return lines
+}
+
+function formatplaybackstatuslabel(lines: string[]): string {
+  const joined = lines.filter(Boolean).join(' | ')
+  if (joined.length <= PLAYBACK_STATUS_LABEL_MAX) {
+    return joined
+  }
+  return joined.slice(0, PLAYBACK_STATUS_LABEL_MAX - 3) + '...'
+}
+
+function syncplaybackoverlaymeta(url: string, path: string) {
+  const lines = formatplaybackoverlaylines(
+    currentplaybacktitle,
+    url,
+    path,
+    currentplaybackartist,
+    currentplaybackalbum,
+    currentplaybackchannel,
+    currentplaybackaudioonly,
+  )
+  sethudmetalines(lines)
+  return formatplaybackstatuslabel(lines)
+}
+
+function clearplaybackmeta() {
+  currentplaybackurl = ''
+  currentplaybacktitle = ''
+  currentplaybackartist = ''
+  currentplaybackalbum = ''
+  currentplaybackchannel = ''
+  currentplaybackaudioonly = false
+  clearhudmetalines()
+}
+
+function applyreadyplaybackmeta(
+  ready:
+    | Pick<
+        MQ_READY_EVENT,
+        'title' | 'artist' | 'album' | 'channel' | 'audioOnly'
+      >
+    | null
+    | undefined,
+) {
+  currentplaybacktitle =
+    ready && ready.title ? String(ready.title).trim() : ''
+  currentplaybackartist =
+    ready && ready.artist ? String(ready.artist).trim() : ''
+  currentplaybackalbum = ready && ready.album ? String(ready.album).trim() : ''
+  currentplaybackchannel =
+    ready && ready.channel ? String(ready.channel).trim() : ''
+  currentplaybackaudioonly = Boolean(ready && ready.audioOnly)
 }
 
 function urlfallbacklabel(url: string) {
@@ -760,11 +850,7 @@ function helloandresume() {
     answerpendingplayercalls()
     publishstreamtoplayers()
     syncplayerlinkstatus()
-    const playinglabel = playbacklabel(
-      currentplaybacktitle,
-      currentplaybackurl,
-      '',
-    )
+    const playinglabel = syncplaybackoverlaymeta(currentplaybackurl, '')
     sendstatus('playing', playinglabel)
   }
 }
@@ -1210,8 +1296,7 @@ async function endcall(opts?: { natural?: boolean; keepplayers?: boolean }) {
     await stopplayback()
     playbackstarted = false
   }
-  currentplaybackurl = ''
-  currentplaybacktitle = ''
+  clearplaybackmeta()
   if (hadcall && !naturalend) {
     sendstatus('call-stopped')
   }
@@ -1257,9 +1342,14 @@ async function startplaybackandcall(url: string) {
     if (devpath) {
       path = devpath
       currentplaybacktitle = 'dev fixture'
+      currentplaybackartist = ''
+      currentplaybackalbum = ''
+      currentplaybackchannel = ''
+      currentplaybackaudioonly = false
       currentplaybackurl = url || 'dev://fixture'
-      setlink('buffering', path)
-      sendstatus('buffering', path)
+      const label = syncplaybackoverlaymeta(currentplaybackurl, path)
+      setlink('buffering', label)
+      sendstatus('buffering', label)
       playback = await startplayback(path)
       if (issupersededplaybackerr(null, gen)) {
         await stopplayback()
@@ -1280,8 +1370,8 @@ async function startplaybackandcall(url: string) {
       }
       if (ready && ready.path) {
         path = ready.path
-        currentplaybacktitle = ready.title ? String(ready.title).trim() : ''
-        const label = playbacklabel(currentplaybacktitle, url, path)
+        applyreadyplaybackmeta(ready)
+        const label = syncplaybackoverlaymeta(url, path)
         setlink('buffering', label)
         sendstatus('buffering', label)
         playback = await startplayback(path, {
@@ -1316,11 +1406,10 @@ async function startplaybackandcall(url: string) {
           return
         }
         path = downloaded && downloaded.path ? downloaded.path : ''
-        currentplaybacktitle =
-          downloaded && downloaded.title ? String(downloaded.title).trim() : ''
+        applyreadyplaybackmeta(downloaded)
         handledownloadprogress({ percent: 100, status: 'downloading' })
         sendstatus('download-progress', '100|')
-        const label = playbacklabel(currentplaybacktitle, url, path)
+        const label = syncplaybackoverlaymeta(url, path)
         setlink('buffering', label)
         sendstatus('buffering', label)
         playback = await startplayback(path, {
@@ -1382,7 +1471,7 @@ async function startplaybackandcall(url: string) {
   answerpendingplayercalls()
   publishstreamtoplayers()
   syncplayerlinkstatus()
-  const playinglabel = playbacklabel(currentplaybacktitle, url, path)
+  const playinglabel = syncplaybackoverlaymeta(url, path)
   sendstatus('playing', playinglabel)
   void reconcileprep()
 }
@@ -1442,7 +1531,7 @@ function handlecafemessage(data: unknown) {
           if (playbackstarted) {
             setlink(
               'playing',
-              playbacklabel(currentplaybacktitle, currentplaybackurl, ''),
+              syncplaybackoverlaymeta(currentplaybackurl, ''),
             )
             return
           }

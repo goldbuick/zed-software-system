@@ -1,12 +1,10 @@
 import { parsetarget } from 'zss/device'
 import { apierror, apitoast, registercopy, vmcli } from 'zss/device/api'
-import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { durableget, durableupdate } from 'zss/feature/durable'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
-import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
@@ -193,12 +191,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
       registercopy(SOFTWARE, player, [x1, y1, x2, y2].join(' '))
       break
     case 'pageopen':
-      doasync(SOFTWARE, player, async () => {
-        // wait a little
-        await waitfor(800)
-        // open codepage
-        vmcli(SOFTWARE, player, `#pageopen ${batch.path}`)
-      })
+      vmcli(SOFTWARE, player, `#pageopen ${batch.path}`)
       break
     default:
       apierror(

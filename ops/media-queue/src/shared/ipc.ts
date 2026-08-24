@@ -51,6 +51,12 @@ export type MQ_PROGRESS_EVENT = {
 export type MQ_READY_EVENT = {
   path: string
   title: string
+  /** Track artist when known (audio); empty when absent. */
+  artist: string
+  /** Album name when known (audio); empty when absent. */
+  album: string
+  /** Channel or uploader when known (video); empty when absent. */
+  channel: string
   audioOnly: boolean
   duration: number
   /** Absolute path to sidecar cover art, or empty when absent. */

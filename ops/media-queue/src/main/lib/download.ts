@@ -48,6 +48,9 @@ type MQ_DOWNLOAD_JOB = {
 type MQ_REGISTRY_META = {
   path: string
   title: string
+  artist: string
+  album: string
+  channel: string
   audioOnly: boolean
   artwork: string
 }
@@ -110,8 +113,18 @@ type MQ_YTDLP_RESULT = {
   success: boolean
   outpath: string
   title: string
+  artist: string
+  album: string
+  channel: string
   message: string
   errlines: string[]
+}
+
+type MQ_YTDLP_META = {
+  title: string
+  artist: string
+  album: string
+  channel: string
 }
 
 type MQ_PRUNE_RESULT = {
@@ -644,7 +657,16 @@ function captureytdlpoutpath(current: string, line: string): string {
   return current
 }
 
-function captureytdlptitle(current: string, line: string): string {
+function ytdlpmetafield(raw: string): string {
+  const trimmed = String(raw || '').trim()
+  if (!trimmed || trimmed === 'NA' || trimmed === 'None') {
+    return ''
+  }
+  return trimmed.slice(0, 120)
+}
+
+/** Parse yt-dlp TSV: title \\t artist \\t album \\t channel \\t uploader */
+function captureytdlpmeta(current: MQ_YTDLP_META, line: string): MQ_YTDLP_META {
   const trimmed = line.trim()
   if (!trimmed || trimmed.startsWith('[')) {
     return current
@@ -652,7 +674,30 @@ function captureytdlptitle(current: string, line: string): string {
   if (trimmed.includes('/') || trimmed.includes('\\')) {
     return current
   }
-  return trimmed.slice(0, 120)
+  if (trimmed.indexOf('\t') < 0) {
+    // Legacy single-field title print (or unexpected line).
+    if (!current.title) {
+      return {
+        title: ytdlpmetafield(trimmed),
+        artist: current.artist,
+        album: current.album,
+        channel: current.channel,
+      }
+    }
+    return current
+  }
+  const parts = trimmed.split('\t')
+  const title = ytdlpmetafield(parts[0] ?? '')
+  const artist = ytdlpmetafield(parts[1] ?? '')
+  const album = ytdlpmetafield(parts[2] ?? '')
+  const channel = ytdlpmetafield(parts[3] ?? '')
+  const uploader = ytdlpmetafield(parts[4] ?? '')
+  return {
+    title: title || current.title,
+    artist: artist || current.artist,
+    album: album || current.album,
+    channel: channel || uploader || current.channel,
+  }
 }
 
 function applyytdlpbaseargs(
@@ -747,7 +792,7 @@ export function buildytdlpargs(
     '-o',
     'mq-%(id)s.%(ext)s',
     '--print',
-    'title',
+    '%(title)s\t%(artist)s\t%(album)s\t%(channel)s\t%(uploader)s',
     '--print',
     'after_move:filepath',
     ctx.url,
@@ -918,7 +963,12 @@ async function runytdlpdownload(
   job.activechild = child
 
   let outpath = ''
-  let title = ''
+  let meta: MQ_YTDLP_META = {
+    title: '',
+    artist: '',
+    album: '',
+    channel: '',
+  }
   const errlines: string[] = []
 
   const stdoutdone = readstreamlines(child.stdout, (line) => {
@@ -926,7 +976,7 @@ async function runytdlpdownload(
       return
     }
     emitline(job, emit, line)
-    title = captureytdlptitle(title, line)
+    meta = captureytdlpmeta(meta, line)
     outpath = captureytdlpoutpath(outpath, line)
   })
   const stderrdone = readstreamlines(child.stderr, (line) => {
@@ -952,7 +1002,10 @@ async function runytdlpdownload(
   return {
     success: code === 0,
     outpath,
-    title,
+    title: meta.title,
+    artist: meta.artist,
+    album: meta.album,
+    channel: meta.channel,
     message,
     errlines,
   }
@@ -1181,6 +1234,9 @@ export class DownloadManager {
     this.registry.set(url, {
       path: meta.path,
       title: meta.title,
+      artist: meta.artist || '',
+      album: meta.album || '',
+      channel: meta.channel || '',
       audioOnly: meta.audioOnly,
       artwork: meta.artwork || '',
       state: 'ready',
@@ -1226,6 +1282,9 @@ export class DownloadManager {
     return {
       path: entry.path,
       title: entry.title,
+      artist: entry.artist || '',
+      album: entry.album || '',
+      channel: entry.channel || '',
       audioOnly: entry.audioOnly,
       artwork: entry.artwork || '',
       duration: 0,
@@ -1452,6 +1511,9 @@ export class DownloadManager {
       success: false,
       outpath: '',
       title: '',
+      artist: '',
+      album: '',
+      channel: '',
       message: '',
       errlines: [],
     }
@@ -1502,6 +1564,9 @@ export class DownloadManager {
         const payload: MQ_READY_PAYLOAD = {
           path: result.outpath,
           title: result.title,
+          artist: result.artist,
+          album: result.album,
+          channel: result.channel,
           audioOnly: audioonly,
           artwork: resolveartworkpath(result.outpath),
           duration: 0,
@@ -1785,6 +1850,9 @@ export class DownloadManager {
         emit(this.playback.readyevent, {
           path: cached.path,
           title: cached.title,
+          artist: cached.artist || '',
+          album: cached.album || '',
+          channel: cached.channel || '',
           audioOnly: cached.audioOnly,
           artwork: cached.artwork || '',
           duration: 0,
