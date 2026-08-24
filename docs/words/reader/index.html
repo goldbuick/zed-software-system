@@ -74,12 +74,20 @@
 <td>number | string</td>
 </tr>
 <tr>
-<td><code>COLOR_OR_KIND</code></td>
-<td>STR_COLOR | STR_KIND</td>
+<td><code>COLOR_OR_GROUP</code></td>
+<td>STR_COLOR | STR_GROUP</td>
+</tr>
+<tr>
+<td><code>GROUP</code></td>
+<td>STR_GROUP</td>
 </tr>
 <tr>
 <td><code>MAYBE_KIND</code></td>
 <td>MAYBE&lt;STR_KIND&gt;</td>
+</tr>
+<tr>
+<td><code>MAYBE_GROUP</code></td>
+<td>MAYBE&lt;STR_GROUP&gt;</td>
 </tr>
 <tr>
 <td><code>MAYBE_NAME</code></td>
@@ -108,7 +116,7 @@
 <li>Temporarily sets <code>READ_CONTEXT.words</code> to the supplied <code>words</code></li>
 <li>For DIR: evaluates via <code>memoryevaldir</code> to produce destpt, layer, targets</li>
 <li>For COLOR: uses readexpr if not a color const; supports numeric color</li>
-<li>For COLOR_OR_KIND: tries readkind first, then readcolor</li>
+<li>For COLOR_OR_GROUP: color const first, else <code>readgroup</code> (freeform name + optional color prefix)</li>
 <li>On invalid arg: calls <code>didexpect</code> (throws with context)</li>
 </ul>
 <h2 id="internal-helpers"><a class="blume-heading-anchor" href="#internal-helpers">Internal Helpers</a></h2>

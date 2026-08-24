@@ -20,11 +20,11 @@ title: transforms.ts
 |---------|------|-------------|
 | `snapshot` | — | Calls [`boardsnapshot`](../../feature/boardsnapshot.ts) on the sim — creates MAIN `zss_snapshot_*` codepage and copies current board |
 | `revert` | — | Calls [`boardrevert`](../../feature/boardsnapshot.ts) on the sim — restores current board from snapshot codepage |
-| `copy` | `stat` [filter…] | Copy region from board at stat to current board |
-| `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
-| `erase` | [filter…] | Erase matching elements (targetset / region); group names supported |
-| `weave` | `dir` [filter…] | Weave board in direction (delta from element position) |
-| `pivot` | `degrees` [filter…] | Rotate board region by degrees (converted to radians); filter targetset can be `all` / `terrain` / `object` or a **group name** (group pivot, same as weave) |
+| `erase` | [filter…] | Erase matching elements; filter **`<group>`** (optional color) or builtins `all`/`terrain`/`object` |
+| `weave` | `dir` [filter…] | Weave board; filter **`<group>`** or builtins |
+| `pivot` | `degrees` [filter…] | Rotate; filter **`<group>`** or builtins |
+| `copy` | `stat` [filter…] | Copy region; filter **`<group>`** or builtins |
+| `remix` | `stat` `pattersize` `mirror` [filter…] | Remix; custom filter is group/kind name via `@group` or display name |
 
 ## Filter Grammar
 
@@ -34,7 +34,10 @@ title: transforms.ts
 - **region** — `x1 y1 [x2 y2]` — pt1 and pt2 corners; single number = square
 - **region (one token)** — `x1,y1,x2,y2` — same layout as `ptstoarea` / batch selection paths; required so values like `0,0,5,5` are not misread as `parseFloat` → `0` with missing follow-up numbers
 
-Filter controls which elements are affected (e.g., `all`, `terrain`, `objects`).
+Filter controls which elements are affected:
+
+- Built-ins: `all`, `terrain`, `object` (and `self` / `others` where applicable)
+- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistboardelementsbygroup`
 
 ## pickcodepagewithtype
 

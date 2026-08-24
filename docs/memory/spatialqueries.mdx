@@ -23,7 +23,7 @@ title: spatialqueries.ts
 | `memorycheckcollision` | source vs dest collision (ghost, walk, swim, solid, bullet) |
 | `memoryfindplayerforelement` | Nearest player to element |
 | `memorylistboardelementsbycolor` | Elements matching STR_COLOR |
-| `memorylistboardelementsbykind` | Elements matching kind name |
+| `memorylistboardelementsbykind` | Elements matching kind name (+ optional color/bg) |
 | `memorylistboardnamedelements` | Elements by name (all, self, others, terrain, object) |
 | `memorylistboardelementsbyidnameorpts` | Resolve target to elements |
 | `memorypickboardnearestpt` | Nearest element to pt |

@@ -30,29 +30,29 @@
 <td>Calls <a href="../../feature/boardsnapshot.ts"><code>boardrevert</code></a> on the sim — restores current board from snapshot codepage</td>
 </tr>
 <tr>
-<td><code>copy</code></td>
-<td><code>stat</code> [filter…]</td>
-<td>Copy region from board at stat to current board</td>
-</tr>
-<tr>
-<td><code>remix</code></td>
-<td><code>stat</code> <code>pattersize</code> <code>mirror</code> [filter…]</td>
-<td>Remix board with pattern and mirror</td>
-</tr>
-<tr>
 <td><code>erase</code></td>
 <td>[filter…]</td>
-<td>Erase matching elements (targetset / region); group names supported</td>
+<td>Erase matching elements; filter <strong><code>&lt;group&gt;</code></strong> (optional color) or builtins <code>all</code>/<code>terrain</code>/<code>object</code></td>
 </tr>
 <tr>
 <td><code>weave</code></td>
 <td><code>dir</code> [filter…]</td>
-<td>Weave board in direction (delta from element position)</td>
+<td>Weave board; filter <strong><code>&lt;group&gt;</code></strong> or builtins</td>
 </tr>
 <tr>
 <td><code>pivot</code></td>
 <td><code>degrees</code> [filter…]</td>
-<td>Rotate board region by degrees (converted to radians); filter targetset can be <code>all</code> / <code>terrain</code> / <code>object</code> or a <strong>group name</strong> (group pivot, same as weave)</td>
+<td>Rotate; filter <strong><code>&lt;group&gt;</code></strong> or builtins</td>
+</tr>
+<tr>
+<td><code>copy</code></td>
+<td><code>stat</code> [filter…]</td>
+<td>Copy region; filter <strong><code>&lt;group&gt;</code></strong> or builtins</td>
+</tr>
+<tr>
+<td><code>remix</code></td>
+<td><code>stat</code> <code>pattersize</code> <code>mirror</code> [filter…]</td>
+<td>Remix; custom filter is group/kind name via <code>@group</code> or display name</td>
 </tr>
 </tbody>
 </table></div>
@@ -63,7 +63,11 @@
 <li><strong>region</strong> — <code>x1 y1 [x2 y2]</code> — pt1 and pt2 corners; single number = square</li>
 <li><strong>region (one token)</strong> — <code>x1,y1,x2,y2</code> — same layout as <code>ptstoarea</code> / batch selection paths; required so values like <code>0,0,5,5</code> are not misread as <code>parseFloat</code> → <code>0</code> with missing follow-up numbers</li>
 </ul>
-<p>Filter controls which elements are affected (e.g., <code>all</code>, <code>terrain</code>, <code>objects</code>).</p>
+<p>Filter controls which elements are affected:</p>
+<ul>
+<li>Built-ins: <code>all</code>, <code>terrain</code>, <code>object</code> (and <code>self</code> / <code>others</code> where applicable)</li>
+<li><strong><code>&lt;group&gt;</code></strong> — parsed via <code>ARG_TYPE.GROUP</code> (optional color prefix); matches <code>@group</code> <strong>or</strong> element display name via <code>memoryreadgroup</code> / <code>memorylistboardelementsbygroup</code></li>
+</ul>
 <h2 id="pickcodepagewithtype"><a class="blume-heading-anchor" href="#pickcodepagewithtype">pickcodepagewithtype</a></h2>
 <p>Helper that searches all books for a codepage of given type and stat/address. Used to resolve <code>stat</code> in copy/remix to a source board.</p>
 <h2 id="implementation-notes"><a class="blume-heading-anchor" href="#implementation-notes">Implementation Notes</a></h2>

@@ -141,7 +141,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `dupe` | Element at direction in given direction |
 | `dupewith` | Element with argument |
 | `write` | Text to board at direction |
-| `change` | Elements of one kind to another |
+| `change` | Elements matching a group (or kind name via listing) to another kind |
 | `put` | Element in direction |
 | `putwith` | Element with argument |
 | `oneof` | Given id to ensure only one element of given kind is made |

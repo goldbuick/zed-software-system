@@ -2122,7 +2122,7 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 | `shove` | `dir` `movedir` | Move object at dir by movedir delta |
 | `push` | `dir` `movedir` | Same as shove but only for pushable objects |
 | `transport` | `target` | Transport object along transporter line (finds opposite transporter, moves object) |
-| `change` | `target` `into` | Change all elements of target kind to into kind (or empty→put) |
+| `change` | `target` `into` | Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind. |
 | `write` | `dir` `color` `text…` | Write colored text on board at direction (E/W/N/S) |
 
 ## Internal Functions
@@ -2384,7 +2384,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `dupe` | Element at direction in given direction |
 | `dupewith` | Element with argument |
 | `write` | Text to board at direction |
-| `change` | Elements of one kind to another |
+| `change` | Elements matching a group (or kind name via listing) to another kind |
 | `put` | Element in direction |
 | `putwith` | Element with argument |
 | `oneof` | Given id to ensure only one element of given kind is made |
@@ -3112,11 +3112,11 @@ Source: https://zed.cafe/docs/firmware/transforms
 |---------|------|-------------|
 | `snapshot` | — | Calls [`boardsnapshot`](../../feature/boardsnapshot.ts) on the sim — creates MAIN `zss_snapshot_*` codepage and copies current board |
 | `revert` | — | Calls [`boardrevert`](../../feature/boardsnapshot.ts) on the sim — restores current board from snapshot codepage |
-| `copy` | `stat` [filter…] | Copy region from board at stat to current board |
-| `remix` | `stat` `pattersize` `mirror` [filter…] | Remix board with pattern and mirror |
-| `erase` | [filter…] | Erase matching elements (targetset / region); group names supported |
-| `weave` | `dir` [filter…] | Weave board in direction (delta from element position) |
-| `pivot` | `degrees` [filter…] | Rotate board region by degrees (converted to radians); filter targetset can be `all` / `terrain` / `object` or a **group name** (group pivot, same as weave) |
+| `erase` | [filter…] | Erase matching elements; filter **`<group>`** (optional color) or builtins `all`/`terrain`/`object` |
+| `weave` | `dir` [filter…] | Weave board; filter **`<group>`** or builtins |
+| `pivot` | `degrees` [filter…] | Rotate; filter **`<group>`** or builtins |
+| `copy` | `stat` [filter…] | Copy region; filter **`<group>`** or builtins |
+| `remix` | `stat` `pattersize` `mirror` [filter…] | Remix; custom filter is group/kind name via `@group` or display name |
 
 ## Filter Grammar
 
@@ -3126,7 +3126,10 @@ Source: https://zed.cafe/docs/firmware/transforms
 - **region** — `x1 y1 [x2 y2]` — pt1 and pt2 corners; single number = square
 - **region (one token)** — `x1,y1,x2,y2` — same layout as `ptstoarea` / batch selection paths; required so values like `0,0,5,5` are not misread as `parseFloat` → `0` with missing follow-up numbers
 
-Filter controls which elements are affected (e.g., `all`, `terrain`, `objects`).
+Filter controls which elements are affected:
+
+- Built-ins: `all`, `terrain`, `object` (and `self` / `others` where applicable)
+- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistboardelementsbygroup`
 
 ## pickcodepagewithtype
 
@@ -5644,7 +5647,7 @@ The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime
 | Element kind / stat / push checks / write-from-kind | [`boards.ts`](../boards.ts) — `memoryreadelementkind`, `memoryreadelementstat`, `memorycheckelementpushable`, `memorywriteelementfromkind`, `memorywritebullet` |
 | Board lookup / over / under / evaldir / init | [`boards.ts`](../boards.ts) — `memoryreadboardbyaddress`, `memoryreadoverboard`, `memoryreadunderboard`, `memoryreadboardbyevaldir`, `memoryinitboard` |
 | Direction evaluation (BY / AT / FLOW / SEEK / RND / AWAY / TOWARD / WITHIN / AWAYBY / ELEMENTS) | [`boarddirection.ts`](../boarddirection.ts) — `memoryevaldir` |
-| Board / object create, delete, import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) — `memorycreateboard`, `memorycreateboardobject`, `memorycreateboardobjectfromkind`, `memorydeleteboardobject`, `memorysafedeleteelement`, `memorywriteterrain`, `memorywriteterrainfromkind`, `memoryreadgroup`, `memoryexportboard(asjson)`, `memoryimportboard` |
+| Board / object create, delete, import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) — `memorycreateboard`, `memorycreateboardobject`, `memorycreateboardobjectfromkind`, `memorydeleteboardobject`, `memorysafedeleteelement`, `memorywriteterrain`, `memorywriteterrainfromkind`, `memoryreadgroup`, `memorylistboardelementsbygroup`, `memoryexportboard(asjson)`, `memoryimportboard` |
 | Terrain kind-default strip on export | [`boardterrainmap.ts`](../boardterrainmap.ts) — see [boardterrainmap.md](boardterrainmap.md); book / memoryfs / `#pageexport` strip; rollback snapshots stay verbatim |
 | Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
@@ -6194,7 +6197,7 @@ Source: https://zed.cafe/docs/memory/spatialqueries
 | `memorycheckcollision` | source vs dest collision (ghost, walk, swim, solid, bullet) |
 | `memoryfindplayerforelement` | Nearest player to element |
 | `memorylistboardelementsbycolor` | Elements matching STR_COLOR |
-| `memorylistboardelementsbykind` | Elements matching kind name |
+| `memorylistboardelementsbykind` | Elements matching kind name (+ optional color/bg) |
 | `memorylistboardnamedelements` | Elements by name (all, self, others, terrain, object) |
 | `memorylistboardelementsbyidnameorpts` | Resolve target to elements |
 | `memorypickboardnearestpt` | Nearest element to pt |
@@ -9600,13 +9603,14 @@ Source: https://zed.cafe/docs/words/expr
 - `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
-- `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor, memorylistboardelementsbykind
+- `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor
+- `zss/memory/boardlifecycle` — memorylistboardelementsbygroup (soft name / `@group` match)
 - `zss/memory/types` — BOARD_ELEMENT
 - `./category` — isstrcategory, mapstrcategory, readcategory
 - `./collision` — isstrcollision, mapstrcollision, readcollision
 - `./color` — isstrcolor, mapstrcolor, readcolor, readstrbg, readstrcolor
 - `./dir` — isstrdir, mapstrdir, readdir
-- `./kind` — readstrkindcolor, readstrkindname
+- `./group` — isstrgroup, readstrgroupcolor, readstrgroupname
 - `./reader` — ARG_TYPE, READ_CONTEXT, readargs
 - `./send` — parsesend
 - `./types` — DIR, NAME
@@ -9743,8 +9747,10 @@ Source: https://zed.cafe/docs/words/reader
 | `NUMBER` | number |
 | `STRING` | string |
 | `NUMBER_OR_STRING` | number \| string |
-| `COLOR_OR_KIND` | STR_COLOR \| STR_KIND |
+| `COLOR_OR_GROUP` | STR_COLOR \| STR_GROUP |
+| `GROUP` | STR_GROUP |
 | `MAYBE_KIND` | MAYBE\<STR_KIND\> |
+| `MAYBE_GROUP` | MAYBE\<STR_GROUP\> |
 | `MAYBE_NAME` | MAYBE\<string\> |
 | `MAYBE_NUMBER` | MAYBE\<number\> |
 | `MAYBE_STRING` | MAYBE\<string\> |
@@ -9756,7 +9762,7 @@ Source: https://zed.cafe/docs/words/reader
 - Temporarily sets `READ_CONTEXT.words` to the supplied `words`
 - For DIR: evaluates via `memoryevaldir` to produce destpt, layer, targets
 - For COLOR: uses readexpr if not a color const; supports numeric color
-- For COLOR_OR_KIND: tries readkind first, then readcolor
+- For COLOR_OR_GROUP: color const first, else `readgroup` (freeform name + optional color prefix)
 - On invalid arg: calls `didexpect` (throws with context)
 
 ## Internal Helpers

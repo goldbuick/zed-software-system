@@ -34,8 +34,10 @@ title: reader.ts
 | `NUMBER` | number |
 | `STRING` | string |
 | `NUMBER_OR_STRING` | number \| string |
-| `COLOR_OR_KIND` | STR_COLOR \| STR_KIND |
+| `COLOR_OR_GROUP` | STR_COLOR \| STR_GROUP |
+| `GROUP` | STR_GROUP |
 | `MAYBE_KIND` | MAYBE\<STR_KIND\> |
+| `MAYBE_GROUP` | MAYBE\<STR_GROUP\> |
 | `MAYBE_NAME` | MAYBE\<string\> |
 | `MAYBE_NUMBER` | MAYBE\<number\> |
 | `MAYBE_STRING` | MAYBE\<string\> |
@@ -47,7 +49,7 @@ title: reader.ts
 - Temporarily sets `READ_CONTEXT.words` to the supplied `words`
 - For DIR: evaluates via `memoryevaldir` to produce destpt, layer, targets
 - For COLOR: uses readexpr if not a color const; supports numeric color
-- For COLOR_OR_KIND: tries readkind first, then readcolor
+- For COLOR_OR_GROUP: color const first, else `readgroup` (freeform name + optional color prefix)
 - On invalid arg: calls `didexpect` (throws with context)
 
 ## Internal Helpers
