@@ -19,10 +19,7 @@ import {
   boardtvlayerz,
   boardtvlayout,
 } from 'zss/feature/mediaqueue/constants'
-import {
-  boardtvvideofit,
-  boardtvvideorect,
-} from 'zss/gadget/boardtvgrid'
+import { boardtvvideofit, boardtvvideorect } from 'zss/gadget/boardtvgrid'
 import { BoardTvSlide } from 'zss/gadget/boardtvslide'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'

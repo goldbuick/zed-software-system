@@ -524,10 +524,7 @@ export function memoryinspectcommand(path: string, player: string) {
     case 'code': {
       const pagetype = 'object'
       const path = [board.id, element.id]
-      modemwriteinitstring(
-        vmcodeaddress(mainbook.id, path),
-        element.code ?? '',
-      )
+      modemwriteinitstring(vmcodeaddress(mainbook.id, path), element.code ?? '')
       vmclearscroll(SOFTWARE, player)
       const prefix = memoryelementtodisplayprefix(element)
       const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${mainbook.name}`

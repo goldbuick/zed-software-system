@@ -55,7 +55,12 @@ import {
   helperqueueskip,
   helperqueueurls,
 } from './queue'
-import { clearhudmetalines, readhudstate, sethudmetalines, sethudstate } from './statushud'
+import {
+  clearhudmetalines,
+  readhudstate,
+  sethudmetalines,
+  sethudstate,
+} from './statushud'
 import { clearcompositorplayback, ensurecompositor } from './streamcompositor'
 
 type MQ_PLAYER_CALL = {
@@ -514,8 +519,7 @@ function applyreadyplaybackmeta(
     | null
     | undefined,
 ) {
-  currentplaybacktitle =
-    ready && ready.title ? String(ready.title).trim() : ''
+  currentplaybacktitle = ready && ready.title ? String(ready.title).trim() : ''
   currentplaybackartist =
     ready && ready.artist ? String(ready.artist).trim() : ''
   currentplaybackalbum = ready && ready.album ? String(ready.album).trim() : ''
@@ -1527,10 +1531,7 @@ function handlecafemessage(data: unknown) {
             return
           }
           if (playbackstarted) {
-            setlink(
-              'playing',
-              syncplaybackoverlaymeta(currentplaybackurl, ''),
-            )
+            setlink('playing', syncplaybackoverlaymeta(currentplaybackurl, ''))
             return
           }
           const phase =

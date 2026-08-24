@@ -53,12 +53,7 @@ import {
   MEMORY_LABEL,
 } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import {
-  type EVAL_DIR,
-  dirfrompts,
-  ispt,
-  ptapplydir,
-} from 'zss/words/dir'
+import { type EVAL_DIR, dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
 import { readstrgroupname } from 'zss/words/group'
 import {
   readstrkindbg,
@@ -94,13 +89,10 @@ function readevaldirfromtarget(
   board: BOARD,
 ): EVAL_DIR {
   const [ascaller] = readargs(words, index, [ARG_TYPE.DIR])
-  return memoryevaldir(
-    board,
-    target,
-    READ_CONTEXT.elementfocus,
-    ascaller.dir,
-    { x: target.x ?? 0, y: target.y ?? 0 },
-  )
+  return memoryevaldir(board, target, READ_CONTEXT.elementfocus, ascaller.dir, {
+    x: target.x ?? 0,
+    y: target.y ?? 0,
+  })
 }
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
@@ -582,7 +574,11 @@ export const BOARD_FIRMWARE = createfirmware()
         READ_CONTEXT.board,
       )
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
-      if (memoryboardelementisobject(maybetarget)) {
+      if (
+        ispresent(targetboard) &&
+        ispresent(maybetarget) &&
+        memoryboardelementisobject(maybetarget)
+      ) {
         const shovedir = readevaldirfromtarget(
           words,
           ii,
@@ -612,6 +608,8 @@ export const BOARD_FIRMWARE = createfirmware()
       )
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (
+        ispresent(targetboard) &&
+        ispresent(maybetarget) &&
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
