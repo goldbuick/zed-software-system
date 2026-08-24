@@ -1,8 +1,10 @@
 jest.mock('zss/words/reader', () => {
+  const { ARG_TYPE } = jest.requireActual('zss/words/types') as {
+    ARG_TYPE: { NUMBER: number }
+  }
   const READ_CONTEXT = { words: [] as unknown[] }
-  const ARG_TYPE_NUMBER = 4
   const readargs = (words: unknown[], index: number, args: number[]) => {
-    if (args[0] === ARG_TYPE_NUMBER && index < words.length) {
+    if (args[0] === ARG_TYPE.NUMBER && index < words.length) {
       return [words[index], index + 1]
     }
     return [undefined, index]

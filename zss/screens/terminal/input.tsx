@@ -79,6 +79,17 @@ type TerminalInputProps = {
   logzoneheight: number
 }
 
+/** Keep quickterminal open for #media so the menu / queue feedback stays visible. */
+function isquickmediakeepopen(line: string): boolean {
+  const trimmed = line.trim()
+  if (!trimmed.startsWith('#')) {
+    return false
+  }
+  const afterhash = trimmed.slice(1).trimStart()
+  const command = afterhash.split(/\s+/)[0] ?? ''
+  return NAME(command) === 'media'
+}
+
 export function TerminalInput({
   terminalmode,
   voice2text,
@@ -390,18 +401,16 @@ export function TerminalInput({
   context.active.color = COLOR.WHITE
   writeplaintext(inputline, context, true)
 
-  if (!quickterminal) {
-    const rowindex = (context.y - 1) * context.width
-    applycodetokencolors(
-      rowindex,
-      0,
-      0,
-      edge.width - 1,
-      inputlinetokens,
-      context,
-      inputline,
-    )
-  }
+  const rowindex = (context.y - 1) * context.width
+  applycodetokencolors(
+    rowindex,
+    0,
+    0,
+    edge.width - 1,
+    inputlinetokens,
+    context,
+    inputline,
+  )
 
   // draw selection
   if (
@@ -431,9 +440,7 @@ export function TerminalInput({
 
   // draw autocomplete (above input line when active)
   const autocompleteactive =
-    !quickterminal &&
-    autocompleteindex >= 0 &&
-    autocomplete.suggestions.length > 0
+    autocompleteindex >= 0 && autocomplete.suggestions.length > 0
   const startx = edge.left
   const popupleftx = startx + autocomplete.wordcol
   const status = computeterminalstatushintrect(edge)
@@ -498,6 +505,9 @@ export function TerminalInput({
       setTimeout(() => {
         const { buffer, bufferindex } = useTerminal.getState()
         const inputstate = buffer[bufferindex]
+        if (!inputstate.trim()) {
+          return
+        }
         const historybuffer: string[] = [
           '',
           inputstate,
@@ -514,7 +524,9 @@ export function TerminalInput({
           buffer: historybuffer,
         })
         vmcli(SOFTWARE, player, inputstate)
-        registerterminalclose(SOFTWARE, player)
+        if (!isquickmediakeepopen(inputstate)) {
+          registerterminalclose(SOFTWARE, player)
+        }
       }, 512)
     }
 
@@ -654,7 +666,7 @@ export function TerminalInput({
                 buffer: historybuffer,
               })
               vmcli(SOFTWARE, player, invoke)
-              if (quickterminal) {
+              if (quickterminal && !isquickmediakeepopen(invoke)) {
                 registerterminalclose(SOFTWARE, player)
               }
             } else {
