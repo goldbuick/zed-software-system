@@ -143,6 +143,7 @@ export type STAT = {
 export enum ARG_TYPE {
   COLOR,
   KIND,
+  GROUP,
   DIR,
   NAME,
   NUMBER,
@@ -151,6 +152,7 @@ export enum ARG_TYPE {
   NUMBER_OR_STRING,
   COLOR_OR_KIND,
   MAYBE_KIND,
+  MAYBE_GROUP,
   MAYBE_NAME,
   MAYBE_NUMBER,
   MAYBE_STRING,

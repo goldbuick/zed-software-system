@@ -160,8 +160,16 @@ export function boardremix(
           }
           break
         default:
-          if (memoryreadelementstat(sourceelement, 'group') !== targetset) {
-            maybekind = ''
+          // kind or @group (same idea as memoryreadgroup / transform filters)
+          {
+            const targetname = NAME(targetset)
+            const kindname = NAME(maybekind)
+            const groupstat = NAME(
+              String(memoryreadelementstat(sourceelement, 'group') ?? ''),
+            )
+            if (kindname !== targetname && groupstat !== targetname) {
+              maybekind = ''
+            }
           }
           if (maybekind) {
             // blank target region

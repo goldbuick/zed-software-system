@@ -108,8 +108,8 @@ $whitedupe with arg
 $whitemove object  
 #push <dir> <movedir>  
 $whiteshove if pushable only  
-#change <target> <into>  
-$whitechange elements to kind
+#change <group> <into>  
+$whitechange group to kind
 
 ## transforms
 
@@ -118,15 +118,15 @@ $whitesave board state
 #revert  
 $whiterestore snapshot  
 #copy <stat> [filter]  
-$whitecopy region from board  
+$whitecopy region from board (group filter)  
 #remix <stat> <size> <mirror> [filter]  
-$whiteremix with pattern  
+$whiteremix with pattern (group filter)  
 #erase [filter]  
-$whiteerase by targetset / region (groups ok)  
+$whiteerase by targetset / region (group)  
 #weave <dir> [filter]  
-$whiteshift/wrap board  
+$whiteshift/wrap board (group filter)  
 #pivot <degrees> [filter]  
-$whiterotate by degrees
+$whiterotate by degrees (group filter)
 
 ## loader - file read
 

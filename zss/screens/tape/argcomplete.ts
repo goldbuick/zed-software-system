@@ -239,6 +239,12 @@ export function itemsforargtype(
         ...tagwords(words.objects, 'objects'),
         ...tagwords(words.terrains, 'terrains'),
       ]
+    case ARG_TYPE.GROUP:
+    case ARG_TYPE.MAYBE_GROUP:
+      return [
+        ...tagwords(words.objects, 'objects'),
+        ...tagwords(words.terrains, 'terrains'),
+      ]
     case ARG_TYPE.NUMBER:
     case ARG_TYPE.MAYBE_NUMBER:
       return []

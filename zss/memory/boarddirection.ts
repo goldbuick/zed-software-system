@@ -10,6 +10,7 @@ import {
   mapstrdirtoconst,
   ptapplydir,
 } from 'zss/words/dir'
+import { isstrgroup } from 'zss/words/group'
 import { isstrkind } from 'zss/words/kind'
 import { DIR, PT } from 'zss/words/types'
 
@@ -327,7 +328,7 @@ export function memoryevaldir(
       }
       case DIR.FLEE: {
         const fleekind = dir[i + 1]
-        if (isstrkind(fleekind)) {
+        if (isstrkind(fleekind) || isstrgroup(fleekind)) {
           const nearest = memorypickboardnearestpt(
             pt,
             memorylistboardelementsbykind(board, fleekind),
@@ -341,7 +342,7 @@ export function memoryevaldir(
       }
       case DIR.FIND: {
         const findkind = dir[i + 1]
-        if (isstrkind(findkind)) {
+        if (isstrkind(findkind) || isstrgroup(findkind)) {
           const nearest = memorypickboardnearestpt(
             pt,
             memorylistboardelementsbykind(board, findkind),
@@ -538,7 +539,7 @@ export function memoryevaldir(
       }
       case DIR.SELECT: {
         const [selectmode, kind] = dir.slice(i + 1)
-        if (isstrkind(kind)) {
+        if (isstrkind(kind) || isstrgroup(kind)) {
           const elements = memorylistboardelementsbykind(board, kind)
           const tracking = memoryreadflags(`tracking_${board.id}`)
           const [kindname, kindcolor] = kind
@@ -566,7 +567,10 @@ export function memoryevaldir(
             }
           }
           if (isarray(tracking[kindflag])) {
-            const target = tracking[kindflag].shift() as string
+            const target = tracking[kindflag].shift() as
+              | string
+              | number
+              | undefined
             const element = memoryreadelementbyidorindex(board, target)
             if (tracking[kindflag].length < 1) {
               delete tracking[kindflag]

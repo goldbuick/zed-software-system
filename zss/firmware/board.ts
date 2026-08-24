@@ -683,15 +683,15 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'change',
-    [ARG_TYPE.KIND, ARG_TYPE.KIND, 'elements of one kind to another'],
+    [ARG_TYPE.GROUP, ARG_TYPE.KIND, 'elements of a group to another kind'],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
         return 0
       }
 
-      // read
-      const [target, into] = readargs(words, 0, [ARG_TYPE.KIND, ARG_TYPE.KIND])
+      // read: target is GROUP matcher; into is blueprint kind
+      const [target, into] = readargs(words, 0, [ARG_TYPE.GROUP, ARG_TYPE.KIND])
 
       // handle player case
       const [maybetargetname] = target

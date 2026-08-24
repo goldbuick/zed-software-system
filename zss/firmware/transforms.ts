@@ -14,7 +14,9 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { isstrcolor } from 'zss/words/color'
 import { isstrdir } from 'zss/words/dir'
+import { isstrgroup, readgroup, readstrgroupname } from 'zss/words/group'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'
 
@@ -72,10 +74,34 @@ function readfilter(words: WORD[], index: number): ReadFilterResult {
       dest = destdir.destpt
       // parse next set
       i = iii
-    } else if (isstring(checkarg)) {
-      targetset = NAME(checkarg)
-      // parse next set
-      i = ii
+    } else if (isstring(checkarg) || isstrcolor(checkarg)) {
+      if (isstring(checkarg)) {
+        const builtin = NAME(checkarg)
+        if (
+          builtin === 'all' ||
+          builtin === 'terrain' ||
+          builtin === 'object' ||
+          builtin === 'self' ||
+          builtin === 'others'
+        ) {
+          targetset = builtin
+          i = ii
+          continue
+        }
+      }
+      const prevwords = READ_CONTEXT.words
+      READ_CONTEXT.words = words
+      const [group, gii] = readgroup(i)
+      READ_CONTEXT.words = prevwords
+      if (isstrgroup(group)) {
+        targetset = NAME(readstrgroupname(group) ?? '')
+        i = gii
+      } else if (isstring(checkarg)) {
+        targetset = NAME(checkarg)
+        i = ii
+      } else {
+        break
+      }
     } else if (isnumber(checkarg)) {
       const [y1, x2, y2, iii] = readargs(words, ii, [
         ARG_TYPE.NUMBER,

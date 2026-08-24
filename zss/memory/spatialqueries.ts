@@ -5,6 +5,12 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { STR_COLOR, readstrbg, readstrcolor } from 'zss/words/color'
 import { ispt } from 'zss/words/dir'
 import {
+  STR_GROUP,
+  readstrgroupbg,
+  readstrgroupcolor,
+  readstrgroupname,
+} from 'zss/words/group'
+import {
   STR_KIND,
   readstrkindbg,
   readstrkindcolor,
@@ -256,14 +262,51 @@ function memoryboardreaddistmapvalue(pt: PT, values: number[]): number {
 
 export function memorylistboardelementsbykind(
   board: MAYBE<BOARD>,
-  kind: STR_KIND,
+  kind: STR_KIND | STR_GROUP,
 ): BOARD_ELEMENT[] {
-  const name = readstrkindname(kind)
-  const color = readstrkindcolor(kind)
-  const bg = readstrkindbg(kind)
-  return memorylistboardnamedelements(board, name ?? '').filter((element) =>
-    filterelement(element, name, color, bg),
+  const name = readstrkindname(kind) ?? readstrgroupname(kind)
+  const color = readstrkindcolor(kind) ?? readstrgroupcolor(kind)
+  const bg = readstrkindbg(kind) ?? readstrgroupbg(kind)
+  const byname = memorylistboardnamedelements(board, name ?? '').filter(
+    (element) => filterelement(element, name, color, bg),
   )
+  // Union @group matches only when no color/bg filter (red bear stays kind-colored)
+  if (ispresent(color) || ispresent(bg) || !name) {
+    return byname
+  }
+  const groupname = NAME(name)
+  const seen = new Set<BOARD_ELEMENT>(byname)
+  const result = [...byname]
+  if (!ispresent(board)) {
+    return result
+  }
+  for (let i = 0; i < BOARD_SIZE; ++i) {
+    const tile = board.terrain[i]
+    if (
+      ispresent(tile) &&
+      !tile.removed &&
+      NAME(String(memoryreadelementstat(tile, 'group') ?? '')) === groupname &&
+      !seen.has(tile)
+    ) {
+      seen.add(tile)
+      result.push(tile)
+    }
+  }
+  const objects = Object.values(board.objects)
+  for (let i = 0; i < objects.length; ++i) {
+    const object = objects[i]
+    if (
+      ispresent(object) &&
+      !object.removed &&
+      NAME(String(memoryreadelementstat(object, 'group') ?? '')) ===
+        groupname &&
+      !seen.has(object)
+    ) {
+      seen.add(object)
+      result.push(object)
+    }
+  }
+  return result
 }
 
 export function memorylistboardnamedelements(

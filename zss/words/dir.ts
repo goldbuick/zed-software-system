@@ -199,8 +199,8 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       }
       case 'FLEE':
       case 'FIND': {
-        const [kind, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.KIND])
-        strdir.push(kind)
+        const [group, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.GROUP])
+        strdir.push(group)
         ii = iii
         break
       }
@@ -238,11 +238,11 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         break
       }
       case 'SELECT': {
-        const [selectmode, kind, iii] = readargs(READ_CONTEXT.words, ii, [
+        const [selectmode, group, iii] = readargs(READ_CONTEXT.words, ii, [
           ARG_TYPE.STRING,
-          ARG_TYPE.KIND,
+          ARG_TYPE.GROUP,
         ])
-        strdir.push(NAME(selectmode), kind)
+        strdir.push(NAME(selectmode), group)
         ii = iii
         break
       }
