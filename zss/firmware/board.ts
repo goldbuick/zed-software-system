@@ -1,4 +1,3 @@
-import { objectKeys } from 'ts-extras'
 import { CHIP } from 'zss/chip'
 import { gadgetclientgotofade } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -17,6 +16,7 @@ import {
   memoryreadobject,
   memoryreadobjects,
 } from 'zss/memory/boardaccess'
+import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
@@ -45,9 +45,20 @@ import {
 import { memorytickobject } from 'zss/memory/runtime'
 import { memoryreadbookbysoftware } from 'zss/memory/session'
 import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
-import { BOARD_HEIGHT, BOARD_WIDTH, MEMORY_LABEL } from 'zss/memory/types'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  MEMORY_LABEL,
+} from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
+import {
+  type EVAL_DIR,
+  dirfrompts,
+  ispt,
+  ptapplydir,
+} from 'zss/words/dir'
 import { readstrgroupname } from 'zss/words/group'
 import {
   readstrkindbg,
@@ -70,6 +81,27 @@ import {
   PT,
   WORD,
 } from 'zss/words/types'
+
+/**
+ * Parse a destination DIR while READ_CONTEXT is still the command runner
+ * (so AT/BY number exprs like p2 resolve against the caller), then evaluate
+ * that STR_DIR from the shove/push target's board cell.
+ */
+function readevaldirfromtarget(
+  words: WORD[],
+  index: number,
+  target: BOARD_ELEMENT,
+  board: BOARD,
+): EVAL_DIR {
+  const [ascaller] = readargs(words, index, [ARG_TYPE.DIR])
+  return memoryevaldir(
+    board,
+    target,
+    READ_CONTEXT.elementfocus,
+    ascaller.dir,
+    { x: target.x ?? 0, y: target.y ?? 0 },
+  )
+}
 
 function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   // invalid data
@@ -551,21 +583,15 @@ export const BOARD_FIRMWARE = createfirmware()
       )
       const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
       if (memoryboardelementisobject(maybetarget)) {
-        // temp override context
-        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-        READ_CONTEXT.element = maybetarget
-        READ_CONTEXT.elementid = maybetarget?.id ?? ''
-        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-        // eval shovedir
-        const [shovedir] = readargs(words, ii, [ARG_TYPE.DIR])
+        const shovedir = readevaldirfromtarget(
+          words,
+          ii,
+          maybetarget,
+          targetboard,
+        )
         memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
           x: shovedir.destpt.x,
           y: shovedir.destpt.y,
-        })
-        // restore context
-        objectKeys(OLD_CONTEXT).forEach((key) => {
-          // @ts-expect-error dont bother me
-          READ_CONTEXT[key] = OLD_CONTEXT[key]
         })
       }
       return 0
@@ -589,21 +615,15 @@ export const BOARD_FIRMWARE = createfirmware()
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
-        // temp override context
-        const OLD_CONTEXT: typeof READ_CONTEXT = { ...READ_CONTEXT }
-        READ_CONTEXT.element = maybetarget
-        READ_CONTEXT.elementid = maybetarget?.id ?? ''
-        READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
-        // eval shovedir
-        const [shovedir] = readargs(words, ii, [ARG_TYPE.DIR])
+        const shovedir = readevaldirfromtarget(
+          words,
+          ii,
+          maybetarget,
+          targetboard,
+        )
         memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
           x: shovedir.destpt.x,
           y: shovedir.destpt.y,
-        })
-        // restore context
-        objectKeys(OLD_CONTEXT).forEach((key) => {
-          // @ts-expect-error dont bother me
-          READ_CONTEXT[key] = OLD_CONTEXT[key]
         })
       }
       return 0
