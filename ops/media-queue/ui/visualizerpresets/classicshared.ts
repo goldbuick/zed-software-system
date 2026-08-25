@@ -5,7 +5,7 @@ export const CLASSIC_GREEN = '#00ff41'
 export const CLASSIC_CYAN = '#00e5ff'
 export const CLASSIC_MAGENTA = '#ff00aa'
 /** Cover art alpha when drawn on top of a full-opacity viz. */
-export const CLASSIC_ARTWORK_OVERLAY_ALPHA = 0.67
+export const CLASSIC_ARTWORK_OVERLAY_ALPHA = 0.37
 export const CLASSIC_BAR_COUNT = 48
 
 /** Cover-fit artwork as a semi-transparent overlay (viz stays opaque underneath). */
@@ -24,7 +24,7 @@ export function drawartwork(
   const dx = (MQ_CANVAS_WIDTH - dw) / 2
   const dy = (MQ_CANVAS_HEIGHT - dh) / 2
   ctx.save()
-  ctx.globalCompositeOperation = 'hard-light'
+  ctx.globalCompositeOperation = 'screen'
   ctx.globalAlpha = CLASSIC_ARTWORK_OVERLAY_ALPHA
   ctx.drawImage(img, dx, dy, dw, dh)
   ctx.restore()
