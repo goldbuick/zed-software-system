@@ -201,7 +201,7 @@ const MARQUEE_PAD_Y = 8
 const MARQUEE_LINE_H = 28
 const MARQUEE_VIZ_LINE_H = 20
 const MARQUEE_GAP_PX = 64
-const MARQUEE_SPEED_PX = 48
+const MARQUEE_SPEED_PX = 16
 const OUTLINE_DIRS: [number, number][] = [
   [-1, -1],
   [0, -1],
