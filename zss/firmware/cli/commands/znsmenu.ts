@@ -133,7 +133,6 @@ export async function showznsmenu(player: string) {
   )
 
   const all = await znslistall(session.email, session.token)
-  console.info(all)
 
   const publishedrows = all
     .sort((a: any, b: any) => {

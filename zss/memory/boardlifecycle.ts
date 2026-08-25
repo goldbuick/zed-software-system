@@ -13,7 +13,7 @@ import {
   readstrgroupcolor,
   readstrgroupname,
 } from 'zss/words/group'
-import { CATEGORY, NAME, PT } from 'zss/words/types'
+import { CATEGORY, COLOR, NAME, PT } from 'zss/words/types'
 
 import {
   memoryexportboardelement,
@@ -190,6 +190,94 @@ export function memorycreateboardobjectfromkind(
   return memorycreateboardobject(board, { ...pt, kind, id })
 }
 
+export function memoryelementisingroup(
+  element: MAYBE<BOARD_ELEMENT>,
+  self: string,
+  targetgroup: string,
+  isterrain: boolean,
+): boolean {
+  if (!ispresent(element) || element.removed) {
+    return false
+  }
+  switch (targetgroup) {
+    case 'all':
+      return true
+    case 'self':
+      return element.id === self
+    case 'others':
+      return element.id !== self
+    case 'terrain':
+      return isterrain === true
+    case 'object':
+      return isterrain === false
+  }
+  const statnamed = memoryreadelementstat(
+    element,
+    targetgroup as BOARD_ELEMENT_STAT,
+  )
+  return (
+    ispresent(statnamed) ||
+    memoryreadelementdisplay(element).name === targetgroup ||
+    memoryreadelementstat(element, 'group') === targetgroup
+  )
+}
+
+function elementmatchesstrgroupcolorbg(
+  element: BOARD_ELEMENT,
+  color: MAYBE<COLOR>,
+  bg: MAYBE<COLOR>,
+): boolean {
+  if (!ispresent(color) && !ispresent(bg)) {
+    return true
+  }
+  const display = memoryreadelementdisplay(element)
+  if (ispresent(color) && color !== display.color) {
+    return false
+  }
+  if (ispresent(bg) && bg !== display.bg) {
+    return false
+  }
+  return true
+}
+
+export function memoryelementmatchesstrgroup(
+  element: MAYBE<BOARD_ELEMENT>,
+  self: string,
+  group: STR_GROUP,
+  isterrain: boolean,
+): boolean {
+  if (!ispresent(element)) {
+    return false
+  }
+  const name = NAME(readstrgroupname(group) ?? '')
+  if (!memoryelementisingroup(element, self, name, isterrain)) {
+    return false
+  }
+  return elementmatchesstrgroupcolorbg(
+    element,
+    readstrgroupcolor(group),
+    readstrgroupbg(group),
+  )
+}
+
+/** Object-layer dest: object itself, or terrain under it (same as memoryreadgroup). */
+export function memoryelementmatchesstrgrouponboard(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  self: string,
+  group: STR_GROUP,
+  isterrain: boolean,
+): boolean {
+  if (memoryelementmatchesstrgroup(element, self, group, isterrain)) {
+    return true
+  }
+  if (isterrain || !ispresent(board) || !ispresent(element)) {
+    return false
+  }
+  const index = pttoindex({ x: element.x ?? 0, y: element.y ?? 0 }, BOARD_WIDTH)
+  return memoryelementmatchesstrgroup(board.terrain[index], self, group, true)
+}
+
 export function memoryreadgroup(
   board: MAYBE<BOARD>,
   self: string,
@@ -201,38 +289,14 @@ export function memoryreadgroup(
     return { objectelements, terrainelements }
   }
 
-  function checkelement(el: BOARD_ELEMENT, isterrain: boolean) {
-    if (el.removed) {
-      return false
-    }
-    switch (targetgroup) {
-      case 'all':
-        return true
-      case 'self':
-        return el?.id === self
-      case 'others':
-        return el?.id !== self
-      case 'terrain':
-        return isterrain === true
-      case 'object':
-        return isterrain === false
-    }
-    const statnamed = memoryreadelementstat(
-      el,
-      targetgroup as BOARD_ELEMENT_STAT,
-    )
-    return (
-      ispresent(statnamed) ||
-      memoryreadelementdisplay(el).name === targetgroup ||
-      memoryreadelementstat(el, 'group') === targetgroup
-    )
-  }
-
   // first pass collect terrain elements
   const terrainindexes = new Set<number>()
   for (let i = 0; i < BOARD_SIZE; ++i) {
     const maybeterrain: MAYBE<BOARD_ELEMENT> = board.terrain[i]
-    if (ispresent(maybeterrain) && checkelement(maybeterrain, true)) {
+    if (
+      ispresent(maybeterrain) &&
+      memoryelementisingroup(maybeterrain, self, targetgroup, true)
+    ) {
       terrainelements.push(maybeterrain)
       terrainindexes.add(i)
     }
@@ -242,11 +306,9 @@ export function memoryreadgroup(
   const allobjects = Object.values(board.objects)
   for (let i = 0; i < allobjects.length; ++i) {
     const object = allobjects[i]
-    if (checkelement(object, false)) {
-      // object element is a match!
+    if (memoryelementisingroup(object, self, targetgroup, false)) {
       objectelements.push(object)
     } else {
-      // check if the object is on the terrain
       const pt = { x: object.x ?? 0, y: object.y ?? 0 }
       const index = pttoindex(pt, BOARD_WIDTH)
       if (terrainindexes.has(index)) {
@@ -268,19 +330,9 @@ export function memorylistboardelementsbygroup(
   const bg = readstrgroupbg(group)
   const { terrainelements, objectelements } = memoryreadgroup(board, self, name)
   const elements = [...terrainelements, ...objectelements]
-  if (!ispresent(color) && !ispresent(bg)) {
-    return elements
-  }
-  return elements.filter((element) => {
-    const display = memoryreadelementdisplay(element)
-    if (ispresent(color) && color !== display.color) {
-      return false
-    }
-    if (ispresent(bg) && bg !== display.bg) {
-      return false
-    }
-    return true
-  })
+  return elements.filter((element) =>
+    elementmatchesstrgroupcolorbg(element, color, bg),
+  )
 }
 
 export function memorywriteterrain(

@@ -1,12 +1,6 @@
 import { linepoints, ptdist, pttoindex } from 'zss/mapping/2d'
 import { inorder, pick, shuffle } from 'zss/mapping/array'
-import {
-  MAYBE,
-  deepcopy,
-  isarray,
-  isnumber,
-  ispresent,
-} from 'zss/mapping/types'
+import { MAYBE, isarray, isnumber, ispresent } from 'zss/mapping/types'
 import {
   EVAL_DIR,
   STR_DIR,
@@ -572,7 +566,6 @@ export function memoryevaldir(
             case 'shuffle': {
               if (!ispresent(tracking[groupflag])) {
                 tracking[groupflag] = shuffle(elements).map(memoryreadidorindex)
-                console.info('shuffled', deepcopy(tracking[groupflag]))
               }
               break
             }
@@ -587,7 +580,6 @@ export function memoryevaldir(
               | number
               | undefined
             const nextelement = memoryreadelementbyidorindex(board, target)
-            console.info('picked', target, nextelement)
             if (tracking[groupflag].length < 1) {
               delete tracking[groupflag]
             }

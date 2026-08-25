@@ -242,7 +242,6 @@ function handlefiletype(player: string, type: string, file: File | undefined) {
     return
   }
   const filetype = mapmimetype(type, file)
-  console.info('handlefiletype !!!', filetype, type)
   switch (filetype) {
     case 'obj':
       file
