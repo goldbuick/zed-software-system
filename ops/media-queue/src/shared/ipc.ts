@@ -40,6 +40,7 @@ export type MQ_DEV_CONFIG = {
   peeridfile: string
   playbackpath: string
   statustextfile: string
+  videomaxbitratekbps: string
 }
 
 export type MQ_PROGRESS_EVENT = {

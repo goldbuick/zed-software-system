@@ -35,6 +35,7 @@ import {
   type PLAYER_CALL_PC_SLICE,
   playercallpcreason,
 } from './playercallice'
+import { applyplayervideocaps } from './playervideocaps'
 import {
   helperqueueadd,
   helperqueueallowlong,
@@ -1045,6 +1046,24 @@ function scheduleplayercalldrop(peerid: string, call: MediaConnection) {
   playercalldroptimers.set(call, timer)
 }
 
+function scheduleplayervideocaps(pc: RTCPeerConnection) {
+  const state = pc.connectionState
+  const ice = pc.iceConnectionState
+  if (
+    state !== 'connected' &&
+    ice !== 'connected' &&
+    ice !== 'completed'
+  ) {
+    return
+  }
+  void applyplayervideocaps(pc).catch(function (err) {
+    const errlike = err as MQ_ERRORLIKE | null
+    console.error(
+      'applyplayervideocaps: ' + String((errlike && errlike.message) || err),
+    )
+  })
+}
+
 function applyplayercallpcreason(
   peerid: string,
   call: MediaConnection,
@@ -1088,6 +1107,7 @@ function wireplayercallpc(call: MediaConnection, peerid: string) {
   playercallpcwired.add(pc)
   const onstate = function () {
     applyplayercallpcreason(peerid, call)
+    scheduleplayervideocaps(pc)
   }
   pc.addEventListener('iceconnectionstatechange', onstate)
   pc.addEventListener('connectionstatechange', onstate)
@@ -1134,6 +1154,10 @@ function answerplayercall(call: MediaConnection) {
   playercalls.set(call.peer, { call: call, answerstream: mediastream })
   pendingplayercalls.delete(call.peer)
   wireplayercallpc(call, call.peer)
+  const pc = call.peerConnection
+  if (pc) {
+    scheduleplayervideocaps(pc)
+  }
   return true
 }
 
@@ -1154,6 +1178,7 @@ function publishstreamtoplayers() {
     return
   }
   const publisherrors: string[] = []
+  const playerpending: Promise<void>[] = []
   playercalls.forEach(function (entry) {
     const pc = entry.call.peerConnection
     if (!pc) {
@@ -1163,6 +1188,7 @@ function publishstreamtoplayers() {
     const senders = pc.getSenders()
     const transceivers =
       typeof pc.getTransceivers === 'function' ? pc.getTransceivers() : []
+    const trackpending: Promise<void>[] = []
     mediastream!.getTracks().forEach(function (track) {
       let sender: RTCRtpSender | null = null
       for (let i = 0; i < senders.length; ++i) {
@@ -1191,14 +1217,16 @@ function publishstreamtoplayers() {
         return
       }
       if (sender && typeof sender.replaceTrack === 'function') {
-        sender.replaceTrack(track).catch(function (err) {
-          publisherrors.push(
-            'replaceTrack ' +
-              track.kind +
-              ' failed: ' +
-              String((err && err.message) || err),
-          )
-        })
+        trackpending.push(
+          sender.replaceTrack(track).catch(function (err) {
+            publisherrors.push(
+              'replaceTrack ' +
+                track.kind +
+                ' failed: ' +
+                String((err && err.message) || err),
+            )
+          }),
+        )
         return
       }
       if (sender) {
@@ -1226,13 +1254,20 @@ function publishstreamtoplayers() {
         )
       }
     })
+    playerpending.push(
+      Promise.all(trackpending).then(function () {
+        scheduleplayervideocaps(pc)
+      }),
+    )
   })
-  if (publisherrors.length) {
-    const detail = publisherrors.join(' | ')
-    console.error('publishstreamtoplayers: ' + detail)
-    sendstatus('playback-failed', detail)
-    setlink('error', detail)
-  }
+  void Promise.all(playerpending).then(function () {
+    if (publisherrors.length) {
+      const detail = publisherrors.join(' | ')
+      console.error('publishstreamtoplayers: ' + detail)
+      sendstatus('playback-failed', detail)
+      setlink('error', detail)
+    }
+  })
 }
 
 function handleplayercall(call: MediaConnection) {

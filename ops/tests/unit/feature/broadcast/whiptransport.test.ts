@@ -95,7 +95,7 @@ describe('WhipTransport', () => {
       { bearer: 'tok_test', endpoint: 'https://whip.test' },
       {
         maxResolution: { width: 1280, height: 720 },
-        maxFramerate: 60,
+        maxFramerate: 30,
         maxBitrate: 3500,
       },
       [{ kind: 'video' } as MediaStreamTrack],
@@ -152,7 +152,7 @@ describe('WhipTransport', () => {
       { bearer: 'tok_test', endpoint: 'https://whip.test' },
       {
         maxResolution: { width: 1280, height: 720 },
-        maxFramerate: 60,
+        maxFramerate: 30,
         maxBitrate: 3500,
       },
       [
@@ -168,7 +168,7 @@ describe('WhipTransport', () => {
     expect(videosender?.getParameters().encodings?.[0]).toEqual(
       expect.objectContaining({
         maxBitrate: 3_500_000,
-        maxFramerate: 60,
+        maxFramerate: 30,
       }),
     )
     expect(audiosender?.setParameters).not.toHaveBeenCalled()

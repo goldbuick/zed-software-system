@@ -42,6 +42,7 @@ const mqdev: MQ_DEV_BRIDGE = {
   peeridfile: process.env.MQ_PEER_ID_FILE || '',
   playbackpath: process.env.MQ_DEV_PLAYBACK_PATH || '',
   statustextfile: process.env.MQ_STATUS_TEXT_FILE || '',
+  videomaxbitratekbps: process.env.MQ_VIDEO_MAX_BITRATE_KBPS || '',
   writetextfile: (filepath, text) =>
     ipcRenderer.invoke('write_text_file', {
       path: filepath,

@@ -52,7 +52,7 @@ describe('IvsLowLatencyTransport', () => {
       { streamKey: 'sk_test', ingestEndpoint: 'https://example.test' },
       {
         maxResolution: { width: 1280, height: 720 },
-        maxFramerate: 60,
+        maxFramerate: 30,
         maxBitrate: 3500,
       },
       [track],
@@ -67,7 +67,7 @@ describe('IvsLowLatencyTransport', () => {
     )
     expect(body.streamKey).toBe('sk_test')
     expect(body.maxBitrate).toBe(3500)
-    expect(body.maxFramerate).toBe(60)
+    expect(body.maxFramerate).toBe(30)
     expect(typeof body.offer).toBe('string')
     expect(JSON.parse(atob(body.offer)).type).toBe('offer')
     expect(transport.getsessionid()).toBe('sess-1')
@@ -90,7 +90,7 @@ describe('IvsLowLatencyTransport', () => {
         { streamKey: 'bad' },
         {
           maxResolution: { width: 1280, height: 720 },
-          maxFramerate: 60,
+          maxFramerate: 30,
           maxBitrate: 3500,
         },
         [{ kind: 'video' } as MediaStreamTrack],
