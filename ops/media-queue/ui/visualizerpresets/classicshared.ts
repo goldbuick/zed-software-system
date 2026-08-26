@@ -24,7 +24,7 @@ export function drawartwork(
   const dx = (MQ_CANVAS_WIDTH - dw) / 2
   const dy = (MQ_CANVAS_HEIGHT - dh) / 2
   ctx.save()
-  ctx.globalCompositeOperation = 'screen'
+  ctx.globalCompositeOperation = 'luminosity'
   ctx.globalAlpha = CLASSIC_ARTWORK_OVERLAY_ALPHA
   ctx.drawImage(img, dx, dy, dw, dh)
   ctx.restore()

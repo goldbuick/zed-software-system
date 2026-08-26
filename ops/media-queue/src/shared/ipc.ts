@@ -186,16 +186,12 @@ export type MQ_INVOKE_MAP = {
   resolve_mq_peer_id: { args: void; result: MQ_PEER_ID }
   read_media_queue: { args: void; result: MQ_QUEUE_DISK }
   write_media_queue: { args: MQ_QUEUE_DISK; result: boolean }
-  get_mq_dev_config: { args: void; result: MQ_DEV_CONFIG }
-  mq_dev_peer_open: { args: { id: string }; result: boolean }
-  mq_dev_status: { args: { text: string }; result: boolean }
 }
 
 export type MQ_INVOKE_COMMAND = keyof MQ_INVOKE_MAP
 
 /**
- * Preload bridge shape on `window`. Named `__TAURI__` for continuity with the
- * original Tauri build of this helper; the renderer calls through it.
+ * Preload IPC bridge shape on `window.mq` (Electron contextBridge).
  */
 export type MQ_BRIDGE = {
   core: {

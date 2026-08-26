@@ -57,4 +57,4 @@ A signaling drop on `terminal.zed.cafe` should resume the control plane and play
 
 CLI registration: [`media.ts`](../../../firmware/cli/commands/media.ts), [`queue.ts`](../../../firmware/cli/commands/queue.ts). Board sink: [`boardtvsink.tsx`](../../../gadget/boardtvsink.tsx).
 
-Design: [`ops/docs/local-media-helpers-tauri.mdx`](../../../../ops/docs/local-media-helpers-tauri.mdx)
+Design: [`ops/docs/local-media-helpers.mdx`](../../../../ops/docs/local-media-helpers.mdx)

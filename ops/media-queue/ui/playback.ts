@@ -79,23 +79,20 @@ function invoke<K extends MQ_INVOKE_COMMAND>(
   cmd: K,
   args?: MQ_INVOKE_MAP[K]['args'],
 ): Promise<MQ_INVOKE_MAP[K]['result']> {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
+  if (!window.mq || !window.mq.core) {
     return Promise.reject(new Error('Electron API missing'))
   }
-  return window.__TAURI__.core.invoke(
-    cmd,
-    (args || {}) as MQ_INVOKE_MAP[K]['args'],
-  )
+  return window.mq.core.invoke(cmd, (args || {}) as MQ_INVOKE_MAP[K]['args'])
 }
 
 function listen(
   event: MQ_EVENT_NAME,
   handler: (message: { payload: unknown }) => void,
 ): Promise<() => void> {
-  if (!window.__TAURI__ || !window.__TAURI__.event) {
+  if (!window.mq || !window.mq.event) {
     return Promise.resolve(function () {})
   }
-  return window.__TAURI__.event.listen(event, handler)
+  return window.mq.event.listen(event, handler)
 }
 
 function revokebloburl() {

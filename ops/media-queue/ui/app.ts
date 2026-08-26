@@ -166,45 +166,20 @@ let endedvideo: MQ_ENDED_MEDIA | null = null
 let prepstate: MQ_PREP_VIEW | null = null
 let preptarget = ''
 
-let mqdevcache: MQ_DEV_CONFIG | null = null
-
-async function loadmqdevconfig() {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
-    return
-  }
-  try {
-    mqdevcache = await window.__TAURI__.core.invoke('get_mq_dev_config')
-  } catch (_) {
-    mqdevcache = null
-  }
-}
-
-void loadmqdevconfig()
-
 function mqdevconfig(): MQ_DEV_CONFIG | null {
-  if (mqdevcache) {
-    return mqdevcache
-  }
   return typeof window.mqdev === 'object' && window.mqdev ? window.mqdev : null
 }
 
 async function writemqdevfile(filepath: string, text: string) {
-  if (!filepath || !window.__TAURI__ || !window.__TAURI__.core) {
+  if (!filepath || !window.mqdev || !window.mqdev.writetextfile) {
     return
   }
   try {
-    await window.__TAURI__.core.invoke('write_text_file', {
-      path: filepath,
-      text: text,
-    })
+    await window.mqdev.writetextfile(filepath, text)
   } catch (_) {}
 }
 
 function writemqpeerid(id: string) {
-  if (window.__TAURI__ && window.__TAURI__.core) {
-    void window.__TAURI__.core.invoke('mq_dev_peer_open', { id: id })
-    return
-  }
   const cfg = mqdevconfig()
   if (cfg && cfg.peeridfile) {
     void writemqdevfile(cfg.peeridfile, id)
@@ -212,10 +187,6 @@ function writemqpeerid(id: string) {
 }
 
 function writemqstatus(text: string) {
-  if (window.__TAURI__ && window.__TAURI__.core) {
-    void window.__TAURI__.core.invoke('mq_dev_status', { text: text })
-    return
-  }
   const cfg = mqdevconfig()
   if (cfg && cfg.statustextfile) {
     void writemqdevfile(cfg.statustextfile, text)
@@ -416,13 +387,10 @@ function invoke<K extends MQ_INVOKE_COMMAND>(
   cmd: K,
   args?: MQ_INVOKE_MAP[K]['args'],
 ): Promise<MQ_INVOKE_MAP[K]['result']> {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
-    return Promise.reject(new Error('Tauri API missing'))
+  if (!window.mq || !window.mq.core) {
+    return Promise.reject(new Error('Electron API missing'))
   }
-  return window.__TAURI__.core.invoke(
-    cmd,
-    (args || {}) as MQ_INVOKE_MAP[K]['args'],
-  )
+  return window.mq.core.invoke(cmd, (args || {}) as MQ_INVOKE_MAP[K]['args'])
 }
 
 function mediabasename(path: string) {
@@ -1002,7 +970,7 @@ function syncplayerlinkstatus() {
 }
 
 async function fitmainwindow() {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
+  if (!window.mq || !window.mq.core) {
     return
   }
   const contentheight = measurecontentheight()
@@ -1565,18 +1533,15 @@ function handlecafemessage(data: unknown) {
         const listenprobeprogress = (
           onprogress: (progress: MQ_PROBE_PROGRESS) => void,
         ): Promise<() => void> => {
-          if (!window.__TAURI__ || !window.__TAURI__.event) {
+          if (!window.mq || !window.mq.event) {
             return Promise.resolve(() => {})
           }
-          return window.__TAURI__.event.listen(
-            'mq-probe-progress',
-            function (event) {
-              const payload = event && event.payload ? event.payload : null
-              if (payload) {
-                onprogress(payload as MQ_PROBE_PROGRESS)
-              }
-            },
-          )
+          return window.mq.event.listen('mq-probe-progress', function (event) {
+            const payload = event && event.payload ? event.payload : null
+            if (payload) {
+              onprogress(payload as MQ_PROBE_PROGRESS)
+            }
+          })
         }
 
         const probebatch = async (
@@ -2104,18 +2069,15 @@ function bootfit() {
       startpeer()
     })
   void refreshcachebytes()
-  if (window.__TAURI__ && window.__TAURI__.event) {
-    void window.__TAURI__.event.listen(
-      'mq-download-progress',
-      function (event) {
-        handledownloadprogress(event && event.payload ? event.payload : null)
-        void refreshcachebytes()
-      },
-    )
-    void window.__TAURI__.event.listen('mq-prep-progress', function (event) {
+  if (window.mq && window.mq.event) {
+    void window.mq.event.listen('mq-download-progress', function (event) {
+      handledownloadprogress(event && event.payload ? event.payload : null)
+      void refreshcachebytes()
+    })
+    void window.mq.event.listen('mq-prep-progress', function (event) {
       handleprepprogress(event && event.payload ? event.payload : null)
     })
-    void window.__TAURI__.event.listen('mq-prep-ready', function (event) {
+    void window.mq.event.listen('mq-prep-ready', function (event) {
       const payload = (
         event && event.payload ? event.payload : null
       ) as MQ_PREP_READY_PAYLOAD | null

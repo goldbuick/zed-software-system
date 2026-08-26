@@ -36,7 +36,7 @@ const bridge: MQ_BRIDGE = {
   },
 }
 
-contextBridge.exposeInMainWorld('__TAURI__', bridge)
+contextBridge.exposeInMainWorld('mq', bridge)
 
 const mqdev: MQ_DEV_BRIDGE = {
   peeridfile: process.env.MQ_PEER_ID_FILE || '',
