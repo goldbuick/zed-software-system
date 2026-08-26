@@ -2,7 +2,7 @@ import type { StreamConfig } from 'zss/feature/broadcast/webbroadcasttypes'
 
 export const DEFAULT_STREAM_CONFIG: StreamConfig = {
   maxResolution: { width: 1280, height: 720 },
-  maxFramerate: 60,
+  maxFramerate: 30,
   maxBitrate: 3500,
 }
 

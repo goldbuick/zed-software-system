@@ -4,6 +4,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
+import { humanizeonset } from 'zss/feature/synth/backend/wasm/playhumanize'
 import {
   playpatternendtime,
   resolveplaystarttime,
@@ -230,16 +231,20 @@ export function createdaisysynth(
     note: SYNTH_NOTE_ON[2],
     replayoffset = 0,
   ) {
-    const when = replayoffset + time
+    const gridwhen = replayoffset + time
     if (recording.recordisrendering > 0 && rendertickhook) {
-      scheduler.schedule(when, () => {
+      scheduler.schedule(gridwhen, () => {
         notifyrendertick(time)
       })
     }
 
+    const livehumanize =
+      recording.recordisrendering <= 0 &&
+      !isofflineaudiocontext(maxi.audioContext)
+
     if (isnumber(note)) {
       if (note === -1) {
-        scheduler.schedule(when, () => {
+        scheduler.schedule(gridwhen, () => {
           if (recording.recordisrendering <= 0) {
             pacercount--
             if (pacercount <= 0) {
@@ -251,6 +256,7 @@ export function createdaisysynth(
         return
       }
       if (note >= 0 && note < WASM_DRUM_COUNT) {
+        const when = livehumanize ? humanizeonset(gridwhen) : gridwhen
         scheduledrum(
           when,
           note,
@@ -265,6 +271,7 @@ export function createdaisysynth(
     if (note.startsWith('#')) {
       return
     }
+    const when = livehumanize ? humanizeonset(gridwhen) : gridwhen
     schedulenote(chan, when, note, tonenotationseconds(notation))
   }
 

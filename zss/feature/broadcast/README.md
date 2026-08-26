@@ -4,7 +4,7 @@ First-party browser broadcast client under `zss/feature/broadcast/`. Replaces th
 
 ## Capture
 
-- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 60fps**, ~3.5 Mbps cap). Frame pump is an **AudioWorklet** on the compositor `AudioContext` (not `requestAnimationFrame`), so capture keeps running when the page is hidden. While hidden, R3F is advanced manually via `advance()` so the game canvas stays live for compositing.
+- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 30fps**, ~3.5 Mbps cap). Frame pump is an **AudioWorklet** on the compositor `AudioContext` (not `requestAnimationFrame`), so capture keeps running when the page is hidden. While hidden, R3F is advanced manually via `advance()` so the game canvas stays live for compositing.
 - **Audio:** Web Audio graph mixes attached `MediaStream` inputs into one outbound audio track.
 
 Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()` + board TV media-queue audio (`mediaqueue` layer) when the player is on the bound board.

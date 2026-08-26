@@ -2,7 +2,7 @@
 
 Local **Electron** helper that downloads queue URLs with **yt-dlp**, plays them locally, and **PeerJS `call`s** [zed.cafe](https://zed.cafe). Video lands on a **board TV** sink and audio plays on cafe speakers for the host and board mates -- not the tape overlay.
 
-Design: [`ops/docs/local-media-helpers-tauri.mdx`](../docs/local-media-helpers-tauri.mdx)
+Design: [`ops/docs/local-media-helpers.mdx`](../docs/local-media-helpers.mdx)
 
 ## Product contract
 
@@ -26,6 +26,8 @@ yarn task run mediaqueue:build:desktop
 ```
 
 `yarn start` / `yarn dist` / `yarn dist:mac` / `yarn dist:win` run `fetch-binaries` and `electron-vite build` automatically. Installers land under `ops/media-queue/dist/`.
+
+`vendor/` (yt-dlp / ffmpeg / deno) is a **local** fetch cache -- gitignored, never committed. electron-vite builds JS into `out/`; binaries are staged into `resources/bin` for packaged builds only.
 
 ## Dev
 

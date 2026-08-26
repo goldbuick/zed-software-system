@@ -5,6 +5,7 @@ import {
   MQ_CANVAS_HEIGHT,
   MQ_CANVAS_WIDTH,
 } from './tvcanvas'
+import { ensurevhspass, rendervhspass, resetvhspass } from './vhspass'
 import { readactivepresetlabel } from './visualizer'
 
 export type MQ_COMPOSITOR_MODE = 'placard' | 'video' | 'audio'
@@ -14,7 +15,16 @@ const CANVAS_HEIGHT = MQ_CANVAS_HEIGHT
 const CAPTURE_FPS = 30
 const BG = '#0a0a12'
 
-let canvasel: HTMLCanvasElement | null = null
+/** 2D scene canvas (content + HUD). Fed into the VHS pass. */
+let scenecanvas: HTMLCanvasElement | null = null
+/** WebGL VHS output canvas. */
+let glcanvas: HTMLCanvasElement | null = null
+/**
+ * 2D blit of the WebGL frame -- captureStream source.
+ * Chromium often returns black tracks from WebGL captureStream; 2D capture
+ * is the path that already worked for the board TV preview.
+ */
+let capturecanvas: HTMLCanvasElement | null = null
 let canvascapture: MediaStream | null = null
 let outstream: MediaStream | null = null
 let animframe: number | null = null
@@ -26,23 +36,39 @@ let active = false
 let placeholderctx: AudioContext | null = null
 let placeholderaudio: MediaStreamTrack | null = null
 
-function ensurecanvas(): HTMLCanvasElement {
-  if (canvasel) {
-    return canvasel
+function placecanvas(el: HTMLCanvasElement) {
+  el.style.position = 'fixed'
+  el.style.left = '-10000px'
+  el.style.top = '0'
+  el.style.width = `${MQ_CANVAS_CSS_WIDTH}px`
+  el.style.height = `${MQ_CANVAS_CSS_HEIGHT}px`
+  el.style.opacity = '1'
+  el.style.pointerEvents = 'none'
+  el.style.zIndex = '-1'
+}
+
+function ensurescenecanvas(): HTMLCanvasElement {
+  if (scenecanvas) {
+    return scenecanvas
   }
-  canvasel = document.createElement('canvas')
-  canvasel.width = CANVAS_WIDTH
-  canvasel.height = CANVAS_HEIGHT
-  canvasel.style.position = 'fixed'
-  canvasel.style.left = '0'
-  canvasel.style.top = '0'
-  canvasel.style.width = `${MQ_CANVAS_CSS_WIDTH}px`
-  canvasel.style.height = `${MQ_CANVAS_CSS_HEIGHT}px`
-  canvasel.style.opacity = '0'
-  canvasel.style.pointerEvents = 'none'
-  canvasel.style.zIndex = '-1'
-  document.body.appendChild(canvasel)
-  return canvasel
+  scenecanvas = document.createElement('canvas')
+  scenecanvas.width = CANVAS_WIDTH
+  scenecanvas.height = CANVAS_HEIGHT
+  placecanvas(scenecanvas)
+  document.body.appendChild(scenecanvas)
+  return scenecanvas
+}
+
+function ensurecapturecanvas(): HTMLCanvasElement {
+  if (capturecanvas) {
+    return capturecanvas
+  }
+  capturecanvas = document.createElement('canvas')
+  capturecanvas.width = CANVAS_WIDTH
+  capturecanvas.height = CANVAS_HEIGHT
+  placecanvas(capturecanvas)
+  document.body.appendChild(capturecanvas)
+  return capturecanvas
 }
 
 /**
@@ -104,10 +130,10 @@ function drawcontain(
 }
 
 function drawframe() {
-  if (!active || !canvasel) {
+  if (!active || !scenecanvas || !capturecanvas || !glcanvas) {
     return
   }
-  const ctx = canvasel.getContext('2d')
+  const ctx = scenecanvas.getContext('2d')
   if (!ctx) {
     return
   }
@@ -131,6 +157,12 @@ function drawframe() {
     readmediaprogress(playbackmedia),
     mode === 'audio' ? readactivepresetlabel() : '',
   )
+  rendervhspass()
+  const out = capturecanvas.getContext('2d')
+  if (out) {
+    out.imageSmoothingEnabled = false
+    out.drawImage(glcanvas, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  }
   animframe = window.requestAnimationFrame(drawframe)
 }
 
@@ -161,9 +193,11 @@ function clearaudiotracks() {
 }
 
 export function ensurecompositor(): MediaStream {
-  const canvas = ensurecanvas()
+  const scene = ensurescenecanvas()
+  glcanvas = ensurevhspass(scene)
+  const capture = ensurecapturecanvas()
   if (!canvascapture) {
-    canvascapture = canvas.captureStream(CAPTURE_FPS)
+    canvascapture = capture.captureStream(CAPTURE_FPS)
   }
   if (!outstream) {
     outstream = new MediaStream()
@@ -266,8 +300,14 @@ export function stopcompositor() {
     }
     outstream = null
   }
-  if (canvasel) {
-    canvasel.remove()
-    canvasel = null
+  resetvhspass()
+  glcanvas = null
+  if (capturecanvas) {
+    capturecanvas.remove()
+    capturecanvas = null
+  }
+  if (scenecanvas) {
+    scenecanvas.remove()
+    scenecanvas = null
   }
 }

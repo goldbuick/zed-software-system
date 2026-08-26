@@ -23,6 +23,7 @@ import { mqpeerserveroptions } from './peerserver'
 import {
   attachpreview,
   readendedelement,
+  setaudiencehold,
   setmqondownloadprogress,
   startdownload,
   startplayback,
@@ -34,6 +35,7 @@ import {
   type PLAYER_CALL_PC_SLICE,
   playercallpcreason,
 } from './playercallice'
+import { applyplayervideocaps } from './playervideocaps'
 import {
   helperqueueadd,
   helperqueueallowlong,
@@ -124,7 +126,6 @@ const els = {
   queue: readel<HTMLTextAreaElement>('queue'),
   cookiesbrowser: readel<HTMLSelectElement>('cookiesbrowser'),
   cookieshint: readel<HTMLElement>('cookieshint'),
-  stopcall: readel<HTMLButtonElement>('stopcall'),
   cleardownloads: readel<HTMLButtonElement>('cleardownloads'),
   preview: readel<HTMLVideoElement>('preview'),
   players: readel<HTMLElement>('players'),
@@ -166,45 +167,20 @@ let endedvideo: MQ_ENDED_MEDIA | null = null
 let prepstate: MQ_PREP_VIEW | null = null
 let preptarget = ''
 
-let mqdevcache: MQ_DEV_CONFIG | null = null
-
-async function loadmqdevconfig() {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
-    return
-  }
-  try {
-    mqdevcache = await window.__TAURI__.core.invoke('get_mq_dev_config')
-  } catch (_) {
-    mqdevcache = null
-  }
-}
-
-void loadmqdevconfig()
-
 function mqdevconfig(): MQ_DEV_CONFIG | null {
-  if (mqdevcache) {
-    return mqdevcache
-  }
   return typeof window.mqdev === 'object' && window.mqdev ? window.mqdev : null
 }
 
 async function writemqdevfile(filepath: string, text: string) {
-  if (!filepath || !window.__TAURI__ || !window.__TAURI__.core) {
+  if (!filepath || !window.mqdev || !window.mqdev.writetextfile) {
     return
   }
   try {
-    await window.__TAURI__.core.invoke('write_text_file', {
-      path: filepath,
-      text: text,
-    })
+    await window.mqdev.writetextfile(filepath, text)
   } catch (_) {}
 }
 
 function writemqpeerid(id: string) {
-  if (window.__TAURI__ && window.__TAURI__.core) {
-    void window.__TAURI__.core.invoke('mq_dev_peer_open', { id: id })
-    return
-  }
   const cfg = mqdevconfig()
   if (cfg && cfg.peeridfile) {
     void writemqdevfile(cfg.peeridfile, id)
@@ -212,10 +188,6 @@ function writemqpeerid(id: string) {
 }
 
 function writemqstatus(text: string) {
-  if (window.__TAURI__ && window.__TAURI__.core) {
-    void window.__TAURI__.core.invoke('mq_dev_status', { text: text })
-    return
-  }
   const cfg = mqdevconfig()
   if (cfg && cfg.statustextfile) {
     void writemqdevfile(cfg.statustextfile, text)
@@ -416,13 +388,10 @@ function invoke<K extends MQ_INVOKE_COMMAND>(
   cmd: K,
   args?: MQ_INVOKE_MAP[K]['args'],
 ): Promise<MQ_INVOKE_MAP[K]['result']> {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
-    return Promise.reject(new Error('Tauri API missing'))
+  if (!window.mq || !window.mq.core) {
+    return Promise.reject(new Error('Electron API missing'))
   }
-  return window.__TAURI__.core.invoke(
-    cmd,
-    (args || {}) as MQ_INVOKE_MAP[K]['args'],
-  )
+  return window.mq.core.invoke(cmd, (args || {}) as MQ_INVOKE_MAP[K]['args'])
 }
 
 function mediabasename(path: string) {
@@ -999,10 +968,16 @@ function syncplayerlinkstatus() {
   // secondary stays in hudstate for MQ_STATUS_TEXT_FILE only -- not drawn on overlay
   sethudstate(phase, detail, secondary)
   writemqstatus(phase + '|' + detail + (secondary ? '|' + secondary : ''))
+  syncaudiencehold()
+}
+
+/** Pause local decode when no answered player calls; resume when one connects. */
+function syncaudiencehold() {
+  setaudiencehold(playbackstarted && playercalls.size === 0)
 }
 
 async function fitmainwindow() {
-  if (!window.__TAURI__ || !window.__TAURI__.core) {
+  if (!window.mq || !window.mq.core) {
     return
   }
   const contentheight = measurecontentheight()
@@ -1071,6 +1046,20 @@ function scheduleplayercalldrop(peerid: string, call: MediaConnection) {
   playercalldroptimers.set(call, timer)
 }
 
+function scheduleplayervideocaps(pc: RTCPeerConnection) {
+  const state = pc.connectionState
+  const ice = pc.iceConnectionState
+  if (state !== 'connected' && ice !== 'connected' && ice !== 'completed') {
+    return
+  }
+  void applyplayervideocaps(pc).catch(function (err) {
+    const errlike = err as MQ_ERRORLIKE | null
+    console.error(
+      'applyplayervideocaps: ' + String((errlike && errlike.message) || err),
+    )
+  })
+}
+
 function applyplayercallpcreason(
   peerid: string,
   call: MediaConnection,
@@ -1114,6 +1103,7 @@ function wireplayercallpc(call: MediaConnection, peerid: string) {
   playercallpcwired.add(pc)
   const onstate = function () {
     applyplayercallpcreason(peerid, call)
+    scheduleplayervideocaps(pc)
   }
   pc.addEventListener('iceconnectionstatechange', onstate)
   pc.addEventListener('connectionstatechange', onstate)
@@ -1160,6 +1150,10 @@ function answerplayercall(call: MediaConnection) {
   playercalls.set(call.peer, { call: call, answerstream: mediastream })
   pendingplayercalls.delete(call.peer)
   wireplayercallpc(call, call.peer)
+  const pc = call.peerConnection
+  if (pc) {
+    scheduleplayervideocaps(pc)
+  }
   return true
 }
 
@@ -1180,6 +1174,7 @@ function publishstreamtoplayers() {
     return
   }
   const publisherrors: string[] = []
+  const playerpending: Promise<void>[] = []
   playercalls.forEach(function (entry) {
     const pc = entry.call.peerConnection
     if (!pc) {
@@ -1189,6 +1184,7 @@ function publishstreamtoplayers() {
     const senders = pc.getSenders()
     const transceivers =
       typeof pc.getTransceivers === 'function' ? pc.getTransceivers() : []
+    const trackpending: Promise<void>[] = []
     mediastream!.getTracks().forEach(function (track) {
       let sender: RTCRtpSender | null = null
       for (let i = 0; i < senders.length; ++i) {
@@ -1217,14 +1213,16 @@ function publishstreamtoplayers() {
         return
       }
       if (sender && typeof sender.replaceTrack === 'function') {
-        sender.replaceTrack(track).catch(function (err) {
-          publisherrors.push(
-            'replaceTrack ' +
-              track.kind +
-              ' failed: ' +
-              String((err && err.message) || err),
-          )
-        })
+        trackpending.push(
+          sender.replaceTrack(track).catch(function (err) {
+            publisherrors.push(
+              'replaceTrack ' +
+                track.kind +
+                ' failed: ' +
+                String((err && err.message) || err),
+            )
+          }),
+        )
         return
       }
       if (sender) {
@@ -1252,13 +1250,20 @@ function publishstreamtoplayers() {
         )
       }
     })
+    playerpending.push(
+      Promise.all(trackpending).then(function () {
+        scheduleplayervideocaps(pc)
+      }),
+    )
   })
-  if (publisherrors.length) {
-    const detail = publisherrors.join(' | ')
-    console.error('publishstreamtoplayers: ' + detail)
-    sendstatus('playback-failed', detail)
-    setlink('error', detail)
-  }
+  void Promise.all(playerpending).then(function () {
+    if (publisherrors.length) {
+      const detail = publisherrors.join(' | ')
+      console.error('publishstreamtoplayers: ' + detail)
+      sendstatus('playback-failed', detail)
+      setlink('error', detail)
+    }
+  })
 }
 
 function handleplayercall(call: MediaConnection) {
@@ -1565,18 +1570,15 @@ function handlecafemessage(data: unknown) {
         const listenprobeprogress = (
           onprogress: (progress: MQ_PROBE_PROGRESS) => void,
         ): Promise<() => void> => {
-          if (!window.__TAURI__ || !window.__TAURI__.event) {
+          if (!window.mq || !window.mq.event) {
             return Promise.resolve(() => {})
           }
-          return window.__TAURI__.event.listen(
-            'mq-probe-progress',
-            function (event) {
-              const payload = event && event.payload ? event.payload : null
-              if (payload) {
-                onprogress(payload as MQ_PROBE_PROGRESS)
-              }
-            },
-          )
+          return window.mq.event.listen('mq-probe-progress', function (event) {
+            const payload = event && event.payload ? event.payload : null
+            if (payload) {
+              onprogress(payload as MQ_PROBE_PROGRESS)
+            }
+          })
         }
 
         const probebatch = async (
@@ -2074,9 +2076,6 @@ async function cleardownloadcache() {
 els.copypeer.addEventListener('click', function () {
   void copypeerid()
 })
-els.stopcall.addEventListener('click', function () {
-  void endcall()
-})
 if (els.cleardownloads) {
   els.cleardownloads.addEventListener('click', function () {
     void cleardownloadcache()
@@ -2104,18 +2103,15 @@ function bootfit() {
       startpeer()
     })
   void refreshcachebytes()
-  if (window.__TAURI__ && window.__TAURI__.event) {
-    void window.__TAURI__.event.listen(
-      'mq-download-progress',
-      function (event) {
-        handledownloadprogress(event && event.payload ? event.payload : null)
-        void refreshcachebytes()
-      },
-    )
-    void window.__TAURI__.event.listen('mq-prep-progress', function (event) {
+  if (window.mq && window.mq.event) {
+    void window.mq.event.listen('mq-download-progress', function (event) {
+      handledownloadprogress(event && event.payload ? event.payload : null)
+      void refreshcachebytes()
+    })
+    void window.mq.event.listen('mq-prep-progress', function (event) {
       handleprepprogress(event && event.payload ? event.payload : null)
     })
-    void window.__TAURI__.event.listen('mq-prep-ready', function (event) {
+    void window.mq.event.listen('mq-prep-ready', function (event) {
       const payload = (
         event && event.payload ? event.payload : null
       ) as MQ_PREP_READY_PAYLOAD | null

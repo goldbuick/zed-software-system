@@ -71,3 +71,7 @@ Triplet divides current duration by 3; dotted multiplies by 1.5.
 - `SYNTH_NOTE_ON`: `[chan, duration, note]`
 - `SYNTH_NOTE_ENTRY`: `[time, SYNTH_NOTE_ON]`
 - `SYNTH_INVOKE`: `SYNTH_OP[] | string`
+
+## Live onset humanize
+
+Live `#play` / `#bgplay` note and drum onsets get a fixed random jitter of up to **±4 ms** (`HUMANIZE_SEC` in [`playhumanize.ts`](../backend/wasm/playhumanize.ts)) so grid music feels slightly organic. Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter).

@@ -1,6 +1,6 @@
 /**
  * Download pinned yt-dlp + ffmpeg + deno binaries into vendor/<os>-<arch>/.
- * Not committed to git; run before tauri build.
+ * Not committed to git; run before electron build.
  */
 import { execFileSync } from 'node:child_process'
 import {

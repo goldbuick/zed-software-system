@@ -323,34 +323,6 @@ function wireipc(): void {
     fs.writeFileSync(filepath, JSON.stringify(disk), 'utf8')
     return true
   })
-
-  handleinvoke('get_mq_dev_config', () => ({
-    peeridfile: process.env.MQ_PEER_ID_FILE || '',
-    playbackpath: process.env.MQ_DEV_PLAYBACK_PATH || '',
-    statustextfile: process.env.MQ_STATUS_TEXT_FILE || '',
-  }))
-
-  handleinvoke('mq_dev_peer_open', (args) => {
-    const id = String((args && args.id) || '').trim()
-    const filepath = process.env.MQ_PEER_ID_FILE
-    if (!id || !filepath) {
-      return false
-    }
-    fs.mkdirSync(path.dirname(filepath), { recursive: true })
-    fs.writeFileSync(filepath, id, 'utf8')
-    return true
-  })
-
-  handleinvoke('mq_dev_status', (args) => {
-    const text = String((args && args.text) ?? '')
-    const filepath = process.env.MQ_STATUS_TEXT_FILE
-    if (!filepath) {
-      return false
-    }
-    fs.mkdirSync(path.dirname(filepath), { recursive: true })
-    fs.writeFileSync(filepath, text, 'utf8')
-    return true
-  })
 }
 
 if (!app) {
