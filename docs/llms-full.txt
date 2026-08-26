@@ -6632,7 +6632,7 @@ Local pack remains `yarn task run mediaqueue:build:desktop:mac`. Public GitHub `
 
 - Release workflow: [`.github/workflows/on-push-tag-release.yml`](../../.github/workflows/on-push-tag-release.yml)
 - Media queue: [`ops/media-queue/README.md`](../media-queue/README.md)
-- Helpers design: [`local-media-helpers-tauri.mdx`](local-media-helpers-tauri.mdx)
+- Helpers design: [`local-media-helpers.mdx`](local-media-helpers.mdx)
 - SignPath GitHub docs: https://docs.signpath.io/trusted-build-systems/github
 
 ---
@@ -6759,7 +6759,7 @@ Consult current docs for the request shape:
 ---
 
 # Local media helpers on Electron
-Source: https://zed.cafe/docs/ops/local-media-helpers-tauri
+Source: https://zed.cafe/docs/ops/local-media-helpers
 
 **Purpose:** Ship cafe's **media-queue helper** as a local **Electron** (Chromium) desktop app. The helper PeerJS-calls cafe for board TV playback. Cafe stays a website; the helper ships as a local binary on GitHub Releases.
 
@@ -8321,6 +8321,10 @@ Triplet divides current duration by 3; dotted multiplies by 1.5.
 - `SYNTH_NOTE_ON`: `[chan, duration, note]`
 - `SYNTH_NOTE_ENTRY`: `[time, SYNTH_NOTE_ON]`
 - `SYNTH_INVOKE`: `SYNTH_OP[] | string`
+
+## Live onset humanize
+
+Live `#play` / `#bgplay` note and drum onsets get a fixed random jitter of up to **±4 ms** (`HUMANIZE_SEC` in [`playhumanize.ts`](../backend/wasm/playhumanize.ts)) so grid music feels slightly organic. Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter).
 
 ---
 

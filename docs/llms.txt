@@ -156,7 +156,7 @@
 - [Desktop helper signing](https://zed.cafe/docs/ops/desktop-signing)
 - [Firmware commands summary](https://zed.cafe/docs/ops/commands-summary)
 - [LiveKit Ingress (WHIP) → YouTube Live](https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live)
-- [Local media helpers on Electron](https://zed.cafe/docs/ops/local-media-helpers-tauri)
+- [Local media helpers on Electron](https://zed.cafe/docs/ops/local-media-helpers)
 - [Web broadcast → LiveKit migration (ZSS)](https://zed.cafe/docs/ops/web-broadcast-livekit)
 
 ## Parse

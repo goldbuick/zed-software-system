@@ -86,5 +86,5 @@ Local pack remains `yarn task run mediaqueue:build:desktop:mac`. Public GitHub `
 
 - Release workflow: [`.github/workflows/on-push-tag-release.yml`](../../.github/workflows/on-push-tag-release.yml)
 - Media queue: [`ops/media-queue/README.md`](../media-queue/README.md)
-- Helpers design: [`local-media-helpers-tauri.mdx`](local-media-helpers-tauri.mdx)
+- Helpers design: [`local-media-helpers.mdx`](local-media-helpers.mdx)
 - SignPath GitHub docs: https://docs.signpath.io/trusted-build-systems/github
