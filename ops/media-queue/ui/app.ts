@@ -1049,11 +1049,7 @@ function scheduleplayercalldrop(peerid: string, call: MediaConnection) {
 function scheduleplayervideocaps(pc: RTCPeerConnection) {
   const state = pc.connectionState
   const ice = pc.iceConnectionState
-  if (
-    state !== 'connected' &&
-    ice !== 'connected' &&
-    ice !== 'completed'
-  ) {
+  if (state !== 'connected' && ice !== 'connected' && ice !== 'completed') {
     return
   }
   void applyplayervideocaps(pc).catch(function (err) {

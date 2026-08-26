@@ -1,5 +1,10 @@
 import { MQ_CANVAS_HEIGHT, MQ_CANVAS_WIDTH } from '../tvcanvas'
 
+import type {
+  MQ_VISUALIZER_PRESET,
+  MQ_VISUALIZER_PRESET_HANDLE,
+  MQ_VISUALIZER_PRESET_OPTS,
+} from './types'
 import {
   VIZ_BAR_COUNT,
   VIZ_BG,
@@ -8,11 +13,6 @@ import {
   drawscanlines,
   drawscopeline,
 } from './vizshared'
-import type {
-  MQ_VISUALIZER_PRESET,
-  MQ_VISUALIZER_PRESET_HANDLE,
-  MQ_VISUALIZER_PRESET_OPTS,
-} from './types'
 
 function startclassicbars(
   opts: MQ_VISUALIZER_PRESET_OPTS,

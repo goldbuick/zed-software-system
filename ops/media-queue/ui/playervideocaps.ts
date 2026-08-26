@@ -8,8 +8,7 @@ const capspending = new WeakMap<RTCPeerConnection, Promise<void>>()
 function readmaxbitratekbps(): number {
   let raw: string | undefined
   if (typeof window !== 'undefined') {
-    const mqdev = (window as { mqdev?: { videomaxbitratekbps?: string } })
-      .mqdev
+    const mqdev = (window as { mqdev?: { videomaxbitratekbps?: string } }).mqdev
     raw = mqdev?.videomaxbitratekbps
   }
   if (!raw) {
@@ -25,11 +24,7 @@ function readmaxbitratekbps(): number {
 function playercapspcready(pc: RTCPeerConnection): boolean {
   const state = pc.connectionState
   const ice = pc.iceConnectionState
-  return (
-    state === 'connected' ||
-    ice === 'connected' ||
-    ice === 'completed'
-  )
+  return state === 'connected' || ice === 'connected' || ice === 'completed'
 }
 
 async function applyplayervideocapsinner(pc: RTCPeerConnection): Promise<void> {
