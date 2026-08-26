@@ -58,6 +58,8 @@ let playbackpath = ''
 let playbackaudioonly = false
 let bloburl = ''
 let playbackactive = false
+/** True while no cafe players are connected -- blocks keepalive auto-resume. */
+let audiencehold = false
 let keepalivetimer: number | null = null
 let ondownloadprogress: ((payload: unknown) => void) | null = null
 
@@ -135,6 +137,7 @@ function ensuredecodevideo(): HTMLVideoElement {
 }
 
 function stopvideo() {
+  audiencehold = false
   playbackactive = false
   stopvisualizer()
   clearcompositorplayback()
@@ -257,15 +260,55 @@ function playbackatornear_end(el: HTMLMediaElement) {
   return el.currentTime >= duration - 0.1
 }
 
-function resumeplayback() {
+function activemediael(): HTMLMediaElement | null {
   if (playbackaudioonly) {
+    return readaudio()
+  }
+  return decodesourceel()
+}
+
+function resumeplayback() {
+  if (audiencehold) {
     return
   }
-  const active = decodesourceel()
+  const active = activemediael()
   if (!playbackactive || !active || playbackatornear_end(active)) {
     return
   }
   if (active.paused) {
+    void active.play().catch(function () {})
+  }
+}
+
+/**
+ * Hold/resume local decode when cafe board TVs disconnect/reconnect.
+ * While held, keepalive will not force play().
+ */
+export function setaudiencehold(hold: boolean) {
+  const next = Boolean(hold)
+  if (next === audiencehold) {
+    if (next) {
+      const active = activemediael()
+      if (active && !active.paused && playbackactive) {
+        try {
+          active.pause()
+        } catch (_) {}
+      }
+    }
+    return
+  }
+  audiencehold = next
+  const active = activemediael()
+  if (!active || !playbackactive) {
+    return
+  }
+  if (audiencehold) {
+    try {
+      active.pause()
+    } catch (_) {}
+    return
+  }
+  if (!playbackatornear_end(active) && active.paused) {
     void active.play().catch(function () {})
   }
 }
@@ -302,7 +345,7 @@ function bindkeepalive(el: MQ_KEEPALIVE_VIDEO) {
     resumeplayback()
   })
   el.addEventListener('pause', function () {
-    if (playbackatornear_end(el)) {
+    if (audiencehold || playbackatornear_end(el)) {
       return
     }
     resumeplayback()

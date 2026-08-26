@@ -1,11 +1,11 @@
 import { MQ_CANVAS_HEIGHT, MQ_CANVAS_WIDTH } from '../tvcanvas'
 
-import { CLASSIC_BG, drawartwork } from './classicshared'
+import { VIZ_BG, VIZ_OVER_ARTWORK_ALPHA, drawartwork } from './vizshared'
 
 /**
- * Tame washed MilkDrop WebGL frames for board TV: mild crush + contrast.
- * Kept bright enough that the later VHS pass does not crush the image.
- * Viz blits opaque; cover art (if any) is a semi-transparent overlay on top.
+ * Blit MilkDrop WebGL frames for board TV with mild contrast punch.
+ * Cover art (if any) is a desaturated underlay; viz is slightly translucent
+ * so the silhouette still reads through.
  */
 export function blitvizcontrast(
   dest: CanvasRenderingContext2D,
@@ -14,12 +14,15 @@ export function blitvizcontrast(
 ) {
   dest.filter = 'none'
   dest.globalAlpha = 1
-  dest.fillStyle = CLASSIC_BG
+  dest.globalCompositeOperation = 'source-over'
+  dest.fillStyle = VIZ_BG
   dest.fillRect(0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
-  dest.filter = 'brightness(0.92) contrast(1.45) saturate(1.35)'
-  dest.drawImage(source, 0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
-  dest.filter = 'none'
   if (artwork) {
     drawartwork(dest, artwork)
   }
+  dest.filter = 'brightness(1.2) contrast(1) saturate(1)'
+  dest.globalAlpha = artwork ? VIZ_OVER_ARTWORK_ALPHA : 1
+  dest.drawImage(source, 0, 0, MQ_CANVAS_WIDTH, MQ_CANVAS_HEIGHT)
+  dest.globalAlpha = 1
+  dest.filter = 'none'
 }

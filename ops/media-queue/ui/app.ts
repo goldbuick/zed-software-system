@@ -23,6 +23,7 @@ import { mqpeerserveroptions } from './peerserver'
 import {
   attachpreview,
   readendedelement,
+  setaudiencehold,
   setmqondownloadprogress,
   startdownload,
   startplayback,
@@ -124,7 +125,6 @@ const els = {
   queue: readel<HTMLTextAreaElement>('queue'),
   cookiesbrowser: readel<HTMLSelectElement>('cookiesbrowser'),
   cookieshint: readel<HTMLElement>('cookieshint'),
-  stopcall: readel<HTMLButtonElement>('stopcall'),
   cleardownloads: readel<HTMLButtonElement>('cleardownloads'),
   preview: readel<HTMLVideoElement>('preview'),
   players: readel<HTMLElement>('players'),
@@ -967,6 +967,12 @@ function syncplayerlinkstatus() {
   // secondary stays in hudstate for MQ_STATUS_TEXT_FILE only -- not drawn on overlay
   sethudstate(phase, detail, secondary)
   writemqstatus(phase + '|' + detail + (secondary ? '|' + secondary : ''))
+  syncaudiencehold()
+}
+
+/** Pause local decode when no answered player calls; resume when one connects. */
+function syncaudiencehold() {
+  setaudiencehold(playbackstarted && playercalls.size === 0)
 }
 
 async function fitmainwindow() {
@@ -2038,9 +2044,6 @@ async function cleardownloadcache() {
 
 els.copypeer.addEventListener('click', function () {
   void copypeerid()
-})
-els.stopcall.addEventListener('click', function () {
-  void endcall()
 })
 if (els.cleardownloads) {
   els.cleardownloads.addEventListener('click', function () {

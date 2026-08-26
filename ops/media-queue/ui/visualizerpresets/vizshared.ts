@@ -1,14 +1,20 @@
 import { MQ_CANVAS_HEIGHT, MQ_CANVAS_WIDTH } from '../tvcanvas'
 
-export const CLASSIC_BG = '#0a0a12'
-export const CLASSIC_GREEN = '#00ff41'
-export const CLASSIC_CYAN = '#00e5ff'
-export const CLASSIC_MAGENTA = '#ff00aa'
-/** Cover art alpha when drawn on top of a full-opacity viz. */
-export const CLASSIC_ARTWORK_OVERLAY_ALPHA = 0.37
-export const CLASSIC_BAR_COUNT = 48
+export const VIZ_BG = '#0a0a12'
+export const VIZ_GREEN = '#00ff41'
+export const VIZ_CYAN = '#00e5ff'
+export const VIZ_MAGENTA = '#ff00aa'
+/** Desaturated dim cover under the viz (canvas filter, source-over). */
+export const VIZ_ARTWORK_UNDERLAY_FILTER = '' //grayscale(1) brightness(0.42)'
+/**
+ * Full-bleed viz (MilkDrop) alpha when a cover underlay is present so the
+ * art silhouette still reads through. Classic bars/scope stay opaque and
+ * only leave art in the empty regions.
+ */
+export const VIZ_OVER_ARTWORK_ALPHA = 0.67
+export const VIZ_BAR_COUNT = 48
 
-/** Cover-fit artwork as a semi-transparent overlay (viz stays opaque underneath). */
+/** Cover-fit artwork as a desaturated underlay (call before drawing viz). */
 export function drawartwork(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -24,9 +30,11 @@ export function drawartwork(
   const dx = (MQ_CANVAS_WIDTH - dw) / 2
   const dy = (MQ_CANVAS_HEIGHT - dh) / 2
   ctx.save()
-  ctx.globalCompositeOperation = 'luminosity'
-  ctx.globalAlpha = CLASSIC_ARTWORK_OVERLAY_ALPHA
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.globalAlpha = 1
+  ctx.filter = VIZ_ARTWORK_UNDERLAY_FILTER
   ctx.drawImage(img, dx, dy, dw, dh)
+  ctx.filter = 'none'
   ctx.restore()
 }
 
@@ -46,7 +54,7 @@ export function drawmirroredbars(
   layout: { top: number; bottom: number },
 ) {
   analysernode.getByteFrequencyData(freqdata)
-  const barcount = CLASSIC_BAR_COUNT
+  const barcount = VIZ_BAR_COUNT
   const step = Math.floor(freqdata.length / barcount)
   const top = layout.top
   const bottom = layout.bottom
@@ -72,12 +80,12 @@ export function drawmirroredbars(
 
     const leftx = center - 16 - (i + 1) * (barw + 1)
     const rightx = center + 16 + i * (barw + 1)
-    ctx.fillStyle = CLASSIC_GREEN
+    ctx.fillStyle = VIZ_GREEN
     ctx.fillRect(leftx, bottom - h, barw, h)
-    ctx.fillStyle = CLASSIC_CYAN
+    ctx.fillStyle = VIZ_CYAN
     ctx.fillRect(rightx, bottom - h, barw, h)
     if (peaks[i] > h + 2) {
-      ctx.fillStyle = CLASSIC_MAGENTA
+      ctx.fillStyle = VIZ_MAGENTA
       ctx.fillRect(leftx, bottom - peaks[i], barw, 2)
       ctx.fillRect(rightx, bottom - peaks[i], barw, 2)
     }
@@ -94,7 +102,7 @@ export function drawscopeline(
   const top = layout.top
   const height = layout.height
   const mid = top + height / 2
-  ctx.strokeStyle = CLASSIC_GREEN
+  ctx.strokeStyle = VIZ_GREEN
   ctx.lineWidth = layout.lineWidth
   ctx.beginPath()
   for (let i = 0; i < timedata.length; i += 1) {
@@ -108,7 +116,7 @@ export function drawscopeline(
     }
   }
   ctx.stroke()
-  ctx.strokeStyle = CLASSIC_CYAN
+  ctx.strokeStyle = VIZ_CYAN
   ctx.globalAlpha = 0.35
   ctx.stroke()
   ctx.globalAlpha = 1

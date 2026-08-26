@@ -1,12 +1,23 @@
+/**
+ * VHS post pass for the media-queue compositor.
+ * Port of LazarusOverlook's CC0 Godot shader (Shadertoy MdffD7 / FMS_Cat):
+ * https://godotshaders.com/shader/vhs-post-processing/
+ */
 import {
   CanvasTexture,
+  DataTexture,
   LinearFilter,
   Mesh,
+  NoColorSpace,
   OrthographicCamera,
   PlaneGeometry,
+  RGBAFormat,
+  RepeatWrapping,
   SRGBColorSpace,
   Scene,
   ShaderMaterial,
+  UnsignedByteType,
+  Vector2,
   WebGLRenderer,
 } from 'three'
 
@@ -17,24 +28,34 @@ import {
   MQ_CANVAS_WIDTH,
 } from './tvcanvas'
 
-/** Horizontal RGB channel split (UV space). */
-const VHS_ABERRATION = 0.0016
-/** Scanline darkening strength (0-1). Peak dip only; average stays near 1. */
-const VHS_SCANLINE = 0.12
-/** Film grain amplitude. */
-const VHS_GRAIN = 0.07
-/** Edge vignette strength. */
-const VHS_VIGNETTE = 0.18
-/** Vertical tracking wobble amplitude (UV). */
-const VHS_WOBBLE = 0.0022
-/** Rare horizontal tear strength. */
-const VHS_TEAR = 0.012
-/** Mild contrast lift after wash. */
-const VHS_CONTRAST = 1.1
-/** Saturation scale (1 = untouched). */
-const VHS_SATURATION = 0.95
-/** Overall gain so VHS look does not crush midtones. */
-const VHS_GAIN = 1.12
+/** Emulated tape resolution (Godot default). */
+const VHS_RESOLUTION = new Vector2(320, 240)
+/** Crease noise amplitude. */
+const VHS_CREASE_NOISE = 1.0
+/** Crease flash opacity. */
+const VHS_CREASE_OPACITY = 0.5
+/** YIQ filter intensity. */
+const VHS_FILTER_INTENSITY = 0.1
+/** Tape crease horizontal smear. */
+const VHS_TAPE_CREASE_SMEAR = 0.2
+/** Tape crease band strength. */
+const VHS_TAPE_CREASE_INTENSITY = 0.2
+/** Tape crease time jitter. */
+const VHS_TAPE_CREASE_JITTER = 0.1
+/** Tape crease scroll speed. */
+const VHS_TAPE_CREASE_SPEED = 0.5
+/** Chroma rotation on crease. */
+const VHS_TAPE_CREASE_DISCOLORATION = 1.0
+/** Bottom switching-noise band thickness (tape lines). */
+const VHS_BOTTOM_BORDER_THICKNESS = 6.0
+/** Bottom switching-noise jitter. */
+const VHS_BOTTOM_BORDER_JITTER = 6.0
+/** Color noise from noise texture. */
+const VHS_NOISE_INTENSITY = 0.1
+/** Overall gain after Godot YIQ filter (board TV midtones). */
+const VHS_GAIN = 1.31
+
+const NOISE_SIZE = 256
 
 const vhsvertexshader = `
 varying vec2 vUv;
@@ -46,53 +67,144 @@ void main() {
 
 const vhsfragmentshader = `
 uniform sampler2D tDiffuse;
+uniform sampler2D noiseTexture;
 uniform float time;
-uniform vec2 resolution;
-uniform float aberration;
-uniform float scanline;
-uniform float grainAmt;
-uniform float vignette;
-uniform float wobbleAmt;
-uniform float tearAmt;
-uniform float contrast;
-uniform float saturation;
+uniform vec2 vhsResolution;
+uniform float creaseNoise;
+uniform float creaseOpacity;
+uniform float filterIntensity;
+uniform float tapeCreaseSmear;
+uniform float tapeCreaseIntensity;
+uniform float tapeCreaseJitter;
+uniform float tapeCreaseSpeed;
+uniform float tapeCreaseDiscoloration;
+uniform float bottomBorderThickness;
+uniform float bottomBorderJitter;
+uniform float noiseIntensity;
 uniform float gain;
 
 varying vec2 vUv;
 
-float hash12(vec2 p) {
-  float h = dot(p, vec2(127.1, 311.7));
-  return fract(sin(h) * 43758.5453);
+const int VHS_SAMPLES = 2;
+const float PI = 3.14159265;
+
+float v2random(vec2 uv) {
+  return texture2D(noiseTexture, mod(uv, vec2(1.0))).x;
+}
+
+mat2 rotate2D(float t) {
+  return mat2(vec2(cos(t), sin(t)), vec2(-sin(t), cos(t)));
+}
+
+vec3 rgb2yiq(vec3 rgb) {
+  return mat3(
+    vec3(0.299, 0.596, 0.211),
+    vec3(0.587, -0.274, -0.523),
+    vec3(0.114, -0.322, 0.312)
+  ) * rgb;
+}
+
+vec3 yiq2rgb(vec3 yiq) {
+  return mat3(
+    vec3(1.0, 1.0, 1.0),
+    vec3(0.956, -0.272, -1.106),
+    vec3(0.621, -0.647, 1.703)
+  ) * yiq;
+}
+
+vec3 vhxTex2D(sampler2D tex, vec2 uv, float rot) {
+  vec3 yiq = vec3(0.0);
+  for (int i = 0; i < VHS_SAMPLES; i++) {
+    float fi = float(i);
+    vec3 sampleRgb = texture2D(
+      tex,
+      uv - vec2(fi, 0.0) / vhsResolution
+    ).xyz;
+    yiq += rgb2yiq(sampleRgb)
+      * vec2(fi, float(VHS_SAMPLES - 1 - i)).yxx
+      / float(VHS_SAMPLES - 1)
+      / float(VHS_SAMPLES)
+      * 2.0;
+  }
+  if (rot != 0.0) {
+    yiq.yz *= rotate2D(rot * tapeCreaseDiscoloration);
+  }
+  return yiq2rgb(yiq);
 }
 
 void main() {
-  vec2 uv = vUv;
-  float t = time;
-  float wobble = sin(t * 2.1 + uv.y * 28.0) * aberration * 0.35
-    + sin(t * 0.7 + uv.y * 9.0) * wobbleAmt;
-  float tearband = step(0.992, hash12(vec2(floor(t * 3.0), floor(uv.y * 40.0))));
-  float tear = tearband * tearAmt * (hash12(vec2(t, uv.y)) - 0.5);
+  vec2 uvn = vUv;
+  vec3 col = vec3(0.0);
 
-  vec2 base = vec2(uv.x + wobble + tear, uv.y);
-  float ab = aberration + 0.0004 * sin(t * 1.3);
-  float r = texture2D(tDiffuse, base + vec2(ab, 0.0)).r;
-  float g = texture2D(tDiffuse, base).g;
-  float b = texture2D(tDiffuse, base - vec2(ab, 0.0)).b;
-  vec3 col = vec3(r, g, b);
+  // Tape wave.
+  uvn.x += (v2random(vec2(uvn.y / 10.0, time / 10.0)) - 0.5)
+    / vhsResolution.x;
+  uvn.x += (v2random(vec2(uvn.y, time * 10.0)) - 0.5)
+    / vhsResolution.x;
 
-  // Dip toward (1 - scanline), never a fixed 0.85 floor.
-  float scans = 1.0 - scanline * (0.5 - 0.5 * sin(uv.y * resolution.y * 3.14159 + t * 8.0));
-  col *= scans;
+  // Tape crease.
+  float tcPhase = smoothstep(
+    0.9,
+    0.96,
+    sin(
+      uvn.y * 8.0
+        - (time * tapeCreaseSpeed
+          + tapeCreaseJitter * v2random(time * vec2(0.67, 0.59)))
+          * PI * 1.2
+    )
+  );
+  float tcNoise = smoothstep(0.3, 1.0, v2random(vec2(uvn.y * 4.77, time)));
+  float tc = tcPhase * tcNoise;
+  uvn.x = uvn.x - tc / vhsResolution.x * 8.0 * tapeCreaseSmear;
 
-  float grain = (hash12(uv * resolution.xy + t * 60.0) - 0.5) * grainAmt;
-  col += grain;
+  // Switching noise (bottom border).
+  float snPhase = smoothstep(
+    1.0 - bottomBorderThickness / vhsResolution.y,
+    1.0,
+    uvn.y
+  );
+  uvn.x += snPhase
+    * (v2random(vec2(vUv.y * 100.0, time * 10.0)) - 0.5)
+    / vhsResolution.x
+    * bottomBorderJitter;
 
-  float vig = smoothstep(0.95, 0.35, length(uv - 0.5) * 1.35);
-  col *= mix(1.0 - vignette, 1.0, vig);
+  // Fetch with YIQ horizontal smear.
+  col = vhxTex2D(tDiffuse, uvn, tcPhase * 0.2 + snPhase * 2.0);
 
-  float luma = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(vec3(luma), col, saturation);
-  col = (col - 0.5) * contrast + 0.5;
+  // Crease noise flash.
+  float cn = tcNoise * creaseNoise
+    * (0.7 * tcPhase * tapeCreaseIntensity + 0.3);
+  if (0.29 < cn) {
+    vec2 V = vec2(0.0, creaseOpacity);
+    vec2 uvt = (uvn + V.yx * v2random(vec2(uvn.y, time))) * vec2(0.1, 1.0);
+    float n0 = v2random(uvt);
+    float n1 = v2random(uvt + V.yx / vhsResolution.x);
+    if (n1 < n0) {
+      col = mix(col, 2.0 * V.yyy, pow(n0, 10.0));
+    }
+  }
+
+  // AC beat.
+  col *= 1.0 + 0.1 * smoothstep(
+    0.4,
+    0.6,
+    v2random(vec2(0.0, 0.1 * (vUv.y + time * 0.2)) / 10.0)
+  );
+
+  // Color noise.
+  col *= 1.0 - noiseIntensity * 0.5
+    + noiseIntensity
+      * texture2D(
+        noiseTexture,
+        mod(uvn * vec2(1.0, 1.0) + time * vec2(5.97, 4.45), vec2(1.0))
+      ).xyz;
+  col = clamp(col, 0.0, 1.0);
+
+  // YIQ filter.
+  col = rgb2yiq(col);
+  col = vec3(0.9, 1.1, 1.5) * col + vec3(0.1, -0.1, 0.0) * filterIntensity;
+  col = yiq2rgb(col);
+
   col *= gain;
   col = clamp(col, 0.0, 1.0);
 
@@ -105,6 +217,7 @@ type VHS_PASS_STATE = {
   glcanvas: HTMLCanvasElement
   renderer: WebGLRenderer
   texture: CanvasTexture
+  noisetexture: DataTexture
   scene: Scene
   camera: OrthographicCamera
   material: ShaderMaterial
@@ -113,6 +226,26 @@ type VHS_PASS_STATE = {
 }
 
 let state: VHS_PASS_STATE | null = null
+
+function createnoisetexture(): DataTexture {
+  const size = NOISE_SIZE
+  const data = new Uint8Array(size * size * 4)
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = (Math.random() * 255) | 0
+    data[i + 1] = (Math.random() * 255) | 0
+    data[i + 2] = (Math.random() * 255) | 0
+    data[i + 3] = 255
+  }
+  const tex = new DataTexture(data, size, size, RGBAFormat, UnsignedByteType)
+  tex.colorSpace = NoColorSpace
+  tex.wrapS = RepeatWrapping
+  tex.wrapT = RepeatWrapping
+  tex.minFilter = LinearFilter
+  tex.magFilter = LinearFilter
+  tex.generateMipmaps = false
+  tex.needsUpdate = true
+  return tex
+}
 
 /**
  * Keep the GL canvas capturable: Chromium often yields black captureStream
@@ -170,21 +303,25 @@ export function ensurevhspass(
   texture.flipY = true
   texture.needsUpdate = true
 
+  const noisetexture = createnoisetexture()
+
   const material = new ShaderMaterial({
     uniforms: {
       tDiffuse: { value: texture },
+      noiseTexture: { value: noisetexture },
       time: { value: 0 },
-      resolution: {
-        value: { x: MQ_CANVAS_WIDTH, y: MQ_CANVAS_HEIGHT },
-      },
-      aberration: { value: VHS_ABERRATION },
-      scanline: { value: VHS_SCANLINE },
-      grainAmt: { value: VHS_GRAIN },
-      vignette: { value: VHS_VIGNETTE },
-      wobbleAmt: { value: VHS_WOBBLE },
-      tearAmt: { value: VHS_TEAR },
-      contrast: { value: VHS_CONTRAST },
-      saturation: { value: VHS_SATURATION },
+      vhsResolution: { value: VHS_RESOLUTION.clone() },
+      creaseNoise: { value: VHS_CREASE_NOISE },
+      creaseOpacity: { value: VHS_CREASE_OPACITY },
+      filterIntensity: { value: VHS_FILTER_INTENSITY },
+      tapeCreaseSmear: { value: VHS_TAPE_CREASE_SMEAR },
+      tapeCreaseIntensity: { value: VHS_TAPE_CREASE_INTENSITY },
+      tapeCreaseJitter: { value: VHS_TAPE_CREASE_JITTER },
+      tapeCreaseSpeed: { value: VHS_TAPE_CREASE_SPEED },
+      tapeCreaseDiscoloration: { value: VHS_TAPE_CREASE_DISCOLORATION },
+      bottomBorderThickness: { value: VHS_BOTTOM_BORDER_THICKNESS },
+      bottomBorderJitter: { value: VHS_BOTTOM_BORDER_JITTER },
+      noiseIntensity: { value: VHS_NOISE_INTENSITY },
       gain: { value: VHS_GAIN },
     },
     vertexShader: vhsvertexshader,
@@ -203,6 +340,7 @@ export function ensurevhspass(
     glcanvas,
     renderer,
     texture,
+    noisetexture,
     scene,
     camera,
     material,
@@ -232,6 +370,7 @@ export function resetvhspass() {
   state.geometry.dispose()
   state.material.dispose()
   state.texture.dispose()
+  state.noisetexture.dispose()
   state.renderer.dispose()
   if (state.glcanvas.parentNode) {
     state.glcanvas.remove()
