@@ -29,7 +29,7 @@ import {
 } from './tvcanvas'
 
 /** Emulated tape resolution (Godot default). */
-const VHS_RESOLUTION = new Vector2(320, 240)
+const VHS_RESOLUTION = new Vector2(640, 480)
 /** Crease noise amplitude. */
 const VHS_CREASE_NOISE = 1.0
 /** Crease flash opacity. */
@@ -52,8 +52,10 @@ const VHS_BOTTOM_BORDER_THICKNESS = 6.0
 const VHS_BOTTOM_BORDER_JITTER = 6.0
 /** Color noise from noise texture. */
 const VHS_NOISE_INTENSITY = 0.1
-/** Overall gain after Godot YIQ filter (board TV midtones). */
-const VHS_GAIN = 1.31
+/** Overall gain after Godot YIQ filter (restores midtones vs source). */
+const VHS_GAIN = 1.42
+/** Additive lift on dark tones only (0-1 RGB); applied after VHS, before gain. */
+const VHS_SHADOW_LIFT = 0.08
 
 const NOISE_SIZE = 256
 
@@ -82,6 +84,7 @@ uniform float bottomBorderThickness;
 uniform float bottomBorderJitter;
 uniform float noiseIntensity;
 uniform float gain;
+uniform float shadowLift;
 
 varying vec2 vUv;
 
@@ -130,6 +133,12 @@ vec3 vhxTex2D(sampler2D tex, vec2 uv, float rot) {
     yiq.yz *= rotate2D(rot * tapeCreaseDiscoloration);
   }
   return yiq2rgb(yiq);
+}
+
+vec3 liftshadows(vec3 rgb, float amount) {
+  float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+  float w = 1.0 - smoothstep(0.04, 0.22, luma);
+  return rgb + amount * w;
 }
 
 void main() {
@@ -202,9 +211,10 @@ void main() {
 
   // YIQ filter.
   col = rgb2yiq(col);
-  col = vec3(0.9, 1.1, 1.5) * col + vec3(0.1, -0.1, 0.0) * filterIntensity;
+  col = vec3(1.33, 1.1, 1.5) * col + vec3(0.1, -0.1, 0.0) * filterIntensity;
   col = yiq2rgb(col);
 
+  col = liftshadows(col, shadowLift);
   col *= gain;
   col = clamp(col, 0.0, 1.0);
 
@@ -323,6 +333,7 @@ export function ensurevhspass(
       bottomBorderJitter: { value: VHS_BOTTOM_BORDER_JITTER },
       noiseIntensity: { value: VHS_NOISE_INTENSITY },
       gain: { value: VHS_GAIN },
+      shadowLift: { value: VHS_SHADOW_LIFT },
     },
     vertexShader: vhsvertexshader,
     fragmentShader: vhsfragmentshader,

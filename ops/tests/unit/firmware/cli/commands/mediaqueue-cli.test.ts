@@ -53,24 +53,28 @@ describe('panel.ts split', () => {
     expect(src).toContain('mediaqueue:approve')
     expect(src).toContain('registercopy')
     expect(src).toContain('media requested:')
-    expect(src).toContain("workstatus(SOFTWARE, player, 'media request')")
+    expect(src).not.toContain('workstatus')
     expect(src).not.toContain('usage: #media add')
     expect(src).not.toContain('usage: #media limit')
   })
 })
 
 describe('receive.ts status UX', () => {
-  it('toasts on helper accept and drives workstatus from progress', () => {
+  it('toasts soft outcomes and uses apierror for failures', () => {
     const src = readFileSync(
       join(process.cwd(), 'zss/feature/mediaqueue/receive.ts'),
       'utf8',
     )
-    expect(src).toContain('mediaqueueapplyworkstatus')
-    expect(src).toContain('mediaqueuestatusworklabel')
-    expect(src).toContain("workstatus(SOFTWARE, player, '')")
+    expect(src).not.toContain('mediaqueueapplyworkstatus')
+    expect(src).not.toContain('mediaqueuestatusworklabel')
+    expect(src).not.toContain('workstatus(')
     expect(src).toContain("status === 'queue-added'")
     expect(src).toContain('apitoast')
     expect(src).toContain('media added:')
+    expect(src).toContain("data.status === 'download-failed'")
+    expect(src).toContain("data.status === 'playback-failed'")
+    expect(src).toContain("status === 'queue-unplayable'")
+    expect(src).toContain('apierror')
   })
 })
 
@@ -81,11 +85,14 @@ describe('mediamenu.ts queue list', () => {
       'utf8',
     )
     expect(src).toContain('state.names[i]')
+    expect(src).toContain('state.titles[i]')
     expect(src).toContain('zsstexttablelines')
+    expect(src).toContain("['who', 'title']")
     expect(src).toContain('zsszedlinkline')
     expect(src).toContain('media playlist')
     expect(src).toContain('$yellow')
     expect(src).not.toContain("['', 'who', 'url']")
+    expect(src).not.toContain("['who', 'url']")
     expect(src).not.toContain('shortplayerid')
     expect(src).not.toContain('canmanage')
   })

@@ -14,6 +14,11 @@ const CANVAS_WIDTH = MQ_CANVAS_WIDTH
 const CANVAS_HEIGHT = MQ_CANVAS_HEIGHT
 const CAPTURE_FPS = 30
 const BG = '#0a0a12'
+/**
+ * Mild global pre-grade before VHS (video mode only).
+ * Shadow lift is in vhspass shadowLift -- keep this light to avoid blowing highlights.
+ */
+const VIDEO_SOURCE_FILTER = 'brightness(1.05) contrast(1.12) saturate(1.12)'
 
 /** 2D scene canvas (content + HUD). Fed into the VHS pass. */
 let scenecanvas: HTMLCanvasElement | null = null
@@ -113,6 +118,7 @@ function drawcontain(
   source: CanvasImageSource,
   sw: number,
   sh: number,
+  sourcefilter?: string,
 ) {
   if (sw <= 0 || sh <= 0) {
     ctx.fillStyle = BG
@@ -126,7 +132,13 @@ function drawcontain(
   const dy = (CANVAS_HEIGHT - dh) / 2
   ctx.fillStyle = BG
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  if (sourcefilter) {
+    ctx.filter = sourcefilter
+  }
   ctx.drawImage(source, dx, dy, dw, dh)
+  if (sourcefilter) {
+    ctx.filter = 'none'
+  }
 }
 
 function drawframe() {
@@ -141,7 +153,7 @@ function drawframe() {
     const vw = videosource.videoWidth || 0
     const vh = videosource.videoHeight || 0
     ctx.imageSmoothingEnabled = false
-    drawcontain(ctx, videosource, vw, vh)
+    drawcontain(ctx, videosource, vw, vh, VIDEO_SOURCE_FILTER)
   } else if (mode === 'audio' && visualizersource) {
     ctx.imageSmoothingEnabled = false
     ctx.drawImage(visualizersource, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)

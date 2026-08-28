@@ -19,14 +19,14 @@ export function showmediamenu(player: string, helperpeerid: string) {
     rows.push(zsstextline('queue: (empty)'))
   } else {
     for (let i = 0; i < state.urls.length; ++i) {
-      const url = state.urls[i]
       const who = state.names[i]
+      const title = state.titles[i] || state.urls[i]
       const color = i === state.index ? '$yellow' : '$white'
-      const short = url.length > 44 ? `${url.slice(0, 41)}...` : url
+      const short = title.length > 44 ? `${title.slice(0, 41)}...` : title
       queuerows.push([`${color}${who}`, `${color}${short}`])
     }
     rows.push('$white  queue')
-    rows.push(...zsstexttablelines(queuerows, ['who', 'url']))
+    rows.push(...zsstexttablelines(queuerows, ['who', 'title']))
   }
 
   rows.push('$32')
