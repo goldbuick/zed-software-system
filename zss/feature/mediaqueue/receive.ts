@@ -4,7 +4,6 @@ import {
   apilog,
   apitoast,
   vmmediaqueueboard,
-  workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
@@ -43,7 +42,6 @@ import {
   mediaqueuecurrenturl,
   mediaqueuereadperplayerlimit,
 } from 'zss/feature/mediaqueue/queue'
-import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 import {
   netterminaldataconnect,
   netterminalregisterpeeropenhandler,
@@ -206,35 +204,6 @@ function toastlistenplayer(ok: boolean, text: string) {
   apierror(SOFTWARE, player, 'media', text)
 }
 
-function mediaqueueapplyworkstatus(status: string, detail?: string) {
-  const player = mediaqueuereadlistenplayer()
-  if (!player) {
-    return
-  }
-  if (
-    status === 'download-failed' ||
-    status === 'playback-failed' ||
-    status === 'queue-cleared' ||
-    status === 'playback-ended' ||
-    status === 'queue-added' ||
-    status === 'queue-pending' ||
-    status === 'queue-error' ||
-    status === 'queue-playlist' ||
-    status === 'queue-unplayable'
-  ) {
-    workstatus(SOFTWARE, player, '')
-    return
-  }
-  const label = mediaqueuestatusworklabel(status, detail)
-  if (label) {
-    workstatus(SOFTWARE, player, label)
-    return
-  }
-  if (status === 'playing') {
-    workstatus(SOFTWARE, player, '')
-  }
-}
-
 function handlequeuestatus(
   peerid: string,
   status: string,
@@ -358,7 +327,6 @@ function handlehelperdata(peerid: string, data: unknown) {
         const player = listenplayer || submitter
         if (listenplayer) {
           mediaqueueapplynowplayingstatus(peerid, data.status, data.detail)
-          mediaqueueapplyworkstatus(data.status, data.detail)
         }
         handlequeuestatus(peerid, data.status, data.detail, submitter)
         if (listenplayer) {

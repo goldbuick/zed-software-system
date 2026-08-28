@@ -35,7 +35,7 @@ const BOARD_TV_HALFTONE_PREBRIGHT = 1.37
  * inverse of prebright nothing clips; going below that only costs brightness.
  */
 export const BOARD_TV_CRT_VIDEO_CEILING = 1 / BOARD_TV_HALFTONE_PREBRIGHT
-export const BOARD_TV_CRT_VIDEO_SATURATION = 1.12
+export const BOARD_TV_CRT_VIDEO_SATURATION = 1
 
 /** No CRT chain downstream, so the video plane passes through untouched. */
 export const BOARD_TV_FLAT_VIDEO_CEILING = 1

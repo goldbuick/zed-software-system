@@ -34,7 +34,6 @@ import {
   mediaqueueclearplayerlayerstate,
 } from 'zss/feature/mediaqueue/playerlayerstate'
 import { mediaqueuenormalizeurl, mediaisqueueurl, mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
-import { mediaqueuestatusworklabel } from 'zss/feature/mediaqueue/workstatuslabel'
 
 describe('mediaqueue url normalize', () => {
   it('detects queue URLs vs peer ids', () => {
@@ -369,36 +368,6 @@ describe('mediaqueue board tv', () => {
     expect(BOARD_TV_COLS).toBe(40)
     expect(BOARD_TV_ROWS).toBe(15)
     expect(BOARD_TV_COLS).toBeGreaterThan(BOARD_TV_ROWS)
-  })
-})
-
-describe('mediaqueue workstatus labels', () => {
-  it('maps helper status to badge text', () => {
-    expect(mediaqueuestatusworklabel('queue-probe')).toBe('media request')
-    expect(mediaqueuestatusworklabel('downloading')).toBe('media fetch')
-    expect(mediaqueuestatusworklabel('extracting')).toBe('media extract')
-    expect(mediaqueuestatusworklabel('download-progress', '42|1:23')).toBe(
-      'media 42%',
-    )
-    expect(mediaqueuestatusworklabel('download-progress', '99|')).toBe(
-      'media process',
-    )
-    expect(mediaqueuestatusworklabel('transcoding')).toBe('media process')
-    expect(mediaqueuestatusworklabel('buffering')).toBe('media buffer')
-    expect(mediaqueuestatusworklabel('playing')).toBe('')
-  })
-
-  it('counts playlist scan progress and leaves a single add alone', () => {
-    expect(mediaqueuestatusworklabel('queue-probe', '3/18 Purgatory')).toBe(
-      'media 3/18',
-    )
-    // A single #media add sends the url as its detail, not a count.
-    expect(
-      mediaqueuestatusworklabel(
-        'queue-probe',
-        'https://www.youtube.com/watch?v=abc',
-      ),
-    ).toBe('media request')
   })
 })
 

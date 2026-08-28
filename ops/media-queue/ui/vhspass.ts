@@ -29,7 +29,7 @@ import {
 } from './tvcanvas'
 
 /** Emulated tape resolution (Godot default). */
-const VHS_RESOLUTION = new Vector2(320, 240)
+const VHS_RESOLUTION = new Vector2(640, 480)
 /** Crease noise amplitude. */
 const VHS_CREASE_NOISE = 1.0
 /** Crease flash opacity. */
