@@ -1,10 +1,5 @@
 import type { DataConnection } from 'peerjs'
-import {
-  apierror,
-  apilog,
-  apitoast,
-  vmmediaqueueboard,
-} from 'zss/device/api'
+import { apierror, apilog, apitoast, vmmediaqueueboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
