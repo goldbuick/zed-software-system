@@ -54,8 +54,8 @@ const VHS_BOTTOM_BORDER_JITTER = 6.0
 const VHS_NOISE_INTENSITY = 0.1
 /** Overall gain after Godot YIQ filter (restores midtones vs source). */
 const VHS_GAIN = 1.42
-/** Additive lift on dark tones only (0-1 RGB); applied after VHS, before gain. */
-const VHS_SHADOW_LIFT = 0.08
+/** Additive lift on crushed shadows (not near-pure black); applied after VHS, before gain. */
+const VHS_SHADOW_LIFT = 0.1
 
 const NOISE_SIZE = 256
 
@@ -137,7 +137,9 @@ vec3 vhxTex2D(sampler2D tex, vec2 uv, float rot) {
 
 vec3 liftshadows(vec3 rgb, float amount) {
   float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
-  float w = 1.0 - smoothstep(0.04, 0.22, luma);
+  // Bell in crushed shadows: leave near-pure black alone, fade out into midtones.
+  float w = smoothstep(0.025, 0.06, luma)
+    * (1.0 - smoothstep(0.06, 0.22, luma));
   return rgb + amount * w;
 }
 
@@ -211,7 +213,7 @@ void main() {
 
   // YIQ filter.
   col = rgb2yiq(col);
-  col = vec3(1.33, 1.1, 1.5) * col + vec3(0.1, -0.1, 0.0) * filterIntensity;
+  col = vec3(0.9, 1.1, 1.5) * col + vec3(0.1, -0.1, 0.0) * filterIntensity;
   col = yiq2rgb(col);
 
   col = liftshadows(col, shadowLift);

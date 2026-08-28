@@ -21,26 +21,6 @@ export const BOARD_TV_COMPOSITOR_WIDTH =
 export const BOARD_TV_COMPOSITOR_HEIGHT =
   BOARD_TV_ROWS * CHAR_HEIGHT * BOARD_TV_COMPOSITOR_SCALE
 
-/**
- * The CRT halftone pass multiplies every pixel by `prebright` and clamps, which
- * is tuned for flat palette art -- continuous-tone video clips its highlights
- * and reads washed out. The video plane pre-compresses its highlights so that
- * pass has the headroom it consumes. Keep in step with `prebright` in
- * zss/gadget/fx/halftone.ts.
- */
-const BOARD_TV_HALFTONE_PREBRIGHT = 1.37
-
-/**
- * Lower ceiling = more highlight headroom and a dimmer picture. At the exact
- * inverse of prebright nothing clips; going below that only costs brightness.
- */
-export const BOARD_TV_CRT_VIDEO_CEILING = 1 / BOARD_TV_HALFTONE_PREBRIGHT
-export const BOARD_TV_CRT_VIDEO_SATURATION = 1
-
-/** No CRT chain downstream, so the video plane passes through untouched. */
-export const BOARD_TV_FLAT_VIDEO_CEILING = 1
-export const BOARD_TV_FLAT_VIDEO_SATURATION = 1
-
 /** Z for board TV: just above floor tiles, below sprites. */
 export function boardtvlayerz(graphics: string, drawheight: number): number {
   const mode = normalizelayerzvariant(graphics)
