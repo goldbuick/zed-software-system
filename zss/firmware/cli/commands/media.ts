@@ -1,6 +1,7 @@
 import { apierror, bridgemediapanel } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { mediapayloadwithboardhelper } from 'zss/feature/mediaqueue/mediaguards'
+import { mediasubmiturl } from 'zss/feature/mediaqueue/mediasubmit'
 import { mediaisqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
@@ -42,11 +43,7 @@ export function registermediacommands(fw: FIRMWARE): FIRMWARE {
       const url = Array.isArray(urlwords)
         ? urlwords.join(' ')
         : String(urlwords ?? '')
-      const payload = mediapayloadwithboardhelper(player, { url })
-      if (!payload) {
-        return 0
-      }
-      bridgemediapanel(SOFTWARE, player, 'add', payload)
+      mediasubmiturl(player, { url })
       return 0
     },
   )

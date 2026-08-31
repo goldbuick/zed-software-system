@@ -43,6 +43,7 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 import { loaderbinary } from './loader/binary'
 import { loaderjson } from './loader/json'
+import { loadermedia } from './loader/media'
 import { loadertext } from './loader/text'
 
 export const LOADER_FIRMWARE = createfirmware({
@@ -61,6 +62,11 @@ export const LOADER_FIRMWARE = createfirmware({
             return [true, textreader.cursor]
           case 'lines':
             return [true, textreader.lines.length]
+          case 'eof':
+            return [
+              true,
+              textreader.cursor >= textreader.lines.length ? 1 : 0,
+            ]
         }
         break
       }
@@ -81,6 +87,11 @@ export const LOADER_FIRMWARE = createfirmware({
             return [true, binaryreader.cursor]
           case 'bytes':
             return [true, binaryreader.bytes.length]
+          case 'eof':
+            return [
+              true,
+              binaryreader.cursor >= binaryreader.bytes.length ? 1 : 0,
+            ]
         }
         break
       }
@@ -168,6 +179,11 @@ export const LOADER_FIRMWARE = createfirmware({
   .command('readline', ['text data'], loadertext)
   .command('readjson', ['JSON data'], loaderjson)
   .command('readbin', ['binary data'], loaderbinary)
+  .command(
+    'media',
+    [ARG_TYPE.NAME, ARG_TYPE.NAME, 'submit URL as display name'],
+    loadermedia,
+  )
   .command(
     'withboard',
     [ARG_TYPE.NAME, 'to target board by id, name, or stat'],

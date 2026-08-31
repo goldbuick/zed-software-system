@@ -1,9 +1,9 @@
 import { sanitizechatrostername } from 'zss/device/vm/chatrosterformat'
 import { isnumber, isstring } from 'zss/mapping/types'
 
-/** Strip characters that would add extra colon fields to `user:voice:text`. */
+/** Strip characters that would break `name|voice:text` header parsing. */
 function sanitizechatvoicehint(raw: string): string {
-  return raw.replace(/[:\r\n]+/g, '')
+  return raw.replace(/[:|\r\n]+/g, '')
 }
 
 function formatchatuser(user: unknown): string {
@@ -27,11 +27,14 @@ function formatchatvoice(voice: unknown): string {
   return sanitizechatvoicehint(trimmed)
 }
 
-/** Loader body for `chat:message*` / `chat:action*`: `user:voice:text`. */
+/**
+ * Loader body for `chat:message*` / `chat:action*`: `name|voice:text`.
+ * Voice may be empty (`alice|:hello`); always includes the pipe.
+ */
 export function formatchatmessagebody(
   user: unknown,
   voice: unknown,
   text: string,
 ): string {
-  return `${formatchatuser(user)}:${formatchatvoice(voice)}:${text}`
+  return `${formatchatuser(user)}|${formatchatvoice(voice)}:${text}`
 }

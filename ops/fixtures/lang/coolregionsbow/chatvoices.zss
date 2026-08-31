@@ -1,6 +1,6 @@
 @loader chatvoices
 @event chat:message
-#readline "(.*?):(.*?):(.*)" chatuser chatvoice chatmessage
+#readline "(.*?)\|(.*?):(.*)" chatuser chatvoice chatmessage
 
 #if chatvoice do
 #ttsqueue chatvoice chatmessage

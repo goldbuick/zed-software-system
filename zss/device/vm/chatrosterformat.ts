@@ -8,13 +8,13 @@ export type CHAT_ROSTER_ENTRY = {
 
 const CHAT_ROSTER_PRUNE_IDLE_SEC = 3600
 
-/** Strip characters that would break `name:seconds` lines. */
+/** Strip characters that would break `name:seconds` lines or chat `name|voice:text`. */
 export function sanitizechatrostername(raw: string): string {
   const trimmed = raw.trim()
   if (!trimmed) {
     return 'player'
   }
-  return trimmed.replace(/[:\r\n]+/g, '')
+  return trimmed.replace(/[:|\r\n]+/g, '')
 }
 
 /**

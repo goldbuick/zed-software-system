@@ -4,6 +4,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { PiperTTS } from './pipertts'
 import { SupertonicTTS } from './supertonictts'
+import { cleantextfortts } from './textcleaner'
 import { requestfishaudiobytesforworker, requestfishinfo } from './ttsfish'
 import { RawAudio, TextSplitterStream } from './utils'
 
@@ -209,6 +210,10 @@ export async function requestaudiobytes(
   model = '',
 ): Promise<MAYBE<ArrayBuffer>> {
   try {
+    const cleaned = cleantextfortts(input)
+    if (!cleaned) {
+      return undefined
+    }
     switch (engine) {
       case 'fish':
         return requestfishaudiobytesforworker(
@@ -216,7 +221,7 @@ export async function requestaudiobytes(
           player,
           config,
           voice,
-          input,
+          cleaned,
           model,
         )
       case 'supertonic': {
@@ -236,7 +241,7 @@ export async function requestaudiobytes(
         const synth = async (): Promise<MAYBE<ArrayBuffer>> => {
           try {
             const streamer = new TextSplitterStream()
-            streamer.push(input)
+            streamer.push(cleaned)
             streamer.close()
             const stream = supertonictts!.stream(
               streamer as AsyncIterable<string>,
@@ -290,7 +295,7 @@ export async function requestaudiobytes(
         const synth = async (): Promise<MAYBE<ArrayBuffer>> => {
           try {
             const streamer = new TextSplitterStream()
-            streamer.push(input)
+            streamer.push(cleaned)
             streamer.close()
             const stream = pipertts!.stream(streamer, {
               speakerId: parseFloat(voice),
