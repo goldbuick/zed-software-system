@@ -16,6 +16,7 @@ import { boardtvscreenrows, boardtvvideofit } from 'zss/gadget/boardtvgrid'
 import {
   mediaqueueclearlistenstate,
   mediaqueuesetboardhelper,
+  mediaqueuesetboardtvhasvideo,
   mediaqueuesethelperconnected,
 } from 'zss/feature/mediaqueue/listenstate'
 import {
@@ -315,15 +316,27 @@ describe('mediaqueue board tv', () => {
     expect(boardtvscreenrows()).toEqual({ start: 0, count: BOARD_TV_ROWS })
   })
 
+  it('boardtvshouldshow reacts when remote video lands without helper connect', () => {
+    mediaqueuesetboardhelper('board-a', 'helper-1')
+    mediaqueuesethelperconnected('helper-1', false)
+    expect(boardtvshouldshow('board-a')).toBe(false)
+    mediaqueuesetboardtvhasvideo(true)
+    expect(boardtvshouldshow('board-a')).toBe(true)
+    mediaqueueclearlistenstate()
+  })
+
   it('boardtvshouldshow matches bound board when listening', () => {
     mediaqueuesetboardhelper('board-a', 'helper-1')
     mediaqueuesethelperconnected('helper-1', true)
-    expect(boardtvshouldshow('board-a', true)).toBe(true)
-    expect(boardtvshouldshow('board-b', true)).toBe(false)
-    expect(boardtvshouldshow('board-a', false)).toBe(true)
+    mediaqueuesetboardtvhasvideo(true)
+    expect(boardtvshouldshow('board-a')).toBe(true)
+    expect(boardtvshouldshow('board-b')).toBe(false)
+    mediaqueuesetboardtvhasvideo(false)
+    expect(boardtvshouldshow('board-a')).toBe(true)
     mediaqueuesethelperconnected('helper-1', false)
-    expect(boardtvshouldshow('board-a', false)).toBe(false)
-    expect(boardtvshouldshow('board-a', true)).toBe(true)
+    expect(boardtvshouldshow('board-a')).toBe(false)
+    mediaqueuesetboardtvhasvideo(true)
+    expect(boardtvshouldshow('board-a')).toBe(true)
     mediaqueueclearlistenstate()
   })
 
@@ -331,8 +344,8 @@ describe('mediaqueue board tv', () => {
     mediaqueuesetboardhelper('board-a', 'helper-1')
     mediaqueuesetboardhelper('board-b', 'helper-1')
     mediaqueuesethelperconnected('helper-1', true)
-    expect(boardtvshouldshow('board-a', false)).toBe(true)
-    expect(boardtvshouldshow('board-b', false)).toBe(true)
+    expect(boardtvshouldshow('board-a')).toBe(true)
+    expect(boardtvshouldshow('board-b')).toBe(true)
     mediaqueueclearlistenstate()
   })
 
@@ -341,27 +354,31 @@ describe('mediaqueue board tv', () => {
     mediaqueuesetboardhelper('board-b', 'helper-2')
     mediaqueuesethelperconnected('helper-1', true)
     mediaqueuesethelperconnected('helper-2', false)
-    expect(boardtvshouldshow('board-a', false)).toBe(true)
-    expect(boardtvshouldshow('board-b', false)).toBe(false)
-    expect(boardtvshouldshow('board-b', true)).toBe(true)
+    expect(boardtvshouldshow('board-a')).toBe(true)
+    expect(boardtvshouldshow('board-b')).toBe(false)
+    mediaqueuesetboardtvhasvideo(true)
+    expect(boardtvshouldshow('board-b')).toBe(true)
     mediaqueueclearlistenstate()
   })
 
   it('boardtvshouldshow shows mount when synced helper layer is on board', () => {
     mediaqueueclearlistenstate()
     mediaqueuesetplayerlayerstate('helper-1', 'board-a', false)
-    expect(boardtvshouldshow('board-a', false)).toBe(true)
-    expect(boardtvshouldshow('board-b', false)).toBe(false)
+    expect(boardtvshouldshow('board-a')).toBe(true)
+    expect(boardtvshouldshow('board-b')).toBe(false)
     mediaqueueclearplayerlayerstate()
   })
 
   it('boardtvshouldshow does not follow join players off the connected board', () => {
     mediaqueueclearlistenstate()
-    expect(boardtvshouldshow('any-board', true)).toBe(false)
-    expect(boardtvshouldshow('any-board', false)).toBe(false)
+    mediaqueuesetboardtvhasvideo(true)
+    expect(boardtvshouldshow('any-board')).toBe(false)
+    mediaqueuesetboardtvhasvideo(false)
+    expect(boardtvshouldshow('any-board')).toBe(false)
     mediaqueuesetplayerlayerstate('helper-1', 'board-a', false)
-    expect(boardtvshouldshow('board-a', true)).toBe(true)
-    expect(boardtvshouldshow('board-b', true)).toBe(false)
+    mediaqueuesetboardtvhasvideo(true)
+    expect(boardtvshouldshow('board-a')).toBe(true)
+    expect(boardtvshouldshow('board-b')).toBe(false)
   })
 
   it('uses landscape tv size constants', () => {

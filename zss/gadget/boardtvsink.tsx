@@ -1,18 +1,11 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useState } from 'react'
-import { Euler, VideoTexture } from 'three'
+import { DoubleSide, Euler, VideoTexture } from 'three'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
-import {
-  mediaqueuehasvideo,
-  useBoardTvVisible,
-} from 'zss/feature/mediaqueue/boardtvvisible'
+import { useBoardTvVisible } from 'zss/feature/mediaqueue/boardtvvisible'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
-  BOARD_TV_CRT_VIDEO_CEILING,
-  BOARD_TV_CRT_VIDEO_SATURATION,
-  BOARD_TV_FLAT_VIDEO_CEILING,
-  BOARD_TV_FLAT_VIDEO_SATURATION,
   type BOARD_TV_LAYOUT,
   BOARD_TV_ROWS,
   boardtvisupright,
@@ -22,8 +15,6 @@ import {
 import { boardtvvideofit, boardtvvideorect } from 'zss/gadget/boardtvgrid'
 import { BoardTvSlide } from 'zss/gadget/boardtvslide'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
-import { useDeviceData } from 'zss/gadget/device'
-import { createboardtvvideomaterial } from 'zss/gadget/display/boardtvvideo'
 import { updateTexture } from 'zss/gadget/display/textures'
 import { useMedia } from 'zss/gadget/media'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
@@ -54,20 +45,6 @@ function BoardTvPlane({
   z: number
   flipvertical: boolean
 }) {
-  const crtactive = useDeviceData((state) => state.crtactive)
-  const material = useMemo(() => createboardtvvideomaterial(), [])
-  useEffect(() => () => material.dispose(), [material])
-  useEffect(() => {
-    material.uniforms.map.value = texture
-  }, [material, texture])
-  useEffect(() => {
-    material.uniforms.ceiling.value = crtactive
-      ? BOARD_TV_CRT_VIDEO_CEILING
-      : BOARD_TV_FLAT_VIDEO_CEILING
-    material.uniforms.saturation.value = crtactive
-      ? BOARD_TV_CRT_VIDEO_SATURATION
-      : BOARD_TV_FLAT_VIDEO_SATURATION
-  }, [material, crtactive])
   return (
     <group
       position={[fit.centerx, fit.centery, z]}
@@ -75,7 +52,7 @@ function BoardTvPlane({
     >
       <mesh scale={[fit.width, fit.height, 1]}>
         <planeGeometry args={[1, 1]} />
-        <primitive object={material} attach="material" />
+        <meshBasicMaterial map={texture} side={DoubleSide} />
       </mesh>
     </group>
   )
@@ -140,8 +117,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   }, [])
 
   const screen = useMedia((state) => state.screen)
-  const hasvideo = mediaqueuehasvideo(screen)
-  const wantshow = useBoardTvVisible(gadgetboard, hasvideo)
+  const wantshow = useBoardTvVisible(gadgetboard)
   const video =
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null

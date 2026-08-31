@@ -4,6 +4,7 @@ import {
   mediaqueueisboundboard,
   mediaqueueislistening,
   mediaqueuereadboardtvgatesnapshot,
+  mediaqueuereadboardtvhasvideo,
   mediaqueuereadhelperforboard,
   mediaqueuesubscribeboardtvgate,
 } from 'zss/feature/mediaqueue/listenstate'
@@ -18,7 +19,7 @@ export function mediaqueuehasvideo(screen: Record<string, unknown>): boolean {
 /** True when the board TV should render on this gadget board. */
 export function boardtvshouldshow(
   gadgetboard: string,
-  hasvideo: boolean,
+  hasvideo = mediaqueuereadboardtvhasvideo(),
 ): boolean {
   const board = gadgetboard.trim()
   if (!board) {
@@ -36,15 +37,12 @@ export function boardtvshouldshow(
   return mediaqueuehelperconnected(helper) || hasvideo
 }
 
-/** Re-renders when helper listen / connect state changes. */
-export function useBoardTvVisible(
-  gadgetboard: string,
-  hasvideo: boolean,
-): boolean {
+/** Re-renders when helper listen / connect state or board TV video changes. */
+export function useBoardTvVisible(gadgetboard: string): boolean {
   useSyncExternalStore(
     mediaqueuesubscribeboardtvgate,
     mediaqueuereadboardtvgatesnapshot,
     mediaqueuereadboardtvgatesnapshot,
   )
-  return boardtvshouldshow(gadgetboard, hasvideo)
+  return boardtvshouldshow(gadgetboard)
 }

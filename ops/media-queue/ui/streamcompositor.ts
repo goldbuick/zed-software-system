@@ -15,10 +15,9 @@ const CANVAS_HEIGHT = MQ_CANVAS_HEIGHT
 const CAPTURE_FPS = 30
 const BG = '#0a0a12'
 /**
- * Mild global pre-grade before VHS (video mode only).
- * Shadow lift is in vhspass shadowLift -- keep this light to avoid blowing highlights.
+ * leaving blank for now
  */
-const VIDEO_SOURCE_FILTER = 'brightness(1.05) contrast(1.12) saturate(1.12)'
+const VIDEO_SOURCE_FILTER = ''
 
 /** 2D scene canvas (content + HUD). Fed into the VHS pass. */
 let scenecanvas: HTMLCanvasElement | null = null

@@ -1,5 +1,7 @@
 import {
   MQ_MAX_DURATION_SEC,
+  MQ_PREP_CONCURRENCY,
+  MQ_PREP_LEAD_SEC,
   MQ_SHORT_FORM_ALLOW_DUP_SEC,
   mqqueueadd,
   mqqueueallowlongforurl,
@@ -12,6 +14,7 @@ import {
   mqqueueneedspending,
   mqqueueparsedisk,
   mqqueuepend,
+  mqqueueprepleadurls,
   mqqueuereadsnapshot,
   mqqueuereject,
   mqqueuesetlimit,
@@ -467,5 +470,92 @@ describe('mqqueueadd short-form duplicates', () => {
         durationsec: 60,
       }),
     ).toEqual({ ok: false, reason: 'duplicate' })
+  })
+})
+
+describe('mqqueueprepleadurls', () => {
+  it('matches the shared prep lead seconds constant', () => {
+    expect(MQ_PREP_LEAD_SEC).toBe(60)
+  })
+
+  it('matches the shared prep concurrency constant', () => {
+    expect(MQ_PREP_CONCURRENCY).toBe(4)
+  })
+
+  it('always includes the immediate next url', () => {
+    expect(
+      mqqueueprepleadurls(
+        [
+          { url: 'https://a.example/0', durationsec: 20 },
+          { url: 'https://a.example/1', durationsec: 90 },
+        ],
+        0,
+      ),
+    ).toEqual(['https://a.example/1'])
+  })
+
+  it('packs short clips until sum is at most the lead window', () => {
+    expect(
+      mqqueueprepleadurls(
+        [
+          { url: 'https://a.example/0', durationsec: 20 },
+          { url: 'https://a.example/1', durationsec: 20 },
+          { url: 'https://a.example/2', durationsec: 20 },
+          { url: 'https://a.example/3', durationsec: 20 },
+          { url: 'https://a.example/4', durationsec: 20 },
+        ],
+        0,
+      ),
+    ).toEqual([
+      'https://a.example/1',
+      'https://a.example/2',
+      'https://a.example/3',
+    ])
+  })
+
+  it('stops before exceeding the lead window after the first next', () => {
+    expect(
+      mqqueueprepleadurls(
+        [
+          { url: 'https://a.example/0', durationsec: 10 },
+          { url: 'https://a.example/1', durationsec: 25 },
+          { url: 'https://a.example/2', durationsec: 25 },
+          { url: 'https://a.example/3', durationsec: 25 },
+        ],
+        0,
+      ),
+    ).toEqual(['https://a.example/1', 'https://a.example/2'])
+  })
+
+  it('stops after the first next when duration is unknown', () => {
+    expect(
+      mqqueueprepleadurls(
+        [
+          { url: 'https://a.example/0', durationsec: 20 },
+          { url: 'https://a.example/1', durationsec: 0 },
+          { url: 'https://a.example/2', durationsec: 20 },
+        ],
+        0,
+      ),
+    ).toEqual(['https://a.example/1'])
+  })
+
+  it('returns a single long next url alone', () => {
+    expect(
+      mqqueueprepleadurls(
+        [
+          { url: 'https://a.example/0', durationsec: 20 },
+          { url: 'https://a.example/1', durationsec: 90 },
+          { url: 'https://a.example/2', durationsec: 20 },
+        ],
+        0,
+      ),
+    ).toEqual(['https://a.example/1'])
+  })
+
+  it('returns empty when there is no next entry', () => {
+    expect(
+      mqqueueprepleadurls([{ url: 'https://a.example/0', durationsec: 20 }], 0),
+    ).toEqual([])
   })
 })
