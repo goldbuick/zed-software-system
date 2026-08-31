@@ -6,6 +6,6 @@
 #readline "(.*?)\|(.*?):(.*)" chatuser chatvoice chattext
 #readline "(.*?)\|(.*?):(https?://\S+)$" chatuser chatvoice url
 #if url do
-#withplayerboard
-#media "$chatuser" "$url"
+ #withplayerboard
+ #media "$chatuser" "$url"
 #done

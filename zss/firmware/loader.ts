@@ -63,10 +63,7 @@ export const LOADER_FIRMWARE = createfirmware({
           case 'lines':
             return [true, textreader.lines.length]
           case 'eof':
-            return [
-              true,
-              textreader.cursor >= textreader.lines.length ? 1 : 0,
-            ]
+            return [true, textreader.cursor >= textreader.lines.length ? 1 : 0]
         }
         break
       }
