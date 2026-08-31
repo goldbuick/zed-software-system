@@ -3,10 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { DoubleSide, Euler, VideoTexture } from 'three'
 import { RUNTIME } from 'zss/config'
 import { mediaqueueensurevideosink } from 'zss/feature/mediaqueue/attachvideo'
-import {
-  mediaqueuehasvideo,
-  useBoardTvVisible,
-} from 'zss/feature/mediaqueue/boardtvvisible'
+import { useBoardTvVisible } from 'zss/feature/mediaqueue/boardtvvisible'
 import { mediaqueuebootstrap } from 'zss/feature/mediaqueue/bootstrap'
 import {
   type BOARD_TV_LAYOUT,
@@ -120,8 +117,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   }, [])
 
   const screen = useMedia((state) => state.screen)
-  const hasvideo = mediaqueuehasvideo(screen)
-  const wantshow = useBoardTvVisible(gadgetboard, hasvideo)
+  const wantshow = useBoardTvVisible(gadgetboard)
   const video =
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null

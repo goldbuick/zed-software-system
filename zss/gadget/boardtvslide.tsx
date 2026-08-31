@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { type ReactNode, useLayoutEffect, useRef } from 'react'
+import { type ReactNode, useCallback, useRef } from 'react'
 import { Group } from 'three'
 import { ispresent } from 'zss/mapping/types'
 import {
@@ -25,17 +25,21 @@ function seedy(group: Group, value: number) {
  * Hide is instant unmount (no slide-out).
  */
 export function BoardTvSlide({ edgeoff, children }: BoardTvSlideProps) {
-  const groupref = useRef<Group>(null)
+  const groupref = useRef<Group | null>(null)
   const seededref = useRef(false)
   const snapped = animsnapy(edgeoff)
 
-  useLayoutEffect(() => {
-    if (seededref.current || !groupref.current) {
-      return
-    }
-    seededref.current = true
-    seedy(groupref.current, snapped)
-  }, [snapped])
+  const bindgroupref = useCallback(
+    (group: Group | null) => {
+      groupref.current = group
+      if (!group || seededref.current) {
+        return
+      }
+      seededref.current = true
+      seedy(group, snapped)
+    },
+    [snapped],
+  )
 
   useFrame((_, delta) => {
     if (!ispresent(groupref.current)) {
@@ -44,5 +48,5 @@ export function BoardTvSlide({ edgeoff, children }: BoardTvSlideProps) {
     animpositiontotarget(groupref.current, 'y', 0, delta, SLIDE_OPEN_VELOCITY)
   })
 
-  return <group ref={groupref}>{children}</group>
+  return <group ref={bindgroupref}>{children}</group>
 }

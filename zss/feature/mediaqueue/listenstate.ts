@@ -7,6 +7,7 @@ const boardhelpers = new Map<string, string>()
 /** helper peer ids with an open DataConnection */
 const connectedhelpers = new Set<string>()
 let hasactiveroomstream = false
+let boardtvhasvideo = false
 let boardtvgateepoch = 0
 const boardtvgatesubs = new Set<() => void>()
 
@@ -15,6 +16,18 @@ function bumpboardtvgate() {
   for (const sub of boardtvgatesubs) {
     sub()
   }
+}
+
+export function mediaqueuesetboardtvhasvideo(active: boolean) {
+  if (boardtvhasvideo === active) {
+    return
+  }
+  boardtvhasvideo = active
+  bumpboardtvgate()
+}
+
+export function mediaqueuereadboardtvhasvideo(): boolean {
+  return boardtvhasvideo
 }
 
 export function mediaqueuesubscribeboardtvgate(onstorechange: () => void) {
@@ -103,6 +116,7 @@ export function mediaqueueclearlistenstate() {
   connectedhelpers.clear()
   listenplayer = ''
   hasactiveroomstream = false
+  boardtvhasvideo = false
   bumpboardtvgate()
 }
 

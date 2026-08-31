@@ -18,7 +18,7 @@ import type {
   MQ_PROBE_META,
   MQ_PROBE_PROGRESS,
 } from '../../shared/ipc'
-import { MQ_MAX_DURATION_SEC } from '../../shared/queue'
+import { MQ_MAX_DURATION_SEC, MQ_PREP_CONCURRENCY } from '../../shared/queue'
 import {
   mqismusicyoutubeurl,
   mqparseplaylistflatstdout,
@@ -1103,13 +1103,26 @@ function readjobstate(job: MQ_DOWNLOAD_JOB): MQ_JOB_STATE {
   }
 }
 
+function idleprepstate(url = ''): MQ_JOB_STATE {
+  return {
+    url,
+    phase: 'idle',
+    percent: 0,
+    status: 'idle',
+    detail: '',
+    path: '',
+    error: '',
+  }
+}
+
 export class DownloadManager {
   resourceroot: string
   cachedir: string
   ytdlphome: string
   cookiesbrowser: string
   playback: MQ_DOWNLOAD_JOB
-  prep: MQ_DOWNLOAD_JOB
+  /** Concurrent background prep downloads keyed by URL. */
+  prepjobs: Map<string, MQ_DOWNLOAD_JOB>
   registry: Map<string, MQ_REGISTRY_ENTRY>
   /** Active decode path; survives job reset so removepartialfiles cannot wipe mid-load. */
   playingpath: string
@@ -1126,10 +1139,7 @@ export class DownloadManager {
     this.ytdlphome = path.join(cachedir, 'ytdlp-home')
     this.cookiesbrowser = ''
     this.playback = createjob()
-    this.prep = createjob()
-    this.prep.progressevent = 'mq-prep-progress'
-    this.prep.readyevent = 'mq-prep-ready'
-    this.prep.errorevent = 'mq-prep-error'
+    this.prepjobs = new Map()
     this.registry = new Map()
     this.playingpath = ''
     this.playingartwork = ''
@@ -1182,19 +1192,60 @@ export class DownloadManager {
   }
 
   readprepstate(): MQ_JOB_STATE {
-    const entry = this.prep.url ? this.registry.get(this.prep.url) : null
-    if (entry && entry.state === 'ready') {
-      return {
-        url: this.prep.url,
-        phase: 'ready',
-        percent: 100,
-        status: 'ready',
-        detail: '',
-        path: entry.path,
-        error: '',
+    for (const job of this.prepjobs.values()) {
+      if (job.phase === 'downloading') {
+        return readjobstate(job)
       }
     }
-    return readjobstate(this.prep)
+    for (const [url, job] of this.prepjobs) {
+      const entry = this.registry.get(url)
+      if (entry && entry.state === 'ready') {
+        return {
+          url,
+          phase: 'ready',
+          percent: 100,
+          status: 'ready',
+          detail: '',
+          path: entry.path,
+          error: '',
+        }
+      }
+      if (job.phase === 'ready') {
+        return readjobstate(job)
+      }
+    }
+    return idleprepstate()
+  }
+
+  listprepstates(): MQ_JOB_STATE[] {
+    const out: MQ_JOB_STATE[] = []
+    for (const [url, job] of this.prepjobs) {
+      const entry = this.registry.get(url)
+      if (entry && entry.state === 'ready') {
+        out.push({
+          url,
+          phase: 'ready',
+          percent: 100,
+          status: 'ready',
+          detail: '',
+          path: entry.path,
+          error: '',
+        })
+        continue
+      }
+      out.push(readjobstate(job))
+    }
+    return out
+  }
+
+  countprepdownloading(): number {
+    let count = 0
+    for (const job of this.prepjobs.values()) {
+      if (job.phase === 'downloading') {
+        count += 1
+      }
+    }
+    return count
   }
 
   protectedpaths(): string[] {
@@ -1220,11 +1271,13 @@ export class DownloadManager {
         paths.push(playbackart)
       }
     }
-    if (this.prep.filepath) {
-      paths.push(this.prep.filepath)
-      const prepart = resolveartworkpath(this.prep.filepath)
-      if (prepart) {
-        paths.push(prepart)
+    for (const job of this.prepjobs.values()) {
+      if (job.filepath) {
+        paths.push(job.filepath)
+        const prepart = resolveartworkpath(job.filepath)
+        if (prepart) {
+          paths.push(prepart)
+        }
       }
     }
     return paths
@@ -1276,8 +1329,10 @@ export class DownloadManager {
     // Keep the registry row so a duplicate short-form queue slot can reuse
     // the same download; prunequeuecache drops it when the URL leaves the queue.
     this.claimplayingmedia(entry.path, entry.artwork)
-    if (this.prep.url === trimmed) {
-      resetjob(this.prep)
+    const prepjob = this.prepjobs.get(trimmed)
+    if (prepjob) {
+      resetjob(prepjob)
+      this.prepjobs.delete(trimmed)
     }
     return {
       path: entry.path,
@@ -1342,7 +1397,11 @@ export class DownloadManager {
     this.prepretryattempt += 1
     this.prepretrytimer = setTimeout(() => {
       this.prepretrytimer = null
-      if (this.prep.url !== url || this.prep.phase === 'ready') {
+      const job = this.prepjobs.get(url)
+      if (job && job.phase === 'ready') {
+        return
+      }
+      if (this.readregistryready(url)) {
         return
       }
       void this.startprep(url, emit, this.prepallowlong, this.prepaudioonly)
@@ -1404,9 +1463,16 @@ export class DownloadManager {
   cancelprep(): void {
     this.clearprepretry()
     this.prepemit = null
-    this.canceljob(this.prep)
-    this.canceljobpartials(this.prep)
-    this.prep.url = ''
+    for (const job of this.prepjobs.values()) {
+      this.canceljob(job)
+      if (job.phase === 'downloading') {
+        resetjob(job)
+      } else {
+        job.cancelled = false
+      }
+    }
+    this.prepjobs.clear()
+    removepartialfiles(this.cachedir, this.protectedpaths())
   }
 
   cleardownloads(): MQ_CLEAR_RESULT {
@@ -1823,8 +1889,13 @@ export class DownloadManager {
     audioonly = false,
   ): Promise<MQ_DOWNLOAD_STATE> {
     const trimmed = String(url || '').trim()
-    if (this.prep.url === trimmed) {
-      this.cancelprep()
+    // Adopt an in-flight prep for this URL instead of canceling it -- short
+    // clips otherwise thrash when the playhead catches the lead download.
+    const prepjob = this.prepjobs.get(trimmed)
+    if (prepjob && prepjob.phase === 'downloading' && prepjob.activethread) {
+      try {
+        await prepjob.activethread
+      } catch (_) {}
     }
     this.canceljob(this.playback)
     this.canceljobpartials(this.playback)
@@ -1887,42 +1958,55 @@ export class DownloadManager {
 
     const ready = this.readregistryready(trimmed)
     if (ready) {
-      this.prep.url = trimmed
-      this.prep.phase = 'ready'
-      this.prep.percent = 100
-      this.prep.status = 'ready'
-      this.prep.filepath = ready.path
-      this.prep.title = ready.title
-      return this.readprepstate()
+      const job = this.prepjobs.get(trimmed) || createjob()
+      job.url = trimmed
+      job.phase = 'ready'
+      job.percent = 100
+      job.status = 'ready'
+      job.filepath = ready.path
+      job.title = ready.title
+      this.prepjobs.set(trimmed, job)
+      return readjobstate(job)
     }
 
-    if (this.prep.url === trimmed && this.prep.phase === 'downloading') {
-      return this.readprepstate()
+    const existing = this.prepjobs.get(trimmed)
+    if (existing && existing.phase === 'downloading') {
+      return readjobstate(existing)
     }
 
-    if (this.prep.url !== trimmed) {
-      this.cancelprep()
+    if (this.countprepdownloading() >= MQ_PREP_CONCURRENCY) {
+      return {
+        url: trimmed,
+        phase: 'idle',
+        percent: 0,
+        status: 'queued',
+        detail: '',
+        path: '',
+        error: '',
+      }
     }
 
+    const job = createjob()
+    job.url = trimmed
+    job.phase = 'downloading'
+    job.progressevent = 'mq-prep-progress'
+    job.readyevent = 'mq-prep-ready'
+    job.errorevent = 'mq-prep-error'
+    this.prepjobs.set(trimmed, job)
     this.prepemit = emit
     this.prepallowlong = allowlong
     this.prepaudioonly = audioonly
     this.clearprepretry()
-    resetjob(this.prep)
-    this.prep.url = trimmed
-    this.prep.progressevent = 'mq-prep-progress'
-    this.prep.readyevent = 'mq-prep-ready'
-    this.prep.errorevent = 'mq-prep-error'
 
     const run = async (): Promise<void> => {
       const payload = await this.runjobdownload(
-        this.prep,
+        job,
         trimmed,
         emit,
         allowlong,
         audioonly,
       )
-      if (jobcancelled(this.prep)) {
+      if (jobcancelled(job)) {
         return
       }
       if (payload) {
@@ -1930,18 +2014,18 @@ export class DownloadManager {
         this.prepretryattempt = 0
         return
       }
-      if (this.prep.url === trimmed && this.prepemit) {
+      if (this.prepjobs.get(trimmed) === job && this.prepemit) {
         this.scheduleprepretry(trimmed, this.prepemit)
       }
     }
 
-    this.prep.activethread = run().catch(() => {
-      if (this.prep.url === trimmed && this.prepemit) {
+    job.activethread = run().catch(() => {
+      if (this.prepjobs.get(trimmed) === job && this.prepemit) {
         this.scheduleprepretry(trimmed, this.prepemit)
       }
     })
 
-    return this.readprepstate()
+    return readjobstate(job)
   }
 
   seedregistryready(url: string, meta: MQ_REGISTRY_META): void {

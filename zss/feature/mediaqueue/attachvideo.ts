@@ -8,6 +8,7 @@ import {
   mediaqueuewireaudiogestureretry,
 } from 'zss/feature/mediaqueue/boardtvaudio'
 import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
+import { mediaqueuesetboardtvhasvideo } from 'zss/feature/mediaqueue/listenstate'
 import { mediaqueueregistervideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
@@ -15,6 +16,7 @@ import { ispresent } from 'zss/mapping/types'
 let remotevideo: HTMLVideoElement | undefined
 let registered = false
 let wiredstream: MediaStream | undefined
+let wiredpeerkey = ''
 let streamtracklistener: ((evt: MediaStreamTrackEvent) => void) | undefined
 let attachedtrackids = ''
 
@@ -31,21 +33,26 @@ function clearstreamtracklistener() {
     wiredstream.removeEventListener('addtrack', streamtracklistener)
   }
   wiredstream = undefined
+  wiredpeerkey = ''
   streamtracklistener = undefined
 }
 
-function wirestreamtracks(stream: MediaStream) {
-  if (wiredstream === stream) {
+function wirestreamtracks(peerkey: string, stream: MediaStream) {
+  if (wiredstream === stream && wiredpeerkey === peerkey) {
     return
   }
   clearstreamtracklistener()
   wiredstream = stream
+  wiredpeerkey = peerkey
   streamtracklistener = (evt) => {
-    if (!ispresent(remotevideo)) {
-      return
-    }
     const player = registerreadplayer()
     apilog(SOFTWARE, player, `media board TV track added: ${evt.track.kind}`)
+    if (!ispresent(remotevideo)) {
+      if (evt.track.kind === 'video' && wiredstream === stream) {
+        attachremotestream(peerkey, stream)
+      }
+      return
+    }
     remotevideo.srcObject = stream
     mediaqueuebindremotevideo(remotevideo)
   }
@@ -63,11 +70,12 @@ function clearremotevideo(peerkey: string) {
   mediaqueueclearremotevideo()
   clearstreamtracklistener()
   useMedia.getState().setscreen(peerkey, undefined)
+  mediaqueuesetboardtvhasvideo(false)
 }
 
 function attachremotestream(peerkey: string, stream: MediaStream) {
   const trackids = streamtrackids(stream)
-  wirestreamtracks(stream)
+  wirestreamtracks(peerkey, stream)
 
   if (
     ispresent(remotevideo) &&
@@ -80,7 +88,7 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
   }
 
   clearremotevideo(peerkey)
-  wirestreamtracks(stream)
+  wirestreamtracks(peerkey, stream)
   attachedtrackids = trackids
 
   if (stream.getVideoTracks().length === 0) {
@@ -108,6 +116,7 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
       return
     }
     useMedia.getState().setscreen(peerkey, video)
+    mediaqueuesetboardtvhasvideo(true)
   }
 
   video.addEventListener('loadeddata', publishvideo)

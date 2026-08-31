@@ -47,8 +47,8 @@ import {
   helperqueuecurrenturl,
   helperqueuedurationforurl,
   helperqueuelimit,
-  helperqueuenexturl,
   helperqueuepend,
+  helperqueueprepleadurls,
   helperqueuereaddisk,
   helperqueuereadsnapshot,
   helperqueuereject,
@@ -166,6 +166,10 @@ let preppolltimer: number | null = null
 let endedvideo: MQ_ENDED_MEDIA | null = null
 let prepstate: MQ_PREP_VIEW | null = null
 let preptarget = ''
+/** Lead-window URLs confirmed registry-ready during the current prep chain. */
+const prepreadurls = new Set<string>()
+/** Lead-window URLs currently downloading (url -> percent). */
+const prepdownloading = new Map<string, number>()
 
 function mqdevconfig(): MQ_DEV_CONFIG | null {
   return typeof window.mqdev === 'object' && window.mqdev ? window.mqdev : null
@@ -263,24 +267,41 @@ function handleprepprogress(payload: unknown) {
 function startpreppoll() {
   clearpreppoll()
   preppolltimer = setInterval(function () {
-    if (!preptarget) {
-      clearpreppoll()
-      return
-    }
-    void invoke('read_media_prep_state')
-      .then(function (state) {
-        if (!preptarget || !state) {
-          return
+    void invoke('read_media_prep_jobs')
+      .then(function (jobs) {
+        const leadset = new Set(helperqueueprepleadurls())
+        let anydownloading = false
+        let becameready = false
+        prepdownloading.clear()
+        const list = Array.isArray(jobs) ? jobs : []
+        for (let i = 0; i < list.length; ++i) {
+          const job = list[i]
+          const url = String(job && job.url ? job.url : '').trim()
+          if (!url || !leadset.has(url)) {
+            continue
+          }
+          if (job.phase === 'downloading') {
+            anydownloading = true
+            prepdownloading.set(url, Number(job.percent || 0))
+            preptarget = url
+            prepstate = {
+              url,
+              phase: 'downloading',
+              percent: Number(job.percent || 0),
+              status: job.status ? String(job.status) : 'downloading',
+              detail: job.detail ? String(job.detail) : '',
+            }
+          } else if (job.phase === 'ready') {
+            if (!prepreadurls.has(url)) {
+              prepreadurls.add(url)
+              becameready = true
+            }
+          }
         }
-        if (state.url && state.url !== preptarget) {
-          return
-        }
-        prepstate = state
-        if (state.phase === 'ready' || state.phase === 'downloading') {
-          renderqueue()
-        }
-        if (state.phase === 'ready' || state.phase === 'idle') {
+        renderqueue()
+        if (becameready || !anydownloading) {
           clearpreppoll()
+          void reconcileprep()
         }
       })
       .catch(function () {})
@@ -667,19 +688,28 @@ function setlink(text: string | null, detail?: string) {
   schedulefitwindow()
 }
 
-function prepbadge(index: number, url: string) {
-  const nextindex = helperqueuereadsnapshot().index + 1
-  if (index !== nextindex || !url || url !== preptarget) {
+function prepbadge(_index: number, url: string) {
+  if (!url) {
     return ''
   }
-  if (prepstate && prepstate.phase === 'ready') {
-    return ' [ready]'
-  }
-  if (prepstate && prepstate.phase === 'downloading') {
-    const pct = Math.round(Number(prepstate.percent || 0))
+  if (prepdownloading.has(url)) {
+    const pct = Math.round(Number(prepdownloading.get(url) || 0))
     return ' [prep ' + pct + '%]'
   }
-  return ' [prep]'
+  if (url === preptarget) {
+    if (prepstate && prepstate.phase === 'ready') {
+      return ' [ready]'
+    }
+    if (prepstate && prepstate.phase === 'downloading') {
+      const pct = Math.round(Number(prepstate.percent || 0))
+      return ' [prep ' + pct + '%]'
+    }
+    return ' [prep]'
+  }
+  if (prepreadurls.has(url)) {
+    return ' [ready]'
+  }
+  return ''
 }
 
 function renderqueue() {
@@ -720,10 +750,12 @@ async function reconcileprep() {
   if (readdevplaybackpath()) {
     return
   }
-  const nexturl = helperqueuenexturl()
-  if (!nexturl) {
+  const leadurls = helperqueueprepleadurls()
+  if (!leadurls.length) {
     preptarget = ''
     prepstate = null
+    prepreadurls.clear()
+    prepdownloading.clear()
     clearpreppoll()
     try {
       await invoke('cancel_media_prep')
@@ -731,33 +763,55 @@ async function reconcileprep() {
     renderqueue()
     return
   }
-  if (preptarget === nexturl && prepstate && prepstate.phase === 'ready') {
-    renderqueue()
-    return
+  const leadset = new Set(leadurls)
+  for (const url of Array.from(prepreadurls)) {
+    if (!leadset.has(url)) {
+      prepreadurls.delete(url)
+    }
+  }
+  for (const url of Array.from(prepdownloading.keys())) {
+    if (!leadset.has(url)) {
+      prepdownloading.delete(url)
+    }
   }
   try {
-    const state = await invoke('read_media_prep_state')
-    if (
-      state &&
-      state.url === nexturl &&
-      (state.phase === 'downloading' || state.phase === 'ready')
-    ) {
-      preptarget = nexturl
-      prepstate = state
-      if (state.phase === 'downloading') {
-        startpreppoll()
+    let anydownloading = false
+    prepdownloading.clear()
+    for (let i = 0; i < leadurls.length; ++i) {
+      const url = leadurls[i]
+      if (prepreadurls.has(url)) {
+        continue
       }
-      renderqueue()
-      return
+      const nextstate = await invoke('start_media_prep', {
+        url,
+        allowlong: helperqueueallowlong(url),
+        audioonly: helperqueueaudioonly(url),
+      })
+      if (nextstate && nextstate.phase === 'ready') {
+        prepreadurls.add(url)
+        preptarget = url
+        prepstate = nextstate
+        continue
+      }
+      if (nextstate && nextstate.phase === 'downloading') {
+        anydownloading = true
+        prepdownloading.set(url, Number(nextstate.percent || 0))
+        preptarget = url
+        prepstate = nextstate
+        continue
+      }
+      // idle/queued: at concurrency cap -- keep polling in-flight jobs
     }
-    preptarget = nexturl
-    prepstate = { url: nexturl, phase: 'downloading', percent: 0 }
-    await invoke('start_media_prep', {
-      url: nexturl,
-      allowlong: helperqueueallowlong(nexturl),
-      audioonly: helperqueueaudioonly(nexturl),
-    })
-    startpreppoll()
+    if (anydownloading) {
+      startpreppoll()
+    } else {
+      clearpreppoll()
+      if (prepreadurls.size > 0) {
+        const last = leadurls[leadurls.length - 1] || ''
+        preptarget = last
+        prepstate = last ? { url: last, phase: 'ready', percent: 100 } : null
+      }
+    }
     renderqueue()
   } catch (_) {
     renderqueue()
@@ -2058,6 +2112,8 @@ async function cleardownloadcache() {
     await endcall()
     preptarget = ''
     prepstate = null
+    prepreadurls.clear()
+    prepdownloading.clear()
     clearpreppoll()
     const result = await invoke('clear_media_downloads')
     const count = result && result.deletedCount ? result.deletedCount : 0

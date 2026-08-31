@@ -267,6 +267,10 @@ function wireipc(): void {
     requiredownloads().readprepstate(),
   )
 
+  handleinvoke('read_media_prep_jobs', () =>
+    requiredownloads().listprepstates(),
+  )
+
   handleinvoke('take_media_prep_ready', (args) => {
     const url = String((args && args.url) || '')
     return requiredownloads().takeprepready(url)

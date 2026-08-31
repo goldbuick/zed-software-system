@@ -7,6 +7,10 @@ export const MQ_MAX_DURATION_SEC = 10 * 60
 export const MQ_PLAYED_CAP = 100
 /** Allow another queue entry for the same URL when duration is this many seconds or less. */
 export const MQ_SHORT_FORM_ALLOW_DUP_SEC = 30
+/** Background-prep lead window: keep short upcoming items ready up to this many seconds. */
+export const MQ_PREP_LEAD_SEC = 60
+/** Max concurrent background prep downloads (short clips need parallel lead fill). */
+export const MQ_PREP_CONCURRENCY = 4
 
 /** True when a known short duration may bypass duplicate rejection. */
 export function mqqueueshortformallowsduplicate(durationsec: number): boolean {
@@ -15,6 +19,58 @@ export function mqqueueshortformallowsduplicate(durationsec: number): boolean {
     durationsec > 0 &&
     durationsec <= MQ_SHORT_FORM_ALLOW_DUP_SEC
   )
+}
+
+type MQ_PREP_LEAD_ENTRY = {
+  url: string
+  durationsec: number
+}
+
+/**
+ * Upcoming URLs to keep registry-ready for a duration lead window.
+ * Always includes the immediate next URL. Further entries are packed while the
+ * sum of known positive durations stays <= leadsec. Unknown duration after the
+ * first next stops the window (cannot budget lead time).
+ */
+export function mqqueueprepleadurls(
+  entries: MQ_PREP_LEAD_ENTRY[],
+  currentindex: number,
+  leadsec: number = MQ_PREP_LEAD_SEC,
+): string[] {
+  const out: string[] = []
+  let sum = 0
+  const start = Math.max(0, Math.floor(currentindex) + 1)
+  const cap =
+    Number.isFinite(leadsec) && leadsec > 0 ? leadsec : MQ_PREP_LEAD_SEC
+  for (let i = start; i < entries.length; ++i) {
+    const url = String(entries[i]?.url || '').trim()
+    if (!url) {
+      continue
+    }
+    const durationsec = Number(entries[i].durationsec)
+    const knownduration =
+      Number.isFinite(durationsec) && durationsec > 0 ? durationsec : 0
+    if (out.length === 0) {
+      out.push(url)
+      if (knownduration <= 0) {
+        break
+      }
+      sum += knownduration
+      if (sum >= cap) {
+        break
+      }
+      continue
+    }
+    if (knownduration <= 0) {
+      break
+    }
+    if (sum + knownduration > cap) {
+      break
+    }
+    out.push(url)
+    sum += knownduration
+  }
+  return out
 }
 
 export type MQ_QUEUE_ENTRY = {

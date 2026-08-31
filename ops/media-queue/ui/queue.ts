@@ -17,6 +17,7 @@ import {
   mqqueuecurrenturl,
   mqqueuedurationforkey,
   mqqueuepend,
+  mqqueueprepleadurls,
   mqqueuereaddisk,
   mqqueuereadsnapshot,
   mqqueuereject,
@@ -64,6 +65,12 @@ export function helperqueueaudioonly(url: string): boolean {
 export function helperqueuenexturl(): string {
   const snap = mqqueuereadsnapshot(helperqueue)
   return String(snap.urls[snap.index + 1] || '').trim()
+}
+
+/** Upcoming URLs to background-prep within the duration lead window. */
+export function helperqueueprepleadurls(): string[] {
+  const snap = mqqueuereadsnapshot(helperqueue)
+  return mqqueueprepleadurls(helperqueue.entries, snap.index)
 }
 
 export function helperqueuedurationforurl(url: string): number {
