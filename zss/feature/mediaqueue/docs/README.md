@@ -10,6 +10,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper. Each helper owns 
 | [`playlistcopy.ts`](../playlistcopy.ts)                                                           | Clipboard `submittedAt title url` lines for `#media playlist`                                                                  |
 | [`urlnormalize.ts`](../urlnormalize.ts)                                                           | Dedupe keys for queue URLs (cafe submit path still normalizes for chat shortcuts)                                              |
 | [`mediaguards.ts`](../mediaguards.ts)                                                             | Submit vs manage permission checks                                                                                             |
+| [`mediasubmit.ts`](../mediasubmit.ts)                                                             | Shared VM `#media` URL submit (`bridgemediapanel` add)                                                                         |
 | [`mediamenu.ts`](../mediamenu.ts) / [`queuemenu.ts`](../queuemenu.ts) / [`panel.ts`](../panel.ts) | `#media` / `#queue` CLI + bridge actions (RPCs after bind)                                                                     |
 | [`playerconnect.ts`](../playerconnect.ts)                                                         | Direct helper `MediaConnection`; leave board disconnects, return reconnects while still bound; dead ICE tears down and redials |
 | [`broadcastaudio.ts`](../broadcastaudio.ts)                                                       | Mix board TV audio into `#broadcast` compositor (same board only)                                                              |
@@ -23,6 +24,7 @@ Receive path for the **Zed Cafe Media Queue** Electron helper. Each helper owns 
 | Action                                            | Who                | Permission               |
 | ------------------------------------------------- | ------------------ | ------------------------ |
 | `#media`, `#media <url>`, `#media playlist`       | Players (creative) | `speaker` (`media`)      |
+| loader `#media <name> <url>`                      | Operator (+ `speaker`) | `speaker` (`media`)  |
 | `#queue`, `#queue` bind, skip, clear, stop, limit, approve, reject | Admin / mod        | `bridge` (`mediamanage`) |
 
 `#media` / `#media <url>` use the helper painted on the **player's current board** (`mediaqueuehelperpeerid`). Other boards have no queue until bound: host and join players off a bound board cannot list or submit for that board. `#media <url>` also needs the host DataConnection to that board's helper (`#queue <peerid>` on that board first). Queue is FIFO autoplay on the helper: finished items are removed; failures auto-skip. Media with unknown duration or longer than 10 minutes waits on the `#queue` needs-approval list until an admin approves (then downloads without the duration filter) or rejects.
@@ -45,6 +47,7 @@ A signaling drop on `terminal.zed.cafe` should resume the control plane and play
 | `#media`           | Queue list on the player's current board (fails if that board has no helper); Copy URLs copies played + current lines to the clipboard |
 | `#media <url>`     | Submit URL to the helper on the player's current board; toast `media requested` on send, toast `media added` when the helper accepts; failures use `apierror`; prep/playback phase labels burn into the board TV compositor HUD |
 | `#media playlist`  | Copy played then current queue as `submittedAt title url` lines (host clipboard)                                                                                                                                        |
+| loader `#media <name> <url>` | Loader firmware only: submit with explicit queue display name (e.g. Twitch `chatuser`). Operator + `speaker` required; use `#withplayerboard` for helper board. See [`loader.md`](../../../firmware/docs/loader.md). |
 | bare chat URL      | Pasting a whole-message allowlisted http(s) URL is equivalent to `#media <url>` (speaker required; see `mediaischatqueueurl`). Join submits are handled on the host helper tab (`bridge:mediapanel` is not forwarded). |
 | `#queue`           | Admin: control menu for the current board's helper (skip / clear / stop links + limit line + pending approve/reject)                                                                                                                                  |
 | `#queue <peerid>`  | Admin: bind (or replace) helper on current board                                                                                                                                                                                    |

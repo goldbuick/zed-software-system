@@ -21,22 +21,23 @@ title: loadertext.ts
 
 `#readline seek <cursor>`
 
-Sets the line cursor to the given index (0-based). Clamped to valid range.
+Sets the line cursor (0-based). Clamped to `[0, lines]` — **`cursor = lines` is EOF** (one past the last line).
 
-### line
+### next
 
-`#readline line`
+`#readline next`
 
-Advances to the next line. Cursor is clamped to `[0, lines.length - 1]`.
+Advances the cursor by one (clamped to EOF).
 
 ### Regex Capture
 
 `#readline <regex> <name1> [name2] …`
 
-- Matches `regex` (case-insensitive) against the current line
+- Matches `regex` (case-insensitive) against the **current** line
 - Capture group 1 → `name1`, group 2 → `name2`, etc.
-- Unmatched captures get `0`
-- Remaining words are parsed as stat names
+- Unmatched captures on a real line get `0`
+- **Does not advance** — use `#readline next` to move
+- On **EOF** (`cursor = lines`): every capture name is set to `''` (empty string)
 
 **Example**:
 
@@ -44,11 +45,36 @@ Advances to the next line. Cursor is clamped to `[0, lines.length - 1]`.
 #readline ^(\d+)\s+(\w+)$ count label
 ```
 
-If line is `42 foo`, sets `count=42`, `label='foo'`.
+If line is `42 foo`, sets `count=42`, `label='foo'`. Cursor stays put.
+
+### End of file
+
+| Check | Meaning |
+|-------|---------|
+| `#while not eof do` / `#if not eof` | Readable `eof` flag: `1` when `cursor = lines`, else `0` |
+| `#if cursor = lines` | Same EOF condition via cursor |
+| empty capture after `#readline` | On EOF, captures are `''` (vs `0` for a failed match on a real line) |
+
+Loop sketch:
+
+```
+#while not eof do
+#readline "^(.*)$" line
+' ... use $line ...
+#readline next
+#done
+```
+
+Rematch the same line (cursor does not move on regex):
+
+```
+#readline "(.*?)\|(.*?):(.*)" chatuser chatvoice chattext
+#readline "(.*?)\|(.*?):(https?://\S+)$" chatuser chatvoice url
+```
 
 ## Implementation
 
-- Uses `textreader.lines[textreader.cursor]` for current line
+- Uses `textreader.lines[textreader.cursor]` for current line when `cursor < lines`
 - `new RegExp(kind, 'i')` for pattern
 - `result[m]` for capture groups (m=1,2,…)
-- Cursor is not advanced by regex; use `line` to move to next line
+- Cursor range is `[0, lines.length]` inclusive

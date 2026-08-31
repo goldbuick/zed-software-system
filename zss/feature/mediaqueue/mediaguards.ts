@@ -1,11 +1,14 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { sanitizechatrostername } from 'zss/device/vm/chatrosterformat'
 import { mediaplayerdisplayname } from 'zss/feature/mediaqueue/playerdisplayname'
-import { isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryplayerallowedcommand } from 'zss/memory/permissions'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryisoperator } from 'zss/memory/session'
+import type { BOARD } from 'zss/memory/types'
+import { READ_CONTEXT } from 'zss/words/reader'
 
 /** Run on VM thread only (chip / vm:media). Bridge MEMORY has no operator/token. */
 export function mediacanmanagequeue(player: string): boolean {
@@ -26,9 +29,17 @@ export function mediarequiremanageonvm(
   return true
 }
 
-/** Helper PeerJS id painted on the player's current board, or empty. VM only. */
+/** Prefer loader `#withboard` / `#withplayerboard` targeting, else player board. */
+export function mediaresolveboard(player: string): BOARD | undefined {
+  if (ispresent(READ_CONTEXT.board)) {
+    return READ_CONTEXT.board
+  }
+  return memoryreadplayerboard(player)
+}
+
+/** Helper PeerJS id on the resolved board, or empty. VM only. */
 export function mediareadboardhelperpeerid(player: string): string {
-  const board = memoryreadplayerboard(player)
+  const board = mediaresolveboard(player)
   const helper = memoryreadboardruntime(board)?.mediaqueuehelperpeerid
   return isstring(helper) ? helper.trim() : ''
 }
@@ -49,15 +60,20 @@ export function mediarequireboardhelper(player: string): string {
 /**
  * Bridge MEMORY has no operator/token or player flags, so the VM resolves both
  * the manage grant and the submitter name here and ships them in the payload.
+ * Explicit `data.displayname` (loader `#media <name> <url>`) wins over player flag.
  */
 export function mediapayloadwithmanage(
   player: string,
   data?: Record<string, unknown>,
 ): Record<string, unknown> {
+  const explicit = data?.displayname
+  const displayname = isstring(explicit)
+    ? sanitizechatrostername(explicit)
+    : mediaplayerdisplayname(player)
   return {
     ...data,
     canmanage: mediacanmanagequeue(player),
-    displayname: mediaplayerdisplayname(player),
+    displayname,
   }
 }
 
@@ -70,7 +86,7 @@ export function mediapayloadwithboardhelper(
   if (!helperpeerid) {
     return undefined
   }
-  const board = memoryreadplayerboard(player)
+  const board = mediaresolveboard(player)
   return mediapayloadwithmanage(player, {
     ...data,
     helperpeerid,

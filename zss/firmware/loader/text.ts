@@ -6,6 +6,19 @@ import { memoryloadercontent } from 'zss/memory/loader'
 import { readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
+/** Inclusive EOF index: cursor may equal lines.length. */
+function cursormax(textreader: TEXT_READER) {
+  return textreader.lines.length
+}
+
+function iseof(textreader: TEXT_READER) {
+  return textreader.cursor >= textreader.lines.length
+}
+
+function advancecursor(textreader: TEXT_READER) {
+  textreader.cursor = clamp(textreader.cursor + 1, 0, cursormax(textreader))
+}
+
 export const loadertext: FIRMWARE_COMMAND = (chip, words) => {
   const textreader: TEXT_READER = memoryloadercontent(chip.id())
   if (!ispresent(textreader)) {
@@ -17,28 +30,29 @@ export const loadertext: FIRMWARE_COMMAND = (chip, words) => {
   switch (lkind) {
     case 'seek': {
       const [cursor] = readargs(words, ii, [ARG_TYPE.NUMBER])
-      textreader.cursor = clamp(cursor, 0, textreader.lines.length - 1)
+      textreader.cursor = clamp(cursor, 0, cursormax(textreader))
       break
     }
-    case 'line':
-      textreader.cursor = clamp(
-        textreader.cursor + 1,
-        0,
-        textreader.lines.length - 1,
-      )
+    case 'next':
+      advancecursor(textreader)
       break
     default: {
-      // we have pattern + names for captures
+      // pattern + capture names; does not advance (use #readline next)
+      if (iseof(textreader)) {
+        for (let i = ii; i < words.length; ) {
+          const [name, next] = readargs(words, i, [ARG_TYPE.NAME])
+          chip.set(name, '')
+          i = next
+        }
+        break
+      }
       const line = textreader.lines[textreader.cursor] ?? ''
       const regex = new RegExp(kind, 'i')
       const result = regex.exec(line) ?? []
       let m = 1
       for (let i = ii; i < words.length; ) {
-        // read next name to set
         const [name, next] = readargs(words, i, [ARG_TYPE.NAME])
-        // set entry, set to zero if we failed the regex match
         chip.set(name, result[m] ?? 0)
-        // next entry
         ++m
         i = next
       }

@@ -110,7 +110,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      'alice::hello world',
+      'alice|:hello world',
     )
   })
 
@@ -135,7 +135,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      'alice:F1:hello world',
+      'alice|F1:hello world',
     )
   })
 
@@ -160,7 +160,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      'alice:3:hello world',
+      'alice|3:hello world',
     )
   })
 
@@ -206,7 +206,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      `alice::${url}`,
+      `alice|:${url}`,
     )
   })
 
@@ -234,7 +234,7 @@ describe('ticker without chat', () => {
       undefined,
       'text',
       'chat:message:player',
-      `alice::${url}`,
+      `alice|:${url}`,
     )
   })
 })

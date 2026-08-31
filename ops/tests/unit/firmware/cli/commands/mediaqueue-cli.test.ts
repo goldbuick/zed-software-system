@@ -7,15 +7,25 @@ describe('media.ts CLI split', () => {
       join(process.cwd(), 'zss/firmware/cli/commands/media.ts'),
       'utf8',
     )
-    expect(src).toContain("bridgemediapanel")
+    expect(src).toContain('bridgemediapanel')
     expect(src).toContain("'menu'")
-    expect(src).toContain("'add'")
     expect(src).toContain("'playlist'")
     expect(src).toContain('mediaisqueueurl')
+    expect(src).toContain('mediasubmiturl')
     expect(src).not.toContain('bridgequeuepanel')
     expect(src).not.toContain("'bind'")
     expect(src).not.toContain("'skip'")
     expect(src).not.toContain("'add' === cmd")
+  })
+
+  it('mediasubmiturl owns the add path', () => {
+    const src = readFileSync(
+      join(process.cwd(), 'zss/feature/mediaqueue/mediasubmit.ts'),
+      'utf8',
+    )
+    expect(src).toContain("bridgemediapanel")
+    expect(src).toContain("'add'")
+    expect(src).toContain('mediapayloadwithboardhelper')
   })
 })
 

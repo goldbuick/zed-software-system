@@ -4,8 +4,9 @@ import {
 } from 'zss/device/vm/chatrosterformat'
 
 describe('chatrosterformat', () => {
-  it('sanitizechatrostername strips colon and newlines', () => {
+  it('sanitizechatrostername strips colon pipe and newlines', () => {
     expect(sanitizechatrostername(' a:b\nc ')).toBe('abc')
+    expect(sanitizechatrostername(' a|b ')).toBe('ab')
     expect(sanitizechatrostername('   ')).toBe('player')
   })
 

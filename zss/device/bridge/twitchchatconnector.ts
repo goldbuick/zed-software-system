@@ -1,26 +1,9 @@
-import { ChatClient, ChatMessage } from '@twurple/chat'
+import { ChatClient } from '@twurple/chat'
 import { ispresent } from 'zss/mapping/types'
 
 import type { CHAT_CONNECTOR, CHAT_CONNECTOR_STATUS } from './chatconnector'
 import { CHAT_KIND } from './chattypes'
-
-function removeurls(text: string) {
-  const urlregex = /(?:https?|ftp):\/\/[\n\S]+/g
-  return text.replace(urlregex, '')
-}
-
-function striptext(msg: ChatMessage) {
-  let plaintext = msg.text
-  const ranges = [...msg.emoteOffsets.values()]
-  for (let r = 0; r < ranges.length; ++r) {
-    const indexes = ranges[r].reverse()
-    for (let i = 0; i < indexes.length; ++i) {
-      const [start, end] = indexes[i].split('-').map(parseFloat)
-      plaintext = plaintext.substring(0, start) + plaintext.substring(end + 1)
-    }
-  }
-  return removeurls(plaintext)
-}
+import { striptext } from './twitchchatstrip'
 
 export type TWITCH_CHAT_HANDLERS = {
   onconnect: (routekey: string) => void
