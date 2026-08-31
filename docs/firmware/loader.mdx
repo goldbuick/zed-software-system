@@ -17,9 +17,9 @@ Returns loader metadata based on format:
 
 | Format | Available names |
 |--------|-----------------|
-| text | `format`, `filename`, `cursor`, `lines` |
+| text | `format`, `filename`, `cursor`, `lines`, `eof` |
 | json | `format`, `filename` |
-| binary | `format`, `filename`, `cursor`, `bytes` |
+| binary | `format`, `filename`, `cursor`, `bytes`, `eof` |
 
 ## Commands
 
@@ -30,6 +30,12 @@ Returns loader metadata based on format:
 | `readline` | (see loadertext.md) | Delegate to loadertext |
 | `readjson` | (see loaderjson.md) | Delegate to loaderjson |
 | `readbin` | (see loaderbinary.md) | Delegate to loaderbinary |
+
+### Media queue
+
+| Command | Args | Description |
+|---------|------|-------------|
+| `media` | `<name> <url>` | Submit URL to the board TV helper with explicit queue display name (operator + `speaker` / `media` permission). Prefer `#withplayerboard` or `#withboard` first so the helper resolves from loader targeting. Empty name sanitizes to `player`. |
 
 ### Context
 
@@ -58,5 +64,6 @@ Returns loader metadata based on format:
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
 - `#withplayerboard` picks among **active** players (activelist + object on board), cycling each pid once through a shuffled `ids` queue under `withplayerboard_tracking` (same pattern as `@pick shuffle`); then sets that player's board. Does not set player focus — use `#withobject` for that
 - `#withboard` / `#withplayerboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
+- Loader `#media <name> <url>` uses `READ_CONTEXT.board` when set (via `#withboard` / `#withplayerboard`), otherwise the operator's player board, for helper resolution
 - Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import

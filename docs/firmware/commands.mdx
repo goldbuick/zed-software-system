@@ -181,10 +181,10 @@ All firmware commands and their descriptions. Commands are available depending o
   - `chat:connect:<routekey>`
   - `chat:disconnect:<routekey>`
   - `chat:roster:<routekey>` (speaker idle list; body lines are `name:seconds`, no space after the colon)
-- **Message / action body:** `user:voice:text`. `#set voice <number|string>` is the middle field for in-session players; bridge events leave it empty (`user::text`). `:` and newlines are stripped from `user` and `voice` at emit time so loaders can `#readline "(.*?):(.*?):(.*)"`.
+- **Message / action body:** `name|voice:text` (always includes `|`; empty voice is fine: `alice|:hello`). `#set voice <number|string>` supplies the voice field for in-session players; bridge/Twitch leave it empty. `:`, `|`, and newlines are stripped from name and voice at emit time so loaders can `#readline "(.*?)\|(.*?):(.*)"`.
 - **Reserved routekey `player`:** in-session players (not a Twitch channel). `#text` from a player emits `chat:message:player` (not the board id). Login/logout emit `chat:connect:player` / `chat:disconnect:player` and refresh `chat:roster:player`. Match loaders with `@event ^chat:message:player`, `@event ^chat:roster:player`, etc.
 - **Twitch / feeds:** keep their own routekey (`chat:roster:mychannel`, …). Roster tracks speakers who recently messaged or acted; idle entries older than 3600s are dropped; disconnect clears the roster and emits an empty body.
-- **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens.
+- **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens. Message text keeps http(s) URLs after emote strip (loaders may `#media` them). TTS strips URLs at speak time via `cleantextfortts`, not at chat ingest.
 - **Status:** `#bridge` or `#bridge status` prints chat slot state and IVS broadcast summary **without** secrets.
 - **Saved profiles (IndexedDB):** `#chat profile` (same as `#chat profile list`) prints profile names; `#chat profile show <name>` prints one profile (secrets redacted); `#chat profile save …` / `#chat profile delete <name>` manage them. Use `#chat start <kind> @profilename` to apply a profile.
 

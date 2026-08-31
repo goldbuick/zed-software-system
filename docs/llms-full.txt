@@ -1622,6 +1622,8 @@ Source: https://zed.cafe/docs/feature/tts
 | [`fishaudio.ts`](../tts/fishaudio.ts) | Fish API (worker-only via `ttsfish`) |
 | [`modelcache.ts`](../tts/modelcache.ts), [`utils.ts`](../tts/utils.ts), [`textcleaner.ts`](../tts/textcleaner.ts), [`phonemizerparser.ts`](../tts/phonemizerparser.ts) | Shared helpers |
 
+`cleantextfortts` (in `textcleaner.ts`) strips http(s)/ftp URLs, emoji, and non-Latin noise before synthesis. All engines apply it in `requestaudiobytes` (Fish included); Piper/Supertonic also re-clean via `TextSplitterStream`.
+
 ## Dependencies (client)
 
 - `@henrygd/queue` — newQueue
@@ -2424,10 +2426,10 @@ All firmware commands and their descriptions. Commands are available depending o
   - `chat:connect:<routekey>`
   - `chat:disconnect:<routekey>`
   - `chat:roster:<routekey>` (speaker idle list; body lines are `name:seconds`, no space after the colon)
-- **Message / action body:** `user:voice:text`. `#set voice <number|string>` is the middle field for in-session players; bridge events leave it empty (`user::text`). `:` and newlines are stripped from `user` and `voice` at emit time so loaders can `#readline "(.*?):(.*?):(.*)"`.
+- **Message / action body:** `name|voice:text` (always includes `|`; empty voice is fine: `alice|:hello`). `#set voice <number|string>` supplies the voice field for in-session players; bridge/Twitch leave it empty. `:`, `|`, and newlines are stripped from name and voice at emit time so loaders can `#readline "(.*?)\|(.*?):(.*)"`.
 - **Reserved routekey `player`:** in-session players (not a Twitch channel). `#text` from a player emits `chat:message:player` (not the board id). Login/logout emit `chat:connect:player` / `chat:disconnect:player` and refresh `chat:roster:player`. Match loaders with `@event ^chat:message:player`, `@event ^chat:roster:player`, etc.
 - **Twitch / feeds:** keep their own routekey (`chat:roster:mychannel`, …). Roster tracks speakers who recently messaged or acted; idle entries older than 3600s are dropped; disconnect clears the roster and emits an empty body.
-- **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens.
+- **Twitch:** `#chat <channel>` or `#chat start twitch <channel> [routekey]` — Twurple uses ambient auth from the environment; do not commit tokens. Message text keeps http(s) URLs after emote strip (loaders may `#media` them). TTS strips URLs at speak time via `cleantextfortts`, not at chat ingest.
 - **Status:** `#bridge` or `#bridge status` prints chat slot state and IVS broadcast summary **without** secrets.
 - **Saved profiles (IndexedDB):** `#chat profile` (same as `#chat profile list`) prints profile names; `#chat profile show <name>` prints one profile (secrets redacted); `#chat profile save …` / `#chat profile delete <name>` manage them. Use `#chat start <kind> @profilename` to apply a profile.
 
@@ -2687,9 +2689,9 @@ Returns loader metadata based on format:
 
 | Format | Available names |
 |--------|-----------------|
-| text | `format`, `filename`, `cursor`, `lines` |
+| text | `format`, `filename`, `cursor`, `lines`, `eof` |
 | json | `format`, `filename` |
-| binary | `format`, `filename`, `cursor`, `bytes` |
+| binary | `format`, `filename`, `cursor`, `bytes`, `eof` |
 
 ## Commands
 
@@ -2700,6 +2702,12 @@ Returns loader metadata based on format:
 | `readline` | (see loadertext.md) | Delegate to loadertext |
 | `readjson` | (see loaderjson.md) | Delegate to loaderjson |
 | `readbin` | (see loaderbinary.md) | Delegate to loaderbinary |
+
+### Media queue
+
+| Command | Args | Description |
+|---------|------|-------------|
+| `media` | `<name> <url>` | Submit URL to the board TV helper with explicit queue display name (operator + `speaker` / `media` permission). Prefer `#withplayerboard` or `#withboard` first so the helper resolves from loader targeting. Empty name sanitizes to `player`. |
 
 ### Context
 
@@ -2728,6 +2736,7 @@ Returns loader metadata based on format:
 - `withobject` enables `#oneof chatuser … #withobject chatuser #goup '` patterns for chat-driven object behavior
 - `#withplayerboard` picks among **active** players (activelist + object on board), cycling each pid once through a shuffled `ids` queue under `withplayerboard_tracking` (same pattern as `@pick shuffle`); then sets that player's board. Does not set player focus — use `#withobject` for that
 - `#withboard` / `#withplayerboard` / `#withobject` set board and object **targeting** on `READ_CONTEXT`; [`memorytickloaders`](../../memory/runtime.ts) persists those five fields per loader chip id across ticks (not whole `READ_CONTEXT`, not across separate loader invocations)
+- Loader `#media <name> <url>` uses `READ_CONTEXT.board` when set (via `#withboard` / `#withplayerboard`), otherwise the operator's player board, for helper resolution
 - Loader context overrides runtime behavior for messaging/UI
 - `endgame` is no-op in loaders to avoid ending session during import
 
@@ -2854,22 +2863,23 @@ Source: https://zed.cafe/docs/firmware/loadertext
 
 `#readline seek <cursor>`
 
-Sets the line cursor to the given index (0-based). Clamped to valid range.
+Sets the line cursor (0-based). Clamped to `[0, lines]` — **`cursor = lines` is EOF** (one past the last line).
 
-### line
+### next
 
-`#readline line`
+`#readline next`
 
-Advances to the next line. Cursor is clamped to `[0, lines.length - 1]`.
+Advances the cursor by one (clamped to EOF).
 
 ### Regex Capture
 
 `#readline <regex> <name1> [name2] …`
 
-- Matches `regex` (case-insensitive) against the current line
+- Matches `regex` (case-insensitive) against the **current** line
 - Capture group 1 → `name1`, group 2 → `name2`, etc.
-- Unmatched captures get `0`
-- Remaining words are parsed as stat names
+- Unmatched captures on a real line get `0`
+- **Does not advance** — use `#readline next` to move
+- On **EOF** (`cursor = lines`): every capture name is set to `''` (empty string)
 
 **Example**:
 
@@ -2877,14 +2887,39 @@ Advances to the next line. Cursor is clamped to `[0, lines.length - 1]`.
 #readline ^(\d+)\s+(\w+)$ count label
 ```
 
-If line is `42 foo`, sets `count=42`, `label='foo'`.
+If line is `42 foo`, sets `count=42`, `label='foo'`. Cursor stays put.
+
+### End of file
+
+| Check | Meaning |
+|-------|---------|
+| `#while not eof do` / `#if not eof` | Readable `eof` flag: `1` when `cursor = lines`, else `0` |
+| `#if cursor = lines` | Same EOF condition via cursor |
+| empty capture after `#readline` | On EOF, captures are `''` (vs `0` for a failed match on a real line) |
+
+Loop sketch:
+
+```
+#while not eof do
+#readline "^(.*)$" line
+' ... use $line ...
+#readline next
+#done
+```
+
+Rematch the same line (cursor does not move on regex):
+
+```
+#readline "(.*?)\|(.*?):(.*)" chatuser chatvoice chattext
+#readline "(.*?)\|(.*?):(https?://\S+)$" chatuser chatvoice url
+```
 
 ## Implementation
 
-- Uses `textreader.lines[textreader.cursor]` for current line
+- Uses `textreader.lines[textreader.cursor]` for current line when `cursor < lines`
 - `new RegExp(kind, 'i')` for pattern
 - `result[m]` for capture groups (m=1,2,…)
-- Cursor is not advanced by regex; use `line` to move to next line
+- Cursor range is `[0, lines.length]` inclusive
 
 ---
 

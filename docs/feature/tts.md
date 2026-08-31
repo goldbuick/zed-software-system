@@ -15,6 +15,8 @@ title: tts/
 | [`fishaudio.ts`](../tts/fishaudio.ts) | Fish API (worker-only via `ttsfish`) |
 | [`modelcache.ts`](../tts/modelcache.ts), [`utils.ts`](../tts/utils.ts), [`textcleaner.ts`](../tts/textcleaner.ts), [`phonemizerparser.ts`](../tts/phonemizerparser.ts) | Shared helpers |
 
+`cleantextfortts` (in `textcleaner.ts`) strips http(s)/ftp URLs, emoji, and non-Latin noise before synthesis. All engines apply it in `requestaudiobytes` (Fish included); Piper/Supertonic also re-clean via `TextSplitterStream`.
+
 ## Dependencies (client)
 
 - `@henrygd/queue` — newQueue
