@@ -4,7 +4,11 @@ First-party browser broadcast client under `zss/feature/broadcast/`. Replaces th
 
 ## Capture
 
-- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 30fps**, ~3.5 Mbps cap). Frame pump is an **AudioWorklet** on the compositor `AudioContext` (not `requestAnimationFrame`), so capture keeps running when the page is hidden. While hidden, R3F is advanced manually via `advance()` so the game canvas stays live for compositing.
+- **Video:** compositor draws attached image/canvas sources into an offscreen canvas (default **1280×720 @ 30fps**, ~3.5 Mbps cap). The frame driver depends on page visibility:
+  - **Visible** — `addAfterEffect` runs the composite after R3F has finished rendering, so `drawImage` reads a settled canvas instead of landing mid-render, and costs nothing beyond the composite itself since rAF is already running.
+  - **Hidden** — rAF is suspended for hidden pages regardless of audibility, so a **worker timer** drives capture. Worker timers are exempt from the one-tick-per-second clamp Chrome applies to hidden-page main-thread timers (live WebRTC only exempts you from the harsher one-per-minute tier). R3F is advanced manually via `advance()` so the game canvas stays live for compositing.
+
+  The framerate gate lives inside the worker, so only on-schedule frames cross to the main thread. The previous **AudioWorklet** pump posted every 128-sample render quantum — ~375 messages/sec at 48 kHz to produce 30 composites — and gated on the receiving side, which put ~345 discarded main-thread tasks per second in front of the render loop.
 - **Audio:** Web Audio graph mixes attached `MediaStream` inputs into one outbound audio track.
 
 Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination()` + board TV media-queue audio (`mediaqueue` layer) when the player is on the bound board.

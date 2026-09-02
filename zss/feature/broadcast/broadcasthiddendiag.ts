@@ -6,6 +6,7 @@ import {
   ivsBroadcastStatsPoll,
   readIvsBroadcastStatsSnapshot,
 } from 'zss/perf/ivsbroadcaststats'
+import { readframeintervalstats } from 'zss/perf/renderupdatestats'
 import { isperfdevbuild, readtickstats } from 'zss/perf/ticktimingstats'
 
 const LOG_INTERVAL_MS = 1000
@@ -26,6 +27,7 @@ const WORKER_SOURCE = `setInterval(function () { postMessage(1) }, 16)`
 let running = false
 let logtimer: ReturnType<typeof setInterval> | undefined
 let rafcount = 0
+let clocktickcount = 0
 let requestframecount = 0
 let workletticks = 0
 let workerticks = 0
@@ -51,6 +53,14 @@ export function broadcasthiddendiagmarkrequestframe() {
     return
   }
   ++requestframecount
+}
+
+/** Frame-clock messages reaching the main thread. Was ~375/s on the worklet. */
+export function broadcasthiddendiagmarkclocktick() {
+  if (!running) {
+    return
+  }
+  ++clocktickcount
 }
 
 async function startworkletprobe(ctx: AudioContext) {
@@ -137,20 +147,24 @@ function emitlog() {
     typeof document !== 'undefined' ? String(document.hidden) : 'unknown'
   const raf = rafcount
   const reqframe = requestframecount
+  const clock = clocktickcount
   const worklet = workletticks
   const workertick = workerticks
   rafcount = 0
   requestframecount = 0
+  clocktickcount = 0
   workletticks = 0
   workerticks = 0
   const wire = wireframedeltas()
   const tickboards = tickboardsdelta()
   const kbps = wire.videokbps != null ? wire.videokbps.toFixed(1) : 'n/a'
+  const frame = readframeintervalstats()
   // eslint-disable-next-line no-console -- dev-only broadcast visibility diagnosis
   console.log(
     `[zss broadcast diag] visibility=${visibility} hidden=${hidden}` +
-      ` raf/s=${raf} reqFrame/s=${reqframe}` +
+      ` composite/s=${raf} reqFrame/s=${reqframe} clock/s=${clock}` +
       ` worklet/s=${worklet} worker/s=${workertick}` +
+      ` frameMs=${frame.meanms.toFixed(2)} p95=${frame.p95ms.toFixed(2)}` +
       ` framesSentDelta=${wire.framessentdelta}` +
       ` framesEncodedDelta=${wire.framesencodeddelta}` +
       ` tickBoardsCallsDelta=${tickboards}` +
@@ -165,6 +179,7 @@ export async function broadcasthiddendiagstart(ctx: AudioContext) {
   running = true
   rafcount = 0
   requestframecount = 0
+  clocktickcount = 0
   workletticks = 0
   workerticks = 0
   prevframessent = 0

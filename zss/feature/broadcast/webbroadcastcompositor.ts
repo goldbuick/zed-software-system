@@ -38,6 +38,7 @@ export class WebBroadcastCompositor {
   private readonly audiolayers: AudioLayer[] = []
   private readonly frameclock = new BroadcastFrameClock()
   private running = false
+  private nextvisiblecapture = 0
 
   constructor(streamconfig: StreamConfig) {
     this.streamconfig = streamconfig
@@ -60,7 +61,10 @@ export class WebBroadcastCompositor {
     this.audiodestination = this.audiocontext.createMediaStreamDestination()
     this.setupsilence()
     this.frameclock.setoncapture(() => {
-      broadcasthiddendiagmarkraf()
+      // rAF drives the composite while visible; the clock only covers hidden.
+      if (typeof document !== 'undefined' && !document.hidden) {
+        return
+      }
       this.drawcomposite()
     })
   }
@@ -84,16 +88,32 @@ export class WebBroadcastCompositor {
     this.frameclock.setonrender(stage)
   }
 
-  async start() {
+  start() {
     if (this.running) {
       return
     }
     this.running = true
+    this.nextvisiblecapture = 0
     void broadcasthiddendiagstart(this.audiocontext)
-    await this.frameclock.start(
-      this.audiocontext,
-      this.streamconfig.maxFramerate,
-    )
+    this.frameclock.start(this.streamconfig.maxFramerate)
+  }
+
+  /**
+   * Composite from the R3F render loop while the page is visible, capped to the
+   * target framerate. Mutually exclusive with the frame clock path, which only
+   * acts while hidden.
+   */
+  capturevisibleframe(now: number) {
+    if (!this.running) {
+      return
+    }
+    if (now < this.nextvisiblecapture) {
+      return
+    }
+    const interval = 1000 / this.streamconfig.maxFramerate
+    this.nextvisiblecapture =
+      (this.nextvisiblecapture < now ? now : this.nextvisiblecapture) + interval
+    this.drawcomposite()
   }
 
   stop() {
@@ -150,6 +170,7 @@ export class WebBroadcastCompositor {
       position,
       render: true,
     })
+    this.videolayers.sort((a, b) => a.position.index - b.position.index)
   }
 
   async addaudioinputdevice(device: MediaStream, name: string) {
@@ -202,16 +223,16 @@ export class WebBroadcastCompositor {
   }
 
   private drawcomposite() {
+    broadcasthiddendiagmarkraf()
     const { width, height } = this.compositeel
-    this.compositecontext.clearRect(0, 0, width, height)
     this.compositecontext.fillStyle = '#000000'
     this.compositecontext.fillRect(0, 0, width, height)
 
-    const layers = [...this.videolayers]
-      .filter((layer) => layer.render)
-      .sort((a, b) => a.position.index - b.position.index)
-
-    for (const layer of layers) {
+    // videolayers is kept sorted by index on insert.
+    for (const layer of this.videolayers) {
+      if (!layer.render) {
+        continue
+      }
       const element = layer.element
       let sourcewidth = element.width
       let sourceheight = element.height

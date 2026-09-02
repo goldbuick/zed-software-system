@@ -1,6 +1,10 @@
 /** Jest stub: R3F is not needed for broadcast unit tests. */
 export function advance() {}
 
+export function addAfterEffect() {
+  return function unsubscribe() {}
+}
+
 export function Canvas() {
   return null
 }

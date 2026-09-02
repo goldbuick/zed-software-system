@@ -246,6 +246,10 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
         })
       }
 
+      // every stat below owns exactly one row; without this an overlong line
+      // wraps and paints over the row beneath it.
+      context.disablewrap = true
+
       let row = 0
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
       tokenizeandwritetextformat(`$PURPLE PERF$WHITE monitor`, context, true)
@@ -321,43 +325,51 @@ function PerfMonitorDraw({ glRef }: PerfMonitorDrawProps) {
         true,
       )
 
+      // state/bitrate/fps on the first row, geometry/session/loss on the
+      // second -- all of it together is twice the 36 usable columns.
       const ivs = readIvsBroadcastStatsSnapshot()
+      const encdim =
+        ivs?.frameW != null && ivs.frameH != null
+          ? `${ivs.frameW}x${ivs.frameH}`
+          : ''
+      const canvasdim =
+        ivs?.canvasW != null && ivs.canvasH != null
+          ? `${ivs.canvasW}x${ivs.canvasH}`
+          : ''
+      // encoder and canvas usually agree; only spell both out when they differ
+      // (that gap is the interesting case -- the encoder is downscaling).
+      let dims = encdim === '' ? canvasdim : encdim
+      if (encdim !== '' && canvasdim !== '' && encdim !== canvasdim) {
+        dims = `e${encdim} c${canvasdim}`
+      }
+      const kbps =
+        ivs?.videoKbps != null && Number.isFinite(ivs.videoKbps)
+          ? `${ivs.videoKbps.toFixed(0)}kbps`
+          : ''
+      const fps =
+        ivs?.fps != null && Number.isFinite(ivs.fps)
+          ? `${ivs.fps.toFixed(0)}fps`
+          : ''
+      const pkt = ivs?.packetsLost != null ? `lost=${ivs.packetsLost}` : ''
+      const session = ivs?.sessionId ? ivs.sessionId.slice(0, 6) : ''
+
       setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
-      if (ivs) {
-        const canvasDim =
-          ivs.canvasW != null && ivs.canvasH != null
-            ? `cv${ivs.canvasW}x${ivs.canvasH}`
-            : ''
-        const encDim =
-          ivs.frameW != null && ivs.frameH != null
-            ? `enc${ivs.frameW}x${ivs.frameH}`
-            : ''
-        const kbps =
-          ivs.videoKbps != null && Number.isFinite(ivs.videoKbps)
-            ? `${ivs.videoKbps.toFixed(0)}kbps`
-            : ''
-        const fps =
-          ivs.fps != null && Number.isFinite(ivs.fps)
-            ? `${ivs.fps.toFixed(0)}fps`
-            : ''
-        const pkt = ivs.packetsLost != null ? `lost=${ivs.packetsLost}` : ''
-        tokenizeandwritetextformat(
-          `$yellow broadcast $white${ivs.connectionState}${
-            kbps ? `$yellow ${kbps}` : ''
-          }${fps ? `$yellow ${fps}` : ''}${
-            encDim ? `$yellow ${encDim}` : ''
-          }${canvasDim ? `$yellow ${canvasDim}` : ''}${
-            ivs.sessionId ? `$yellow ${ivs.sessionId.slice(0, 6)}` : ''
-          }${pkt ? `$yellow ${pkt}` : ''}`,
-          context,
-          true,
-        )
-      } else {
-        tokenizeandwritetextformat(
-          `$yellow broadcast $blackidle`,
-          context,
-          true,
-        )
+      tokenizeandwritetextformat(
+        ivs
+          ? `$yellow broadcast $white${ivs.connectionState}${
+              kbps ? `$yellow ${kbps}` : ''
+            }${fps ? `$yellow ${fps}` : ''}`
+          : `$yellow broadcast $blackidle`,
+        context,
+        true,
+      )
+
+      const ivsdetail = `${dims}${session ? `$yellow ${session}` : ''}${
+        pkt ? `$yellow ${pkt}` : ''
+      }`
+      setupeditoritem(false, false, 0, row++, context, 1, 1, 1)
+      if (ivsdetail !== '') {
+        tokenizeandwritetextformat(`  $white${ivsdetail}`, context, true)
       }
 
       const chat = readChatMessageStats()

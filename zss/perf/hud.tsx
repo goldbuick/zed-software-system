@@ -1,6 +1,10 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useRef } from 'react'
 import { useTape } from 'zss/gadget/data/zustandstores'
+import {
+  readframeintervalstats,
+  recordframeinterval,
+} from 'zss/perf/renderupdatestats'
 
 const LOG_INTERVAL_S = 1
 
@@ -10,6 +14,7 @@ function PerfHudConsoleLogger() {
   const acc = useRef(0)
 
   useFrame((_, delta) => {
+    recordframeinterval(delta * 1000)
     acc.current += delta
     if (acc.current < LOG_INTERVAL_S) {
       return
@@ -21,10 +26,12 @@ function PerfHudConsoleLogger() {
     }
     const m = info.memory
     const p = info.programs?.length ?? 0
+    const frame = readframeintervalstats()
 
     // eslint-disable-next-line no-console -- intentional perf logging when perf monitor is on
     console.log(
-      `[zss perf] geos=${m.geometries} texs=${m.textures} programs=${p}`,
+      `[zss perf] geos=${m.geometries} texs=${m.textures} programs=${p}` +
+        ` frameMs=${frame.meanms.toFixed(2)} p95=${frame.p95ms.toFixed(2)}`,
     )
   })
 

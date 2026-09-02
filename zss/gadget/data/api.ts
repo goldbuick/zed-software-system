@@ -351,12 +351,12 @@ export function gadgethyperlink(
       break
   }
 
-  // Normalize chip once so PANEL_ITEM, modem keys, and sendmessage agree
-  // (sid_ mixes case; worker apply already uses NAME(chip)).
-  const chipname = NAME(chip)
+  // PANEL_ITEM keeps the chip verbatim: sendmessage round-trips it back to the
+  // sim, where `inspect:<sid>` chips are looked up against case-sensitive ids.
+  // Modem / shared keys normalize on their own (paneladdress, NAME(chip)).
 
   // package into a panel item
-  const hyperlink: WORD[] = [chipname, label, ...words]
+  const hyperlink: WORD[] = [chip, label, ...words]
   // chip, label, target, [type], [...args]
 
   // type of target value to track
@@ -364,7 +364,7 @@ export function gadgethyperlink(
     `${hyperlink[3] as string}`,
   ) as keyof typeof HYPERLINK_WITH_SHARED_DEFAULTS
 
-  const bridge = resolvehyperlinksharedbridge(chipname, type)
+  const bridge = resolvehyperlinksharedbridge(chip, type)
   const getforchip = bridge?.get ?? get
   const setforchip = bridge?.set ?? set
 
@@ -377,7 +377,7 @@ export function gadgethyperlink(
   if (HYPERLINK_WITH_SHARED.has(type)) {
     const target = `${hyperlink[2] as string}`
     applyhyperlinksharedmodemsync(
-      chipname,
+      chip,
       type,
       target,
       getforchip,
