@@ -10,6 +10,7 @@ import {
   gadgetcheckqueue,
   gadgetcheckset,
   gadgetclearscroll,
+  gadgethyperlink,
   gadgetstate,
   gadgetstateprovider,
   gadgettext,
@@ -211,9 +212,25 @@ describe('api', () => {
   })
 
   describe('gadgethyperlink', () => {
-    // Note: gadgethyperlink is complex and requires proper setup
-    // We'll test it through integration with other functions
-    // or with mocked modem functions
+    it('keeps the chip verbatim so sendmessage round-trips case-sensitive ids', () => {
+      gadgethyperlink('player1', 'inspect:sid_AbC9XyZ', 'edit object', [
+        'code',
+        'zssedit',
+      ])
+      const [item] = gadgetcheckqueue('player1')
+      expect((item as WORD[])[0]).toBe('inspect:sid_AbC9XyZ')
+    })
+
+    it('still lowercases the modem address for shared widgets', () => {
+      gadgethyperlink('player1', 'inspect:sid_AbC9XyZ', 'p3', [
+        'p3',
+        'text',
+      ])
+      expect(modemwriteinitstring).toHaveBeenCalledWith(
+        'inspect:sid_abc9xyz:p3',
+        '0',
+      )
+    })
   })
 
   describe('applyhyperlinksharedmodemsync', () => {

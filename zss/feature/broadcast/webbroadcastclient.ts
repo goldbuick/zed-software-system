@@ -16,7 +16,10 @@ import type {
 } from 'zss/feature/broadcast/webbroadcasttypes'
 import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
-import { broadcasthiddenrendertick } from 'zss/gadget/broadcasthiddenrender'
+import {
+  broadcasthiddenrendertick,
+  broadcastvisibleframesubscribe,
+} from 'zss/gadget/broadcasthiddenrender'
 
 export type WebBroadcastClientConfig = {
   streamConfig?: StreamConfig
@@ -50,6 +53,7 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
   private active = false
   private started = false
   private activetransport: 'low-latency' | 'whip' | undefined
+  private visibleframeunsubscribe: (() => void) | undefined
 
   constructor(config: WebBroadcastClientConfig = {}) {
     this.streamconfig = config.streamConfig ?? DEFAULT_STREAM_CONFIG
@@ -143,7 +147,10 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
     this.compositor.setonrender(() => {
       broadcasthiddenrendertick()
     })
-    await this.compositor.start()
+    this.visibleframeunsubscribe = broadcastvisibleframesubscribe((now) => {
+      this.compositor.capturevisibleframe(now)
+    })
+    this.compositor.start()
     const tracks = this.collecttracks()
     if (!tracks.length) {
       throw new Error('web broadcast client: no media tracks attached')
@@ -176,6 +183,8 @@ export class WebBroadcastClient implements WebBroadcastStatsReader {
       this.lowlatency.stop()
     }
     this.compositor.setonrender(undefined)
+    this.visibleframeunsubscribe?.()
+    this.visibleframeunsubscribe = undefined
     this.compositor.stop()
     this.started = false
     this.active = false

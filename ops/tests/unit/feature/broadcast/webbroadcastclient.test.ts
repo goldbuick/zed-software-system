@@ -77,6 +77,7 @@ describe('WebBroadcastClient lifecycle', () => {
   const originalaudiocontext = global.AudioContext
   const originalaudioworkletnode = (global as { AudioWorkletNode?: unknown })
     .AudioWorkletNode
+  const originalworker = global.Worker
   const originalurl = global.URL
 
   beforeEach(() => {
@@ -126,6 +127,14 @@ describe('WebBroadcastClient lifecycle', () => {
     ;(global as { AudioWorkletNode: unknown }).AudioWorkletNode =
       MockAudioWorkletNode
 
+    // frame clock is worker-driven so it survives hidden-page timer throttling
+    class MockWorker {
+      onmessage: ((ev: MessageEvent) => void) | null = null
+      postMessage = jest.fn()
+      terminate = jest.fn()
+    }
+    global.Worker = MockWorker as unknown as typeof Worker
+
     global.URL.createObjectURL = jest.fn(() => 'blob:mock-worklet')
     global.URL.revokeObjectURL = jest.fn()
 
@@ -169,6 +178,7 @@ describe('WebBroadcastClient lifecycle', () => {
     global.AudioContext = originalaudiocontext
     ;(global as { AudioWorkletNode?: unknown }).AudioWorkletNode =
       originalaudioworkletnode
+    global.Worker = originalworker
     global.URL = originalurl
     jest.restoreAllMocks()
   })
