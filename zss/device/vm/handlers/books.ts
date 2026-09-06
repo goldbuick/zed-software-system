@@ -26,15 +26,15 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
     try {
       workstatus(vm, message.player, 'load books')
       let books: BOOK[] = []
+      let maybemain: string | undefined
       if (isarray(message.data)) {
         books = message.data
       } else if (isstring(message.data)) {
         const decompressed = await memorydecompressbooks(message.data)
-        if (isarray(decompressed)) {
-          books = decompressed
-        }
+        books = decompressed.books
+        maybemain = decompressed.main
       }
-      memoryresetbooks(books)
+      memoryresetbooks(books, maybemain)
       registerloginready(vm, message.player)
     } finally {
       memorywritefrozen(false)

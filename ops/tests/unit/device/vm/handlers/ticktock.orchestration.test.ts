@@ -60,7 +60,7 @@ describe('handleticktock orchestration', () => {
 
   it('runs full tick pipeline when sim is unfrozen', () => {
     jest
-      .spyOn(session, 'memoryreadbookbysoftware')
+      .spyOn(session, 'memoryreadmainbook')
       .mockReturnValue(stubmainbook)
     handleticktock(vm, msg)
 
@@ -71,7 +71,7 @@ describe('handleticktock orchestration', () => {
 
   it('rebuilds gadget layers from post-tick player boards after mid-tick move', () => {
     jest
-      .spyOn(session, 'memoryreadbookbysoftware')
+      .spyOn(session, 'memoryreadmainbook')
       .mockReturnValue(stubmainbook)
     ;(memoryreadbookplayerboards as jest.Mock)
       .mockReturnValueOnce([boardsource])

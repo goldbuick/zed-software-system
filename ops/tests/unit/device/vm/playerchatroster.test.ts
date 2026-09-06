@@ -8,7 +8,7 @@ jest.mock('zss/memory/flags', () => ({
 
 jest.mock('zss/memory/session', () => ({
   memoryreadoperator: jest.fn(() => 'op1'),
-  memoryreadbookbysoftware: jest.fn(() => ({
+  memoryreadmainbook: jest.fn(() => ({
     activelist: ['p1', 'p2'],
   })),
 }))

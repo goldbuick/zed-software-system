@@ -12,7 +12,7 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
 import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
-import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
+import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 import { BOARD_WIDTH, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 describe('memorymoveplayertoboard incremental lookup', () => {
@@ -27,7 +27,7 @@ describe('memorymoveplayertoboard incremental lookup', () => {
     const boardb = memorycreatecodepage('@board dest\n', {})
     const book = memorycreatebook([playerpage, boarda, boardb])
     memoryresetbooks([book])
-    memorywritesoftwarebook('main', book.id)
+    memorywritemainbook(book.id)
 
     const src = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boarda)!
     const dest = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!

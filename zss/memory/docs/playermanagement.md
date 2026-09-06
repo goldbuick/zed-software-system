@@ -23,7 +23,7 @@ title: playermanagement.ts
 - `./codepages` — memorypickcodepagewithtypeandstat
 - `./runtime` — memoryhaltchip
 - `./runtimeboundary` — memoryreadboardruntime
-- `./session` — memoryisoperator, memoryreadbookbysoftware
+- `./session` — memoryisoperator, memoryreadmainbook
 - `./spatialqueries` — memorycheckcollision
 
 ## Key Exports

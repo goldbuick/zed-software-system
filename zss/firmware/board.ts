@@ -43,14 +43,13 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { memoryreadmainbook } from 'zss/memory/session'
 import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
-  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { type EVAL_DIR, dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
@@ -467,7 +466,7 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const mainbook = memoryreadmainbook()
       if (!ispresent(mainbook)) {
         return 0
       }

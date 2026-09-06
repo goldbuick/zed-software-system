@@ -15,9 +15,7 @@ import { MAYBE, deepcopy, isnumber, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
 import { memoryreadbookflag, memorywritebookflag } from './bookoperations'
-import { memoryreadbookbysoftware } from './session'
-import { MEMORY_LABEL } from './types'
-
+import { memoryreadmainbook } from './session'
 const SYNTH_VOICES_KEY = 'voices'
 const SYNTH_VOICEFX_KEY = 'voicefx'
 
@@ -88,7 +86,7 @@ function memorymigratefourbusvoicefx(cache: SYNTH_STATE) {
 }
 
 function readsynthcacheinternal(board: string): SYNTH_STATE {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const main = memoryreadmainbook()
   const owner = createsynthid(board)
   let voices = memoryreadbookflag(main, owner, SYNTH_VOICES_KEY) as MAYBE<
     SYNTH_STATE['voices']
@@ -181,7 +179,7 @@ const SYNTH_PLAYQUEUE_KEY = 'playqueue'
 const SYNTH_PLAY_DEFAULT: SYNTH_PLAY[] = []
 
 function readsynthplayinternal(board: string): SYNTH_PLAY[] {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const main = memoryreadmainbook()
   const owner = createsynthid(board)
   const queue = memoryreadbookflag(main, owner, SYNTH_PLAYQUEUE_KEY) as MAYBE<
     SYNTH_PLAY[]
@@ -210,7 +208,7 @@ function synthplaypatterntickwait(pattern: SYNTH_NOTE_ENTRY[]): number {
 }
 
 export function memoryqueuesynthplay(board: string, play: string) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const main = memoryreadmainbook()
   if (!ispresent(main)) {
     return
   }

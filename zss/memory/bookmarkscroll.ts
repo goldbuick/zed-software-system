@@ -9,12 +9,10 @@ import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent } from 'zss/mapping/types'
 import { memorycachebookmarkscrolllist } from 'zss/memory/bookmarkdeleteconfirm'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
+import { memoryreadmainbook } from 'zss/memory/session'
 /** True when MAIN is missing or has no codepages (fresh ensure with nothing authored). */
 export function memorymainbookisempty(): boolean {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   return !ispresent(mainbook) || mainbook.pages.length === 0
 }
 

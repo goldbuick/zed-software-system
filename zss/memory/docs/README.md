@@ -6,7 +6,7 @@ The memory system manages the ZSS game state — books, codepages, boards, eleme
 
 ## Architecture Overview
 
-- **MEMORY** — Singleton: books Map, software slots (main/temp), loaders, session, operator, topic, halt
+- **MEMORY** — Singleton: books Map, opened book (`main`), loaders, session, operator, topic, halt
 - **BOOK** — Contains pages (codepages), flags, activelist
 - **CODE_PAGE** — Board, object, terrain, charset, palette, loader
 - **BOARD** — terrain[], objects{}, lookup, named; 60×25 grid

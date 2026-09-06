@@ -27,7 +27,7 @@ title: utilities.ts
 - `./bookoperations` — memoryexportbook(asjson), memoryimportbook(fromjson), memoryreadelementdisplay
 - `./flags` — memoryreadflags
 - `./playermanagement` — memoryreadplayerboard
-- `./session` — memoryisoperator, memoryreadbookbysoftware, memoryreadoperator, memoryreadtopic, memorywritehalt
+- `./session` — memoryisoperator, memoryreadmainbook, memoryreadoperator, memoryreadtopic, memorywritehalt
 - `./types` — BOOK, MEMORY_LABEL
 
 ## Exports
@@ -40,5 +40,5 @@ title: utilities.ts
 | `memoryreadconfigall()` | Snapshot every config flag |
 | `memorywriteconfig(name, value)` | Write a single config flag |
 | `memoryadminmenu(player)` | Admin scroll: player list, util, config, multiplayer QR |
-| `memorycompressbooks(books)` (async) | msgpack array + zstd-19 → base64url (CLI: trimmed JSON) |
-| `memorydecompressbooks(base64bytes)` (async) | base64url → books; also loads legacy JSZip and JSON array payloads |
+| `memorycompressbooks(books)` (async) | msgpack `{ main?, books }` + zstd-19 → base64url (CLI: same envelope JSON) |
+| `memorydecompressbooks(base64bytes)` (async) | base64url → `{ books, main? }`; also loads legacy JSZip / bare book-array payloads |

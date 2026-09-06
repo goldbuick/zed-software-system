@@ -132,9 +132,8 @@ export enum CODE_PAGE_TYPE {
   TXT,
 }
 
+/** Login / spawn page names (not book pointers). */
 export enum MEMORY_LABEL {
-  MAIN = 'main',
-  TEMP = 'temp',
   TITLE = 'title',
   PLAYER = 'player',
 }
@@ -149,8 +148,7 @@ export type BOARD = {
   isdark?: number
   startx?: number
   starty?: number
-  // board displayed over/under this one
-  // uses content slot book
+  // board displayed over/under this one (resolved by name across loaded books)
   over?: string
   under?: string
   // control camera zoom

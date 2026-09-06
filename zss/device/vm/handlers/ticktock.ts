@@ -13,12 +13,11 @@ import {
 } from 'zss/memory/rendering'
 import { memorytickloaders, memorytickmain } from 'zss/memory/runtime'
 import {
-  memoryreadbookbysoftware,
   memoryreadfrozen,
   memoryreadhalt,
+  memoryreadmainbook,
 } from 'zss/memory/session'
 import type { BOARD, BOOK } from 'zss/memory/types'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { isperfdevbuild, readtickstats } from 'zss/perf/ticktimingstats'
 import { perfmeasure } from 'zss/perf/ui'
 
@@ -43,7 +42,7 @@ function rebuildgadgetlayers(mainbook: BOOK, boards: BOARD[]) {
 export function handleticktock(vm: DEVICE, _message: MESSAGE): void {
   void _message
   const t0 = isperfdevbuild() ? performance.now() : 0
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (ispresent(mainbook) && !memoryreadfrozen()) {
     perfmeasure('vm:memorytickloaders', () => {
       memorytickloaders()

@@ -17,17 +17,16 @@ The MEMORY singleton plus its book/loader/operator/topic accessors.
 - **memoryreadloaders()**, **memorystartloader(id, code)** - Loader map accessors
 - **memoryreadbooklist()**, **memoryreadfirstbook()**, **memoryreadfirstcontentbook()** - Book listing
 - **memoryreadbookbyaddress(address)**, **memorywritebook(book)**, **memoryresetbooks(books)**, **memoryclearbook(address)**, **memoryfreebook(book)** - Book CRUD
-- **memorywritesoftwarebook(slot, book)**, **memoryreadbookbysoftware(slot)** - Software slot (`main` / `temp`) accessors
-- **SOFTWARE_SLOT** (type)
+- **memorywritemainbook(address)**, **memoryreadmainbook()** - Opened book (`MEMORY.main`) accessors
 
 ## books.ts
 
 Higher-level book ensure helpers built on `session.ts`.
 
-- **memorycreatesoftwarebook(maybename?)** - Creates a new software book and registers it
+- **memorycreatesoftwarebook(maybename?)** - Creates a new book and registers it
 - **memoryensurebookbyname(name)** - Returns the matching book, creating one if missing
-- **memoryensuresoftwarebook(slot, maybename?)** - Ensures the software slot has a book
-- **memoryensuresoftwarecodepage(slot, address, createtype)** - Ensures the named codepage exists in a software book
+- **memoryensuremainbook(maybename?)** - Ensures there is an opened book
+- **memoryensuremaincodepage(address, createtype)** - Ensures the named codepage exists in the opened book
 
 ## flags.ts
 
@@ -210,6 +209,7 @@ Chip OS / tick loop.
 - **memoryreadbookplayeractive(book, player)**, **memoryreadplayeractive(player)**, **memoryreadplayerboard(player)**, **memoryreadbookplayerboards(book)**, **memorypicknextactiveplayerboard()**
 - **memorywritebookplayerboard(book, player, board)**
 - **memoryloginplayer(player, stickyflags)**, **memorylogoutplayer(player, isendgame)**
+- **memoryswitchopenedbook(dest, players)**, **memoryreopenaftertrash()**
 - **memoryscanplayers(players)**
 
 ## gamesend.ts

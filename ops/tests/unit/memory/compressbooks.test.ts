@@ -23,7 +23,11 @@ import {
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { memoryexportshouldskipflagowner } from 'zss/memory/exportflagcache'
-import { memoryresetbooks } from 'zss/memory/session'
+import {
+  memoryreadmainbook,
+  memoryresetbooks,
+  memorywritemainbook,
+} from 'zss/memory/session'
 import {
   memorycompressbooks,
   memorydecompressbooks,
@@ -116,7 +120,7 @@ describe('memorycompressbooks', () => {
     )
 
     memoryboundariesclear()
-    const books = await memorydecompressbooks(compressed)
+    const { books } = await memorydecompressbooks(compressed)
     expect(books.length).toBe(1)
     expect(books[0].name).toBe(book.name)
     expect(books[0].id).toBe(book.id)
@@ -127,6 +131,30 @@ describe('memorycompressbooks', () => {
     expect(objs[0].kind).toBe('widget')
     expect(objs[0].x).toBe(5)
     expect(objs[0].y).toBe(6)
+  })
+
+  it('persists opened book id through compress/decompress and reset', async () => {
+    const first = memorycreatebook([
+      memorycreatecodepage('@board a\n', { board: memorycreateboard() }),
+    ])
+    first.name = 'alpha'
+    const second = memorycreatebook([
+      memorycreatecodepage('@board b\n', { board: memorycreateboard() }),
+    ])
+    second.name = 'beta'
+    memoryresetbooks([first, second])
+    memorywritemainbook(second.id)
+    expect(memoryreadmainbook()?.id).toBe(second.id)
+
+    const compressed = await memorycompressbooks([first, second])
+    memoryboundariesclear()
+    const bundle = await memorydecompressbooks(compressed)
+    expect(bundle.main).toBe(second.id)
+    expect(bundle.books.map((b) => b.id)).toEqual([first.id, second.id])
+
+    memoryresetbooks(bundle.books, bundle.main)
+    expect(memoryreadmainbook()?.id).toBe(second.id)
+    expect(memoryreadmainbook()?.name).toBe('beta')
   })
 
   it('drops _gadget and _layers caches but keeps durable flags', async () => {
@@ -150,7 +178,9 @@ describe('memorycompressbooks', () => {
 
     const compressed = await memorycompressbooks([book])
     memoryboundariesclear()
-    const [again] = await memorydecompressbooks(compressed)
+    const {
+      books: [again],
+    } = await memorydecompressbooks(compressed)
     expect(memoryreadbookflags(again, durable)).toEqual({ health: 100 })
     expect(again.flags[creategadgetid(durable)]).toBeUndefined()
     expect(again.flags[`${book.pages[0].id}_layers`]).toBeUndefined()
@@ -188,7 +218,9 @@ describe('memorycompressbooks', () => {
 
     const compressed = await memorycompressbooks([book])
     memoryboundariesclear()
-    const [again] = await memorydecompressbooks(compressed)
+    const {
+      books: [again],
+    } = await memorydecompressbooks(compressed)
     expect(memoryreadbookflags(again, durablechip)).toEqual({ ec: 3 })
     expect(again.flags.pid_player_cli_chip).toBeUndefined()
     expect(again.flags[`${oid}_draw_chip`]).toBeUndefined()
@@ -202,7 +234,9 @@ describe('memorycompressbooks', () => {
 
     const compressed = await memorycompressbooks([book])
     memoryboundariesclear()
-    const [again] = await memorydecompressbooks(compressed)
+    const {
+      books: [again],
+    } = await memorydecompressbooks(compressed)
     const board = readboard(again, 'room')
 
     // page id is referenced from board.b1, so it must survive unchanged
@@ -258,7 +292,7 @@ describe('memorycompressbooks', () => {
     expect(legacy.startsWith('UEs')).toBe(true)
 
     memoryboundariesclear()
-    const books = await memorydecompressbooks(legacy)
+    const { books } = await memorydecompressbooks(legacy)
     expect(books.length).toBe(1)
     expect(books[0].id).toBe(book.id)
     expect(readboard(books[0], 'legacy')).toBeDefined()

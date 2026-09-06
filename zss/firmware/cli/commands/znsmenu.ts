@@ -31,11 +31,10 @@ import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   memoryreadbookbyaddress,
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadbooklist,
   memoryreadfirstcontentbook,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
@@ -126,7 +125,7 @@ export async function showznsmenu(player: string) {
     return
   }
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const list = memoryreadbooklist()
   const booklinks = list.map((book) =>
     zsszedlinkline(`zns book ${book.id}`, book.name),
@@ -243,7 +242,7 @@ export function znsrunpublish(
       break
     }
     case 'bytes': {
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const mainbook = memoryreadmainbook()
       if (!ispresent(mainbook)) {
         write(SOFTWARE, player, zsstextline(`$red main book not found`))
         return

@@ -9,18 +9,16 @@ import { lastinputtime } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
 const PLAYER_ROUTEKEY = 'player'
 
 let lastplayerrosterwire = ''
 let lastplayerrosteremitms = 0
 
 function sessionrosterentries(nowms: number): CHAT_ROSTER_ENTRY[] {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const ids = new Set<string>(mainbook?.activelist ?? [])
   const operator = memoryreadoperator()
   if (operator) {

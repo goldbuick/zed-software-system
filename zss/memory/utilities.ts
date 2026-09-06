@@ -34,13 +34,13 @@ import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
   memoryreadtopic,
   memorywritehalt,
 } from './session'
 import { trimformatobject, trimmemoryexport } from './trimexport'
-import { BOOK, MEMORY_LABEL } from './types'
+import { BOOK } from './types'
 
 /** zstd level for URL book payloads (measured: 19 vs 15 ~0.8%, 22 triples CPU). */
 const BOOK_ZSTD_LEVEL = 19
@@ -162,7 +162,7 @@ export function memoryadminmenu(
   idletimes?: Record<string, number>,
 ) {
   const isop = memoryisoperator(player)
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
   activelistvalues.add(memoryreadoperator())
   const activelist = [...activelistvalues]
@@ -237,12 +237,40 @@ export function memoryadminmenu(
   scrollwritelines(player, 'cpu #admin', zsstexttape(...rows), 'refscroll')
 }
 
+/** Save/load payload: books plus optional opened-book id (`MEMORY.main`). */
+export type MEMORY_BOOKS_BUNDLE = {
+  books: BOOK[]
+  main?: string
+}
+
+function memoryimportbooklist(list: unknown): BOOK[] {
+  if (!Array.isArray(list)) {
+    return []
+  }
+  const books: BOOK[] = []
+  for (let i = 0; i < list.length; ++i) {
+    const book = memoryimportbook(list[i] as FORMAT_OBJECT)
+    if (ispresent(book)) {
+      books.push(book)
+    }
+  }
+  return books
+}
+
+function memoryimportbooklistfromjson(list: unknown): BOOK[] {
+  if (!Array.isArray(list)) {
+    return []
+  }
+  return list.map(memoryimportbookfromjson).filter(ispresent)
+}
+
 export async function memorycompressbooks(books: BOOK[]) {
+  const main = memoryreadmainbook()?.id
   const jsonbooks = books.map((book) =>
     trimmemoryexport(memoryexportbookasjson(book)),
   )
   if (getclimode()) {
-    return JSON.stringify(jsonbooks)
+    return JSON.stringify({ main, books: jsonbooks })
   }
 
   await ensurezstdwasm()
@@ -255,8 +283,8 @@ export async function memorycompressbooks(books: BOOK[]) {
     }
   }
 
-  // Single zstd frame over a msgpack array of books (no JSZip envelope).
-  const bin = pack(exported)
+  // Single zstd frame over msgpack { main?, books } (legacy: bare books array).
+  const bin = pack({ main, books: exported })
   const binsquash = compress(bin, BOOK_ZSTD_LEVEL)
   const bytes =
     binsquash instanceof Uint8Array
@@ -317,11 +345,21 @@ async function memorydecompressbookszip(content: string): Promise<BOOK[]> {
 
 export async function memorydecompressbooks(
   base64bytes: string,
-): Promise<BOOK[]> {
+): Promise<MEMORY_BOOKS_BUNDLE> {
   const trimmed = base64bytes.trim()
   if (trimmed.startsWith('[')) {
-    const json = JSON.parse(base64bytes) as BOOK[]
-    return json.map(memoryimportbookfromjson).filter(ispresent)
+    const json = JSON.parse(base64bytes) as unknown
+    return { books: memoryimportbooklistfromjson(json) }
+  }
+  if (trimmed.startsWith('{')) {
+    const json = JSON.parse(base64bytes) as {
+      main?: string
+      books?: unknown
+    }
+    return {
+      books: memoryimportbooklistfromjson(json.books),
+      main: isstring(json.main) ? json.main : undefined,
+    }
   }
 
   await ensurezstdwasm()
@@ -331,22 +369,21 @@ export async function memorydecompressbooks(
 
   // Legacy: JSZip envelope (PK..) with per-book zstd|msgpack|json entries.
   if (iszipbytes(raw)) {
-    return memorydecompressbookszip(content)
+    return { books: await memorydecompressbookszip(content) }
   }
 
-  // Current: zstd(msgpack(FORMAT_OBJECT[]))
+  // Current: zstd(msgpack({ main?, books })) — legacy: zstd(msgpack(FORMAT_OBJECT[]))
   const ubin = decompress(raw)
-  const list = unpack(ubin) as unknown
-  if (!Array.isArray(list)) {
-    return []
+  const payload = unpack(ubin) as unknown
+  if (Array.isArray(payload)) {
+    return { books: memoryimportbooklist(payload) }
   }
-  const books: BOOK[] = []
-  for (let i = 0; i < list.length; ++i) {
-    const entry = list[i] as FORMAT_OBJECT
-    const book = memoryimportbook(entry)
-    if (ispresent(book)) {
-      books.push(book)
+  if (payload && typeof payload === 'object') {
+    const envelope = payload as { main?: unknown; books?: unknown }
+    return {
+      books: memoryimportbooklist(envelope.books),
+      main: isstring(envelope.main) ? envelope.main : undefined,
     }
   }
-  return books
+  return { books: [] }
 }

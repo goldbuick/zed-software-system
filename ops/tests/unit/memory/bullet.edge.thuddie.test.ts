@@ -13,8 +13,8 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memorytickobject } from 'zss/memory/runtime'
 import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
-import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
-import { BOARD_WIDTH, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
+import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
 
@@ -41,7 +41,7 @@ describe('bullet edge thud die', () => {
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([bulletpage, boardpage])
     memoryresetbooks([book])
-    memorywritesoftwarebook('main', book.id)
+    memorywritemainbook(book.id)
 
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardpage)!
     board.id = boardpage.id

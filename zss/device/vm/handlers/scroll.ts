@@ -4,11 +4,10 @@ import type { MESSAGE } from 'zss/device/types'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryensuresoftwarebook } from 'zss/memory/books'
+import { memoryensuremainbook } from 'zss/memory/books'
 import { memorymakeitscroll } from 'zss/memory/inspectionmakeit'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
 import { memoryunlockscroll } from 'zss/memory/runtime'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { romread } from 'zss/rom'
 
 export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
@@ -32,7 +31,7 @@ export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
 }
 
 export function handlerefscroll(vm: DEVICE, message: MESSAGE): void {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     apitoast(vm, message.player, 'gadget scroll: need main book')
     return

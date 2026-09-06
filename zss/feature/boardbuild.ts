@@ -5,18 +5,17 @@ import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memoryensuresoftwarecodepage } from 'zss/memory/books'
+import { memoryensuremaincodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
 import { memoryreadflags } from 'zss/memory/flags'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { memoryreadmainbook } from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
   CODE_PAGE_TYPE,
-  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
@@ -194,11 +193,7 @@ export function boardbuild(
     }
   }
 
-  const [codepage] = memoryensuresoftwarecodepage(
-    MEMORY_LABEL.TEMP,
-    createsid(),
-    CODE_PAGE_TYPE.BOARD,
-  )
+  const [codepage] = memoryensuremaincodepage(createsid(), CODE_PAGE_TYPE.BOARD)
   if (!ispresent(codepage)) {
     apierror(device, player, 'build', 'build: failed to create board')
     return
@@ -211,7 +206,7 @@ export function boardbuild(
   }
 
   if (ispresent(sourceboard)) {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     const prevbook = READ_CONTEXT.book
     READ_CONTEXT.book = mainbook
     const copied = boardcopy(

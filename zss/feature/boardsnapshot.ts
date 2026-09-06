@@ -1,18 +1,10 @@
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryclearbookcodepage } from 'zss/memory/bookoperations'
-import { memoryensuresoftwarecodepage } from 'zss/memory/books'
+import { memoryensuremaincodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import {
-  memoryreadbookbysoftware,
-  memoryreadbooklist,
-} from 'zss/memory/session'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-  MEMORY_LABEL,
-} from 'zss/memory/types'
+import { memoryreadbooklist, memoryreadmainbook } from 'zss/memory/session'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
@@ -28,7 +20,7 @@ const p2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const targetset = 'all'
 
 function withmainbook<T>(fn: () => T): T {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const prevbook = READ_CONTEXT.book
   READ_CONTEXT.book = mainbook
   try {
@@ -52,8 +44,7 @@ export function boardsnapshot(target: string) {
   }
 
   // create snapshot board codepage on MAIN (host-authoritative)
-  const [snapshotcodepage] = memoryensuresoftwarecodepage(
-    MEMORY_LABEL.MAIN,
+  const [snapshotcodepage] = memoryensuremaincodepage(
     name,
     CODE_PAGE_TYPE.BOARD,
   )

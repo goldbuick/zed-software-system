@@ -1,6 +1,6 @@
 /**
  * Session state and book storage: MEMORY singleton, operator/topic/halt/loaders, and book map.
- * Other memory modules (books, codepages, etc.) depend on this for `MEMORY.books` / `MEMORY.loaders` and `MEMORY.software`.
+ * Other memory modules depend on this for `MEMORY.books` / `MEMORY.loaders` and `MEMORY.main` (opened book).
  */
 import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -9,7 +9,7 @@ import { NAME } from 'zss/words/types'
 import { memoryboundarydelete } from './boundaries'
 import { memoryfreecodepage } from './codepageoperations'
 import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
-import { BOOK, MEMORY_LABEL } from './types'
+import { BOOK } from './types'
 
 const MEMORY = {
   halt: false,
@@ -17,7 +17,8 @@ const MEMORY = {
   topic: '',
   operator: '',
   session: createsid(),
-  software: { main: '', temp: '' },
+  /** Opened book id (live world / authoring target). */
+  main: '',
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
 }
@@ -91,33 +92,48 @@ export function memoryreadbookbyaddress(address: string): MAYBE<BOOK> {
   )
 }
 
-export function memorywritesoftwarebook(
-  slot: keyof typeof MEMORY.software,
-  book: string,
-) {
-  if (ispresent(memoryreadbookbyaddress(book))) {
-    MEMORY.software[slot] = book
+/** Set or clear the opened book. Empty address clears. Invalid address is a no-op. */
+export function memorywritemainbook(address: string) {
+  if (!address) {
+    MEMORY.main = ''
+    memoryinvalidatecodepagepickcache()
+    return
+  }
+  const book = memoryreadbookbyaddress(address)
+  if (ispresent(book)) {
+    MEMORY.main = book.id
+    memoryinvalidatecodepagepickcache()
   }
 }
 
-export function memoryreadbookbysoftware(
-  slot: keyof typeof MEMORY.software,
-): MAYBE<BOOK> {
-  return memoryreadbookbyaddress(MEMORY.software[slot])
+/** Read the opened book (MEMORY.main). */
+export function memoryreadmainbook(): MAYBE<BOOK> {
+  return memoryreadbookbyaddress(MEMORY.main)
 }
 
-export function memoryresetbooks(books: BOOK[]) {
+export function memoryresetbooks(books: BOOK[], maybemain?: string) {
   MEMORY.books = {}
+  MEMORY.main = ''
   books.forEach((book) => {
     MEMORY.books[book.id] = book
-    if (book.name === 'main') {
-      MEMORY.software.main = book.id
-    }
   })
-  if (!MEMORY.software.main) {
+  if (maybemain) {
+    const opened = memoryreadbookbyaddress(maybemain)
+    if (ispresent(opened)) {
+      MEMORY.main = opened.id
+    }
+  }
+  if (!MEMORY.main) {
+    books.forEach((book) => {
+      if (book.name === 'main') {
+        MEMORY.main = book.id
+      }
+    })
+  }
+  if (!MEMORY.main) {
     const first = books[0]
     if (first) {
-      MEMORY.software.main = first.id
+      MEMORY.main = first.id
     }
   }
   memoryinvalidatecodepagepickcache()
@@ -149,18 +165,19 @@ export function memoryclearbook(address: string) {
   if (ispresent(book)) {
     memoryfreebook(book)
     delete MEMORY.books[book.id]
+    if (MEMORY.main === book.id) {
+      MEMORY.main = ''
+    }
     memoryinvalidatecodepagepickcache()
   }
 }
 
 export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
   const books = memoryreadbooklist()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const [first] = books.filter((book) => book.id !== mainbook?.id)
   return first ?? mainbook
 }
-
-export type SOFTWARE_SLOT = keyof typeof MEMORY.software
 
 export type MEMORY_ROOT = typeof MEMORY
 

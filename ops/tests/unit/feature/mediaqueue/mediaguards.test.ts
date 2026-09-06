@@ -22,8 +22,8 @@ import {
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
-import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
-import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 
 jest.mock('zss/device/api', () => ({
@@ -71,7 +71,7 @@ describe('mediaguards', () => {
   it('mediapayloadwithmanage carries the user flag as the submitter name', () => {
     const book = memorycreatebook([])
     memoryresetbooks([book])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    memorywritemainbook(book.id)
     memorywritebookflag(book, 'namedplayer', 'user', 'goldbuick')
     expect(mediapayloadwithmanage('namedplayer')).toEqual({
       canmanage: false,
@@ -82,7 +82,7 @@ describe('mediaguards', () => {
   it('mediapayloadwithmanage honors explicit displayname over player flag', () => {
     const book = memorycreatebook([])
     memoryresetbooks([book])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    memorywritemainbook(book.id)
     memorywritebookflag(book, 'namedplayer', 'user', 'goldbuick')
     expect(
       mediapayloadwithmanage('namedplayer', { displayname: 'twitchfan' }),
@@ -126,7 +126,7 @@ describe('mediaguards', () => {
     const boardb = memorycreatecodepage('@board other\n', {})
     const book = memorycreatebook([boarda, boardb])
     memoryresetbooks([book])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    memorywritemainbook(book.id)
     const bound = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boarda)!
     const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
     bound.id = boarda.id
@@ -160,7 +160,7 @@ describe('mediaguards', () => {
     const boardb = memorycreatecodepage('@board other\n', {})
     const book = memorycreatebook([boarda, boardb])
     memoryresetbooks([book])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    memorywritemainbook(book.id)
     const bound = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boarda)!
     const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
     bound.id = boarda.id

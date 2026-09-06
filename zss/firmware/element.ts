@@ -204,7 +204,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'starty':
         return [true, READ_CONTEXT.board?.starty ?? 0]
       // board displayed over/under this one
-      // uses content slot book
       case 'over':
         return [true, READ_CONTEXT.board?.over ?? '']
       case 'under':
@@ -340,7 +339,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
         break
       // board displayed over/under this one
-      // uses content slot book
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
           const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)

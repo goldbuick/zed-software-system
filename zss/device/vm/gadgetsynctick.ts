@@ -32,18 +32,14 @@ import {
   memoryconverttogadgetcontrollayer,
   memoryreadgraphics,
 } from 'zss/memory/rendering'
-import {
-  memoryreadbookbysoftware,
-  memoryreadoperator,
-} from 'zss/memory/session'
+import { memoryreadmainbook, memoryreadoperator } from 'zss/memory/session'
 import { memoryreadsynth } from 'zss/memory/synthstate'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { measurestage, recordemitdiff } from 'zss/perf/ticktimingstats'
 import { perfmeasure } from 'zss/perf/ui'
 
 gadgetstateprovider((player) => {
   if (ispid(player)) {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     const owner = creategadgetid(player)
     let value = memoryreadbookflag(
       mainbook,
@@ -176,7 +172,7 @@ export function gadgetsynctick(vm: DEVICE) {
 }
 
 function gadgetsynctickbody(vm: DEVICE) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }

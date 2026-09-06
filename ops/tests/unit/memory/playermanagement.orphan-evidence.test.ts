@@ -31,7 +31,7 @@ import {
 } from 'zss/memory/playermanagement'
 import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryresetbooks,
 } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
@@ -78,7 +78,7 @@ function makeboardpage(name: string, pageid: string, extrastats = '') {
 }
 
 function placeplayer(boardid: string, player: string, x: number, y: number) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const main = memoryreadmainbook()
   const page = main?.pages.find((p) => p.id === boardid)
   const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(page)
   if (!board) {
@@ -131,7 +131,7 @@ describe('player orphan evidence (no fix)', () => {
 
   it('R1: host move leaves at most one board copy (H1)', () => {
     const src = placeplayer(boarda, player, 5, 5)
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     memorywritebookplayerboard(mainbook, player, boarda)
     memorywritebookflag(mainbook, player, 'enterx', 5)
     memorywritebookflag(mainbook, player, 'entery', 5)
@@ -165,7 +165,7 @@ describe('player orphan evidence (no fix)', () => {
   })
 
   it('R2: logout purges stranded copies on other boards (H2)', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     placeplayer(boarda, player, 5, 5)
     placeplayer(boardc, player, 1, 1)
     memorywritebookplayerboard(mainbook, player, boarda)
@@ -188,7 +188,7 @@ describe('player orphan evidence (no fix)', () => {
   })
 
   it('R3: logout deletes player on host (H3)', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     placeplayer(boarda, player, 5, 5)
     memorywritebookplayerboard(mainbook, player, boarda)
     tracking[player] = SECOND_TIMEOUT
@@ -249,7 +249,7 @@ describe('player orphan evidence (no fix)', () => {
   })
 
   it('R4: login with stranded copy can create second (H4)', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     placeplayer(boardc, player, 1, 1)
     memorywritebookflag(mainbook, player, 'board', '')
 

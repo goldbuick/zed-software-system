@@ -15,7 +15,7 @@ const MEMORY = {
   session: createsid(),
   operator: '',
   simfreeze: false,
-  software: { main: '', temp: '' },
+  main: '', // opened book id
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
 }
@@ -30,7 +30,7 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 | Former category | New module(s) |
 |------------------|---------------|
 | Session, operator, topic, halt, simfreeze | [`session.ts`](../session.ts) |
-| Software slots (`main` / `temp`), book CRUD | [`session.ts`](../session.ts) + [`books.ts`](../books.ts) |
+| Opened book (`main`), book CRUD | [`session.ts`](../session.ts) + [`books.ts`](../books.ts) |
 | Loaders | [`session.ts`](../session.ts) (storage) + [`loader.ts`](../loader.ts) (dispatch) |
 | Per-id flags | [`flags.ts`](../flags.ts) |
 | Codepage discovery (across books) | [`codepages.ts`](../codepages.ts) |
@@ -48,7 +48,7 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 
 ## Conceptual model
 
-- **MEMORY** singleton: books, software slots, loaders, session, operator, topic, halt, simfreeze.
+- **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, topic, halt, simfreeze.
 - **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-id flag bag.
 - **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (lookup, named).
 - **BOARD_ELEMENT**: kind, position, char, color, code, collision, …

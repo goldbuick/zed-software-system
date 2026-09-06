@@ -3,20 +3,18 @@ import {
   memoryhasbookflags,
   memoryreadbookflags,
 } from './bookoperations'
-import { memoryreadbookbysoftware } from './session'
-import { MEMORY_LABEL } from './types'
-
+import { memoryreadmainbook } from './session'
 export function memoryreadflags(id: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   return memoryreadbookflags(mainbook, id)
 }
 
 export function memoryhasflags(id: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   return memoryhasbookflags(mainbook, id)
 }
 
 export function memoryclearflags(id: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   return memoryclearbookflags(mainbook, id)
 }

@@ -39,8 +39,8 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
-import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadmainbook } from 'zss/memory/session'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { NAME } from 'zss/words/types'
 
@@ -271,7 +271,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         message.target = target.replace('self:', '')
         memorymessagechip(message)
       } else {
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const mainbook = memoryreadmainbook()
         const boards = memoryreadbookplayerboards(mainbook)
         memorysendtoboards(message.player, target, path, boards)
       }

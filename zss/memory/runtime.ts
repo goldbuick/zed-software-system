@@ -25,7 +25,7 @@ import { memoryensureboardready } from './boardlookup'
 import { memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
-import { memoryensuresoftwarebook } from './books'
+import { memoryensuremainbook } from './books'
 import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
@@ -42,8 +42,8 @@ import {
   memoryreadboardruntime,
 } from './runtimeboundary'
 import {
-  memoryreadbookbysoftware,
   memoryreadloaders,
+  memoryreadmainbook,
   memoryreadoperator,
 } from './session'
 import {
@@ -51,13 +51,7 @@ import {
   memorymergesynthvoicefx,
   memoryreadsynthplay,
 } from './synthstate'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOOK,
-  CODE_PAGE_TYPE,
-  MEMORY_LABEL,
-} from './types'
+import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
 
 // manages chips
 const os = createos()
@@ -74,14 +68,19 @@ export function memoryhaltchip(id: string) {
   memoryclearflags(mem)
 }
 
-export function memoryrestartallchipsandflags() {
-  // stop all chips
+/** Halt every running chip and clear chip flags on the opened book. */
+export function memoryhaltallchips() {
   const ids = os.ids()
   for (let i = 0; i < ids.length; ++i) {
     memoryhaltchip(ids[i])
   }
+}
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+export function memoryrestartallchipsandflags() {
+  // stop all chips
+  memoryhaltallchips()
+
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -114,7 +113,7 @@ export function memoryrepeatclilast(player: string) {
 const APPLY_SYNTH_RATE = Math.round(1.5 * TICK_FPS)
 
 export function memorytickloaders() {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -171,7 +170,7 @@ export function memorytickmain(
   boards: BOARD[],
   playeronly = false,
 ) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -363,7 +362,7 @@ export function memorytickonce(
 }
 
 export function memoryruncli(player: string, cli: string, tracking = true) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -403,7 +402,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
 
 export function memoryruncodepage(address: string, label: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   const codepage = memoryreadcodepage(mainbook, address)
   if (!ispresent(mainbook) || !ispresent(codepage)) {
     return

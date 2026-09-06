@@ -1,5 +1,5 @@
 /**
- * Book creation and software book helpers. Depends on session (book storage) and bookoperations.
+ * Book creation and opened-book helpers. Depends on session (book storage) and bookoperations.
  */
 import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
@@ -9,14 +9,13 @@ import {
   memorycreatebook,
   memoryensurebookcodepagewithtype,
 } from './bookoperations'
-import type { SOFTWARE_SLOT } from './session'
 import {
   memoryreadbookbyaddress,
-  memoryreadbookbysoftware,
   memoryreadfirstbook,
+  memoryreadmainbook,
   memoryreadoperator,
   memorywritebook,
-  memorywritesoftwarebook,
+  memorywritemainbook,
 } from './session'
 import { CODE_PAGE_TYPE } from './types'
 
@@ -41,11 +40,9 @@ export function memoryensurebookbyname(name: string) {
   return book
 }
 
-export function memoryensuresoftwarebook(
-  slot: SOFTWARE_SLOT,
-  maybename?: string,
-) {
-  const prev = memoryreadbookbysoftware(slot)
+/** Ensure MEMORY.main points at a book; create one if the map is empty. */
+export function memoryensuremainbook(maybename?: string) {
+  const prev = memoryreadmainbook()
   let book = ispresent(maybename) ? memoryensurebookbyname(maybename) : prev
 
   if (!ispresent(book)) {
@@ -56,24 +53,19 @@ export function memoryensuresoftwarebook(
   }
   const firstopen = ispresent(book) && (!ispresent(prev) || prev.id !== book.id)
   if (firstopen) {
-    apilog(
-      SOFTWARE,
-      memoryreadoperator(),
-      `opened [book] ${book.name} for ${slot}`,
-    )
+    apilog(SOFTWARE, memoryreadoperator(), `opened [book] ${book.name}`)
   }
 
-  memorywritesoftwarebook(slot, book.id)
+  memorywritemainbook(book.id)
   return book
 }
 
-export function memoryensuresoftwarecodepage<T extends CODE_PAGE_TYPE>(
-  slot: SOFTWARE_SLOT,
+export function memoryensuremaincodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
   return memoryensurebookcodepagewithtype(
-    memoryensuresoftwarebook(slot),
+    memoryensuremainbook(),
     createtype,
     address,
   )

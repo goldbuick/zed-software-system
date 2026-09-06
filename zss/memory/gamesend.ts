@@ -18,9 +18,9 @@ import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
 import { memorychipispresent, memorymessagechip } from './runtime'
-import { memoryreadbookbysoftware } from './session'
+import { memoryreadmainbook } from './session'
 import { memorylistboardelementsbyidnameorpts } from './spatialqueries'
-import { BOARD, BOARD_ELEMENT, BOARD_WIDTH, MEMORY_LABEL } from './types'
+import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from './types'
 
 // Game Message Functions
 
@@ -60,7 +60,7 @@ export function memorysendtoboards(
   label: string,
   boards: BOARD[],
 ) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }

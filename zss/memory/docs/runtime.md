@@ -23,7 +23,7 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./boards` — memoryinitboard, memoryreadelementstat
 - `./boardtick` — memorytickboard
 - `./bookoperations` — memoryreadcodepage
-- `./books` — memoryensuresoftwarebook
+- `./books` — memoryensuremainbook
 - `./boundaries` — memoryboundarydelete
 - `./codepageoperations` — memoryreadcodepagestats
 - `./codepages` — memorypickcodepagewithtypeandstat
@@ -31,7 +31,7 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./loader` — memoryloaderarg
 - `./playermanagement` — memoryreadplayerboard
 - `./runtimeboundary` — memoryreadboardelementruntime, memoryreadboardruntime
-- `./session` — memoryreadbookbysoftware, memoryreadloaders, memoryreadoperator
+- `./session` — memoryreadmainbook, memoryreadloaders, memoryreadoperator
 - `./synthstate` — memorymergesynthvoice, memorymergesynthvoicefx, memoryreadsynthplay
 
 ## Exports

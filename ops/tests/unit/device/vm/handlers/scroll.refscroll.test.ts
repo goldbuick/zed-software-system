@@ -45,10 +45,9 @@ import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryresetbooks,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { romread } from 'zss/rom'
 
 describe('handlerefscroll', () => {
@@ -71,7 +70,7 @@ describe('handlerefscroll', () => {
   })
 
   it('without MAIN creates the book then applies refscroll:menu', () => {
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeUndefined()
+    expect(memoryreadmainbook()).toBeUndefined()
     jest
       .mocked(romread)
       .mockImplementation((key: string) =>
@@ -80,7 +79,7 @@ describe('handlerefscroll', () => {
 
     handlerefscroll(vm, message)
 
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeDefined()
+    expect(memoryreadmainbook()).toBeDefined()
     expect(scrollwritelines).toHaveBeenCalledWith(
       'p1',
       '#help or $meta+h',
