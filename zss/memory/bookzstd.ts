@@ -4,10 +4,7 @@
  */
 import { compress } from '@bokuweb/zstd-wasm'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
-import {
-  arraybuffertobase64,
-  base64tobase64url,
-} from 'zss/mapping/encode'
+import { arraybuffertobase64, base64tobase64url } from 'zss/mapping/encode'
 
 /** zstd level for URL book payloads (measured: 19 vs 15 ~0.8%, 22 triples CPU). */
 export const BOOK_ZSTD_LEVEL = 19

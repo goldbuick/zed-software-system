@@ -1,6 +1,6 @@
 import { decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { pack, unpack } from 'msgpackr'
+import { unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
@@ -19,14 +19,14 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
+import { compressbookspodenvelope } from './bookcompresspod'
+import type { MEMORY_BOOKS_POD_ENVELOPE } from './bookcompresspod'
 import {
-  memoryexportbook,
   memoryexportbookasjson,
   memoryimportbook,
   memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from './bookoperations'
-import { bookzstdcompressbase64url } from './bookzstd'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
@@ -36,7 +36,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
-import { trimformatobject, trimmemoryexport } from './trimexport'
+import { trimmemoryexport } from './trimexport'
 import { BOOK } from './types'
 
 function base64tobytes(base64: string): Uint8Array {
@@ -258,24 +258,23 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
   return list.map(memoryimportbookfromjson).filter(ispresent)
 }
 
-/** Msgpack `{ main?, books }` for zstd. Export runs on sim; yields so ticktock can run. */
-export async function memorypackbooksforcompress(
+/** Snapshot books as JSON POD trees for the compress worker (yields between books). */
+export async function memorysnapshotbookspod(
   books: BOOK[],
-): Promise<Uint8Array> {
+): Promise<MEMORY_BOOKS_POD_ENVELOPE> {
   const main = memoryreadmainbook()?.id
-  const exported: FORMAT_OBJECT[] = []
+  const jsonbooks: unknown[] = []
   for (let i = 0; i < books.length; ++i) {
-    const exportedbook = trimformatobject(memoryexportbook(books[i]))
-    if (exportedbook) {
-      exported.push(exportedbook)
+    const exported = trimmemoryexport(memoryexportbookasjson(books[i]))
+    if (exported) {
+      jsonbooks.push(exported)
     }
     // Macrotask yield: clock wake uses setTimeout; Promise.resolve is not enough.
     await new Promise<void>((resolve) => {
       setTimeout(resolve, 0)
     })
   }
-  const bin = pack({ main, books: exported })
-  return bin instanceof Uint8Array ? bin : new Uint8Array(bin)
+  return { main, books: jsonbooks }
 }
 
 function shouldoffloadbookcompress(): boolean {
@@ -293,32 +292,22 @@ function shouldoffloadbookcompress(): boolean {
 }
 
 export async function memorycompressbooks(books: BOOK[]) {
-  const main = memoryreadmainbook()?.id
-  // CLI only: do not build JSON exports on the browser/sim save path (was a
-  // full second sync export of every book before msgpack).
-  if (getclimode()) {
-    const jsonbooks = books.map((book) =>
-      trimmemoryexport(memoryexportbookasjson(book)),
-    )
-    return JSON.stringify({ main, books: jsonbooks })
-  }
-
-  const packed = await memorypackbooksforcompress(books)
-  // Let one more tick land before zstd work (worker or in-process fallback).
+  const envelope = await memorysnapshotbookspod(books)
+  const mode = getclimode() ? 'json' : 'zstd'
+  // Let one more tick land before compress work (worker or in-process).
   await new Promise<void>((resolve) => {
     setTimeout(resolve, 0)
   })
   if (shouldoffloadbookcompress()) {
     try {
-      const { compresspackedbooksoffthread } = await import(
-        'zss/compressworkerclient'
-      )
-      return await compresspackedbooksoffthread(packed)
+      const { compressbookspodenvelopeoffthread } =
+        await import('zss/compressworkerclient')
+      return await compressbookspodenvelopeoffthread(envelope, mode)
     } catch {
       // Worker spawn / postMessage failed -- same bytes in-process.
     }
   }
-  return bookzstdcompressbase64url(packed)
+  return compressbookspodenvelope(envelope, mode)
 }
 
 async function memorydecompressbookszip(content: string): Promise<BOOK[]> {

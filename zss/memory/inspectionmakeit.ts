@@ -16,12 +16,7 @@ import {
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { memoryreadbooklist } from './session'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-} from './types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 function makeitlinktoken(s: string): string {
   if (/\s/.test(s) || s.length === 0) {
@@ -132,14 +127,16 @@ export function memorymakeitcommand(
       // attempt to check first word as codepage type to create
       switch (type) {
         case stattypestring(STAT_TYPE.LOADER): {
-          const [codepage, didcreate] = memoryensuremaincodepage(name,
+          const [codepage, didcreate] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.LOADER,
           )
           openeditor(codepage, didcreate)
           break
         }
         case stattypestring(STAT_TYPE.BOARD): {
-          const [codepage] = memoryensuremaincodepage(name,
+          const [codepage] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.BOARD,
           )
           if (ispresent(codepage)) {
@@ -155,35 +152,40 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.OBJECT): {
-          const [codepage, didcreate] = memoryensuremaincodepage(name,
+          const [codepage, didcreate] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.OBJECT,
           )
           openeditor(codepage, didcreate)
           break
         }
         case stattypestring(STAT_TYPE.TERRAIN): {
-          const [codepage, didcreate] = memoryensuremaincodepage(name,
+          const [codepage, didcreate] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.TERRAIN,
           )
           openeditor(codepage, didcreate)
           break
         }
         case stattypestring(STAT_TYPE.CHARSET): {
-          const [codepage, didcreate] = memoryensuremaincodepage(name,
+          const [codepage, didcreate] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.CHARSET,
           )
           openeditor(codepage, didcreate)
           break
         }
         case stattypestring(STAT_TYPE.PALETTE): {
-          const [codepage, didcreate] = memoryensuremaincodepage(name,
+          const [codepage, didcreate] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.PALETTE,
           )
           openeditor(codepage, didcreate)
           break
         }
         case stattypestring(STAT_TYPE.TXT): {
-          const [codepage, didcreate] = memoryensuremaincodepage(name,
+          const [codepage, didcreate] = memoryensuremaincodepage(
+            name,
             CODE_PAGE_TYPE.TXT,
           )
           openeditor(codepage, didcreate)

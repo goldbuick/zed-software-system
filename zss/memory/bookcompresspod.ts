@@ -3,11 +3,8 @@
  * Worker (or in-process fallback) finishes export — stringify or FORMAT_OBJECT
  * msgpack+zstd. Browser wire stays FORMAT_OBJECT (same as memoryexportbook).
  */
-import {
-  FORMAT_OBJECT,
-  FORMAT_SKIP,
-  formatobject,
-} from 'zss/feature/format'
+import { pack } from 'msgpackr'
+import { FORMAT_OBJECT, FORMAT_SKIP, formatobject } from 'zss/feature/format'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
 import {
@@ -22,7 +19,6 @@ import {
   BOOK_KEYS,
   CODE_PAGE_KEYS,
 } from 'zss/memory/types'
-import { pack } from 'msgpackr'
 
 export type MEMORY_BOOKS_POD_ENVELOPE = {
   main?: string
@@ -85,8 +81,7 @@ function formatboardpod(board: unknown): MAYBE<FORMAT_OBJECT> {
     return board
   }
   return formatobject(board, BOARD_KEYS, {
-    terrain: (terrain: unknown[]) =>
-      (terrain ?? []).map(formatboardelementpod),
+    terrain: (terrain: unknown[]) => (terrain ?? []).map(formatboardelementpod),
     objects: (elements: unknown) => {
       const list = Array.isArray(elements)
         ? elements
@@ -127,11 +122,8 @@ export function bookpodtoformatobject(pod: unknown): MAYBE<FORMAT_OBJECT> {
     return undefined
   }
   if (isalreadyformatobject(pod)) {
-    const trimmed = trimformatobject(pod)
-    if (trimmed) {
-      applyexportidremap(trimmed, buildexportidremap(trimmed))
-    }
-    return trimmed
+    applyexportidremap(pod, buildexportidremap(pod))
+    return trimformatobject(pod)
   }
   const book = pod as { pages?: unknown[] }
   const pagesout: FORMAT_OBJECT[] = []

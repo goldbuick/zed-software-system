@@ -15,8 +15,8 @@ import type {
   WebBroadcastStatsReader,
 } from 'zss/feature/broadcast/webbroadcasttypes'
 import {
-  resolvewhipendpoint,
   TWITCH_WHIP_ENDPOINT,
+  resolvewhipendpoint,
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 import {

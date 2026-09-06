@@ -28,8 +28,8 @@ import {
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   memoryreadbookbyaddress,
-  memoryreadmainbook,
   memoryreadbooklist,
+  memoryreadmainbook,
 } from 'zss/memory/session'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'

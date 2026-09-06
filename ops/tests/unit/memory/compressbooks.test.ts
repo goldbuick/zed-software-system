@@ -1,22 +1,24 @@
 import { compress } from '@bokuweb/zstd-wasm'
 import JSZip from 'jszip'
+import { setclimode } from 'zss/feature/detect'
 import {
   FORMAT_OBJECT,
   formatobject,
   packformat,
 } from 'zss/feature/format'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
-import { creategadgetid, createsid } from 'zss/mapping/guid'
 import { base64tobase64url } from 'zss/mapping/encode'
+import { creategadgetid, createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
+import { memoryboundariesclear } from 'zss/memory/boundaries'
+import { compressbookspodenvelope } from 'zss/memory/bookcompresspod'
 import {
   memorycreatebook,
   memoryexportbook,
   memoryreadbookflags,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
@@ -29,12 +31,6 @@ import {
   memorywritemainbook,
 } from 'zss/memory/session'
 import {
-  memorycompressbooks,
-  memorydecompressbooks,
-  memorypackbooksforcompress,
-} from 'zss/memory/utilities'
-import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
-import {
   BOARD,
   BOARD_ELEMENT,
   BOOK,
@@ -42,6 +38,11 @@ import {
   CODE_PAGE_TYPE,
   FIXED_DATE,
 } from 'zss/memory/types'
+import {
+  memorycompressbooks,
+  memorydecompressbooks,
+  memorysnapshotbookspod,
+} from 'zss/memory/utilities'
 
 function readboard(book: BOOK, pagename: string): BOARD {
   const page = book.pages.find((p) => p.code.includes(`@board ${pagename}`))
@@ -159,19 +160,59 @@ describe('memorycompressbooks', () => {
     expect(memoryreadmainbook()?.name).toBe('beta')
   })
 
-  it('in-process zstd of packed bytes matches memorycompressbooks', async () => {
+  it('in-process POD zstd matches memorycompressbooks', async () => {
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
     ])
     memoryresetbooks([book])
     memorywritemainbook(book.id)
-    const packedbytes = await memorypackbooksforcompress([book])
-    expect(packedbytes.byteLength).toBeGreaterThan(0)
-    const viazstd = await bookzstdcompressbase64url(packedbytes)
+    const envelope = await memorysnapshotbookspod([book])
+    expect(envelope.books.length).toBe(1)
+    expect(envelope.main).toBe(book.id)
+    const viazstd = await compressbookspodenvelope(envelope, 'zstd')
     const viaapi = await memorycompressbooks([book])
     expect(viaapi).toBe(viazstd)
     const { books } = await memorydecompressbooks(viazstd)
     expect(books[0].id).toBe(book.id)
+  })
+
+  it('json mode stringifies POD envelope for climode', async () => {
+    const book = memorycreatebook([
+      memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
+    ])
+    memoryresetbooks([book])
+    memorywritemainbook(book.id)
+    setclimode(true)
+    try {
+      const compressed = await memorycompressbooks([book])
+      expect(compressed.startsWith('{')).toBe(true)
+      const parsed = JSON.parse(compressed) as {
+        main?: string
+        books: unknown[]
+      }
+      expect(parsed.main).toBe(book.id)
+      expect(Array.isArray(parsed.books)).toBe(true)
+      expect((parsed.books[0] as { id: string }).id).toBe(book.id)
+      memoryboundariesclear()
+      const { books, main } = await memorydecompressbooks(compressed)
+      expect(main).toBe(book.id)
+      expect(books[0].id).toBe(book.id)
+    } finally {
+      setclimode(false)
+    }
+  })
+
+  it('POD zstd wire imports via FORMAT_OBJECT path not JSON fields', async () => {
+    const book = memorycreatebook([
+      memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
+    ])
+    memorywritebookflag(book, 'player1', 'score', 7 as any)
+    const compressed = await memorycompressbooks([book])
+    expect(compressed.startsWith('{')).toBe(false)
+    memoryboundariesclear()
+    const { books } = await memorydecompressbooks(compressed)
+    expect(books.length).toBe(1)
+    expect(memoryreadbookflags(books[0], 'player1')).toEqual({ score: 7 })
   })
 
   it('drops _gadget and _layers caches but keeps durable flags', async () => {

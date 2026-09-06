@@ -269,7 +269,7 @@ Player roles, command allowlists, token bans.
 
 - **CONFIG_KEYS**, **memorysetconfig(list)**, **memoryreadconfig(name)**, **memoryreadconfigall()**, **memorywriteconfig(name, value)**
 - **memoryadminmenu(player)** - Admin scroll
-- **memorycompressbooks(books)** (async), **memorydecompressbooks(base64bytes)** (async)
+- **memorycompressbooks(books)** (async), **memorysnapshotbookspod(books)** (async), **memorydecompressbooks(base64bytes)** (async)
 
 ## bookmarkscroll.ts / editorbookmarkscroll.ts
 

@@ -8,10 +8,7 @@ import {
 import { lastinputtime } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/flags'
-import {
-  memoryreadmainbook,
-  memoryreadoperator,
-} from 'zss/memory/session'
+import { memoryreadmainbook, memoryreadoperator } from 'zss/memory/session'
 const PLAYER_ROUTEKEY = 'player'
 
 let lastplayerrosterwire = ''

@@ -9,13 +9,7 @@ import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
 import { memorymoveplayertoboard } from './playermanagement'
 import { memoryreadmainbook } from './session'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  BOOK,
-} from './types'
+import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
 function memorytryexitaddress(
   elementid: string,

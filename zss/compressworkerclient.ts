@@ -1,9 +1,14 @@
 /**
  * Sim-owned client for the single-purpose compressspace worker.
- * Lazy spawn; transferable ArrayBuffer in; base64url out.
+ * Lazy spawn; structuredClone POD envelope in; result string out.
  */
+import { compressbookspodenvelope } from 'zss/memory/bookcompresspod'
+import type {
+  BOOK_COMPRESS_MODE,
+  MEMORY_BOOKS_POD_ENVELOPE,
+} from 'zss/memory/bookcompresspod'
+
 import CompressWorker from './compressspace??worker'
-import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
 
 type Pending = {
   resolve: (value: string) => void
@@ -19,7 +24,7 @@ function attachcompressworkerhandlers(w: Worker) {
   w.onmessage = (event: MessageEvent) => {
     const data = event.data as {
       id?: string
-      base64url?: string
+      result?: string
       error?: string
     }
     if (typeof data?.id !== 'string') {
@@ -34,11 +39,11 @@ function attachcompressworkerhandlers(w: Worker) {
       wait.reject(new Error(data.error))
       return
     }
-    if (typeof data.base64url === 'string') {
-      wait.resolve(data.base64url)
+    if (typeof data.result === 'string') {
+      wait.resolve(data.result)
       return
     }
-    wait.reject(new Error('compress worker response missing base64url'))
+    wait.reject(new Error('compress worker response missing result'))
   }
   w.onerror = (event: ErrorEvent) => {
     workerfailed = true
@@ -81,39 +86,25 @@ export function haltcompressworker() {
   pending.clear()
 }
 
-function transferablepackbuffer(bin: Uint8Array): ArrayBuffer {
-  if (
-    bin.byteOffset === 0 &&
-    bin.byteLength === bin.buffer.byteLength &&
-    bin.buffer instanceof ArrayBuffer
-  ) {
-    return bin.buffer
-  }
-  return bin.buffer.slice(
-    bin.byteOffset,
-    bin.byteOffset + bin.byteLength,
-  ) as ArrayBuffer
-}
-
 /**
- * Off-thread zstd+base64url. Falls back in-process if Worker cannot start.
+ * Off-thread POD compress. Falls back in-process if Worker cannot start.
  */
-export async function compresspackedbooksoffthread(
-  bin: Uint8Array,
+export async function compressbookspodenvelopeoffthread(
+  envelope: MEMORY_BOOKS_POD_ENVELOPE,
+  mode: BOOK_COMPRESS_MODE,
 ): Promise<string> {
   const w = ensurecompressworker()
   if (!w) {
-    return bookzstdcompressbase64url(bin)
+    return compressbookspodenvelope(envelope, mode)
   }
   const id = `c${++nextid}`
-  const copy = transferablepackbuffer(bin)
   return new Promise<string>((resolve, reject) => {
     pending.set(id, { resolve, reject })
     try {
-      w.postMessage({ id, bin: copy }, [copy])
+      w.postMessage({ id, envelope, mode })
     } catch {
       pending.delete(id)
-      void bookzstdcompressbase64url(bin).then(resolve, reject)
+      void compressbookspodenvelope(envelope, mode).then(resolve, reject)
     }
   })
 }

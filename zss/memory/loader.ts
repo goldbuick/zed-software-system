@@ -10,12 +10,7 @@ import {
   memoryreadoperator,
   memorystartloader,
 } from './session'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-} from './types'
+import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 export type LOADER_READ_CONTEXT_SNAPSHOT = {
   board: MAYBE<BOARD>
