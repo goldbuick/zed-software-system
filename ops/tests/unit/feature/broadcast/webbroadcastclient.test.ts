@@ -2,12 +2,14 @@ import {
   createwebbroadcastclient,
   parsebroadcaststartpayload,
 } from 'zss/feature/broadcast/webbroadcastclient'
+import { TWITCH_WHIP_ENDPOINT } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 
 describe('parsebroadcaststartpayload', () => {
-  it('maps legacy string to low-latency start', () => {
+  it('maps bare string to Twitch WHIP v2 start', () => {
     expect(parsebroadcaststartpayload('sk_test')).toEqual({
-      kind: 'ivs-low-latency',
-      streamKey: 'sk_test',
+      kind: 'whip',
+      endpoint: TWITCH_WHIP_ENDPOINT,
+      bearer: 'sk_test',
     })
   })
 

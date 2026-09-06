@@ -48,7 +48,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
-| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only) |
 | `media` | Board TV media queue: `#media` (queue list), `#media <url>` (submit), `#media playlist` (copy played + queue URLs) |
 | `queue` | Media helper admin: `#queue` (menu), `#queue <peerid>` (bind), `#queue skip` / `clear` / `stop` / `limit <N>` / `approve <N>` / `reject <N>` |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |

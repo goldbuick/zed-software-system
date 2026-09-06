@@ -14,7 +14,10 @@ import type {
   VideoComposition,
   WebBroadcastStatsReader,
 } from 'zss/feature/broadcast/webbroadcasttypes'
-import { resolvewhipendpoint } from 'zss/feature/broadcast/webbroadcastwhipaliases'
+import {
+  resolvewhipendpoint,
+  TWITCH_WHIP_ENDPOINT,
+} from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { WhipTransport } from 'zss/feature/broadcast/whiptransport'
 import {
   broadcasthiddenrendertick,
@@ -248,7 +251,11 @@ export function parsebroadcaststartpayload(
   data: unknown,
 ): BroadcastStartPayload | undefined {
   if (typeof data === 'string' && data.length > 0) {
-    return { kind: 'ivs-low-latency', streamKey: data }
+    return {
+      kind: 'whip',
+      endpoint: TWITCH_WHIP_ENDPOINT,
+      bearer: data,
+    }
   }
   if (!data || typeof data !== 'object') {
     return undefined
