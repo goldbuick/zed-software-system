@@ -5,6 +5,8 @@
  * id string appears once in the whole wire payload, or it is the known
  * codepage.object|terrain.id === codepage.id alias (exactly two occurrences).
  * Ids referenced from flags, board stats, element stats, or code stay as sids.
+ * Flag owners / activelist / flag bag strings are never remapped (including
+ * when another book in the same compress envelope references them).
  * book.id is never remapped.
  *
  * On import, integer id fields are minted back to fresh sids (same integer ->
@@ -51,6 +53,60 @@ function countidinpayload(payload: unknown, id: string): number {
     return 0
   }
   return JSON.stringify(payload).split(id).length - 1
+}
+
+function collectstringsinvalue(value: unknown, out: Set<string>): void {
+  if (typeof value === 'string') {
+    if (value) {
+      out.add(value)
+    }
+    return
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; ++i) {
+      collectstringsinvalue(value[i], out)
+    }
+    return
+  }
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    const keys = Object.keys(record)
+    for (let i = 0; i < keys.length; ++i) {
+      const key = keys[i]
+      if (key) {
+        out.add(key)
+      }
+      collectstringsinvalue(record[key], out)
+    }
+  }
+}
+
+/**
+ * Ids that must stay as sids: flag owners, activelist entries, and string
+ * values in flag bags (e.g. flags.board). Used so multi-book compress cannot
+ * remint a page/player that another book still references.
+ */
+export function collectflagprotectedids(
+  bookwire: MAYBE<FORMAT_OBJECT>,
+): Set<string> {
+  const out = new Set<string>()
+  if (!ispresent(bookwire)) {
+    return out
+  }
+  const activelist = formatgetvalue(bookwire, BOOK_KEYS.activelist)
+  if (Array.isArray(activelist)) {
+    for (let i = 0; i < activelist.length; ++i) {
+      const id = activelist[i]
+      if (typeof id === 'string' && id) {
+        out.add(id)
+      }
+    }
+  }
+  const flags = formatgetvalue(bookwire, BOOK_KEYS.flags)
+  if (flags && typeof flags === 'object') {
+    collectstringsinvalue(flags, out)
+  }
+  return out
 }
 
 function collectcandidateids(bookwire: FORMAT_OBJECT): string[] {
@@ -118,6 +174,7 @@ function ispageidstructuralalias(pages: FORMAT_OBJECT[], id: string): boolean {
 /** Build string-sid -> dense-int map for remappable ids in one book wire tree. */
 export function buildexportidremap(
   bookwire: MAYBE<FORMAT_OBJECT>,
+  extraprotected?: ReadonlySet<string>,
 ): Map<string, number> {
   const map = new Map<string, number>()
   if (!ispresent(bookwire)) {
@@ -126,6 +183,13 @@ export function buildexportidremap(
   const pages = formatgetvalue(bookwire, BOOK_KEYS.pages)
   if (!Array.isArray(pages)) {
     return map
+  }
+
+  const protectedids = collectflagprotectedids(bookwire)
+  if (extraprotected) {
+    for (const id of extraprotected) {
+      protectedids.add(id)
+    }
   }
 
   const candidates = collectcandidateids(bookwire)
@@ -143,6 +207,9 @@ export function buildexportidremap(
   let next = 0
   for (let i = 0; i < unique.length; ++i) {
     const id = unique[i]
+    if (protectedids.has(id)) {
+      continue
+    }
     const count = countidinpayload(bookwire, id)
     if (count === 1) {
       map.set(id, next++)

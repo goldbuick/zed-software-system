@@ -12,7 +12,6 @@ import { creategadgetid, createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
-import { compressbookspodenvelope } from 'zss/memory/bookcompresspod'
 import {
   memorycreatebook,
   memoryexportbook,
@@ -41,7 +40,6 @@ import {
 import {
   memorycompressbooks,
   memorydecompressbooks,
-  memorysnapshotbookspod,
 } from 'zss/memory/utilities'
 
 function readboard(book: BOOK, pagename: string): BOARD {
@@ -160,23 +158,20 @@ describe('memorycompressbooks', () => {
     expect(memoryreadmainbook()?.name).toBe('beta')
   })
 
-  it('in-process POD zstd matches memorycompressbooks', async () => {
+  it('round-trips opened main id in the compress envelope', async () => {
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
     ])
     memoryresetbooks([book])
     memorywritemainbook(book.id)
-    const envelope = await memorysnapshotbookspod([book])
-    expect(envelope.books.length).toBe(1)
-    expect(envelope.main).toBe(book.id)
-    const viazstd = await compressbookspodenvelope(envelope, 'zstd')
-    const viaapi = await memorycompressbooks([book])
-    expect(viaapi).toBe(viazstd)
-    const { books } = await memorydecompressbooks(viazstd)
+    const compressed = await memorycompressbooks([book])
+    memoryboundariesclear()
+    const { books, main } = await memorydecompressbooks(compressed)
+    expect(main).toBe(book.id)
     expect(books[0].id).toBe(book.id)
   })
 
-  it('json mode stringifies POD envelope for climode', async () => {
+  it('json mode stringifies envelope for climode', async () => {
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
     ])
@@ -202,7 +197,7 @@ describe('memorycompressbooks', () => {
     }
   })
 
-  it('POD zstd wire imports via FORMAT_OBJECT path not JSON fields', async () => {
+  it('zstd wire imports via FORMAT_OBJECT path not JSON fields', async () => {
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
     ])

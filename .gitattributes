@@ -1,0 +1,2 @@
+# Normalize text to Unix LF. Git treats detected binaries as -text (untouched).
+* text=auto eol=lf

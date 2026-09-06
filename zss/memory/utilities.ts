@@ -1,6 +1,6 @@
 import { decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { unpack } from 'msgpackr'
+import { pack, unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
@@ -19,14 +19,19 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
-import { compressbookspodenvelope } from './bookcompresspod'
-import type { MEMORY_BOOKS_POD_ENVELOPE } from './bookcompresspod'
 import {
+  memoryexportbook,
   memoryexportbookasjson,
   memoryimportbook,
   memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from './bookoperations'
+import { bookzstdcompressbase64url } from './bookzstd'
+import {
+  applyexportidremap,
+  buildexportidremap,
+  collectflagprotectedids,
+} from './exportidremap'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
@@ -36,7 +41,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
-import { trimmemoryexport } from './trimexport'
+import { trimformatobject, trimmemoryexport } from './trimexport'
 import { BOOK } from './types'
 
 function base64tobytes(base64: string): Uint8Array {
@@ -258,56 +263,52 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
   return list.map(memoryimportbookfromjson).filter(ispresent)
 }
 
-/** Snapshot books as JSON POD trees for the compress worker (yields between books). */
-export async function memorysnapshotbookspod(
-  books: BOOK[],
-): Promise<MEMORY_BOOKS_POD_ENVELOPE> {
-  const main = memoryreadmainbook()?.id
-  const jsonbooks: unknown[] = []
-  for (let i = 0; i < books.length; ++i) {
-    const exported = trimmemoryexport(memoryexportbookasjson(books[i]))
-    if (exported) {
-      jsonbooks.push(exported)
-    }
-    // Macrotask yield: clock wake uses setTimeout; Promise.resolve is not enough.
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 0)
-    })
-  }
-  return { main, books: jsonbooks }
-}
-
-function shouldoffloadbookcompress(): boolean {
-  if (typeof Worker === 'undefined') {
-    return false
-  }
-  // Jest has no Vite ??worker transform for the nested compress worker.
-  if (
-    typeof process !== 'undefined' &&
-    typeof process.env?.JEST_WORKER_ID === 'string'
-  ) {
-    return false
-  }
-  return true
-}
-
+/**
+ * Compress books for URL save / fork / share.
+ * Same export path as prod: `memoryexportbook` FORMAT_OBJECT + zstd(msgpack).
+ * Envelope keeps opened-book id (`main`) for multi-book sessions.
+ * Dense id remap is applied after collecting flag/activelist ids from every
+ * book so cross-book flags.board / player objects are not reminted out from
+ * under the opened book's resume pointer.
+ */
 export async function memorycompressbooks(books: BOOK[]) {
-  const envelope = await memorysnapshotbookspod(books)
-  const mode = getclimode() ? 'json' : 'zstd'
-  // Let one more tick land before compress work (worker or in-process).
-  await new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
-  })
-  if (shouldoffloadbookcompress()) {
-    try {
-      const { compressbookspodenvelopeoffthread } =
-        await import('zss/compressworkerclient')
-      return await compressbookspodenvelopeoffthread(envelope, mode)
-    } catch {
-      // Worker spawn / postMessage failed -- same bytes in-process.
+  const main = memoryreadmainbook()?.id
+  if (getclimode()) {
+    const jsonbooks: unknown[] = []
+    for (let i = 0; i < books.length; ++i) {
+      const exported = trimmemoryexport(memoryexportbookasjson(books[i]))
+      if (exported) {
+        jsonbooks.push(exported)
+      }
+    }
+    return JSON.stringify({ main, books: jsonbooks })
+  }
+
+  const wires: FORMAT_OBJECT[] = []
+  for (let i = 0; i < books.length; ++i) {
+    const wire = memoryexportbook(books[i], { noremap: true })
+    if (wire) {
+      wires.push(wire)
     }
   }
-  return compressbookspodenvelope(envelope, mode)
+  const protectedids = new Set<string>()
+  for (let i = 0; i < wires.length; ++i) {
+    const ids = collectflagprotectedids(wires[i])
+    for (const id of ids) {
+      protectedids.add(id)
+    }
+  }
+  const exported: FORMAT_OBJECT[] = []
+  for (let i = 0; i < wires.length; ++i) {
+    applyexportidremap(wires[i], buildexportidremap(wires[i], protectedids))
+    const trimmed = trimformatobject(wires[i])
+    if (trimmed) {
+      exported.push(trimmed)
+    }
+  }
+  const bin = pack({ main, books: exported })
+  const bytes = bin instanceof Uint8Array ? bin : new Uint8Array(bin)
+  return bookzstdcompressbase64url(bytes)
 }
 
 async function memorydecompressbookszip(content: string): Promise<BOOK[]> {

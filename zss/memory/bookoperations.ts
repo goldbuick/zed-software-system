@@ -179,7 +179,10 @@ export function memoryexportbookasjson(book: MAYBE<BOOK>): any {
   }
 }
 
-export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
+export function memoryexportbook(
+  book: MAYBE<BOOK>,
+  options?: { noremap?: boolean; protectedids?: ReadonlySet<string> },
+): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(book)) {
     return undefined
   }
@@ -207,7 +210,12 @@ export function memoryexportbook(book: MAYBE<BOOK>): MAYBE<FORMAT_OBJECT> {
   if (!ispresent(formatted)) {
     return undefined
   }
-  applyexportidremap(formatted, buildexportidremap(formatted))
+  if (!options?.noremap) {
+    applyexportidremap(
+      formatted,
+      buildexportidremap(formatted, options?.protectedids),
+    )
+  }
   return formatted
 }
 
