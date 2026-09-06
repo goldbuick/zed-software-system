@@ -17,6 +17,8 @@ title: utilities.ts
 - `zss/feature/url` — isjoin
 - `zss/feature/zsstextui` — DIVIDER, zsstexttape, zsszedlinklinechip
 - `zss/feature/zstdwasm` — ensurezstdwasm
+- `zss/memory/bookzstd` — shared zstd level + in-process compress
+- `zss/compressworkerclient` — nested compressspace worker (browser save path)
 - `zss/gadget/data/api` — registerhyperlinksharedbridge
 - `zss/gadget/data/scrollwritelines` — scrollwritelines, scrolllinkescapefrag
 - `zss/mapping/encode` — arraybuffertobase64, base64url helpers
@@ -40,5 +42,6 @@ title: utilities.ts
 | `memoryreadconfigall()` | Snapshot every config flag |
 | `memorywriteconfig(name, value)` | Write a single config flag |
 | `memoryadminmenu(player)` | Admin scroll: player list, util, config, multiplayer QR |
-| `memorycompressbooks(books)` (async) | msgpack `{ main?, books }` + zstd-19 → base64url (CLI: same envelope JSON) |
+| `memorycompressbooks(books)` (async) | climode: JSON envelope; browser: export+msgpack on sim with tick yields, zstd-19 on compress worker |
+| `memorypackbooksforcompress(books)` (async) | msgpack `{ main?, books }` bytes (yields between books) |
 | `memorydecompressbooks(base64bytes)` (async) | base64url → `{ books, main? }`; also loads legacy JSZip / bare book-array payloads |

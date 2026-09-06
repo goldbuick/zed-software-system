@@ -122,6 +122,37 @@ describe('memoryswitchopenedbook', () => {
     expect(bookb.timestamp).toBeGreaterThan(before)
   })
 
+  it('with login false only switches main and leaves players logged out', () => {
+    const booka = makeplayablebook('world-a')
+    const bookb = makeplayablebook('world-b')
+    memoryresetbooks([booka, bookb])
+    memorywritemainbook(booka.id)
+    expect(memoryloginplayer(player, {})).toBe(true)
+
+    expect(
+      memoryswitchopenedbook(bookb.id, [player], { login: false }),
+    ).toBe(true)
+    expect(memoryreadmainbook()?.id).toBe(bookb.id)
+    expect(bookb.activelist).not.toContain(player)
+    expect(memoryreadbookflag(bookb, player, 'board')).toBeFalsy()
+  })
+
+  it('re-login early return restores activelist when object still on board', () => {
+    const book = makeplayablebook('world')
+    memoryresetbooks([book])
+    memorywritemainbook(book.id)
+    expect(memoryloginplayer(player, {})).toBe(true)
+    const boardid = memoryreadbookflag(book, player, 'board') as string
+
+    // Simulate broken state: object + board flag remain, activelist dropped
+    book.activelist = book.activelist.filter((id) => id !== player)
+    expect(book.activelist).not.toContain(player)
+
+    expect(memoryloginplayer(player, {})).toBe(true)
+    expect(book.activelist).toContain(player)
+    expect(memoryreadbookflag(book, player, 'board')).toBe(boardid)
+  })
+
   it('opens an empty book; still places if title and player exist elsewhere', () => {
     const booka = makeplayablebook('world-a')
     const empty = memorycreatebook([])

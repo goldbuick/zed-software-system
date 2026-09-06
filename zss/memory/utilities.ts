@@ -1,4 +1,4 @@
-import { compress, decompress } from '@bokuweb/zstd-wasm'
+import { decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { pack, unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
@@ -12,11 +12,7 @@ import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import {
-  arraybuffertobase64,
-  base64tobase64url,
-  base64urltobase64,
-} from 'zss/mapping/encode'
+import { base64urltobase64 } from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
 import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -30,6 +26,7 @@ import {
   memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from './bookoperations'
+import { bookzstdcompressbase64url } from './bookzstd'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
@@ -41,9 +38,6 @@ import {
 } from './session'
 import { trimformatobject, trimmemoryexport } from './trimexport'
 import { BOOK } from './types'
-
-/** zstd level for URL book payloads (measured: 19 vs 15 ~0.8%, 22 triples CPU). */
-const BOOK_ZSTD_LEVEL = 19
 
 function base64tobytes(base64: string): Uint8Array {
   const binary = atob(base64)
@@ -264,40 +258,67 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
   return list.map(memoryimportbookfromjson).filter(ispresent)
 }
 
-export async function memorycompressbooks(books: BOOK[]) {
+/** Msgpack `{ main?, books }` for zstd. Export runs on sim; yields so ticktock can run. */
+export async function memorypackbooksforcompress(
+  books: BOOK[],
+): Promise<Uint8Array> {
   const main = memoryreadmainbook()?.id
-  const jsonbooks = books.map((book) =>
-    trimmemoryexport(memoryexportbookasjson(book)),
-  )
-  if (getclimode()) {
-    return JSON.stringify({ main, books: jsonbooks })
-  }
-
-  await ensurezstdwasm()
-
   const exported: FORMAT_OBJECT[] = []
   for (let i = 0; i < books.length; ++i) {
     const exportedbook = trimformatobject(memoryexportbook(books[i]))
     if (exportedbook) {
       exported.push(exportedbook)
     }
+    // Macrotask yield: clock wake uses setTimeout; Promise.resolve is not enough.
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0)
+    })
+  }
+  const bin = pack({ main, books: exported })
+  return bin instanceof Uint8Array ? bin : new Uint8Array(bin)
+}
+
+function shouldoffloadbookcompress(): boolean {
+  if (typeof Worker === 'undefined') {
+    return false
+  }
+  // Jest has no Vite ??worker transform for the nested compress worker.
+  if (
+    typeof process !== 'undefined' &&
+    typeof process.env?.JEST_WORKER_ID === 'string'
+  ) {
+    return false
+  }
+  return true
+}
+
+export async function memorycompressbooks(books: BOOK[]) {
+  const main = memoryreadmainbook()?.id
+  // CLI only: do not build JSON exports on the browser/sim save path (was a
+  // full second sync export of every book before msgpack).
+  if (getclimode()) {
+    const jsonbooks = books.map((book) =>
+      trimmemoryexport(memoryexportbookasjson(book)),
+    )
+    return JSON.stringify({ main, books: jsonbooks })
   }
 
-  // Single zstd frame over msgpack { main?, books } (legacy: bare books array).
-  const bin = pack({ main, books: exported })
-  const binsquash = compress(bin, BOOK_ZSTD_LEVEL)
-  const bytes =
-    binsquash instanceof Uint8Array
-      ? binsquash
-      : new Uint8Array(binsquash as ArrayBuffer)
-  return base64tobase64url(
-    arraybuffertobase64(
-      bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength,
-      ) as ArrayBuffer,
-    ),
-  )
+  const packed = await memorypackbooksforcompress(books)
+  // Let one more tick land before zstd work (worker or in-process fallback).
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0)
+  })
+  if (shouldoffloadbookcompress()) {
+    try {
+      const { compresspackedbooksoffthread } = await import(
+        'zss/compressworkerclient'
+      )
+      return await compresspackedbooksoffthread(packed)
+    } catch {
+      // Worker spawn / postMessage failed -- same bytes in-process.
+    }
+  }
+  return bookzstdcompressbase64url(packed)
 }
 
 async function memorydecompressbookszip(content: string): Promise<BOOK[]> {

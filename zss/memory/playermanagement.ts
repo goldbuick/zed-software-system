@@ -1,4 +1,4 @@
-import { apierror } from 'zss/device/api'
+import { apierror, vmrestart } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
 import { shuffle, unique } from 'zss/mapping/array'
@@ -11,6 +11,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptonumber } from 'zss/mapping/value'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
@@ -40,7 +41,7 @@ import {
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryhaltchip, memoryhaltallchips } from './runtime'
+import { memoryhaltallchips, memoryhaltchip } from './runtime'
 import { memoryreadboardruntime } from './runtimeboundary'
 import {
   memoryisoperator,
@@ -269,6 +270,9 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
+    // Ensure activelist + board flag even when the object already exists
+    // (stale dest-book visits used to early-return without activelist → void gadget).
+    memorywritebookplayerboard(mainbook, player, currentboard.id)
     return true
   }
 
@@ -373,52 +377,16 @@ export function memoryloginplayer(
   return false
 }
 
-/**
- * Switch the opened book (MEMORY.main). Always succeeds when dest exists.
- * Logs players out of the previous book, then attempts login on dest.
- * Title and player kind prefer dest, then any loaded book.
- */
-export function memoryswitchopenedbook(
-  destaddress: string,
-  players: string[],
-): boolean {
+export function memoryswitchopenedbook(destaddress: string): boolean {
+  // check if we are actually switching books
+  const current = memoryreadmainbook()
   const dest = memoryreadbookbyaddress(destaddress)
-  if (!ispresent(dest)) {
+  if (!ispresent(dest) || current?.id === dest.id) {
     return false
   }
 
-  const current = memoryreadmainbook()
-  if (current?.id === dest.id) {
-    return true
-  }
-
-  const transfer: string[] = []
-  if (ispresent(current)) {
-    for (let i = 0; i < current.activelist.length; ++i) {
-      transfer.push(current.activelist[i])
-    }
-  }
-  for (let i = 0; i < players.length; ++i) {
-    const player = players[i]
-    if (player && !transfer.includes(player)) {
-      transfer.push(player)
-    }
-  }
-
-  for (let i = 0; i < transfer.length; ++i) {
-    memorylogoutplayer(transfer[i])
-  }
-
-  // Drop leftover NPC/loader chips from the book we are leaving so dest objects
-  // boot fresh against dest flag bags (lingering OS chips can freeze a world).
-  memoryhaltallchips()
-
+  // switch to dest book
   memorywritemainbook(dest.id)
-
-  for (let i = 0; i < transfer.length; ++i) {
-    memoryloginplayer(transfer[i], {})
-  }
-
   return true
 }
 

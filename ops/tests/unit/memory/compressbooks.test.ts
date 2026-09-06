@@ -31,7 +31,9 @@ import {
 import {
   memorycompressbooks,
   memorydecompressbooks,
+  memorypackbooksforcompress,
 } from 'zss/memory/utilities'
+import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -155,6 +157,21 @@ describe('memorycompressbooks', () => {
     memoryresetbooks(bundle.books, bundle.main)
     expect(memoryreadmainbook()?.id).toBe(second.id)
     expect(memoryreadmainbook()?.name).toBe('beta')
+  })
+
+  it('in-process zstd of packed bytes matches memorycompressbooks', async () => {
+    const book = memorycreatebook([
+      memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
+    ])
+    memoryresetbooks([book])
+    memorywritemainbook(book.id)
+    const packedbytes = await memorypackbooksforcompress([book])
+    expect(packedbytes.byteLength).toBeGreaterThan(0)
+    const viazstd = await bookzstdcompressbase64url(packedbytes)
+    const viaapi = await memorycompressbooks([book])
+    expect(viaapi).toBe(viazstd)
+    const { books } = await memorydecompressbooks(viazstd)
+    expect(books[0].id).toBe(book.id)
   })
 
   it('drops _gadget and _layers caches but keeps durable flags', async () => {

@@ -2,13 +2,12 @@ import {
   apierror,
   apilog,
   registereditoropen,
-  vmgadgetdesync,
   vmcodeaddress,
+  vmlogout,
   vmrefscroll,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
-import { lastinputtime, tracking } from 'zss/device/vm/state'
 import { terminalwritemarkdownlines } from 'zss/feature/parse/markdownterminal'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
 import { write } from 'zss/feature/writeui'
@@ -25,7 +24,6 @@ import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadobject } from 'zss/memory/boardaccess'
-import { memoryinvalidatedraw } from 'zss/memory/boarddrawdirty'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbookcodepage,
@@ -45,7 +43,6 @@ import {
 } from 'zss/memory/codepageoperations'
 import {
   memorymoveplayertoboard,
-  memoryreadplayerboard,
   memoryreopenaftertrash,
   memoryswitchopenedbook,
 } from 'zss/memory/playermanagement'
@@ -128,7 +125,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
     .command(
       'bookopen',
       [ARG_TYPE.NAME, 'switch opened book by id or name'],
-      (chip, words) => {
+      (_, words) => {
         const [address] = readargs(words, 0, [ARG_TYPE.NAME])
         const dest = memoryreadbookbyaddress(address)
         if (!ispresent(dest)) {
@@ -140,29 +137,14 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           )
           return 0
         }
-        const ok = memoryswitchopenedbook(dest.id, [READ_CONTEXT.elementfocus])
-        if (!ok) {
-          apierror(
+        if (memoryswitchopenedbook(dest.id)) {
+          apilog(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            'bookopen',
-            `failed to open book ${address}`,
+            `opened [book] ${dest.name}`,
           )
-          return 0
+          vmflushop()
         }
-        const focus = READ_CONTEXT.elementfocus
-        tracking[focus] = 0
-        lastinputtime[focus] = Date.now()
-        const playerboard = memoryreadplayerboard(focus)
-        memoryinvalidatedraw(playerboard)
-        vmgadgetdesync(SOFTWARE, focus)
-        apilog(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          `opened [book] ${dest.name}`,
-        )
-        vmflushop()
-        chip.command('books')
         return 0
       },
     )

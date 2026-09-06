@@ -42,6 +42,7 @@ import {
   memoryreadboardruntime,
 } from './runtimeboundary'
 import {
+  memoryreadbooklist,
   memoryreadloaders,
   memoryreadmainbook,
   memoryreadoperator,
@@ -80,16 +81,15 @@ export function memoryrestartallchipsandflags() {
   // stop all chips
   memoryhaltallchips()
 
-  const mainbook = memoryreadmainbook()
-  if (!ispresent(mainbook)) {
-    return
+  const books = memoryreadbooklist()
+  for (let b = 0; b < books.length; ++b) {
+    const book = books[b]
+    const flagids = Object.keys(book.flags)
+    for (let i = 0; i < flagids.length; ++i) {
+      memoryboundarydelete(book.flags[flagids[i]])
+    }
+    book.flags = {}
   }
-
-  const flagids = Object.keys(mainbook.flags)
-  for (let i = 0; i < flagids.length; ++i) {
-    memoryboundarydelete(mainbook.flags[flagids[i]])
-  }
-  mainbook.flags = {}
 }
 
 export function memorymessagechip(message: MESSAGE) {
