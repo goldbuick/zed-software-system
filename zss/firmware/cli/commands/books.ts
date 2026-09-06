@@ -3,7 +3,6 @@ import {
   apilog,
   registereditoropen,
   vmcodeaddress,
-  vmlogout,
   vmrefscroll,
 } from 'zss/device/api'
 import { modemwriteinitstring } from 'zss/device/modem'

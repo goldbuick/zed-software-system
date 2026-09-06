@@ -209,7 +209,7 @@ Chip OS / tick loop.
 - **memoryreadbookplayeractive(book, player)**, **memoryreadplayeractive(player)**, **memoryreadplayerboard(player)**, **memoryreadbookplayerboards(book)**, **memorypicknextactiveplayerboard()**
 - **memorywritebookplayerboard(book, player, board)**
 - **memoryloginplayer(player, stickyflags)**, **memorylogoutplayer(player, isendgame)**
-- **memoryswitchopenedbook(dest, players)**, **memoryreopenaftertrash()**
+- **memoryswitchopenedbook(dest)**, **memoryreopenaftertrash()**
 - **memoryscanplayers(players)**
 
 ## gamesend.ts

@@ -1,4 +1,4 @@
-import { apierror, vmrestart } from 'zss/device/api'
+import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
 import { shuffle, unique } from 'zss/mapping/array'
@@ -11,7 +11,6 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptonumber } from 'zss/mapping/value'
-import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryreadobject } from './boardaccess'
@@ -41,7 +40,7 @@ import {
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryhaltallchips, memoryhaltchip } from './runtime'
+import { memoryhaltchip } from './runtime'
 import { memoryreadboardruntime } from './runtimeboundary'
 import {
   memoryisoperator,
