@@ -41,7 +41,7 @@ import {
 } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
-import { PT } from 'zss/words/types'
+import { NAME, PT } from 'zss/words/types'
 
 import {
   LAYOUT_SZZT,
@@ -112,12 +112,17 @@ const ZZT_TEXT_BLOCK_START = 47
 const ZZT_TEXT_BLOCK_END = 53
 const ZZT_TEXT_FANCY_MIN = 128
 
+type ZZT_STAT_ENTRY = {
+  stat: ZZT_STAT
+  index: number
+}
+
 function buildstatmap(
   stats: ZZT_STAT[],
   tilewidth: number,
   tileheight: number,
-): Map<number, ZZT_STAT> {
-  const map = new Map<number, ZZT_STAT>()
+): Map<number, ZZT_STAT_ENTRY> {
+  const map = new Map<number, ZZT_STAT_ENTRY>()
   for (let i = 0; i < stats.length; ++i) {
     const s = stats[i]
     if (
@@ -128,10 +133,47 @@ function buildstatmap(
       s.x < tilewidth &&
       s.y < tileheight
     ) {
-      map.set(s.x + s.y * tilewidth, s)
+      map.set(s.x + s.y * tilewidth, { stat: s, index: i })
     }
   }
   return map
+}
+
+/**
+ * ZZT Leader/Follower are status-element indices. Cafe centipede scripts store
+ * those links on element stats: p3=follower id, p4=leader id, p5=linkgrace.
+ */
+function applyzztcentipedelinks(
+  allstats: ZZT_STAT[],
+  bystatindex: Map<number, BOARD_ELEMENT>,
+) {
+  for (const [index, el] of bystatindex) {
+    const kind = NAME(el.kind ?? '')
+    if (kind !== 'head' && kind !== 'segment') {
+      continue
+    }
+    const st = allstats[index]
+    if (!ispresent(st)) {
+      continue
+    }
+    const follower = st.follower
+    if (isnumber(follower) && follower >= 0) {
+      const next = bystatindex.get(follower)
+      if (ispresent(next?.id)) {
+        el.p3 = next.id
+      }
+    }
+    const leader = st.leader
+    if (isnumber(leader) && leader >= 0) {
+      const prev = bystatindex.get(leader)
+      if (ispresent(prev?.id)) {
+        el.p4 = prev.id
+      }
+    } else if (isnumber(leader) && leader < -1) {
+      // ZZT: Leader < -1 promotes segment to head on the next segment tick
+      el.p5 = 1
+    }
+  }
 }
 
 type PROCESS_LAYOUT = {
@@ -153,7 +195,7 @@ function processboards(
     kind: MAYBE<STR_KIND>,
     dest: PT,
     addstats?: BOARD_ELEMENT,
-  ) {
+  ): MAYBE<BOARD_ELEMENT> {
     const element = memorywriteelementfromkind(board, kind, dest)
     if (ispresent(element) && ispresent(addstats)) {
       const stats = objectKeys(addstats)
@@ -162,6 +204,7 @@ function processboards(
         element[stat] = addstats[stat]
       }
     }
+    return element
   }
 
   function colorsfromzztcolor(zcolor: number) {
@@ -175,8 +218,9 @@ function processboards(
     x: number,
     y: number,
     element: ZZT_ELEMENT,
-    statmap: Map<number, ZZT_STAT>,
+    statmap: Map<number, ZZT_STAT_ENTRY>,
     allstats: ZZT_STAT[],
+    bystatindex: Map<number, BOARD_ELEMENT>,
   ) {
     const maincolor = colorsfromzztcolor(element.color)
     const strcolor: STR_COLOR = mapcolortostrcolor(
@@ -189,7 +233,9 @@ function processboards(
     )
 
     const addstats: BOARD_ELEMENT = {}
-    const elementstat = statmap.get(x + y * tilewidth)
+    const stomentry = statmap.get(x + y * tilewidth)
+    const elementstat = stomentry?.stat
+    const statindex = stomentry?.index
     if (ispresent(elementstat)) {
       if (isnumber(elementstat.cycle) && elementstat.cycle > 0) {
         addstats.cycle = elementstat.cycle
@@ -217,6 +263,12 @@ function processboards(
         if (ispresent(maybecopy?.code) && isstring(maybecopy.code)) {
           addstats.code = zztoop(maybecopy.code)
         }
+      }
+    }
+
+    function remember(written: MAYBE<BOARD_ELEMENT>) {
+      if (ispresent(written) && isnumber(statindex)) {
+        bystatindex.set(statindex, written)
       }
     }
     switch (element.type) {
@@ -388,10 +440,16 @@ function processboards(
         writefromkind(board, ['blinkns', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_HEAD:
-        writefromkind(board, ['head', strcolor], { x, y }, addstats)
+        // p3 reserved for follower object id (ZZT Follower index)
+        delete addstats.p3
+        remember(writefromkind(board, ['head', strcolor], { x, y }, addstats))
         break
       case ZZT_TILE_SEGMENT:
-        writefromkind(board, ['segment', strcolor], { x, y }, addstats)
+        // p3 reserved for follower object id (ZZT Follower index)
+        delete addstats.p3
+        remember(
+          writefromkind(board, ['segment', strcolor], { x, y }, addstats),
+        )
         break
       case ZZT_TILE_CUSTOMTEXT:
         writefromkind(
@@ -448,6 +506,7 @@ function processboards(
   for (let i = 0; i < zztboards.length; ++i) {
     const zztboard = zztboards[i]
     const statmap = buildstatmap(zztboard.stats, tilewidth, tileheight)
+    const bystatindex = new Map<number, BOARD_ELEMENT>()
 
     const codepagestats: string[] = [`@zztboard${i}`]
     if (croppedfromszzt) {
@@ -522,6 +581,7 @@ function processboards(
           zztboard.elements[e],
           statmap,
           zztboard.stats,
+          bystatindex,
         )
       }
       ++x
@@ -531,6 +591,7 @@ function processboards(
       }
     }
 
+    applyzztcentipedelinks(zztboard.stats, bystatindex)
     memoryinitboard(board)
   }
 }

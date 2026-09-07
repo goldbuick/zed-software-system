@@ -4,31 +4,32 @@
 @isbreakable
 @p1 range;Intelligence?
 @p2 range;Deviance?
+' p3=follower id  p8/p9=prevxy scratch
 :think
-#if not follower do
+#if not p3 do
  #if any n segment do
   #send n trylink
  #done
- #if not follower do
+ #if not p3 do
   #if any s segment do
    #send s trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any e segment do
    #send e trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any w segment do
    #send w trylink
   #done
  #done
 #done
-#set prevx thisx
-#set prevy thisy
-#if follower do
- #send "$follower" :preparefollow
+#set p8 thisx
+#set p9 thisy
+#if p3 do
+ #send "$p3" :preparefollow
 #done
 #if p2 above random 10 do
  ?rnd
@@ -37,23 +38,23 @@
 #else do
  ?seek
 #done
-#if thisx is prevx and thisy is prevy do
+#if thisx is p8 and thisy is p9 do
  ?rnd
 #done
-#if thisx is prevx and thisy is prevy do
- #if follower do
-  #send "$follower" :becomehead
+#if thisx is p8 and thisy is p9 do
+ #if p3 do
+  #send "$p3" :becomehead
   #become segment
  #done
 #else do
- #if follower do
-  #send "$follower" :dofollow
+ #if p3 do
+  #send "$p3" :dofollow
  #done
 #done
 #think
 :acceptlink
-#if not follower do
- #set follower senderid
+#if not p3 do
+ #set p3 senderid
 #done
 #think
 :thud
@@ -65,8 +66,8 @@
 #think
 :shot
 :bombed
-#if follower do
- #send "$follower" :leaderdied
+#if p3 do
+ #send "$p3" :leaderdied
 #done
 #give score 1
 #die

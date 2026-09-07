@@ -2,28 +2,29 @@
 @char 79
 @cycle 2
 @isbreakable
+' p3=follower  p4=leader  p5=linkgrace  p6/p7=destxy
 :think
-#if not leader do
- #if linkgrace do
+#if not p4 do
+ #if p5 do
   #become head
  #else do
-  #set linkgrace 1
+  #set p5 1
  #done
-#else if not follower do
+#else if not p3 do
  #if any n segment do
   #send n trylink
  #done
- #if not follower do
+ #if not p3 do
   #if any s segment do
    #send s trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any e segment do
    #send e trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any w segment do
    #send w trylink
   #done
@@ -32,26 +33,26 @@
 #idle
 #think
 :trylink
-#if not leader do
- #set leader senderid
- #clear linkgrace
+#if not p4 do
+ #set p4 senderid
+ #clear p5
  #send sender :acceptlink
- #if not follower do
+ #if not p3 do
   #if any n segment do
    #send n trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any s segment do
    #send s trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any e segment do
    #send e trylink
   #done
  #done
- #if not follower do
+ #if not p3 do
   #if any w segment do
    #send w trylink
   #done
@@ -59,28 +60,28 @@
 #done
 #end
 :acceptlink
-#if not follower do
- #set follower senderid
+#if not p3 do
+ #set p3 senderid
 #done
 #end
 :preparefollow
-#set destx senderx
-#set desty sendery
-#if follower do
- #send "$follower" :preparefollow
+#set p6 senderx
+#set p7 sendery
+#if p3 do
+ #send "$p3" :preparefollow
 #done
 #end
 :dofollow
-#go toward destx desty
-#if follower do
- #send "$follower" :dofollow
+#go toward p6 p7
+#if p3 do
+ #send "$p3" :dofollow
 #done
 #end
 :becomehead
 #become head
 :leaderdied
-#clear leader
-#clear linkgrace
+#clear p4
+#clear p5
 #become head
 :thud
 :touch
@@ -91,8 +92,8 @@
 #end
 :shot
 :bombed
-#if follower do
- #send "$follower" :leaderdied
+#if p3 do
+ #send "$p3" :leaderdied
 #done
 #give score 3
 #die

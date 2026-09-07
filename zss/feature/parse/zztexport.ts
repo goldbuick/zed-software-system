@@ -219,8 +219,8 @@ function kindtozzt(
     p1: numberorzero(el.p1),
     p2: numberorzero(el.p2),
     p3: numberorzero(el.p3),
-    follower: 0,
-    leader: 0,
+    follower: -1,
+    leader: -1,
     underelement: 0,
     undercolor: 0,
     pointer: 0,
@@ -422,6 +422,8 @@ function memoryboardtozzt(
   const { board, exportname } = entry
   const elements: ZZT_ELEMENT[] = []
   const stats: ZZT_STAT[] = []
+  const idtostati = new Map<string, number>()
+  const centipedelinks: { stati: number; el: BOARD_ELEMENT }[] = []
   for (let y = 0; y < ZZT_BOARD_HEIGHT; ++y) {
     for (let x = 0; x < ZZT_BOARD_WIDTH; ++x) {
       const el = memoryreadelement(board, { x, y })
@@ -432,8 +434,42 @@ function memoryboardtozzt(
       }
       elements.push(r.tile)
       if (r.stat && zzttypewantsstat(r.tile.type)) {
+        const kind = NAME(el?.kind ?? '')
+        if (kind === 'head' || kind === 'segment') {
+          // p3/p4 are cafe object ids; ZZT uses Follower/Leader indices
+          r.stat.p3 = 0
+          r.stat.follower = -1
+          r.stat.leader = -1
+        }
+        const stati = stats.length
         stats.push(r.stat)
+        if (ispresent(el?.id)) {
+          idtostati.set(el.id, stati)
+        }
+        if (kind === 'head' || kind === 'segment') {
+          centipedelinks.push({ stati, el: el! })
+        }
       }
+    }
+  }
+
+  for (let i = 0; i < centipedelinks.length; ++i) {
+    const { stati, el } = centipedelinks[i]
+    const st = stats[stati]
+    if (isstring(el.p3) && el.p3) {
+      const fi = idtostati.get(el.p3)
+      if (isnumber(fi)) {
+        st.follower = fi
+      }
+    }
+    if (isstring(el.p4) && el.p4) {
+      const li = idtostati.get(el.p4)
+      if (isnumber(li)) {
+        st.leader = li
+      }
+    } else if (el.p5) {
+      // orphan ready to promote (ZZT Leader < -1)
+      st.leader = -2
     }
   }
 
