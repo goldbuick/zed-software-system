@@ -8,12 +8,21 @@
 #if not follower do
  #if any n segment do
   #send n trylink
- #else if any s segment do
-  #send s trylink
- #else if any e segment do
-  #send e trylink
- #else if any w segment do
-  #send w trylink
+ #done
+ #if not follower do
+  #if any s segment do
+   #send s trylink
+  #done
+ #done
+ #if not follower do
+  #if any e segment do
+   #send e trylink
+  #done
+ #done
+ #if not follower do
+  #if any w segment do
+   #send w trylink
+  #done
  #done
 #done
 #set prevx thisx

@@ -13,7 +13,7 @@
  */
 
 import { objectKeys } from 'ts-extras'
-import { apitoast, workstatus } from 'zss/device/api'
+import { apitoast, vmflush, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import {
   assertzztelementlibrary,
@@ -622,6 +622,7 @@ export function parsezzt(player: string, content: Uint8Array) {
   })
   memorywritebook(book)
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
+  vmflush(SOFTWARE, player)
 }
 
 export function parseszt(player: string, content: Uint8Array) {
@@ -661,4 +662,5 @@ export function parseszt(player: string, content: Uint8Array) {
   })
   memorywritebook(book)
   apitoast(SOFTWARE, player, `imported Super ZZT into ${book.name} book`)
+  vmflush(SOFTWARE, player)
 }

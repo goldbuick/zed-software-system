@@ -4,14 +4,63 @@
 @isbreakable
 :think
 #if not leader do
- #become head
+ #if linkgrace do
+  #become head
+ #else do
+  #set linkgrace 1
+ #done
+#else if not follower do
+ #if any n segment do
+  #send n trylink
+ #done
+ #if not follower do
+  #if any s segment do
+   #send s trylink
+  #done
+ #done
+ #if not follower do
+  #if any e segment do
+   #send e trylink
+  #done
+ #done
+ #if not follower do
+  #if any w segment do
+   #send w trylink
+  #done
+ #done
 #done
 #idle
 #think
 :trylink
 #if not leader do
  #set leader senderid
+ #clear linkgrace
  #send sender :acceptlink
+ #if not follower do
+  #if any n segment do
+   #send n trylink
+  #done
+ #done
+ #if not follower do
+  #if any s segment do
+   #send s trylink
+  #done
+ #done
+ #if not follower do
+  #if any e segment do
+   #send e trylink
+  #done
+ #done
+ #if not follower do
+  #if any w segment do
+   #send w trylink
+  #done
+ #done
+#done
+#end
+:acceptlink
+#if not follower do
+ #set follower senderid
 #done
 #end
 :preparefollow
@@ -31,6 +80,7 @@
 #become head
 :leaderdied
 #clear leader
+#clear linkgrace
 #become head
 :thud
 :touch
