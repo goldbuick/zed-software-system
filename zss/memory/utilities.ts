@@ -265,11 +265,8 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
 
 /**
  * Compress books for URL save / fork / share.
- * Same export path as prod: `memoryexportbook` FORMAT_OBJECT + zstd(msgpack).
- * Envelope keeps opened-book id (`main`) for multi-book sessions.
- * Dense id remap is applied after collecting flag/activelist ids from every
- * book so cross-book flags.board / player objects are not reminted out from
- * under the opened book's resume pointer.
+ * Sim owns export + cross-book id protect + msgpack; browser zstd runs on the
+ * compress worker (in-process fallback / Jest). Climode uses JSON envelope.
  */
 export async function memorycompressbooks(books: BOOK[]) {
   const main = memoryreadmainbook()?.id
@@ -308,7 +305,23 @@ export async function memorycompressbooks(books: BOOK[]) {
   }
   const bin = pack({ main, books: exported })
   const bytes = bin instanceof Uint8Array ? bin : new Uint8Array(bin)
-  return bookzstdcompressbase64url(bytes)
+
+  // Jest has no Vite ??worker transform for compressspace.
+  if (
+    typeof process !== 'undefined' &&
+    typeof process.env?.JEST_WORKER_ID === 'string'
+  ) {
+    return bookzstdcompressbase64url(bytes)
+  }
+
+  try {
+    const { compressbookbytesoffthread } = await import(
+      'zss/compressworkerclient'
+    )
+    return await compressbookbytesoffthread(bytes)
+  } catch {
+    return bookzstdcompressbase64url(bytes)
+  }
 }
 
 async function memorydecompressbookszip(content: string): Promise<BOOK[]> {

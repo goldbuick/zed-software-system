@@ -35,7 +35,7 @@
 :thud
 :touch
 #if any at senderx sendery player do
- #shoot at senderx sendery
+ #send at senderx sendery shot
 #done
 #idle
 #end

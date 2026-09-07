@@ -1,12 +1,8 @@
 /**
  * Sim-owned client for the single-purpose compressspace worker.
- * Lazy spawn; structuredClone POD envelope in; result string out.
+ * Lazy spawn; transferable packed bytes in; base64url string out.
  */
-import { compressbookspodenvelope } from 'zss/memory/bookcompresspod'
-import type {
-  BOOK_COMPRESS_MODE,
-  MEMORY_BOOKS_POD_ENVELOPE,
-} from 'zss/memory/bookcompresspod'
+import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
 
 import CompressWorker from './compressspace??worker'
 
@@ -86,25 +82,32 @@ export function haltcompressworker() {
   pending.clear()
 }
 
+function copytoarraybuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
+  return copy.buffer
+}
+
 /**
- * Off-thread POD compress. Falls back in-process if Worker cannot start.
+ * Off-thread zstd of already-packed book bytes. Falls back in-process if
+ * Worker cannot start.
  */
-export async function compressbookspodenvelopeoffthread(
-  envelope: MEMORY_BOOKS_POD_ENVELOPE,
-  mode: BOOK_COMPRESS_MODE,
+export async function compressbookbytesoffthread(
+  bytes: Uint8Array,
 ): Promise<string> {
   const w = ensurecompressworker()
   if (!w) {
-    return compressbookspodenvelope(envelope, mode)
+    return bookzstdcompressbase64url(bytes)
   }
   const id = `c${++nextid}`
+  const buffer = copytoarraybuffer(bytes)
   return new Promise<string>((resolve, reject) => {
     pending.set(id, { resolve, reject })
     try {
-      w.postMessage({ id, envelope, mode })
+      w.postMessage({ id, bytes: buffer }, [buffer])
     } catch {
       pending.delete(id)
-      void compressbookspodenvelope(envelope, mode).then(resolve, reject)
+      void bookzstdcompressbase64url(bytes).then(resolve, reject)
     }
   })
 }

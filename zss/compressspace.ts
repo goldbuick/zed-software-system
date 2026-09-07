@@ -1,40 +1,24 @@
 /**
- * Single-purpose book URL compress worker: POD envelope → json or zstd+base64url.
- * No hub, no device.
+ * Single-purpose book URL compress worker: packed msgpack bytes → zstd+base64url.
+ * No hub, no device. Export + id remap stay on the sim thread.
  */
-import { compressbookspodenvelope } from 'zss/memory/bookcompresspod'
-import type {
-  BOOK_COMPRESS_MODE,
-  MEMORY_BOOKS_POD_ENVELOPE,
-} from 'zss/memory/bookcompresspod'
+import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
 
 type CompressRequest = {
   id: string
-  envelope: MEMORY_BOOKS_POD_ENVELOPE
-  mode: BOOK_COMPRESS_MODE
+  bytes: ArrayBuffer
 }
 
 type CompressResponse =
   | { id: string; result: string }
   | { id: string; error: string }
 
-function iscompressmode(value: unknown): value is BOOK_COMPRESS_MODE {
-  return value === 'json' || value === 'zstd'
-}
-
 function iscompressrequest(data: unknown): data is CompressRequest {
   if (!data || typeof data !== 'object') {
     return false
   }
   const msg = data as CompressRequest
-  if (typeof msg.id !== 'string' || !iscompressmode(msg.mode)) {
-    return false
-  }
-  const envelope = msg.envelope
-  if (!envelope || typeof envelope !== 'object') {
-    return false
-  }
-  return Array.isArray(envelope.books)
+  return typeof msg.id === 'string' && msg.bytes instanceof ArrayBuffer
 }
 
 self.onmessage = (event: MessageEvent<unknown>) => {
@@ -42,8 +26,8 @@ self.onmessage = (event: MessageEvent<unknown>) => {
   if (!iscompressrequest(data)) {
     return
   }
-  const { id, envelope, mode } = data
-  void compressbookspodenvelope(envelope, mode)
+  const { id, bytes } = data
+  void bookzstdcompressbase64url(new Uint8Array(bytes))
     .then((result) => {
       const response: CompressResponse = { id, result }
       self.postMessage(response)

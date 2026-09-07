@@ -13,6 +13,8 @@ import {
   memoryreadelement,
   memoryreadelementbyidorindex,
   memoryreadobject,
+  memoryreadobjectbypt,
+  memoryreadterrain,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
@@ -269,24 +271,47 @@ export function memorysendtoelements(
       }
     }
   } else if (ispresent(send.targetdir)) {
-    if (send.targetdir.targets.length) {
-      for (let i = 0; i < send.targetdir.targets.length; ++i) {
-        const element = memoryreadelement(
-          READ_CONTEXT.board,
-          send.targetdir.targets[i],
-        )
-        if (ispresent(element)) {
-          memorysendtoelement(fromelement, element, send.label)
-        }
+    const pts =
+      send.targetdir.targets.length > 0
+        ? send.targetdir.targets
+        : [send.targetdir.destpt]
+    for (let i = 0; i < pts.length; ++i) {
+      const pt = pts[i]
+      if (!ispt(pt)) {
+        continue
       }
-    } else {
-      const element = memoryreadelement(
-        READ_CONTEXT.board,
-        send.targetdir.destpt,
-      )
-      if (ispresent(element)) {
-        memorysendtoelement(fromelement, element, send.label)
-      }
+      memorysendtolabelatpt(fromelement, pt, send.label)
     }
+  }
+}
+
+/** Directional #send at a cell. Label shot hits object and terrain layers. */
+function memorysendtolabelatpt(
+  fromelement: MAYBE<BOARD_ELEMENT>,
+  pt: PT,
+  label: string,
+) {
+  const board = READ_CONTEXT.board
+  if (NAME(label) === 'shot') {
+    const object = memoryreadobjectbypt(board, pt)
+    if (ispresent(object)) {
+      memorysendtoelement(fromelement, object, label)
+    }
+    const terrain = memoryreadterrain(board, pt.x, pt.y)
+    if (ispresent(terrain)) {
+      // Ensure x/y for softdelete / sender index when terrain lacks them
+      if (!ispresent(terrain.x)) {
+        terrain.x = pt.x
+      }
+      if (!ispresent(terrain.y)) {
+        terrain.y = pt.y
+      }
+      memorysendtoelement(fromelement, terrain, label)
+    }
+    return
+  }
+  const element = memoryreadelement(board, pt)
+  if (ispresent(element)) {
+    memorysendtoelement(fromelement, element, label)
   }
 }

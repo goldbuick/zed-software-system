@@ -30,9 +30,9 @@
 #think
 :thud
 #if any at senderx sendery player do
- #shoot at senderx sendery
+ #send at senderx sendery shot
 #else if any at senderx sendery breakable do
- #shoot at senderx sendery
+ #send at senderx sendery shot
 #done
 #idle
 #think

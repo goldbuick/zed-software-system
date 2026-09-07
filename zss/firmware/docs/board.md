@@ -50,7 +50,7 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 
 ## Internal Functions
 
-- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields
+- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields. For **contact damage**, prefer `#send at x y shot` (see [gamesend.md](../../memory/docs/gamesend.md)) instead of point-blank `#shoot`.
 - **`commandput`** — Handles put: validates context, parses dir+kind, handles multi-target dirs, clipping, ghost vs solid, pushable shove, empty delete, color apply, object/terrain write
 - **`commanddupe`** — Duplicates element at dir in dupedir; blocks on player kind and blocked dest
 
