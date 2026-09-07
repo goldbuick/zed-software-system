@@ -122,6 +122,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `runwith` | Function with argument |
 | `array` | Array variable |
 | `read` | Property from object into variable |
+| `pget` | Attr from dir or object id into variable (Weave-like) |
+| `pset` | Attr on dir or object id (Weave-like; `step` sets stepx/stepy) |
 | `toast` | Toast notification |
 | `ticker` | Element ticker text |
 

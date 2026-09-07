@@ -3,60 +3,14 @@
 @cycle 2
 @isbreakable
 ' p3=follower  p4=leader  p5=linkgrace  p6/p7=destxy
-:think
-#if not p4 do
- #if p5 do
-  #become head
- #else do
-  #set p5 1
- #done
-#else if not p3 do
- #if any n segment do
-  #send n trylink
- #done
- #if not p3 do
-  #if any s segment do
-   #send s trylink
-  #done
- #done
- #if not p3 do
-  #if any e segment do
-   #send e trylink
-  #done
- #done
- #if not p3 do
-  #if any w segment do
-   #send w trylink
-  #done
- #done
-#done
-#idle
+' passive tick: only Leader grace -> become head (ZZT). Handlers above :think.
 #think
+#end
 :trylink
 #if not p4 do
  #set p4 senderid
  #clear p5
  #send sender :acceptlink
- #if not p3 do
-  #if any n segment do
-   #send n trylink
-  #done
- #done
- #if not p3 do
-  #if any s segment do
-   #send s trylink
-  #done
- #done
- #if not p3 do
-  #if any e segment do
-   #send e trylink
-  #done
- #done
- #if not p3 do
-  #if any w segment do
-   #send w trylink
-  #done
- #done
 #done
 #end
 :acceptlink
@@ -77,6 +31,17 @@
  #send "$p3" :dofollow
 #done
 #end
+:fullreverse
+#set next p3
+#set p3 p4
+#set p4 next
+#if next do
+ #send "$next" :fullreverse
+#else do
+ #clear p4
+ #become head
+#done
+#end
 :becomehead
 #become head
 :leaderdied
@@ -89,7 +54,7 @@
  #send at senderx sendery shot
 #done
 #idle
-#end
+#think
 :shot
 :bombed
 #if p3 do
@@ -97,3 +62,14 @@
 #done
 #give score 3
 #die
+:think
+' passive: only promote when leader link is gone (p5 grace)
+#if not p4 do
+ #if p5 do
+  #become head
+ #else do
+  #set p5 1
+ #done
+#done
+#idle
+#think

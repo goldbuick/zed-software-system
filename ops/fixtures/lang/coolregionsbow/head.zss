@@ -4,8 +4,43 @@
 @isbreakable
 @p1 range;Intelligence?
 @p2 range;Deviance?
-' p3=follower id  p8/p9=prevxy scratch
+' p3=follower id  p4=leader after reverse  p8/p9=prev xy
+' boot into :think; handlers above main loop so #think cannot fall into them
+#think
+#end
+:acceptlink
+#if not p3 do
+ #set p3 senderid
+#done
+#end
+:fullreverse
+' swap follower/leader; walk toward old tail; promote tail to head
+#set next p3
+#set p3 p4
+#set p4 next
+#if next do
+ #send "$next" :fullreverse
+#else do
+ #clear p4
+ #become head
+#done
+#end
+:thud
+:touch
+#if any at senderx sendery player do
+ #send at senderx sendery shot
+#done
+#idle
+#think
+:shot
+:bombed
+#if p3 do
+ #send "$p3" :leaderdied
+#done
+#give score 1
+#die
 :think
+' claim orphan segments when this head has no follower
 #if not p3 do
  #if any n segment do
   #send n trylink
@@ -31,10 +66,11 @@
 #if p3 do
  #send "$p3" :preparefollow
 #done
+' ZZT-ish: deviance (p2) random turn; else intelligence (p1) seek
 #if p2 above random 10 do
  ?rnd
 #else if p1 below random 10 do
- ?rnd
+ ?seek
 #else do
  ?seek
 #done
@@ -42,32 +78,19 @@
  ?rnd
 #done
 #if thisx is p8 and thisy is p9 do
+ ' fully stuck: reverse whole chain via p3 walk
  #if p3 do
-  #send "$p3" :becomehead
+  #set next p3
+  #clear p3
+  #set p4 next
+  #send "$next" :fullreverse
   #become segment
  #done
 #else do
+ ' preparefollow already wrote vacated (pre-move) xy into follower p6/p7
  #if p3 do
   #send "$p3" :dofollow
  #done
 #done
-#think
-:acceptlink
-#if not p3 do
- #set p3 senderid
-#done
-#think
-:thud
-:touch
-#if any at senderx sendery player do
- #send at senderx sendery shot
-#done
 #idle
 #think
-:shot
-:bombed
-#if p3 do
- #send "$p3" :leaderdied
-#done
-#give score 1
-#die

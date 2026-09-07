@@ -44,8 +44,10 @@ Writes stats:
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `set` | `name` `value` | Set stat (default value 1) |
+| `set` | `name` `value` | Set stat (default value 1). Weave form: `set name pget <dir\|id> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
+| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag |
+| `pset` | `<dir\|id>` `attr` `value` | Write remote element attr (`step <walkdir>` sets stepx/stepy) |
 | `cycle` | `value` | Set cycle (1–255) |
 
 ### Movement
