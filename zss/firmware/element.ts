@@ -438,6 +438,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
+      case 'kind':
+        return [true, READ_CONTEXT.element?.kind ?? '']
       case 'senderid':
         return [true, sender?.id ?? '']
       case 'senderx':

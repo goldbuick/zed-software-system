@@ -138,7 +138,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `goto` | Teleport player via `memorymoveplayertoboard` — board by name or address with optional x, y |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
-| `push` | Target object in direction ONLY if pushable |
+| `push` | Target object in direction ONLY if pushable (at most once per tick) |
 | `duplicate` | Element at direction in given direction |
 | `duplicatewith` | Element with argument |
 | `dupe` | Element at direction in given direction |

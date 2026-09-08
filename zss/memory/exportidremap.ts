@@ -48,11 +48,46 @@ function formatsetvalue(
   }
 }
 
-function countidinpayload(payload: unknown, id: string): number {
-  if (!id) {
+/**
+ * Count non-overlapping substring hits of `id` in one JSON snapshot of the
+ * wire tree. Same semantics as `JSON.stringify(payload).split(id).length - 1`,
+ * without re-serializing the payload per id.
+ */
+function countoccurrencesintext(haystack: string, needle: string): number {
+  if (!needle) {
     return 0
   }
-  return JSON.stringify(payload).split(id).length - 1
+  let count = 0
+  let from = 0
+  while (from < haystack.length) {
+    const at = haystack.indexOf(needle, from)
+    if (at < 0) {
+      break
+    }
+    count += 1
+    from = at + needle.length
+  }
+  return count
+}
+
+/** One stringify, then per-id occurrence counts (export remap eligibility). */
+function countidsinpayload(
+  payload: unknown,
+  ids: readonly string[],
+): Map<string, number> {
+  const counts = new Map<string, number>()
+  if (ids.length === 0) {
+    return counts
+  }
+  const text = JSON.stringify(payload)
+  for (let i = 0; i < ids.length; ++i) {
+    const id = ids[i]
+    if (!id || counts.has(id)) {
+      continue
+    }
+    counts.set(id, countoccurrencesintext(text, id))
+  }
+  return counts
 }
 
 function collectstringsinvalue(value: unknown, out: Set<string>): void {
@@ -205,12 +240,13 @@ export function buildexportidremap(
   }
 
   let next = 0
+  const counts = countidsinpayload(bookwire, unique)
   for (let i = 0; i < unique.length; ++i) {
     const id = unique[i]
     if (protectedids.has(id)) {
       continue
     }
-    const count = countidinpayload(bookwire, id)
+    const count = counts.get(id) ?? 0
     if (count === 1) {
       map.set(id, next++)
       continue

@@ -32,29 +32,23 @@ export function parsesend(words: WORD[], candirsend = false): SEND_META {
       label,
       args: words.slice(bb),
     }
-  } else {
-    const [targetname, maybelabel, cc] = readargs(words, 0, [
-      ARG_TYPE.NAME, // maybe target name
-      ARG_TYPE.ANY, // maybe label name
-    ])
-    // target:label [args]
-    if (isstring(maybelabel) && maybelabel.startsWith(':')) {
-      return {
-        targetname,
-        label: maybelabel.substring(1).trim(),
-        args: words.slice(cc),
-      }
-    }
-    // label [args]
+  }
+  const [targetname, maybelabel, cc] = readargs(words, 0, [
+    ARG_TYPE.NAME, // maybe target name
+    ARG_TYPE.ANY, // maybe label name
+  ])
+  // target:label [args]
+  if (isstring(maybelabel) && maybelabel.startsWith(':')) {
     return {
-      targetname: 'self',
-      label: targetname,
-      args: words.slice(aa),
+      targetname,
+      label: maybelabel.substring(1).trim(),
+      args: words.slice(cc),
     }
   }
+  // label [args]
   return {
-    targetname: '',
-    label: '',
-    args: [],
+    targetname: 'self',
+    label: targetname,
+    args: words.slice(aa),
   }
 }

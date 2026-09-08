@@ -315,4 +315,6 @@ export type BOARD_ELEMENT_RUNTIME = {
   kindsourcepageid?: string
   /** NAME(element.kind) at resolve time; detects kind string changes without pick. */
   kindsourcekind?: string
+  /** Book timestamp of last successful `#push` displacement (once per tick). */
+  pushedtick?: number
 }

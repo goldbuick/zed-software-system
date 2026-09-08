@@ -56,7 +56,7 @@ In cafe these are **player flags by convention** (set/read with `#give`/`#take`/
 | `gems` | gem +1 | `World.Info.Gems` |
 | `torches` | torch +1; lighting -1 | `World.Info.Torches` |
 | `score` | gem +10, kills (`ScoreValue`) | `World.Info.Score` |
-| `key<color>` (cafe: `key0`,`key9`..`key15`) | key grants, door consumes | `World.Info.Keys[1..7]` |
+| `key<color>` (cafe: `keyblack`, `keyblue`..`keywhite` via `$color` name) | key grants, door consumes | `World.Info.Keys[1..7]` |
 | `energized` / `wick` (cafe) | energizer / torch upkeep timers | `EnergizerTicks` / `TorchTicks` |
 
 ### Element stats (engine, per-element)
@@ -128,7 +128,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
 | 38 | Shark | shark | object | 3 | destruct=no | ok | - | swim in water only, contact damage | `@isswimming` + `@notbreakable` + `:thud` melee |
 | 39 | Spinning gun | spinninggun | object | 2 | - | ok | - | fire bullet/star by P1/P2 | `:drawdisplay` arrows; fire in `:think` |
-| 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | `#push`+`#go flow`; idle if step 0,0 |
+| 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | `#push flow flow`; idle if step 0,0 (move via everytick step) |
 | 41 | Lion | lion | object | 2 | destruct, push | ok | - | `P1<rnd10` rnd else seek, contact damage | seek/rnd + `#send … shot`; `:shot #give score 1` |
 | 42 | Tiger | tiger | object | 2 | destruct, push | ok | - | lion move + fire bullet/star by P2 | move + fire; `:shot #give score 2` |
 | 43 | Blink ray NS | blinkns | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
@@ -193,7 +193,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Pusher (40) -- `pusher-sid_u6ehMs9Uc1SI`
 
 - **ZZT tick:** if the tile ahead (`Step`) is not walkable, `ElementPushablePush` it; then if now walkable, `MoveStat` forward and play a sound; if the pusher two tiles **behind** (`-2*Step`) is another pusher facing the same way, tick it too (chain). Cycle 4, glyph by direction (`16 > `, `17 <`, `30 ^`, `31 v`), dir param.
-- **Cafe now:** `@cycle 4`, glyph from `stepx`/`stepy` in `:think`, idle when step is 0,0, else `#push flow flow` then `#go flow`. Import already maps `E_PUSHER` -> `pusher`.
+- **Cafe now:** `@cycle 4`, glyph from `stepx`/`stepy` in `:think`, idle when step is 0,0, else `#push flow flow` (move via everytick step — no `#go`, which double-stepped). Import already maps `E_PUSHER` -> `pusher`.
 - **Status:** ok (parity-noted). Intentional: no explicit “tick pusher two behind”; sequential ticks + auto-push cover most chains. Push does not destroy breakable terrain (existing cafe push gap).
 
 ---
@@ -209,12 +209,12 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 - **ZZT key:** `key := Color mod 8`; if already held -> "already have"; else set flag, remove tile, "you now have the KEY key".
 - **ZZT door:** `key := (Color div 16) mod 8` (the **background/high nibble** picks the color); if held -> open (clear flag, remove tile); else "locked".
-- **Import normalization (important):** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) imports a door with `strcolorflipped` = `mapcolortostrcolor((bg+8)%16, fg)`, so the ZZT door's **background-nibble key color becomes the cafe door's foreground**. Keys import with plain `strcolor` (fg kept). Net: an imported blue door and a blue key both end up with fg `color` 9 -> flag `key9`. So matching on foreground `color` is **correct and consistent**, not a bug.
-- **Cafe now:** key maps fg `color` (9-15) to a name, sets `key$color`, `#die`; door renders `displaycolor white` on `displaybg = color % 8` and opens when `key$color` is held (`#clear` + `#die`), else "locked". Blocking works because an unopened door is an object the player can't pass.
-- **Real latent issues (not the nibble):**
-  1. Placeholder name `#set p1 "#$%@!"` leaks into the message ("You now have the `#$%@!` key") if an authored key/door has a `color` outside 9-15. Give a sane default.
-  2. Only 7 colors (9-15) are handled -- fine for ZZT parity; revisit only if cafe wants keys/doors in all colors.
-  3. `key0` is cleared by the player setup but never granted/consumed by key/door (dead flag).
+- **Import normalization (important):** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) imports a door with `strcolorflipped` = `mapcolortostrcolor((bg+8)%16, fg)`, so the ZZT door's **background-nibble key color becomes the cafe door's foreground**. Keys import with plain `strcolor` (fg kept). Net: an imported blue door and a blue key both end up with fg `color` 9 -> flag `keyblue` (via `"key$color"` template print). So matching on foreground `color` is **correct and consistent**, not a bug.
+- **Cafe now:** key/door use `$color` in messages and `#set`/`#clear "key$color"` (prints as `keyblue`, etc.); door renders `displaycolor white` on `displaybg = color % 8` and opens when the named key flag is held (`#clear` + `#die`), else "locked". Blocking works because an unopened door is an object the player can't pass.
+- **Notes:**
+  1. `$color` prints the COLOR enum name for any fg index (not only 9-15).
+  2. Player sidebar clears/tests named flags (`keyblue` … `keywhite`, plus `keyblack`).
+  3. Existing saves with numeric `key9` flags need a re-pickup (breaking rename).
 
 ### Passage (11) -- `passage-...`
 

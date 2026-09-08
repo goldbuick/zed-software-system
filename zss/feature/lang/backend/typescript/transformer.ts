@@ -54,7 +54,7 @@ function writetemplatestring(value: string): string {
       if (NAME(name) === 'center') {
         return `$CENTER`
       }
-      return `', api.print(api.get('${name}')), '`
+      return `', api.print(api.get('${name}'), '${name}'), '`
     }
     return escapesinglequoted(token.image)
   })

@@ -28,6 +28,7 @@ import {
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory/flags'
+import { formatprintvalue } from './words/printvalue'
 import { memorycanruncommand } from './memory/permissions'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
@@ -864,23 +865,18 @@ export function createchip(
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
     },
-    print(value) {
-      if (isarray(value)) {
-        return `array ${value.length} ${value.length === 1 ? 'item' : 'items'}`
-      }
-      if (typeof value === 'object') {
-        return `obj ${Object.keys(value).join(', ')}`
-      }
-      return value
+    print(value, name) {
+      return formatprintvalue(value, name)
     },
     template(words) {
       const result = tokenize(words.join(' '), true)
       return result.tokens
         .map((token) => {
           if (token.tokenType === MaybeFlag) {
-            const maybevalue = chip.get(token.image.substring(1))
+            const flagname = token.image.substring(1)
+            const maybevalue = chip.get(flagname)
             if (ispresent(maybevalue)) {
-              return maybevalue
+              return formatprintvalue(maybevalue, flagname)
             }
           }
           return token.image
