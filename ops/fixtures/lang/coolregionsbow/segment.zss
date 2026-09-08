@@ -2,52 +2,19 @@
 @char 79
 @cycle 2
 @isbreakable
-' p3=follower  p4=leader  p5=linkgrace  p6/p7=destxy
-' passive tick: only Leader grace -> become head (ZZT). Handlers above :think.
+' p4=leader  p5=linkgrace. passive: the head does all the moving.
+' promote when the leader id no longer resolves (unset, shot, or bombed).
+:think
+#pget "$p4" id live
+#if not live do
+ #if p5 do
+  #morph head
+ #else do
+  #set p5 1
+ #done
+#done
+#idle
 #think
-#end
-:trylink
-#if not p4 do
- #set p4 senderid
- #clear p5
- #send sender :acceptlink
-#done
-#end
-:acceptlink
-#if not p3 do
- #set p3 senderid
-#done
-#end
-:preparefollow
-#set p6 senderx
-#set p7 sendery
-#if p3 do
- #send "$p3" :preparefollow
-#done
-#end
-:dofollow
-#go toward p6 p7
-#if p3 do
- #send "$p3" :dofollow
-#done
-#end
-:fullreverse
-#set next p3
-#set p3 p4
-#set p4 next
-#if next do
- #send "$next" :fullreverse
-#else do
- #clear p4
- #become head
-#done
-#end
-:becomehead
-#become head
-:leaderdied
-#clear p4
-#clear p5
-#become head
 :thud
 :touch
 #if any at senderx sendery player do
@@ -57,19 +24,5 @@
 #think
 :shot
 :bombed
-#if p3 do
- #send "$p3" :leaderdied
-#done
 #give score 3
 #die
-:think
-' passive: only promote when leader link is gone (p5 grace)
-#if not p4 do
- #if p5 do
-  #become head
- #else do
-  #set p5 1
- #done
-#done
-#idle
-#think

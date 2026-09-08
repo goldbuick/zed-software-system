@@ -2,13 +2,13 @@
 title: boardlookup.ts
 ---
 
-**Purpose**: Board lookup tables — lookup (id at index) and named (name → Set<id|index>). Indexes objects and terrain for O(1) access and name resolution.
+**Purpose**: Board named index (name → Set of id|index). Indexes objects and terrain for name resolution. Object-at-cell queries live in [`boardaccess.ts`](../boardaccess.ts) (`memoryreadobjectatpt`).
 
 ## Dependencies
 
 - `zss/mapping/types` — MAYBE, ispresent, isstring
-- `zss/words/types` — CATEGORY, COLLISION, NAME
-- `./boardaccess` — memoryboardelementindex (moved out of `boardoperations.ts`)
+- `zss/words/types` — CATEGORY, NAME
+- `./boardaccess` — memoryboardelementindex
 - `./bookoperations` — memoryreadelementdisplay
 - `./codepageoperations` — memoryapplyelementstats, memoryreadcodepagestatsfromtext
 
@@ -17,8 +17,9 @@ title: boardlookup.ts
 | Export | Description |
 |--------|-------------|
 | `memorywriteboardnamed` | Add element to board.named[name] |
-| `memorywriteboardobjectlookup` | Set board.lookup[idx] = object.id |
-| `memorydeleteboardobjectnamedlookup` | Remove from lookup and named |
-| `memoryresetboardlookups` | Clear and rebuild lookup, named |
-| `memoryinitboardlookup` | Build lookup and named from terrain/objects |
+| `memorydeleteboardobjectnamedlookup` | Remove object from named |
+| `memoryrebuildboardnamed` | Clear and rebuild named |
+| `memoryinitboardnamed` | Build named from terrain/objects (lazy) |
+| `memoryensureboardready` | Ensure named + terrain coords without wipe |
 | `memorydeleteboardterrainnamed` | Remove terrain from named |
+| `memoryensureterraincoords` | Fill missing terrain x/y from index |

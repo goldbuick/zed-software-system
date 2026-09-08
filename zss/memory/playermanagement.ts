@@ -24,7 +24,6 @@ import {
   memorydeleteboardobjectnamedlookup,
   memoryensureboardready,
   memorywriteboardnamed,
-  memorywriteboardobjectlookup,
 } from './boardlookup'
 import { memorycheckblockedboardobject } from './boardmovement'
 import { memoryreadboardbyaddress, memoryreadelementstat } from './boards'
@@ -114,7 +113,7 @@ export function memorymoveplayertoboard(
     return false
   }
 
-  // ensure lookup exists for the current board
+  // ensure named index exists for the current board
   memoryensureboardready(currentboard)
 
   // player element
@@ -132,7 +131,7 @@ export function memorymoveplayertoboard(
     return false
   }
 
-  // make sure lookup is created
+  // make sure named index is created
   memoryensureboardready(destboard)
 
   // read target spot
@@ -159,9 +158,8 @@ export function memorymoveplayertoboard(
   element.y = dest.y
   destboard.objects[element.id] = element
 
-  // add to dest board lookups
+  // add to dest board named index
   memorywriteboardnamed(destboard, element)
-  memorywriteboardobjectlookup(destboard, element)
 
   // updating tracking
   memorywritebookflag(book, player, 'enterx', dest.x)

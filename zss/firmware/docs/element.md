@@ -46,7 +46,7 @@ Writes stats:
 |---------|------|-------------|
 | `set` | `name` `value` | Set stat (default value 1). Weave form: `set name pget <dir\|id> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
-| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag |
+| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p10`, …) |
 | `pset` | `<dir\|id>` `attr` `value` | Write remote element attr (`step <walkdir>` sets stepx/stepy) |
 | `cycle` | `value` | Set cycle (1–255) |
 
@@ -63,6 +63,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `become` | `kind` | Transform into kind (preserve color), delete self, create new, endofprogram |
+| `morph` | `kind` | Change kind in place (keep id and stats), swap code/display, halt chip |
 | `bind` | `name` | Copy code from first named element; halt chip |
 | `char` | [dir] `value` | Set char at dir or self |
 | `color` | [dir] `color` | Set color at dir or self |

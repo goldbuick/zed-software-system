@@ -1,10 +1,10 @@
-import { compilescript } from 'zss/feature/lang/langcompileclient'
-import { cleartickreadcontextall } from 'zss/firmware/runtime'
 import {
   DRIVER_TYPE,
   firmwaregetcommand,
   firmwarelistcommands,
 } from 'zss/firmware/runner'
+import { compilescript } from 'zss/feature/lang/langcompileclient'
+import { cleartickreadcontextall } from 'zss/firmware/runtime'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
@@ -16,6 +16,7 @@ import {
 import { memorytickobject } from 'zss/memory/runtime'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { createsid } from 'zss/mapping/guid'
 import { READ_CONTEXT } from 'zss/words/reader'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -36,46 +37,35 @@ const SEGMENT_CODE = fs
   .replace(/\r\n/g, '\n')
   .replace(/\n$/, '')
 
-describe('centipede H1 fix: handlers above :think', () => {
-  it('separates boot #think from :acceptlink with #end', () => {
+describe('centipede handlers after :think', () => {
+  it('places :think before :thud on head', () => {
     const build = compilescript('head', HEAD_CODE)
-    const text = Function.prototype.toString.call(build.code!)
-    expect(text).toMatch(
-      /command\('think'\).*command\('end'\).*'acceptlink' label/s,
+    expect(build.errors ?? []).toEqual([])
+    expect(HEAD_CODE.indexOf(':think')).toBeLessThan(
+      HEAD_CODE.indexOf(':thud'),
     )
   })
 
-  it('separates boot #think from :trylink with #end', () => {
+  it('places :think before :thud on segment', () => {
     const build = compilescript('segment', SEGMENT_CODE)
-    const text = Function.prototype.toString.call(build.code!)
-    expect(text).toMatch(
-      /command\('think'\).*command\('end'\).*'trylink' label/s,
+    expect(build.errors ?? []).toEqual([])
+    expect(SEGMENT_CODE.indexOf(':think')).toBeLessThan(
+      SEGMENT_CODE.indexOf(':thud'),
     )
-  })
-
-  it('keeps main :think after message handlers in source', () => {
-    const accept = HEAD_CODE.indexOf(':acceptlink')
-    const think = HEAD_CODE.lastIndexOf(':think')
-    expect(accept).toBeGreaterThan(0)
-    expect(think).toBeGreaterThan(accept)
-
-    const trylink = SEGMENT_CODE.indexOf(':trylink')
-    const segthink = SEGMENT_CODE.lastIndexOf(':think')
-    expect(trylink).toBeGreaterThan(0)
-    expect(segthink).toBeGreaterThan(trylink)
   })
 })
 
-describe('centipede head/segment link after H1 fix', () => {
+describe('centipede head claims adjacent segment', () => {
   afterEach(() => {
     cleartickreadcontextall()
     memoryboundariesclear()
     memoryresetbooks([])
   })
 
-  it('links a head to an adjacent north segment within a few ticks', () => {
+  it('links a head to an adjacent segment behind vacated cell', () => {
     expect(firmwarelistcommands(DRIVER_TYPE.RUNTIME)).toContain('shortsend')
     expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'shortsend')).toBeTruthy()
+    expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'stat')).toBeTruthy()
 
     const headpage = memorycreatecodepage(HEAD_CODE, {})
     const segpage = memorycreatecodepage(SEGMENT_CODE, {})
@@ -88,6 +78,8 @@ describe('centipede head/segment link after H1 fix', () => {
     board.id = boardpage.id
     memoryensureboardready(board)
 
+    const pid = `pid_${createsid()}`
+    memorycreateboardobjectfromkind(board, { x: 10, y: 0 }, 'player', pid)
     const head = memorycreateboardobjectfromkind(
       board,
       { x: 10, y: 10 },
@@ -96,28 +88,21 @@ describe('centipede head/segment link after H1 fix', () => {
     )!
     const seg = memorycreateboardobjectfromkind(
       board,
-      { x: 10, y: 9 },
+      { x: 10, y: 11 },
       'segment',
       'oid_seg',
     )!
+    head.player = pid
     head.cycle = 1
     seg.cycle = 1
+    head.p1 = 10
+    head.p2 = 0
+    head.stepx = 0
+    head.stepy = 0
     book.timestamp = 100
     READ_CONTEXT.timestamp = 100
 
-    // Boot both chips so directional #send can deliver locally
-    memorytickobject(book, board, seg, SEGMENT_CODE)
     memorytickobject(book, board, head, HEAD_CODE)
-
-    for (let i = 0; i < 12; ++i) {
-      book.timestamp += 1
-      READ_CONTEXT.timestamp = book.timestamp
-      memorytickobject(book, board, head, HEAD_CODE)
-      memorytickobject(book, board, seg, SEGMENT_CODE)
-      if (head.p3 === 'oid_seg' && seg.p4 === 'oid_head') {
-        break
-      }
-    }
 
     expect(head.p3).toBe('oid_seg')
     expect(seg.p4).toBe('oid_head')

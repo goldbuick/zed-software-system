@@ -114,4 +114,13 @@ describe('element #pget / #pset', () => {
     expect(chip.flags.got).toBe(0)
     expect(chip.flags.didfail).toBe(1)
   })
+
+  it('#pget dir id reads neighbor object id', () => {
+    setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pget')
+    handler!(chip, ['n', 'id', 'got'])
+    expect(chip.flags.got).toBe('oid_north')
+    expect(chip.flags.didfail).toBe(0)
+  })
 })

@@ -2,15 +2,72 @@ import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { ispt } from 'zss/words/dir'
-import { PT } from 'zss/words/types'
+import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
-import { memoryreadboardruntime } from './runtimeboundary'
+import { memoryreadboardelementruntime } from './runtimeboundary'
 import {
   memorylistboardnamedelements,
   memorypickboardnearestpt,
 } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
+
+export type MEMORY_READ_OBJECT_AT_PT_OPTIONS = {
+  /** Include ISGHOST objects (default false: occupancy skips ghosts). */
+  includeghost?: boolean
+}
+
+function memoryobjectisghost(object: BOARD_ELEMENT): boolean {
+  if (object.collision === COLLISION.ISGHOST) {
+    return true
+  }
+  return (
+    memoryreadboardelementruntime(object)?.kinddata?.collision ===
+    COLLISION.ISGHOST
+  )
+}
+
+/**
+ * Authoritative object-at-cell query. Scans board.objects by x/y.
+ * Players win on overlap; ghosts are skipped unless includeghost is set.
+ */
+export function memoryreadobjectatpt(
+  board: MAYBE<BOARD>,
+  pt: PT,
+  options?: MEMORY_READ_OBJECT_AT_PT_OPTIONS,
+): MAYBE<BOARD_ELEMENT> {
+  if (
+    !ispresent(board?.objects) ||
+    pt.x < 0 ||
+    pt.x >= BOARD_WIDTH ||
+    pt.y < 0 ||
+    pt.y >= BOARD_HEIGHT
+  ) {
+    return undefined
+  }
+  const includeghost = options?.includeghost === true
+  const objects = Object.values(board.objects)
+  let found: MAYBE<BOARD_ELEMENT>
+  for (let i = 0; i < objects.length; ++i) {
+    const object = objects[i]
+    if (
+      object.x !== pt.x ||
+      object.y !== pt.y ||
+      !ispresent(object.id) ||
+      ispresent(object.removed)
+    ) {
+      continue
+    }
+    if (!includeghost && memoryobjectisghost(object)) {
+      continue
+    }
+    if (ispid(object.id)) {
+      return object
+    }
+    found ??= object
+  }
+  return found
+}
 
 export function memoryreadidorindex(element: BOARD_ELEMENT) {
   return memoryboardelementisobject(element)
@@ -60,40 +117,20 @@ export function memoryreadobjectbypt(
   board: MAYBE<BOARD>,
   pt: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const index = memoryboardelementindex(board, pt)
-  const lookup = memoryreadboardruntime(board)?.lookup
-  if (index < 0 || !ispresent(lookup)) {
-    return undefined
-  }
-  const object = memoryreadobject(board, lookup[index] ?? '')
-  if (ispresent(object)) {
-    return object
-  }
-  return undefined
+  return memoryreadobjectatpt(board, pt)
 }
 
 export function memoryreadelement(
   board: MAYBE<BOARD>,
   pt: PT,
-  nolookup?: boolean,
+  options?: MEMORY_READ_OBJECT_AT_PT_OPTIONS,
 ): MAYBE<BOARD_ELEMENT> {
   const index = memoryboardelementindex(board, pt)
   if (index < 0 || !ispresent(board)) {
     return undefined
   }
 
-  let object: MAYBE<BOARD_ELEMENT>
-  if (nolookup === true) {
-    object = Object.values(board.objects).find(
-      (el) => el.x === pt.x && el.y === pt.y && !el.removed,
-    )
-  } else {
-    const lookup = memoryreadboardruntime(board)?.lookup
-    if (ispresent(lookup)) {
-      object = memoryreadobject(board, lookup[index] ?? '')
-    }
-  }
-
+  const object = memoryreadobjectatpt(board, pt, options)
   if (ispresent(object)) {
     return object
   }

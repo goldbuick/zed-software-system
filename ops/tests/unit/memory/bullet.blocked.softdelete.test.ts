@@ -1,3 +1,4 @@
+import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
@@ -7,7 +8,6 @@ import {
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
@@ -61,8 +61,7 @@ describe('bullet blocked breakable softdelete', () => {
     memorytickobject(book, board, bullet, BULLET_CODE_NO_DIE)
 
     expect(bullet!.removed).toBe(20)
-    const startidx = 5 + 5 * BOARD_WIDTH
-    expect(memoryreadboardruntime(board)?.lookup?.[startidx]).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 5, y: 5 })).toBeUndefined()
   })
 
   it('removes both breakable bullets when one walks into the other', () => {
@@ -104,9 +103,7 @@ describe('bullet blocked breakable softdelete', () => {
 
     expect(follower!.removed).toBe(30)
     expect(lead!.removed).toBe(30)
-    const leadidx = 8 + 15 * BOARD_WIDTH
-    const followidx = 9 + 15 * BOARD_WIDTH
-    expect(memoryreadboardruntime(board)?.lookup?.[leadidx]).toBeUndefined()
-    expect(memoryreadboardruntime(board)?.lookup?.[followidx]).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 8, y: 15 })).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 9, y: 15 })).toBeUndefined()
   })
 })

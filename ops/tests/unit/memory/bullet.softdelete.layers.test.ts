@@ -1,15 +1,12 @@
 import { LAYER_TYPE } from 'zss/gadget/data/types'
-import { pttoindex } from 'zss/mapping/2d'
+import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
   memorysafedeleteelement,
 } from 'zss/memory/boardlifecycle'
-import {
-  memoryensureboardready,
-  memorywriteboardobjectlookup,
-} from 'zss/memory/boardlookup'
+import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
   memoryconverttogadgetlayers,
@@ -21,7 +18,6 @@ import {
 } from 'zss/memory/runtimeboundary'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memoryresetbooks } from 'zss/memory/session'
-import { BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION, DIR } from 'zss/words/types'
 
 jest.mock('zss/config', () => ({
@@ -59,7 +55,7 @@ describe('bullet soft-delete + incremental layers', () => {
     memoryresetbooks([])
   })
 
-  it('memorysafedeleteelement clears object lookup (soft delete)', () => {
+  it('memorysafedeleteelement clears occupancy (soft delete)', () => {
     const board = memorycreateboard()
     board.id = 'board_bullet_lookup'
     const bullet = memorycreateboardobjectfromkind(
@@ -71,16 +67,14 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(bullet).toBeDefined()
     bullet!.collision = COLLISION.ISBULLET
     memoryensureboardready(board)
-    memorywriteboardobjectlookup(board, bullet)
 
-    const idx = 3 + 0 * BOARD_WIDTH
-    expect(memoryreadboardruntime(board)?.lookup?.[idx]).toBe('sid_bullet1')
+    expect(memoryreadobjectatpt(board, { x: 3, y: 0 })?.id).toBe('sid_bullet1')
 
     const ok = memorysafedeleteelement(board, bullet, 100)
     expect(ok).toBe(true)
     expect(bullet!.removed).toBe(100)
     expect(board.objects.sid_bullet1).toBeDefined()
-    expect(memoryreadboardruntime(board)?.lookup?.[idx]).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 3, y: 0 })).toBeUndefined()
   })
 
   it('soft-deleted bullet leaves layer sprites after warm cache', () => {
@@ -126,7 +120,7 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(readbulletsprites(layers).length).toBe(0)
   })
 
-  it('edge block does not leave bullet in lookup when soft-deleted after thud', () => {
+  it('edge block does not leave bullet occupancy when soft-deleted after thud', () => {
     const board = memorycreateboard()
     board.id = 'board_bullet_edge'
     const bullet = memorycreateboardobjectfromkind(
@@ -140,7 +134,6 @@ describe('bullet soft-delete + incremental layers', () => {
     bullet!.stepx = 0
     bullet!.stepy = -1
     memoryensureboardready(board)
-    memorywriteboardobjectlookup(board, bullet)
 
     // Simulate failed north move into edge, then soft-delete (thud/#die).
     const moved = memorymoveobject(undefined, board, bullet, {
@@ -152,7 +145,6 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(bullet!.y).toBe(0)
 
     memorysafedeleteelement(board, bullet, 50)
-    const idx = pttoindex({ x: 5, y: 0 }, BOARD_WIDTH)
-    expect(memoryreadboardruntime(board)?.lookup?.[idx]).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 5, y: 0 })).toBeUndefined()
   })
 })

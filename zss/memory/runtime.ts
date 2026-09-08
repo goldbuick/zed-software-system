@@ -186,7 +186,7 @@ export function memorytickmain(
       for (let b = 0; b < boards.length; ++b) {
         const board = boards[b]
 
-        // ensure lookups/kind without per-tick wipe
+        // ensure named/kind without per-tick wipe
         memoryensureboardready(board)
         if (timestamp % APPLY_SYNTH_RATE === 0) {
           memoryapplyboardsynthstats(board)
@@ -381,7 +381,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
 
-  // ensure lookup is created for the current board
+  // ensure named index is created for the current board
   memoryensureboardready(READ_CONTEXT.board)
 
   // invoke once

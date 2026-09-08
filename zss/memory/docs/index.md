@@ -50,6 +50,6 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 
 - **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, topic, halt, simfreeze.
 - **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-id flag bag.
-- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (lookup, named).
+- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (named).
 - **BOARD_ELEMENT**: kind, position, char, color, code, collision, …
 - **Boundary**: an opaque keyed slice of nested memory (board runtime, chip, player, gadget, synth, layers, tracking) used internally and for jsonpipe gadget projection.

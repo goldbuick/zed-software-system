@@ -164,6 +164,7 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | Command | Description |
 |---------|-------------|
 | `become` | Transform element into different kind |
+| `morph` | Change kind in place, keep stats and id |
 | `bind` | Copy code from named element |
 | `char` | Set character (self or at direction) |
 | `color` | Set color (self or at direction) |

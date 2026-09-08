@@ -14,7 +14,7 @@ title: playermanagement.ts
 - `./boardaccess` — memoryreadobject
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorycreateboardobjectfromkind, memorydeleteboardobject
-- `./boardlookup` — memorydeleteboardobjectnamedlookup, memorywriteboardnamed, memorywriteboardobjectlookup
+- `./boardlookup` — memorydeleteboardobjectnamedlookup, memorywriteboardnamed, memoryensureboardready
 - `./boardmovement` — memorycheckblockedboardobject
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
 - `./boardvisuals` — memoryupdateboardvisuals

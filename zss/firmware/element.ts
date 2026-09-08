@@ -25,6 +25,7 @@ import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
+  memorymorphboardobject,
   memoryreadboardbyevaldir,
   memoryreadelementstat,
   memorywriteelementfromkind,
@@ -159,6 +160,9 @@ function resolveremotetarget(
 
 function readremoteattr(element: BOARD_ELEMENT, attr: string): WORD {
   const statname = mapremotestatname(attr)
+  if (statname === 'id') {
+    return element.id ?? ''
+  }
   if (statname === 'x') {
     return element.x ?? 0
   }
@@ -929,6 +933,26 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
       // halt execution
       chip.endofprogram()
+      return 0
+    },
+    { lists: ['kinds'] },
+  )
+  .command(
+    'morph',
+    [ARG_TYPE.KIND, 'change kind in place, keep stats and id'],
+    (chip, words) => {
+      const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
+      const ok = memorymorphboardobject(
+        READ_CONTEXT.board,
+        READ_CONTEXT.element,
+        kind,
+      )
+      if (ok) {
+        memoryhaltchip(READ_CONTEXT.elementid)
+        chip.set('didfail', 0)
+      } else {
+        chip.set('didfail', 1)
+      }
       return 0
     },
     { lists: ['kinds'] },

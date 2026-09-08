@@ -320,7 +320,7 @@ function processboards(
         writefromkind(board, ['bomb', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_ENERGIZE:
-        writefromkind(board, ['energize', strcolor], { x, y }, addstats)
+        writefromkind(board, ['energizer', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_STAR:
         writefromkind(board, ['star', strcolor], { x, y }, addstats)

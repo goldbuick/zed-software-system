@@ -4,27 +4,60 @@
 @isbreakable
 @p1 range;Intelligence?
 @p2 range;Deviance?
-' p3=follower id  p4=leader after reverse  p8/p9=prev xy
-' boot into :think; handlers above main loop so #think cannot fall into them
-#think
-#end
-:acceptlink
-#if not p3 do
- #set p3 senderid
-#done
-#end
-:fullreverse
-' swap follower/leader; walk toward old tail; promote tail to head
-#set next p3
-#set p3 p4
-#set p4 next
-#if next do
- #send "$next" :fullreverse
+' p3=follower  p4=leader (head writes both while dragging)
+' walk first, then drag the chain into the cells we vacate -- same tick.
+:think
+#if p1 below random 10 do
+ #walk rnd
+#else if p2 above random 9 do
+ #walk rnd
 #else do
- #clear p4
- #become head
+ #walk seek
 #done
-#end
+#if blocked flow do
+ #walk rnd
+#done
+' adopt a segment trailing right behind us
+#if not p3 do
+ #if any opp flow segment do
+  #pget opp flow id p3
+ #done
+#done
+#set destx thisx
+#set desty thisy
+#set nextx thisx + stepx
+#set nexty thisy + stepy
+#if any at nextx nexty player do
+ #send at nextx nexty shot
+ #die
+#done
+' pset moves without yielding, so the drag below still runs this tick
+#pset "$thisid" x nextx
+#pset "$thisid" y nexty
+#walk idle
+#set cur thisid
+#set hops 0
+#while cur do
+ #give hops
+ #if hops above 24 break
+ #pget "$cur" p3 nxt
+ #pget "$nxt" id live
+ #if not live do
+  #pset "$cur" p3 0
+  #clear cur
+ #else do
+  #pget "$nxt" x oldx
+  #pget "$nxt" y oldy
+  #pset "$nxt" p4 cur
+  #pset "$nxt" x destx
+  #pset "$nxt" y desty
+  #set destx oldx
+  #set desty oldy
+  #set cur nxt
+ #done
+#done
+#idle
+#think
 :thud
 :touch
 #if any at senderx sendery player do
@@ -34,63 +67,5 @@
 #think
 :shot
 :bombed
-#if p3 do
- #send "$p3" :leaderdied
-#done
 #give score 1
 #die
-:think
-' claim orphan segments when this head has no follower
-#if not p3 do
- #if any n segment do
-  #send n trylink
- #done
- #if not p3 do
-  #if any s segment do
-   #send s trylink
-  #done
- #done
- #if not p3 do
-  #if any e segment do
-   #send e trylink
-  #done
- #done
- #if not p3 do
-  #if any w segment do
-   #send w trylink
-  #done
- #done
-#done
-#set p8 thisx
-#set p9 thisy
-#if p3 do
- #send "$p3" :preparefollow
-#done
-' ZZT-ish: deviance (p2) random turn; else intelligence (p1) seek
-#if p2 above random 10 do
- ?rnd
-#else if p1 below random 10 do
- ?seek
-#else do
- ?seek
-#done
-#if thisx is p8 and thisy is p9 do
- ?rnd
-#done
-#if thisx is p8 and thisy is p9 do
- ' fully stuck: reverse whole chain via p3 walk
- #if p3 do
-  #set next p3
-  #clear p3
-  #set p4 next
-  #send "$next" :fullreverse
-  #become segment
- #done
-#else do
- ' preparefollow already wrote vacated (pre-move) xy into follower p6/p7
- #if p3 do
-  #send "$p3" :dofollow
- #done
-#done
-#idle
-#think

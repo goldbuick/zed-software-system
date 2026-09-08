@@ -1,6 +1,6 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { memoryreadobjectatpt, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
 import * as boardmovement from 'zss/memory/boardmovement'
@@ -97,7 +97,7 @@ export function boardweave(
   const tmpboard = memorycreateboard()
   tmpboard.terrain = [...origterrain]
 
-  // make sure lookup is created
+  // make sure named index is created
   memoryinitboard(targetboard)
 
   const destindiceswritten = new Set<number>()
@@ -105,7 +105,7 @@ export function boardweave(
 
   // apply weave (terrain from snapshot; object destinations collected then applied once
   // so objects are not chain-moved when dest lies inside the woven rectangle).
-  // nolookup finds objects by x/y (including ghosts, which are omitted from lookup).
+  // includeghost finds objects by x/y (including ghosts, which are omitted from occupancy).
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       let weaveobject = false
@@ -127,7 +127,11 @@ export function boardweave(
       const destidx = tx + ty * BOARD_WIDTH
       const srcidx = x + y * BOARD_WIDTH
       if (weaveobject) {
-        const maybeobject = memoryreadelement(targetboard, { x, y }, true)
+        const maybeobject = memoryreadobjectatpt(
+          targetboard,
+          { x, y },
+          { includeghost: true },
+        )
         if (
           memoryboardelementisobject(maybeobject) &&
           ispresent(maybeobject?.id) &&
@@ -168,7 +172,7 @@ export function boardweave(
     }
   }
 
-  // reset all lookups
+  // rebuild named index
   memoryinitboard(targetboard)
 
   return true
@@ -189,7 +193,7 @@ export function boardweavegroup(
     return false
   }
 
-  // make sure lookup is created
+  // make sure named index is created
   memoryinitboard(targetboard)
 
   // read target group

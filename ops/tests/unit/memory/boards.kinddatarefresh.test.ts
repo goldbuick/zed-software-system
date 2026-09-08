@@ -7,7 +7,7 @@ import {
 } from 'zss/memory/boardlifecycle'
 import {
   memoryensureboardready,
-  memoryinitboardlookup,
+  memoryinitboardnamed,
 } from 'zss/memory/boardlookup'
 import { memorymoveboardobject } from 'zss/memory/boardmovement'
 import {
@@ -29,6 +29,7 @@ import {
   memoryreadboardruntime,
   memoryreadboardelementruntime,
 } from 'zss/memory/runtimeboundary'
+import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
 import { memoryresetbooks } from 'zss/memory/session'
 import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { CATEGORY } from 'zss/words/types'
@@ -134,13 +135,13 @@ describe('codepage pick cache', () => {
   })
 })
 
-describe('incremental board lookup', () => {
+describe('board object occupancy', () => {
   afterEach(() => {
     memoryboundariesclear()
     memoryresetbooks([])
   })
 
-  it('spawn move delete keep lookup without reset', () => {
+  it('spawn move delete keep occupancy without named reset', () => {
     const page = memorycreatecodepage('@crate\n', {})
     memoryresetbooks([memorycreatebook([page])])
 
@@ -153,16 +154,15 @@ describe('incremental board lookup', () => {
       'crate',
     )
     expect(object?.id).toBeDefined()
-    const runtime = memoryreadboardruntime(board)
-    expect(runtime?.lookup?.[3 + 4 * BOARD_WIDTH]).toBe(object!.id)
+    expect(memoryreadobjectatpt(board, { x: 3, y: 4 })?.id).toBe(object!.id)
 
     const blocked = memorymoveboardobject(board, object, { x: 4, y: 4 })
     expect(blocked).toBeUndefined()
-    expect(runtime?.lookup?.[3 + 4 * BOARD_WIDTH]).toBeUndefined()
-    expect(runtime?.lookup?.[4 + 4 * BOARD_WIDTH]).toBe(object!.id)
+    expect(memoryreadobjectatpt(board, { x: 3, y: 4 })).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 4, y: 4 })?.id).toBe(object!.id)
 
     memorydeleteboardobject(board, object!.id!)
-    expect(runtime?.lookup?.[4 + 4 * BOARD_WIDTH]).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 4, y: 4 })).toBeUndefined()
     expect(board.objects[object!.id!]).toBeUndefined()
   })
 
@@ -179,11 +179,11 @@ describe('incremental board lookup', () => {
     expect(named?.has(1 + 1 * BOARD_WIDTH)).toBe(true)
   })
 
-  it('memoryensureboardready is lazy when lookup exists', () => {
+  it('memoryensureboardready is lazy when named exists', () => {
     const board = memorycreateboard()
-    memoryinitboardlookup(board)
-    const before = memoryreadboardruntime(board)?.lookup
+    memoryinitboardnamed(board)
+    const before = memoryreadboardruntime(board)?.named
     memoryensureboardready(board)
-    expect(memoryreadboardruntime(board)?.lookup).toBe(before)
+    expect(memoryreadboardruntime(board)?.named).toBe(before)
   })
 })

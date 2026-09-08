@@ -9,7 +9,7 @@ The memory system manages the ZSS game state — books, codepages, boards, eleme
 - **MEMORY** — Singleton: books Map, opened book (`main`), loaders, session, operator, topic, halt
 - **BOOK** — Contains pages (codepages), flags, activelist
 - **CODE_PAGE** — Board, object, terrain, charset, palette, loader
-- **BOARD** — terrain[], objects{}, lookup, named; 60×25 grid
+- **BOARD** — terrain[], objects{}, named; 60×25 grid
 - **BOARD_ELEMENT** — kind, id, x, y, char, color, code, collision, etc.
 
 ## Module Index
@@ -21,11 +21,10 @@ The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`,
 | [types.md](types.md) | BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE, enums |
 | [index.md](index.md) | Tour of the MEMORY singleton + which file holds which API (replaces the old `index.ts` doc) |
 | [boardelement.md](boardelement.md) | Element create, color, export/import |
-| [boardlookup.md](boardlookup.md) | lookup, named indexing |
+| [boardlookup.md](boardlookup.md) | named indexing |
 | [boardmovement.md](boardmovement.md) | Move, blocked check, cleanup |
 | [boardoperations.md](boardoperations.md) | CRUD, eval dir, tick, path |
 | [boardterrainmap.md](boardterrainmap.md) | Terrain kind-default strip for persisted exports |
-| [boardlookup.md](boardlookup.md) | lookup, named indexing |
 | [bookoperations.md](bookoperations.md) | Book/codepage CRUD, flags, display |
 | [codepageoperations.md](codepageoperations.md) | Parse, apply stats, import/export |
 | [gamesend.md](gamesend.md) | Send to element/boards |

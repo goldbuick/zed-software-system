@@ -4,7 +4,6 @@ import {
   memoryboardlightingapplyobject,
   memoryboardlightingmarkplayer,
 } from 'zss/memory/boardlighting'
-import { memorywriteboardruntime } from 'zss/memory/runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
@@ -206,11 +205,10 @@ describe('boardlighting', () => {
       expect(alphaswall[beyond]).toBeGreaterThanOrEqual(alphasopen[beyond])
     })
 
-    it('darkens cells beyond a lookup object versus the same layout without it', () => {
+    it('darkens cells beyond an object versus the same layout without it', () => {
       const blockerid = 'blocker'
       const bx = 18
       const by = 10
-      const bidx = bx + by * BOARD_WIDTH
 
       const boardplain = makeboard()
       const boardwithobj = makeboard()
@@ -220,9 +218,6 @@ describe('boardlighting', () => {
         y: by,
         runtime: '',
       }
-      const boardruntime = { lookup: new Array<string>(BOARD_SIZE).fill('') }
-      boardruntime.lookup[bidx] = blockerid
-      memorywriteboardruntime(boardwithobj, boardruntime)
 
       const sprite = testsprite(15, 10)
       const light = 7
@@ -241,7 +236,7 @@ describe('boardlighting', () => {
       expect(withalphas[east]).toBeGreaterThanOrEqual(plainalphas[east])
     })
 
-    it('adds occlusion from two inline lookup objects more than a single one', () => {
+    it('adds occlusion from two inline objects more than a single one', () => {
       const lightx = 15
       const y = 10
       const sprite = testsprite(lightx, y)
@@ -251,13 +246,10 @@ describe('boardlighting', () => {
 
       function runwithblockers(ids: { id: string; x: number }[]) {
         const board = makeboard()
-        const boardruntime = { lookup: new Array<string>(BOARD_SIZE).fill('') }
         for (let i = 0; i < ids.length; i++) {
           const { id, x } = ids[i]
           board.objects[id] = { id, x, y, runtime: '' }
-          boardruntime.lookup[x + y * BOARD_WIDTH] = id
         }
-        memorywriteboardruntime(board, boardruntime)
         const alphas = new Array<number>(BOARD_SIZE).fill(1)
         memoryboardlightingapplyobject(board, alphas, {}, sprite, light)
         return alphas[east]

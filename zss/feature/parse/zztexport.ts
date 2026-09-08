@@ -286,7 +286,7 @@ function kindtozzt(
     }
     case 'bomb':
       return { ok: true, tile: { type: T_BOMB, color: z() }, stat: basestat() }
-    case 'energize':
+    case 'energizer':
       return { ok: true, tile: { type: T_ENERGIZE, color: z() } }
     case 'star':
       return { ok: true, tile: { type: T_STAR, color: z() } }

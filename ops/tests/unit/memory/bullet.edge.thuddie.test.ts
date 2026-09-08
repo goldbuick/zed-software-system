@@ -1,20 +1,15 @@
+import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
-import {
-  memorycreateboardobjectfromkind,
-  memorysafedeleteelement,
-} from 'zss/memory/boardlifecycle'
+import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
-import {
-  memorycreatebook,
-} from 'zss/memory/bookoperations'
+import { memorycreatebook } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
-import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
 
@@ -36,7 +31,7 @@ describe('bullet edge thud die', () => {
     memoryresetbooks([])
   })
 
-  it('dies and clears lookup after walking into board edge', () => {
+  it('dies and clears occupancy after walking into board edge', () => {
     const bulletpage = memorycreatecodepage(BULLET_CODE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([bulletpage, boardpage])
@@ -70,7 +65,6 @@ describe('bullet edge thud die', () => {
     }
 
     expect(bullet!.removed).toBeDefined()
-    const idx = 5 + 0 * BOARD_WIDTH
-    expect(memoryreadboardruntime(board)?.lookup?.[idx]).toBeUndefined()
+    expect(memoryreadobjectatpt(board, { x: 5, y: 0 })).toBeUndefined()
   })
 })

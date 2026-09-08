@@ -348,12 +348,12 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
     return
   }
 
-  // ensure lookup
+  // ensure named index
   memoryinitboard(board)
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = memoryreadelement(board, p1, true)
+    const element = memoryreadelement(board, p1, { includeghost: true })
     const codepage = memoryreadelementcodepage(mainbook, element)
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
@@ -745,7 +745,9 @@ export function memoryinspectempty(
     case 'emptyobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y }, true)
+          const maybeobject = memoryreadelement(board, { x, y }, {
+            includeghost: true,
+          })
           if (
             memoryreadboardelementruntime(maybeobject)?.category ===
             CATEGORY.ISOBJECT

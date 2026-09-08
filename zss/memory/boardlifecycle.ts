@@ -24,7 +24,6 @@ import {
   memorydeleteboardobjectnamedlookup,
   memorydeleteboardterrainnamed,
   memorywriteboardnamed,
-  memorywriteboardobjectlookup,
 } from './boardlookup'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryexportterrainelement } from './boardterrainmap'
@@ -177,7 +176,6 @@ export function memorycreateboardobject(
   board.objects[object.id] = object
   memoryreadelementkind(object)
   memorywriteboardnamed(board, object)
-  memorywriteboardobjectlookup(board, object)
   return board.objects[object.id]
 }
 

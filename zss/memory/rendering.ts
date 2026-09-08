@@ -309,7 +309,7 @@ export function memoryconverttogadgetlayers(
     }
   }
 
-  // make sure lookup is created (tick path already ensured; lazy if other callers)
+  // make sure named index is created (tick path already ensured; lazy if other callers)
   memoryensureboardready(board)
 
   // update resolve caches

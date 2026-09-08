@@ -292,7 +292,6 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 
 export type BOARD_RUNTIME = {
   named?: Record<string, Set<string | number>>
-  lookup?: MAYBE<string>[]
   distmaps?: Record<string, number[]>
   overboard?: string
   underboard?: string

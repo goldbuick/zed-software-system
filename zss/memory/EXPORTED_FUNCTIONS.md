@@ -53,7 +53,7 @@ Board runtime readiness helpers for tests and boundary collection.
 
 ## jsonpipefilter.ts
 
-- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `lookup` / `named`)
+- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `named`)
 
 ## boardaccess.ts
 
@@ -61,7 +61,8 @@ Board element / point lookups (no mutation).
 
 - **memoryreadidorindex(element)**, **memoryboardelementindex(board, pt)**
 - **memoryreadterrain(board, x, y)**, **memoryreadobject(board, id)**, **memoryreadobjectbypt(board, pt)**
-- **memoryreadelement(board, pt)**, **memoryreadelementbyidorindex(board, idorindex)**
+- **memoryreadobjectatpt(board, pt, options?)** - authoritative object-at-cell scan (player wins; ghosts skipped unless `includeghost`)
+- **memoryreadelement(board, pt, options?)**, **memoryreadelementbyidorindex(board, idorindex)**
 - **memoryreadobjects(board)**, **memoryreadplayersonboard(board)**
 - **memoryfindboardplayer(board, target, player)**
 
@@ -70,7 +71,7 @@ Board element / point lookups (no mutation).
 Board / element / kind reads + creators.
 
 - **memoryreadelementkind(element)**, **memoryreadelementstat(element, stat)**, **memorycheckelementpushable(pusher, target)**
-- **memorywriteelementfromkind(board, kind, dest, id?)**, **memorywritebullet(board, kind, dest)**
+- **memorywriteelementfromkind(board, kind, dest, id?)**, **memorywritebullet(board, kind, dest)**, **memorymorphboardobject(board, element, kind)**
 - **memoryreadboardbyaddress(address)**, **memoryreadoverboard(board)**, **memoryreadunderboard(board)**, **memoryreadboardbyevaldir(dir, board)**
 - **memoryinitboard(board)**
 
@@ -99,11 +100,11 @@ Terrain kind-default strip for persisted exports (see [docs](docs/boardterrainma
 
 ## boardlookup.ts
 
-Lookup tables (object id → pt, named indices).
+Named index (name → Set of object id | terrain index).
 
-- **memorywriteboardnamed**, **memorywriteboardobjectlookup**
-- **memorydeleteboardobjectnamedlookup**, **memorydeleteboardterrainnamed**
-- **memoryresetboardlookups(board)**, **memoryinitboardlookup(board)**
+- **memorywriteboardnamed**, **memorydeleteboardobjectnamedlookup**, **memorydeleteboardterrainnamed**
+- **memoryrebuildboardnamed(board)**, **memoryinitboardnamed(board)**, **memoryensureboardready(board)**
+- **memoryensureterraincoords(board)**
 
 ## boardmovement.ts
 
