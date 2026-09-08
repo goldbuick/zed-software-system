@@ -187,10 +187,10 @@
       },
       {
         "id": "sid_O4pIK7XOb4_C",
-        "code": "@scroll\n@cycle 1\n@isitem\n@ispushable\n@char 232\n@color white\n@code zssedit;edit scroll\n' do not edit\n:think\n#give color\n#if color above 15 do\n #set color 9\n#done\n#think\n:touch\n#bgplay tc-c+d-d+e-e+f-f+g-g\n#die",
+        "code": "@scroll\n@cycle 1\n@isitem\n@ispushable\n@char 232\n@color white\n@code zssedit;edit scroll\n' do not edit\n:think\n#give color\n#if color above 15 do\n #set color 9\n#done\n#idle\n#think\n:touch\n#bgplay tc-c+d-d+e-e+f-f+g-g\n#die",
         "object": {
           "id": "sid_O4pIK7XOb4_C",
-          "code": "@scroll\n@cycle 1\n@isitem\n@ispushable\n@char 232\n@color white\n@code zssedit\n:think\n#give color\n#if color above 15 do\n #set color 9\n#done\n#think\n:touch\n#bgplay tc-c+d-d+e-e+f-f+g-g\n#dieonend",
+          "code": "@scroll\n@cycle 1\n@isitem\n@ispushable\n@char 232\n@color white\n@code zssedit;edit scroll\n' do not edit\n:think\n#give color\n#if color above 15 do\n #set color 9\n#done\n#idle\n#think\n:touch\n#bgplay tc-c+d-d+e-e+f-f+g-g\n#die",
           "name": "scroll",
           "char": 232,
           "color": 15,
@@ -380,10 +380,10 @@
       },
       {
         "id": "sid_u6ehMs9Uc1SI",
-        "code": "@pusher\n@cycle 4\n@char 16\n:think\n#if stepx above 0 set char 16\n#if stepx below 0 set char 17\n#if stepy below 0 set char 30\n#if stepy above 0 set char 31\n#if stepx is 0 and stepy is 0 do\n #idle\n #think\n#done\n#push flow flow\n#think",
+        "code": "@pusher\n@cycle 4\n@char 16\n:think\n#if stepx above 0 set char 16\n#if stepx below 0 set char 17\n#if stepy below 0 set char 30\n#if stepy above 0 set char 31\n#idle\n#think",
         "object": {
           "id": "sid_u6ehMs9Uc1SI",
-          "code": "@pusher\n@cycle 4\n@char 16\n:think\n#if stepx above 0 set char 16\n#if stepx below 0 set char 17\n#if stepy below 0 set char 30\n#if stepy above 0 set char 31\n#if stepx is 0 and stepy is 0 do\n #idle\n #think\n#done\n#push flow flow\n#think\n",
+          "code": "@pusher\n@cycle 4\n@char 16\n:think\n#if stepx above 0 set char 16\n#if stepx below 0 set char 17\n#if stepy below 0 set char 30\n#if stepy above 0 set char 31\n#idle\n#think\n",
           "name": "pusher",
           "char": 16,
           "cycle": 4
@@ -400,7 +400,7 @@
       },
       {
         "id": "sid_YfADg1Nq89xx",
-        "code": "@star\n@cycle 1\n@char 83\n@notbreakable\n@p2 100\n:think\n#take p2\n#if p2 below or eq 0 do\n #die\n#else if p2 % 2 is 0 do\n ?seek\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:drawdisplay\n#give color\n#if color above 15 set color 9\n#set p4 currenttick % 4\n#if p4 is 0 char 179\n#if p4 is 1 char 47\n#if p4 is 2 char 196\n#if p4 is 3 char 92\n#end"
+        "code": "@star\n@cycle 1\n@char 83\n@notbreakable\n@p2 100\n:think\n#take p2\n#if p2 below or eq 0 do\n #die\n#else if p2 % 2 is 0 do\n ?seek\n#else do\n #idle\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:drawdisplay\n#give color\n#if color above 15 set color 9\n#set p4 currenttick % 4\n#if p4 is 0 char 179\n#if p4 is 1 char 47\n#if p4 is 2 char 196\n#if p4 is 3 char 92\n#end"
       },
       {
         "id": "sid_0TOoer5HeouV",

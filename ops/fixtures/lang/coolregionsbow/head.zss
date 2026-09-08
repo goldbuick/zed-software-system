@@ -1,7 +1,6 @@
 @head
 @char 233
 @cycle 2
-@isbreakable
 @p1 range;Intelligence?
 @p2 range;Deviance?
 ' p3=follower  p4=leader (head writes both while dragging)

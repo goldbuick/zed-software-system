@@ -128,7 +128,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
 | 38 | Shark | shark | object | 3 | destruct=no | ok | - | swim in water only, contact damage | `@isswimming` + `@notbreakable` + `:thud` melee |
 | 39 | Spinning gun | spinninggun | object | 2 | - | ok | - | fire bullet/star by P1/P2 | `:drawdisplay` arrows; fire in `:think` |
-| 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | `#push flow flow`; idle if step 0,0 (move via everytick step) |
+| 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | glyph from step; `#idle`/`#think` (move+push via everytick step) |
 | 41 | Lion | lion | object | 2 | destruct, push | ok | - | `P1<rnd10` rnd else seek, contact damage | seek/rnd + `#send … shot`; `:shot #give score 1` |
 | 42 | Tiger | tiger | object | 2 | destruct, push | ok | - | lion move + fire bullet/star by P2 | move + fire; `:shot #give score 2` |
 | 43 | Blink ray NS | blinkns | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
@@ -193,7 +193,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Pusher (40) -- `pusher-sid_u6ehMs9Uc1SI`
 
 - **ZZT tick:** if the tile ahead (`Step`) is not walkable, `ElementPushablePush` it; then if now walkable, `MoveStat` forward and play a sound; if the pusher two tiles **behind** (`-2*Step`) is another pusher facing the same way, tick it too (chain). Cycle 4, glyph by direction (`16 > `, `17 <`, `30 ^`, `31 v`), dir param.
-- **Cafe now:** `@cycle 4`, glyph from `stepx`/`stepy` in `:think`, idle when step is 0,0, else `#push flow flow` (move via everytick step — no `#go`, which double-stepped). Import already maps `E_PUSHER` -> `pusher`.
+- **Cafe now:** `@cycle 4`, glyph from `stepx`/`stepy` in `:think`, then `#idle`/`#think`. March + pushables come from everytick step via `memorymoveobject` (no `#go` / `#push` — those double-acted). Import already maps `E_PUSHER` -> `pusher`.
 - **Status:** ok (parity-noted). Intentional: no explicit “tick pusher two behind”; sequential ticks + auto-push cover most chains. Push does not destroy breakable terrain (existing cafe push gap).
 
 ---
@@ -242,9 +242,16 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 ### Bullet (18) -- `bullet-...`
 
-- **ZZT:** move in step dir; onto walkable/water -> continue; onto ricochet -> reverse and retry; onto breakable or destructible (`P1=0` or player) -> `BoardAttack` (+score); check perpendicular ricochets; else remove and send `SHOT` to an object/scroll it hit.
-- **Cafe now:** on blocked, tries cw/ccw/opposite ricochet neighbors and re-walks; else idle; `:thud/:shot #die`. Engine delivers `:shot` when mover is `ISBULLET` (`#shoot`). Creatures award ZZT ScoreValues on `:shot` before `#die`.
-- **Status:** ok.
+- **ZZT:** move in step dir; onto walkable/water -> continue; onto ricochet -> reverse and retry; onto breakable or destructible (`P1=0` or player) -> `BoardAttack` (+score); check perpendicular ricochets; else remove and send `SHOT` to an object/scroll it hit. OOP `#SHOOT` uses `SHOT_SOURCE_ENEMY` (`P1=1`), so object/tiger bullets do **not** `BoardAttack` creatures.
+- **Cafe now:** on blocked, tries cw/ccw/opposite ricochet neighbors and re-walks; else idle; `:thud/:shot #die`. Engine picks collision label via `memorybulletcollisionlabel` (`party` ≈ ZZT `P1`):
+
+| Source (`bullet.party`) | Player | Creature (lion, …) | `object` / `scroll` | `@isbreakable` |
+|---|---|---|---|---|
+| Player (`ispid`) | `:shot` / `:partyshot` remap | `:shot` | `:shot` | `:shot` + softdelete |
+| Object / tiger (`sid_…`) | `:shot` | `:partyshot` (no kill) | `:shot` | `:shot` + softdelete |
+
+  Non-breakable creatures (lion, tiger, …) get `:partyshot` from enemy-source bullets. `@isbreakable` (wall, head, gem, …) gets `:shot` + softdelete from any source. Creatures award ZZT ScoreValues on `:shot` before `#die`.
+- **Status:** ok (RoZZT no-creature-kill mapped to cafe `:partyshot` when not `@isbreakable`).
 
 ### Water (19) / Forest (20) / Fake (27)
 

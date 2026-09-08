@@ -11,6 +11,7 @@
 #if color above 15 do
  #set color 9
 #done
+#idle
 #think
 :touch
 #bgplay tc-c+d-d+e-e+f-f+g-g

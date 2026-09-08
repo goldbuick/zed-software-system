@@ -21,7 +21,10 @@ import {
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
 } from './boardtransitions'
-import { memorysendtoelement } from './gamesend'
+import {
+  memorybulletcollisionlabel,
+  memorysendtoelement,
+} from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -306,7 +309,11 @@ export function memorymoveobject(
           memoryplayerwaszapped(book, board, blocked, blocked.id ?? '')
         }
         memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'shot')
+        memorysendtoelement(
+          element,
+          blocked,
+          memorybulletcollisionlabel(element, blocked),
+        )
       }
       // Breakable projectiles must leave the cell even when the chip skips :thud
       // #die. A leftover occupant after a wall thud would block later bullets.

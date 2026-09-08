@@ -9,6 +9,8 @@
  #die
 #else if p2 % 2 is 0 do
  ?seek
+#else do
+ #idle
 #done
 #think
 :thud
