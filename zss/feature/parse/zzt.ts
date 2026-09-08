@@ -110,6 +110,8 @@ const ZZT_TILE_SEGMENT = 45
 const ZZT_TILE_CUSTOMTEXT = 46
 const ZZT_TEXT_BLOCK_START = 47
 const ZZT_TEXT_BLOCK_END = 53
+/** Weave boundary: types above this use all-color custom text (type encodes color). */
+const ZZT_TEXT_ALLCOLORS = 127
 const ZZT_TEXT_FANCY_MIN = 128
 
 type ZZT_STAT_ENTRY = {
@@ -479,8 +481,22 @@ function processboards(
             { x, y },
             { ...addstats, char: element.color },
           )
+        } else if (
+          element.type > ZZT_TEXT_BLOCK_END &&
+          element.type <= ZZT_TEXT_ALLCOLORS
+        ) {
+          // Weave mid-range text (54-127): CUSTOMTEXT defaults; color byte is glyph
+          writefromkind(
+            board,
+            ['customtext'],
+            { x, y },
+            { ...addstats, char: element.color },
+          )
         } else if (element.type >= ZZT_TEXT_FANCY_MIN) {
-          const altcolor = colorsfromzztcolor(element.type)
+          // Weave all-color text (128-255): ElemDefColor = type - 128
+          const altcolor = colorsfromzztcolor(
+            element.type - ZZT_TEXT_FANCY_MIN,
+          )
           const straltcolor: STR_COLOR = mapcolortostrcolor(
             altcolor.color,
             altcolor.bg % 8,
