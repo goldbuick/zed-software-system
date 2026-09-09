@@ -251,6 +251,14 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.COLOR_OR_GROUP: {
+        // Prefer color+name (or name-only) group via readgroup so
+        // `any white blinkew` matches kind+color, not color alone.
+        const [group, groupii] = readgroup(ii)
+        if (isstrgroup(group)) {
+          ii = groupii
+          values.push(group)
+          break
+        }
         if (mapstrcolor(words[ii]) !== undefined) {
           const [value, jjj] = readcolor(ii)
           if (isstrcolor(value)) {
@@ -258,14 +266,6 @@ export function readargs<T extends ARG_TYPES>(
             values.push(value)
           } else {
             didexpect('color or group', value, words)
-          }
-        } else if (isstring(words[ii])) {
-          const [group, jjj] = readgroup(ii)
-          if (isstrgroup(group)) {
-            ii = jjj
-            values.push(group)
-          } else {
-            didexpect('color or group', group, words)
           }
         } else {
           const [value, kkk] = readexpr(ii)

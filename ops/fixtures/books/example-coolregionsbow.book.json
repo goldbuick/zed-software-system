@@ -443,10 +443,10 @@
       },
       {
         "id": "sid_ZQLMQH7oD_9v",
-        "code": "@blinkwall\n@cycle 1\n@char 206\n@p1 range;starting time\n@p2 range;period\n@shootx number -1 1\n@shooty number -1 1\n:think \n#if p3 is 0 do\n #set p3 p1 + 1\n#else if p3 is 1 do\n ' either clear or shoot\n #if shooty is 0 do\n  #set p4 blinkew\n #else do\n  #set p4 blinkns\n #done\n #set p5 thisx + shootx\n #set p6 thisy + shooty\n #set p7 p5\n #set p8 p6\n ' clear blink walls\n #while any at p5 p6 \"$color\" \"$p4\" do\n  #put at p5 p6 empty\n  #give p5 shootx\n  #give p6 shooty\n #done \n ' write blink walls and damage along the ray\n #if p5 is p7 and p6 is p8 do\n  #while not blocked at p5 p6 do\n   #put at p5 p6 \"$color\" \"$p4\"\n   #send at p5 p6 shot\n   #give p5 shootx\n   #give p6 shooty\n  #done\n  #send at p5 p6 shot\n #done\n #set p3 p2 * 2 + 1\n#else do\n #take p3\n#done\n#idle\n#think",
+        "code": "@blinkwall\n@cycle 1\n@char 206\n@p1 range;starting time\n@p2 range;period\n@shootx number -1 1\n@shooty number -1 1\n:think \n#if p3 is 0 do\n #set p3 p1 + 1\n#else if p3 is 1 do\n ' either clear or shoot\n #if shootx do\n  #set p4 blinkew\n #else if shooty do\n  #set p4 blinkns\n #else do\n  #idle\n  #think\n #done\n #set p5 thisx + shootx\n #set p6 thisy + shooty\n #set p7 p5\n #set p8 p6\n ' clear blink walls\n #while any at p5 p6 \"$color\" \"$p4\" do\n  #put at p5 p6 empty\n  #give p5 shootx\n  #give p6 shooty\n #done \n ' write blink walls and damage along the ray\n ' send before put -- #put shoves pushable (player) off the cell first\n #if p5 is p7 and p6 is p8 do\n  #while not blocked at p5 p6 do\n   #send at p5 p6 shot\n   #put at p5 p6 \"$color\" \"$p4\"\n   #give p5 shootx\n   #give p6 shooty\n  #done\n  #send at p5 p6 shot\n #done\n #set p3 p2 * 2 + 1\n#else do\n #take p3\n#done\n#idle\n#think",
         "object": {
           "id": "sid_ZQLMQH7oD_9v",
-          "code": "@blinkwall\n@cycle 1\n@char 206\n@p1 range;starting time\n@p2 range;period\n@shootx number -1 1\n@shooty number -1 1\n:think \n#if p3 is 0 do\n #set p3 p1 + 1\n#else if p3 is 1 do\n ' either clear or shoot\n #if shooty is 0 do\n  #set p4 blinkew\n #else do\n  #set p4 blinkns\n #done\n #set p5 thisx + shootx\n #set p6 thisy + shooty\n #set p7 p5\n #set p8 p6\n ' clear blink walls\n #while any at p5 p6 \"$color\" \"$p4\" do\n  #put at p5 p6 empty\n  #give p5 shootx\n  #give p6 shooty\n #done \n ' write blink walls and damage along the ray\n #if p5 is p7 and p6 is p8 do\n  #while not blocked at p5 p6 do\n   #put at p5 p6 \"$color\" \"$p4\"\n   #send at p5 p6 shot\n   #give p5 shootx\n   #give p6 shooty\n  #done\n  #send at p5 p6 shot\n #done\n #set p3 p2 * 2 + 1\n#else do\n #take p3\n#done\n#idle\n#think",
+          "code": "@blinkwall\n@cycle 1\n@char 206\n@p1 range;starting time\n@p2 range;period\n@shootx number -1 1\n@shooty number -1 1\n:think \n#if p3 is 0 do\n #set p3 p1 + 1\n#else if p3 is 1 do\n ' either clear or shoot\n #if shootx do\n  #set p4 blinkew\n #else if shooty do\n  #set p4 blinkns\n #else do\n  #idle\n  #think\n #done\n #set p5 thisx + shootx\n #set p6 thisy + shooty\n #set p7 p5\n #set p8 p6\n ' clear blink walls\n #while any at p5 p6 \"$color\" \"$p4\" do\n  #put at p5 p6 empty\n  #give p5 shootx\n  #give p6 shooty\n #done \n ' write blink walls and damage along the ray\n ' send before put -- #put shoves pushable (player) off the cell first\n #if p5 is p7 and p6 is p8 do\n  #while not blocked at p5 p6 do\n   #send at p5 p6 shot\n   #put at p5 p6 \"$color\" \"$p4\"\n   #give p5 shootx\n   #give p6 shooty\n  #done\n  #send at p5 p6 shot\n #done\n #set p3 p2 * 2 + 1\n#else do\n #take p3\n#done\n#idle\n#think",
           "name": "blinkwall",
           "char": 206,
           "p1": 4,
@@ -507,25 +507,29 @@
       },
       {
         "id": "sid_Kptuh6GQDrEN",
-        "code": "@blinkew\n@char 205\n@bg onclear",
+        "code": "@terrain blinkew\n@issolid\n@char 205\n@bg onclear",
         "object": {
           "id": "sid_Kptuh6GQDrEN",
-          "code": "@blinkew\n@char 205\n@bg onclear\n",
+          "code": "@terrain blinkew\n@issolid\n@char 205\n@bg onclear",
           "name": "blinkew",
           "char": 205,
-          "bg": 32
-        }
+          "bg": 32,
+          "collision": 1
+        },
+        "collision": 1
       },
       {
         "id": "sid_hstdE3lhtq3W",
-        "code": "@blinkns\n@char 186\n@bg onclear",
+        "code": "@terrain blinkns\n@issolid\n@char 186\n@bg onclear",
         "object": {
           "id": "sid_hstdE3lhtq3W",
-          "code": "@blinkns\n@char 186\n@bg onclear\n",
+          "code": "@terrain blinkns\n@issolid\n@char 186\n@bg onclear",
           "name": "blinkns",
           "char": 186,
-          "bg": 32
-        }
+          "bg": 32,
+          "collision": 1
+        },
+        "collision": 1
       },
       {
         "id": "sid_dC_QxbuKO59P",

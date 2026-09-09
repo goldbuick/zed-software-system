@@ -287,7 +287,7 @@ Cafe flags match ZZT. Breakable is destroyed by shots/creatures (bullet special-
 ### Blink wall (29) + rays (33/43) -- `blinkwall-...`, `blinkew`, `blinkns`
 
 - **ZZT:** `P3` timer starts at `P1+1`; when it hits 1, either clears its existing ray (matching element+color along the step dir) or, if none, extends a ray until blocked -- damaging destructibles and pinning/killing a player caught in it -- then resets `P3 := P2*2+1`. Ray element is `E_BLINK_RAY_EW`/`NS` by orientation.
-- **Cafe:** `blinkwall` implements start/period with `p3`, clears then writes `blinkew`/`blinkns` tiles along `shootx/shooty`, `#send … shot` at **each** ray cell (and tip). Ray kinds are terrain shells.
+- **Cafe:** `blinkwall` implements start/period with `p3`, clears then writes solid `blinkew`/`blinkns` along `shootx/shooty`, `#send … shot` at **each** ray cell **before** `#put` (and at the tip). Send-before-put matters because `#put` shoves `@ispushable` occupants (the player) off the cell first. Ray kinds use `@issolid`.
 - **Status:** ok. Keep `blinkew`/`blinkns` as runtime-only tiles.
 
 ### Line (31) -- `line-...`

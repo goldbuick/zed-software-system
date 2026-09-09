@@ -120,10 +120,30 @@ describe('readkind vs readgroup', () => {
     expect(next).toBe(2)
   })
 
-  it('ARG_TYPE.GROUP parses unknown names via readargs', () => {
-    READ_CONTEXT.words = ['combat']
-    const [group, next] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.GROUP])
-    expect(group).toEqual(['combat', undefined])
+  it('ARG_TYPE.COLOR_OR_GROUP parses color+name as a group', () => {
+    READ_CONTEXT.words = ['white', 'blinkew']
+    const [match, next] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.COLOR_OR_GROUP,
+    ])
+    expect(match).toEqual(['blinkew', ['WHITE']])
+    expect(next).toBe(2)
+  })
+
+  it('ARG_TYPE.COLOR_OR_GROUP still accepts color-only', () => {
+    READ_CONTEXT.words = ['white']
+    const [match, next] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.COLOR_OR_GROUP,
+    ])
+    expect(match).toEqual(['WHITE'])
+    expect(next).toBe(1)
+  })
+
+  it('ARG_TYPE.COLOR_OR_GROUP still accepts name-only group', () => {
+    READ_CONTEXT.words = ['blinkew']
+    const [match, next] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.COLOR_OR_GROUP,
+    ])
+    expect(match).toEqual(['blinkew', undefined])
     expect(next).toBe(1)
   })
 })

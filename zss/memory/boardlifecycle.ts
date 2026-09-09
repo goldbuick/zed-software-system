@@ -396,11 +396,26 @@ export function memorysafedeleteelement(
     element.removed = timestamp
     memorydeleteboardobjectnamedlookup(board, element)
   } else {
-    memorywriteterrain(board, {
-      x: element?.x ?? 0,
-      y: element?.y ?? 0,
-    })
+    // Clear slot to undefined; kindless {x,y} stubs falsely match color queries.
+    if (
+      !ispresent(board) ||
+      !ispresent(element.x) ||
+      !ispresent(element.y) ||
+      element.x < 0 ||
+      element.x >= BOARD_WIDTH ||
+      element.y < 0 ||
+      element.y >= BOARD_HEIGHT
+    ) {
+      return false
+    }
+    memoryreadelementkind(element)
     memorydeleteboardterrainnamed(board, element)
+    memorydeleteboardelementruntime(element)
+    board.terrain[element.x + element.y * BOARD_WIDTH] = undefined
+    const boardruntime = memoryreadboardruntime(board)
+    if (ispresent(boardruntime)) {
+      delete boardruntime.distmaps
+    }
   }
   return true
 }
