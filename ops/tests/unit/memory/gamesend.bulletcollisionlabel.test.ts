@@ -32,6 +32,7 @@ import {
   memorycreateboardobjectfromkind,
 } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
+import { memorymoveobject } from 'zss/memory/boardmovement'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import {
@@ -41,6 +42,7 @@ import {
 import { memoryresetbooks } from 'zss/memory/session'
 import type { BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
+import { COLLISION } from 'zss/words/types'
 
 describe('memorybulletcollisionlabel', () => {
   function bullet(party: string): BOARD_ELEMENT {
@@ -304,5 +306,85 @@ describe('enemy-source bullet send labels', () => {
       expect.objectContaining({ target: 'sid_head:partyshot' }),
     )
     expect(mockedmemorysafedeleteelement).not.toHaveBeenCalled()
+  })
+})
+
+describe('walker into bullet uses memorybulletcollisionlabel', () => {
+  afterEach(() => {
+    memoryboundariesclear()
+    memoryresetbooks([])
+  })
+
+  function setupkinds(...codes: string[]) {
+    mockedmemorychipispresent.mockReturnValue(true)
+    mockedmemorymessagechip.mockClear()
+    mockedmemorysafedeleteelement.mockClear()
+    memoryresetbooks([
+      memorycreatebook(codes.map((code) => memorycreatecodepage(code, {}))),
+    ])
+    const board = memorycreateboard()
+    memoryensureboardready(board)
+    READ_CONTEXT.board = board
+    READ_CONTEXT.timestamp = 1
+    return board
+  }
+
+  function placewalkerandbullet(
+    board: ReturnType<typeof memorycreateboard>,
+    party: string,
+  ) {
+    const tiger = memorycreateboardobjectfromkind(
+      board,
+      { x: 2, y: 1 },
+      'tiger',
+      'sid_tiger_b',
+    )
+    const shot = memorycreateboardobjectfromkind(
+      board,
+      { x: 3, y: 1 },
+      'bullet',
+      'sid_shot',
+    )
+    expect(tiger).toBeDefined()
+    expect(shot).toBeDefined()
+    shot!.party = party
+    shot!.collision = COLLISION.ISBULLET
+    shot!.breakable = 1
+    return { tiger: tiger!, shot: shot! }
+  }
+
+  it('sends partyshot and softdeletes breakable enemy-party bullet', () => {
+    const board = setupkinds('@tiger\n', '@bullet\n@isbullet\n@isbreakable\n')
+    const { tiger, shot } = placewalkerandbullet(board, 'sid_tiger_a')
+    const moved = memorymoveobject(undefined, board, tiger, { x: 3, y: 1 })
+    expect(moved).toBe(false)
+    expect(mockedmemorymessagechip).toHaveBeenCalledWith(
+      expect.objectContaining({ target: 'sid_tiger_b:partyshot' }),
+    )
+    expect(mockedmemorysafedeleteelement).toHaveBeenCalledWith(
+      board,
+      shot,
+      1,
+    )
+    expect(mockedmemorysafedeleteelement).not.toHaveBeenCalledWith(
+      board,
+      tiger,
+      expect.anything(),
+    )
+  })
+
+  it('sends shot when walker hits player-party bullet', () => {
+    const board = setupkinds('@tiger\n', '@bullet\n@isbullet\n@isbreakable\n')
+    const { tiger, shot } = placewalkerandbullet(board, 'pid_hero')
+    const moved = memorymoveobject(undefined, board, tiger, { x: 3, y: 1 })
+    expect(moved).toBe(false)
+    expect(mockedmemorymessagechip).toHaveBeenCalledWith(
+      expect.objectContaining({ target: 'sid_tiger_b:shot' }),
+    )
+    expect(mockedmemorysafedeleteelement).toHaveBeenCalledWith(
+      board,
+      shot,
+      1,
+    )
   })
 })

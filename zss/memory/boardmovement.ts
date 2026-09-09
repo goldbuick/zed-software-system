@@ -324,8 +324,19 @@ export function memorymoveobject(
         }
       }
     } else if (blockedisbullet) {
-      // Walker hits a bullet: walker takes :shot.
-      memorysendtoelement(blocked, element, 'shot')
+      // Walker hits a bullet: same shot/partyshot policy as bullet→target.
+      memorysendtoelement(
+        blocked,
+        element,
+        memorybulletcollisionlabel(blocked, element),
+      )
+      const contextstamp = READ_CONTEXT.timestamp
+      const bookstamp = book?.timestamp ?? 0
+      const deletestamp =
+        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
+      if (memoryreadelementstat(blocked, 'breakable')) {
+        memorysafedeleteelement(board, blocked, deletestamp)
+      }
     }
 
     // blocked

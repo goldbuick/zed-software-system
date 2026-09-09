@@ -5,13 +5,13 @@
  *
  * Each bar is one `#play`. Tracks are chosen in **global time order** (tick, track index, MIDI pitch): each track is taken the **first** time one of its notes appears, until four distinct tracks or end of file. Selected GM drum tracks (MIDI ch.10) merge into one drum layer at that order position. Output has at most four `;`-separated voices (`MAX_VOICES_PER_PLAY`).
  * Voices are joined with `"; "` (see `PLAY_VOICE_SEPARATOR` in midiplay). Drum-only files get a leading rest voice on **bar 0 only**
- * (`wx; …`) so that bar’s drums are not assigned to synth channel 0. Melodic voices: `+`/`-` (octave from baseline 3), then
+ * (`wx; …`) so that bar’s drums are not assigned to synth channel 0. Melodic voices: `+`/`-` (octave from baseline 4), then
  * duration (`ytsiqhw`), then pitch (`c#`, `b!`). Drums: duration then token (`0`–`9`, `p`, …); rests: duration then `x`.
  * Example (twomeasures.mid, 4/4, two melodic tracks):
  *
  * ```
- * #play +qcdef; wx
- * #play +qgaa#+c; +qefga
+ * #play qcdef; wx
+ * #play qgaa#+c; qefga
  * ```
  */
 

@@ -247,14 +247,14 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Bullet (18) -- `bullet-...`
 
 - **ZZT:** move in step dir; onto walkable/water -> continue; onto ricochet -> reverse and retry; onto breakable or destructible (`P1=0` or player) -> `BoardAttack` (+score); check perpendicular ricochets; else remove and send `SHOT` to an object/scroll it hit. OOP `#SHOOT` uses `SHOT_SOURCE_ENEMY` (`P1=1`), so object/tiger bullets do **not** `BoardAttack` creatures.
-- **Cafe now:** on blocked, tries cw/ccw/opposite ricochet neighbors and re-walks; else idle; `:thud/:shot #die`. Engine picks collision label via `memorybulletcollisionlabel` (`party` ≈ ZZT `P1`):
+- **Cafe now:** on blocked, tries cw/ccw/opposite ricochet neighbors and re-walks; else idle; `:thud/:shot #die`. Engine picks collision label via `memorybulletcollisionlabel` (`party` ≈ ZZT `P1`) for **both** bullet→target and walker→bullet:
 
 | Source (`bullet.party`) | Player | Creature (lion, …) | `object` / `scroll` | `@isbreakable` |
 |---|---|---|---|---|
 | Player (`ispid`) | `:shot` / `:partyshot` remap | `:shot` | `:shot` | `:shot` + softdelete |
 | Object / tiger (`sid_…`) | `:shot` | `:partyshot` (no kill) | `:shot` | `:shot` + softdelete |
 
-  Non-breakable creatures (lion, tiger, head, …) get `:partyshot` from enemy-source bullets. `@isbreakable` (breakable wall, gem, …) gets `:shot` + softdelete from any source. Creatures award ZZT ScoreValues on `:shot` before `#die`.
+  Non-breakable creatures (lion, tiger, head, …) get `:partyshot` from enemy-source bullets (including when they walk into the projectile). `@isbreakable` (breakable wall, gem, …) gets `:shot` + softdelete from any source. Creatures award ZZT ScoreValues on `:shot` before `#die`. Breakable projectiles soft-delete after either collision direction.
 - **Status:** ok (RoZZT no-creature-kill mapped to cafe `:partyshot` when not `@isbreakable`).
 
 ### Water (19) / Forest (20) / Fake (27)
