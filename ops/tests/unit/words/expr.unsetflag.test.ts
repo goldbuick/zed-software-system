@@ -6,11 +6,11 @@ describe('readexpr unset flags', () => {
     READ_CONTEXT.get = undefined
   })
 
-  it('treats unset chip flags as 0, not the flag name string', () => {
+  it('returns the flag name string when a chip flag is unset', () => {
     READ_CONTEXT.get = () => undefined
     READ_CONTEXT.words = ['follower']
     const [value] = readexpr(0)
-    expect(value).toBe(0)
+    expect(value).toBe('follower')
   })
 
   it('still returns present flag values', () => {
