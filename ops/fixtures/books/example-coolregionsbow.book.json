@@ -273,15 +273,16 @@
       },
       {
         "id": "sid_V5FcTvuWHYOr",
-        "code": "@bear\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 0\n#set p3 0\n#if not thisx is playerx do\n #if abs playery - thisy below or eq 8 - p1 do\n  #set p2 playerx - thisx\n  #if p2 below 0 set p2 -1\n  #if p2 above 0 set p2 1\n  #set p3 0\n #done\n#done\n#if p2 is 0 do\n #if abs playerx - thisx below or eq 8 - p1 do\n  #set p3 playery - thisy\n  #if p3 below 0 set p3 -1\n  #if p3 above 0 set p3 1\n  #set p2 0\n #done\n#done\n' --- Movement ---\n#if any by p2 p3 player do\n #send by p2 p3 shot\n #die\n#else if any by p2 p3 breakable do\n #send by p2 p3 shot\n #die\n#else do\n ?by p2 p3\n#done\n#think\n:touch\n#send at senderx sendery shot\n#idle\n#think\n:shot\n#give score 1\n#die\n",
+        "code": "@bear\n@ispushable\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 0\n#set p3 0\n#if not thisx is playerx do\n #if abs playery - thisy below or eq 8 - p1 do\n  #set p2 playerx - thisx\n  #if p2 below 0 set p2 -1\n  #if p2 above 0 set p2 1\n  #set p3 0\n #done\n#done\n#if p2 is 0 do\n #if abs playerx - thisx below or eq 8 - p1 do\n  #set p3 playery - thisy\n  #if p3 below 0 set p3 -1\n  #if p3 above 0 set p3 1\n  #set p2 0\n #done\n#done\n' --- Movement ---\n#if any by p2 p3 player do\n #send by p2 p3 shot\n #die\n#else if any by p2 p3 breakable do\n #send by p2 p3 shot\n #die\n#else do\n ?by p2 p3\n#done\n#think\n:touch\n#send at senderx sendery shot\n#idle\n#think\n:shot\n#give score 1\n#die\n",
         "object": {
           "id": "sid_V5FcTvuWHYOr",
-          "code": "@bear\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 0\n#set p3 0\n#if not thisx is playerx do\n #if abs playery - thisy below or eq 8 - p1 do\n  #set p2 playerx - thisx\n  #if p2 below 0 set p2 -1\n  #if p2 above 0 set p2 1\n  #set p3 0\n #done\n#done\n#if p2 is 0 do\n #if abs playerx - thisx below or eq 8 - p1 do\n  #set p3 playery - thisy\n  #if p3 below 0 set p3 -1\n  #if p3 above 0 set p3 1\n  #set p2 0\n #done\n#done\n' --- Movement ---\n#if any by p2 p3 player do\n #send by p2 p3 shot\n #die\n#else if any by p2 p3 breakable do\n #send by p2 p3 shot\n #die\n#else do\n ?by p2 p3\n#done\n#think\n:touch\n#send at senderx sendery shot\n#idle\n#think\n:shot\n#give score 1\n#die\n",
+          "code": "@bear\n@ispushable\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 0\n#set p3 0\n#if not thisx is playerx do\n #if abs playery - thisy below or eq 8 - p1 do\n  #set p2 playerx - thisx\n  #if p2 below 0 set p2 -1\n  #if p2 above 0 set p2 1\n  #set p3 0\n #done\n#done\n#if p2 is 0 do\n #if abs playerx - thisx below or eq 8 - p1 do\n  #set p3 playery - thisy\n  #if p3 below 0 set p3 -1\n  #if p3 above 0 set p3 1\n  #set p2 0\n #done\n#done\n' --- Movement ---\n#if any by p2 p3 player do\n #send by p2 p3 shot\n #die\n#else if any by p2 p3 breakable do\n #send by p2 p3 shot\n #die\n#else do\n ?by p2 p3\n#done\n#think\n:touch\n#send at senderx sendery shot\n#idle\n#think\n:shot\n#give score 1\n#die\n",
           "name": "bear",
           "char": 153,
           "color": 6,
           "p1": 4,
-          "cycle": 3
+          "cycle": 3,
+          "pushable": 1
         }
       },
       {

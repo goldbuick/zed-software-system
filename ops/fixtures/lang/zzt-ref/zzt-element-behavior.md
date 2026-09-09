@@ -126,7 +126,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 31 | Line | line | object | -1 | - | ok | - | wall glyph by line/edge neighbors | `:drawdisplay` (no `:calcdisplay` fan-out) |
 | 32 | Ricochet | ricochet | terrain | -1 | - | ok | - | bounces bullets | `@issolid` (bullet handles bounce) |
 | 33 | Blink ray EW | blinkew | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
-| 34 | Bear | bear | object | 3 | destruct | ok | - | seek within `8-P1`, contact damage | `p2`/`p3` deltas + Movement `#send by` / `?by`; `:touch` send-shot |
+| 34 | Bear | bear | object | 3 | destruct, push | ok | - | seek within `8-P1`, contact damage | `p2`/`p3` deltas + Movement `#send by` / `?by`; `:touch` send-shot |
 | 35 | Ruffian | ruffian | object | 1 | destruct, push | ok | - | rest/rush, contact damage | seek/rest + `#send … shot`; `:shot #give score 2` |
 | 36 | Object | object | object | 3 | - | ok | - | author OOP program | zssedit stub (author-provided) |
 | 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
@@ -172,8 +172,8 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Bear (34) -- `bear-sid_V5FcTvuWHYOr`
 
 - **ZZT tick:** if `X != playerX` and `Difference(Y,playerY) <= 8-P1` -> step in X toward player; else if `Difference(X,playerX) <= 8-P1` -> step in Y; else stand. Move if walkable; `BoardAttack` if dest is player **or breakable**. Cycle 3, P1 = Sensitivity, score 1.
-- **Cafe now:** RoZZT shape in one `:think` -- `p2`/`p3` as clamped deltaX/deltaY, then Movement: `#send by p2 p3 shot` + `#die` on player/breakable else `?by p2 p3` (`#go`, not `#walk`, so no `:thud`). `:touch` is only `#send at senderx sendery shot`. No `@ispushable` (cafe push would shove past contact). `:shot` score 1 `#die`.
-- **Status:** ok (parity-noted). Intentional: dropped Pushable so player walk-in hits `:touch`.
+- **Cafe now:** RoZZT shape in one `:think` -- `p2`/`p3` as clamped deltaX/deltaY, then Movement: `#send by p2 p3 shot` + `#die` on player/breakable else `?by p2 p3` (`#go`, not `#walk`, so no `:thud`). `:touch` is only `#send at senderx sendery shot`. Keeps `@ispushable` (ZZT Pushable). `:shot` score 1 `#die`.
+- **Status:** ok (parity-noted). Bear-initiated contact uses dest pre-check so a pushable player is not shoved past `BoardAttack`.
 
 ### Ruffian (35) -- `ruffian-sid_Rpd0b1r0fOsp`
 

@@ -39,10 +39,10 @@ const PLAYER_CODE = `@player
 `
 
 describe('bear RoZZT contact script', () => {
-  it('uses p2/p3 deltas, no ispushable, no thud', () => {
+  it('uses p2/p3 deltas, ispushable, no thud', () => {
     const build = compilescript('bear', BEAR_CODE)
     expect(build.errors ?? []).toEqual([])
-    expect(BEAR_CODE).not.toMatch(/@ispushable/)
+    expect(BEAR_CODE).toMatch(/@ispushable/)
     expect(BEAR_CODE).not.toMatch(/:thud/)
     expect(BEAR_CODE).toMatch(/#set p2 0/)
     expect(BEAR_CODE).toMatch(/#set p3 0/)
