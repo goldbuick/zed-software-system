@@ -229,11 +229,12 @@ export type CHIP = {
   hyperlink: (...words: WORD[]) => void
 
   /**
-   * Formats a value for printing/display.
-   * @param name - The value to print
-   * @returns A formatted string representation of the value
+   * Formats a value for `$flag` template expansion / display.
+   * @param value - The flag or stat value to format
+   * @param name - Optional flag/stat name so numeric enums (color, collision, …) can be labeled
+   * @returns A display string, or a raw number/boolean when no special formatting applies
    */
-  print: (name: string) => string
+  print: (value: unknown, name?: string) => string | number | boolean
 
   /**
    * Processes a template string, replacing variables (prefixed with special characters) with their values.

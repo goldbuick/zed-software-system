@@ -56,8 +56,8 @@ import {
   readworldheaderzzt,
   zztparseboard,
 } from './zztbinparse'
-import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { zztcolorfrombyte } from './zztcolor'
+import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { zztoop } from './zztoop'
 
 // --- ZZT element ids (ModdingWiki / ZZT internal) ---------------------------------

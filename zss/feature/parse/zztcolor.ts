@@ -26,7 +26,7 @@ export function zztcolorfrombyte(zcolor: number): {
 export function zztcolorbyte(fg: number, bg: number): number {
   let blink = 0
   let fgn = fg & 0x0f
-  if (fg >= COLOR.BLBLACK && fg <= COLOR.BLWHITE) {
+  if (fg >= (COLOR.BLBLACK as number) && fg <= (COLOR.BLWHITE as number)) {
     blink = 0x80
     fgn = fg - COLOR.BLBLACK
   }

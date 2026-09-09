@@ -22,8 +22,8 @@ import {
 import { NAME } from 'zss/words/types'
 
 import { ooptuzz } from './ooptuzz'
-import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
 import { zztcolorbyte } from './zztcolor'
+import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
 const ZZT_BOARD_WIDTH = 60
