@@ -273,25 +273,24 @@
       },
       {
         "id": "sid_V5FcTvuWHYOr",
-        "code": "@bear\n@ispushable\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 playerx - thisx\n#set p3 playery - thisy\n#if not p2 is 0 do\n #if abs p3 below or eq 8 - p1 do\n  #if p2 below 0 do\n   ?left\n  #else do\n   ?right\n  #done\n  #think\n #done\n#done\n#if abs p2 below or eq 8 - p1 do\n #if p3 below 0 do\n  ?up\n #else do\n  ?down\n #done\n#else do\n #idle\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
+        "code": "@bear\n@ispushable\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 playerx - thisx\n#set p3 playery - thisy\n#if not p2 is 0 do\n #if abs p3 below or eq 8 - p1 do\n  #if p2 below 0 do\n   ?left\n  #else do\n   ?right\n  #done\n  #think\n #done\n#done\n#if abs p2 below or eq 8 - p1 do\n #if p3 below 0 do\n  ?up\n #else do\n  ?down\n #done\n#else do\n #idle\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
         "object": {
           "id": "sid_V5FcTvuWHYOr",
-          "code": "@bear\n@ispushable\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 playerx - thisx\n#set p3 playery - thisy\n#if not p2 is 0 do\n #if abs p3 below or eq 8 - p1 do\n  #if p2 below 0 do\n   ?left\n  #else do\n   ?right\n  #done\n  #think\n #done\n#done\n#if abs p2 below or eq 8 - p1 do\n #if p3 below 0 do\n  ?up\n #else do\n  ?down\n #done\n#else do\n #idle\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
+          "code": "@bear\n@ispushable\n@cycle 3\n@char 153\n@color 6\n@p1 range\n@light 4\n:think\n#set p2 playerx - thisx\n#set p3 playery - thisy\n#if not p2 is 0 do\n #if abs p3 below or eq 8 - p1 do\n  #if p2 below 0 do\n   ?left\n  #else do\n   ?right\n  #done\n  #think\n #done\n#done\n#if abs p2 below or eq 8 - p1 do\n #if p3 below 0 do\n  ?up\n #else do\n  ?down\n #done\n#else do\n #idle\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
           "name": "bear",
           "char": 153,
           "color": 6,
           "pushable": 1,
-          "breakable": 1,
           "p1": 4,
           "cycle": 3
         }
       },
       {
         "id": "sid_Rpd0b1r0fOsp",
-        "code": "@ruffian\n@ispushable\n@cycle 1\n@char 5\n@color 13\n@p1 range;Intelligence?\n@p2 range;Resting time?\n:think\n#if stepx is 0 and stepy is 0 do\n #if p2 + 8 below or eq random 17 do\n  #if random 9 below or eq p1 do\n   #walk seek\n  #else do\n   #walk rnd\n  #done\n #done\n#else do\n #if aligned and random 9 below or eq p1 do\n  #walk seek\n  #idle\n #done\n #if p2 + 8 below or eq random 17 do\n  #walk idle\n #done\n#done\n#idle\n#think\n:thud\n#walk idle\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
+        "code": "@ruffian\n@ispushable\n@cycle 1\n@char 5\n@color 13\n@p1 range;Intelligence?\n@p2 range;Resting time?\n:think\n#if stepx is 0 and stepy is 0 do\n #if p2 + 8 below or eq random 17 do\n  #if random 9 below or eq p1 do\n   #walk seek\n  #else do\n   #walk rnd\n  #done\n #done\n#else do\n #if aligned and random 9 below or eq p1 do\n  #walk seek\n  #idle\n #done\n #if p2 + 8 below or eq random 17 do\n  #walk idle\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#walk idle\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
         "object": {
           "id": "sid_Rpd0b1r0fOsp",
-          "code": "@ruffian\n@ispushable\n@cycle 1\n@char 5\n@color 13\n@p1 range;Intelligence?\n@p2 range;Resting time?\n:think\n#if stepx is 0 and stepy is 0 do\n #if p2 + 8 below or eq random 17 do\n  #if random 9 below or eq p1 do\n   #walk seek\n  #else do\n   #walk rnd\n  #done\n #done\n#else do\n #if aligned and random 9 below or eq p1 do\n  #walk seek\n  #idle\n #done\n #if p2 + 8 below or eq random 17 do\n  #walk idle\n #done\n#done\n#idle\n#think\n:thud\n#walk idle\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
+          "code": "@ruffian\n@ispushable\n@cycle 1\n@char 5\n@color 13\n@p1 range;Intelligence?\n@p2 range;Resting time?\n:think\n#if stepx is 0 and stepy is 0 do\n #if p2 + 8 below or eq random 17 do\n  #if random 9 below or eq p1 do\n   #walk seek\n  #else do\n   #walk rnd\n  #done\n #done\n#else do\n #if aligned and random 9 below or eq p1 do\n  #walk seek\n  #idle\n #done\n #if p2 + 8 below or eq random 17 do\n  #walk idle\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#walk idle\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
           "name": "ruffian",
           "char": 5,
           "color": 13,
@@ -324,43 +323,40 @@
       },
       {
         "id": "sid_xoTocNz9Bkeo",
-        "code": "@shark\n@isswimming\n@notbreakable\n@cycle 3\n@char 94\n@color 7\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think",
+        "code": "@shark\n@isswimming\n@notbreakable\n@cycle 3\n@char 94\n@color 7\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think",
         "object": {
           "id": "sid_xoTocNz9Bkeo",
-          "code": "@shark\n@isswimming\n@notbreakable\n@cycle 3\n@char 94\n@color 7\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think",
+          "code": "@shark\n@isswimming\n@notbreakable\n@cycle 3\n@char 94\n@color 7\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think",
           "name": "shark",
           "char": 94,
           "color": 7,
           "collision": 2,
-          "breakable": 0,
           "p1": 4,
           "cycle": 3
         }
       },
       {
         "id": "sid_8jzLhq6RieiL",
-        "code": "@lion\n@ispushable\n@cycle 2\n@char 234\n@color 14\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
+        "code": "@lion\n@ispushable\n@cycle 2\n@char 234\n@color 14\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
         "object": {
           "id": "sid_8jzLhq6RieiL",
-          "code": "@lion\n@ispushable\n@cycle 2\n@char 234\n@color 14\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
+          "code": "@lion\n@ispushable\n@cycle 2\n@char 234\n@color 14\n@p1 range;Intelligence?\n:think\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 1\n#die",
           "name": "lion",
           "char": 234,
           "color": 14,
           "pushable": 1,
-          "breakable": 1,
           "p1": 4,
           "cycle": 2
         }
       },
       {
         "id": "sid_wG_XV_VD57jG",
-        "code": "@head\n@char 233\n@cycle 2\n@isbreakable\n@p1 range;Intelligence?\n@p2 range;Deviance?\n' p3=follower  p4=leader (head writes both while dragging)\n' walk first, then drag the chain into the cells we vacate -- same tick.\n:think\n#if p1 below random 10 do\n #walk rnd\n#else if p2 above random 9 do\n #walk rnd\n#else do\n #walk seek\n#done\n#if blocked flow do\n #walk rnd\n#done\n' adopt a segment trailing right behind us\n#if not p3 do\n #if any opp flow segment do\n  #pget opp flow id p3\n #done\n#done\n#set destx thisx\n#set desty thisy\n#set nextx thisx + stepx\n#set nexty thisy + stepy\n#if any at nextx nexty player do\n #send at nextx nexty shot\n #die\n#done\n' pset moves without yielding, so the drag below still runs this tick\n#pset \"$thisid\" x nextx\n#pset \"$thisid\" y nexty\n#walk idle\n#set cur thisid\n#set hops 0\n#while cur do\n #give hops\n #if hops above 24 break\n #pget \"$cur\" p3 nxt\n #pget \"$nxt\" id live\n #if not live do\n  #pset \"$cur\" p3 0\n  #clear cur\n #else do\n  #pget \"$nxt\" x oldx\n  #pget \"$nxt\" y oldy\n  #pset \"$nxt\" p4 cur\n  #pset \"$nxt\" x destx\n  #pset \"$nxt\" y desty\n  #set destx oldx\n  #set desty oldy\n  #set cur nxt\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 1\n#die\n",
+        "code": "@head\n@char 233\n@cycle 2\n@p1 range;Intelligence?\n@p2 range;Deviance?\n' p3=follower  p4=leader (head writes both while dragging)\n' walk first, then drag the chain into the cells we vacate -- same tick.\n:think\n#if p1 below random 10 do\n #walk rnd\n#else if p2 above random 9 do\n #walk rnd\n#else do\n #walk seek\n#done\n#if blocked flow do\n #walk rnd\n#done\n' adopt a segment trailing right behind us\n#if not p3 do\n #if any opp flow segment do\n  #pget opp flow id p3\n #done\n#done\n#set destx thisx\n#set desty thisy\n#set nextx thisx + stepx\n#set nexty thisy + stepy\n#if any at nextx nexty player do\n #send at nextx nexty shot\n #die\n#done\n' pset moves without yielding, so the drag below still runs this tick\n#pset \"$thisid\" x nextx\n#pset \"$thisid\" y nexty\n#walk idle\n#set cur thisid\n#set hops 0\n#while cur do\n #give hops\n #if hops above 24 break\n #pget \"$cur\" p3 nxt\n #pget \"$nxt\" id live\n #if not live do\n  #pset \"$cur\" p3 0\n  #clear cur\n #else do\n  #pget \"$nxt\" x oldx\n  #pget \"$nxt\" y oldy\n  #pset \"$nxt\" p4 cur\n  #pset \"$nxt\" x destx\n  #pset \"$nxt\" y desty\n  #set destx oldx\n  #set desty oldy\n  #set cur nxt\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 1\n#die\n",
         "object": {
           "id": "sid_wG_XV_VD57jG",
-          "code": "@head\n@char 233\n@cycle 2\n@isbreakable\n@p1 range;Intelligence?\n@p2 range;Deviance?\n' p3=follower  p4=leader (head writes both while dragging)\n' walk first, then drag the chain into the cells we vacate -- same tick.\n:think\n#if p1 below random 10 do\n #walk rnd\n#else if p2 above random 9 do\n #walk rnd\n#else do\n #walk seek\n#done\n#if blocked flow do\n #walk rnd\n#done\n' adopt a segment trailing right behind us\n#if not p3 do\n #if any opp flow segment do\n  #pget opp flow id p3\n #done\n#done\n#set destx thisx\n#set desty thisy\n#set nextx thisx + stepx\n#set nexty thisy + stepy\n#if any at nextx nexty player do\n #send at nextx nexty shot\n #die\n#done\n' pset moves without yielding, so the drag below still runs this tick\n#pset \"$thisid\" x nextx\n#pset \"$thisid\" y nexty\n#walk idle\n#set cur thisid\n#set hops 0\n#while cur do\n #give hops\n #if hops above 24 break\n #pget \"$cur\" p3 nxt\n #pget \"$nxt\" id live\n #if not live do\n  #pset \"$cur\" p3 0\n  #clear cur\n #else do\n  #pget \"$nxt\" x oldx\n  #pget \"$nxt\" y oldy\n  #pset \"$nxt\" p4 cur\n  #pset \"$nxt\" x destx\n  #pset \"$nxt\" y desty\n  #set destx oldx\n  #set desty oldy\n  #set cur nxt\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 1\n#die\n",
+          "code": "@head\n@char 233\n@cycle 2\n@p1 range;Intelligence?\n@p2 range;Deviance?\n' p3=follower  p4=leader (head writes both while dragging)\n' walk first, then drag the chain into the cells we vacate -- same tick.\n:think\n#if p1 below random 10 do\n #walk rnd\n#else if p2 above random 9 do\n #walk rnd\n#else do\n #walk seek\n#done\n#if blocked flow do\n #walk rnd\n#done\n' adopt a segment trailing right behind us\n#if not p3 do\n #if any opp flow segment do\n  #pget opp flow id p3\n #done\n#done\n#set destx thisx\n#set desty thisy\n#set nextx thisx + stepx\n#set nexty thisy + stepy\n#if any at nextx nexty player do\n #send at nextx nexty shot\n #die\n#done\n' pset moves without yielding, so the drag below still runs this tick\n#pset \"$thisid\" x nextx\n#pset \"$thisid\" y nexty\n#walk idle\n#set cur thisid\n#set hops 0\n#while cur do\n #give hops\n #if hops above 24 break\n #pget \"$cur\" p3 nxt\n #pget \"$nxt\" id live\n #if not live do\n  #pset \"$cur\" p3 0\n  #clear cur\n #else do\n  #pget \"$nxt\" x oldx\n  #pget \"$nxt\" y oldy\n  #pset \"$nxt\" p4 cur\n  #pset \"$nxt\" x destx\n  #pset \"$nxt\" y desty\n  #set destx oldx\n  #set desty oldy\n  #set cur nxt\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 1\n#die\n",
           "name": "head",
           "char": 233,
-          "breakable": 1,
           "p1": 4,
           "p2": 4,
           "cycle": 2
@@ -368,13 +364,12 @@
       },
       {
         "id": "sid_jCUP_m2AaDhb",
-        "code": "@segment\n@char 79\n@cycle 2\n@isbreakable\n' p4=leader  p5=linkgrace. passive: the head does all the moving.\n' promote when the leader id no longer resolves (unset, shot, or bombed).\n:think\n#pget \"$p4\" id live\n#if not live do\n #if p5 do\n  #morph head\n #else do\n  #set p5 1\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 3\n#die\n",
+        "code": "@segment\n@char 79\n@cycle 2\n' p4=leader  p5=linkgrace. passive: the head does all the moving.\n' promote when the leader id no longer resolves (unset, shot, or bombed).\n:think\n#pget \"$p4\" id live\n#if not live do\n #if p5 do\n  #morph head\n #else do\n  #set p5 1\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 3\n#die\n",
         "object": {
           "id": "sid_jCUP_m2AaDhb",
-          "code": "@segment\n@char 79\n@cycle 2\n@isbreakable\n' p4=leader  p5=linkgrace. passive: the head does all the moving.\n' promote when the leader id no longer resolves (unset, shot, or bombed).\n:think\n#pget \"$p4\" id live\n#if not live do\n #if p5 do\n  #morph head\n #else do\n  #set p5 1\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 3\n#die\n",
+          "code": "@segment\n@char 79\n@cycle 2\n' p4=leader  p5=linkgrace. passive: the head does all the moving.\n' promote when the leader id no longer resolves (unset, shot, or bombed).\n:think\n#pget \"$p4\" id live\n#if not live do\n #if p5 do\n  #morph head\n #else do\n  #set p5 1\n #done\n#done\n#idle\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n:bombed\n#give score 3\n#die\n",
           "name": "segment",
           "char": 79,
-          "breakable": 1,
           "cycle": 2
         }
       },
@@ -400,7 +395,7 @@
       },
       {
         "id": "sid_YfADg1Nq89xx",
-        "code": "@star\n@cycle 1\n@char 83\n@notbreakable\n@p2 100\n:think\n#take p2\n#if p2 below or eq 0 do\n #die\n#else if p2 % 2 is 0 do\n ?seek\n#else do\n #idle\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:drawdisplay\n#give color\n#if color above 15 set color 9\n#set p4 currenttick % 4\n#if p4 is 0 char 179\n#if p4 is 1 char 47\n#if p4 is 2 char 196\n#if p4 is 3 char 92\n#end"
+        "code": "@star\n@cycle 1\n@char 83\n@notbreakable\n@p2 100\n:think\n#take p2\n#if p2 below or eq 0 do\n #die\n#else if p2 % 2 is 0 do\n ?seek\n#else do\n #idle\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:drawdisplay\n#give color\n#if color above 15 set color 9\n#set p4 currenttick % 4\n#if p4 is 0 char 179\n#if p4 is 1 char 47\n#if p4 is 2 char 196\n#if p4 is 3 char 92\n#end"
       },
       {
         "id": "sid_0TOoer5HeouV",
@@ -501,10 +496,10 @@
       },
       {
         "id": "sid_6e_bOqewuBBk",
-        "code": "@tiger\n@ispushable\n@cycle 2\n@char 227\n@color 11\n@p1 range;intelligence\n@p2 range;firing rate\n@p3 select bullet 0 star 1;firing type?\n:think\n#if (random 10) * 3 below or eq p2 do\n #set p4 playerx - thisx\n #set p5 playery - thisy\n #if abs p4 below or eq 2 or abs p5 below or eq 2 do\n  #if p3 is 0 do\n   #set p6 bullet\n  #else do\n   #set p6 star\n  #done\n #done\n #shoot seek \"$p6\"\n#done\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
+        "code": "@tiger\n@ispushable\n@cycle 2\n@char 227\n@color 11\n@p1 range;intelligence\n@p2 range;firing rate\n@p3 select bullet 0 star 1;firing type?\n:think\n#if (random 10) * 3 below or eq p2 do\n #set p4 playerx - thisx\n #set p5 playery - thisy\n #if abs p4 below or eq 2 or abs p5 below or eq 2 do\n  #if p3 is 0 do\n   #set p6 bullet\n  #else do\n   #set p6 star\n  #done\n #done\n #shoot seek \"$p6\"\n#done\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
         "object": {
           "id": "sid_6e_bOqewuBBk",
-          "code": "@tiger\n@ispushable\n@cycle 2\n@char 227\n@color 11\n@p1 range;intelligence\n@p2 range;firing rate\n@p3 select bullet 0 star 1;firing type?\n:think\n#if (random 10) * 3 below or eq p2 do\n #set p4 playerx - thisx\n #set p5 playery - thisy\n #if abs p4 below or eq 2 or abs p5 below or eq 2 do\n  #if p3 is 0 do\n   #set p6 bullet\n  #else do\n   #set p6 star\n  #done\n #done\n #shoot seek \"$p6\"\n#done\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
+          "code": "@tiger\n@ispushable\n@cycle 2\n@char 227\n@color 11\n@p1 range;intelligence\n@p2 range;firing rate\n@p3 select bullet 0 star 1;firing type?\n:think\n#if (random 10) * 3 below or eq p2 do\n #set p4 playerx - thisx\n #set p5 playery - thisy\n #if abs p4 below or eq 2 or abs p5 below or eq 2 do\n  #if p3 is 0 do\n   #set p6 bullet\n  #else do\n   #set p6 star\n  #done\n #done\n #shoot seek \"$p6\"\n#done\n#if p1 below random 10 do\n ?rnd\n#else do\n ?seek\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:shot\n#give score 2\n#die",
           "name": "tiger",
           "char": 227,
           "cycle": 2

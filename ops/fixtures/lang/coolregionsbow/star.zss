@@ -14,6 +14,7 @@
 #done
 #think
 :thud
+:touch
 #if any at senderx sendery player do
  #send at senderx sendery shot
 #else if any at senderx sendery breakable do

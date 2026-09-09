@@ -11,6 +11,7 @@
  ?seek
 #done
 :thud
+:touch
 #if any at senderx sendery player do
  #send at senderx sendery shot
 #done

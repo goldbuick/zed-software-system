@@ -1,5 +1,6 @@
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
+  memoryelementisingroup,
   memoryelementmatchesstrgrouponboard,
   memorylistboardelementsbygroup,
 } from 'zss/memory/boardlifecycle'
@@ -156,6 +157,23 @@ describe('memorylistboardelementsbygroup', () => {
       ['YELLOW'],
     ])
     expect(found.map((el) => el.id)).toEqual(['sid_yellow'])
+  })
+})
+
+describe('memoryelementisingroup breakable flag', () => {
+  it('does not treat default breakable 0 as matching group breakable', () => {
+    const bear = makeobject('sid_bear', 2, 2, { name: 'bear' })
+    expect(memoryelementisingroup(bear, '', 'breakable', false)).toBe(false)
+    expect(memoryelementisingroup(bear, '', 'bear', false)).toBe(true)
+  })
+
+  it('matches breakable when breakable stat is non-zero or kind name is breakable', () => {
+    const gem = makeobject('sid_gem', 3, 3, { name: 'gem' })
+    gem.breakable = 1
+    expect(memoryelementisingroup(gem, '', 'breakable', false)).toBe(true)
+
+    const wall = makeobject('sid_wall', 4, 4, { name: 'breakable' })
+    expect(memoryelementisingroup(wall, '', 'breakable', false)).toBe(true)
   })
 })
 

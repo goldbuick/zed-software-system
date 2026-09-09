@@ -1,7 +1,6 @@
 @segment
 @char 79
 @cycle 2
-@isbreakable
 ' p4=leader  p5=linkgrace. passive: the head does all the moving.
 ' promote when the leader id no longer resolves (unset, shot, or bombed).
 :think

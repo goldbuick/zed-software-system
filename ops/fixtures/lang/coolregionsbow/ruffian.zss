@@ -26,6 +26,7 @@
 #idle
 #think
 :thud
+:touch
 #walk idle
 #if any at senderx sendery player do
  #send at senderx sendery shot

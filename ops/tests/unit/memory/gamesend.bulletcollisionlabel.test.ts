@@ -89,18 +89,24 @@ describe('memorybulletcollisionlabel', () => {
     ).toBe('shot')
     expect(
       memorybulletcollisionlabel(bullet('sid_object'), {
-        id: 'sid_head',
-        kind: 'head',
+        id: 'sid_gem',
+        kind: 'gem',
         breakable: 1,
       }),
     ).toBe('shot')
   })
 
-  it('uses partyshot for object-party bullet vs lion', () => {
+  it('uses partyshot for object-party bullet vs lion or head', () => {
     expect(
       memorybulletcollisionlabel(bullet('sid_object'), {
         id: 'sid_lion',
         kind: 'lion',
+      }),
+    ).toBe('partyshot')
+    expect(
+      memorybulletcollisionlabel(bullet('sid_object'), {
+        id: 'sid_head',
+        kind: 'head',
       }),
     ).toBe('partyshot')
   })
@@ -232,10 +238,11 @@ describe('enemy-source bullet send labels', () => {
     )
   })
 
-  it('softdeletes @isbreakable targets on shot including head', () => {
+  it('softdeletes @isbreakable wall or gem on shot; head gets partyshot', () => {
     const board = setupkinds(
       '@terrain breakable\n@isbreakable\n',
-      '@head\n@isbreakable\n',
+      '@object gem\n@isbreakable\n',
+      '@head\n',
       '@bullet\n',
     )
     const wall = memorycreateboardobjectfromkind(
@@ -248,9 +255,18 @@ describe('enemy-source bullet send labels', () => {
       wall.kind = 'breakable'
       wall.breakable = 1
     }
-    const head = memorycreateboardobjectfromkind(
+    const gem = memorycreateboardobjectfromkind(
       board,
       { x: 3, y: 1 },
+      'gem',
+      'sid_gem',
+    )
+    if (gem) {
+      gem.breakable = 1
+    }
+    const head = memorycreateboardobjectfromkind(
+      board,
+      { x: 4, y: 1 },
       'head',
       'sid_head',
     )
@@ -271,15 +287,22 @@ describe('enemy-source bullet send labels', () => {
     }
 
     mockedmemorysafedeleteelement.mockClear()
+    expect(gem).toBeDefined()
+    const gemlabel = memorybulletcollisionlabel(shot!, gem!)
+    expect(gemlabel).toBe('shot')
+    memorysendtoelement(shot!, gem!, gemlabel)
+    expect(mockedmemorysafedeleteelement).toHaveBeenCalled()
+
+    mockedmemorysafedeleteelement.mockClear()
+    mockedmemorymessagechip.mockClear()
     expect(head).toBeDefined()
     head!.kind = 'head'
-    head!.breakable = 1
     const headlabel = memorybulletcollisionlabel(shot!, head!)
-    expect(headlabel).toBe('shot')
+    expect(headlabel).toBe('partyshot')
     memorysendtoelement(shot!, head!, headlabel)
     expect(mockedmemorymessagechip).toHaveBeenCalledWith(
-      expect.objectContaining({ target: 'sid_head:shot' }),
+      expect.objectContaining({ target: 'sid_head:partyshot' }),
     )
-    expect(mockedmemorysafedeleteelement).toHaveBeenCalled()
+    expect(mockedmemorysafedeleteelement).not.toHaveBeenCalled()
   })
 })

@@ -214,7 +214,8 @@ export function memoryelementisingroup(
     targetgroup as BOARD_ELEMENT_STAT,
   )
   return (
-    ispresent(statnamed) ||
+    // we only care about truthy statnamed
+    !!statnamed ||
     memoryreadelementdisplay(element).name === targetgroup ||
     memoryreadelementstat(element, 'group') === targetgroup
   )

@@ -334,15 +334,14 @@ export function memorymoveobject(
         }
       }
     } else {
-      if (blockedbyplayer) {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
-      } else if (blockedisbullet) {
+      if (blockedisbullet) {
+        // Walker hits a bullet: walker takes :shot; bullet gets :thud.
         memorysendtoelement(blocked, element, 'shot')
         memorysendtoelement(element, blocked, 'thud')
       } else {
+        // RoZZT ElementObjectTick: OopSend(self, THUD) -- walker receives
+        // :thud with sender = blocker (player, wall, object, ...).
         memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'bump')
       }
     }
 
