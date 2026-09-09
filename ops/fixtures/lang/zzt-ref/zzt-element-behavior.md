@@ -21,10 +21,10 @@ Implementation reference for fixing the cafe element library so each kind matche
 | `BoardShoot` -- spawn bullet/star | `Game.pas` | `#shoot dir` / `#shoot dir star` |
 | `DamageStat` / `BoardDamageTile` | `Game.pas` | `:shot` (and bomb also `:bombed`) -> `#die` / breakable auto-clear on `:shot` |
 | `OopSend(-stat,'SHOT')` from a bullet hit | bullet tick | target `:shot` label |
-| `OopSend(-stat,'THUD')` from object walk | `ElementObjectTick` | blocked step → `:thud` **to the walker** (sender = blocker) |
+| `OopSend(-stat,'THUD')` from object walk | `ElementObjectTick` | blocked stepx/stepy walk in element everytick → `:thud` **to the walker** (sender = blocker); not `memorymoveobject` |
 | `OopSend(-stat,'TOUCH')` | `ElementObjectTouch` | player walks into object → `:touch` to that object |
 
-**Blocked-walk labels (RoZZT `ElementObjectTick`):** cafe sends `:thud` to the **moving** non-bullet object when its dest is blocked (wall, player, other object); sender is the blocker. Player tile is not walkable, so creature → player is `:thud` on the creature (not dual `:touch`). No second label to the obstacle on this path (`:bump` remains same-party `:touch` remap only).
+**Blocked-walk labels (RoZZT `ElementObjectTick`):** cafe sends `:thud` from element everytick when a stepx/stepy walk fails; target is the **moving** object, sender is the blocker (wall, player, other object). `#go` / shove / weave do not emit this walk thud. Player tile is not walkable, so creature → player is `:thud` on the creature (not dual `:touch`). No second label to the obstacle on this path (`:bump` remains same-party `:touch` remap only).
 
 **Player-initiated contact:** player walks into an object → `:touch` (RoZZT `TOUCH` / `ElementDamagingTouch`). Melee kinds use `:thud` / `:touch` fallthrough + `#send at senderx sendery shot` to approximate `BoardAttack`. Ranged fire still uses `#shoot`.
 
@@ -126,7 +126,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 31 | Line | line | object | -1 | - | ok | - | wall glyph by line/edge neighbors | `:drawdisplay` (no `:calcdisplay` fan-out) |
 | 32 | Ricochet | ricochet | terrain | -1 | - | ok | - | bounces bullets | `@issolid` (bullet handles bounce) |
 | 33 | Blink ray EW | blinkew | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
-| 34 | Bear | bear | object | 3 | destruct, push | ok | - | seek within `8-P1`, contact damage | seek + `#send … shot` melee; `:shot #give score 1` |
+| 34 | Bear | bear | object | 3 | destruct | ok | - | seek within `8-P1`, contact damage | `p2`/`p3` deltas + Movement `#send by` / `?by`; `:touch` send-shot |
 | 35 | Ruffian | ruffian | object | 1 | destruct, push | ok | - | rest/rush, contact damage | seek/rest + `#send … shot`; `:shot #give score 2` |
 | 36 | Object | object | object | 3 | - | ok | - | author OOP program | zssedit stub (author-provided) |
 | 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
@@ -145,7 +145,7 @@ Coverage gaps at a glance:
 
 - **P0 creatures done:** `pusher` added; `head`/`segment` script-only chain; `shark` water-gated + non-destructible. Also mirrored into darkpianoshammer ZTK.
 - **P1 items/interactions done:** energizer invuln (128 vs 75 kept); star/bullet damage + creature score; water msg + forest `@isitem`; bomb cycle 12 kept; passage color `#goto`; transporter landing search; blink-wall ray `:shot` along path; `:drawdisplay` glyph migration.
-- **Melee note:** `lion`/`tiger`/`bear`/`ruffian` use `#send at senderx sendery shot` on `:thud` / `:touch` for contact damage -- keep it (not a bug).
+- **Melee note:** `lion`/`tiger`/`ruffian` use `#send at senderx sendery shot` on `:thud` / `:touch`. Bear uses dest pre-check `#send by p2 p3 shot` in `:think` (no `#walk`/`:thud`) and plain `:touch` `#send at senderx sendery shot`.
 - **Naming:** cafe page is `energizer`; ZZT import kind is `energize` in [`zzt.ts`](../../../../zss/feature/parse/zzt.ts).
 - **Cafe-only:** `bombsmoke` (VFX helper, keep).
 
@@ -172,8 +172,8 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Bear (34) -- `bear-sid_V5FcTvuWHYOr`
 
 - **ZZT tick:** if `X != playerX` and `Difference(Y,playerY) <= 8-P1` -> step in X toward player; else if `Difference(X,playerX) <= 8-P1` -> step in Y; else stand. Move if walkable; `BoardAttack` if dest is player **or breakable**. Cycle 3, P1 = Sensitivity, score 1.
-- **Cafe now:** computes dx/dy, moves toward player within `8-p1` band on each axis, `:thud` / `:touch` shoots player or breakable; `:shot #give score 1` then `#die`.
-- **Status:** ok. Movement band and cycle 3 are correct; `#send … shot` against player and breakable is the intended idiom (bear "eats" breakable walls by contact). No change required.
+- **Cafe now:** RoZZT shape in one `:think` -- `p2`/`p3` as clamped deltaX/deltaY, then Movement: `#send by p2 p3 shot` + `#die` on player/breakable else `?by p2 p3` (`#go`, not `#walk`, so no `:thud`). `:touch` is only `#send at senderx sendery shot`. No `@ispushable` (cafe push would shove past contact). `:shot` score 1 `#die`.
+- **Status:** ok (parity-noted). Intentional: dropped Pushable so player walk-in hits `:touch`.
 
 ### Ruffian (35) -- `ruffian-sid_Rpd0b1r0fOsp`
 

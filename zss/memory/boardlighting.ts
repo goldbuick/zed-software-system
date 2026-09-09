@@ -232,14 +232,7 @@ export function memoryboardlightingapplyobject(
     }
     ringocclusions.length = 0
     lightingforeachchebyshevingcell(sprite.x, sprite.y, r, (x, y) => {
-      lightingappendringocclusions(
-        board,
-        sprite,
-        radius,
-        x,
-        y,
-        ringocclusions,
-      )
+      lightingappendringocclusions(board, sprite, radius, x, y, ringocclusions)
     })
     lightingforeachchebyshevingcell(sprite.x, sprite.y, r, (x, y) => {
       lightingrayshade(

@@ -24,7 +24,7 @@ import { memoryresetbooks } from 'zss/memory/session'
 import { COLLISION } from 'zss/words/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 
-describe('RoZZT thud timing in memorymoveobject', () => {
+describe('memorymoveobject does not emit thud', () => {
   afterEach(() => {
     memoryboundariesclear()
     memoryresetbooks([])
@@ -49,7 +49,7 @@ describe('RoZZT thud timing in memorymoveobject', () => {
       .map((call) => call[2] as string)
   }
 
-  it('sends thud to creature mover blocked by player (not touch)', () => {
+  it('does not send thud when creature blocked by player', () => {
     const board = setupboard('@bear\n', '@player\n')
     const player = memorycreateboardobjectfromkind(
       board,
@@ -69,11 +69,11 @@ describe('RoZZT thud timing in memorymoveobject', () => {
 
     const moved = memorymoveobject(undefined, board, bear!, { x: 3, y: 2 })
     expect(moved).toBe(false)
-    expect(labelsfor('sid_bear')).toEqual(['thud'])
+    expect(labelsfor('sid_bear')).toEqual([])
     expect(labelsfor('pid_hero')).toEqual([])
   })
 
-  it('sends thud to creature mover blocked by solid (not bump)', () => {
+  it('does not send thud when creature blocked by solid', () => {
     const board = setupboard('@bear\n')
     const bear = memorycreateboardobjectfromkind(
       board,
@@ -92,7 +92,7 @@ describe('RoZZT thud timing in memorymoveobject', () => {
 
     const moved = memorymoveobject(undefined, board, bear!, { x: 3, y: 2 })
     expect(moved).toBe(false)
-    expect(labelsfor('sid_bear')).toEqual(['thud'])
+    expect(labelsfor('sid_bear')).toEqual([])
     expect(
       mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'bump'),
     ).toBe(false)

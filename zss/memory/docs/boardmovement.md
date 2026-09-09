@@ -2,7 +2,7 @@
 title: boardmovement.ts
 ---
 
-**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/shot/thud. Orchestrates movement with gamesend and player exits.
+**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here.
 
 ## Dependencies
 
@@ -30,5 +30,5 @@ title: boardmovement.ts
 | `memorycheckmoveboardobject` | True if dest is blocked |
 | `memorycleanupboard` | Remove objects marked removed > 5s |
 | `memorymoveboardobject` | Move object by x/y; return blocked or undefined |
-| `memorymoveobject` | Full move with push chain and send (touch/shot/thud) |
+| `memorymoveobject` | Full move with push chain and send (touch/shot); no thud |
 | `BOOK_RUN_ARGS` | Tick/draw run arg type |

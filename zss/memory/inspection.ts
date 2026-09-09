@@ -745,9 +745,13 @@ export function memoryinspectempty(
     case 'emptyobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y }, {
-            includeghost: true,
-          })
+          const maybeobject = memoryreadelement(
+            board,
+            { x, y },
+            {
+              includeghost: true,
+            },
+          )
           if (
             memoryreadboardelementruntime(maybeobject)?.category ===
             CATEGORY.ISOBJECT

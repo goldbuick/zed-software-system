@@ -1,6 +1,6 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadobjectatpt, memoryreadelement } from 'zss/memory/boardaccess'
+import { memoryreadelement, memoryreadobjectatpt } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
 import * as boardmovement from 'zss/memory/boardmovement'

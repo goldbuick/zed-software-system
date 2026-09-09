@@ -1,22 +1,12 @@
-import {
-  isarray,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { isstrcategory } from 'zss/words/category'
 import { isstrcollision } from 'zss/words/collision'
-import { isstrcolor, STR_COLOR } from 'zss/words/color'
-import { isstrdir, STR_DIR } from 'zss/words/dir'
+import { STR_COLOR, isstrcolor } from 'zss/words/color'
+import { STR_DIR, isstrdir } from 'zss/words/dir'
 import { isstrgroup } from 'zss/words/group'
 import { CATEGORY, COLLISION, COLOR, DIR, NAME } from 'zss/words/types'
 
-const COLOR_STAT_NAMES = new Set([
-  'color',
-  'bg',
-  'displaycolor',
-  'displaybg',
-])
+const COLOR_STAT_NAMES = new Set(['color', 'bg', 'displaycolor', 'displaybg'])
 
 function lowerconst(value: string): string {
   return value.toLowerCase()
@@ -50,7 +40,7 @@ function formatstrdir(dir: STR_DIR): string {
       if (isstrgroup(segment)) {
         return formatnamedcolorable(segment)
       }
-      return `${segment}`
+      return ''
     })
     .join(' ')
 }
@@ -137,5 +127,5 @@ export function formatprintvalue(
   if (typeof value === 'boolean' || isnumber(value) || isstring(value)) {
     return value
   }
-  return `${value ?? ''}`
+  return ''
 }

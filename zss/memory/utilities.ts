@@ -315,9 +315,8 @@ export async function memorycompressbooks(books: BOOK[]) {
   }
 
   try {
-    const { compressbookbytesoffthread } = await import(
-      'zss/compressworkerclient'
-    )
+    const { compressbookbytesoffthread } =
+      await import('zss/compressworkerclient')
     return await compressbookbytesoffthread(bytes)
   } catch {
     return bookzstdcompressbase64url(bytes)

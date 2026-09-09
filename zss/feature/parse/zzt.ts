@@ -494,9 +494,7 @@ function processboards(
           )
         } else if (element.type >= ZZT_TEXT_FANCY_MIN) {
           // Weave all-color text (128-255): ElemDefColor = type - 128
-          const altcolor = colorsfromzztcolor(
-            element.type - ZZT_TEXT_FANCY_MIN,
-          )
+          const altcolor = colorsfromzztcolor(element.type - ZZT_TEXT_FANCY_MIN)
           const straltcolor: STR_COLOR = mapcolortostrcolor(
             altcolor.color,
             altcolor.bg % 8,

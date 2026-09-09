@@ -21,10 +21,7 @@ import {
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
 } from './boardtransitions'
-import {
-  memorybulletcollisionlabel,
-  memorysendtoelement,
-} from './gamesend'
+import { memorybulletcollisionlabel, memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -287,28 +284,21 @@ export function memorymoveobject(
     const blockedisedge = blocked.kind === 'edge'
     if (elementisplayer) {
       if (blockedisedge) {
-        if (!memoryplayerblockedbyedge(board, element, dest)) {
-          memorysendtoelement(blocked, element, 'thud')
-        }
+        memoryplayerblockedbyedge(board, element, dest)
       } else if (blockedisbullet) {
         if (board?.restartonzap) {
           memoryplayerwaszapped(book, board, element, element.id ?? '')
         }
         memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
       } else {
         memorysendtoelement(blocked, element, 'touch')
         memorysendtoelement(element, blocked, 'touch')
       }
     } else if (elementisbullet) {
-      if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
+      if (!blockedisbullet) {
         if (blockedbyplayer && board?.restartonzap) {
           memoryplayerwaszapped(book, board, blocked, blocked.id ?? '')
         }
-        memorysendtoelement(blocked, element, 'thud')
         memorysendtoelement(
           element,
           blocked,
@@ -333,16 +323,9 @@ export function memorymoveobject(
           memorysafedeleteelement(board, blockedobject, deletestamp)
         }
       }
-    } else {
-      if (blockedisbullet) {
-        // Walker hits a bullet: walker takes :shot; bullet gets :thud.
-        memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
-        // RoZZT ElementObjectTick: OopSend(self, THUD) -- walker receives
-        // :thud with sender = blocker (player, wall, object, ...).
-        memorysendtoelement(blocked, element, 'thud')
-      }
+    } else if (blockedisbullet) {
+      // Walker hits a bullet: walker takes :shot.
+      memorysendtoelement(blocked, element, 'shot')
     }
 
     // blocked

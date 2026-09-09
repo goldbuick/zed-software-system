@@ -36,7 +36,7 @@ Writes stats:
 ### everytick(chip)
 
 - **Health** — If player and health ≤ 0: endofprogram, vmlogout
-- **Walk** — If element has stepx/stepy: move object
+- **Walk** — If element has stepx/stepy: move object; on blocked move send `:thud` (blocker → walker)
 
 ## Commands
 

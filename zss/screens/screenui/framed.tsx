@@ -3,7 +3,6 @@ import {
   registerbookmarkscroll,
   registerterminalopen,
   registerterminalquickopen,
-  synthplay,
   synthupdate,
   vmclirepeatlast,
   vmfindany,

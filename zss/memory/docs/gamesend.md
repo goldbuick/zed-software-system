@@ -21,7 +21,7 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 
 | Path | Behavior |
 |------|----------|
-| Bullet collision | Engine emits chosen label + bullet `:thud` via board movement |
+| Bullet collision | Engine emits chosen collision label via board movement; walk `:thud` via element everytick |
 | `#send at x y shot` / `#send within N i shot` | Chip directional send |
 | Breakable + real `:shot` | `memorysendtoelement` softdeletes the target (object or terrain) |
 | `:bombed` | Content/blast label only — **no** auto-delete |

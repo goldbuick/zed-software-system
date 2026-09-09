@@ -20,6 +20,7 @@ import {
   memoryreadelement,
   memoryreadelementbyidorindex,
 } from 'zss/memory/boardaccess'
+import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
@@ -30,9 +31,9 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
+import { memorysendtoelement } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
@@ -191,21 +192,15 @@ function writeremoteattr(
   attr: string,
   words: WORD[],
   valueindex: number,
-): number {
+): 0 | 1 {
   const statname = mapremotestatname(attr)
   if (statname === 'step') {
     // Parse dir under caller (flag/stat exprs), apply from target cell.
     const [ascaller] = readargs(words, valueindex, [ARG_TYPE.DIR])
-    const dest = memoryevaldir(
-      READ_CONTEXT.board,
-      element,
-      '',
-      ascaller.dir,
-      {
-        x: element.x ?? 0,
-        y: element.y ?? 0,
-      },
-    )
+    const dest = memoryevaldir(READ_CONTEXT.board, element, '', ascaller.dir, {
+      x: element.x ?? 0,
+      y: element.y ?? 0,
+    })
     const x = element.x ?? 0
     const y = element.y ?? 0
     element.stepx = dest.destpt.x - x
@@ -780,15 +775,21 @@ export const ELEMENT_FIRMWARE = createfirmware({
       ispresent(READ_CONTEXT.element.stepy) &&
       (READ_CONTEXT.element.stepx || READ_CONTEXT.element.stepy)
     ) {
-      memorymoveobject(
-        READ_CONTEXT.book,
-        READ_CONTEXT.board,
-        READ_CONTEXT.element,
-        {
-          x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
-          y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
-        },
-      )
+      const dest = {
+        x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
+        y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
+      }
+      if (
+        !memorymoveobject(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          dest,
+        )
+      ) {
+        const blocked = memoryreadelement(READ_CONTEXT.board, dest)
+        memorysendtoelement(blocked, READ_CONTEXT.element, 'thud')
+      }
     }
   },
   aftertick(chip) {
