@@ -4,7 +4,7 @@
  */
 
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
 import {
@@ -23,6 +23,7 @@ import { NAME } from 'zss/words/types'
 
 import { ooptuzz } from './ooptuzz'
 import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
+import { zztcolorbyte } from './zztcolor'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
 const ZZT_BOARD_WIDTH = 60
@@ -78,10 +79,6 @@ export type ZZTEXPORTERROR = { message: string; board?: string }
 export type ZZTEXPORTRESULT =
   | { ok: true; bytes: Uint8Array }
   | { ok: false; errors: ZZTEXPORTERROR[] }
-
-function zztcolorbyte(fg: number, bg: number): number {
-  return (fg & 15) + 16 * (bg & 15)
-}
 
 type SORTEDENTRY = {
   codepage: CODE_PAGE
@@ -230,6 +227,7 @@ function kindtozzt(
 
   if (memoryboardelementisobject(el)) {
     const st = basestat()
+    applystatunder(st, board, x, y, entries)
     st.p1 = el.char ?? st.p1
     if (kind === 'object' || !kind) {
       return { ok: true, tile: { type: T_OBJECT, color: z() }, stat: st }
@@ -360,6 +358,26 @@ function numberorzero(v: number | string | undefined): number {
     return isNaN(n) ? 0 : n
   }
   return 0
+}
+
+/** Cafe terrain under an object → ZZT Stat UnderElement / UnderColor. */
+function applystatunder(
+  st: ZZT_STAT,
+  board: BOARD,
+  x: number,
+  y: number,
+  entries: SORTEDENTRY[],
+) {
+  const terrain = memoryreadterrain(board, x, y)
+  if (!ispresent(terrain) || terrain.removed) {
+    return
+  }
+  // (-1,-1) skips startx/starty player remap in kindtozzt
+  const r = kindtozzt(terrain, -1, -1, board, entries)
+  if (r.ok && r.tile.type !== T_EMPTY) {
+    st.underelement = r.tile.type
+    st.undercolor = r.tile.color
+  }
 }
 
 function creaturekindtotile(kind: string): number | undefined {

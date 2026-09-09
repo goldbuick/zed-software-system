@@ -57,6 +57,7 @@ import {
   zztparseboard,
 } from './zztbinparse'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
+import { zztcolorfrombyte } from './zztcolor'
 import { zztoop } from './zztoop'
 
 // --- ZZT element ids (ModdingWiki / ZZT internal) ---------------------------------
@@ -209,12 +210,6 @@ function processboards(
     return element
   }
 
-  function colorsfromzztcolor(zcolor: number) {
-    const color = zcolor % 16
-    const bg = Math.floor(zcolor / 16)
-    return { color, bg }
-  }
-
   function writefromzztelement(
     board: BOARD,
     x: number,
@@ -224,7 +219,7 @@ function processboards(
     allstats: ZZT_STAT[],
     bystatindex: Map<number, BOARD_ELEMENT>,
   ) {
-    const maincolor = colorsfromzztcolor(element.color)
+    const maincolor = zztcolorfrombyte(element.color)
     const strcolor: STR_COLOR = mapcolortostrcolor(
       maincolor.color,
       maincolor.bg,
@@ -266,6 +261,27 @@ function processboards(
           addstats.code = zztoop(maybecopy.code)
         }
       }
+    }
+
+    // ZZT stores floor under a stat in UnderElement/UnderColor (e.g. water under shark).
+    // Cafe is object + terrain layers — write Under as terrain before the top tile.
+    if (
+      ispresent(elementstat) &&
+      isnumber(elementstat.underelement) &&
+      elementstat.underelement > 0
+    ) {
+      writefromzztelement(
+        board,
+        x,
+        y,
+        {
+          type: elementstat.underelement,
+          color: elementstat.undercolor ?? 0,
+        },
+        new Map(),
+        allstats,
+        bystatindex,
+      )
     }
 
     function remember(written: MAYBE<BOARD_ELEMENT>) {
@@ -466,7 +482,7 @@ function processboards(
           element.type >= ZZT_TEXT_BLOCK_START &&
           element.type <= ZZT_TEXT_BLOCK_END
         ) {
-          const altcolor = colorsfromzztcolor(
+          const altcolor = zztcolorfrombyte(
             element.type === ZZT_TEXT_BLOCK_END
               ? 15
               : (element.type - 46) * 16 + 15,
@@ -494,7 +510,7 @@ function processboards(
           )
         } else if (element.type >= ZZT_TEXT_FANCY_MIN) {
           // Weave all-color text (128-255): ElemDefColor = type - 128
-          const altcolor = colorsfromzztcolor(element.type - ZZT_TEXT_FANCY_MIN)
+          const altcolor = zztcolorfrombyte(element.type - ZZT_TEXT_FANCY_MIN)
           const straltcolor: STR_COLOR = mapcolortostrcolor(
             altcolor.color,
             altcolor.bg % 8,

@@ -185,6 +185,8 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 - **ZZT tick:** `if P1 < Random(10) then rnd else seek`; **move only onto `E_WATER`**; if dest is player `BoardAttack`. Not destructible. Cycle 3, P1 intel.
 - **Cafe now:** `@isswimming` (engine gates move to `@isswimable` water), `@notbreakable`, `?rnd/?seek`, `:thud` / `:touch` -> `#send at senderx sendery shot` on player. No `:shot #die`.
+- **Under:** ZZT stores water in `Stat.UnderElement`/`UnderColor`; cafe import writes that as terrain under the shark (`writefromzztelement`); export restores Under from terrain (`applystatunder`).
+- **Color:** import/export use blink-aware CGA attributes (`zztcolor.ts`). Editor default water `0xF9` → `@color blblue` `@bg ltgrey`; DEMO cooler water `0x9F` → `@color blwhite` `@bg dkblue`.
 - **Status:** ok. Intentional: sharks **block** bullets and survive (ZZT “pass over” was imprecise; no collision change).
 
 ### Centipede head (44) / segment (45) -- `head-sid_wG_XV_VD57jG`, `segment-sid_jCUP_m2AaDhb`
@@ -259,7 +261,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 ### Water (19) / Forest (20) / Fake (27)
 
-- **ZZT water:** not walkable for player (message "blocked by water"), but bullets and sharks pass. **Cafe:** `@isswimable` terrain; player `:thud` shows `blocked by water`. Status: ok.
+- **ZZT water:** not walkable for player (message "blocked by water"), but bullets and sharks pass. **Cafe:** `@isswimable` terrain; player `:thud` shows `blocked by water`. Color bytes use blink-aware decode (`0xF9` editor / `0x9F` DEMO). Status: ok.
 - **ZZT forest:** blocks movement; touching clears it to empty ("path is cleared"). **Cafe:** keep `@isitem` object that dies on touch with note (item `#die` yoink). Status: ok -- do not drop `@isitem`.
 - **ZZT fake:** walkable wall; first touch shows "fake wall - secret passage!". **Cafe:** `@iswalkable` terrain, no message. Fix (P2): optionally restore the one-time message.
 
