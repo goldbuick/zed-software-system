@@ -3,10 +3,11 @@
 <ul>
 <li><code>zss/mapping/types</code> — MAYBE, ispresent, isstring</li>
 <li><code>zss/words/types</code> — CATEGORY, NAME</li>
-<li><code>./boardaccess</code> — memoryboardelementindex</li>
+<li><code>./boards</code> — memoryreadelementkind</li>
 <li><code>./bookoperations</code> — memoryreadelementdisplay</li>
 <li><code>./codepageoperations</code> — memoryapplyelementstats, memoryreadcodepagestatsfromtext</li>
 </ul>
+<p>Named-index <strong>reads</strong> go through <code>memorylistelement({ name })</code> in <a href="../boardaccess.ts"><code>boardaccess.ts</code></a> (uses <code>board.named</code> maintained here).</p>
 <h2 id="exports"><a class="blume-heading-anchor" href="#exports">Exports</a></h2>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>

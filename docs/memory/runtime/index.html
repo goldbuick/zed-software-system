@@ -18,13 +18,11 @@
 <li><code>./boardtick</code> — memorytickboard</li>
 <li><code>./bookoperations</code> — memoryreadcodepage</li>
 <li><code>./books</code> — memoryensuremainbook</li>
-<li><code>./boundaries</code> — memoryboundarydelete</li>
 <li><code>./codepageoperations</code> — memoryreadcodepagestats</li>
-<li><code>./codepages</code> — memorypickcodepagewithtypeandstat</li>
+<li><code>./codepages</code> — memorypickcodepage</li>
 <li><code>./flags</code> — memoryreadflags</li>
 <li><code>./loader</code> — memoryloaderarg</li>
 <li><code>./playermanagement</code> — memoryreadplayerboard</li>
-<li><code>./runtimeboundary</code> — memoryreadboardelementruntime, memoryreadboardruntime</li>
 <li><code>./session</code> — memoryreadmainbook, memoryreadloaders, memoryreadoperator</li>
 <li><code>./synthstate</code> — memorymergesynthvoice, memorymergesynthvoicefx, memoryreadsynthplay</li>
 </ul>
@@ -41,7 +39,7 @@
 <tr>
 <td>Chip lifecycle</td>
 <td><code>memorygc()</code>, <code>memoryhaltchip(id)</code>, <code>memoryrestartallchipsandflags()</code>, <code>memorymessagechip(message)</code></td>
-<td><code>memoryrestartallchipsandflags</code> frees flag-backed boundaries on every loaded book</td>
+<td><code>memoryrestartallchipsandflags</code> clears flag bags on every loaded book</td>
 </tr>
 <tr>
 <td>CLI</td>

@@ -14,7 +14,7 @@
 <li><strong>Input flags</strong> — For players: <code>inputmove</code>, <code>inputshoot</code>, <code>inputok</code>, <code>inputcancel</code>, <code>inputmenu</code>, <code>inputa</code>/<code>inputb</code>/<code>inputx</code>/<code>inputy</code>, <code>inputl1</code>/<code>inputl2</code>, <code>inputr1</code>/<code>inputr2</code>, <code>inputalt</code>, <code>inputctrl</code>, <code>inputshift</code> (from input queue; <code>inputmove</code>/<code>inputshoot</code> may list two dirs for diagonals; FPV remaps dirs)</li>
 <li><strong>Board stats</strong> — <code>isdark</code>, <code>startx</code>, <code>starty</code>, <code>over</code>, <code>under</code>, <code>palette</code>, <code>charset</code>, exits, <code>timelimit</code>, <code>restartonzap</code>, <code>maxplayershots</code>, <code>b1</code>–<code>b10</code>, <code>camera</code>, <code>graphics</code>, <code>facing</code></li>
 <li><strong>Env</strong> — <code>currenttick</code>, <code>boardid</code>, <code>playerid</code>, <code>playerx</code>, <code>playery</code>, <code>thisid</code>, <code>thisx</code>, <code>thisy</code>, <code>senderid</code>, <code>senderx</code>, <code>sendery</code></li>
-<li><strong>Standard stats</strong> — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p10, cycle, stepx/y, shootx/y, light, lightdir, arg</li>
+<li><strong>Standard stats</strong> — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light, lightdir, arg</li>
 <li><strong>Fallback</strong> — Player flags</li>
 </ul>
 <h3 id="setchip-name-value"><a class="blume-heading-anchor" href="#setchip-name-value">set(chip, name, value)</a></h3>
@@ -54,7 +54,7 @@
 <tr>
 <td><code>pget</code></td>
 <td><code>&lt;dir|id&gt;</code> <code>attr</code> <code>destflag</code></td>
-<td>Read remote element attr into flag (<code>id</code>, <code>x</code>/<code>y</code>, <code>p1</code>–<code>p10</code>, …)</td>
+<td>Read remote element attr into flag (<code>id</code>, <code>x</code>/<code>y</code>, <code>p1</code>–<code>p20</code>, …)</td>
 </tr>
 <tr>
 <td><code>pset</code></td>
@@ -113,7 +113,7 @@
 <tr>
 <td><code>morph</code></td>
 <td><code>kind</code></td>
-<td>Change kind in place (keep id and stats), swap code/display, halt chip</td>
+<td>Drop code/kinddata, set kind (object source; object or terrain target); halt chip</td>
 </tr>
 <tr>
 <td><code>bind</code></td>

@@ -711,7 +711,7 @@ Source: https://zed.cafe/docs/feature/boardcopy
 |----------|------|-------------|
 | `boardcopy` | `source`, `target`, `p1`, `p2`, `targetset` | Copy board region from source to target; targetset: `'all'`, `'object'`, `'terrain'`, or group name |
 | `boardcopygroup` | `source`, `target`, `p1`, `self`, `targetgroup` | Copy elements by group with collision handling |
-| `mapelementcopy` | `maybenew`, `from` | Copy element surface stats from one element to another, then clone runtime payload onto `maybenew` via `memorycopyboardelementruntime` (distinct boundary id from source) |
+| `mapelementcopy` | `maybenew`, `from` | Copy element surface stats from one element to another, then copy kinddata fields (`category`, `kinddata`, `kindsource*`, `pushedtick`) onto `maybenew` via `memorycopyelementkinddata` |
 
 ## Internal Helpers
 
@@ -780,7 +780,7 @@ Source: https://zed.cafe/docs/feature/boardpivot
 
 - Uses shear transform (alpha = -tan(θ/2), beta = sin(θ)) and per-row/column integer skews (`pivotbuildintegeredges`)
 - Full-board path applies three skew passes; rectangular path copies terrain like rectangular weave (permute sources in rect, clear non-image cells in rect)
-- **Group path terrain:** After placing group tiles at pivoted destinations via `memorycloneboardelement` (fresh runtime boundary per tile), terrain on **incoming-only** indices (destinations that are not former group sources) is copied into **vacated** former group cells (sorted by linear index, pairwise), so non-group terrain is not deleted — same idea as `boardweavegroup`
+- **Group path terrain:** After placing group tiles at pivoted destinations via `deepcopy` (fresh element objects, including inline `kinddata` / `category`), terrain on **incoming-only** indices (destinations that are not former group sources) is copied into **vacated** former group cells (sorted by linear index, pairwise), so non-group terrain is not deleted — same idea as `boardweavegroup`
 
 ---
 
@@ -860,7 +860,6 @@ Source: https://zed.cafe/docs/feature/boardweave
 - `zss/memory/boardmovement` — `* as boardmovement`
 - `zss/memory/boards` — memorycheckelementpushable, memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
 - `zss/memory/boardtransitions` — memoryptwithinboard
-- `zss/memory/runtimeboundary` — memorycloneboardelement, memoryreadboardruntime
 - `zss/memory/spatialqueries` — memorycheckcollision
 - `zss/words/reader` — READ_CONTEXT
 - `zss/words/types` — COLLISION, PT
@@ -877,13 +876,13 @@ Source: https://zed.cafe/docs/feature/boardweave
 ### Rectangular path (`all` / `object` / `terrain`)
 
 - **Terrain / `all`:** `tmpboard.terrain` is seeded with a **copy** of the full board terrain, then each cell `(x,y)` in `[p1,p2]` writes `orig[src] → tmp[dest]` with torus wrapping on `dest`. Cells inside the rectangle that are **not** in the image of the rectangle under that map are cleared (`undefined`). Cells **outside** the rectangle are unchanged. Finally `targetboard.terrain` is replaced with the tmp array.
-- **Objects / `all`:** Objects at each source cell are found via `memoryreadobjectatpt(..., { includeghost: true })`; coordinates are set to wrapped `dest`.
+- **Objects / `all`:** Objects at each source cell are found via `memoryreadelement(..., READ_LAYER.OBJECTGHOST)`; coordinates are set to wrapped `dest`.
 - **Objects-only:** Terrain array is not replaced; only object coordinates update.
 
 ### Group path (`boardweavegroup`)
 
 - **Sort:** One deterministic sweep order — primary axis is whichever has larger `|delta|` (`x` if tied with `y`); direction follows the sign of that axis; when both `|delta.x|` and `|delta.y|` match, `x` is compared first, then `y`.
-- **Terrain apply:** Builds a new terrain array from a snapshot, places each group cell’s tile at `from + delta` (no wrap; off-board is rejected in the collision pass). Each placed or displaced tile is written via `memorycloneboardelement` so the new terrain object gets its **own** runtime boundary (cloned payload, not a shared id). **Displaced terrain:** cells that receive a group tile but were not group sources (“incoming-only”) previously held non-group terrain; that terrain is **not** discarded. Those tiles are paired in sorted order (same sweep comparator as above) with vacated group source cells (`gset \ dest`) and written into the vacated indices with updated `x`/`y`, so terrain swaps into the leading edge instead of being overwritten. Vacated cells with no displaced partner (or empty source) become `undefined`.
+- **Terrain apply:** Builds a new terrain array from a snapshot, places each group cell’s tile at `from + delta` (no wrap; off-board is rejected in the collision pass). Each placed or displaced tile is written via `deepcopy` so the new terrain object is a distinct element (including any inline `kinddata` / `category`). **Displaced terrain:** cells that receive a group tile but were not group sources (“incoming-only”) previously held non-group terrain; that terrain is **not** discarded. Those tiles are paired in sorted order (same sweep comparator as above) with vacated group source cells (`gset \ dest`) and written into the vacated indices with updated `x`/`y`, so terrain swaps into the leading edge instead of being overwritten. Vacated cells with no displaced partner (or empty source) become `undefined`.
 - **Carried objects:** After terrain writes, objects found at original `from` positions (via `memoryreadelement`) are shifted by `delta`.
 - **Objects:** `boardmovement.memorymoveobject` for each group object. If any apply-phase move fails, the board is restored from a `memoryexportboard` snapshot taken immediately before terrain mutation, then the function returns `false`.
 
@@ -2353,7 +2352,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `clear` | Variables (set to 0) |
 | `set` | Variable to value |
 | `become` | Element into specified kind |
-| `morph` | Change kind in place, keep stats and id |
+| `morph` | Drop code/kinddata, set kind (object source; object or terrain target) |
 | `bind` | Code from named element |
 | `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
@@ -2530,7 +2529,7 @@ Provides stat/variable access for the chip:
 - **Input flags** — For players: `inputmove`, `inputshoot`, `inputok`, `inputcancel`, `inputmenu`, `inputa`/`inputb`/`inputx`/`inputy`, `inputl1`/`inputl2`, `inputr1`/`inputr2`, `inputalt`, `inputctrl`, `inputshift` (from input queue; `inputmove`/`inputshoot` may list two dirs for diagonals; FPV remaps dirs)
 - **Board stats** — `isdark`, `startx`, `starty`, `over`, `under`, `palette`, `charset`, exits, `timelimit`, `restartonzap`, `maxplayershots`, `b1`–`b10`, `camera`, `graphics`, `facing`
 - **Env** — `currenttick`, `boardid`, `playerid`, `playerx`, `playery`, `thisid`, `thisx`, `thisy`, `senderid`, `senderx`, `sendery`
-- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p10, cycle, stepx/y, shootx/y, light, lightdir, arg
+- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light, lightdir, arg
 - **Fallback** — Player flags
 
 ### set(chip, name, value)
@@ -2555,7 +2554,7 @@ Writes stats:
 |---------|------|-------------|
 | `set` | `name` `value` | Set stat (default value 1). Weave form: `set name pget <dir\|id> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
-| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p10`, …) |
+| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p20`, …) |
 | `pset` | `<dir\|id>` `attr` `value` | Write remote element attr (`step <walkdir>` sets stepx/stepy) |
 | `cycle` | `value` | Set cycle (1–255) |
 
@@ -2572,7 +2571,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `become` | `kind` | Transform into kind (preserve color), delete self, create new, endofprogram |
-| `morph` | `kind` | Change kind in place (keep id and stats), swap code/display, halt chip |
+| `morph` | `kind` | Drop code/kinddata, set kind (object source; object or terrain target); halt chip |
 | `bind` | `name` | Copy code from first named element; halt chip |
 | `char` | [dir] `value` | Set char at dir or self |
 | `color` | [dir] `color` | Set color at dir or self |
@@ -3173,11 +3172,11 @@ Source: https://zed.cafe/docs/firmware/transforms
 Filter controls which elements are affected:
 
 - Built-ins: `all`, `terrain`, `object` (and `self` / `others` where applicable)
-- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistboardelementsbygroup`
+- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistelement({ group, self })`
 
-## pickcodepagewithtype
+## pickcodepage
 
-Helper that searches all books for a codepage of given type and stat/address. Used to resolve `stat` in copy/remix to a source board.
+Helper that searches books for a codepage of given type and stat/address (`memorypickcodepage(memoryreadbooklist(), type, stat)`). Used to resolve `stat` in copy/remix to a source board.
 
 ## Implementation Notes
 
@@ -3529,7 +3528,7 @@ Inspector stat categories: BOARD, OBJECT, RANGE, HOTKEY, CHAREDIT, etc.
 
 Source: [`zss/words/docs/stats.md`](https://github.com/goldbuick/zed-software-system/blob/main/zss/words/docs/stats.md)
 
-### p1–p10
+### p1–p20
 
 **Audience:** Creator · **Related:** BOARD_ELEMENT, #set
 
@@ -3739,19 +3738,11 @@ Sim-worker vm device — authoritative owner of MEMORY and game tick loop.
 
 Source: [`zss/device/vm.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/device/vm.ts)
 
-### boundary
-
-**Audience:** Dev · **Related:** paint, patch
-
-Opaque keyed slice of nested memory for efficient jsonpipe partial sync.
-
-Source: [`zss/memory/boundaries.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/boundaries.ts)
-
 ### paint
 
 **Audience:** Dev · **Related:** patch, jsonpipe
 
-Full jsonpipe snapshot sync — replaces entire boundary or gadget document.
+Full jsonpipe snapshot sync — replaces entire gadget or memory document.
 
 Source: [`zss/feature/jsonpipe/README.md`](https://github.com/goldbuick/zed-software-system/blob/main/zss/feature/jsonpipe/README.md)
 
@@ -3991,7 +3982,7 @@ Source: [`zss/memory/types.ts`](https://github.com/goldbuick/zed-software-system
 
 **Audience:** Both · **Related:** CHIP, kind
 
-Single cell occupant: kind, char, color, collision, cycle, movement, params p1–p10.
+Single cell occupant: kind, char, color, collision, cycle, movement, params p1–p20.
 
 Source: [`zss/memory/types.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/types.ts)
 
@@ -4017,7 +4008,7 @@ Source: [`zss/words/docs/collision.md`](https://github.com/goldbuick/zed-softwar
 
 Named boolean or value bag on books, elements, or players for script state.
 
-Source: [`zss/memory/flags.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/flags.ts)
+Source: [`zss/memory/bookoperations.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/bookoperations.ts)
 
 ### MEMORY_LABEL
 
@@ -5517,6 +5508,57 @@ Source: https://zed.cafe/docs/memory
 
 > **There is no `zss/memory/index.ts` any more.** The previous "everything" module was split into focused files. This page explains where each former responsibility lives. For the flat function catalog see [`../EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md).
 
+## Public API grammar
+
+Name shape: `memory` + **verb** + **noun** [+ qualifier]. The noun is the value returned or mutated; the **container is the first argument**.
+
+### Closed verbs
+
+| Verb | Meaning |
+|------|---------|
+| **read** | Lookup; never allocate |
+| **write** | Mutate / replace |
+| **list** | Return an array |
+| **pick** | Choose one from candidates (shuffle / weights / cache) |
+| **create** | Always allocate new |
+| **ensure** | Return existing or create |
+| **init** | Hydrate derived caches on an existing entity |
+| **delete** | Remove child from parent |
+| **clear** | Empty a bag or cached field; keep parent |
+| **free** | Drop page payload / empty a book (`memoryfreecodepage`, `memoryfreebook`) |
+| **export** / **import** | Serialize |
+| **check** | Boolean predicate |
+
+Domain verbs stay where they name the product action: **move**, **tick**, **send**, **eval**, **run**, **inspect**, **find**, **makeit**, **allow**, **revoke**.
+
+### Banned as public synonyms
+
+- `get` / `set` (use read / write)
+- Extra `find*` when `read` / `list` / `pick` already cover it
+- **`runtime` in new names** (that word meant the old side-store boundary blob)
+
+### Containers
+
+Always pass the container. First arg is `BOOK` or `BOOK[]` (or the board / element you already have).
+
+| Need | Call |
+|------|------|
+| Opened book | `memoryreadmainbook()` |
+| All books | `memoryreadbooklist()` |
+
+No `'main'` / `'all'` tokens. No silent “if book missing, use main” defaults — fail the same way as today when the container is absent.
+
+### Composed nouns (preferred)
+
+| Noun | Prefer | Notes |
+|------|--------|-------|
+| Element | `memoryreadelement(board, query, READ_LAYER)`, `memorylistelement(board, filter?)` | `READ_LAYER`: ANY / TERRAIN / OBJECT / ANYGHOST / OBJECTGHOST; named-index fast path stays on `board.named` |
+| Flags | `memoryreadflags(book, id)` (+ write / has / clear) | Book-scoped only; no `flags.ts` facade |
+| Codepage | `memoryreadcodepage(book\|books, …)`, `memorylistcodepage(…)`, `memorypickcodepage(…)` | Pick stays separate (weights + cache) |
+| Export | `memoryexport*(entity, { format?, strip? })` | `format: 'wire' \| 'json'`; no `asjson` twins |
+
+Do **not** add a barrel `index.ts` or a boundary / side-map store. Callers import the defining module.
+
 ## The MEMORY root
 
 `zss/memory/session.ts` owns the singleton:
@@ -5527,14 +5569,16 @@ const MEMORY = {
   topic: '',
   session: createsid(),
   operator: '',
-  simfreeze: false,
+  frozen: false,
   main: '', // opened book id
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
 }
 ```
 
-Everything below the surface (boards, elements, codepages, flags) lives **inside `BOOK`**, plus an off-tree **boundary store** ([`boundaries.ts`](../boundaries.ts)) that holds opaque jsonpipe slices keyed by id (board id, codepage runtime id, chip id, player id, gadget id, synth id, layers id, tracking id).
+Everything below the surface (boards, elements, codepages, flags) lives **inside `BOOK`**. Payload is inline: each `CODE_PAGE` may hold `board` / `object` / `terrain` / `charset` / `palette`; each `BOOK.flags[owner]` is an inline flag bag; board and element derived fields (`named`, `kinddata`, draw caches, …) sit on those objects directly.
+
+Session freeze: `memoryreadfrozen` / `memorywritefrozen` (not `simfreeze`).
 
 `memoryreadroot()` returns the live `MEMORY` object. Disk projection of MEMORY (Chromium folder drop) is [`memoryfs`](../../feature/memoryfs/docs/index.md) — separate from jsonpipe gadget sync.
 
@@ -5542,30 +5586,29 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 
 | Former category | New module(s) |
 |------------------|---------------|
-| Session, operator, topic, halt, simfreeze | [`session.ts`](../session.ts) |
+| Session, operator, topic, halt, frozen | [`session.ts`](../session.ts) |
 | Opened book (`main`), book CRUD | [`session.ts`](../session.ts) + [`books.ts`](../books.ts) |
 | Loaders | [`session.ts`](../session.ts) (storage) + [`loader.ts`](../loader.ts) (dispatch) |
-| Per-id flags | [`flags.ts`](../flags.ts) |
-| Codepage discovery (across books) | [`codepages.ts`](../codepages.ts) |
-| Codepage parse / stats / runtime cache | [`codepageoperations.ts`](../codepageoperations.ts) |
+| Per-id flags | [`bookoperations.ts`](../bookoperations.ts) |
+| Codepage read / list (book or books) | [`bookoperations.ts`](../bookoperations.ts) |
+| Codepage pick across books | [`codepages.ts`](../codepages.ts) |
+| Codepage parse / stats / import-export | [`codepageoperations.ts`](../codepageoperations.ts) |
 | Element kind / stat / push checks / write-from-kind | [`boards.ts`](../boards.ts) |
 | Board lookup by address / over / under / evaldir / init | [`boards.ts`](../boards.ts) |
-| Per-element / per-point reads | [`boardaccess.ts`](../boardaccess.ts) |
+| Per-element / per-point reads + spatial lists | [`boardaccess.ts`](../boardaccess.ts) |
 | Board / object create / delete / import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) |
-| Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
+| Element kinddata field copy | [`boardelement.ts`](../boardelement.ts) — `memorycopyelementkinddata` |
 | Direction evaluation (`n`, `rndne`, `flow`, …) | [`boarddirection.ts`](../boarddirection.ts) |
-| Boundary store (jsonpipe slices) | [`boundaries.ts`](../boundaries.ts) |
-| "Which boundary ids does this board need" | [`boundaryrouting.ts`](../boundaryrouting.ts) |
 | jsonpipe filter (`shouldemitpath`) | [`jsonpipefilter.ts`](../jsonpipefilter.ts) |
 | Board lighting | [`boardlighting.ts`](../boardlighting.ts) + [`lightinggeometry.ts`](../lightinggeometry.ts) |
 
 ## Conceptual model
 
-- **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, topic, halt, simfreeze.
-- **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-id flag bag.
-- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (named).
-- **BOARD_ELEMENT**: kind, position, char, color, code, collision, …
-- **Boundary**: an opaque keyed slice of nested memory (board runtime, chip, player, gadget, synth, layers, tracking) used internally and for jsonpipe gadget projection.
+- **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, topic, halt, frozen.
+- **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-owner flag bags (`Record<string, BOOK_FLAGS>`).
+- **BOARD**: 60×25 grid, terrain[], objects{}, plus derived fields (`named`, `distmaps`, draw*, mediaqueue*).
+- **BOARD_ELEMENT**: kind, position, char, color, code, collision, plus derived `category` / `kinddata` / `kindsource*` / `pushedtick`.
+- **jsonpipe**: `memoryrootshouldemitpath` omits those derived fields and ephemeral flag owners (`*_layers`, `*_gadget`, …) from the wire.
 
 ---
 
@@ -5609,10 +5652,8 @@ Source: https://zed.cafe/docs/memory/boardelement
 | Export | Description |
 |--------|-------------|
 | `memoryapplyboardelementcolor(element, strcolor)` | Set element color/bg from STR_COLOR |
-| `memoryexportboardelement` | Format for export (object vs terrain) |
-| `memoryexportboardelementasjson` | Plain JSON export for editor / wire use; enumerates fields explicitly |
-
-| `memoryimportboardelement` | Unformat from entry |
+| `memoryexportboardelement(element, options?)` | Wire or JSON export (`format?: 'wire' \| 'json'`) |
+| `memoryimportboardelement(entry, options?)` | Wire or JSON import |
 | `memoryboardelementisobject` | element.category === CATEGORY.ISOBJECT |
 | `memorycreateboardelement` | New element with createsid() |
 
@@ -5627,9 +5668,11 @@ Source: https://zed.cafe/docs/memory/boardlookup
 
 - `zss/mapping/types` — MAYBE, ispresent, isstring
 - `zss/words/types` — CATEGORY, NAME
-- `./boardaccess` — memoryboardelementindex
+- `./boards` — memoryreadelementkind
 - `./bookoperations` — memoryreadelementdisplay
 - `./codepageoperations` — memoryapplyelementstats, memoryreadcodepagestatsfromtext
+
+Named-index **reads** go through `memorylistelement({ name })` in [`boardaccess.ts`](../boardaccess.ts) (uses `board.named` maintained here).
 
 ## Exports
 
@@ -5684,21 +5727,21 @@ Source: https://zed.cafe/docs/memory/boardmovement
 # boardoperations.ts (and friends)
 Source: https://zed.cafe/docs/memory/boardoperations
 
-> The original `boardoperations.ts` was split into smaller modules. This page is a per-area cross-reference.
+> The original `boardoperations.ts` was split into smaller modules and then removed. This page is a per-area cross-reference — there is no remaining `boardoperations.ts` facade.
 
-The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime(board)` (frees per-element runtime entries when a board is destroyed). Everything else lives in:
+Everything that used to live under that name is now in:
 
 | Area | Module |
 |------|--------|
-| Per-element / per-point reads | [`boardaccess.ts`](../boardaccess.ts) — `memoryboardelementindex`, `memoryreadelement`, `memoryreadterrain`, `memoryreadobject`, `memoryreadobjects`, `memoryreadelementbyidorindex`, `memoryfindboardplayer`, `memoryreadplayersonboard`, `memoryreadidorindex` |
+| Per-element / per-point reads | [`boardaccess.ts`](../boardaccess.ts) — `READ_LAYER`, `memoryboardelementindex`, `memoryreadelement(board, query, layer)`, `memorylistelement` (layer / color / kind / name / group / ids / pts), `memorypicknearest`, `memoryfindboardplayer`, `memoryreadplayersonboard`, `memoryreadidorindex` |
 | Element kind / stat / push checks / write-from-kind | [`boards.ts`](../boards.ts) — `memoryreadelementkind`, `memoryreadelementstat`, `memorycheckelementpushable`, `memorywriteelementfromkind`, `memorywritebullet` |
 | Board lookup / over / under / evaldir / init | [`boards.ts`](../boards.ts) — `memoryreadboardbyaddress`, `memoryreadoverboard`, `memoryreadunderboard`, `memoryreadboardbyevaldir`, `memoryinitboard` |
 | Direction evaluation (BY / AT / FLOW / SEEK / RND / AWAY / TOWARD / WITHIN / AWAYBY / ELEMENTS) | [`boarddirection.ts`](../boarddirection.ts) — `memoryevaldir` |
-| Board / object create, delete, import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) — `memorycreateboard`, `memorycreateboardobject`, `memorycreateboardobjectfromkind`, `memorydeleteboardobject`, `memorysafedeleteelement`, `memorywriteterrain`, `memorywriteterrainfromkind`, `memoryreadgroup`, `memorylistboardelementsbygroup`, `memoryelementisingroup`, `memoryelementmatchesstrgroup`, `memoryelementmatchesstrgrouponboard`, `memoryexportboard(asjson)`, `memoryimportboard` |
+| Board / object create, delete, import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) — `memorycreateboard`, `memorycreateboardobject`, `memorycreateboardobjectfromkind`, `memorydeleteboardobject`, `memorysafedeleteelement`, `memorywriteterrain`, `memorywriteterrainfromkind`, `memoryreadgroup`, `memoryelementisingroup`, `memoryelementmatchesstrgroup`, `memoryelementmatchesstrgrouponboard`, `memoryexportboard`, `memoryimportboard` |
 | Terrain kind-default strip on export | [`boardterrainmap.ts`](../boardterrainmap.ts) — see [boardterrainmap.md](boardterrainmap.md); book / memoryfs / `#pageexport` strip; rollback snapshots stay verbatim |
 | Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
-| Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
+| Element kinddata field copy | [`boardelement.ts`](../boardelement.ts) — `memorycopyelementkinddata` |
 | Board lookup tables (named indices) | [`boardlookup.ts`](../boardlookup.ts) |
 | Movement (push, collision) | [`boardmovement.ts`](../boardmovement.ts) — `memorycheckblockedboardobject`, `memorycheckmoveboardobject`, `memorymoveboardobject`, `memorymoveobject`, `memorycleanupboard` |
 | Edge / corner-exit detection | [`boardtransitions.ts`](../boardtransitions.ts), [`boardcornerexits.ts`](../boardcornerexits.ts) |
@@ -5733,9 +5776,9 @@ Source: https://zed.cafe/docs/memory/boardterrainmap
 | `strip` | Callers | Result |
 |---------|---------|--------|
 | absent / false | [`boardpivot.ts`](../../feature/boardpivot.ts) rollback snapshot, memoryfs `apply.ts` prior read | verbatim |
-| `true` | `memoryexportbook`, `memoryexportbookasjson`, memoryfs [`export.ts`](../../feature/memoryfs/export.ts), `#pageexport` | kind-default display stats omitted |
+| `true` | `memoryexportbook`, `memoryexportcodepage({ strip: true })`, memoryfs [`export.ts`](../../feature/memoryfs/export.ts), `#pageexport` | kind-default display stats omitted |
 
-Verbatim exists because `memoryexportboard` / `memoryimportboard` are also used as an in-memory rollback snapshot, not just persistence. memoryfs `apply.ts` reads prior state through `memoryexportcodepageasjson` and feeds it back to the importer, so stripping there would rewrite live memory on unrelated edits.
+Verbatim exists because `memoryexportboard` / `memoryimportboard` are also used as an in-memory rollback snapshot, not just persistence. memoryfs `apply.ts` reads prior state through `memoryexportcodepage({ format: 'json' })` and feeds it back to the importer, so stripping there would rewrite live memory on unrelated edits.
 
 ## Why stripping is display-equivalent
 
@@ -5762,13 +5805,14 @@ Source: https://zed.cafe/docs/memory/bookoperations
 | Category | Exports |
 |----------|---------|
 | Element | memoryreadelementcodepage, memoryreadelementdisplay |
-| Codepage | memoryclearbookcodepage, memoryensurebookcodepagewithtype, memoryreadcodepage, memoryreadcodepagewithtype, memorywritecodepage |
-| Codepage listing | memorylistcodepagebytype, memorylistcodepagebystat, memorylistcodepagebytypeandstat, memorylistcodepagedatabytype, memorylistcodepagessorted |
-| Flags | memoryclearbookflags, memoryreadbookflags, memoryhasbookflags, memoryhasbookmatch, memoryreadbookflag, memorywritebookflag |
-| Book | memorycreatebook, memoryexportbook, memoryexportbookasjson, memoryimportbook, memoryimportbookfromjson, memoryupdatebookname, memoryupdatebooktoken |
+| Codepage | memoryreadcodepage(book\|books, address, type?), memorylistcodepage(book\|books, filter?), memorywritecodepage, memoryupsertcodepage, memoryensurecodepage, memorydeletecodepage |
+| Flags | memoryclearflags, memoryreadflags, memoryhasflags, memoryhasbookmatch, memoryreadflag, memorywriteflag |
+| Book | memorycreatebook, memoryexportbook, memoryimportbook, memoryupdatebookname, memoryupdatebooktoken |
+
+`memoryreadcodepage` / `memorylistcodepage` accept a single `BOOK` or `BOOK[]` (MAYBE variants). First match / first id wins in array order. Cross-book callers pass `memoryreadbooklist()` (or `[main, ...rest]` when main-first order matters). List filter is `{ type?, stat?, sort? }`.
 
 > Higher-level `memoryensurebookbyname` / `memoryensuremainbook` / `memorycreatesoftwarebook` / `memoryensuremaincodepage` live in [`books.ts`](../books.ts) (separate module).
-> Per-id flag bag accessors (`memoryreadflags` / `memoryhasflags` / `memoryclearflags`, **not** the per-book flag helpers above) live in [`flags.ts`](../flags.ts).
+> Cross-book **pick** (`memorypickcodepage`) lives in [`codepages.ts`](../codepages.ts).
 
 ---
 
@@ -5793,7 +5837,9 @@ Source: https://zed.cafe/docs/memory/codepageoperations
 |----------|---------|
 | Stats | memoryapplyelementstats, memoryreadcodepagestats, memoryreadcodepagestatsfromtext, memoryreadcodepagestat |
 | Parse | memoryreadcodepagedata, memoryreadcodepagetype, memoryreadcodepagename |
-| CRUD | memorycreatecodepage, memoryexportcodepage, memoryimportcodepage |
+| CRUD | memorycreatecodepage, memoryexportcodepage, memoryimportcodepage (`format` / `strip` options) |
+
+Lookup / list / pick across books: [`bookoperations.ts`](bookoperations.md) (`memoryreadcodepage`, `memorylistcodepage`) and [`codepages.ts`](../codepages.ts) (`memorypickcodepage`).
 
 ---
 
@@ -5844,12 +5890,11 @@ Bomb blasts send **`bombed` then `shot`** so `:bombed`-only handlers run before 
 - `zss/device/session` — SOFTWARE
 - `zss/mapping/*` — guid, 2d, types
 - `zss/words/*` — dir, reader, send, types
-- `./boardaccess` — memoryreadelement, memoryreadobjectbypt, memoryreadterrain
+- `./boardaccess` — memorylistelement (ids / name resolve), memoryreadelement
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorysafedeleteelement
 - `./playermanagement` — memoryreadbookplayerboards
 - `./runtime` — memorymessagechip
-- `./spatialqueries` — memorylistboardelementsbyidnameorpts
 
 ## Exports
 
@@ -5959,7 +6004,7 @@ Source: https://zed.cafe/docs/memory/inspectionmakeit
 - `zss/mapping/types` — MAYBE, ispresent
 - `zss/words/stats` — statformat, stattypestring
 - `zss/words/types` — STAT_TYPE
-- `./bookoperations` — memorylistcodepagebystat, memoryreadcodepage
+- `./bookoperations` — memorylistcodepage, memoryreadcodepage
 - `./books` — memoryensuremaincodepage
 - `./codepageoperations` — memoryreadcodepagename, memoryreadcodepagetype, memoryreadcodepagetypeasstring
 - `./session` — memoryreadbooklist
@@ -6037,7 +6082,7 @@ Source: https://zed.cafe/docs/memory/loader
 - `zss/mapping/guid` — createsid
 - `zss/mapping/types` — MAYBE, ispresent, isstring
 - `zss/words/types` — WORD
-- `./bookoperations` — memorylistcodepagebytype, memoryreadcodepage
+- `./bookoperations` — memorylistcodepage, memoryreadcodepage
 - `./codepageoperations` — memoryreadcodepagestats
 - `./types` — CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL
 
@@ -6085,11 +6130,10 @@ Source: https://zed.cafe/docs/memory/playermanagement
 - `./boardmovement` — memorycheckblockedboardobject
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
 - `./boardvisuals` — memoryupdateboardvisuals
-- `./bookoperations` — memoryclearbookflags, memoryreadbookflag, memoryreadbookflags, memorywritebookflag
+- `./bookoperations` — memoryclearflags, memoryreadflag, memoryreadflags, memorywriteflag
 - `./codepageoperations` — memoryreadcodepagedata
-- `./codepages` — memorypickcodepagewithtypeandstat
+- `./codepages` — memorypickcodepage
 - `./runtime` — memoryhaltchip
-- `./runtimeboundary` — memoryreadboardruntime
 - `./session` — memoryisoperator, memoryreadmainbook
 - `./spatialqueries` — memorycheckcollision
 
@@ -6125,7 +6169,7 @@ The memory system manages the ZSS game state — books, codepages, boards, eleme
 
 ## Module Index
 
-The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`, `books.ts`, `flags.ts`, `boardaccess.ts`, `boardlifecycle.ts`, `boundaries.ts`, …). For a flat function-by-function catalog see [`EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md). The narrative docs below cover the modules with bigger surface area.
+The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`, `books.ts`, `bookoperations.ts`, `boardaccess.ts`, `boardlifecycle.ts`, `boardelement.ts`, …). For a flat function-by-function catalog see [`EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md). The narrative docs below cover the modules with bigger surface area.
 
 | File | Purpose |
 |------|---------|
@@ -6158,7 +6202,7 @@ The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`,
 # rendering.ts
 Source: https://zed.cafe/docs/memory/rendering
 
-**Purpose**: Convert memory state into the per-player gadget layer stack consumed by [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) (which then ships paint/patch to the main-thread `gadgetclient`). Sprite / dither / control / tile **caches** live in the sibling [`renderinglayercache.ts`](../renderinglayercache.ts).
+**Purpose**: Convert memory state into the per-player gadget layer stack consumed by [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) (which then ships paint/patch to the main-thread `gadgetclient`). Sprite / dither / control / tile caches and the board-size array pool are **file-local** helpers inside `rendering.ts` (not public exports).
 
 ## Dependencies
 
@@ -6167,17 +6211,16 @@ Source: https://zed.cafe/docs/memory/rendering
 - `zss/gadget/graphics/layerz` — normalizelayerzvariant
 - `zss/mapping/*` — 2d, guid, types
 - `zss/words/*` — types (COLOR, DIR, NAME, PT, COLLISION)
-- `./boardaccess` — memoryreadobject
+- `./boardaccess` — memoryreadelement
 - `./boardcornerexits` — memorycornerexitboardids
 - `./boardlighting` — memoryboardlightingapplyobject, memoryboardlightingmarkplayer
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementkind, memoryreadelementstat, memoryreadoverboard, memoryreadunderboard
 - `./boardvisuals` — memoryupdateboardvisuals
-- `./bookoperations` — memoryreadelementdisplay
+- `./bookoperations` — memoryreadelementdisplay, memoryreadflags
 - `./codepageoperations` — memoryreadcodepagedata, memoryreadcodepagename, memoryreadcodepagetype
-- `./codepages` — memorypickcodepagewithtypeandstat
-- `./flags` — memoryreadflags
-- `./renderinglayercache` — createcachedcontrol, createcacheddither, createcachedmedia, createcachedtiles, memorycreatecachedsprite, memorycreatecachedsprites
-- `./runtimeboundary` — memoryreadboardelementruntime, memoryreadboardruntime, memorywriteboardelementruntime
+- `./codepages` — memorypickcodepage
+
+Board / element derived fields (`named`, `kinddata`, `drawdirtycells`, …) are read directly on the board/element objects.
 
 ## Key Exports
 
@@ -6197,9 +6240,9 @@ Source: https://zed.cafe/docs/memory/rendering
 
 Aug 2026 optimizations touching this module:
 
-- **Layer flag read cache** — [`gadgetlayersflags.ts`](../gadgetlayersflags.ts) caches `memoryreadbookflags(book, createlayersid(board))` per board; see [render-gadget-optimizations.md](../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker).
+- **Layer flag read cache** — [`gadgetlayersflags.ts`](../gadgetlayersflags.ts) caches `memoryreadflags(book, createlayersid(board))` per board; see [render-gadget-optimizations.md](../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker).
 - **Incremental layer rebuild** — `memoryconverttogadgetlayers` cache when `PERF_INCREMENTAL_LAYERS`, empty `drawallowids`, **and** empty `drawdirtycells`; see `memoryincrementallayerscachestable` in [`rendering.ts`](../rendering.ts).
-- **Tile dirty cells** — `memoryattachdrawdirtycellstotiles` copies `boardruntime.drawdirtycells` (from [`boarddrawdirty.ts`](../boarddrawdirty.ts)) onto `LAYER_TILES.dirtycells` for main-thread `PERF_TILE_SUBIMAGE` uploads.
+- **Tile dirty cells** — `memoryattachdrawdirtycellstotiles` copies `board.drawdirtycells` (from [`boarddrawdirty.ts`](../boarddrawdirty.ts)) onto `LAYER_TILES.dirtycells` for main-thread `PERF_TILE_SUBIMAGE` uploads.
 
 Full intent, trace evidence, and debugging: [`zss/perf/docs/render-gadget-optimizations.md`](../../perf/docs/render-gadget-optimizations.md).
 
@@ -6230,13 +6273,11 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./boardtick` — memorytickboard
 - `./bookoperations` — memoryreadcodepage
 - `./books` — memoryensuremainbook
-- `./boundaries` — memoryboundarydelete
 - `./codepageoperations` — memoryreadcodepagestats
-- `./codepages` — memorypickcodepagewithtypeandstat
+- `./codepages` — memorypickcodepage
 - `./flags` — memoryreadflags
 - `./loader` — memoryloaderarg
 - `./playermanagement` — memoryreadplayerboard
-- `./runtimeboundary` — memoryreadboardelementruntime, memoryreadboardruntime
 - `./session` — memoryreadmainbook, memoryreadloaders, memoryreadoperator
 - `./synthstate` — memorymergesynthvoice, memorymergesynthvoicefx, memoryreadsynthplay
 
@@ -6244,7 +6285,7 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 
 | Category | Function | Notes |
 |----------|----------|-------|
-| Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` frees flag-backed boundaries on every loaded book |
+| Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` clears flag bags on every loaded book |
 | CLI | `memoryrepeatclilast(player)`, `memoryruncli(player, cli, tracking?)` | `tracking=true` saves into `flags.playbuffer` |
 | Tick | `memorytickloaders()` | Increments `mainbook.timestamp`, runs every loader; restores/saves per-loader board/object targeting via [`loader.ts`](loader.md) snapshot helpers |
 | Tick | `memorytickmain(timestamp, boards, playeronly?)` | Runs draw + update passes for every supplied board; called from sim `handleticktock` |
@@ -6259,18 +6300,14 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 # spatialqueries.ts
 Source: https://zed.cafe/docs/memory/spatialqueries
 
-**Purpose**: Spatial queries — collision check, find player, list by color/kind, pathfinding. Used by expr (any, countof, blocked) and direction evaluation.
+**Purpose**: Spatial queries — collision check, find player, empty pts, pathfinding. Element list filters live on [`memorylistelement`](../boardaccess.ts) in boardaccess.
 
 ## Dependencies
 
 - `zss/mapping/*` — 2d, array, number, types
-- `zss/words/color` — STR_COLOR, readstrbg, readstrcolor
-- `zss/words/dir` — ispt
-- `zss/words/kind` — STR_KIND, readstrkind*
-- `zss/words/types` — COLLISION, COLOR, NAME, PT
-- `./boardaccess` — memoryreadelement, memoryreadterrain (per-point reads moved out of `boardoperations.ts`)
+- `zss/words/types` — COLLISION, PT
+- `./boardaccess` — memoryreadelement, memorylistelement, memorypicknearest, memoryreadterrain
 - `./boardtransitions` — memoryptwithinboard
-- `./bookoperations` — memoryreadelementdisplay
 - `./types` — BOARD, BOARD_ELEMENT, etc.
 
 ## Key Exports
@@ -6278,12 +6315,8 @@ Source: https://zed.cafe/docs/memory/spatialqueries
 | Export | Description |
 |--------|-------------|
 | `memorycheckcollision` | source vs dest collision (ghost, walk, swim, solid, bullet) |
-| `memoryfindplayerforelement` | Nearest player to element |
-| `memorylistboardelementsbycolor` | Elements matching STR_COLOR |
-| `memorylistboardelementsbykind` | Elements matching kind name (+ optional color/bg) |
-| `memorylistboardnamedelements` | Elements by name (all, self, others, terrain, object) |
-| `memorylistboardelementsbyidnameorpts` | Resolve target to elements |
-| `memorypickboardnearestpt` | Nearest element to pt |
+| `memoryfindplayerforelement` | Nearest player to element (uses `memorylistelement({ name: 'player' })`) |
+| `memorylistboardptsbyempty` | Empty cell points (returns `PT[]`, not elements) |
 | `memoryreadboardpath` | Pathfinding (A*-like) |
 
 ---
@@ -6314,24 +6347,24 @@ Source: https://zed.cafe/docs/memory/types
 
 | Enum | Key values |
 |------|------------|
-| BOARD_ELEMENT_KEYS | kind, id, x, y, char, color, collision, etc. |
-| BOARD_KEYS | terrain, objects, isdark, over, under, exits, etc. |
+| BOARD_ELEMENT_KEYS | kind, id, x, y, char, color, collision, etc. (persisted wire keys) |
+| BOARD_KEYS | terrain, objects, isdark, over, under, exits, etc. (persisted wire keys) |
 | BOOK_KEYS | id, name, timestamp, activelist, pages, flags |
 | CODE_PAGE_KEYS | id, code, board, object, terrain, charset, palette |
 | CODE_PAGE_TYPE | ERROR, LOADER, BOARD, OBJECT, TERRAIN, CHARSET, PALETTE, TXT |
-| MEMORY_LABEL | main, temp, title, player, gadgetstore |
+| MEMORY_LABEL | title, player |
 
 ## Types
 
 | Type | Description |
 |------|-------------|
-| BOARD | terrain, objects, named (runtime), exits, over/under, etc. |
-| BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, category, etc. |
-| BOOK | id, name, pages, flags, activelist |
-| CODE_PAGE | id, code, board/object/terrain/charset/palette, stats |
+| BOARD | terrain, objects, exits, over/under, plus runtime-only `named`, `distmaps`, draw*, mediaqueue* |
+| BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, plus runtime-only `category`, `kinddata`, `kindsource*`, `pushedtick` |
+| BOOK | id, name, pages, `flags: Record<string, BOOK_FLAGS>` (inline bags), activelist |
+| CODE_PAGE | id, code, optional inline `board` / `object` / `terrain` / `charset` / `palette`, stats |
+| BOOK_FLAGS | `Record<string, WORD>` — one owner's flag bag |
 
 First-line `@` rule: `@{type}` alone names an object; `@{type} <name>` declares that codepage type (including `txt`).
-| BOOK_FLAGS | Record<string, WORD> |
 
 ---
 
@@ -6361,10 +6394,9 @@ Source: https://zed.cafe/docs/memory/utilities
 - `zss/mapping/qr` — qrlines
 - `zss/mapping/types` — ispresent, isstring
 - `zss/words/types` — COLOR
-- `./boardaccess` — memoryreadobject
-- `./bookoperations` — memoryexportbook(asjson), memoryimportbook(fromjson), memoryreadelementdisplay
-- `./exportidremap` — cross-book protected dense id remap
-- `./flags` — memoryreadflags
+- `./boardaccess` — memoryreadelement
+- `./bookoperations` — memoryexportbook, memoryimportbook (`format` / `strip` options), memoryreadelementdisplay
+- `./exportidremap` — dense id remap used by compress/export (prefer `memoryexportbook` / `memorycompressbooks`)
 - `./playermanagement` — memoryreadplayerboard
 - `./session` — memoryisoperator, memoryreadmainbook, memoryreadoperator, memoryreadtopic, memorywritehalt
 - `./types` — BOOK, MEMORY_LABEL
@@ -9697,11 +9729,11 @@ Source: https://zed.cafe/docs/words/expr
 - `zss/mapping/types` — MAYBE, isarray, isnumber, ispresent, isstring
 - `zss/memory` — memoryreadboardbyevaldir
 - `zss/memory/boardmovement` — memorycheckmoveboardobject
-- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain
+- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain, memorylistelement (color / group)
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
-- `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor
-- `zss/memory/boardlifecycle` — memorylistboardelementsbygroup (soft name / `@group` match)
+- `zss/memory/spatialqueries` — memoryfindplayerforelement
+- `zss/memory/boardlifecycle` — memoryelementmatchesstrgrouponboard (soft name / `@group` match)
 - `zss/memory/types` — BOARD_ELEMENT
 - `./category` — isstrcategory, mapstrcategory, readcategory
 - `./collision` — isstrcollision, mapstrcollision, readcollision

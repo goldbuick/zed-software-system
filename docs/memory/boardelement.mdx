@@ -18,9 +18,7 @@ title: boardelement.ts
 | Export | Description |
 |--------|-------------|
 | `memoryapplyboardelementcolor(element, strcolor)` | Set element color/bg from STR_COLOR |
-| `memoryexportboardelement` | Format for export (object vs terrain) |
-| `memoryexportboardelementasjson` | Plain JSON export for editor / wire use; enumerates fields explicitly |
-
-| `memoryimportboardelement` | Unformat from entry |
+| `memoryexportboardelement(element, options?)` | Wire or JSON export (`format?: 'wire' \| 'json'`) |
+| `memoryimportboardelement(entry, options?)` | Wire or JSON import |
 | `memoryboardelementisobject` | element.category === CATEGORY.ISOBJECT |
 | `memorycreateboardelement` | New element with createsid() |

@@ -24,9 +24,9 @@ title: boardterrainmap.ts
 | `strip` | Callers | Result |
 |---------|---------|--------|
 | absent / false | [`boardpivot.ts`](../../feature/boardpivot.ts) rollback snapshot, memoryfs `apply.ts` prior read | verbatim |
-| `true` | `memoryexportbook`, `memoryexportbookasjson`, memoryfs [`export.ts`](../../feature/memoryfs/export.ts), `#pageexport` | kind-default display stats omitted |
+| `true` | `memoryexportbook`, `memoryexportcodepage({ strip: true })`, memoryfs [`export.ts`](../../feature/memoryfs/export.ts), `#pageexport` | kind-default display stats omitted |
 
-Verbatim exists because `memoryexportboard` / `memoryimportboard` are also used as an in-memory rollback snapshot, not just persistence. memoryfs `apply.ts` reads prior state through `memoryexportcodepageasjson` and feeds it back to the importer, so stripping there would rewrite live memory on unrelated edits.
+Verbatim exists because `memoryexportboard` / `memoryimportboard` are also used as an in-memory rollback snapshot, not just persistence. memoryfs `apply.ts` reads prior state through `memoryexportcodepage({ format: 'json' })` and feeds it back to the importer, so stripping there would rewrite live memory on unrelated edits.
 
 ## Why stripping is display-equivalent
 

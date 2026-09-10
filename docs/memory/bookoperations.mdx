@@ -18,10 +18,11 @@ title: bookoperations.ts
 | Category | Exports |
 |----------|---------|
 | Element | memoryreadelementcodepage, memoryreadelementdisplay |
-| Codepage | memoryclearbookcodepage, memoryensurebookcodepagewithtype, memoryreadcodepage, memoryreadcodepagewithtype, memorywritecodepage |
-| Codepage listing | memorylistcodepagebytype, memorylistcodepagebystat, memorylistcodepagebytypeandstat, memorylistcodepagedatabytype, memorylistcodepagessorted |
-| Flags | memoryclearbookflags, memoryreadbookflags, memoryhasbookflags, memoryhasbookmatch, memoryreadbookflag, memorywritebookflag |
-| Book | memorycreatebook, memoryexportbook, memoryexportbookasjson, memoryimportbook, memoryimportbookfromjson, memoryupdatebookname, memoryupdatebooktoken |
+| Codepage | memoryreadcodepage(book\|books, address, type?), memorylistcodepage(book\|books, filter?), memorywritecodepage, memoryupsertcodepage, memoryensurecodepage, memorydeletecodepage |
+| Flags | memoryclearflags, memoryreadflags, memoryhasflags, memoryhasbookmatch, memoryreadflag, memorywriteflag |
+| Book | memorycreatebook, memoryexportbook, memoryimportbook, memoryupdatebookname, memoryupdatebooktoken |
+
+`memoryreadcodepage` / `memorylistcodepage` accept a single `BOOK` or `BOOK[]` (MAYBE variants). First match / first id wins in array order. Cross-book callers pass `memoryreadbooklist()` (or `[main, ...rest]` when main-first order matters). List filter is `{ type?, stat?, sort? }`.
 
 > Higher-level `memoryensurebookbyname` / `memoryensuremainbook` / `memorycreatesoftwarebook` / `memoryensuremaincodepage` live in [`books.ts`](../books.ts) (separate module).
-> Per-id flag bag accessors (`memoryreadflags` / `memoryhasflags` / `memoryclearflags`, **not** the per-book flag helpers above) live in [`flags.ts`](../flags.ts).
+> Cross-book **pick** (`memorypickcodepage`) lives in [`codepages.ts`](../codepages.ts).

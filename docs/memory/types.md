@@ -25,21 +25,21 @@ title: types.ts
 
 | Enum | Key values |
 |------|------------|
-| BOARD_ELEMENT_KEYS | kind, id, x, y, char, color, collision, etc. |
-| BOARD_KEYS | terrain, objects, isdark, over, under, exits, etc. |
+| BOARD_ELEMENT_KEYS | kind, id, x, y, char, color, collision, etc. (persisted wire keys) |
+| BOARD_KEYS | terrain, objects, isdark, over, under, exits, etc. (persisted wire keys) |
 | BOOK_KEYS | id, name, timestamp, activelist, pages, flags |
 | CODE_PAGE_KEYS | id, code, board, object, terrain, charset, palette |
 | CODE_PAGE_TYPE | ERROR, LOADER, BOARD, OBJECT, TERRAIN, CHARSET, PALETTE, TXT |
-| MEMORY_LABEL | main, temp, title, player, gadgetstore |
+| MEMORY_LABEL | title, player |
 
 ## Types
 
 | Type | Description |
 |------|-------------|
-| BOARD | terrain, objects, named (runtime), exits, over/under, etc. |
-| BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, category, etc. |
-| BOOK | id, name, pages, flags, activelist |
-| CODE_PAGE | id, code, board/object/terrain/charset/palette, stats |
+| BOARD | terrain, objects, exits, over/under, plus runtime-only `named`, `distmaps`, draw*, mediaqueue* |
+| BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, plus runtime-only `category`, `kinddata`, `kindsource*`, `pushedtick` |
+| BOOK | id, name, pages, `flags: Record<string, BOOK_FLAGS>` (inline bags), activelist |
+| CODE_PAGE | id, code, optional inline `board` / `object` / `terrain` / `charset` / `palette`, stats |
+| BOOK_FLAGS | `Record<string, WORD>` — one owner's flag bag |
 
 First-line `@` rule: `@{type}` alone names an object; `@{type} <name>` declares that codepage type (including `txt`).
-| BOOK_FLAGS | Record<string, WORD> |

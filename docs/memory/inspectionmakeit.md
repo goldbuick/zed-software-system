@@ -16,7 +16,7 @@ title: inspectionmakeit.ts
 - `zss/mapping/types` — MAYBE, ispresent
 - `zss/words/stats` — statformat, stattypestring
 - `zss/words/types` — STAT_TYPE
-- `./bookoperations` — memorylistcodepagebystat, memoryreadcodepage
+- `./bookoperations` — memorylistcodepage, memoryreadcodepage
 - `./books` — memoryensuremaincodepage
 - `./codepageoperations` — memoryreadcodepagename, memoryreadcodepagetype, memoryreadcodepagetypeasstring
 - `./session` — memoryreadbooklist

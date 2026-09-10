@@ -8,9 +8,11 @@ title: boardlookup.ts
 
 - `zss/mapping/types` — MAYBE, ispresent, isstring
 - `zss/words/types` — CATEGORY, NAME
-- `./boardaccess` — memoryboardelementindex
+- `./boards` — memoryreadelementkind
 - `./bookoperations` — memoryreadelementdisplay
 - `./codepageoperations` — memoryapplyelementstats, memoryreadcodepagestatsfromtext
+
+Named-index **reads** go through `memorylistelement({ name })` in [`boardaccess.ts`](../boardaccess.ts) (uses `board.named` maintained here).
 
 ## Exports
 

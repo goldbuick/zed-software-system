@@ -46,12 +46,11 @@ Bomb blasts send **`bombed` then `shot`** so `:bombed`-only handlers run before 
 - `zss/device/session` — SOFTWARE
 - `zss/mapping/*` — guid, 2d, types
 - `zss/words/*` — dir, reader, send, types
-- `./boardaccess` — memoryreadelement, memoryreadobjectbypt, memoryreadterrain
+- `./boardaccess` — memorylistelement (ids / name resolve), memoryreadelement
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorysafedeleteelement
 - `./playermanagement` — memoryreadbookplayerboards
 - `./runtime` — memorymessagechip
-- `./spatialqueries` — memorylistboardelementsbyidnameorpts
 
 ## Exports
 

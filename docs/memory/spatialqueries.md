@@ -2,18 +2,14 @@
 title: spatialqueries.ts
 ---
 
-**Purpose**: Spatial queries — collision check, find player, list by color/kind, pathfinding. Used by expr (any, countof, blocked) and direction evaluation.
+**Purpose**: Spatial queries — collision check, find player, empty pts, pathfinding. Element list filters live on [`memorylistelement`](../boardaccess.ts) in boardaccess.
 
 ## Dependencies
 
 - `zss/mapping/*` — 2d, array, number, types
-- `zss/words/color` — STR_COLOR, readstrbg, readstrcolor
-- `zss/words/dir` — ispt
-- `zss/words/kind` — STR_KIND, readstrkind*
-- `zss/words/types` — COLLISION, COLOR, NAME, PT
-- `./boardaccess` — memoryreadelement, memoryreadterrain (per-point reads moved out of `boardoperations.ts`)
+- `zss/words/types` — COLLISION, PT
+- `./boardaccess` — memoryreadelement, memorylistelement, memorypicknearest, memoryreadterrain
 - `./boardtransitions` — memoryptwithinboard
-- `./bookoperations` — memoryreadelementdisplay
 - `./types` — BOARD, BOARD_ELEMENT, etc.
 
 ## Key Exports
@@ -21,10 +17,6 @@ title: spatialqueries.ts
 | Export | Description |
 |--------|-------------|
 | `memorycheckcollision` | source vs dest collision (ghost, walk, swim, solid, bullet) |
-| `memoryfindplayerforelement` | Nearest player to element |
-| `memorylistboardelementsbycolor` | Elements matching STR_COLOR |
-| `memorylistboardelementsbykind` | Elements matching kind name (+ optional color/bg) |
-| `memorylistboardnamedelements` | Elements by name (all, self, others, terrain, object) |
-| `memorylistboardelementsbyidnameorpts` | Resolve target to elements |
-| `memorypickboardnearestpt` | Nearest element to pt |
+| `memoryfindplayerforelement` | Nearest player to element (uses `memorylistelement({ name: 'player' })`) |
+| `memorylistboardptsbyempty` | Empty cell points (returns `PT[]`, not elements) |
 | `memoryreadboardpath` | Pathfinding (A*-like) |

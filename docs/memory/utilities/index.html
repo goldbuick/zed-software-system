@@ -20,10 +20,9 @@
 <li><code>zss/mapping/qr</code> — qrlines</li>
 <li><code>zss/mapping/types</code> — ispresent, isstring</li>
 <li><code>zss/words/types</code> — COLOR</li>
-<li><code>./boardaccess</code> — memoryreadobject</li>
-<li><code>./bookoperations</code> — memoryexportbook(asjson), memoryimportbook(fromjson), memoryreadelementdisplay</li>
-<li><code>./exportidremap</code> — cross-book protected dense id remap</li>
-<li><code>./flags</code> — memoryreadflags</li>
+<li><code>./boardaccess</code> — memoryreadelement</li>
+<li><code>./bookoperations</code> — memoryexportbook, memoryimportbook (<code>format</code> / <code>strip</code> options), memoryreadelementdisplay</li>
+<li><code>./exportidremap</code> — dense id remap used by compress/export (prefer <code>memoryexportbook</code> / <code>memorycompressbooks</code>)</li>
 <li><code>./playermanagement</code> — memoryreadplayerboard</li>
 <li><code>./session</code> — memoryisoperator, memoryreadmainbook, memoryreadoperator, memoryreadtopic, memorywritehalt</li>
 <li><code>./types</code> — BOOK, MEMORY_LABEL</li>

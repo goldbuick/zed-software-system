@@ -20,4 +20,6 @@ title: codepageoperations.ts
 |----------|---------|
 | Stats | memoryapplyelementstats, memoryreadcodepagestats, memoryreadcodepagestatsfromtext, memoryreadcodepagestat |
 | Parse | memoryreadcodepagedata, memoryreadcodepagetype, memoryreadcodepagename |
-| CRUD | memorycreatecodepage, memoryexportcodepage, memoryimportcodepage |
+| CRUD | memorycreatecodepage, memoryexportcodepage, memoryimportcodepage (`format` / `strip` options) |
+
+Lookup / list / pick across books: [`bookoperations.ts`](bookoperations.md) (`memoryreadcodepage`, `memorylistcodepage`) and [`codepages.ts`](../codepages.ts) (`memorypickcodepage`).
