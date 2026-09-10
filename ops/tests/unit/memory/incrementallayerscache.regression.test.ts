@@ -10,7 +10,6 @@ import {
   memoryincrementallayerscachestable,
   memoryreadgadgetlayers,
 } from 'zss/memory/rendering'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { BOARD_WIDTH } from 'zss/memory/types'
 import { DIR } from 'zss/words/types'
 
@@ -54,13 +53,13 @@ describe('PERF_INCREMENTAL_LAYERS regression', () => {
 
     memoryupdatedrawdirty(board, 1)
     memoryupdatedrawdirty(board, 2)
-    expect(memoryreadboardruntime(board)?.drawallowids?.size ?? 0).toBe(0)
+    expect(board?.drawallowids?.size ?? 0).toBe(0)
 
     player!.x = 6
     player!.y = 6
     memoryupdatedrawdirty(board, 3)
 
-    const runtime = memoryreadboardruntime(board)
+    const runtime = board
     expect(runtime?.drawallowids?.size ?? 0).toBe(0)
     expect(runtime?.drawdirtycells?.length ?? 0).toBeGreaterThan(0)
     expect(memoryincrementallayerscachestable(runtime)).toBe(false)
@@ -121,7 +120,7 @@ describe('PERF_INCREMENTAL_LAYERS regression', () => {
     // no position/fp change -> stable layer cache; tickers must still be emitted
     memoryupdatedrawdirty(board, 2)
     expect(
-      memoryincrementallayerscachestable(memoryreadboardruntime(board)),
+      memoryincrementallayerscachestable(board),
     ).toBe(true)
     layers = memoryreadgadgetlayers('flat', board)
     expect(layers.tickers.some((t) => t.id === 'pid_player')).toBe(true)

@@ -29,12 +29,6 @@ import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryexportterrainelement } from './boardterrainmap'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
-  memorydeleteboardelementruntime,
-  memoryensureboardelementruntime,
-  memoryensureboardruntime,
-  memoryreadboardruntime,
-} from './runtimeboundary'
-import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_ELEMENT_STAT,
@@ -44,6 +38,24 @@ import {
   BOARD_WIDTH,
 } from './types'
 
+const BOARD_RUNTIME_SKIP = {
+  id: FORMAT_SKIP,
+  name: FORMAT_SKIP,
+  named: FORMAT_SKIP,
+  distmaps: FORMAT_SKIP,
+  overboard: FORMAT_SKIP,
+  underboard: FORMAT_SKIP,
+  charsetpage: FORMAT_SKIP,
+  palettepage: FORMAT_SKIP,
+  drawlastfp: FORMAT_SKIP,
+  drawlastxy: FORMAT_SKIP,
+  drawallowids: FORMAT_SKIP,
+  drawdirtycells: FORMAT_SKIP,
+  drawneedfull: FORMAT_SKIP,
+  mediaqueuehelperpeerid: FORMAT_SKIP,
+  mediaqueuenowplayingtitle: FORMAT_SKIP,
+}
+
 function createempty() {
   return new Array(BOARD_WIDTH * BOARD_HEIGHT).map(() => undefined)
 }
@@ -51,7 +63,6 @@ function createempty() {
 export function memorydeleteboardobject(board: MAYBE<BOARD>, id: string) {
   if (ispresent(board?.objects[id])) {
     memorydeleteboardobjectnamedlookup(board, board.objects[id])
-    memorydeleteboardelementruntime(board.objects[id])
     delete board.objects[id]
     return true
   }
@@ -83,9 +94,7 @@ export function memoryexportboard(
         .map(memoryexportboardelement)
       return objects
     },
-    id: FORMAT_SKIP,
-    name: FORMAT_SKIP,
-    runtime: FORMAT_SKIP,
+    ...BOARD_RUNTIME_SKIP,
   })
 }
 
@@ -141,7 +150,7 @@ export function memoryexportboardasjson(
 export function memoryimportboard(
   boardentry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD> {
-  const board = unformatobject<BOARD>(boardentry, BOARD_KEYS, {
+  return unformatobject<BOARD>(boardentry, BOARD_KEYS, {
     terrain: (terrain) => terrain.map(memoryimportboardelement),
     objects: (elements) => {
       const objects: Record<string, BOARD_ELEMENT> = {}
@@ -154,11 +163,6 @@ export function memoryimportboard(
       return objects
     },
   })
-  if (!ispresent(board)) {
-    return undefined
-  }
-  memoryensureboardruntime(board)
-  return board
 }
 
 export function memorycreateboardobject(
@@ -170,9 +174,7 @@ export function memorycreateboardobject(
   }
   const object = deepcopy(from)
   object.id = object.id ?? createsid()
-  object.runtime = ''
-  const runtime = memoryensureboardelementruntime(object)
-  runtime.category = CATEGORY.ISOBJECT
+  object.category = CATEGORY.ISOBJECT
   board.objects[object.id] = object
   memoryreadelementkind(object)
   memorywriteboardnamed(board, object)
@@ -357,14 +359,9 @@ export function memorywriteterrain(
     memorydeleteboardterrainnamed(board, prior)
   }
   const terrain = deepcopy(from)
-  terrain.runtime = ''
-  const runtime = memoryensureboardelementruntime(terrain)
-  runtime.category = CATEGORY.ISTERRAIN
+  terrain.category = CATEGORY.ISTERRAIN
   board.terrain[index] = terrain
-  const boardruntime = memoryreadboardruntime(board)
-  if (ispresent(boardruntime)) {
-    delete boardruntime.distmaps
-  }
+  delete board.distmaps
   if (ispresent(terrain.kind) && terrain.kind) {
     memoryreadelementkind(terrain)
     memorywriteboardnamed(board, terrain, index)
@@ -410,12 +407,8 @@ export function memorysafedeleteelement(
     }
     memoryreadelementkind(element)
     memorydeleteboardterrainnamed(board, element)
-    memorydeleteboardelementruntime(element)
     board.terrain[element.x + element.y * BOARD_WIDTH] = undefined
-    const boardruntime = memoryreadboardruntime(board)
-    if (ispresent(boardruntime)) {
-      delete boardruntime.distmaps
-    }
+    delete board.distmaps
   }
   return true
 }
@@ -426,8 +419,6 @@ export function memorycreateboard(fn = noop<BOARD>) {
     objects: {},
     id: '',
     name: '',
-    runtime: '',
   }
-  memoryensureboardruntime(board)
   return fn(board)
 }

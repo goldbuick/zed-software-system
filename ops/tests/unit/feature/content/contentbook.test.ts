@@ -8,7 +8,6 @@ import {
   validatebookexport,
   validatecodepagefile,
 } from 'zss/feature/content/contentbook'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetype,
@@ -26,7 +25,6 @@ const MINIMAL_PAGES = path.join(CONTENT_TEMPLATES_DIR, 'minimal/pages')
 const DEMO_MANIFEST = CONTENT_DEMO_MANIFEST_PATH
 
 afterEach(() => {
-  memoryboundariesclear()
   memoryresetbooks([])
 })
 

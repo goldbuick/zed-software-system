@@ -1,6 +1,5 @@
 import { createsid } from 'zss/mapping/guid'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memoryreadbookflags,
@@ -16,7 +15,6 @@ import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 
 describe('memoryrestartallchipsandflags', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -46,7 +44,6 @@ describe('memoryrestartallchipsandflags', () => {
       x: 1,
       y: 1,
       code: '@guard\n#end\n',
-      runtime: '',
     }
     memorytickobject(booka, board, board.objects[npcid], '#end\n')
     expect(memorychipispresent(npcid)).toBe(true)

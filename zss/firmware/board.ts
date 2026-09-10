@@ -43,7 +43,6 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadmainbook } from 'zss/memory/session'
 import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import {
@@ -613,8 +612,7 @@ export const BOARD_FIRMWARE = createfirmware()
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
-        const runtime = memoryensureboardelementruntime(maybetarget)
-        if (runtime.pushedtick === READ_CONTEXT.timestamp) {
+        if (maybetarget.pushedtick === READ_CONTEXT.timestamp) {
           return 0
         }
         const shovedir = readevaldirfromtarget(
@@ -633,7 +631,7 @@ export const BOARD_FIRMWARE = createfirmware()
           },
         )
         if (moved) {
-          runtime.pushedtick = READ_CONTEXT.timestamp
+          maybetarget.pushedtick = READ_CONTEXT.timestamp
         }
       }
       return 0

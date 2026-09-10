@@ -1,16 +1,10 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
 import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
-import { MAYBE, isplainobject, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, isplainobject, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
 import { remapbookidsforfilenamesafety } from './bookidremap'
-import {
-  memoryboundaryalloc,
-  memoryboundarydelete,
-  memoryboundaryget,
-  memoryboundaryset,
-} from './boundaries'
 import {
   memorycodepagetypetostring,
   memorycreatecodepage,
@@ -31,8 +25,8 @@ import {
   buildexportidremap,
   mintcompressedexportids,
 } from './exportidremap'
-import { memoryreadboardelementruntime } from './runtimeboundary'
 import {
+  BOARD,
   BOARD_ELEMENT,
   BOOK,
   BOOK_FLAGS,
@@ -89,9 +83,7 @@ export function memoryclearbookflags(book: MAYBE<BOOK>, id: string) {
   if (!ispresent(book)) {
     return
   }
-  // nuke it
-  const bid = book.flags[id]
-  memoryboundaryset(bid, {})
+  book.flags[id] = {}
 }
 
 export function memoryreadelementdisplay(
@@ -100,7 +92,7 @@ export function memoryreadelementdisplay(
   defaultcolor = COLOR.WHITE,
   defaultbg = COLOR.BLACK,
 ): { name: string; char: number; color: COLOR; bg: COLOR; light: number } {
-  const kind = memoryreadboardelementruntime(element)?.kinddata
+  const kind = element?.kinddata
   return {
     name: NAME(element?.name ?? kind?.name),
     char:
@@ -240,11 +232,11 @@ export function memoryimportbookfromjson(flat: any): MAYBE<BOOK> {
 
   // import flags (bags must be plain objects; string ids are corrupt persist)
   const names = Object.keys(book.flags ?? {})
-  const flagsout: Record<string, string> = {}
+  const flagsout: Record<string, BOOK_FLAGS> = {}
   for (let i = 0; i < names.length; ++i) {
     const name = names[i]
     const bag = book.flags[name]
-    flagsout[name] = memoryboundaryalloc(isplainobject(bag) ? bag : {}, name)
+    flagsout[name] = isplainobject(bag) ? bag : {}
   }
 
   // return book
@@ -278,12 +270,12 @@ export function memoryimportbook(bookentry: MAYBE<FORMAT_OBJECT>): MAYBE<BOOK> {
     .map((entry) => memoryimportcodepage(entry))
     .filter(ispresent)
 
-  const flags: Record<string, string> = {}
+  const flags: Record<string, BOOK_FLAGS> = {}
   const flagids = Object.keys(flat.flags ?? {})
   for (let i = 0; i < flagids.length; ++i) {
     const id = flagids[i]
     const bag = flat.flags[id]
-    flags[id] = memoryboundaryalloc(isplainobject(bag) ? bag : {})
+    flags[id] = isplainobject(bag) ? bag : {}
   }
 
   // return book
@@ -413,26 +405,18 @@ export function memoryreadbookflag(
   return flags?.[name]
 }
 
-export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): any {
+export function memoryreadbookflags(book: MAYBE<BOOK>, id: string): BOOK_FLAGS {
   if (!ispresent(book)) {
     return {}
   }
 
-  // read boundary (reject non-object heap values from corrupt persist)
-  const bid = book.flags[id]
-  const flags = memoryboundaryget<BOOK_FLAGS>(bid)
+  const flags = book.flags[id]
   if (isplainobject(flags)) {
     return flags
   }
 
-  // create stub if not present or replace corrupt bag in place
-  const stub: BOOK_FLAGS = {}
-  if (ispresent(bid) && isstring(bid)) {
-    memoryboundaryset(bid, stub)
-  } else {
-    book.flags[id] = memoryboundaryalloc(stub)
-  }
-  return stub
+  book.flags[id] = {}
+  return book.flags[id]
 }
 
 export function memorylistcodepagessorted(book: MAYBE<BOOK>) {
@@ -503,7 +487,6 @@ export function memoryupsertcodepage(
     }
     return memorywritecodepage(book, page)
   }
-  memoryboundarydelete(flat.id)
   existing.code = flat.code
   if (flat.board && typeof flat.board === 'object') {
     const board = flat.board as { id?: string; objects?: unknown }
@@ -511,17 +494,14 @@ export function memoryupsertcodepage(
     if (!board.objects || typeof board.objects !== 'object') {
       board.objects = {}
     }
+    existing.board = flat.board as unknown as BOARD
+  } else {
+    existing.board = undefined
   }
-  memoryboundaryalloc(
-    {
-      board: flat.board,
-      object: flat.object,
-      terrain: flat.terrain,
-      charset: flat.charset,
-      palette: flat.palette,
-    },
-    flat.id,
-  )
+  existing.object = flat.object as unknown as BOARD_ELEMENT | undefined
+  existing.terrain = flat.terrain as unknown as BOARD_ELEMENT | undefined
+  existing.charset = flat.charset as typeof existing.charset
+  existing.palette = flat.palette as typeof existing.palette
   memoryresetcodepagestats(existing)
   return true
 }

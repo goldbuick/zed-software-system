@@ -1,5 +1,4 @@
 import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -26,7 +25,6 @@ const BULLET_CODE_NO_DIE = `@bullet
 describe('bullet blocked breakable softdelete', () => {
   afterEach(() => {
     cleartickreadcontextall()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

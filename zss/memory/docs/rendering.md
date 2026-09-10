@@ -21,7 +21,8 @@ title: rendering.ts
 - `./codepages` — memorypickcodepagewithtypeandstat
 - `./flags` — memoryreadflags
 - `./renderinglayercache` — createcachedcontrol, createcacheddither, createcachedmedia, createcachedtiles, memorycreatecachedsprite, memorycreatecachedsprites
-- `./runtimeboundary` — memoryreadboardelementruntime, memoryreadboardruntime, memorywriteboardelementruntime
+
+Board / element runtime fields (`named`, `kinddata`, `drawdirtycells`, …) are read directly on the board/element objects.
 
 ## Key Exports
 
@@ -43,7 +44,7 @@ Aug 2026 optimizations touching this module:
 
 - **Layer flag read cache** — [`gadgetlayersflags.ts`](../gadgetlayersflags.ts) caches `memoryreadbookflags(book, createlayersid(board))` per board; see [render-gadget-optimizations.md](../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker).
 - **Incremental layer rebuild** — `memoryconverttogadgetlayers` cache when `PERF_INCREMENTAL_LAYERS`, empty `drawallowids`, **and** empty `drawdirtycells`; see `memoryincrementallayerscachestable` in [`rendering.ts`](../rendering.ts).
-- **Tile dirty cells** — `memoryattachdrawdirtycellstotiles` copies `boardruntime.drawdirtycells` (from [`boarddrawdirty.ts`](../boarddrawdirty.ts)) onto `LAYER_TILES.dirtycells` for main-thread `PERF_TILE_SUBIMAGE` uploads.
+- **Tile dirty cells** — `memoryattachdrawdirtycellstotiles` copies `board.drawdirtycells` (from [`boarddrawdirty.ts`](../boarddrawdirty.ts)) onto `LAYER_TILES.dirtycells` for main-thread `PERF_TILE_SUBIMAGE` uploads.
 
 Full intent, trace evidence, and debugging: [`zss/perf/docs/render-gadget-optimizations.md`](../../perf/docs/render-gadget-optimizations.md).
 

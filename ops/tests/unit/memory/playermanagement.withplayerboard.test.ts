@@ -1,6 +1,5 @@
 import * as arraymod from 'zss/mapping/array'
 import { createtrackingid } from 'zss/mapping/guid'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import {
   memorycreatebook,
@@ -15,7 +14,6 @@ import {
   memorypicknextactiveplayerboard,
   memorywritebookplayerboard,
 } from 'zss/memory/playermanagement'
-import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
   memoryreadmainbook,
   memoryresetbooks,
@@ -58,7 +56,7 @@ function placeplayer(boardid: string, player: string, x: number, y: number) {
     player,
   )
   if (obj) {
-    memoryensureboardelementruntime(obj).category = CATEGORY.ISOBJECT
+    obj!.category = CATEGORY.ISOBJECT
     obj.player = player
   }
   return board
@@ -71,7 +69,6 @@ describe('memorypicknextactiveplayerboard', () => {
   const playerb = 'pid_12_bbbbbbbbbbbbbb'
 
   beforeEach(() => {
-    memoryboundariesclear()
     const playerkind = memorycreatecodepage(`@${MEMORY_LABEL.PLAYER}\n`, {
       object: { name: MEMORY_LABEL.PLAYER },
     })
@@ -87,7 +84,6 @@ describe('memorypicknextactiveplayerboard', () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

@@ -1,5 +1,4 @@
 import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -27,7 +26,6 @@ const BULLET_CODE = `@bullet
 describe('bullet edge thud die', () => {
   afterEach(() => {
     cleartickreadcontextall()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

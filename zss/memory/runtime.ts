@@ -26,7 +26,6 @@ import { memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import { memoryreadcodepage } from './bookoperations'
 import { memoryensuremainbook } from './books'
-import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryclearflags, memoryreadflags } from './flags'
@@ -37,10 +36,6 @@ import {
   memoryloaderrelease,
 } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
-import {
-  memoryreadboardelementruntime,
-  memoryreadboardruntime,
-} from './runtimeboundary'
 import {
   memoryreadbooklist,
   memoryreadloaders,
@@ -83,12 +78,7 @@ export function memoryrestartallchipsandflags() {
 
   const books = memoryreadbooklist()
   for (let b = 0; b < books.length; ++b) {
-    const book = books[b]
-    const flagids = Object.keys(book.flags)
-    for (let i = 0; i < flagids.length; ++i) {
-      memoryboundarydelete(book.flags[flagids[i]])
-    }
-    book.flags = {}
+    books[b].flags = {}
   }
 }
 
@@ -192,10 +182,9 @@ export function memorytickmain(
           memoryapplyboardsynthstats(board)
         }
 
-        const boardruntime = memoryreadboardruntime(board)
-        const drawallowforqueue = boardruntime?.drawneedfull
+        const drawallowforqueue = board.drawneedfull
           ? undefined
-          : boardruntime?.drawallowids
+          : board.drawallowids
         const rundraw =
           drawallowforqueue === undefined || drawallowforqueue.size > 0
         const run = memorytickboard(
@@ -294,9 +283,7 @@ export function memorytickobject(
 
   // run chip code
   const id = object.id ?? ''
-  const itemname = NAME(
-    object.name ?? memoryreadboardelementruntime(object)?.kinddata?.name ?? '',
-  )
+  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
   os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
@@ -348,11 +335,7 @@ export function memorytickonce(
 
   READ_CONTEXT.usedisplaystats = true
 
-  const itemname = NAME(
-    element.name ??
-      memoryreadboardelementruntime(element)?.kinddata?.name ??
-      '',
-  )
+  const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 
   objectKeys(OLD_CONTEXT).forEach((key) => {
@@ -413,9 +396,7 @@ export function memoryruncodepage(address: string, label: string) {
 
   const id = `${address}_run`
   const itemname =
-    READ_CONTEXT.element?.name ??
-    memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata?.name ??
-    ''
+    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
   const itemcode = codepage?.code ?? ''
 
   // set arg to value on chip with id = id

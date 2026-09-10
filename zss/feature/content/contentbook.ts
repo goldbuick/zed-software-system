@@ -8,7 +8,6 @@ import {
   memoryexportbookasjson,
   memoryimportbookfromjson,
 } from 'zss/memory/bookoperations'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memoryimportcodepagefromjson,
   memoryreadcodepagedata,
@@ -141,7 +140,6 @@ export function buildbookfrommanifest(
   manifestpath: string,
   rootdir = path.dirname(manifestpath),
 ): CONTENT_BOOK_EXPORT {
-  memoryboundariesclear()
   const manifest = readmanifest(manifestpath)
   const pages: CODE_PAGE[] = []
   for (let i = 0; i < manifest.pages.length; ++i) {
@@ -186,7 +184,6 @@ export function writebookexport(
 
 export function validatecodepagefile(filepath: string): string[] {
   const errors: string[] = []
-  memoryboundariesclear()
   const parsed = parsecodepagefilename(filepath)
   if (!ispresent(parsed)) {
     errors.push(`filename must be {name}.{type}.json: ${filepath}`)
@@ -224,7 +221,6 @@ export function validatecodepagefile(filepath: string): string[] {
 
 export function validatebookexport(exportbook: CONTENT_BOOK_EXPORT): string[] {
   const errors: string[] = []
-  memoryboundariesclear()
   memoryresetbooks([])
   const book = memoryimportbookfromjson(exportbook.data)
   if (!ispresent(book)) {

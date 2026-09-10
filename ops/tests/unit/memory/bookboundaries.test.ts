@@ -18,14 +18,8 @@ import {
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
 import {
-  memoryboundariesclear,
-  memoryboundaryalloc,
-  memoryboundaryget,
-} from 'zss/memory/boundaries'
-import {
   memorycreatecodepage,
   memoryexportcodepage,
-  memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
 import { memoryfreebook, memoryresetbooks } from 'zss/memory/session'
 import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
@@ -44,19 +38,18 @@ function wirebookforimport(book: BOOK): FORMAT_OBJECT {
   return wired
 }
 
-describe('book opaque boundaries', () => {
+describe('book import export and flags', () => {
   afterEach(() => {
     memoryresetbooks([])
   })
 
-  it('stores code pages on the book; runtime payload at boundaries[codepage.id]', () => {
+  it('stores code pages on the book with payload on the page', () => {
     const cp = memorycreatecodepage('@board testboard\n', {})
     const book = memorycreatebook([cp])
     expect(book.pages.length).toBe(1)
     expect(book.pages[0]).toBe(cp)
     expect(book.flags).toEqual({})
-    expect(memoryreadcodepageruntime(cp)).toEqual({})
-    expect(memoryboundaryget(cp.id)).toEqual({})
+    expect(cp.board).toBeUndefined()
     expect(memoryreadcodepage(book, cp.id)?.id).toBe(cp.id)
   })
 
@@ -68,18 +61,16 @@ describe('book opaque boundaries', () => {
     expect(packed).toBeDefined()
     const unpacked = unpackformat(packed!)
     expect(ispresent(unpacked)).toBe(true)
-    memoryboundariesclear()
     const again = memoryimportbook(unpacked)
     expect(ispresent(again)).toBe(true)
     expect(again!.pages.length).toBe(1)
     expect(memoryreadcodepage(again, cp.id)?.id).toBe(cp.id)
     const imported = memoryreadcodepage(again, cp.id)
     expect(imported).toBeDefined()
-    expect(memoryreadcodepageruntime(imported)).toBeDefined()
-    expect(memoryboundaryget(imported!.id)).toBeDefined()
+    expect(imported!.id).toBe(cp.id)
   })
 
-  it('round-trips JSON export/import with board runtime (CLI snapshot shape)', () => {
+  it('round-trips JSON export/import with board payload (CLI snapshot shape)', () => {
     const cp = memorycreatecodepage('@board snapjson\n@exitnorth roomn\n', {
       board: {
         id: 'bid',
@@ -90,11 +81,9 @@ describe('book opaque boundaries', () => {
       },
     })
     const book = memorycreatebook([cp])
-    const rtbefore = memoryreadcodepageruntime(memoryreadcodepage(book, cp.id))
-    expect(rtbefore?.board?.exitnorth).toBe('roomn')
+    expect(memoryreadcodepage(book, cp.id)?.board?.exitnorth).toBe('roomn')
 
     const json = JSON.stringify(wirebookforimport(book))
-    memoryboundariesclear()
     memoryresetbooks([])
 
     const imported = memoryimportbook(JSON.parse(json) as FORMAT_OBJECT)
@@ -103,17 +92,16 @@ describe('book opaque boundaries', () => {
 
     const cp2 = memoryreadcodepage(imported, cp.id)
     expect(cp2).toBeDefined()
-    const rtafter = memoryreadcodepageruntime(cp2)
-    expect(rtafter?.board?.exitnorth).toBe('roomn')
+    expect(cp2?.board?.exitnorth).toBe('roomn')
   })
 
-  it('mutates flags through boundary-backed record', () => {
+  it('mutates flags through inline flag bags', () => {
     const book = memorycreatebook([])
     const gadgetowner = creategadgetid('testplayer')
     memorywritebookflag(book, gadgetowner, 'x', 42 as any)
     const root = memoryreadbookflags(book, gadgetowner)
     expect(root.x).toBe(42)
-    expect(memoryboundaryget(book.flags[gadgetowner])).toBeDefined()
+    expect(book.flags[gadgetowner]).toBe(root)
   })
 
   it('export trim drops cleared empty flags but keeps carry-over stats', () => {
@@ -136,7 +124,6 @@ describe('book opaque boundaries', () => {
     const packed = packformat(trimmedwire!)
     expect(packed).toBeDefined()
 
-    memoryboundariesclear()
     const again = memoryimportbook(unpackformat(packed!))
     expect(ispresent(again)).toBe(true)
     expect(again!.flags[cleared]).toBeUndefined()
@@ -163,7 +150,6 @@ describe('book opaque boundaries', () => {
 
     const wire = memoryexportbook(book)
     expect(ispresent(wire)).toBe(true)
-    memoryboundariesclear()
     const again = memoryimportbook(wire)
     expect(ispresent(again)).toBe(true)
     expect(memoryreadbookflags(again, durable)).toEqual({ score: 7 })
@@ -171,76 +157,48 @@ describe('book opaque boundaries', () => {
     expect(again!.flags[layersowner]).toBeUndefined()
   })
 
-  it('frees nested runtime boundaries when freeing a whole book', () => {
-    const boardruntime = 'board-runtime'
-    const terrainruntime = 'terrain-runtime'
-    const objectruntime = 'object-runtime'
-    const pageobjectruntime = 'page-object-runtime'
-    const pageterrainruntime = 'page-terrain-runtime'
-    memoryboundaryalloc({}, boardruntime)
-    memoryboundaryalloc({}, terrainruntime)
-    memoryboundaryalloc({}, objectruntime)
-    memoryboundaryalloc({}, pageobjectruntime)
-    memoryboundaryalloc({}, pageterrainruntime)
-
+  it('frees pages and clears flags when freeing a whole book', () => {
     const cp = memorycreatecodepage('@board testboard\n', {
       board: {
         id: 'b',
         name: 'board',
-        terrain: [{ runtime: terrainruntime }],
-        objects: { oid: { id: 'oid', runtime: objectruntime } },
-        runtime: boardruntime,
+        terrain: [],
+        objects: { oid: { id: 'oid', char: 1 } },
       },
-      object: { id: 'obj', runtime: pageobjectruntime },
-      terrain: { runtime: pageterrainruntime },
+      object: { id: 'obj', char: 2 },
+      terrain: { char: 3 },
     })
     const book = memorycreatebook([cp])
+    memorywritebookflag(book, 'pid', 'score', 1 as any)
 
-    expect(memoryreadcodepageruntime(cp)).toBeDefined()
-    expect(memoryboundaryget(boardruntime)).toBeDefined()
-    expect(memoryboundaryget(terrainruntime)).toBeDefined()
-    expect(memoryboundaryget(objectruntime)).toBeDefined()
-    expect(memoryboundaryget(pageobjectruntime)).toBeDefined()
-    expect(memoryboundaryget(pageterrainruntime)).toBeDefined()
+    expect(book.pages.length).toBe(1)
+    expect(cp.board).toBeDefined()
+    expect(Object.keys(book.flags).length).toBeGreaterThan(0)
 
     memoryfreebook(book)
 
     expect(book.pages.length).toBe(0)
-    expect(memoryboundaryget(cp.id)).toBeUndefined()
-    expect(memoryboundaryget(boardruntime)).toBeUndefined()
-    expect(memoryboundaryget(terrainruntime)).toBeUndefined()
-    expect(memoryboundaryget(objectruntime)).toBeUndefined()
-    expect(memoryboundaryget(pageobjectruntime)).toBeUndefined()
-    expect(memoryboundaryget(pageterrainruntime)).toBeUndefined()
+    expect(book.flags).toEqual({})
   })
 
-  it('frees nested runtime boundaries when clearing one codepage', () => {
-    const boardruntime = 'board-runtime-clear'
-    const objectruntime = 'object-runtime-clear'
-    memoryboundaryalloc({}, boardruntime)
-    memoryboundaryalloc({}, objectruntime)
-
+  it('removes the page when clearing one codepage', () => {
     const cp = memorycreatecodepage('@board clearme\n', {
       board: {
         id: 'b2',
         name: 'board2',
         terrain: [],
         objects: {},
-        runtime: boardruntime,
       },
-      object: { id: 'obj2', runtime: objectruntime },
+      object: { id: 'obj2', char: 4 },
     })
     const book = memorycreatebook([cp])
 
-    expect(memoryreadcodepageruntime(cp)).toBeDefined()
-    expect(memoryboundaryget(boardruntime)).toBeDefined()
-    expect(memoryboundaryget(objectruntime)).toBeDefined()
+    expect(book.pages.length).toBe(1)
+    expect(cp.board).toBeDefined()
 
     const removed = memoryclearbookcodepage(book, cp.id)
     expect(removed?.id).toBe(cp.id)
     expect(book.pages.length).toBe(0)
-    expect(memoryboundaryget(cp.id)).toBeUndefined()
-    expect(memoryboundaryget(boardruntime)).toBeUndefined()
-    expect(memoryboundaryget(objectruntime)).toBeUndefined()
+    expect(memoryreadcodepage(book, cp.id)).toBeUndefined()
   })
 })

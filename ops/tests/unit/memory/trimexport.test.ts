@@ -14,11 +14,9 @@ import {
   memoryreadcodepage,
   memorywritebookflag,
 } from 'zss/memory/bookoperations'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
-  memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
@@ -133,14 +131,12 @@ describe('trimexport', () => {
       const packed = packformat(trimmed!)
       expect(packed).toBeDefined()
 
-      memoryboundariesclear()
       const again = memoryimportbook(unpackformat(packed!))
       expect(ispresent(again)).toBe(true)
       expect(again!.pages.length).toBe(1)
 
       const importedpage = memoryreadcodepage(again, 'snap')
-      const runtime = memoryreadcodepageruntime(importedpage)
-      expect(runtime?.board?.exitnorth).toBe('roomn')
+      expect(importedpage?.board?.exitnorth).toBe('roomn')
       expect(memoryreadbookflags(again, 'player-with-stats')).toEqual({
         deaths: 3,
       })
@@ -153,7 +149,6 @@ describe('trimexport', () => {
       const packed = packformat(trimmed)
       expect(packed).toBeDefined()
 
-      memoryboundariesclear()
       const again = memoryimportbook(unpackformat(packed!))
       expect(ispresent(again)).toBe(true)
       expect(memoryreadcodepage(again, cp.id)?.id).toBe(cp.id)

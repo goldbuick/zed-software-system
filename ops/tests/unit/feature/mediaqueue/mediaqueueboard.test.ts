@@ -2,14 +2,9 @@ import { handlemediaqueueboard } from 'zss/device/vm/handlers/mediaqueueboard'
 import { memoryinvalidatedraw } from 'zss/memory/boarddrawdirty'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
 jest.mock('zss/memory/boards', () => ({
   memoryreadboardbyaddress: jest.fn(),
-}))
-
-jest.mock('zss/memory/runtimeboundary', () => ({
-  memoryensureboardruntime: jest.fn(),
 }))
 
 jest.mock('zss/memory/boarddrawdirty', () => ({
@@ -25,11 +20,12 @@ describe('mediaqueue board runtime sync', () => {
     jest.clearAllMocks()
   })
 
-  it('binds helper peer id on board runtime', () => {
-    const board = { id: 'board-a' }
-    const runtime: { mediaqueuehelperpeerid?: string } = {}
+  it('binds helper peer id on board', () => {
+    const board: {
+      id: string
+      mediaqueuehelperpeerid?: string
+    } = { id: 'board-a' }
     jest.mocked(memoryreadboardbyaddress).mockReturnValue(board as never)
-    jest.mocked(memoryensureboardruntime).mockReturnValue(runtime as never)
     handlemediaqueueboard({} as never, {
       player: 'p1',
       data: {
@@ -38,7 +34,7 @@ describe('mediaqueue board runtime sync', () => {
         helperpeerid: 'helper-1',
       },
     } as never)
-    expect(runtime.mediaqueuehelperpeerid).toBe('helper-1')
+    expect(board.mediaqueuehelperpeerid).toBe('helper-1')
     expect(memoryinvalidatedraw).toHaveBeenCalledWith(board)
     expect(memoryinvalidategadgetlayerscacheforboard).toHaveBeenCalledWith(
       'board-a',
@@ -46,13 +42,16 @@ describe('mediaqueue board runtime sync', () => {
   })
 
   it('clears helper peer id on stop', () => {
-    const board = { id: 'board-a' }
-    const runtime = {
+    const board: {
+      id: string
+      mediaqueuehelperpeerid?: string
+      mediaqueuenowplayingtitle?: string
+    } = {
+      id: 'board-a',
       mediaqueuehelperpeerid: 'helper-1',
       mediaqueuenowplayingtitle: 'Playing',
     }
     jest.mocked(memoryreadboardbyaddress).mockReturnValue(board as never)
-    jest.mocked(memoryensureboardruntime).mockReturnValue(runtime as never)
     handlemediaqueueboard({} as never, {
       player: 'p1',
       data: {
@@ -61,8 +60,8 @@ describe('mediaqueue board runtime sync', () => {
         helperpeerid: '',
       },
     } as never)
-    expect(runtime.mediaqueuehelperpeerid).toBeUndefined()
-    expect(runtime.mediaqueuenowplayingtitle).toBeUndefined()
+    expect(board.mediaqueuehelperpeerid).toBeUndefined()
+    expect(board.mediaqueuenowplayingtitle).toBeUndefined()
     expect(memoryinvalidatedraw).toHaveBeenCalledWith(board)
     expect(memoryinvalidategadgetlayerscacheforboard).toHaveBeenCalledWith(
       'board-a',

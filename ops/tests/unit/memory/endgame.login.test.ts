@@ -1,5 +1,4 @@
 import { apierror } from 'zss/device/api'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memoryreadbookflag,
@@ -35,7 +34,6 @@ describe('endgame logout then login', () => {
   const player = 'pid_12_endgameplayer1'
 
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     jest.mocked(apierror).mockClear()
   })

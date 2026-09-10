@@ -18,7 +18,7 @@ title: boardcopy.ts
 |----------|------|-------------|
 | `boardcopy` | `source`, `target`, `p1`, `p2`, `targetset` | Copy board region from source to target; targetset: `'all'`, `'object'`, `'terrain'`, or group name |
 | `boardcopygroup` | `source`, `target`, `p1`, `self`, `targetgroup` | Copy elements by group with collision handling |
-| `mapelementcopy` | `maybenew`, `from` | Copy element surface stats from one element to another, then clone runtime payload onto `maybenew` via `memorycopyboardelementruntime` (distinct boundary id from source) |
+| `mapelementcopy` | `maybenew`, `from` | Copy element surface stats from one element to another, then copy runtime fields (`category`, `kinddata`, `kindsource*`, `pushedtick`) onto `maybenew` via `memorycopyboardelementruntime` |
 
 ## Internal Helpers
 

@@ -7,7 +7,6 @@ import {
   mediareaddisplaynamefrompayload,
   mediarequireboardhelper,
 } from 'zss/feature/mediaqueue/mediaguards'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memorywritebookflag,
@@ -21,7 +20,6 @@ import {
   memorysetplayertotoken,
   memorysetrolefortoken,
 } from 'zss/memory/permissions'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -39,7 +37,6 @@ describe('mediaguards', () => {
   })
 
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -131,7 +128,7 @@ describe('mediaguards', () => {
     const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
     bound.id = boarda.id
     other.id = boardb.id
-    memoryensureboardruntime(bound).mediaqueuehelperpeerid = 'mq_helper1'
+    bound.mediaqueuehelperpeerid = 'mq_helper1'
     memorywritebookflag(book, 'p1', 'board', bound.id)
     memorywritebookflag(book, 'p1', 'user', 'goldbuick')
     expect(mediarequireboardhelper('p1')).toBe('mq_helper1')
@@ -165,7 +162,7 @@ describe('mediaguards', () => {
     const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
     bound.id = boarda.id
     other.id = boardb.id
-    memoryensureboardruntime(bound).mediaqueuehelperpeerid = 'mq_from_context'
+    bound.mediaqueuehelperpeerid = 'mq_from_context'
     memorywritebookflag(book, 'p1', 'board', other.id)
     const previous = READ_CONTEXT.board
     READ_CONTEXT.board = bound

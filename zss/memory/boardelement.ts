@@ -5,15 +5,19 @@ import {
   unformatobject,
 } from 'zss/feature/format'
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { STR_COLOR, isstrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { CATEGORY } from 'zss/words/types'
 
-import {
-  memoryensureboardelementruntime,
-  memoryreadboardelementruntime,
-} from './runtimeboundary'
 import { BOARD_ELEMENT, BOARD_ELEMENT_KEYS } from './types'
+
+const BOARD_ELEMENT_RUNTIME_SKIP = {
+  category: FORMAT_SKIP,
+  kinddata: FORMAT_SKIP,
+  kindsourcepageid: FORMAT_SKIP,
+  kindsourcekind: FORMAT_SKIP,
+  pushedtick: FORMAT_SKIP,
+}
 
 export function memoryapplyboardelementcolor(
   element: MAYBE<BOARD_ELEMENT>,
@@ -36,7 +40,7 @@ export function memoryexportboardelement(
 ): MAYBE<FORMAT_OBJECT> {
   if (ispresent(boardelement?.id)) {
     return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
-      runtime: FORMAT_SKIP,
+      ...BOARD_ELEMENT_RUNTIME_SKIP,
       stopped: FORMAT_SKIP,
       bucket: FORMAT_SKIP,
     })
@@ -49,7 +53,7 @@ export function memoryexportboardelement(
     lx: FORMAT_SKIP,
     ly: FORMAT_SKIP,
     code: FORMAT_SKIP,
-    runtime: FORMAT_SKIP,
+    ...BOARD_ELEMENT_RUNTIME_SKIP,
     stopped: FORMAT_SKIP,
     removed: FORMAT_SKIP,
     bucket: FORMAT_SKIP,
@@ -143,28 +147,47 @@ export function memoryexportboardelementasjson(
 export function memoryimportboardelement(
   boardelemententry: MAYBE<FORMAT_OBJECT>,
 ): MAYBE<BOARD_ELEMENT> {
-  const element = unformatobject<BOARD_ELEMENT>(
-    boardelemententry,
-    BOARD_ELEMENT_KEYS,
-  )
-  if (!ispresent(element)) {
-    return undefined
-  }
-  memoryensureboardelementruntime(element)
-  return element
+  return unformatobject<BOARD_ELEMENT>(boardelemententry, BOARD_ELEMENT_KEYS)
 }
 
 export function memoryboardelementisobject(
   element: MAYBE<BOARD_ELEMENT>,
 ): boolean {
-  return memoryreadboardelementruntime(element)?.category === CATEGORY.ISOBJECT
+  return element?.category === CATEGORY.ISOBJECT
+}
+
+export function memorycopyboardelementruntime(
+  dest: BOARD_ELEMENT,
+  src: BOARD_ELEMENT,
+): void {
+  if (ispresent(src.category)) {
+    dest.category = src.category
+  }
+  if (ispresent(src.kinddata)) {
+    dest.kinddata = deepcopy(src.kinddata)
+  } else {
+    delete dest.kinddata
+  }
+  if (ispresent(src.kindsourcepageid)) {
+    dest.kindsourcepageid = src.kindsourcepageid
+  } else {
+    delete dest.kindsourcepageid
+  }
+  if (ispresent(src.kindsourcekind)) {
+    dest.kindsourcekind = src.kindsourcekind
+  } else {
+    delete dest.kindsourcekind
+  }
+  if (ispresent(src.pushedtick)) {
+    dest.pushedtick = src.pushedtick
+  } else {
+    delete dest.pushedtick
+  }
 }
 
 export function memorycreateboardelement() {
   const boardelement: BOARD_ELEMENT = {
     id: createsid(),
-    runtime: '',
   }
-  memoryensureboardelementruntime(boardelement)
   return boardelement
 }

@@ -98,7 +98,7 @@ describe('zzt centipede Leader/Follower import', () => {
     memoryclearbook(book.id)
   })
 
-  it('maps Leader < -1 onto segment p5 linkgrace', () => {
+  it('maps Leader < -1 onto segment p5 past the linkgrace threshold', () => {
     const elements = blankelements()
     const sx = 5
     const sy = 5
@@ -140,7 +140,7 @@ describe('zzt centipede Leader/Follower import', () => {
     const memboard = memoryreadboardbyaddress(boardaddresses[0])
     const seg = memoryreadelement(memboard, { x: sx, y: sy })
     expect(NAME(seg?.kind ?? '')).toBe('segment')
-    expect(seg?.p5).toBe(1)
+    expect(seg?.p5).toBe(17)
     expect(seg?.p4).toBeUndefined()
 
     memoryclearbook(book.id)

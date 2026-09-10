@@ -10,7 +10,6 @@ import {
   handleeditorbookmarkscrollpanel,
 } from 'zss/device/vm/handlers/editorbookmarkscroll'
 import type { ZssEditorBookmark } from 'zss/feature/bookmarks'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 import { memorybookmarkdeleteprompt } from 'zss/memory/bookmarkdeleteconfirm'
@@ -90,7 +89,6 @@ describe('handleeditorbookmarkscroll', () => {
 
   beforeEach(() => {
     jest.mocked(memoryeditorbookmarkscroll).mockClear()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

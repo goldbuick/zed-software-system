@@ -13,7 +13,6 @@ import {
   handlebookmarkscroll,
   handlebookmarkscrollpanel,
 } from 'zss/device/vm/handlers/bookmarkscroll'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorybookmarkscroll,
   memorymainbookisempty,
@@ -59,7 +58,6 @@ describe('handlebookmarkscroll', () => {
 
   beforeEach(() => {
     jest.mocked(memorybookmarkscroll).mockClear()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

@@ -11,7 +11,6 @@ jest.mock('zss/memory/gamesend', () => {
   }
 })
 
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -26,7 +25,6 @@ import { READ_CONTEXT } from 'zss/words/reader'
 
 describe('memorymoveobject does not emit thud', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     READ_CONTEXT.board = undefined
     mockedmemorysendtoelement.mockClear()

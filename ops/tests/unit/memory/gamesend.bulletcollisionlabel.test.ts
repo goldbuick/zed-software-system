@@ -26,7 +26,6 @@ jest.mock('zss/memory/boardlifecycle', () => {
   }
 })
 
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -125,7 +124,6 @@ describe('memorybulletcollisionlabel', () => {
 
 describe('enemy-source bullet send labels', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -311,7 +309,6 @@ describe('enemy-source bullet send labels', () => {
 
 describe('walker into bullet uses memorybulletcollisionlabel', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

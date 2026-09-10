@@ -1,6 +1,5 @@
 import { isfilenamesafeid } from 'zss/mapping/guid'
 import { memoryimportbookfromjson } from 'zss/memory/bookoperations'
-import { memoryreadcodepageruntime } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import {
   readcoolregionsbowbookexport,
@@ -112,7 +111,7 @@ describe('coolregionsbow book fixture', () => {
     expect(book).toBeDefined()
     memoryresetbooks([book!])
 
-    const board = memoryreadcodepageruntime(book!.pages[sample!.page])?.board
+    const board = book!.pages[sample!.page]?.board
     const cell = board?.terrain[sample!.index]
     expect(cell?.kind).toBe(sample!.kind)
     expect(cell?.dmap).toBeUndefined()

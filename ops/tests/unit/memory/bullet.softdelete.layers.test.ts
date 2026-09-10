@@ -12,11 +12,6 @@ import {
   memoryconverttogadgetlayers,
   memoryincrementallayerscachestable,
 } from 'zss/memory/rendering'
-import {
-  memoryreadboardruntime,
-  memorywriteboardelementruntime,
-} from 'zss/memory/runtimeboundary'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memoryresetbooks } from 'zss/memory/session'
 import { COLLISION, DIR } from 'zss/words/types'
 
@@ -51,7 +46,6 @@ function readbulletsprites(
 
 describe('bullet soft-delete + incremental layers', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -89,12 +83,11 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(bullet).toBeDefined()
     bullet!.collision = COLLISION.ISBULLET
     bullet!.char = 248
-    memorywriteboardelementruntime(bullet!, {
+    Object.assign(bullet!, {
       category: 1,
       kinddata: {
         id: 'bullet',
         code: '@bullet\n:thud\n#die\n',
-        runtime: '',
       },
     })
     memoryensureboardready(board)
@@ -108,12 +101,12 @@ describe('bullet soft-delete + incremental layers', () => {
     layers = memoryconverttogadgetlayers('flat', 0, board, DIR.MID)
     expect(readbulletsprites(layers).length).toBe(1)
     expect(
-      memoryincrementallayerscachestable(memoryreadboardruntime(board)),
+      memoryincrementallayerscachestable(board),
     ).toBe(true)
 
     memorysafedeleteelement(board, bullet, 3)
     memoryupdatedrawdirty(board, 3)
-    const runtime = memoryreadboardruntime(board)
+    const runtime = board
     // Must not reuse stale sprite list that still contains the bullet.
     expect(memoryincrementallayerscachestable(runtime)).toBe(false)
     layers = memoryconverttogadgetlayers('flat', 0, board, DIR.MID)

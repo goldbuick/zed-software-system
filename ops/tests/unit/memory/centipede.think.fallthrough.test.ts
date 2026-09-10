@@ -5,7 +5,6 @@ import {
 } from 'zss/firmware/runner'
 import { compilescript } from 'zss/feature/lang/langcompileclient'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -58,7 +57,6 @@ describe('centipede handlers after :think', () => {
 describe('centipede head claims adjacent segment', () => {
   afterEach(() => {
     cleartickreadcontextall()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

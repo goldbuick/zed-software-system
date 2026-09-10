@@ -1,5 +1,4 @@
 import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import {
@@ -17,7 +16,6 @@ import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 describe('memorymoveplayertoboard occupancy', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

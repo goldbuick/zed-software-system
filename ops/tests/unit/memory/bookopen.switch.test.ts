@@ -1,5 +1,4 @@
 import { apierror } from 'zss/device/api'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memoryreadbookflag,
@@ -57,7 +56,6 @@ function maketitleonlybook(name: string) {
 
 describe('memoryswitchopenedbook', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     jest.mocked(apierror).mockClear()
   })
@@ -98,7 +96,6 @@ describe('memoryswitchopenedbook', () => {
 
 describe('memoryloginplayer title and player scope', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     jest.mocked(apierror).mockClear()
   })
@@ -147,7 +144,6 @@ describe('memoryloginplayer title and player scope', () => {
 
 describe('memorycreatesoftwarebook', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -166,7 +162,6 @@ describe('memorycreatesoftwarebook', () => {
 
 describe('memorywritemainbook', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

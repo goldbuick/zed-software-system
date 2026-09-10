@@ -19,7 +19,6 @@ import { memoryensuremainbook } from './books'
 import { memoryinspectempty, memoryinspectemptymenu } from './inspection'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
-import { memoryreadboardelementruntime } from './runtimeboundary'
 import { memoryreadoperator } from './session'
 import { BOARD, BOARD_ELEMENT } from './types'
 
@@ -63,10 +62,7 @@ function createboardelementbuffer(
         // visible element only
         flattened.push(under)
       } else {
-        if (
-          memoryreadboardelementruntime(maybeobject)?.category ===
-          CATEGORY.ISOBJECT
-        ) {
+        if (maybeobject?.category === CATEGORY.ISOBJECT) {
           // terrain and object
           terrain.push(deepcopy(memoryreadterrain(board, x, y)))
           objects.push({
@@ -289,10 +285,7 @@ export async function memoryinspectcut(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (
-            memoryreadboardelementruntime(maybeobject)?.category ===
-            CATEGORY.ISOBJECT
-          ) {
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
           memorywriteterrain(board, { x, y })
@@ -304,10 +297,7 @@ export async function memoryinspectcut(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (
-            memoryreadboardelementruntime(maybeobject)?.category ===
-            CATEGORY.ISOBJECT
-          ) {
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }

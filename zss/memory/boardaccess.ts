@@ -5,7 +5,6 @@ import { ispt } from 'zss/words/dir'
 import { COLLISION, PT } from 'zss/words/types'
 
 import { memoryboardelementisobject } from './boardelement'
-import { memoryreadboardelementruntime } from './runtimeboundary'
 import {
   memorylistboardnamedelements,
   memorypickboardnearestpt,
@@ -21,10 +20,7 @@ function memoryobjectisghost(object: BOARD_ELEMENT): boolean {
   if (object.collision === COLLISION.ISGHOST) {
     return true
   }
-  return (
-    memoryreadboardelementruntime(object)?.kinddata?.collision ===
-    COLLISION.ISGHOST
-  )
+  return object.kinddata?.collision === COLLISION.ISGHOST
 }
 
 /**

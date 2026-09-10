@@ -321,7 +321,7 @@ yarn jest ops/tests/unit/feature/lang/backend/typescript/codegenbench.test.ts --
 | [`zss/memory/gadgetlayersflags.ts`](../../memory/gadgetlayersflags.ts) | Layer store cache |
 | [`zss/memory/rendering.ts`](../../memory/rendering.ts) | `memoryattachdrawdirtycellstotiles`, incremental layer cache |
 | [`zss/memory/boarddrawdirty.ts`](../../memory/boarddrawdirty.ts) | `drawdirtycells` |
-| [`zss/memory/types.ts`](../../memory/types.ts) | `BOARD_RUNTIME.drawdirtycells` |
+| [`zss/memory/types.ts`](../../memory/types.ts) | `BOARD.drawdirtycells` (runtime-only) |
 | [`zss/words/expr.ts`](../../words/expr.ts) | Reader fast path |
 | [`zss/words/reader.ts`](../../words/reader.ts) | `readargs` swap skip |
 | [`zss/device/clock.ts`](../../device/clock.ts) | Slow wake log |

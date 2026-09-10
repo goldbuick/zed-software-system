@@ -21,7 +21,7 @@ const MEMORY = {
 }
 ```
 
-Everything below the surface (boards, elements, codepages, flags) lives **inside `BOOK`**, plus an off-tree **boundary store** ([`boundaries.ts`](../boundaries.ts)) that holds opaque jsonpipe slices keyed by id (board id, codepage runtime id, chip id, player id, gadget id, synth id, layers id, tracking id).
+Everything below the surface (boards, elements, codepages, flags) lives **inside `BOOK`**. Payload is inline: each `CODE_PAGE` may hold `board` / `object` / `terrain` / `charset` / `palette`; each `BOOK.flags[owner]` is an inline flag bag; board and element runtime fields (`named`, `kinddata`, draw caches, …) sit on those objects directly.
 
 `memoryreadroot()` returns the live `MEMORY` object. Disk projection of MEMORY (Chromium folder drop) is [`memoryfs`](../../feature/memoryfs/docs/index.md) — separate from jsonpipe gadget sync.
 
@@ -34,22 +34,20 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 | Loaders | [`session.ts`](../session.ts) (storage) + [`loader.ts`](../loader.ts) (dispatch) |
 | Per-id flags | [`flags.ts`](../flags.ts) |
 | Codepage discovery (across books) | [`codepages.ts`](../codepages.ts) |
-| Codepage parse / stats / runtime cache | [`codepageoperations.ts`](../codepageoperations.ts) |
+| Codepage parse / stats / import-export | [`codepageoperations.ts`](../codepageoperations.ts) |
 | Element kind / stat / push checks / write-from-kind | [`boards.ts`](../boards.ts) |
 | Board lookup by address / over / under / evaldir / init | [`boards.ts`](../boards.ts) |
 | Per-element / per-point reads | [`boardaccess.ts`](../boardaccess.ts) |
 | Board / object create / delete / import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) |
-| Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
+| Element runtime field copy (`kinddata`, `category`, …) | [`boardelement.ts`](../boardelement.ts) |
 | Direction evaluation (`n`, `rndne`, `flow`, …) | [`boarddirection.ts`](../boarddirection.ts) |
-| Boundary store (jsonpipe slices) | [`boundaries.ts`](../boundaries.ts) |
-| "Which boundary ids does this board need" | [`boundaryrouting.ts`](../boundaryrouting.ts) |
 | jsonpipe filter (`shouldemitpath`) | [`jsonpipefilter.ts`](../jsonpipefilter.ts) |
 | Board lighting | [`boardlighting.ts`](../boardlighting.ts) + [`lightinggeometry.ts`](../lightinggeometry.ts) |
 
 ## Conceptual model
 
 - **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, topic, halt, simfreeze.
-- **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-id flag bag.
-- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (named).
-- **BOARD_ELEMENT**: kind, position, char, color, code, collision, …
-- **Boundary**: an opaque keyed slice of nested memory (board runtime, chip, player, gadget, synth, layers, tracking) used internally and for jsonpipe gadget projection.
+- **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-owner flag bags (`Record<string, BOOK_FLAGS>`).
+- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime-only fields (`named`, `distmaps`, draw*, mediaqueue*).
+- **BOARD_ELEMENT**: kind, position, char, color, code, collision, plus runtime-only `category` / `kinddata` / `kindsource*` / `pushedtick`.
+- **jsonpipe**: `memoryrootshouldemitpath` omits those runtime fields and ephemeral flag owners (`*_layers`, `*_gadget`, …) from the wire.

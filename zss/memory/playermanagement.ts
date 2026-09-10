@@ -40,7 +40,6 @@ import {
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhaltchip } from './runtime'
-import { memoryreadboardruntime } from './runtimeboundary'
 import {
   memoryisoperator,
   memoryreadbookbyaddress,
@@ -196,9 +195,7 @@ export function memoryreadbookplayerboards(book: MAYBE<BOOK>) {
 
       // see if we have an over board
       // it runs first
-      const over = memoryreadboardbyaddress(
-        memoryreadboardruntime(board)?.overboard ?? '',
-      )
+      const over = memoryreadboardbyaddress(board.overboard ?? '')
       if (ispresent(over)) {
         // only add once
         if (!addedids.has(over.id)) {

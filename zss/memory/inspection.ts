@@ -68,10 +68,6 @@ import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
 } from './rendering'
-import {
-  memoryensureboardruntime,
-  memoryreadboardelementruntime,
-} from './runtimeboundary'
 import { memoryreadmainbook, memoryreadoperator } from './session'
 import {
   BOARD,
@@ -183,7 +179,7 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
     }
   }
   // get falls back to kind data
-  const kind = memoryreadboardelementruntime(element)?.kinddata
+  const kind = element?.kinddata
   const maybevalue =
     element?.[name as keyof BOARD_ELEMENT] ??
     kind?.[name as keyof BOARD_ELEMENT]
@@ -283,7 +279,7 @@ function registerhyperlinksforelementsetvalue(
             elementhyperlinkcontext.board,
           )
           if (ispresent(editedboard)) {
-            memoryensureboardruntime(editedboard).drawneedfull = true
+            editedboard.drawneedfull = true
           }
           break
         }
@@ -648,27 +644,19 @@ export function memoryinspectelement(
   lines.push(
     zsszedlinkline(
       'char charedit',
-      `char: ${
-        element.char ??
-        memoryreadboardelementruntime(element)?.kinddata?.char ??
-        1
-      }`,
+      `char: ${element.char ?? element.kinddata?.char ?? 1}`,
     ),
   )
   lines.push(
     zsszedlinkline(
       'color coloredit',
-      `color: ${
-        element.color ??
-        memoryreadboardelementruntime(element)?.kinddata?.color ??
-        15
-      }`,
+      `color: ${element.color ?? element.kinddata?.color ?? 15}`,
     ),
   )
   lines.push(
     zsszedlinkline(
       'bg bgedit',
-      `bg: ${element.bg ?? memoryreadboardelementruntime(element)?.kinddata?.bg ?? 0}`,
+      `bg: ${element.bg ?? element.kinddata?.bg ?? 0}`,
     ),
   )
   // Match area inspect: open empty submenu (terrain/objects/both), not instant delete
@@ -731,10 +719,7 @@ export function memoryinspectempty(
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
           const maybeobject = memoryreadelement(board, { x, y })
-          if (
-            memoryreadboardelementruntime(maybeobject)?.category ===
-            CATEGORY.ISOBJECT
-          ) {
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
           memorywriteterrain(board, { x, y })
@@ -752,10 +737,7 @@ export function memoryinspectempty(
               includeghost: true,
             },
           )
-          if (
-            memoryreadboardelementruntime(maybeobject)?.category ===
-            CATEGORY.ISOBJECT
-          ) {
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }

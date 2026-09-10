@@ -5,7 +5,6 @@ import {
   memorylistboardelementsbygroup,
 } from 'zss/memory/boardlifecycle'
 import { memoryinitboard } from 'zss/memory/boards'
-import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
 import { readtransformfilter } from 'zss/firmware/transforms'
 import { readexpr } from 'zss/words/expr'
@@ -34,7 +33,7 @@ jest.mock('zss/memory/boards', () => {
     ...actual,
     memoryreadelementkind: (el: { kind?: string }) => {
       if (el.kind === 'bear' || el.kind === 'empty') {
-        return { id: el.kind, name: el.kind, runtime: '' }
+        return { id: el.kind, name: el.kind }
       }
       return undefined
     },
@@ -56,15 +55,13 @@ function makeobject(
     group: opts.group,
     char: 1,
     color: 15,
-    runtime: '',
   }
-  memorywriteboardelementruntime(el, {
+  Object.assign(el, {
     category: CATEGORY.ISOBJECT,
     kinddata: {
       id: opts.name,
       name: opts.name,
       char: 1,
-      runtime: '',
     },
   })
   return el

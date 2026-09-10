@@ -68,10 +68,6 @@ jest.mock('zss/memory/codepageoperations', () => ({
   memoryreadcodepagename: jest.fn(),
 }))
 
-jest.mock('zss/memory/boardoperations', () => ({
-  memoryreadobject: jest.fn(),
-}))
-
 jest.mock('zss/memory/playermanagement', () => ({
   memoryreadplayerboard: jest.fn(),
   memoryreadbookplayerboards: jest.fn(() => []),

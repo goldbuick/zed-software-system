@@ -11,7 +11,6 @@ import {
   MEMORYFS_SKILL_NAMES,
   buildmemoryfsskills,
 } from 'zss/feature/memoryfs/skills'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memoryexportbookasjson,
@@ -28,7 +27,6 @@ import {
 } from 'zss/memory/session'
 
 afterEach(() => {
-  memoryboundariesclear()
   memoryresetbooks([])
 })
 

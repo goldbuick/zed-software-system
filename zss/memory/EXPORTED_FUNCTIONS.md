@@ -30,30 +30,13 @@ Higher-level book ensure helpers built on `session.ts`.
 
 ## flags.ts
 
-Per-id flag bag (boundary-backed in `MEMORY.books[*].flags`).
+Per-id flag bag (`MEMORY.books[*].flags[owner]` is an inline `BOOK_FLAGS` object).
 
 - **memoryreadflags(id)**, **memoryhasflags(id)**, **memoryclearflags(id)**
 
-## boundaries.ts
-
-Boundary store: opaque keyed slices (board runtime, chip, gadget, synth, layers, tracking, player).
-
-- **memoryboundaryget(id)**, **memoryboundaryset(id, payload)**, **memoryboundarydelete(id)**, **memoryboundaryalloc(payload, maybeid?)**, **memoryboundariesclear()**
-
-## boundaryrouting.ts
-
-- **memorycollectboundaryidsforboard(book, board)** - Returns boundary ids associated with a board (runtime caches, chips, players, gadget layers)
-
-## boardwait.ts
-
-Board runtime readiness helpers for tests and boundary collection.
-
-- **memoryisboardready(boardid)**
-- **memorycollecttickboundaries(book, boards)** - Union of boundary ids for hydrated boards in the list
-
 ## jsonpipefilter.ts
 
-- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `named`)
+- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `named` / `kinddata`, terrain-only props, ephemeral flag owners)
 
 ## boardaccess.ts
 
@@ -97,6 +80,7 @@ Terrain kind-default strip for persisted exports (see [docs](docs/boardterrainma
 - **memorycreateboardelement()**, **memoryapplyboardelementcolor(element, strcolor)**
 - **memoryboardelementisobject(element)**
 - **memoryexportboardelement(boardelement)**, **memoryexportboardelementasjson(boardelement)**, **memoryimportboardelement(boardelemententry)**
+- **memorycopyboardelementruntime(dest, src)** - Copies runtime-only element fields (`category`, `kinddata`, `kindsource*`, `pushedtick`)
 
 ## boardlookup.ts
 
@@ -169,27 +153,15 @@ Codepage discovery across books.
 
 ## codepageoperations.ts
 
-Codepage parse / runtime.
+Codepage parse / import-export.
 
-- **memoryreadcodepageruntime(codepage)**, **memoryensurecodepageruntime(codepage)**
 - **memoryapplyelementstats(stats, element)**
 - **memoryreadcodepagedata(codepage)**, **memoryreadcodepagename(codepage)**, **memoryreadcodepagetype(codepage)**, **memoryreadcodepagetypeasstring(codepage)**
 - **memoryreadcodepagestat(codepage, stat)**, **memoryreadcodepagestats(codepage)**, **memoryreadcodepagestatdefaults(codepage)**, **memoryreadcodepagestatsfromtext(content)**, **memoryresetcodepagestats(codepage)**
-- **memorycodepagetypetostring(type)**, **memorycodepagehasmatch(codepage, type, ids)**
+- **memorycodepagetypetostring(type)**
 - **memorycreatecodepage(code, content)**, **memoryfreecodepage(codepage)**
 - **memoryexportcodepage(codepage, strip?)**, **memoryexportcodepageasjson(codepage, strip?)**, **memoryimportcodepage(codepage)**, **memoryimportcodepagefromjson(flat)**
 - **memoryexportbitmap**, **memoryimportbitmap**
-
-## runtimeboundary.ts
-
-Per-board / per-element transient runtime state stored in the boundary map.
-
-- **memoryensureboardruntime(board)**, **memoryreadboardruntime(board)**, **memorywriteboardruntime(...)**, **memorydeleteboardruntime(board)**
-- **memoryensureboardelementruntime(...)**, **memoryreadboardelementruntime(...)**, **memorywriteboardelementruntime(...)**, **memorydeleteboardelementruntime(...)**, **memorycopyboardelementruntime(...)**, **memorycloneboardelement(...)**
-
-## boardoperations.ts
-
-- **memoryfreeboardelementsruntime(board)** - Frees element-runtime entries for every object on a board
 
 ## runtime.ts
 
@@ -316,4 +288,4 @@ Top-level inspector entry points.
 
 ## types.ts
 
-Constants and shared types: `BOARD_WIDTH`, `BOARD_HEIGHT`, `BOARD_SIZE`, `CHAR_RAY_MARGIN`, `FIXED_DATE`, `CORNER_EXIT_DISPUTED`, `MEMORY_LABEL`, `BOARD`, `BOARD_ELEMENT`, `BOARD_ELEMENT_STAT`, `BOOK`, `BOOK_FLAGS`, `CODE_PAGE`, `CODE_PAGE_RUNTIME`, `CODE_PAGE_STATS`, `CODE_PAGE_TYPE`, `CODE_PAGE_TYPE_MAP`, `MAYBE_CODE_PAGE`, `BOARD_RUNTIME`, `BOARD_ELEMENT_RUNTIME`.
+Constants and shared types: `BOARD_WIDTH`, `BOARD_HEIGHT`, `BOARD_SIZE`, `CHAR_RAY_MARGIN`, `FIXED_DATE`, `CORNER_EXIT_DISPUTED`, `MEMORY_LABEL`, `BOARD`, `BOARD_ELEMENT`, `BOARD_ELEMENT_STAT`, `BOOK`, `BOOK_FLAGS`, `CODE_PAGE`, `CODE_PAGE_STATS`, `CODE_PAGE_TYPE`, `CODE_PAGE_TYPE_MAP`, `MAYBE_CODE_PAGE`.

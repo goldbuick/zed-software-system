@@ -2,14 +2,9 @@ import { handlemediaqueuenowplaying } from 'zss/device/vm/handlers/mediaqueuenow
 import { memoryinvalidatedraw } from 'zss/memory/boarddrawdirty'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
 jest.mock('zss/memory/boards', () => ({
   memoryreadboardbyaddress: jest.fn(),
-}))
-
-jest.mock('zss/memory/runtimeboundary', () => ({
-  memoryensureboardruntime: jest.fn(),
 }))
 
 jest.mock('zss/memory/boarddrawdirty', () => ({
@@ -25,11 +20,12 @@ describe('mediaqueue now playing board runtime sync', () => {
     jest.clearAllMocks()
   })
 
-  it('sets now playing title on board runtime', () => {
-    const board = { id: 'board-a' }
-    const runtime: { mediaqueuenowplayingtitle?: string } = {}
+  it('sets now playing title on board', () => {
+    const board: {
+      id: string
+      mediaqueuenowplayingtitle?: string
+    } = { id: 'board-a' }
     jest.mocked(memoryreadboardbyaddress).mockReturnValue(board as never)
-    jest.mocked(memoryensureboardruntime).mockReturnValue(runtime as never)
     handlemediaqueuenowplaying({} as never, {
       player: 'p1',
       data: {
@@ -38,7 +34,7 @@ describe('mediaqueue now playing board runtime sync', () => {
         title: 'Cool Video Title',
       },
     } as never)
-    expect(runtime.mediaqueuenowplayingtitle).toBe('Cool Video Title')
+    expect(board.mediaqueuenowplayingtitle).toBe('Cool Video Title')
     expect(memoryinvalidatedraw).toHaveBeenCalledWith(board)
     expect(memoryinvalidategadgetlayerscacheforboard).toHaveBeenCalledWith(
       'board-a',
@@ -46,10 +42,11 @@ describe('mediaqueue now playing board runtime sync', () => {
   })
 
   it('clears now playing title on stop', () => {
-    const board = { id: 'board-a' }
-    const runtime = { mediaqueuenowplayingtitle: 'Cool Video Title' }
+    const board: {
+      id: string
+      mediaqueuenowplayingtitle?: string
+    } = { id: 'board-a', mediaqueuenowplayingtitle: 'Cool Video Title' }
     jest.mocked(memoryreadboardbyaddress).mockReturnValue(board as never)
-    jest.mocked(memoryensureboardruntime).mockReturnValue(runtime as never)
     handlemediaqueuenowplaying({} as never, {
       player: 'p1',
       data: {
@@ -58,7 +55,7 @@ describe('mediaqueue now playing board runtime sync', () => {
         title: '',
       },
     } as never)
-    expect(runtime.mediaqueuenowplayingtitle).toBeUndefined()
+    expect(board.mediaqueuenowplayingtitle).toBeUndefined()
     expect(memoryinvalidatedraw).toHaveBeenCalledWith(board)
     expect(memoryinvalidategadgetlayerscacheforboard).toHaveBeenCalledWith(
       'board-a',

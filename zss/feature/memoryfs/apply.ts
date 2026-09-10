@@ -19,7 +19,6 @@ import {
 import {
   memoryexportcodepageasjson,
   memoryreadcodepagedata,
-  memoryreadcodepageruntime,
   memoryreadcodepagetype,
 } from 'zss/memory/codepageoperations'
 import {
@@ -392,9 +391,8 @@ function applydelete(path: string, errors: string[], ignored: { n: number }) {
     if (rest.startsWith('board/objects/') && rest.endsWith('.json')) {
       const objid = rest.slice('board/objects/'.length, -'.json'.length)
       const page = memoryreadcodepage(book, pageid)
-      const runtime = memoryreadcodepageruntime(page)
-      if (runtime?.board) {
-        memorydeleteboardobject(runtime.board, objid)
+      if (page?.board) {
+        memorydeleteboardobject(page.board, objid)
       }
       return
     }

@@ -53,27 +53,14 @@ import {
   memoryexportboardasjson,
   memoryimportboard,
 } from './boardlifecycle'
-import { memoryfreeboardelementsruntime } from './boardoperations'
 import { remapcodepageidsforfilenamesafety } from './bookidremap'
-import {
-  memoryboundaryalloc,
-  memoryboundarydelete,
-  memoryboundaryget,
-  memoryboundaryset,
-} from './boundaries'
 import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
-import {
-  memorydeleteboardelementruntime,
-  memorydeleteboardruntime,
-  memoryensureboardelementruntime,
-} from './runtimeboundary'
 import {
   BITMAP_KEYS,
   BOARD,
   BOARD_ELEMENT,
   CODE_PAGE,
   CODE_PAGE_KEYS,
-  CODE_PAGE_RUNTIME,
   CODE_PAGE_STATS,
   CODE_PAGE_TYPE,
   CODE_PAGE_TYPE_MAP,
@@ -105,23 +92,6 @@ function parsecsscolortonormalizedrgb(
     }
   }
   return undefined
-}
-
-export function memoryreadcodepageruntime(
-  codepage: MAYBE<CODE_PAGE>,
-): MAYBE<CODE_PAGE_RUNTIME> {
-  return memoryboundaryget<CODE_PAGE_RUNTIME>(codepage?.id ?? '')
-}
-
-export function memoryensurecodepageruntime(
-  codepage: CODE_PAGE,
-): CODE_PAGE_RUNTIME {
-  let rt = memoryboundaryget<CODE_PAGE_RUNTIME>(codepage.id)
-  if (!ispresent(rt)) {
-    rt = {} as CODE_PAGE_RUNTIME
-    memoryboundaryset(codepage.id, rt)
-  }
-  return rt
 }
 
 export function memoryapplyelementstats(
@@ -293,15 +263,14 @@ export function memoryexportcodepageasjson(
   if (!ispresent(codepage)) {
     return undefined
   }
-  const runtime = memoryreadcodepageruntime(codepage) ?? {}
   return {
     id: codepage.id,
     code: codepage.code,
-    board: memoryexportboardasjson(runtime.board, strip),
-    object: memoryexportboardelementasjson(runtime.object),
-    terrain: memoryexportboardelementasjson(runtime.terrain),
-    charset: memoryexportbitmap(runtime.charset),
-    palette: memoryexportbitmap(runtime.palette),
+    board: memoryexportboardasjson(codepage.board, strip),
+    object: memoryexportboardelementasjson(codepage.object),
+    terrain: memoryexportboardelementasjson(codepage.terrain),
+    charset: memoryexportbitmap(codepage.charset),
+    palette: memoryexportbitmap(codepage.palette),
   }
 }
 
@@ -312,14 +281,7 @@ export function memoryexportcodepage(
   if (!ispresent(codepage)) {
     return undefined
   }
-  const wire = Object.assign(
-    {
-      id: codepage.id,
-      code: codepage.code,
-    },
-    memoryreadcodepageruntime(codepage) ?? {},
-  )
-  return formatobject(wire, CODE_PAGE_KEYS, {
+  return formatobject(codepage, CODE_PAGE_KEYS, {
     board: (board) => memoryexportboard(board, strip),
     object: memoryexportboardelement,
     terrain: memoryexportboardelement,
@@ -351,19 +313,14 @@ export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
       board.objects = {}
     }
   }
-  memoryboundaryalloc(
-    {
-      board: page.board,
-      object: page.object,
-      terrain: page.terrain,
-      charset: page.charset,
-      palette: page.palette,
-    },
-    page.id,
-  )
   return {
     id: page.id,
     code: page.code,
+    board: page.board,
+    object: page.object,
+    terrain: page.terrain,
+    charset: page.charset,
+    palette: page.palette,
   }
 }
 
@@ -387,14 +344,11 @@ export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
   if (!ispresent(codepage)) {
     return
   }
-  const rt = memoryreadcodepageruntime(codepage)
-  if (ispresent(rt)) {
-    memorydeleteboardruntime(rt.board)
-    memoryfreeboardelementsruntime(rt.board)
-    memorydeleteboardelementruntime(rt.object)
-    memorydeleteboardelementruntime(rt.terrain)
-  }
-  memoryboundarydelete(codepage.id)
+  codepage.board = undefined
+  codepage.object = undefined
+  codepage.terrain = undefined
+  codepage.charset = undefined
+  codepage.palette = undefined
 }
 
 export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
@@ -418,13 +372,12 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
       return (codepage.code ?? '') as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.BOARD: {
-      const rt = memoryensurecodepageruntime(codepage)
-      if (!ispresent(rt.board)) {
-        rt.board = memorycreateboard()
+      if (!ispresent(codepage.board)) {
+        codepage.board = memorycreateboard()
       }
 
-      rt.board.id = codepage.id
-      rt.board.name = memoryreadcodepagename(codepage)
+      codepage.board.id = codepage.id
+      codepage.board.name = memoryreadcodepagename(codepage)
       // unpack stats into board data
       const stats = memoryreadcodepagestatdefaults(codepage)
       const keys = Object.keys(stats)
@@ -433,16 +386,16 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
         const value = stats[key]
         switch (key) {
           case 'isdark':
-            rt.board.isdark = 1
+            codepage.board.isdark = 1
             break
           case 'notdark':
-            rt.board.isdark = 0
+            codepage.board.isdark = 0
             break
           case 'restartonzap':
-            rt.board.restartonzap = 1
+            codepage.board.restartonzap = 1
             break
           case 'norestartonzap':
-            rt.board.restartonzap = 0
+            codepage.board.restartonzap = 0
             break
           case 'startx':
           case 'starty':
@@ -450,7 +403,7 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
           case 'timelimit':
           case 'maxplayershots':
             if (isnumber(value)) {
-              rt.board[key] = value
+              codepage.board[key] = value
             }
             break
           case 'over':
@@ -465,9 +418,9 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
           case 'exiteast':
             if (isstring(value)) {
               if (NAME(value) === 'empty') {
-                rt.board[key] = undefined
+                codepage.board[key] = undefined
               } else {
-                rt.board[key] = value
+                codepage.board[key] = value
               }
             }
             break
@@ -483,50 +436,47 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
           case 'b10':
             if (ispresent(value)) {
               // @ts-expect-error yes
-              rt.board[key] = mapstrtoconsts(value) ?? value
+              codepage.board[key] = mapstrtoconsts(value) ?? value
             }
             break
         }
       }
-      return rt.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
-      const rt = memoryensurecodepageruntime(codepage)
-      if (!ispresent(rt.object)) {
-        rt.object = memorycreateboardelement()
+      if (!ispresent(codepage.object)) {
+        codepage.object = memorycreateboardelement()
       }
-      rt.object.id = codepage.id
-      rt.object.code = codepage.code
-      rt.object.name = memoryreadcodepagename(codepage)
-      memoryensureboardelementruntime(rt.object).category = CATEGORY.ISOBJECT
+      codepage.object.id = codepage.id
+      codepage.object.code = codepage.code
+      codepage.object.name = memoryreadcodepagename(codepage)
+      codepage.object.category = CATEGORY.ISOBJECT
       memoryapplyelementstats(
         memoryreadcodepagestatdefaults(codepage),
-        rt.object,
+        codepage.object,
       )
-      return rt.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
-      const rt = memoryensurecodepageruntime(codepage)
-      if (!ispresent(rt.terrain)) {
-        rt.terrain = memorycreateboardelement()
+      if (!ispresent(codepage.terrain)) {
+        codepage.terrain = memorycreateboardelement()
       }
-      rt.terrain.id = codepage.id
-      rt.terrain.code = codepage.code
-      rt.terrain.name = memoryreadcodepagename(codepage)
-      memoryensureboardelementruntime(rt.terrain).category = CATEGORY.ISTERRAIN
+      codepage.terrain.id = codepage.id
+      codepage.terrain.code = codepage.code
+      codepage.terrain.name = memoryreadcodepagename(codepage)
+      codepage.terrain.category = CATEGORY.ISTERRAIN
       memoryapplyelementstats(
         memoryreadcodepagestatdefaults(codepage),
-        rt.terrain,
+        codepage.terrain,
       )
-      return rt.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.PALETTE: {
-      const rt = memoryensurecodepageruntime(codepage)
-      if (!ispresent(rt.palette)) {
+      if (!ispresent(codepage.palette)) {
         // clone default
-        rt.palette = loadpalettefrombytes(PALETTE)
+        codepage.palette = loadpalettefrombytes(PALETTE)
       }
-      if (ispresent(rt.palette?.bits)) {
+      if (ispresent(codepage.palette?.bits)) {
         const stats = memoryreadcodepagestatdefaults(codepage)
         const statnames = objectKeys(stats)
         for (let i = 0; i < statnames.length; ++i) {
@@ -543,22 +493,21 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
               const cpr = parsed.r * 63
               const cpg = parsed.g * 63
               const cpb = parsed.b * 63
-              rt.palette.bits[row + 0] = clamp(cpr, 0, 63)
-              rt.palette.bits[row + 1] = clamp(cpg, 0, 63)
-              rt.palette.bits[row + 2] = clamp(cpb, 0, 63)
+              codepage.palette.bits[row + 0] = clamp(cpr, 0, 63)
+              codepage.palette.bits[row + 1] = clamp(cpg, 0, 63)
+              codepage.palette.bits[row + 2] = clamp(cpb, 0, 63)
             }
           }
         }
       }
-      return rt.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.palette as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.CHARSET: {
-      const rt = memoryensurecodepageruntime(codepage)
-      if (!ispresent(rt.charset)) {
+      if (!ispresent(codepage.charset)) {
         // clone default
-        rt.charset = loadcharsetfrombytes(CHARSET)
+        codepage.charset = loadcharsetfrombytes(CHARSET)
       }
-      if (ispresent(rt.charset?.bits)) {
+      if (ispresent(codepage.charset?.bits)) {
         const stats = memoryreadcodepagestatdefaults(codepage)
         const statnames = objectKeys(stats)
         for (let i = 0; i < statnames.length; ++i) {
@@ -582,12 +531,12 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
                     break
                 }
               }
-              writecharfrombytes(Uint8Array.from(pixels), rt.charset, idx)
+              writecharfrombytes(Uint8Array.from(pixels), codepage.charset, idx)
             }
           }
         }
       }
-      return rt.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      return codepage.charset as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
   }
 }
@@ -805,30 +754,17 @@ export function memorycodepagetypetostring(
 
 export function memorycreatecodepage(
   code: string,
-  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>> & Partial<CODE_PAGE_RUNTIME>,
+  content: Partial<Omit<CODE_PAGE, 'id' | 'code'>>,
 ): CODE_PAGE {
   const { stats, board, object, terrain, charset, palette } = content
-  const id = createsid()
-  const rt: CODE_PAGE_RUNTIME = {}
-  if (ispresent(board)) {
-    rt.board = board
-  }
-  if (ispresent(object)) {
-    rt.object = object
-  }
-  if (ispresent(terrain)) {
-    rt.terrain = terrain
-  }
-  if (ispresent(charset)) {
-    rt.charset = charset
-  }
-  if (ispresent(palette)) {
-    rt.palette = palette
-  }
-  memoryboundaryalloc(rt, id)
   return {
-    id,
+    id: createsid(),
     code,
     stats,
+    board,
+    object,
+    terrain,
+    charset,
+    palette,
   }
 }

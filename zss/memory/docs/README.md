@@ -14,7 +14,7 @@ The memory system manages the ZSS game state — books, codepages, boards, eleme
 
 ## Module Index
 
-The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`, `books.ts`, `flags.ts`, `boardaccess.ts`, `boardlifecycle.ts`, `boundaries.ts`, …). For a flat function-by-function catalog see [`EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md). The narrative docs below cover the modules with bigger surface area.
+The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`, `books.ts`, `flags.ts`, `boardaccess.ts`, `boardlifecycle.ts`, `boardelement.ts`, …). For a flat function-by-function catalog see [`EXPORTED_FUNCTIONS.md`](../EXPORTED_FUNCTIONS.md). The narrative docs below cover the modules with bigger surface area.
 
 | File | Purpose |
 |------|---------|

@@ -5,7 +5,6 @@ import { mediaplayerdisplayname } from 'zss/feature/mediaqueue/playerdisplayname
 import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryplayerallowedcommand } from 'zss/memory/permissions'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryisoperator } from 'zss/memory/session'
 import type { BOARD } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -40,7 +39,7 @@ export function mediaresolveboard(player: string): BOARD | undefined {
 /** Helper PeerJS id on the resolved board, or empty. VM only. */
 export function mediareadboardhelperpeerid(player: string): string {
   const board = mediaresolveboard(player)
-  const helper = memoryreadboardruntime(board)?.mediaqueuehelperpeerid
+  const helper = board?.mediaqueuehelperpeerid
   return isstring(helper) ? helper.trim() : ''
 }
 

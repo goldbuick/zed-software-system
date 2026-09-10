@@ -4,7 +4,6 @@ import { isstring } from 'zss/mapping/types'
 import { memoryinvalidatedraw } from 'zss/memory/boarddrawdirty'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryinvalidategadgetlayerscacheforboard } from 'zss/memory/rendering'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 
 export function handlemediaqueuenowplaying(
   _vm: DEVICE,
@@ -22,13 +21,12 @@ export function handlemediaqueuenowplaying(
   if (!board) {
     return
   }
-  const runtime = memoryensureboardruntime(board)
   const action = isstring(data?.action) ? data.action : ''
   const title = isstring(data?.title) ? data.title.trim() : ''
   if (action === 'clear' || !title) {
-    delete runtime.mediaqueuenowplayingtitle
+    delete board.mediaqueuenowplayingtitle
   } else {
-    runtime.mediaqueuenowplayingtitle = title.slice(0, 120)
+    board.mediaqueuenowplayingtitle = title.slice(0, 120)
   }
   memoryinvalidatedraw(board)
   memoryinvalidategadgetlayerscacheforboard(board.id)

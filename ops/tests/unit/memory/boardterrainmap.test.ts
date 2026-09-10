@@ -19,11 +19,7 @@ import {
   memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from 'zss/memory/bookoperations'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
-import {
-  memorycreatecodepage,
-  memoryreadcodepageruntime,
-} from 'zss/memory/codepageoperations'
+import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import type { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE } from 'zss/memory/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
@@ -36,7 +32,7 @@ function makecell(
   display: { char?: number; color?: number; bg?: number },
   kind = 'wall',
 ): BOARD_ELEMENT {
-  return { x, y: 0, kind, runtime: '', ...display }
+  return { x, y: 0, kind, ...display }
 }
 
 function makeboard(id: string, cells: BOARD_ELEMENT[]): BOARD {
@@ -45,13 +41,13 @@ function makeboard(id: string, cells: BOARD_ELEMENT[]): BOARD {
     const cell = cells[i]
     terrain[pttoindex({ x: cell.x ?? 0, y: cell.y ?? 0 }, BOARD_WIDTH)] = cell
   }
-  return { id, name: id, terrain, objects: {}, runtime: '' }
+  return { id, name: id, terrain, objects: {} }
 }
 
 /** Book with a `@terrain wall` kind page plus one board page per entry. */
 function makebook(boards: BOARD[]): BOOK {
   const wallcp = memorycreatecodepage('@terrain wall\n', {
-    terrain: { id: 'wall', name: 'wall', ...WALL_KIND, runtime: '' },
+    terrain: { id: 'wall', name: 'wall', ...WALL_KIND },
   })
   const pages: CODE_PAGE[] = [wallcp]
   for (let i = 0; i < boards.length; ++i) {
@@ -73,7 +69,7 @@ function readdisplay(cell: BOARD_ELEMENT) {
 function readboards(book: BOOK): BOARD[] {
   const boards: BOARD[] = []
   for (let i = 0; i < book.pages.length; ++i) {
-    const board = memoryreadcodepageruntime(book.pages[i])?.board
+    const board = book.pages[i]?.board
     if (ispresent(board)) {
       boards.push(board)
     }
@@ -93,7 +89,6 @@ function throughdisk(value: any): any {
 describe('terrain display strip', () => {
   afterEach(() => {
     memoryresetbooks([])
-    memoryboundariesclear()
   })
 
   it('drops display stats matching the kind and keeps the rest', () => {
@@ -119,7 +114,7 @@ describe('terrain display strip', () => {
 
   it('keeps every stat when the kind carries no display values', () => {
     const bareterrain = memorycreatecodepage('@terrain bare\n', {
-      terrain: { id: 'bare', name: 'bare', runtime: '' },
+      terrain: { id: 'bare', name: 'bare' },
     })
     memoryresetbooks([memorycreatebook([bareterrain])])
     const cell = makecell(0, { char: 5, color: 1, bg: 0 }, 'bare')
@@ -144,7 +139,6 @@ describe('terrain display strip', () => {
 describe('book export strip', () => {
   afterEach(() => {
     memoryresetbooks([])
-    memoryboundariesclear()
   })
 
   it('strips kind-default display stats on book export', () => {
@@ -205,7 +199,6 @@ describe('book export strip', () => {
 describe('book strip round trip', () => {
   afterEach(() => {
     memoryresetbooks([])
-    memoryboundariesclear()
   })
 
   const CELLS = [
@@ -229,7 +222,6 @@ describe('book strip round trip', () => {
     const exported = throughdisk(memoryexportbookasjson(book))
     expect(exported.terrainmap).toBeUndefined()
 
-    memoryboundariesclear()
     const imported = memoryimportbookfromjson(exported)
     expect(ispresent(imported)).toBe(true)
     memoryresetbooks([imported!])
@@ -247,7 +239,6 @@ describe('book strip round trip', () => {
     expect(ispresent(packed)).toBe(true)
     const unpacked = unpackformat(packed!)
 
-    memoryboundariesclear()
     const imported = memoryimportbook(unpacked)
     expect(ispresent(imported)).toBe(true)
     memoryresetbooks([imported!])
@@ -260,9 +251,9 @@ describe('book strip round trip', () => {
   it('restores identical cells through a verbatim export and import', () => {
     makebook([])
     const board = makeroundtripboard('one')
-    // terrain x / y and runtime are not persisted; memoryinitboardnamed rebuilds them
+    // terrain x / y are not persisted; memoryinitboardnamed rebuilds them
     const readpayload = (cells: BOARD_ELEMENT[]) =>
-      cells.map(({ runtime: _r, x: _x, y: _y, ...rest }) => rest)
+      cells.map(({ x: _x, y: _y, ...rest }) => rest)
     const before = readpayload(readcells(board))
 
     const restored = memoryimportboard(memoryexportboard(board))

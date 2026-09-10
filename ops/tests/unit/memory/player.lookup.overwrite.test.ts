@@ -1,5 +1,4 @@
 import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -21,7 +20,6 @@ function makeplayer(board: BOARD, x: number, y: number, id: string) {
 
 describe('player occupancy at point', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

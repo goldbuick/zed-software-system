@@ -22,7 +22,6 @@ title: playermanagement.ts
 - `./codepageoperations` — memoryreadcodepagedata
 - `./codepages` — memorypickcodepagewithtypeandstat
 - `./runtime` — memoryhaltchip
-- `./runtimeboundary` — memoryreadboardruntime
 - `./session` — memoryisoperator, memoryreadmainbook
 - `./spatialqueries` — memorycheckcollision
 

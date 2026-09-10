@@ -2,9 +2,9 @@
 title: boardoperations.ts (and friends)
 ---
 
-> The original `boardoperations.ts` was split into smaller modules. This page is a per-area cross-reference.
+> The original `boardoperations.ts` was split into smaller modules and then removed. This page is a per-area cross-reference — there is no remaining `boardoperations.ts` facade.
 
-The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime(board)` (frees per-element runtime entries when a board is destroyed). Everything else lives in:
+Everything that used to live under that name is now in:
 
 | Area | Module |
 |------|--------|
@@ -16,7 +16,7 @@ The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime
 | Terrain kind-default strip on export | [`boardterrainmap.ts`](../boardterrainmap.ts) — see [boardterrainmap.md](boardterrainmap.md); book / memoryfs / `#pageexport` strip; rollback snapshots stay verbatim |
 | Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
-| Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
+| Element runtime field copy | [`boardelement.ts`](../boardelement.ts) — `memorycopyboardelementruntime` |
 | Board lookup tables (named indices) | [`boardlookup.ts`](../boardlookup.ts) |
 | Movement (push, collision) | [`boardmovement.ts`](../boardmovement.ts) — `memorycheckblockedboardobject`, `memorycheckmoveboardobject`, `memorymoveboardobject`, `memorymoveobject`, `memorycleanupboard` |
 | Edge / corner-exit detection | [`boardtransitions.ts`](../boardtransitions.ts), [`boardcornerexits.ts`](../boardcornerexits.ts) |

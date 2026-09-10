@@ -15,7 +15,6 @@ jest.mock('zss/memory/runtime', () => {
 })
 
 import type { CHIP } from 'zss/chip'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -42,7 +41,6 @@ function stubchip(): CHIP {
 
 describe('shot damage send to terrain', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     READ_CONTEXT.board = undefined
     READ_CONTEXT.timestamp = 0

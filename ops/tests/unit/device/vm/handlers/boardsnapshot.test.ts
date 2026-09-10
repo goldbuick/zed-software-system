@@ -4,7 +4,6 @@ import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks } from 'zss/memory/session'
 import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { BOARD_SIZE, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -32,11 +31,10 @@ function makewallterrain(x: number, y: number): BOARD_ELEMENT {
     kind: 'wall',
     char: 219,
     color: 2,
-    runtime: '',
   }
-  memorywriteboardelementruntime(tile, {
+  Object.assign(tile, {
     category: CATEGORY.ISTERRAIN,
-    kinddata: { id: 'wall', name: 'wall', char: 219, runtime: '' },
+    kinddata: { id: 'wall', name: 'wall', char: 219 },
   })
   return tile
 }
@@ -53,7 +51,6 @@ function makeboard(name: string, terrainat?: BOARD_ELEMENT): BOARD {
     name,
     terrain,
     objects: {},
-    runtime: '',
   }
 }
 
@@ -78,7 +75,7 @@ describe('boardsnapshot / boardrevert', () => {
     const wall = makewallterrain(0, 0)
     const currentboard = makeboard('here', wall)
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,
@@ -103,7 +100,7 @@ describe('boardsnapshot / boardrevert', () => {
     const wall = makewallterrain(0, 0)
     const currentboard = makeboard('here', wall)
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,
@@ -132,7 +129,7 @@ describe('boardsnapshot / boardrevert', () => {
     const wall = makewallterrain(0, 0)
     const currentboard = makeboard('here', wall)
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,

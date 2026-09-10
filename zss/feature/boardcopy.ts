@@ -1,7 +1,10 @@
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
-import { memoryboardelementisobject } from 'zss/memory/boardelement'
+import {
+  memoryboardelementisobject,
+  memorycopyboardelementruntime,
+} from 'zss/memory/boardelement'
 import {
   memoryreadgroup,
   memorysafedeleteelement,
@@ -13,7 +16,6 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memorycopyboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,

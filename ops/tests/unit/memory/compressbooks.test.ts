@@ -11,7 +11,6 @@ import { base64tobase64url } from 'zss/mapping/encode'
 import { creategadgetid, createsid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memoryexportbook,
@@ -68,7 +67,6 @@ function makebookwithrefs(): {
     kind: 'widget',
     x: 1,
     y: 2,
-    runtime: '',
   }
   board.objects[objectb] = {
     id: objectb,
@@ -79,7 +77,6 @@ function makebookwithrefs(): {
     p1: objecta,
     party: objecta,
     group: objecta,
-    runtime: '',
   }
 
   const page = memorycreatecodepage('@board room\n', { board })
@@ -91,7 +88,6 @@ function makebookwithrefs(): {
 describe('memorycompressbooks', () => {
   afterEach(() => {
     memoryresetbooks([])
-    memoryboundariesclear()
   })
 
   it('round-trips a book through zstd msgpack and reports size', async () => {
@@ -102,12 +98,11 @@ describe('memorycompressbooks', () => {
       kind: 'widget',
       x: 5,
       y: 6,
-      runtime: '',
     }
     const book = memorycreatebook([
       memorycreatecodepage('@board title\n', { board }),
       memorycreatecodepage('@object widget\n@char 2\n', {
-        object: { id: createsid(), char: 2, runtime: '' },
+        object: { id: createsid(), char: 2 },
       }),
     ])
     memorywritebookflag(book, 'player1', 'score', 42 as any)
@@ -120,7 +115,6 @@ describe('memorycompressbooks', () => {
       `memorycompressbooks size: ${compressed.length} base64url chars`,
     )
 
-    memoryboundariesclear()
     const { books } = await memorydecompressbooks(compressed)
     expect(books.length).toBe(1)
     expect(books[0].name).toBe(book.name)
@@ -148,7 +142,6 @@ describe('memorycompressbooks', () => {
     expect(memoryreadmainbook()?.id).toBe(second.id)
 
     const compressed = await memorycompressbooks([first, second])
-    memoryboundariesclear()
     const bundle = await memorydecompressbooks(compressed)
     expect(bundle.main).toBe(second.id)
     expect(bundle.books.map((b) => b.id)).toEqual([first.id, second.id])
@@ -165,7 +158,6 @@ describe('memorycompressbooks', () => {
     memoryresetbooks([book])
     memorywritemainbook(book.id)
     const compressed = await memorycompressbooks([book])
-    memoryboundariesclear()
     const { books, main } = await memorydecompressbooks(compressed)
     expect(main).toBe(book.id)
     expect(books[0].id).toBe(book.id)
@@ -188,7 +180,6 @@ describe('memorycompressbooks', () => {
       expect(parsed.main).toBe(book.id)
       expect(Array.isArray(parsed.books)).toBe(true)
       expect((parsed.books[0] as { id: string }).id).toBe(book.id)
-      memoryboundariesclear()
       const { books, main } = await memorydecompressbooks(compressed)
       expect(main).toBe(book.id)
       expect(books[0].id).toBe(book.id)
@@ -204,7 +195,6 @@ describe('memorycompressbooks', () => {
     memorywritebookflag(book, 'player1', 'score', 7 as any)
     const compressed = await memorycompressbooks([book])
     expect(compressed.startsWith('{')).toBe(false)
-    memoryboundariesclear()
     const { books } = await memorydecompressbooks(compressed)
     expect(books.length).toBe(1)
     expect(memoryreadbookflags(books[0], 'player1')).toEqual({ score: 7 })
@@ -230,7 +220,6 @@ describe('memorycompressbooks', () => {
     memorywritebookflag(book, 'gadgetstore', 'legacy', { layers: [] } as any)
 
     const compressed = await memorycompressbooks([book])
-    memoryboundariesclear()
     const {
       books: [again],
     } = await memorydecompressbooks(compressed)
@@ -256,7 +245,6 @@ describe('memorycompressbooks', () => {
       kind: 'widget',
       x: 1,
       y: 1,
-      runtime: '',
     }
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board }),
@@ -270,7 +258,6 @@ describe('memorycompressbooks', () => {
     memorywritebookflag(book, `draw_2_${oid}_chip`, 'ec', 1 as any)
 
     const compressed = await memorycompressbooks([book])
-    memoryboundariesclear()
     const {
       books: [again],
     } = await memorydecompressbooks(compressed)
@@ -286,7 +273,6 @@ describe('memorycompressbooks', () => {
     const { book, pageid, objecta } = makebookwithrefs()
 
     const compressed = await memorycompressbooks([book])
-    memoryboundariesclear()
     const {
       books: [again],
     } = await memorydecompressbooks(compressed)
@@ -344,7 +330,6 @@ describe('memorycompressbooks', () => {
     )
     expect(legacy.startsWith('UEs')).toBe(true)
 
-    memoryboundariesclear()
     const { books } = await memorydecompressbooks(legacy)
     expect(books.length).toBe(1)
     expect(books[0].id).toBe(book.id)

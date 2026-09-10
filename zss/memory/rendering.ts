@@ -47,11 +47,6 @@ import {
   memorycreatecachedsprites,
 } from './renderinglayercache'
 import {
-  memoryreadboardelementruntime,
-  memoryreadboardruntime,
-  memorywriteboardelementruntime,
-} from './runtimeboundary'
-import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
@@ -131,11 +126,8 @@ export function memorycodepagetoprefix(codepage: MAYBE<CODE_PAGE>) {
     const name = memoryreadcodepagename(codepage)
     const stub: BOARD_ELEMENT = {
       kind: name,
-      runtime: '',
-    }
-    memorywriteboardelementruntime(stub, {
       kinddata: memoryreadcodepagedata<CODE_PAGE_TYPE.TERRAIN>(codepage),
-    })
+    }
     return `${memoryelementtodisplayprefix(stub)}$ONCLEAR$BLUE `
   }
   return ''
@@ -236,12 +228,11 @@ export function memoryincrementallayerscachestable(
 
 function memoryattachdrawdirtycellstotiles(board: BOARD, tiles: LAYER_TILES) {
   // PERF_TILE_SUBIMAGE path: zss/perf/docs/render-gadget-optimizations.md
-  const boardruntime = memoryreadboardruntime(board)
-  if (boardruntime?.drawneedfull) {
+  if (board.drawneedfull) {
     delete tiles.dirtycells
     return
   }
-  const dirty = boardruntime?.drawdirtycells
+  const dirty = board.drawdirtycells
   if (dirty?.length) {
     tiles.dirtycells = dirty
   } else {
@@ -291,9 +282,7 @@ export function memoryconverttogadgetlayers(
   }
 
   if (PERF_INCREMENTAL_LAYERS) {
-    const boardruntime = memoryreadboardruntime(board)
-    const stable =
-      boardruntime && memoryincrementallayerscachestable(boardruntime)
+    const stable = memoryincrementallayerscachestable(board)
     if (stable) {
       const cachekey = `${graphics}:${board.id}:${whichlayer}:${index}`
       const cached = memoryconverttogadgetlayerscache.get(cachekey)
@@ -455,7 +444,6 @@ export function memoryconverttogadgetlayers(
 
   // layers for display media
   if (whichlayer === DIR.MID) {
-    const boardruntime = memoryreadboardruntime(board)
     // set mood
     layers.push(
       createcachedmedia(
@@ -467,10 +455,10 @@ export function memoryconverttogadgetlayers(
     )
 
     // check for palette
-    if (isstring(boardruntime?.palettepage)) {
+    if (isstring(board.palettepage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.PALETTE,
-        boardruntime.palettepage,
+        board.palettepage,
       )
       const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
@@ -479,16 +467,16 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/palette',
-            cachedmediabits(boardruntime.palettepage, palette.bits),
+            cachedmediabits(board.palettepage, palette.bits),
           ),
         )
       }
     }
     // check for charset
-    if (isstring(boardruntime?.charsetpage)) {
+    if (isstring(board.charsetpage)) {
       const codepage = memorypickcodepagewithtypeandstat(
         CODE_PAGE_TYPE.CHARSET,
-        boardruntime.charsetpage,
+        board.charsetpage,
       )
       const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
@@ -497,28 +485,28 @@ export function memoryconverttogadgetlayers(
             cacheowner,
             iiii++,
             'image/charset',
-            cachedmediabits(boardruntime.charsetpage, charset.bits),
+            cachedmediabits(board.charsetpage, charset.bits),
           ),
         )
       }
     }
-    if (isstring(boardruntime?.mediaqueuehelperpeerid)) {
+    if (isstring(board.mediaqueuehelperpeerid)) {
       layers.push(
         createcachedmedia(
           cacheowner,
           iiii++,
           'text/mediaqueue-helper',
-          boardruntime.mediaqueuehelperpeerid,
+          board.mediaqueuehelperpeerid,
         ),
       )
     }
-    if (isstring(boardruntime?.mediaqueuenowplayingtitle)) {
+    if (isstring(board.mediaqueuenowplayingtitle)) {
       layers.push(
         createcachedmedia(
           cacheowner,
           iiii++,
           'text/mediaqueue-nowplaying',
-          boardruntime.mediaqueuenowplayingtitle,
+          board.mediaqueuenowplayingtitle,
         ),
       )
     }
@@ -606,7 +594,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
     withname = isstring(user) ? user : 'player'
   } else {
     memoryreadelementkind(element)
-    const kind = memoryreadboardelementruntime(element)?.kinddata
+    const kind = element.kinddata
     const fromdisplay = element.displayname ?? kind?.displayname
     const trimmed =
       isstring(fromdisplay) && fromdisplay.trim().length > 0

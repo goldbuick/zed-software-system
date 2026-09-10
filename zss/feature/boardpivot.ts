@@ -21,7 +21,6 @@ import {
   memoryreadelementstat,
 } from 'zss/memory/boards'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import {
   type BOARD,
@@ -477,10 +476,7 @@ export function boardpivotgroup(
   }
 
   targetboard.terrain = newterrain
-  const boardruntime = memoryreadboardruntime(targetboard)
-  if (boardruntime) {
-    delete boardruntime.distmaps
-  }
+  delete targetboard.distmaps
   memoryinitboard(targetboard)
 
   objectelements.sort((a, b) => {

@@ -5,7 +5,6 @@ import {
 } from 'zss/firmware/runner'
 import { compilescript } from 'zss/feature/lang/langcompileclient'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboardobjectfromkind,
   memorywriteterrain,
@@ -71,7 +70,6 @@ describe('centipede script layout', () => {
 describe('centipede behaviors', () => {
   afterEach(() => {
     cleartickreadcontextall()
-    memoryboundariesclear()
     memoryhaltallchips()
     memoryresetbooks([])
   })

@@ -11,7 +11,6 @@ import type { MESSAGE } from 'zss/device/types'
 import { handlelogout } from 'zss/device/vm/handlers/auth'
 import { SECOND_TIMEOUT, tracking } from 'zss/device/vm/state'
 import { extractpidsfromopspaths } from 'zss/debugingest'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import {
   memorycreatebook,
@@ -29,7 +28,6 @@ import {
   memorymoveplayertoboard,
   memorywritebookplayerboard,
 } from 'zss/memory/playermanagement'
-import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
   memoryreadmainbook,
   memoryresetbooks,
@@ -91,7 +89,7 @@ function placeplayer(boardid: string, player: string, x: number, y: number) {
     player,
   )
   if (obj) {
-    memoryensureboardelementruntime(obj).category = CATEGORY.ISOBJECT
+    obj!.category = CATEGORY.ISOBJECT
     obj.player = player
   }
   return board
@@ -109,7 +107,6 @@ describe('player orphan evidence (no fix)', () => {
   })
 
   beforeEach(() => {
-    memoryboundariesclear()
     const playerkind = memorycreatecodepage(`@${MEMORY_LABEL.PLAYER}\n`, {
       object: { name: MEMORY_LABEL.PLAYER },
     })
@@ -125,7 +122,6 @@ describe('player orphan evidence (no fix)', () => {
   })
 
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

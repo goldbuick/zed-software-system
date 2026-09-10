@@ -35,7 +35,6 @@ import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
 import { memorysendtoelement } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
 import {
   memoryfindplayerforelement,
@@ -510,11 +509,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // board displayed over/under this one
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.over !== valuestr) {
-            boardruntime.overboard = undefined
+            READ_CONTEXT.board.overboard = undefined
           }
           READ_CONTEXT.board.over = valuestr
           return [true, valuestr]
@@ -522,11 +520,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.under !== valuestr) {
-            boardruntime.underboard = undefined
+            READ_CONTEXT.board.underboard = undefined
           }
           READ_CONTEXT.board.under = valuestr
           return [true, valuestr]
@@ -534,11 +531,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'palette':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.palette !== valuestr) {
-            boardruntime.palettepage = undefined
+            READ_CONTEXT.board.palettepage = undefined
           }
           READ_CONTEXT.board.palette = valuestr
           return [true, valuestr]
@@ -546,11 +542,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'charset':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.charset !== valuestr) {
-            boardruntime.charsetpage = undefined
+            READ_CONTEXT.board.charsetpage = undefined
           }
           READ_CONTEXT.board.charset = valuestr
           return [true, valuestr]
@@ -942,7 +937,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'morph',
-    [ARG_TYPE.KIND, 'change kind in place, keep stats and id'],
+    [ARG_TYPE.KIND, 'change kind in place, drop code and kinddata'],
     (chip, words) => {
       const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
       const ok = memorymorphboardobject(

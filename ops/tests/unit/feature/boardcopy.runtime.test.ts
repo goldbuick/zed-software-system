@@ -2,10 +2,6 @@ import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { pttoindex } from 'zss/mapping/2d'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import {
-  memoryreadboardelementruntime,
-  memorywriteboardelementruntime,
-} from 'zss/memory/runtimeboundary'
 import { memoryresetbooks } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -32,11 +28,10 @@ function makewallterrain(x: number, y: number): BOARD_ELEMENT {
     kind: 'wall',
     char: 219,
     color: 2,
-    runtime: '',
   }
-  memorywriteboardelementruntime(tile, {
+  Object.assign(tile, {
     category: CATEGORY.ISTERRAIN,
-    kinddata: { id: 'wall', name: 'wall', char: 219, runtime: '' },
+    kinddata: { id: 'wall', name: 'wall', char: 219 },
   })
   return tile
 }
@@ -53,7 +48,6 @@ function makeboard(id: string, terrainat?: BOARD_ELEMENT): BOARD {
     name: id,
     terrain,
     objects: {},
-    runtime: '',
   }
 }
 
@@ -63,27 +57,25 @@ describe('boardcopy runtime', () => {
     READ_CONTEXT.book = undefined
   })
 
-  it('mapelementcopy clones runtime onto dest with a distinct boundary id', () => {
+  it('mapelementcopy clones kinddata onto dest without aliasing', () => {
     const src = makewallterrain(0, 0)
-    const dest: BOARD_ELEMENT = { x: 1, y: 0, kind: 'wall', runtime: '' }
-    memorywriteboardelementruntime(dest, { category: CATEGORY.ISTERRAIN })
+    const dest: BOARD_ELEMENT = { x: 1, y: 0, kind: 'wall' }
+    Object.assign(dest, { category: CATEGORY.ISTERRAIN })
 
-    const srcid = src.runtime
     mapelementcopy(dest, src)
 
-    expect(dest.runtime).not.toBe(srcid)
     expect(dest.char).toBe(219)
-    expect(memoryreadboardelementruntime(dest)?.kinddata?.name).toBe('wall')
+    expect(dest.kinddata?.name).toBe('wall')
+    expect(dest.kinddata).not.toBe(src.kinddata)
   })
 
-  it('boardcopy gives dest terrain its own runtime boundary', () => {
+  it('boardcopy clones kinddata onto dest terrain without aliasing', () => {
     const srctile = makewallterrain(0, 0)
     const srcboard = makeboard('srcboard', srctile)
     const dstboard = makeboard('dstboard')
-    const srcruntimeid = srctile.runtime
 
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const srccp = memorycreatecodepage('@board srcboard\n', { board: srcboard })
     const dstcp = memorycreatecodepage('@board dstboard\n', { board: dstboard })
@@ -103,8 +95,8 @@ describe('boardcopy runtime', () => {
 
     const copied = dstboard.terrain[0]
     expect(copied).toBeDefined()
-    expect(copied!.runtime).not.toBe(srcruntimeid)
-    expect(memoryreadboardelementruntime(copied)?.kinddata?.name).toBe('wall')
+    expect(copied!.kinddata?.name).toBe('wall')
+    expect(copied!.kinddata).not.toBe(srctile.kinddata)
     expect(copied!.char).toBe(219)
   })
 })
