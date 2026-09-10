@@ -4,7 +4,7 @@ import { CLI_FIRMWARE } from 'zss/firmware/cli'
 import { ELEMENT_FIRMWARE } from 'zss/firmware/element'
 import { RUNTIME_FIRMWARE } from 'zss/firmware/runtime'
 import { gadgetcheckqueue } from 'zss/gadget/data/api'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/bookoperations'
 import { memorycanruncommand } from 'zss/memory/permissions'
 import { READ_CONTEXT } from 'zss/words/reader'
 
@@ -26,8 +26,8 @@ jest.mock('zss/gadget/data/api', () => ({
   gadgetcheckqueue: jest.fn(() => []),
 }))
 
-jest.mock('zss/memory/flags', () => ({
-  ...jest.requireActual('zss/memory/flags'),
+jest.mock('zss/memory/bookoperations', () => ({
+  ...jest.requireActual('zss/memory/bookoperations'),
   memoryreadflags: jest.fn(() => ({ user: 'alice' })),
 }))
 

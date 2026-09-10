@@ -301,7 +301,7 @@ export async function runApp(flags: RunAppFlags): Promise<void> {
     async (player: string, _label: string, longcontent: string) => {
       void _label
       // longcontent is already memorycompressbooks export JSON (expanded flag
-      // bags). Persist that export shape so reload via memoryimportbookfromjson
+      // bags). Persist that export shape so reload via memoryimportbook({ format: 'json' })
       // sees bags, not a live-memory-only tree.
       const exported = JSON.parse(longcontent) as unknown
       writeJsonFile(path.join(dataDir, `${player}.json`), exported, dataDir)

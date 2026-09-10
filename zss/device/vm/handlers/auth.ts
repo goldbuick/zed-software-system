@@ -17,8 +17,8 @@ import { sanitizeloginflags } from 'zss/feature/loginflags'
 import { isstring } from 'zss/mapping/types'
 import {
   memoryistokenbanned,
-  memorysetcommandpermissions,
-  memorysetplayertotoken,
+  memorywritecommandpermissions,
+  memorywriteplayertotoken,
 } from 'zss/memory/permissions'
 import {
   memoryloginplayer,
@@ -79,7 +79,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
   } = message.data ?? {}
 
   if (memoryisoperator(message.player)) {
-    memorysetcommandpermissions(
+    memorywritecommandpermissions(
       bannedtokens ?? [],
       rolebytoken ?? {},
       permissionconfig ?? 'creative',
@@ -126,7 +126,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
       vm.replynext(message, 'acklogin', false)
       return
     }
-    memorysetplayertotoken(message.player, token)
+    memorywriteplayertotoken(message.player, token)
   }
 
   if (
@@ -148,7 +148,7 @@ export function handlelogin(vm: DEVICE, message: MESSAGE): void {
 
 export function handleplayertoken(_vm: DEVICE, message: MESSAGE): void {
   if (isstring(message.data)) {
-    memorysetplayertotoken(message.player, message.data)
+    memorywriteplayertotoken(message.player, message.data)
   }
 }
 

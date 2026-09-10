@@ -17,7 +17,6 @@ import { CATEGORY, COLOR, NAME, PT } from 'zss/words/types'
 
 import {
   memoryexportboardelement,
-  memoryexportboardelementasjson,
   memoryimportboardelement,
 } from './boardelement'
 import {
@@ -79,10 +78,63 @@ export function memoryunlinkboardobject(board: MAYBE<BOARD>, id: string) {
   return false
 }
 
+export type MEMORY_BOARD_IO_OPTIONS = {
+  format?: 'wire' | 'json'
+  strip?: boolean
+}
+
 export function memoryexportboard(
   board: MAYBE<BOARD>,
-  strip?: boolean,
-): MAYBE<FORMAT_OBJECT> {
+  options?: MEMORY_BOARD_IO_OPTIONS,
+): MAYBE<FORMAT_OBJECT | Record<string, unknown>> {
+  const format = options?.format ?? 'wire'
+  const strip = options?.strip === true
+  if (format === 'json') {
+    if (!ispresent(board)) {
+      return undefined
+    }
+    const objects: Record<string, unknown> = {}
+    for (const object of Object.values(board.objects ?? {})) {
+      objects[object.id ?? ''] = memoryexportboardelement(object, {
+        format: 'json',
+      })
+    }
+    return {
+      terrain: board.terrain.map((element) =>
+        memoryexportboardelement(memoryexportterrainelement(element, strip), {
+          format: 'json',
+        }),
+      ),
+      objects,
+      isdark: board.isdark,
+      startx: board.startx,
+      starty: board.starty,
+      over: board.over,
+      under: board.under,
+      camera: board.camera,
+      graphics: board.graphics,
+      facing: board.facing,
+      charset: board.charset,
+      palette: board.palette,
+      exitnorth: board.exitnorth,
+      exitsouth: board.exitsouth,
+      exitwest: board.exitwest,
+      exiteast: board.exiteast,
+      timelimit: board.timelimit,
+      restartonzap: board.restartonzap,
+      maxplayershots: board.maxplayershots,
+      b1: board.b1,
+      b2: board.b2,
+      b3: board.b3,
+      b4: board.b4,
+      b5: board.b5,
+      b6: board.b6,
+      b7: board.b7,
+      b8: board.b8,
+      b9: board.b9,
+      b10: board.b10,
+    }
+  }
   return formatobject(board, BOARD_KEYS, {
     terrain: (terrain: MAYBE<BOARD_ELEMENT>[]) =>
       terrain.map((element) =>
@@ -91,67 +143,59 @@ export function memoryexportboard(
     objects: (elements) => {
       const objects = Object.values<BOARD_ELEMENT>(elements)
         .filter((boardelement) => !boardelement.removed)
-        .map(memoryexportboardelement)
+        .map((boardelement) => memoryexportboardelement(boardelement))
       return objects
     },
     ...BOARD_RUNTIME_SKIP,
   })
 }
 
-export function memoryexportboardasjson(
-  board: MAYBE<BOARD>,
-  strip?: boolean,
-): any {
-  if (!ispresent(board)) {
-    return undefined
-  }
-  const objects: Record<string, any> = {}
-  for (const object of Object.values(board.objects ?? {})) {
-    objects[object.id ?? ''] = memoryexportboardelementasjson(object)
-  }
-  return {
-    terrain: board.terrain.map((element) =>
-      memoryexportboardelementasjson(
-        memoryexportterrainelement(element, strip),
-      ),
-    ),
-    objects,
-    // stats
-    isdark: board.isdark,
-    startx: board.startx,
-    starty: board.starty,
-    over: board.over,
-    under: board.under,
-    camera: board.camera,
-    graphics: board.graphics,
-    facing: board.facing,
-    charset: board.charset,
-    palette: board.palette,
-    exitnorth: board.exitnorth,
-    exitsouth: board.exitsouth,
-    exitwest: board.exitwest,
-    exiteast: board.exiteast,
-    timelimit: board.timelimit,
-    restartonzap: board.restartonzap,
-    maxplayershots: board.maxplayershots,
-    b1: board.b1,
-    b2: board.b2,
-    b3: board.b3,
-    b4: board.b4,
-    b5: board.b5,
-    b6: board.b6,
-    b7: board.b7,
-    b8: board.b8,
-    b9: board.b9,
-    b10: board.b10,
-  }
-}
-
 export function memoryimportboard(
-  boardentry: MAYBE<FORMAT_OBJECT>,
+  boardentry: MAYBE<FORMAT_OBJECT | Record<string, unknown>>,
+  options?: MEMORY_BOARD_IO_OPTIONS,
 ): MAYBE<BOARD> {
-  return unformatobject<BOARD>(boardentry, BOARD_KEYS, {
-    terrain: (terrain) => terrain.map(memoryimportboardelement),
+  const format = options?.format ?? 'wire'
+  if (format === 'json') {
+    if (!ispresent(boardentry)) {
+      return undefined
+    }
+    const flat = boardentry as Record<string, unknown>
+    const terrainraw = Array.isArray(flat.terrain) ? flat.terrain : []
+    const terrain = terrainraw.map((element) =>
+      memoryimportboardelement(element as Record<string, unknown>, {
+        format: 'json',
+      }),
+    )
+    const objectsraw =
+      flat.objects && typeof flat.objects === 'object'
+        ? (flat.objects as Record<string, unknown>)
+        : {}
+    const objects: Record<string, BOARD_ELEMENT> = {}
+    const objectids = Object.keys(objectsraw)
+    for (let i = 0; i < objectids.length; ++i) {
+      const id = objectids[i]
+      const obj = memoryimportboardelement(
+        objectsraw[id] as Record<string, unknown>,
+        { format: 'json' },
+      )
+      if (ispresent(obj)) {
+        if (!ispresent(obj.id)) {
+          obj.id = id
+        }
+        objects[obj.id] = obj
+      }
+    }
+    return {
+      ...(flat as unknown as BOARD),
+      terrain,
+      objects,
+    }
+  }
+  return unformatobject<BOARD>(boardentry as MAYBE<FORMAT_OBJECT>, BOARD_KEYS, {
+    terrain: (terrain) =>
+      terrain.map((element: MAYBE<FORMAT_OBJECT>) =>
+        memoryimportboardelement(element),
+      ),
     objects: (elements) => {
       const objects: Record<string, BOARD_ELEMENT> = {}
       for (let i = 0; i < elements.length; ++i) {
@@ -319,21 +363,6 @@ export function memoryreadgroup(
   }
 
   return { objectelements, terrainelements }
-}
-
-export function memorylistboardelementsbygroup(
-  board: MAYBE<BOARD>,
-  self: string,
-  group: STR_GROUP,
-): BOARD_ELEMENT[] {
-  const name = NAME(readstrgroupname(group) ?? '')
-  const color = readstrgroupcolor(group)
-  const bg = readstrgroupbg(group)
-  const { terrainelements, objectelements } = memoryreadgroup(board, self, name)
-  const elements = [...terrainelements, ...objectelements]
-  return elements.filter((element) =>
-    elementmatchesstrgroupcolorbg(element, color, bg),
-  )
 }
 
 export function memorywriteterrain(

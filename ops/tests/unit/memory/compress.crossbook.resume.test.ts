@@ -1,7 +1,7 @@
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
 import {
   memorycreatebook,
-  memoryreadbookflag,
+  memoryreadflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -71,7 +71,7 @@ describe('compress cross-book resume', () => {
       delete atitle.objects[player]
     }
 
-    expect(memoryreadbookflag(booka, player, 'board')).toBe(roompage.id)
+    expect(memoryreadflag(booka, player, 'board')).toBe(roompage.id)
 
     const compressed = await memorycompressbooks([booka, bookb])
     const bundle = await memorydecompressbooks(compressed)

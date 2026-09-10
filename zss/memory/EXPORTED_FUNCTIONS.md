@@ -1,291 +1,203 @@
-# Memory Module - Exported Functions Summary
+# MEMORY exported functions
 
-<!-- When public exports under `zss/memory/` change, update this catalog. -->
-
-The previous monolithic `index.ts` has been split into smaller modules. Per-module narratives live in [`docs/`](docs/README.md); this file is the flat function catalog.
-
-## session.ts
-
-The MEMORY singleton plus its book/loader/operator/topic accessors.
-
-- **memoryreadroot()** / **MEMORY_ROOT** (type) - Reads the live MEMORY object
-- **memoryreadsession()** - Returns the session ID
-- **memoryreadoperator()**, **memoryisoperator(player)**, **memorywriteoperator(operator)** - Operator player accessors
-- **memoryreadtopic()**, **memorywritetopic(topic)** - Multiplayer topic accessors
-- **memoryreadhalt()**, **memorywritehalt(halt)** - Dev/halt mode accessors
-- **memoryreadsimfreeze()**, **memorywritesimfreeze(frozen)** - Sim freeze gate (skips the VM tick when true)
-- **memoryreadloaders()**, **memorystartloader(id, code)** - Loader map accessors
-- **memoryreadbooklist()**, **memoryreadfirstbook()**, **memoryreadfirstcontentbook()** - Book listing
-- **memoryreadbookbyaddress(address)**, **memorywritebook(book)**, **memoryresetbooks(books)**, **memoryclearbook(address)**, **memoryfreebook(book)** - Book CRUD
-- **memorywritemainbook(address)**, **memoryreadmainbook()** - Opened book (`MEMORY.main`) accessors
-
-## books.ts
-
-Higher-level book ensure helpers built on `session.ts`.
-
-- **memorycreatesoftwarebook(maybename?)** - Creates a new book and registers it
-- **memoryensurebookbyname(name)** - Returns the matching book, creating one if missing
-- **memoryensuremainbook(maybename?)** - Ensures there is an opened book
-- **memoryensuremaincodepage(address, createtype)** - Ensures the named codepage exists in the opened book
-
-## flags.ts
-
-Per-id flag bag (`MEMORY.books[*].flags[owner]` is an inline `BOOK_FLAGS` object).
-
-- **memoryreadflags(id)**, **memoryhasflags(id)**, **memoryclearflags(id)**
-
-## jsonpipefilter.ts
-
-- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `named` / `kinddata`, terrain-only props, ephemeral flag owners)
+Generated from `export function` / `export const` under `zss/memory/`.
 
 ## boardaccess.ts
 
-Board element / point lookups (no mutation).
-
-- **memoryreadidorindex(element)**, **memoryboardelementindex(board, pt)**
-- **memoryreadterrain(board, x, y)**, **memoryreadobject(board, id)**, **memoryreadobjectbypt(board, pt)**
-- **memoryreadobjectatpt(board, pt, options?)** - authoritative object-at-cell scan (player wins; ghosts skipped unless `includeghost`)
-- **memoryreadelement(board, pt, options?)**, **memoryreadelementbyidorindex(board, idorindex)**
-- **memoryreadobjects(board)**, **memoryreadplayersonboard(board)**
-- **memoryfindboardplayer(board, target, player)**
-
-## boards.ts
-
-Board / element / kind reads + creators.
-
-- **memoryreadelementkind(element)**, **memoryreadelementstat(element, stat)**, **memorycheckelementpushable(pusher, target)**
-- **memorywriteelementfromkind(board, kind, dest, id?)**, **memorywritebullet(board, kind, dest)**, **memorymorphboardobject(board, element, kind)**
-- **memoryreadboardbyaddress(address)**, **memoryreadoverboard(board)**, **memoryreadunderboard(board)**, **memoryreadboardbyevaldir(dir, board)**
-- **memoryinitboard(board)**
-
-## boardlifecycle.ts
-
-Board / object create, delete, import/export.
-
-- **memorycreateboard(fn?)**, **memorycreateboardobject(board, from)**, **memorycreateboardobjectfromkind(board, pt, kind, id?)**
-- **memorydeleteboardobject(board, id)**, **memorysafedeleteelement(board, element, timestamp)**
-- **memorywriteterrain(board, from)**, **memorywriteterrainfromkind(board, pt, kind)**
-- **memoryreadgroup(board, self, targetgroup)**, **memorylistboardelementsbygroup(board, self, STR_GROUP)**, **memoryelementisingroup**, **memoryelementmatchesstrgroup**, **memoryelementmatchesstrgrouponboard**
-- **memoryexportboard(board, strip?)**, **memoryexportboardasjson(board, strip?)**, **memoryimportboard(boardentry)**
-
-## boardterrainmap.ts
-
-Terrain kind-default strip for persisted exports (see [docs](docs/boardterrainmap.md)).
-
-- **memorystripterrainkinddefaults(element)** - omit display stats equal to the resolved kind
-- **memoryexportterrainelement(element, strip?)** - strip when true; verbatim when absent/false
-
-## boardelement.ts
-
-- **memorycreateboardelement()**, **memoryapplyboardelementcolor(element, strcolor)**
-- **memoryboardelementisobject(element)**
-- **memoryexportboardelement(boardelement)**, **memoryexportboardelementasjson(boardelement)**, **memoryimportboardelement(boardelemententry)**
-- **memorycopyboardelementruntime(dest, src)** - Copies runtime-only element fields (`category`, `kinddata`, `kindsource*`, `pushedtick`)
-
-## boardlookup.ts
-
-Named index (name → Set of object id | terrain index).
-
-- **memorywriteboardnamed**, **memorydeleteboardobjectnamedlookup**, **memorydeleteboardterrainnamed**
-- **memoryrebuildboardnamed(board)**, **memoryinitboardnamed(board)**, **memoryensureboardready(board)**
-- **memoryensureterraincoords(board)**
-
-## boardmovement.ts
-
-- **memorycheckblockedboardobject(board, collision, dest, isplayer?)**, **memorycheckmoveboardobject(board, target, dest)**
-- **memorymoveboardobject(board, element, dest)**, **memorymoveobject(book, board, element, dest, didpush?)**
-- **memorycleanupboard(board, timestamp)**
-
-## boarddirection.ts
-
-- **memoryevaldir(board, element, player, dir, startpt)** - Resolves direction commands (`n`/`rndne`/`flow` / etc.) into destination points
-
-## boardtick.ts
-
-- **memorytickboard(board, timestamp, rundraw, drawallowforqueue?)** - Builds the per-tick run list for chips on a board
-
-## boardtransitions.ts
-
-Edge / corner-exit detection used by cross-board player moves.
-
-## boardvisuals.ts
-
-- **memoryupdateboardvisuals(board)** - Refreshes over/under/charset/palette caches
-
-## boarddrawdirty.ts
-
-- **memoryupdatedrawdirty(board, timestamp)** - Promotes per-tick "draw" markings into the next tick's runtime hints
-
-## boardarraypool.ts
-
-- **acquireboardsizearray(fill)**, **releaseboardsizearray(arr)** - Pool for `BOARD_WIDTH * BOARD_HEIGHT` numeric scratch buffers
-
-## boardlighting.ts / lightinggeometry.ts
-
-Dark-board lighting:
-
-- `boardlighting.ts` — **memoryboardlightingapplyobject**, **memoryboardlightingmarkplayer**
-- `lightinggeometry.ts` — **lightingmixmaxrange**, **memorylightingaddrangetoblocked**, plus `LightingOccluderKind`, `LIGHTING_*` constants
+- **memoryreadidorindex**, **memoryboardelementindex**, **memoryreadelement**, **memorypicknearest**, **memorylistelement**, **memoryfindboardplayer**, **memoryreadplayersonboard**
 
 ## boardcornerexits.ts
 
-Helper used by [`memoryreadboardbyevaldir`](boards.ts) and edge transitions.
+- **memorycornerexitboardids**
+
+## boarddepth2exits.ts
+
+- **memorydepth2exitboardids**
+
+## boarddirection.ts
+
+- **memoryevaldir**
+
+## boarddrawdirty.ts
+
+- **memorycodehasdrawdisplay**, **memoryelementdrawreadid**, **memoryinvalidatedraw**, **memoryupdatedrawdirty**
+
+## boardelement.ts
+
+- **memoryapplyboardelementcolor**, **memoryexportboardelement**, **memoryimportboardelement**, **memoryboardelementisobject**, **memorycopyelementkinddata**, **memorycreateboardelement**
+
+## boardlifecycle.ts
+
+- **memorydeleteboardobject**, **memoryunlinkboardobject**, **memoryexportboard**, **memoryimportboard**, **memorycreateboardobject**, **memorycreateboardobjectfromkind**, **memoryelementisingroup**, **memoryelementmatchesstrgroup**, **memoryelementmatchesstrgrouponboard**, **memoryreadgroup**, **memorywriteterrain**, **memorywriteterrainfromkind**, **memorysafedeleteelement**, **memorycreateboard**
+
+## boardlighting.ts
+
+- **memoryboardlightingapplyobject**, **memoryboardlightingmarkplayer**
+
+## boardlookup.ts
+
+- **memorywriteboardnamed**, **memorydeleteboardobjectnamedlookup**, **memoryensureterraincoords**, **memoryensureboardready**, **memoryrebuildboardnamed**, **memoryinitboardnamed**, **memorydeleteboardterrainnamed**
+
+## boardmovement.ts
+
+- **memorycheckblockedboardobject**, **memorycheckmoveboardobject**, **memorycleanupboard**, **memorymoveboardobject**, **memorymoveobject**
+
+## boards.ts
+
+- **memoryclearelementkinddata**, **memoryreadelementkind**, **memoryreadelementstat**, **memorycheckelementpushable**, **memorymorphboardobject**, **memorywriteelementfromkind**, **memorywritebullet**, **memoryreadboardbyaddress**, **memoryreadoverboard**, **memoryreadunderboard**, **memoryreadboardbyevaldir**, **memoryinitboard**
+
+## boardterrainmap.ts
+
+- **memorystripterrainkinddefaults**, **memoryexportterrainelement**
+
+## boardtick.ts
+
+- **memorytickboard**
+
+## boardtransitions.ts
+
+- **memoryplayerblockedbyedge**, **memoryplayerwaszapped**, **memoryptwithinboard**
+
+## boardvisuals.ts
+
+- **memoryupdateboardvisuals**
+
+## bookidremap.ts
+
+- **remapbookidsforfilenamesafety**, **remapcodepageidsforfilenamesafety**
+
+## bookmarkdeleteconfirm.ts
+
+- **memorycachebookmarkscrolllist**, **memorycacheeditorbookmarkscrolllist**, **memorycacheterminalbookmarkdelete**, **memoryreadbookmarklistcache**, **memorybookmarkdeleteprompt**
+
+## bookmarkscroll.ts
+
+- **memorymainbookisempty**, **memorybookmarkscroll**
 
 ## bookoperations.ts
 
-Book / codepage / flag operations.
+- **memoryreadelementcodepage**, **memorydeletecodepage**, **memoryclearflags**, **memoryreadelementdisplay**, **memoryensurecodepage**, **memoryexportbook**, **memoryhasflags**, **memoryimportbook**, **memoryreadcodepage**, **memorylistcodepage**, **memoryreadflag**, **memoryreadflags**, **memoryupdatebookname**, **memoryupdatebooktoken**, **memorywritecodepage**, **memoryupsertcodepage**, **memorywriteflag**, **memorycreatebook**
 
-- **memoryreadcodepage(book, address)**, **memoryreadcodepagewithtype(book, type, address)**
-- **memoryreadelementcodepage(book, element)**, **memoryreadelementdisplay(element, ...)**
-- **memorylistcodepagebytype(book, type)**, **memorylistcodepagebystat(book, statname)**, **memorylistcodepagebytypeandstat(book, type, statname)**, **memorylistcodepagedatabytype(book, type)**, **memorylistcodepagessorted(book)**
-- **memorywritecodepage(book, codepage)**, **memoryclearbookcodepage(book, address)**
-- **memoryensurebookcodepagewithtype(book, type, address)**
-- **memoryreadbookflag**, **memoryreadbookflags**, **memorywritebookflag**, **memoryhasbookflags**, **memoryclearbookflags**, **memoryhasbookmatch**
-- **memoryupdatebookname(book)**, **memoryupdatebooktoken(book)**
-- **memorycreatebook(pages)**, **memoryexportbook(book)**, **memoryexportbookasjson(book)**, **memoryimportbook(bookentry)**, **memoryimportbookfromjson(flat)** - both exporters strip kind-default terrain display stats
+## books.ts
 
-## codepages.ts
+- **memorycreatesoftwarebook**, **memoryensurebookbyname**, **memoryensuremainbook**, **memoryensuremaincodepage**
 
-Codepage discovery across books.
+## bookzstd.ts
 
-- **memorylistallcodepagewithtype(type)**, **memorylistcodepagewithtype(type)**
-- **memoryreadcodepagebyid(address)**, **memorypickcodepagewithtypeandstat(type, address)**
+- **bookzstdcompressbase64url**, **BOOK_ZSTD_LEVEL**
+
+## codelabels.ts
+
+- **memorycollectcodelabels**
 
 ## codepageoperations.ts
 
-Codepage parse / import-export.
+- **memoryapplyelementstats**, **memoryexportbitmap**, **memoryimportbitmap**, **memoryexportcodepage**, **memoryimportcodepage**, **memoryfreecodepage**, **memoryreadcodepagedata**, **memoryreadcodepagename**, **memoryreadcodepagestat**, **memoryreadcodepagestatdefaults**, **memoryreadcodepagestats**, **memoryreadcodepagestatsfromtext**, **memoryreadcodepagetype**, **memoryreadcodepagetypeasstring**, **memoryresetcodepagestats**, **memorycodepagetypetostring**, **memorycreatecodepage**
 
-- **memoryapplyelementstats(stats, element)**
-- **memoryreadcodepagedata(codepage)**, **memoryreadcodepagename(codepage)**, **memoryreadcodepagetype(codepage)**, **memoryreadcodepagetypeasstring(codepage)**
-- **memoryreadcodepagestat(codepage, stat)**, **memoryreadcodepagestats(codepage)**, **memoryreadcodepagestatdefaults(codepage)**, **memoryreadcodepagestatsfromtext(content)**, **memoryresetcodepagestats(codepage)**
-- **memorycodepagetypetostring(type)**
-- **memorycreatecodepage(code, content)**, **memoryfreecodepage(codepage)**
-- **memoryexportcodepage(codepage, strip?)**, **memoryexportcodepageasjson(codepage, strip?)**, **memoryimportcodepage(codepage)**, **memoryimportcodepagefromjson(flat)**
-- **memoryexportbitmap**, **memoryimportbitmap**
+## codepagepickcache.ts
 
-## runtime.ts
+- **memoryreadcodepagepickcache**, **memorywritecodepagepickcache**, **memoryinvalidatecodepagepickcache**
 
-Chip OS / tick loop.
+## codepages.ts
 
-- **memorygc()**, **memoryhaltchip(id)**, **memoryrestartallchipsandflags()**, **memorymessagechip(message)**
-- **memoryrepeatclilast(player)**, **memoryruncli(player, cli, tracking?)**
-- **memorytickloaders()** - Runs all queued loaders (sim VM only)
-- **memorytickmain(timestamp, boards, playeronly?)** - Runs one tick across the supplied boards (sim VM only, via handleticktock)
-- **memorytickobject(book, board, object, code)**, **memorytickonce(book, board, element, code, id, label)**
-- **memoryruncodepage(address, label)**
-- **memoryunlockscroll(id, player)**
-- **memoryapplyboardsynthstats(board)**
+- **memorypickcodepage**
 
-## playermanagement.ts
+## editorbookmarkscroll.ts
 
-- **memorymoveplayertoboard(book, player, board, dest)** - Authoritative move (called by [`vm:playermovetoboard`](../device/vm/handlers/playermovetoboard.ts))
-- **memoryreadbookplayeractive(book, player)**, **memoryreadplayeractive(player)**, **memoryreadplayerboard(player)**, **memoryreadbookplayerboards(book)**, **memorypicknextactiveplayerboard()**
-- **memorywritebookplayerboard(book, player, board)**
-- **memoryloginplayer(player, stickyflags)**, **memorylogoutplayer(player, isendgame)**
-- **memoryswitchopenedbook(dest)**, **memoryreopenaftertrash()**
-- **memoryscanplayers(players)**
+- **memoryeditorbookmarkshorttitle**, **memoryeditorbookmarkscroll**
 
-## gamesend.ts
+## exportflagcache.ts
 
-- **memorysendtoboards(target, message, data, boards)**, **memorysendtoelement(fromelement, toelement, label)**, **memorysendtoelements(chip, fromelement, send)**
+- **memoryexportshouldskipflagowner**
 
-## loader.ts
+## exportidremap.ts
 
-- **memoryloader(arg, format, idoreventname, content, player)** - Runs every loader matching the format/event
-- **memoryloaderarg(id)**, **memoryloadercontent(id)**, **memoryloaderformat(id)**, **memoryloadermatches(format, idoreventname)**
-- **memoryloaderreadcontextapply(id)**, **memoryloaderreadcontextsave(id)**, **memoryloaderrelease(id)** - Per-loader board/object targeting snapshot across ticks
-
-## rendering.ts
-
-Memory → gadget layer conversion.
-
-- **memorycodepagetoprefix(codepage)**, **memoryelementtodisplayprefix(element)**, **memoryelementtologprefix(element)**, **memoryelementtotickerprefix(element)**
-- **memoryconverttogadgetcontrollayer(player, index, board)**, **memoryconverttogadgetlayers(player, index, board, tickers, whichlayer, multi?)**
-- **memoryreadgadgetlayers(mode, board)**, **memoryreadgraphics(player, board)**
-- **MEMORY_GADGET_LAYERS** (type)
-
-## renderinglayercache.ts
-
-Pooled sprite / dither / control / tile builders for [`gadgetsynctick`](../device/vm/gadgetsynctick.ts).
-
-- **memorycreatecachedsprite**, **memorycreatecachedsprites**
-- **createcacheddither**, **createcachedmedia**, **createcachedcontrol**, **createcachedtiles**
+- **collectflagprotectedids**, **buildexportidremap**, **applyexportidremap**, **mintcompressedexportids**
 
 ## gadgetlayersflags.ts
 
-- **memoryreadbookgadgetlayersforboard(book, boardid)** - Returns the per-board cached gadget layer store keyed by graphics variant
+- **memoryresetbookgadgetlayersreadcache**, **memoryreadbookgadgetlayersforboard**
 
-## synthstate.ts
+## gamesend.ts
 
-- **memoryreadsynth(board)**, **memoryreadsynthplay(board)**, **memoryqueuesynthplay(board, play)**
-- **memorymergesynthvoice(board, idx, config, value)**, **memorymergesynthvoicefx(board, idx, fx, config, value)**
-
-## spatialqueries.ts
-
-- **memorycheckcollision(source, dest)**, **memoryfindplayerforelement(board, elementpt, player)**
-- **memorylistboardelementsbycolor**, **memorylistboardelementsbyempty**, **memorylistboardelementsbyidnameorpts**, **memorylistboardelementsbykind**, **memorylistboardnamedelements**, **memorylistboardptsbyempty**
-- **memorypickboardfarthestpt**, **memorypickboardnearestpt**, **memoryreadboardpath(board, forcollision, frompt, topt, flee)**
-
-## permissions.ts
-
-Player roles, command allowlists, token bans.
-
-- **PERMISSION_CONTROLLED_GROUPS**, **PERMISSION_CONTROLLED_COMMANDS**, **DEFAULT_ALLOWLIST_ADMIN**, **CREATIVE_ALLOWLIST_MOD**, **DEFAULT_ALLOWLIST_PLAYER**, **DEFAULT_ALLOWLIST_BY_ROLE**, **PERMISSION_ROLES**, **PERMISSION_CONFIG_NAMES**, **PERMISSION_PRESETS**, **PERMISSION_ALLOWLIST_BREAKDOWN** (type), **PERMISSION_CONFIG_NAME** (type)
-- **ispermissioncontrolledcommand(command)**, **memorymapcommandtofamily(command)**, **memorycanruncommand(player, command)**
-- **memorysetplayertotoken(player, token)**, **memorysetcommandpermissions(...)**
-- **memoryistokenbanned(token)**, **memorybantoken(token)**, **memoryunbantoken(token)**, **memoryreadbannedtokens()**
-- **memoryreadplayertotoken()**, **memoryreadallowlistbyrole()**, **memoryreadallowlistbreakdownbyrole()**, **memoryreadrolebytoken()**
-- **memoryallowcommand(role, command)**, **memoryrevokecommand(role, command)**, **memorysetrolefortoken(token, role)**
-- **memoryreadpermissionconfig()**, **memoryapplypermissionconfig(name)**, **memoryserializepermissions()**
-
-## utilities.ts
-
-- **CONFIG_KEYS**, **memorysetconfig(list)**, **memoryreadconfig(name)**, **memoryreadconfigall()**, **memorywriteconfig(name, value)**
-- **memoryadminmenu(player)** - Admin scroll
-- **memorycompressbooks(books)** (async), **memorydecompressbooks(base64bytes)** (async)
-
-## bookmarkscroll.ts / editorbookmarkscroll.ts
-
-- **memorybookmarkscroll(player, includecodepages)** - Bookmarks scroll
-- **memoryeditorbookmarkshorttitle(...)**, **memoryeditorbookmarkscroll(...)** - Editor bookmarks scroll
+- **memorybulletcollisionlabel**, **memorysendtoboards**, **memorysendtoelement**, **memorysendtoelements**
 
 ## inspection.ts
 
-Top-level inspector entry points.
-
-- **memoryinspect(player, p1, p2)** (async), **memoryinspectarea(player, p1, p2, hassecretheap)**
-- **memoryinspectboardlines(board)**, **memoryinspectloaderlines(p1, p2)**
-- **memoryinspectelement(player, board, codepage, element, p1, isobject)**
-- **memoryinspectempty(player, p1, p2, mode)**, **memoryinspectemptymenu(player, p1, p2)**
-- **memoryinspectcommand(path, player)**
-- Char / color / bg editors are **inline** on inspect (`charedit` / `coloredit` / `bgedit`); no nested editor scrolls.
+- **memoryinspectboardlines**, **memoryinspectloaderlines**, **memoryinspect**, **memoryinspectarea**, **memoryinspectcommand**, **memoryinspectelement**, **memoryinspectempty**, **memoryinspectemptymenu**
 
 ## inspectionbatch.ts
 
-- **memoryhassecretheap()** (async), **memoryreadsecretheap()** (async)
-- **memoryinspectbatchcommand(path, player)** (async)
-- **memoryinspectcopy / copymenu**, **memoryinspectcut / cutmenu**, **memoryinspectpaste / pastemenu**
+- **memoryhassecretheap**, **memoryinspectbatchcommand**, **memoryinspectcopy**, **memoryinspectcopymenu**, **memoryinspectcut**, **memoryinspectcutmenu**, **memoryinspectpaste**, **memoryinspectpastemenu**, **memoryreadsecretheap**
+
+## inspectionconfig.ts
+
+- **memorycreateinspectionconfig**
 
 ## inspectionfind.ts
 
-- **FINDANY_CONFIG** (type)
-- **memoryfindany(path, player)** (async), **memoryfindanymenu(player)** (async)
-- **memoryreadfindanyconfig()** (async), **memorywritefindanyconfig(updater)** (async)
+- **memoryfindany**, **memoryfindanymenu**
 
 ## inspectionmakeit.ts
 
-- **memorymakeitcommand(path, data, player)**, **memorymakeitscroll(makeit, player)**
+- **memorymakeitcommand**, **memorymakeitscroll**
 
 ## inspectionremix.ts
 
-- **memoryinspectremixcommand(path, player)** (async), **memoryinspectremixmenu(player, p1, p2)** (async)
-- **memoryreadremixconfig()** (async), **memorywriteremixconfig(updater)** (async)
+- **memoryinspectremixcommand**, **memoryinspectremixmenu**
 
 ## inspectionstyle.ts
 
-- **memoryinspectstyle(player, p1, p2, mode)** (async), **memoryinspectstylemenu(player, p1, p2)** (async)
-- **memoryreadstyleconfig()** (async), **memorywritestyleconfig(updater)** (async)
+- **memoryinspectstyle**, **memoryinspectstylemenu**
+
+## jsonpipefilter.ts
+
+- **memoryrootshouldemitpath**
+
+## lightinggeometry.ts
+
+- **lightingmixmaxrange**, **memorylightingaddrangetoblocked**, **LIGHTING_RAY_TILE_YSCALE**, **LIGHTING_OBJECT_OCCLUDER_CELL_FRAC**
+
+## loader.ts
+
+- **memoryloaderreadcontextapply**, **memoryloaderreadcontextsave**, **memoryloaderrelease**, **memoryloader**, **memoryloaderarg**, **memoryloadercontent**, **memoryloaderformat**, **memoryloadermatches**
+
+## permissions.ts
+
+- **memorycheckpermissioncommand**, **memorymapcommandtofamily**, **memoryplayerallowedcommand**, **memorycanruncommand**, **memorywriteplayertotoken**, **memorywritecommandpermissions**, **memoryistokenbanned**, **memorybantoken**, **memoryunbantoken**, **memoryreadbannedtokens**, **memoryreadplayertotoken**, **memoryreadallowlistbyrole**, **memoryreadallowlistbreakdownbyrole**, **memoryreadrolebytoken**, **memoryallowcommand**, **memoryrevokecommand**, **memorywriterolefortoken**, **memoryreadpermissionconfig**, **memoryapplypermissionconfig**, **memoryserializepermissions**, **PERMISSION_CONTROLLED_GROUPS**, **PERMISSION_CONFIG_NAMES**
+
+## playermanagement.ts
+
+- **memorydebugcountplayerboards**, **memorypurgeplayerboardcopies**, **memorymoveplayertoboard**, **memoryreadbookplayeractive**, **memoryreadbookplayerboards**, **memorywritebookplayerboard**, **memoryloginplayer**, **memoryswitchopenedbook**, **memoryreopenaftertrash**, **memorylogoutplayer**, **memoryscanplayers**, **memoryreadplayeractive**, **memoryreadplayerboard**, **memorypicknextactiveplayerboard**
+
+## rendering.ts
+
+- **memorycodepagetoprefix**, **memoryconverttogadgetcontrollayer**, **memoryinvalidategadgetlayerscacheforboard**, **memoryincrementallayerscachestable**, **memoryappendboardtickers**, **memoryconverttogadgetlayers**, **memoryreadgraphics**, **memoryelementtodisplayprefix**, **memoryelementtologprefix**, **memoryelementtotickerprefix**, **memoryreadgadgetlayers**
+
+## runtime.ts
+
+- **memorychipispresent**, **memoryhaltchip**, **memoryhaltallchips**, **memoryrestartallchipsandflags**, **memorymessagechip**, **memoryrepeatclilast**, **memorytickloaders**, **memorytickmain**, **memorytickobject**, **memorytickonce**, **memoryruncli**, **memoryruncodepage**, **memoryunlockscroll**, **memoryapplyboardsynthstats**
+
+## session.ts
+
+- **memoryreadloaders**, **memorystartloader**, **memoryreadsession**, **memorywritesession**, **memoryreadoperator**, **memoryisoperator**, **memorywriteoperator**, **memoryreadtopic**, **memorywritetopic**, **memorywritehalt**, **memoryreadhalt**, **memorywritefrozen**, **memoryreadfrozen**, **memoryreadbooklist**, **memoryreadfirstbook**, **memoryreadbookbyaddress**, **memorywritemainbook**, **memoryreadmainbook**, **memoryresetbooks**, **memorywritebook**, **memoryfreebook**, **memoryclearbook**, **memoryreadfirstcontentbook**, **memoryreadroot**
+
+## spatialqueries.ts
+
+- **memorycheckcollision**, **memoryfindplayerforelement**, **memorylistboardptsbyempty**, **memoryreadboardpath**
+
+## synthstate.ts
+
+- **memoryreadsynth**, **memorymergesynthvoice**, **memorymergesynthvoicefx**, **memoryreadsynthplay**, **memoryqueuesynthplay**
+
+## trimexport.ts
+
+- **trimmemoryexport**, **trimformatobject**
 
 ## types.ts
 
-Constants and shared types: `BOARD_WIDTH`, `BOARD_HEIGHT`, `BOARD_SIZE`, `CHAR_RAY_MARGIN`, `FIXED_DATE`, `CORNER_EXIT_DISPUTED`, `MEMORY_LABEL`, `BOARD`, `BOARD_ELEMENT`, `BOARD_ELEMENT_STAT`, `BOOK`, `BOOK_FLAGS`, `CODE_PAGE`, `CODE_PAGE_STATS`, `CODE_PAGE_TYPE`, `CODE_PAGE_TYPE_MAP`, `MAYBE_CODE_PAGE`.
+- **BOARD_WIDTH**, **BOARD_HEIGHT**, **BOARD_SIZE**, **CHAR_RAY_MARGIN**, **FIXED_DATE**, **CORNER_EXIT_DISPUTED**
+
+## utilities.ts
+
+- **memorysetconfig**, **memoryreadconfig**, **memoryreadconfigall**, **memorywriteconfig**, **memoryadminmenu**, **memorycompressbooks**, **memorydecompressbooks**

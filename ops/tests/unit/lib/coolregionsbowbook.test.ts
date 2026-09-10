@@ -1,5 +1,5 @@
 import { isfilenamesafeid } from 'zss/mapping/guid'
-import { memoryimportbookfromjson } from 'zss/memory/bookoperations'
+import { memoryimportbook } from 'zss/memory/bookoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import {
   readcoolregionsbowbookexport,
@@ -107,7 +107,7 @@ describe('coolregionsbow book fixture', () => {
     const sample = findstrippedcell(readcoolregionsbowbookexport().data as any)
     expect(sample).toBeDefined()
 
-    const book = memoryimportbookfromjson(readcoolregionsbowbookexport().data)
+    const book = memoryimportbook(readcoolregionsbowbookexport().data, { format: 'json' })
     expect(book).toBeDefined()
     memoryresetbooks([book!])
 

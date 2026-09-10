@@ -6,7 +6,7 @@ import { PT } from 'zss/words/types'
 
 import { memorymoveboardobject } from './boardmovement'
 import { memoryreadboardbyaddress } from './boards'
-import { memoryreadbookflag } from './bookoperations'
+import { memoryreadflag } from './bookoperations'
 import { memorymoveplayertoboard } from './playermanagement'
 import { memoryreadmainbook } from './session'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
@@ -73,8 +73,8 @@ export function memoryplayerwaszapped(
   element: MAYBE<BOARD_ELEMENT>,
   player: string,
 ) {
-  const enterx = memoryreadbookflag(book, player, 'enterx')
-  const entery = memoryreadbookflag(book, player, 'entery')
+  const enterx = memoryreadflag(book, player, 'enterx')
+  const entery = memoryreadflag(book, player, 'entery')
   if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
     memorymoveboardobject(board, element, { x: enterx, y: entery })
   }

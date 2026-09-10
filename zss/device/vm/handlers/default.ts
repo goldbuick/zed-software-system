@@ -20,13 +20,20 @@ import {
 } from 'zss/feature/mediaqueue/mediaguards'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
-import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
+import {
+  zsstextline,
+  zsstexttape,
+  zsszedlinkline,
+} from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { isarray, ispresent } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardaccess'
+import {
+  isarray,
+  ispresent,
+} from 'zss/mapping/types'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
-import { memorylistcodepagewithtype } from 'zss/memory/codepages'
+import { memorylistcodepage } from 'zss/memory/bookoperations'
 import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryinspectcommand } from 'zss/memory/inspection'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectionbatch'
@@ -39,16 +46,17 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'
-import { memoryreadmainbook } from 'zss/memory/session'
+import {
+  memoryreadmainbook,
+  memoryreadbooklist,
+} from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { NAME } from 'zss/words/types'
-
 import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handleimageimport } from './imageimport'
 import { handlezztbridge } from './zzt'
-
 const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
   'menu hk b " B " next',
   '$ltgreyBack to main menu',
@@ -73,7 +81,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     }
     case 'admingoto': {
       const playerboard = memoryreadplayerboard(path)
-      const playerelement = memoryreadobject(playerboard, path)
+      const playerelement = memoryreadelement(playerboard, path, { layer: 'object' })
       if (ispresent(playerboard) && ispresent(playerelement)) {
         const dest = {
           x: playerelement.x ?? 0,
@@ -95,7 +103,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           memoryadminmenu(message.player, lastinputtime)
           break
         case 'objectlistscroll': {
-          const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.OBJECT)
+          const pages = memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.OBJECT, sort: true })
           const rows: string[] = []
           for (let i = 0; i < pages.length; ++i) {
             const codepage = pages[i]
@@ -114,7 +122,7 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
           break
         }
         case 'terrainlistscroll': {
-          const pages = memorylistcodepagewithtype(CODE_PAGE_TYPE.TERRAIN)
+          const pages = memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.TERRAIN, sort: true })
           const rows: string[] = []
           for (let i = 0; i < pages.length; ++i) {
             const codepage = pages[i]

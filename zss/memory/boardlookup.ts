@@ -1,7 +1,7 @@
+import { pttoindex } from 'zss/mapping/2d'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, NAME } from 'zss/words/types'
 
-import { memoryboardelementindex } from './boardaccess'
 import { memoryreadelementkind } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
@@ -179,7 +179,7 @@ export function memorydeleteboardterrainnamed(
   if (ispresent(board) && ispresent(terrain?.x) && ispresent(terrain.y)) {
     // remove from named
     const display = memoryreadelementdisplay(terrain)
-    const index = memoryboardelementindex(board, terrain)
+    const index = pttoindex({ x: terrain.x, y: terrain.y }, BOARD_WIDTH)
     if (ispresent(board.named?.[display.name])) {
       board.named[display.name].delete(index)
     }

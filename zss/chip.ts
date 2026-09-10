@@ -27,8 +27,12 @@ import {
   ispresent,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
-import { memoryclearflags, memoryreadflags } from './memory/flags'
+import {
+  memoryclearflags,
+  memoryreadflags,
+} from './memory/bookoperations'
 import { memorycanruncommand } from './memory/permissions'
+import { memoryreadmainbook } from './memory/session'
 import { formatprintvalue } from './words/printvalue'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
@@ -501,7 +505,7 @@ export function createchip(
   const mem = createchipid(id)
 
   function chipflags() {
-    return memoryreadflags(mem)
+    return memoryreadflags(memoryreadmainbook(), mem)
   }
 
   // ref to generator instance
@@ -561,7 +565,7 @@ export function createchip(
 
   const chip: CHIP = {
     halt() {
-      memoryclearflags(mem)
+      memoryclearflags(memoryreadmainbook(), mem)
     },
     // id
     id() {

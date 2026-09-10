@@ -1,9 +1,9 @@
-import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import {
   memorycreatebook,
-  memorywritebookflag,
+  memorywriteflag,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -43,16 +43,16 @@ describe('memorymoveplayertoboard occupancy', () => {
       player,
     )
     expect(obj?.id).toBe(player)
-    memorywritebookflag(book, player, 'board', src.id)
+    memorywriteflag(book, player, 'board', src.id)
 
-    expect(memoryreadobjectatpt(src, { x: 5, y: 5 })?.id).toBe(player)
+    expect(memoryreadelement(src, { x: 5, y: 5 }, { layer: 'object' })?.id).toBe(player)
 
     const ok = memorymoveplayertoboard(book, player, dest.id, { x: 2, y: 3 })
     expect(ok).toBe(true)
     expect(src.objects[player]).toBeUndefined()
     expect(dest.objects[player]).toBeDefined()
-    expect(memoryreadobjectatpt(src, { x: 5, y: 5 })).toBeUndefined()
-    expect(memoryreadobjectatpt(dest, { x: 2, y: 3 })?.id).toBe(player)
+    expect(memoryreadelement(src, { x: 5, y: 5 }, { layer: 'object' })).toBeUndefined()
+    expect(memoryreadelement(dest, { x: 2, y: 3 }, { layer: 'object' })?.id).toBe(player)
 
     // second hop must still see CATEGORY.ISOBJECT (runtime preserved on unlink)
     const boardc = memorycreatecodepage('@board third\n', {})
@@ -65,6 +65,6 @@ describe('memorymoveplayertoboard occupancy', () => {
     expect(ok2).toBe(true)
     expect(dest.objects[player]).toBeUndefined()
     expect(third.objects[player]).toBeDefined()
-    expect(memoryreadobjectatpt(third, { x: 1, y: 1 })?.id).toBe(player)
+    expect(memoryreadelement(third, { x: 1, y: 1 }, { layer: 'object' })?.id).toBe(player)
   })
 })

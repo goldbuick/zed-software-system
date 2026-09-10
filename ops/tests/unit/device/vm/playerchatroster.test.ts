@@ -2,8 +2,8 @@ jest.mock('zss/device/api', () => ({
   vmloader: jest.fn(),
 }))
 
-jest.mock('zss/memory/flags', () => ({
-  memoryreadflags: jest.fn(() => ({ user: 'Alice' })),
+jest.mock('zss/memory/bookoperations', () => ({
+  memoryreadflags: jest.fn((_book: unknown) => ({ user: 'Alice' })),
 }))
 
 jest.mock('zss/memory/session', () => ({
@@ -22,7 +22,7 @@ import {
   resetplayerchatrosteremitsfortests,
 } from 'zss/device/vm/playerchatroster'
 import { lastinputtime } from 'zss/device/vm/state'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/bookoperations'
 
 describe('playerchatroster', () => {
   const vm = {} as DEVICE
@@ -38,7 +38,7 @@ describe('playerchatroster', () => {
     lastinputtime.p1 = now
     lastinputtime.p2 = now - 12_000
     lastinputtime.op1 = now - 5_000
-    jest.mocked(memoryreadflags).mockImplementation((id: string) => {
+    jest.mocked(memoryreadflags).mockImplementation((_book: unknown, id: string) => {
       if (id === 'p1') {
         return { user: 'Alice' } as any
       }

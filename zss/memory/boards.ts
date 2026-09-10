@@ -3,7 +3,12 @@
  */
 import { pttoindex } from 'zss/mapping/2d'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   EVAL_DIR,
   dirfrompts,
@@ -11,8 +16,13 @@ import {
   mapstrdirtoconst,
 } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { CATEGORY, COLLISION, DIR, NAME, PT } from 'zss/words/types'
-
+import {
+  CATEGORY,
+  COLLISION,
+  DIR,
+  NAME,
+  PT,
+} from 'zss/words/types'
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
@@ -32,10 +42,8 @@ import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,
 } from './codepageoperations'
-import {
-  memorypickcodepagewithtypeandstat,
-  memoryreadcodepagebyaddress,
-} from './codepages'
+import { memoryreadcodepage } from './bookoperations'
+import { memorypickcodepage } from './codepages'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -45,7 +53,7 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-
+import { memoryreadbooklist } from './session'
 function memorykinddataisfresh(
   element: BOARD_ELEMENT,
   cached: BOARD_ELEMENT,
@@ -54,7 +62,7 @@ function memorykinddataisfresh(
   if (!isstring(pageid) || !pageid) {
     return false
   }
-  const page = memoryreadcodepagebyaddress(pageid)
+  const page = memoryreadcodepage(memoryreadbooklist(), pageid)
   return ispresent(page) && cached.code === page.code
 }
 
@@ -108,10 +116,8 @@ export function memoryreadelementkind(
   }
 
   // Cold path: pick once, rebuild kinddata, stamp kindsourcepageid.
-  const maybeobject = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.OBJECT,
-    element.kind,
-  )
+  const maybeobject = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
+    element.kind,)
   if (ispresent(maybeobject)) {
     return memoryapplykinddatafrompage(
       element,
@@ -120,10 +126,8 @@ export function memoryreadelementkind(
       element.kind,
     )
   }
-  const maybeterrain = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.TERRAIN,
-    element.kind,
-  )
+  const maybeterrain = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN,
+    element.kind,)
   if (ispresent(maybeterrain)) {
     return memoryapplykinddatafrompage(
       element,
@@ -151,8 +155,8 @@ export function memoryreadelementstat(
     return kindstat
   }
   const codepage =
-    memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.OBJECT, kindid) ??
-    memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.TERRAIN, kindid)
+    memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT, kindid) ??
+    memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, kindid)
   const codepagestat = memoryreadcodepagestat(codepage, stat)
   if (ispresent(codepagestat)) {
     return codepagestat
@@ -172,6 +176,16 @@ export function memoryreadelementstat(
     case 'p8':
     case 'p9':
     case 'p10':
+    case 'p11':
+    case 'p12':
+    case 'p13':
+    case 'p14':
+    case 'p15':
+    case 'p16':
+    case 'p17':
+    case 'p18':
+    case 'p19':
+    case 'p20':
     case 'item':
     case 'pushable':
     case 'breakable':
@@ -224,13 +238,11 @@ export function memorymorphboardobject(
     return false
   }
   const [kindname] = kind
-  const objectpage = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.OBJECT,
-    kindname,
-  )
+  const objectpage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
+    kindname,)
   const isterraintarget = !ispresent(objectpage)
   const terrainpage = isterraintarget
-    ? memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.TERRAIN, kindname)
+    ? memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, kindname)
     : undefined
   if (!ispresent(objectpage) && !ispresent(terrainpage)) {
     return false
@@ -290,10 +302,8 @@ export function memorywriteelementfromkind(
     return undefined
   }
   const [name, maybecolor] = kind
-  const maybeobject = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.OBJECT,
-    name,
-  )
+  const maybeobject = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
+    name,)
   if (ispresent(maybeobject)) {
     const object = memorycreateboardobjectfromkind(board, dest, name, id)
     if (ispresent(object)) {
@@ -303,10 +313,8 @@ export function memorywriteelementfromkind(
       return object
     }
   }
-  const maybeterrain = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.TERRAIN,
-    name,
-  )
+  const maybeterrain = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN,
+    name,)
   if (ispresent(maybeterrain)) {
     const terrain = memorywriteterrainfromkind(board, dest, name)
     if (ispresent(terrain)) {
@@ -329,10 +337,8 @@ export function memorywritebullet(
     return undefined
   }
   const [name, maybecolor] = kind
-  const maybeobject = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.OBJECT,
-    name,
-  )
+  const maybeobject = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
+    name,)
   if (ispresent(maybeobject)) {
     const object = memorycreateboardobjectfromkind(board, dest, name)
     memoryapplyboardelementcolor(object, maybecolor)
@@ -346,9 +352,10 @@ export function memorywritebullet(
 }
 
 export function memoryreadboardbyaddress(address: string): MAYBE<BOARD> {
-  const maybeboard = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.BOARD,
+  const maybeboard = memoryreadcodepage(
+    memoryreadbooklist(),
     address,
+    CODE_PAGE_TYPE.BOARD,
   )
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
 }

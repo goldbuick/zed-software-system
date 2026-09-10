@@ -1,9 +1,9 @@
 import { createsynthid, isfilenamesafeid } from 'zss/mapping/guid'
 import { remapbookidsforfilenamesafety } from 'zss/memory/bookidremap'
 import {
-  memoryimportbookfromjson,
-  memoryreadbookflags,
-  memorywritebookflag,
+  memoryimportbook,
+  memoryreadflags,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -74,9 +74,9 @@ describe('remapbookidsforfilenamesafety', () => {
   })
 })
 
-describe('memoryimportbookfromjson remaps dotted ids', () => {
+describe('memoryimportbook json remaps dotted ids', () => {
   it('imports a book with dotted ids as filename-safe', () => {
-    const imported = memoryimportbookfromjson({
+    const imported = memoryimportbook({
       id: 'sid_import.book',
       name: 'importme',
       token: 't',
@@ -97,7 +97,7 @@ describe('memoryimportbookfromjson remaps dotted ids', () => {
         },
       ],
       flags: {},
-    })
+    }, { format: 'json' })
 
     expect(imported).toBeDefined()
     expect(imported?.id).toBe('sid_import_book')
@@ -111,10 +111,10 @@ describe('memoryimportbookfromjson remaps dotted ids', () => {
   })
 })
 
-describe('memoryimportbookfromjson flag bags', () => {
+describe('memoryimportbook json flag bags', () => {
   it('rejects string flag values from corrupt headless persist', () => {
     const player = 'pid_corrupt_player'
-    const imported = memoryimportbookfromjson({
+    const imported = memoryimportbook({
       id: 'sid_flagbag_book',
       name: 'flagbag',
       token: 't',
@@ -125,12 +125,12 @@ describe('memoryimportbookfromjson flag bags', () => {
         [player]: player,
         [`${player}_gadget`]: 'sid_not_a_bag',
       },
-    })
+    }, { format: 'json' })
     expect(imported).toBeDefined()
-    const flags = memoryreadbookflags(imported, player)
+    const flags = memoryreadflags(imported, player)
     expect(typeof flags).toBe('object')
     expect(flags).not.toBe(player)
-    memorywritebookflag(imported, player, 'enterx', 3)
+    memorywriteflag(imported, player, 'enterx', 3)
     expect(flags.enterx).toBe(3)
   })
 })

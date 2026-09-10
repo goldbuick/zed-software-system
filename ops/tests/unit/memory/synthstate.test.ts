@@ -1,7 +1,7 @@
 import { createsynthid } from 'zss/mapping/guid'
 import {
   memorycreatebook,
-  memoryreadbookflags,
+  memoryreadflags,
 } from 'zss/memory/bookoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import {
@@ -34,7 +34,7 @@ describe('synthstate flag layout', () => {
     const boardid = 'bd-test'
     memoryreadsynth(boardid)
 
-    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    const flags = memoryreadflags(book, createsynthid(boardid))
     expect(flags.voices).toEqual({
       '0': { square: '' },
       '1': { square: '' },
@@ -64,7 +64,7 @@ describe('synthstate flag layout', () => {
     const boardid = 'bd-merge'
     memorymergesynthvoice(boardid, 0, 'freq', 440)
 
-    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    const flags = memoryreadflags(book, createsynthid(boardid))
     expect(flags.voices).toEqual({
       '0': { square: '', freq: 440 },
       '1': { square: '' },
@@ -84,7 +84,7 @@ describe('synthstate flag layout', () => {
     const boardid = 'bd-play'
     memoryreadsynthplay(boardid)
 
-    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    const flags = memoryreadflags(book, createsynthid(boardid))
     expect(Array.isArray(flags.playqueue)).toBe(true)
     expect(flags.playqueue).toEqual([])
   })
@@ -97,13 +97,13 @@ describe('synthstate flag layout', () => {
     const boardid = 'bd-queue'
     memoryqueuesynthplay(boardid, '')
 
-    const flags = memoryreadbookflags(book, createsynthid(boardid))
+    const flags = memoryreadflags(book, createsynthid(boardid))
     expect(flags.playqueue).toEqual([])
 
     memoryqueuesynthplay(boardid, 'c')
     const queue = memoryreadsynthplay(boardid)
     expect(queue.length).toBeGreaterThan(0)
-    expect(memoryreadbookflags(book, createsynthid(boardid)).playqueue).toBe(
+    expect(memoryreadflags(book, createsynthid(boardid)).playqueue).toBe(
       queue,
     )
   })

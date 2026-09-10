@@ -15,8 +15,7 @@ import { mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadelementdisplay, memoryreadflags } from 'zss/memory/bookoperations'
 import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memorycanruncommand } from 'zss/memory/permissions'
 import { memoryelementtologprefix } from 'zss/memory/rendering'
@@ -137,7 +136,10 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementid,
           `${memoryelementtologprefix(READ_CONTEXT.element)}${ticker}`,
         )
-        const { user, voice } = memoryreadflags(READ_CONTEXT.elementid)
+        const { user, voice } = memoryreadflags(
+          READ_CONTEXT.book,
+          READ_CONTEXT.elementid,
+        )
         vmloader(
           SOFTWARE,
           READ_CONTEXT.elementid,
@@ -151,7 +153,10 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
     })
     .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
       const [label, ...words] = args
-      const { user } = memoryreadflags(READ_CONTEXT.elementid)
+      const { user } = memoryreadflags(
+        READ_CONTEXT.book,
+        READ_CONTEXT.elementid,
+      )
       const withuser = isstring(user) ? user : 'player'
       const icon = memoryreadelementdisplay(READ_CONTEXT.element)
       const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `

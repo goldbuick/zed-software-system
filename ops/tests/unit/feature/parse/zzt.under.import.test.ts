@@ -1,7 +1,7 @@
 import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbook,
@@ -72,7 +72,7 @@ describe('zzt under element import', () => {
     expect(memboard).toBeDefined()
     const shark = memoryreadelement(memboard, { x, y })
     expect(NAME(shark?.kind ?? '')).toBe('shark')
-    const under = memoryreadterrain(memboard!, x, y)
+    const under = memoryreadelement(memboard!, { x: x, y: y }, { layer: 'terrain' })
     expect(NAME(under?.kind ?? '')).toBe('water')
     expect(under?.color).toBe(COLOR.BLWHITE)
     expect(under?.bg).toBe(COLOR.DKBLUE)

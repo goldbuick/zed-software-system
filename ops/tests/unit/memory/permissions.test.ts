@@ -1,7 +1,7 @@
 import { apierror } from 'zss/device/api'
 import {
   DEFAULT_ALLOWLIST_BY_ROLE,
-  ispermissioncontrolledcommand,
+  memorycheckpermissioncommand,
   memoryallowcommand,
   memoryapplypermissionconfig,
   memorycanruncommand,
@@ -12,9 +12,9 @@ import {
   memoryreadpermissionconfig,
   memoryrevokecommand,
   memoryserializepermissions,
-  memorysetcommandpermissions,
-  memorysetplayertotoken,
-  memorysetrolefortoken,
+  memorywritecommandpermissions,
+  memorywriteplayertotoken,
+  memorywriterolefortoken,
 } from 'zss/memory/permissions'
 import { memoryreadoperator } from 'zss/memory/session'
 
@@ -30,7 +30,7 @@ const mockmemoryreadoperator = memoryreadoperator as jest.Mock
 const mockapierror = apierror as jest.Mock
 
 function resettocreativedefaults() {
-  memorysetcommandpermissions([], {}, 'creative', {}, {}, undefined, undefined)
+  memorywritecommandpermissions([], {}, 'creative', {}, {}, undefined, undefined)
 }
 
 describe('permissions', () => {
@@ -39,22 +39,22 @@ describe('permissions', () => {
     resettocreativedefaults()
   })
 
-  describe('ispermissioncontrolledcommand', () => {
+  describe('memorycheckpermissioncommand', () => {
     it('returns true for commands in the permission-controlled command table', () => {
-      expect(ispermissioncontrolledcommand('allow')).toBe(true)
-      expect(ispermissioncontrolledcommand('access')).toBe(true)
-      expect(ispermissioncontrolledcommand('run')).toBe(true)
-      expect(ispermissioncontrolledcommand('build')).toBe(true)
+      expect(memorycheckpermissioncommand('allow')).toBe(true)
+      expect(memorycheckpermissioncommand('access')).toBe(true)
+      expect(memorycheckpermissioncommand('run')).toBe(true)
+      expect(memorycheckpermissioncommand('build')).toBe(true)
     })
 
     it('returns true for family variant commands', () => {
-      expect(ispermissioncontrolledcommand('pageexport')).toBe(true)
-      expect(ispermissioncontrolledcommand('synth1')).toBe(true)
+      expect(memorycheckpermissioncommand('pageexport')).toBe(true)
+      expect(memorycheckpermissioncommand('synth1')).toBe(true)
     })
 
     it('returns false for non-permission-controlled commands', () => {
-      expect(ispermissioncontrolledcommand('shortsend')).toBe(false)
-      expect(ispermissioncontrolledcommand('unknown')).toBe(false)
+      expect(memorycheckpermissioncommand('shortsend')).toBe(false)
+      expect(memorycheckpermissioncommand('unknown')).toBe(false)
     })
   })
 
@@ -100,22 +100,22 @@ describe('permissions', () => {
     it('allows non-operator when token has role with command on allowlist', () => {
       mockmemoryreadoperator.mockReturnValue('operator')
       resettocreativedefaults()
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'toast')).toBe(true)
     })
 
     it('denies non-operator when command not on role allowlist', () => {
       mockmemoryreadoperator.mockReturnValue('operator')
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'allow')).toBe(false)
     })
 
     it('apierror includes family and command on allowlist deny', () => {
       mockmemoryreadoperator.mockReturnValue('operator')
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       mockapierror.mockClear()
       expect(memorycanruncommand('player1', 'allow')).toBe(false)
       expect(apierror).toHaveBeenCalledWith(
@@ -129,8 +129,8 @@ describe('permissions', () => {
 
     it('allows admin roles family; denies risk by default', () => {
       mockmemoryreadoperator.mockReturnValue('operator')
-      memorysetplayertotoken('player1', 'token-admin')
-      memorysetrolefortoken('token-admin', 'admin')
+      memorywriteplayertotoken('player1', 'token-admin')
+      memorywriterolefortoken('token-admin', 'admin')
       expect(memorycanruncommand('player1', 'nuke')).toBe(false)
       expect(memorycanruncommand('player1', 'allow')).toBe(true)
       expect(memoryreadallowlistbyrole().admin?.has('roles')).toBe(true)
@@ -158,8 +158,8 @@ describe('permissions', () => {
 
     it('creative player can run gadget and dev; cannot save or nuke', () => {
       memoryapplypermissionconfig('creative')
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'gadget')).toBe(true)
       expect(memorycanruncommand('player1', 'dev')).toBe(true)
       expect(memorycanruncommand('player1', 'save')).toBe(false)
@@ -168,8 +168,8 @@ describe('permissions', () => {
 
     it('creative player can submit media but not manage queue', () => {
       memoryapplypermissionconfig('creative')
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       expect(memorymapcommandtofamily('media')).toBe('speaker')
       expect(memorycanruncommand('player1', 'media')).toBe(true)
       expect(memorycanruncommand('player1', 'mediamanage')).toBe(false)
@@ -177,8 +177,8 @@ describe('permissions', () => {
 
     it('memoryplayerallowedcommand probes mediamanage without apierror', () => {
       memoryapplypermissionconfig('creative')
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       mockapierror.mockClear()
       expect(memoryplayerallowedcommand('player1', 'media')).toBe(true)
       expect(memoryplayerallowedcommand('player1', 'mediamanage')).toBe(false)
@@ -187,8 +187,8 @@ describe('permissions', () => {
 
     it('creative mod can submit and manage media queue', () => {
       memoryapplypermissionconfig('creative')
-      memorysetplayertotoken('mod1', 'token-mod')
-      memorysetrolefortoken('token-mod', 'mod')
+      memorywriteplayertotoken('mod1', 'token-mod')
+      memorywriterolefortoken('token-mod', 'mod')
       expect(memorycanruncommand('mod1', 'media')).toBe(true)
       expect(memorycanruncommand('mod1', 'mediamanage')).toBe(true)
     })
@@ -208,15 +208,15 @@ describe('permissions', () => {
 
     it('open player can save and allow; cannot nuke', () => {
       memoryapplypermissionconfig('open')
-      memorysetplayertotoken('player1', 'token-a')
-      memorysetrolefortoken('token-a', 'player')
+      memorywriteplayertotoken('player1', 'token-a')
+      memorywriterolefortoken('token-a', 'player')
       expect(memorycanruncommand('player1', 'save')).toBe(true)
       expect(memorycanruncommand('player1', 'allow')).toBe(true)
       expect(memorycanruncommand('player1', 'nuke')).toBe(false)
     })
 
     it('hydrates empty allowlist from saved base preset', () => {
-      memorysetcommandpermissions(
+      memorywritecommandpermissions(
         [],
         {},
         'lockdown',
@@ -232,7 +232,7 @@ describe('permissions', () => {
     })
 
     it('migrates legacy custom to lockdown base plus overrides', () => {
-      memorysetcommandpermissions(
+      memorywritecommandpermissions(
         [],
         {},
         'custom',
@@ -274,7 +274,7 @@ describe('permissions', () => {
       memoryapplypermissionconfig('lockdown')
       memoryallowcommand('player', 'risk')
       const serialized = memoryserializepermissions()
-      memorysetcommandpermissions(
+      memorywritecommandpermissions(
         [],
         {},
         serialized.permissionconfig,
@@ -298,9 +298,9 @@ describe('permissions', () => {
     })
   })
 
-  describe('memorysetcommandpermissions from DEFAULT_ALLOWLIST_BY_ROLE shape', () => {
+  describe('memorywritecommandpermissions from DEFAULT_ALLOWLIST_BY_ROLE shape', () => {
     it('restores creative-equivalent when arrays match creative preset', () => {
-      memorysetcommandpermissions(
+      memorywritecommandpermissions(
         [],
         {},
         'creative',

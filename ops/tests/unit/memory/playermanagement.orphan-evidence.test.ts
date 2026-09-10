@@ -14,11 +14,11 @@ import { extractpidsfromopspaths } from 'zss/debugingest'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import {
   memorycreatebook,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
-  memoryimportcodepagefromjson,
+  memoryimportcodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import {
@@ -59,7 +59,7 @@ function evidencelog(entry: Record<string, unknown>) {
 }
 
 function makeboardpage(name: string, pageid: string, extrastats = '') {
-  const page = memoryimportcodepagefromjson({
+  const page = memoryimportcodepage({
     id: pageid,
     code: `@board ${name}\n${extrastats}`,
     board: {
@@ -68,7 +68,7 @@ function makeboardpage(name: string, pageid: string, extrastats = '') {
       terrain: [],
       objects: {},
     },
-  })
+  }, { format: 'json' })
   if (!page) {
     throw new Error(`failed to create board page ${pageid}`)
   }
@@ -129,8 +129,8 @@ describe('player orphan evidence (no fix)', () => {
     const src = placeplayer(boarda, player, 5, 5)
     const mainbook = memoryreadmainbook()
     memorywritebookplayerboard(mainbook, player, boarda)
-    memorywritebookflag(mainbook, player, 'enterx', 5)
-    memorywritebookflag(mainbook, player, 'entery', 5)
+    memorywriteflag(mainbook, player, 'enterx', 5)
+    memorywriteflag(mainbook, player, 'entery', 5)
 
     const before = memorydebugcountplayerboards(player)
     const moved = memorymoveplayertoboard(mainbook, player, boardb, {
@@ -247,7 +247,7 @@ describe('player orphan evidence (no fix)', () => {
   it('R4: login with stranded copy can create second (H4)', () => {
     const mainbook = memoryreadmainbook()
     placeplayer(boardc, player, 1, 1)
-    memorywritebookflag(mainbook, player, 'board', '')
+    memorywriteflag(mainbook, player, 'board', '')
 
     const before = memorydebugcountplayerboards(player)
     const ok = memoryloginplayer(player, {})

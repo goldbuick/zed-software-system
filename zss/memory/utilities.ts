@@ -18,13 +18,12 @@ import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryreadobject } from './boardaccess'
+import { memoryreadelement } from './boardaccess'
 import {
   memoryexportbook,
-  memoryexportbookasjson,
   memoryimportbook,
-  memoryimportbookfromjson,
   memoryreadelementdisplay,
+  memoryreadflags,
 } from './bookoperations'
 import { bookzstdcompressbase64url } from './bookzstd'
 import {
@@ -32,7 +31,6 @@ import {
   buildexportidremap,
   collectflagprotectedids,
 } from './exportidremap'
-import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
@@ -171,10 +169,10 @@ export function memoryadminmenu(
   rows.push(DIVIDER)
   for (let i = 0; i < activelist.length; ++i) {
     const pid = activelist[i]
-    const { user } = memoryreadflags(pid)
+    const { user } = memoryreadflags(memoryreadmainbook(), pid)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(pid)
-    const playerelement = memoryreadobject(playerboard, pid)
+    const playerelement = memoryreadelement(playerboard, pid, { layer: 'object' })
     const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
@@ -260,7 +258,11 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
   if (!Array.isArray(list)) {
     return []
   }
-  return list.map(memoryimportbookfromjson).filter(ispresent)
+  return list
+    .map((entry) => memoryimportbook(entry as Record<string, unknown>, {
+      format: 'json',
+    }))
+    .filter(ispresent)
 }
 
 /**
@@ -273,7 +275,9 @@ export async function memorycompressbooks(books: BOOK[]) {
   if (getclimode()) {
     const jsonbooks: unknown[] = []
     for (let i = 0; i < books.length; ++i) {
-      const exported = trimmemoryexport(memoryexportbookasjson(books[i]))
+      const exported = trimmemoryexport(
+        memoryexportbook(books[i], { format: 'json' }),
+      )
       if (exported) {
         jsonbooks.push(exported)
       }

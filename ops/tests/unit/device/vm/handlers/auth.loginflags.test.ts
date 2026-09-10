@@ -29,8 +29,8 @@ jest.mock('zss/memory/session', () => ({
 
 jest.mock('zss/memory/permissions', () => ({
   memoryistokenbanned: jest.fn(() => false),
-  memorysetcommandpermissions: jest.fn(),
-  memorysetplayertotoken: jest.fn(),
+  memorywritecommandpermissions: jest.fn(),
+  memorywriteplayertotoken: jest.fn(),
 }))
 
 jest.mock('zss/memory/utilities', () => ({

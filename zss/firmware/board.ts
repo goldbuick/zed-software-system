@@ -12,9 +12,8 @@ import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
+  memorylistelement,
   memoryreadelement,
-  memoryreadobject,
-  memoryreadobjects,
 } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
@@ -22,7 +21,6 @@ import {
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
 import {
-  memorylistboardelementsbygroup,
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
@@ -107,7 +105,7 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   if (READ_CONTEXT.elementisplayer) {
     const maxplayershots = READ_CONTEXT.board?.maxplayershots ?? 0
     if (maxplayershots > 0) {
-      const bulletcount = memoryreadobjects(READ_CONTEXT.board).filter(
+      const bulletcount = memorylistelement(READ_CONTEXT.board, { layer: 'object' }).filter(
         (obj) => {
           return (
             !obj.removed &&
@@ -500,7 +498,7 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       const [target] = readargs(words, 0, [ARG_TYPE.STRING])
-      const maybeobject = memoryreadobject(READ_CONTEXT.board, target)
+      const maybeobject = memoryreadelement(READ_CONTEXT.board, target, { layer: 'object' })
       if (
         ispresent(READ_CONTEXT.element?.x) &&
         ispresent(READ_CONTEXT.element.y) &&
@@ -748,11 +746,10 @@ export const BOARD_FIRMWARE = createfirmware()
       const intoname = readstrkindname(into)
       const intocolor = readstrkindcolor(into)
       const intobg = readstrkindbg(into)
-      memorylistboardelementsbygroup(
-        READ_CONTEXT.board,
-        READ_CONTEXT.elementid,
-        target,
-      ).forEach((element) => {
+      memorylistelement(READ_CONTEXT.board, {
+        group: target,
+        self: READ_CONTEXT.elementid,
+      }).forEach((element) => {
         // modify existing elements
         if (ispresent(intocolor)) {
           element.color = intocolor
@@ -823,7 +820,7 @@ export const BOARD_FIRMWARE = createfirmware()
       // if there is already an object with mark id, bail
       if (
         ispresent(READ_CONTEXT.board) &&
-        memoryreadobject(READ_CONTEXT.board, mark)
+        memoryreadelement(READ_CONTEXT.board, mark, { layer: 'object' })
       ) {
         chip.set('didfail', 1)
         return 0
@@ -847,7 +844,7 @@ export const BOARD_FIRMWARE = createfirmware()
       // if there is already an object with mark id, bail
       if (
         ispresent(READ_CONTEXT.board) &&
-        memoryreadobject(READ_CONTEXT.board, mark)
+        memoryreadelement(READ_CONTEXT.board, mark, { layer: 'object' })
       ) {
         chip.set('didfail', 1)
         return 0

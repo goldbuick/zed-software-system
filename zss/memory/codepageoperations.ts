@@ -44,13 +44,11 @@ import {
 import {
   memorycreateboardelement,
   memoryexportboardelement,
-  memoryexportboardelementasjson,
   memoryimportboardelement,
 } from './boardelement'
 import {
   memorycreateboard,
   memoryexportboard,
-  memoryexportboardasjson,
   memoryimportboard,
 } from './boardlifecycle'
 import { remapcodepageidsforfilenamesafety } from './bookidremap'
@@ -146,6 +144,16 @@ export function memoryapplyelementstats(
       case 'p8':
       case 'p9':
       case 'p10':
+      case 'p11':
+      case 'p12':
+      case 'p13':
+      case 'p14':
+      case 'p15':
+      case 'p16':
+      case 'p17':
+      case 'p18':
+      case 'p19':
+      case 'p20':
       case 'cycle':
       case 'stepx':
       case 'stepy':
@@ -256,33 +264,33 @@ export function memoryimportbitmap(
   })
 }
 
-export function memoryexportcodepageasjson(
-  codepage: MAYBE<CODE_PAGE>,
-  strip?: boolean,
-): any {
-  if (!ispresent(codepage)) {
-    return undefined
-  }
-  return {
-    id: codepage.id,
-    code: codepage.code,
-    board: memoryexportboardasjson(codepage.board, strip),
-    object: memoryexportboardelementasjson(codepage.object),
-    terrain: memoryexportboardelementasjson(codepage.terrain),
-    charset: memoryexportbitmap(codepage.charset),
-    palette: memoryexportbitmap(codepage.palette),
-  }
+export type MEMORY_CODEPAGE_IO_OPTIONS = {
+  format?: 'wire' | 'json'
+  strip?: boolean
 }
 
 export function memoryexportcodepage(
   codepage: MAYBE<CODE_PAGE>,
-  strip?: boolean,
-): MAYBE<FORMAT_OBJECT> {
+  options?: MEMORY_CODEPAGE_IO_OPTIONS,
+): MAYBE<FORMAT_OBJECT | Record<string, unknown>> {
   if (!ispresent(codepage)) {
     return undefined
   }
+  const format = options?.format ?? 'wire'
+  const strip = options?.strip === true
+  if (format === 'json') {
+    return {
+      id: codepage.id,
+      code: codepage.code,
+      board: memoryexportboard(codepage.board, { format: 'json', strip }),
+      object: memoryexportboardelement(codepage.object, { format: 'json' }),
+      terrain: memoryexportboardelement(codepage.terrain, { format: 'json' }),
+      charset: memoryexportbitmap(codepage.charset),
+      palette: memoryexportbitmap(codepage.palette),
+    }
+  }
   return formatobject(codepage, CODE_PAGE_KEYS, {
-    board: (board) => memoryexportboard(board, strip),
+    board: (board) => memoryexportboard(board, { strip }),
     object: memoryexportboardelement,
     terrain: memoryexportboardelement,
     charset: memoryexportbitmap,
@@ -301,7 +309,7 @@ type CODE_PAGE_WIRE = {
   palette?: BITMAP
 }
 
-export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
+function memorynormalizeimportedcodepage(flat: any): MAYBE<CODE_PAGE> {
   if (!ispresent(flat)) {
     return undefined
   }
@@ -325,19 +333,28 @@ export function memoryimportcodepagefromjson(flat: any): MAYBE<CODE_PAGE> {
 }
 
 export function memoryimportcodepage(
-  codepage: MAYBE<FORMAT_OBJECT>,
+  codepage: MAYBE<FORMAT_OBJECT | Record<string, unknown>>,
+  options?: MEMORY_CODEPAGE_IO_OPTIONS,
 ): MAYBE<CODE_PAGE> {
   if (!ispresent(codepage)) {
     return undefined
   }
-  const flat = unformatobject<CODE_PAGE_WIRE>(codepage, CODE_PAGE_KEYS, {
-    board: (board) => memoryimportboard(board),
-    object: memoryimportboardelement,
-    terrain: memoryimportboardelement,
-    charset: memoryimportbitmap,
-    palette: memoryimportbitmap,
-  })
-  return memoryimportcodepagefromjson(flat)
+  const format = options?.format ?? 'wire'
+  if (format === 'json') {
+    return memorynormalizeimportedcodepage(codepage)
+  }
+  const flat = unformatobject<CODE_PAGE_WIRE>(
+    codepage as MAYBE<FORMAT_OBJECT>,
+    CODE_PAGE_KEYS,
+    {
+      board: (board) => memoryimportboard(board),
+      object: memoryimportboardelement,
+      terrain: memoryimportboardelement,
+      charset: memoryimportbitmap,
+      palette: memoryimportbitmap,
+    },
+  )
+  return memorynormalizeimportedcodepage(flat)
 }
 
 export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {

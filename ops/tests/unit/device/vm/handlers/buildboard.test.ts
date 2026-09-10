@@ -2,10 +2,9 @@ import type { DEVICE } from 'zss/device'
 import { boardbuild } from 'zss/feature/boardbuild'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memorycreatebook } from 'zss/memory/bookoperations'
+import { memorycreatebook, memoryreadflags } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import { memoryreadflags } from 'zss/memory/flags'
-import { memoryresetbooks } from 'zss/memory/session'
+import { memoryreadmainbook, memoryresetbooks } from 'zss/memory/session'
 import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -175,7 +174,7 @@ describe('boardbuild', () => {
 
     expect(apierror).not.toHaveBeenCalled()
     expect(currentboard.exitsouth).toBeUndefined()
-    const flags = memoryreadflags('pid_builder')
+    const flags = memoryreadflags(memoryreadmainbook(), 'pid_builder')
     expect(typeof flags.myroom).toBe('string')
     expect(flags.myroom).toBeTruthy()
     expect(flags.myroom).not.toBe(hubcp.id)
@@ -205,7 +204,7 @@ describe('boardbuild', () => {
     expect(apierror).not.toHaveBeenCalled()
     expect(currentboard.objects.el1.p1).toBeTruthy()
     expect(currentboard.objects.el1.p1).not.toBe(hubcp.id)
-    expect(memoryreadflags('pid_builder').p1).toBeUndefined()
+    expect(memoryreadflags(memoryreadmainbook(), 'pid_builder').p1).toBeUndefined()
   })
 
   it('fails loud when standard element stat has missing element', () => {
@@ -225,6 +224,6 @@ describe('boardbuild', () => {
 
     expect(apierror).toHaveBeenCalled()
     expect(book.pages.length).toBe(pagecountbefore)
-    expect(memoryreadflags('pid_builder').p1).toBeUndefined()
+    expect(memoryreadflags(memoryreadmainbook(), 'pid_builder').p1).toBeUndefined()
   })
 })

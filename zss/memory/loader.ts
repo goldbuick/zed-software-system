@@ -1,17 +1,27 @@
 import { createsid } from 'zss/mapping/guid'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { WORD } from 'zss/words/types'
-
-import { memorylistcodepagebytype, memoryreadcodepage } from './bookoperations'
+import {
+  memorylistcodepage,
+  memoryreadcodepage,
+} from './bookoperations'
 import { memoryreadcodepagestats } from './codepageoperations'
 import {
   memoryreadmainbook,
   memoryreadoperator,
   memorystartloader,
 } from './session'
-import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
-
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from './types'
 export type LOADER_READ_CONTEXT_SNAPSHOT = {
   board: MAYBE<BOARD>
   element: MAYBE<BOARD_ELEMENT>
@@ -127,10 +137,7 @@ export function memoryloadermatches(
     return [maybecodepage]
   }
 
-  const loaders = memorylistcodepagebytype(
-    mainbook,
-    CODE_PAGE_TYPE.LOADER,
-  ).filter((codepage) => {
+  const loaders = memorylistcodepage(mainbook, { type: CODE_PAGE_TYPE.LOADER }).filter((codepage) => {
     const stats = memoryreadcodepagestats(codepage)
 
     /*

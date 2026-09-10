@@ -10,18 +10,14 @@ import { SEND_META } from 'zss/words/send'
 import { NAME, PT } from 'zss/words/types'
 
 import {
+  memorylistelement,
   memoryreadelement,
-  memoryreadelementbyidorindex,
-  memoryreadobject,
-  memoryreadobjectbypt,
-  memoryreadterrain,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
 import { memorychipispresent, memorymessagechip } from './runtime'
 import { memoryreadmainbook } from './session'
-import { memorylistboardelementsbyidnameorpts } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from './types'
 
 // Game Message Functions
@@ -134,7 +130,7 @@ export function memorysendtoboards(
       }
       default: {
         // check named elements first
-        sendtoelements(memorylistboardelementsbyidnameorpts(board, [target]))
+        sendtoelements(memorylistelement(board, { ids: [target] }))
         break
       }
     }
@@ -242,7 +238,7 @@ export function memorysendtoelements(
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryreadobject(READ_CONTEXT.board, id)
+          const object = memoryreadelement(READ_CONTEXT.board, id, { layer: 'object' })
           if (ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -251,7 +247,7 @@ export function memorysendtoelements(
       case 'others':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryreadobject(READ_CONTEXT.board, id)
+          const object = memoryreadelement(READ_CONTEXT.board, id, { layer: 'object' })
           if (id !== chip.id() && ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -259,9 +255,7 @@ export function memorysendtoelements(
         break
       case 'sender': {
         // sender info
-        const sender = memoryreadelementbyidorindex(
-          READ_CONTEXT.board,
-          READ_CONTEXT.element?.sender ?? '',
+        const sender = memoryreadelement(READ_CONTEXT.board, READ_CONTEXT.element?.sender ?? '',
         )
         if (ispresent(sender) && memoryboardelementisobject(sender)) {
           memorysendtoelement(fromelement, sender, send.label)
@@ -283,10 +277,9 @@ export function memorysendtoelements(
         break
       default: {
         // target named elements
-        const elements = memorylistboardelementsbyidnameorpts(
-          READ_CONTEXT.board,
-          [send.targetname],
-        )
+        const elements = memorylistelement(READ_CONTEXT.board, {
+          ids: [send.targetname],
+        })
         for (let i = 0; i < elements.length; ++i) {
           const element = elements[i]
           if (ispresent(element)) {
@@ -319,11 +312,11 @@ function memorysendtolabelatpt(
 ) {
   const board = READ_CONTEXT.board
   if (NAME(label) === 'shot') {
-    const object = memoryreadobjectbypt(board, pt)
+    const object = memoryreadelement(board, pt, { layer: 'object' })
     if (ispresent(object)) {
       memorysendtoelement(fromelement, object, label)
     }
-    const terrain = memoryreadterrain(board, pt.x, pt.y)
+    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })
     if (ispresent(terrain)) {
       // Ensure x/y for softdelete / sender index when terrain lacks them
       if (!ispresent(terrain.x)) {

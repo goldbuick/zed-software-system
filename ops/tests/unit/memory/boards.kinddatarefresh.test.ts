@@ -22,12 +22,17 @@ import {
   memoryinvalidatecodepagepickcache,
   memoryreadcodepagepickcache,
 } from 'zss/memory/codepagepickcache'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryresetbooks } from 'zss/memory/session'
-import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { memorypickcodepage } from 'zss/memory/codepages'
+import { memoryreadelement } from 'zss/memory/boardaccess'
+import {
+  memoryresetbooks,
+  memoryreadbooklist,
+} from 'zss/memory/session'
+import {
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { CATEGORY } from 'zss/words/types'
-
 describe('memoryreadelementkind kinddata refresh', () => {
   afterEach(() => {
     memoryresetbooks([])
@@ -113,7 +118,7 @@ describe('codepage pick cache', () => {
     const page = memorycreatecodepage('@torch\n', {})
     memoryresetbooks([memorycreatebook([page])])
     expect(
-      memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.OBJECT, 'torch')?.id,
+      memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT, 'torch')?.id,
     ).toBe(page.id)
     expect(
       memoryreadcodepagepickcache(CODE_PAGE_TYPE.OBJECT, 'torch').hit,
@@ -144,15 +149,15 @@ describe('board object occupancy', () => {
       'crate',
     )
     expect(object?.id).toBeDefined()
-    expect(memoryreadobjectatpt(board, { x: 3, y: 4 })?.id).toBe(object!.id)
+    expect(memoryreadelement(board, { x: 3, y: 4 }, { layer: 'object' })?.id).toBe(object!.id)
 
     const blocked = memorymoveboardobject(board, object, { x: 4, y: 4 })
     expect(blocked).toBeUndefined()
-    expect(memoryreadobjectatpt(board, { x: 3, y: 4 })).toBeUndefined()
-    expect(memoryreadobjectatpt(board, { x: 4, y: 4 })?.id).toBe(object!.id)
+    expect(memoryreadelement(board, { x: 3, y: 4 }, { layer: 'object' })).toBeUndefined()
+    expect(memoryreadelement(board, { x: 4, y: 4 }, { layer: 'object' })?.id).toBe(object!.id)
 
     memorydeleteboardobject(board, object!.id!)
-    expect(memoryreadobjectatpt(board, { x: 4, y: 4 })).toBeUndefined()
+    expect(memoryreadelement(board, { x: 4, y: 4 }, { layer: 'object' })).toBeUndefined()
     expect(board.objects[object!.id!]).toBeUndefined()
   })
 

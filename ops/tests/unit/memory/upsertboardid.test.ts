@@ -1,7 +1,7 @@
 import { memoryupsertcodepage, memorycreatebook } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
-  memoryimportcodepagefromjson,
+  memoryimportcodepage,
 } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 
@@ -10,9 +10,9 @@ describe('board.id restore on upsert/import', () => {
     memoryresetbooks([])
   })
 
-  it('memoryimportcodepagefromjson sets board.id to page id', () => {
+  it('memoryimportcodepage json sets board.id to page id', () => {
     const pageid = 'room0x1-sid_testpage'
-    const page = memoryimportcodepagefromjson({
+    const page = memoryimportcodepage({
       id: pageid,
       code: '@board room0x1\n',
       board: {
@@ -20,7 +20,7 @@ describe('board.id restore on upsert/import', () => {
         terrain: [],
         objects: {},
       },
-    })
+    }, { format: 'json' })
     expect(page?.id).toBe(pageid)
     expect(page?.board?.id).toBe(pageid)
   })

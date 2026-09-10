@@ -2,7 +2,7 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import { memorylistelement, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memorysafedeleteelement,
@@ -15,7 +15,6 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memorylistboardnamedelements } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'
@@ -209,12 +208,12 @@ export function boardremix(
       if (memoryboardelementisobject(maybenew)) {
         // sample t board example of 'kind'
         const sample = pick(
-          memorylistboardnamedelements(sourceboard, maybekind),
+          memorylistelement(sourceboard, { name: maybekind }),
         )
         if (ispresent(sample)) {
           // copy terrain element from under sample
           memorywriteterrain(targetboard, {
-            ...memoryreadterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
+            ...memoryreadelement(sourceboard, { x: sample.x ?? 0, y: sample.y ?? 0 }, { layer: 'terrain' }),
             x,
             y,
           })

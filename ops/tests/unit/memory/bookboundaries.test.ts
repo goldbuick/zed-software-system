@@ -7,27 +7,34 @@ import {
 import { creategadgetid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
 import {
-  memoryclearbookcodepage,
-  memoryclearbookflags,
+  memorydeletecodepage,
+  memoryclearflags,
   memorycreatebook,
   memoryexportbook,
-  memoryexportbookasjson,
   memoryimportbook,
-  memoryreadbookflags,
+  memoryreadflags,
   memoryreadcodepage,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
 } from 'zss/memory/codepageoperations'
-import { memoryfreebook, memoryresetbooks } from 'zss/memory/session'
-import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
-import { BOOK, BOOK_KEYS } from 'zss/memory/types'
-
-/** Test helper: `memoryexportbook` stores pages as plain JSON; `memoryimportbook` needs per-page wire objects. */
+import {
+  memoryfreebook,
+  memoryresetbooks,
+} from 'zss/memory/session'
+import {
+  trimformatobject,
+  trimmemoryexport,
+} from 'zss/memory/trimexport'
+import {
+  BOOK,
+  BOOK_KEYS,
+} from 'zss/memory/types'
+/** Test helper: json book export; wrap pages as wire for wire import. */
 function wirebookforimport(book: BOOK): FORMAT_OBJECT {
-  const j = memoryexportbookasjson(book)
+  const j = memoryexportbook(book, { format: 'json' })
   const pageswired = book.pages
     .map((p) => memoryexportcodepage(p))
     .filter(ispresent)
@@ -98,8 +105,8 @@ describe('book import export and flags', () => {
   it('mutates flags through inline flag bags', () => {
     const book = memorycreatebook([])
     const gadgetowner = creategadgetid('testplayer')
-    memorywritebookflag(book, gadgetowner, 'x', 42 as any)
-    const root = memoryreadbookflags(book, gadgetowner)
+    memorywriteflag(book, gadgetowner, 'x', 42 as any)
+    const root = memoryreadflags(book, gadgetowner)
     expect(root.x).toBe(42)
     expect(book.flags[gadgetowner]).toBe(root)
   })
@@ -109,13 +116,13 @@ describe('book import export and flags', () => {
     const cleared = 'cleared-player'
     const kept = 'kept-player'
 
-    memorywritebookflag(book, cleared, 'score', 10 as any)
-    memoryclearbookflags(book, cleared)
+    memorywriteflag(book, cleared, 'score', 10 as any)
+    memoryclearflags(book, cleared)
 
-    memorywritebookflag(book, kept, 'deaths', 2 as any)
-    memorywritebookflag(book, kept, 'highscore', 99 as any)
+    memorywriteflag(book, kept, 'deaths', 2 as any)
+    memorywriteflag(book, kept, 'highscore', 99 as any)
 
-    const trimmedjson = trimmemoryexport(memoryexportbookasjson(book))
+    const trimmedjson = trimmemoryexport(memoryexportbook(book, { format: 'json' }))
     expect(trimmedjson.flags[cleared]).toBeUndefined()
     expect(trimmedjson.flags[kept]).toEqual({ deaths: 2, highscore: 99 })
 
@@ -127,7 +134,7 @@ describe('book import export and flags', () => {
     const again = memoryimportbook(unpackformat(packed!))
     expect(ispresent(again)).toBe(true)
     expect(again!.flags[cleared]).toBeUndefined()
-    expect(memoryreadbookflags(again, kept)).toEqual({
+    expect(memoryreadflags(again, kept)).toEqual({
       deaths: 2,
       highscore: 99,
     })
@@ -139,11 +146,11 @@ describe('book import export and flags', () => {
     const gadgetowner = creategadgetid(durable)
     const layersowner = `${book.id}_layers`
 
-    memorywritebookflag(book, durable, 'score', 7 as any)
-    memorywritebookflag(book, gadgetowner, 'state', { layers: [] } as any)
-    memorywritebookflag(book, layersowner, 'normal', { id: 'x' } as any)
+    memorywriteflag(book, durable, 'score', 7 as any)
+    memorywriteflag(book, gadgetowner, 'state', { layers: [] } as any)
+    memorywriteflag(book, layersowner, 'normal', { id: 'x' } as any)
 
-    const json = memoryexportbookasjson(book)
+    const json = memoryexportbook(book, { format: 'json' })
     expect(json.flags[durable]).toEqual({ score: 7 })
     expect(json.flags[gadgetowner]).toBeUndefined()
     expect(json.flags[layersowner]).toBeUndefined()
@@ -152,7 +159,7 @@ describe('book import export and flags', () => {
     expect(ispresent(wire)).toBe(true)
     const again = memoryimportbook(wire)
     expect(ispresent(again)).toBe(true)
-    expect(memoryreadbookflags(again, durable)).toEqual({ score: 7 })
+    expect(memoryreadflags(again, durable)).toEqual({ score: 7 })
     expect(again!.flags[gadgetowner]).toBeUndefined()
     expect(again!.flags[layersowner]).toBeUndefined()
   })
@@ -169,7 +176,7 @@ describe('book import export and flags', () => {
       terrain: { char: 3 },
     })
     const book = memorycreatebook([cp])
-    memorywritebookflag(book, 'pid', 'score', 1 as any)
+    memorywriteflag(book, 'pid', 'score', 1 as any)
 
     expect(book.pages.length).toBe(1)
     expect(cp.board).toBeDefined()
@@ -196,7 +203,7 @@ describe('book import export and flags', () => {
     expect(book.pages.length).toBe(1)
     expect(cp.board).toBeDefined()
 
-    const removed = memoryclearbookcodepage(book, cp.id)
+    const removed = memorydeletecodepage(book, cp.id)
     expect(removed?.id).toBe(cp.id)
     expect(book.pages.length).toBe(0)
     expect(memoryreadcodepage(book, cp.id)).toBeUndefined()

@@ -3,11 +3,11 @@ import { createtrackingid } from 'zss/mapping/guid'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import {
   memorycreatebook,
-  memoryreadbookflags,
+  memoryreadflags,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
-  memoryimportcodepagefromjson,
+  memoryimportcodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import {
@@ -26,7 +26,7 @@ jest.mock('zss/device/api', () => ({
 }))
 
 function makeboardpage(name: string, pageid: string) {
-  const page = memoryimportcodepagefromjson({
+  const page = memoryimportcodepage({
     id: pageid,
     code: `@board ${name}\n`,
     board: {
@@ -35,7 +35,7 @@ function makeboardpage(name: string, pageid: string) {
       terrain: [],
       objects: {},
     },
-  })
+  }, { format: 'json' })
   if (!page) {
     throw new Error(`failed to create board page ${pageid}`)
   }
@@ -119,7 +119,7 @@ describe('memorypicknextactiveplayerboard', () => {
     expect(first?.id).toBe(boarda)
 
     // re-prime queue with stale pid first, then active
-    const tracking = memoryreadbookflags(
+    const tracking = memoryreadflags(
       mainbook,
       createtrackingid('withplayerboard'),
     )

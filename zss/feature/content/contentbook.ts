@@ -5,11 +5,11 @@ import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
 import {
   memorycreatebook,
-  memoryexportbookasjson,
-  memoryimportbookfromjson,
+  memoryexportbook,
+  memoryimportbook,
 } from 'zss/memory/bookoperations'
 import {
-  memoryimportcodepagefromjson,
+  memoryimportcodepage,
   memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagetype,
@@ -48,7 +48,7 @@ export type CONTENT_PAGE_JSON = {
 
 export type CONTENT_BOOK_EXPORT = {
   exported: string
-  data: ReturnType<typeof memoryexportbookasjson>
+  data: ReturnType<typeof memoryexportbook>
 }
 
 export type CONTENT_CODEPAGE_EXPORT = {
@@ -109,15 +109,18 @@ export function codepagefromjson(flat: CONTENT_PAGE_JSON): CODE_PAGE {
     throw new Error('codepage json missing required code field')
   }
   const id = flat.id ?? createsid()
-  const cp = memoryimportcodepagefromjson({
-    id,
-    code: flat.code,
-    board: flat.board,
-    object: flat.object,
-    terrain: flat.terrain,
-    charset: flat.charset,
-    palette: flat.palette,
-  })
+  const cp = memoryimportcodepage(
+    {
+      id,
+      code: flat.code,
+      board: flat.board,
+      object: flat.object,
+      terrain: flat.terrain,
+      charset: flat.charset,
+      palette: flat.palette,
+    },
+    { format: 'json' },
+  )
   if (!ispresent(cp)) {
     throw new Error('failed to import codepage from json')
   }
@@ -150,7 +153,7 @@ export function buildbookfrommanifest(
   }
   const book = memorycreatebook(pages)
   book.name = manifest.name
-  const data = memoryexportbookasjson(book)
+  const data = memoryexportbook(book, { format: 'json' })
   if (!ispresent(data)) {
     throw new Error('failed to export book json')
   }
@@ -222,9 +225,9 @@ export function validatecodepagefile(filepath: string): string[] {
 export function validatebookexport(exportbook: CONTENT_BOOK_EXPORT): string[] {
   const errors: string[] = []
   memoryresetbooks([])
-  const book = memoryimportbookfromjson(exportbook.data)
+  const book = memoryimportbook(exportbook.data, { format: 'json' })
   if (!ispresent(book)) {
-    errors.push('memoryimportbookfromjson failed')
+    errors.push('memoryimportbook failed')
     return errors
   }
   memoryresetbooks([book])

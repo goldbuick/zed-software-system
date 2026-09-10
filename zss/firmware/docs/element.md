@@ -21,7 +21,7 @@ Provides stat/variable access for the chip:
 - **Input flags** — For players: `inputmove`, `inputshoot`, `inputok`, `inputcancel`, `inputmenu`, `inputa`/`inputb`/`inputx`/`inputy`, `inputl1`/`inputl2`, `inputr1`/`inputr2`, `inputalt`, `inputctrl`, `inputshift` (from input queue; `inputmove`/`inputshoot` may list two dirs for diagonals; FPV remaps dirs)
 - **Board stats** — `isdark`, `startx`, `starty`, `over`, `under`, `palette`, `charset`, exits, `timelimit`, `restartonzap`, `maxplayershots`, `b1`–`b10`, `camera`, `graphics`, `facing`
 - **Env** — `currenttick`, `boardid`, `playerid`, `playerx`, `playery`, `thisid`, `thisx`, `thisy`, `senderid`, `senderx`, `sendery`
-- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p10, cycle, stepx/y, shootx/y, light, lightdir, arg
+- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light, lightdir, arg
 - **Fallback** — Player flags
 
 ### set(chip, name, value)
@@ -46,7 +46,7 @@ Writes stats:
 |---------|------|-------------|
 | `set` | `name` `value` | Set stat (default value 1). Weave form: `set name pget <dir\|id> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
-| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p10`, …) |
+| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p20`, …) |
 | `pset` | `<dir\|id>` `attr` `value` | Write remote element attr (`step <walkdir>` sets stepx/stepy) |
 | `cycle` | `value` | Set cycle (1–255) |
 

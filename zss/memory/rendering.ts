@@ -1,20 +1,41 @@
 import { PERF_INCREMENTAL_LAYERS } from 'zss/config'
 import {
   LAYER,
+  LAYER_CONTROL,
+  LAYER_DITHER,
+  LAYER_MEDIA,
+  LAYER_SPRITES,
   LAYER_TILES,
   LAYER_TYPE,
+  SPRITE,
   TICKER,
   VIEWSCALE,
+  createcontrol,
+  createdither,
+  createmedia,
+  createsprite,
+  createsprites,
+  createtiles,
   layersreadmedia,
 } from 'zss/gadget/data/types'
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { measurestage } from 'zss/perf/ticktimingstats'
-import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
-
-import { memoryreadobject } from './boardaccess'
+import {
+  COLLISION,
+  COLOR,
+  DIR,
+  NAME,
+  PT,
+} from 'zss/words/types'
+import { memoryreadelement } from './boardaccess'
 import { memorycornerexitboardids } from './boardcornerexits'
 import { memorydepth2exitboardids } from './boarddepth2exits'
 import {
@@ -30,35 +51,243 @@ import {
   memoryreadunderboard,
 } from './boards'
 import { memoryupdateboardvisuals } from './boardvisuals'
-import { memoryreadelementdisplay } from './bookoperations'
+import {
+  memoryreadelementdisplay,
+  memoryreadflags,
+} from './bookoperations'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagetype,
 } from './codepageoperations'
-import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryreadflags } from './flags'
-import {
-  createcachedcontrol,
-  createcacheddither,
-  createcachedmedia,
-  createcachedtiles,
-  memorycreatecachedsprite,
-  memorycreatecachedsprites,
-} from './renderinglayercache'
+import { memorypickcodepage } from './codepages'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
+  BOARD_SIZE,
   BOARD_WIDTH,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
+import { memoryreadbooklist, memoryreadmainbook } from './session'
+
+/** Board-size number[] pool + keyed LAYER/SPRITE cache (memory-internal). */
+const MAX_POOLED_BOARD_ARRAYS = 128
+const BOARD_ARRAY_POOL: number[][] = []
+
+function acquireboardsizearray(fill: number): number[] {
+  const arr = BOARD_ARRAY_POOL.pop()
+  if (ispresent(arr) && arr.length === BOARD_SIZE) {
+    arr.fill(fill)
+    return arr
+  }
+  return new Array(BOARD_SIZE).fill(fill)
+}
+
+function releaseboardsizearray(arr: MAYBE<number[]>) {
+  if (!ispresent(arr) || arr.length !== BOARD_SIZE) {
+    return
+  }
+  if (BOARD_ARRAY_POOL.length >= MAX_POOLED_BOARD_ARRAYS) {
+    return
+  }
+  BOARD_ARRAY_POOL.push(arr)
+}
+
+const MAX_LAYER_AND_SPRITE_CACHE = 512
+const LAYER_CACHE: Record<string, LAYER> = {}
+const SPRITE_CACHE: Record<string, SPRITE> = {}
+const CACHE_EVICTION_ORDER: string[] = []
+
+function releaselayerbackingarrays(layer: LAYER) {
+  if (layer.type === LAYER_TYPE.TILES) {
+    releaseboardsizearray(layer.char)
+    releaseboardsizearray(layer.color)
+    releaseboardsizearray(layer.bg)
+    releaseboardsizearray(layer.props)
+    return
+  }
+  if (layer.type === LAYER_TYPE.DITHER) {
+    releaseboardsizearray(layer.alphas)
+  }
+}
+
+function evictrendercacheifneeded() {
+  while (CACHE_EVICTION_ORDER.length > MAX_LAYER_AND_SPRITE_CACHE) {
+    const tag = CACHE_EVICTION_ORDER.shift()
+    if (!ispresent(tag)) {
+      break
+    }
+    if (tag.startsWith('L')) {
+      const id = tag.slice(2)
+      const layer = LAYER_CACHE[id]
+      if (ispresent(layer)) {
+        releaselayerbackingarrays(layer)
+      }
+      delete LAYER_CACHE[id]
+    } else {
+      delete SPRITE_CACHE[tag.slice(2)]
+    }
+  }
+}
+
+function registernewlayercacheid(id: string) {
+  CACHE_EVICTION_ORDER.push(`L:${id}`)
+  evictrendercacheifneeded()
+}
+
+function registernewspritecacheid(id: string) {
+  CACHE_EVICTION_ORDER.push(`S:${id}`)
+  evictrendercacheifneeded()
+}
+
+function createtileswithpooledbuffers(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  bg = 0,
+): LAYER_TILES {
+  const size = width * height
+  if (size !== BOARD_SIZE) {
+    return createtiles(player, index, width, height, bg)
+  }
+  return {
+    id: `t:${player}:${index}`,
+    type: LAYER_TYPE.TILES,
+    width,
+    height,
+    char: acquireboardsizearray(0),
+    color: acquireboardsizearray(0),
+    bg: acquireboardsizearray(bg),
+    props: acquireboardsizearray(0),
+  }
+}
+
+function createditherwithpooledbuffer(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  fill = 0,
+): LAYER_DITHER {
+  const size = width * height
+  if (size !== BOARD_SIZE) {
+    return createdither(player, index, width, height, fill)
+  }
+  return {
+    id: `d:${player}:${index}`,
+    type: LAYER_TYPE.DITHER,
+    width,
+    height,
+    alphas: acquireboardsizearray(fill),
+  }
+}
+
+function memorycreatecachedsprite(
+  player: string,
+  index: number,
+  id: string,
+  spriteindex: number,
+): SPRITE {
+  const uid = `sprites:${player}:${index}:${id}`
+  const cid = `sprite:${player}:${index}:${spriteindex}`
+  if (!ispresent(SPRITE_CACHE[cid])) {
+    SPRITE_CACHE[cid] = createsprite(player, index, id)
+    registernewspritecacheid(cid)
+  }
+  SPRITE_CACHE[cid].id = uid
+  return SPRITE_CACHE[cid]
+}
+
+function memorycreatecachedsprites(
+  player: string,
+  index: number,
+): LAYER_SPRITES {
+  const id = `sprites:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createsprites(player, index)
+    registernewlayercacheid(id)
+  }
+  return LAYER_CACHE[id] as LAYER_SPRITES
+}
+
+function createcacheddither(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  fill = 0,
+): LAYER_DITHER {
+  const id = `dither:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createditherwithpooledbuffer(
+      player,
+      index,
+      width,
+      height,
+      fill,
+    )
+    registernewlayercacheid(id)
+  }
+  return LAYER_CACHE[id] as LAYER_DITHER
+}
+
+function createcachedmedia(
+  player: string,
+  index: number,
+  mime: string,
+  media: string | number[],
+): LAYER_MEDIA {
+  const id = `media:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createmedia(player, index, mime, media)
+    registernewlayercacheid(id)
+  }
+  const layermedia = LAYER_CACHE[id] as LAYER_MEDIA
+  layermedia.mime = mime
+  layermedia.media = media
+  return layermedia
+}
+
+function createcachedcontrol(
+  player: string,
+  index: number,
+): LAYER_CONTROL {
+  const id = `control:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createcontrol(player, index)
+    registernewlayercacheid(id)
+  }
+  return LAYER_CACHE[id] as LAYER_CONTROL
+}
+
+function createcachedtiles(
+  player: string,
+  index: number,
+  width: number,
+  height: number,
+  bg = 0,
+): LAYER_TILES {
+  const id = `tiles:${player}:${index}`
+  if (!ispresent(LAYER_CACHE[id])) {
+    LAYER_CACHE[id] = createtileswithpooledbuffers(
+      player,
+      index,
+      width,
+      height,
+      bg,
+    )
+    registernewlayercacheid(id)
+  }
+  return LAYER_CACHE[id] as LAYER_TILES
+}
 
 /**
  * Gadget rendering: board → layer stacks, display prefixes, and a small LRU
  * for palette/charset bit fingerprints (`cachedmediabits`). Layer identity and
- * backing buffers live in `renderinglayercache` + `boardarraypool`.
+ * backing buffers use an in-file board-size array pool + layer cache.
  */
 
 /** Dedupes identical palette/charset bit payloads; small LRU by key. */
@@ -139,7 +368,7 @@ export function memoryconverttogadgetcontrollayer(
   board: MAYBE<BOARD>,
 ): LAYER[] {
   const control = createcachedcontrol(player, index)
-  const maybeobject = memoryreadobject(board, player)
+  const maybeobject = memoryreadelement(board, player, { layer: 'object' })
   if (!ispresent(board) || !ispresent(maybeobject)) {
     return []
   }
@@ -456,10 +685,8 @@ export function memoryconverttogadgetlayers(
 
     // check for palette
     if (isstring(board.palettepage)) {
-      const codepage = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.PALETTE,
-        board.palettepage,
-      )
+      const codepage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.PALETTE,
+        board.palettepage,)
       const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
         layers.push(
@@ -474,10 +701,8 @@ export function memoryconverttogadgetlayers(
     }
     // check for charset
     if (isstring(board.charsetpage)) {
-      const codepage = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.CHARSET,
-        board.charsetpage,
-      )
+      const codepage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.CHARSET,
+        board.charsetpage,)
       const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
         layers.push(
@@ -549,7 +774,10 @@ export type MEMORY_GADGET_LAYERS = {
 
 export function memoryreadgraphics(player: string, board: BOARD) {
   // player flags, then board flags
-  const { graphics, camera, facing } = memoryreadflags(player)
+  const { graphics, camera, facing } = memoryreadflags(
+    memoryreadmainbook(),
+    player,
+  )
   const withgraphics = graphics ?? board.graphics ?? ''
   const withcamera = camera ?? board.camera ?? ''
   const withfacing = facing ?? board.facing ?? ''
@@ -574,7 +802,7 @@ export function memoryelementtologprefix(element: MAYBE<BOARD_ELEMENT>) {
 
   let withname = memoryreadelementdisplay(element).name
   if (element.kind === 'player') {
-    const { user } = memoryreadflags(element.id)
+    const { user } = memoryreadflags(memoryreadmainbook(), element.id)
     withname = isstring(user) ? user : 'player'
   }
 
@@ -590,7 +818,7 @@ export function memoryelementtotickerprefix(element: MAYBE<BOARD_ELEMENT>) {
 
   let withname: string
   if (element.kind === 'player') {
-    const { user } = memoryreadflags(element.id)
+    const { user } = memoryreadflags(memoryreadmainbook(), element.id)
     withname = isstring(user) ? user : 'player'
   } else {
     memoryreadelementkind(element)

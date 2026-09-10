@@ -3,7 +3,10 @@ import { synthplay } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
-import { createchipid, ispid } from 'zss/mapping/guid'
+import {
+  createchipid,
+  ispid,
+} from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import {
   MAYBE,
@@ -18,17 +21,18 @@ import { measurestage } from 'zss/perf/ticktimingstats'
 import { perfmeasure } from 'zss/perf/ui'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
-
-import { memoryreadobject } from './boardaccess'
+import { memoryreadelement } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryensureboardready } from './boardlookup'
 import { memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
-import { memoryreadcodepage } from './bookoperations'
+import {
+  memoryclearflags,
+  memoryreadcodepage,
+  memoryreadflags,
+} from './bookoperations'
 import { memoryensuremainbook } from './books'
 import { memoryreadcodepagestats } from './codepageoperations'
-import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryclearflags, memoryreadflags } from './flags'
 import {
   memoryloaderarg,
   memoryloaderreadcontextapply,
@@ -47,8 +51,12 @@ import {
   memorymergesynthvoicefx,
   memoryreadsynthplay,
 } from './synthstate'
-import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
-
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOOK,
+  CODE_PAGE_TYPE,
+} from './types'
 // manages chips
 const os = createos()
 
@@ -61,7 +69,7 @@ export function memoryhaltchip(id: string) {
   os.halt(id)
   // ensure we clear flags
   const mem = createchipid(id)
-  memoryclearflags(mem)
+  memoryclearflags(memoryreadmainbook(), mem)
 }
 
 /** Halt every running chip and clear chip flags on the opened book. */
@@ -89,7 +97,7 @@ export function memorymessagechip(message: MESSAGE) {
 // CLI Operations
 
 export function memoryrepeatclilast(player: string) {
-  const flags = memoryreadflags(player)
+  const flags = memoryreadflags(memoryreadmainbook(), player)
   // setup as array of invokes
   const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
     ? flags.playbuffer
@@ -297,7 +305,7 @@ export function memorytickobject(
 
   // clear used input
   if (READ_CONTEXT.elementisplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.elementid)
+    const flags = memoryreadflags(READ_CONTEXT.book, READ_CONTEXT.elementid)
     if (isnumber(flags.inputcurrent)) {
       flags.inputcurrent = 0
     }
@@ -359,7 +367,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = memoryreadobject(READ_CONTEXT.board, player)
+  READ_CONTEXT.element = memoryreadelement(READ_CONTEXT.board, player, { layer: 'object' })
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
@@ -372,7 +380,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
 
   // track invoke
   if (tracking) {
-    const flags = memoryreadflags(player)
+    const flags = memoryreadflags(memoryreadmainbook(), player)
     // track value of invoke
     flags.playbuffer = cli
   }
@@ -459,9 +467,10 @@ function memoryapplysynthvoicefx(
 }
 
 export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
-  const codepage = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.BOARD,
+  const codepage = memoryreadcodepage(
+    memoryreadbooklist(),
     board?.id ?? '',
+    CODE_PAGE_TYPE.BOARD,
   )
   if (!ispresent(codepage)) {
     return

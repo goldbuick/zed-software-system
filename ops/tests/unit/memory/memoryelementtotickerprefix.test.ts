@@ -7,7 +7,13 @@ import { COLOR } from 'zss/words/types'
 
 const mockedmemoryreadflags = jest.fn()
 
-jest.mock('zss/memory/flags', () => ({
+jest.mock('zss/memory/session', () => ({
+  ...jest.requireActual('zss/memory/session'),
+  memoryreadmainbook: () => ({ id: 'main' }),
+}))
+
+jest.mock('zss/memory/bookoperations', () => ({
+  ...jest.requireActual('zss/memory/bookoperations'),
   memoryreadflags: (...args: unknown[]) => mockedmemoryreadflags(...args),
 }))
 

@@ -27,7 +27,7 @@ import {
   memorysendtoelement,
   memorysendtoelements,
 } from 'zss/memory/gamesend'
-import { memoryreadterrain } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryresetbooks } from 'zss/memory/session'
 import { BOARD_WIDTH } from 'zss/memory/types'
 import { DIR } from 'zss/words/types'
@@ -79,9 +79,9 @@ describe('shot damage send to terrain', () => {
       kind: 'breakable',
       breakable: 1,
     })
-    expect(memoryreadterrain(board, pt.x, pt.y)?.kind).toBe('breakable')
+    expect(memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })?.kind).toBe('breakable')
 
-    const terrain = memoryreadterrain(board, pt.x, pt.y)!
+    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })!
     terrain.x = pt.x
     terrain.y = pt.y
     memorysendtoelement(from, terrain, 'shot')
@@ -101,7 +101,7 @@ describe('shot damage send to terrain', () => {
       kind: 'breakable',
       breakable: 1,
     })
-    const terrain = memoryreadterrain(board, pt.x, pt.y)!
+    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })!
     terrain.x = pt.x
     terrain.y = pt.y
     memorysendtoelement(from, terrain, 'bombed')

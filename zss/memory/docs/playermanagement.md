@@ -18,9 +18,9 @@ title: playermanagement.ts
 - `./boardmovement` — memorycheckblockedboardobject
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
 - `./boardvisuals` — memoryupdateboardvisuals
-- `./bookoperations` — memoryclearbookflags, memoryreadbookflag, memoryreadbookflags, memorywritebookflag
+- `./bookoperations` — memoryclearflags, memoryreadflag, memoryreadflags, memorywriteflag
 - `./codepageoperations` — memoryreadcodepagedata
-- `./codepages` — memorypickcodepagewithtypeandstat
+- `./codepages` — memorypickcodepage
 - `./runtime` — memoryhaltchip
 - `./session` — memoryisoperator, memoryreadmainbook
 - `./spatialqueries` — memorycheckcollision

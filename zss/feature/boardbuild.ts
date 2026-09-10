@@ -2,14 +2,20 @@ import { apierror } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createsid } from 'zss/mapping/guid'
-import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardaccess'
+import {
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryensuremaincodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memoryreadflags } from 'zss/memory/flags'
-import { memoryreadmainbook } from 'zss/memory/session'
+import { memorypickcodepage } from 'zss/memory/codepages'
+import { memoryreadflags } from 'zss/memory/bookoperations'
+import {
+  memoryreadmainbook,
+  memoryreadbooklist,
+} from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -19,7 +25,6 @@ import {
 } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
-
 const COPY_P1 = { x: 0, y: 0 }
 const COPY_P2 = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
 const COPY_TARGETSET = 'all'
@@ -49,6 +54,16 @@ const STANDARD_ELEMENT_STAT_NAMES = new Set([
   'p8',
   'p9',
   'p10',
+  'p11',
+  'p12',
+  'p13',
+  'p14',
+  'p15',
+  'p16',
+  'p17',
+  'p18',
+  'p19',
+  'p20',
   'cycle',
   'stepx',
   'stepy',
@@ -139,7 +154,7 @@ function writebuildstat(
   }
 
   if (isstandardelementstat(stat)) {
-    const element = memoryreadobject(currentboard, elementid)
+    const element = memoryreadelement(currentboard, elementid, { layer: 'object' })
     if (!ispresent(element)) {
       apierror(device, player, 'build', `build: element not found ${elementid}`)
       return false
@@ -148,7 +163,7 @@ function writebuildstat(
     return true
   }
 
-  const flags = memoryreadflags(player)
+  const flags = memoryreadflags(memoryreadmainbook(), player)
   flags[stat] = createdboard.id
   return true
 }
@@ -170,7 +185,7 @@ export function boardbuild(
   if (
     !isexitstat(stat) &&
     isstandardelementstat(stat) &&
-    !ispresent(memoryreadobject(currentboard, elementid))
+    !ispresent(memoryreadelement(currentboard, elementid, { layer: 'object' }))
   ) {
     apierror(device, player, 'build', `build: element not found ${elementid}`)
     return
@@ -178,10 +193,8 @@ export function boardbuild(
 
   let sourceboard: BOARD | undefined
   if (isstring(maybesource) && maybesource.length > 0) {
-    const sourcepage = memorypickcodepagewithtypeandstat(
-      CODE_PAGE_TYPE.BOARD,
-      maybesource,
-    )
+    const sourcepage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.BOARD,
+      maybesource,)
     if (!ispresent(sourcepage)) {
       apierror(device, player, 'build', `build: board not found ${maybesource}`)
       return

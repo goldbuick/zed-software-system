@@ -1,9 +1,15 @@
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
-
+import {
+  MAYBE,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { memoryreadboardbyaddress } from './boards'
-import { memorypickcodepagewithtypeandstat } from './codepages'
-import { BOARD, CODE_PAGE_TYPE } from './types'
-
+import { memorypickcodepage } from './codepages'
+import {
+  BOARD,
+  CODE_PAGE_TYPE,
+} from './types'
+import { memoryreadbooklist } from './session'
 export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
@@ -43,18 +49,14 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
 
   if (isstring(board.charset)) {
     if (isstring(board.charsetpage)) {
-      const charset = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.CHARSET,
-        board.charset,
-      )
+      const charset = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.CHARSET,
+        board.charset,)
       if (!ispresent(charset)) {
         delete board.charsetpage
       }
     } else {
-      const maybecharset = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.CHARSET,
-        board.charset,
-      )
+      const maybecharset = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.CHARSET,
+        board.charset,)
       if (ispresent(maybecharset)) {
         board.charsetpage = maybecharset.id
       }
@@ -65,18 +67,14 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
 
   if (isstring(board.palette)) {
     if (isstring(board.palettepage)) {
-      const palette = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.PALETTE,
-        board.palette,
-      )
+      const palette = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.PALETTE,
+        board.palette,)
       if (!ispresent(palette)) {
         delete board.palettepage
       }
     } else {
-      const maybepalette = memorypickcodepagewithtypeandstat(
-        CODE_PAGE_TYPE.PALETTE,
-        board.palette,
-      )
+      const maybepalette = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.PALETTE,
+        board.palette,)
       if (ispresent(maybepalette)) {
         board.palettepage = maybepalette.id
       }

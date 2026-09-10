@@ -1,5 +1,5 @@
 /**
- * Codepage listing and pick-by-stat. Uses session, bookoperations, codepageoperations.
+ * Cross-book codepage pick-by-stat. Per-book read/list live in bookoperations.
  */
 import {
   inorder,
@@ -20,92 +20,41 @@ import {
 import { maptostring } from 'zss/mapping/value'
 import { NAME } from 'zss/words/types'
 
-import {
-  memorylistcodepagebytype,
-  memorylistcodepagebytypeandstat,
-  memorylistcodepagessorted,
-  memoryreadbookflags,
-  memoryreadcodepage,
-} from './bookoperations'
-import {
-  memoryreadcodepagestat,
-  memoryreadcodepagetype,
-} from './codepageoperations'
+import { memorylistcodepage, memoryreadflags } from './bookoperations'
+import { memoryreadcodepagestat } from './codepageoperations'
 import {
   memoryreadcodepagepickcache,
   memorywritecodepagepickcache,
 } from './codepagepickcache'
-import { memoryreadbooklist, memoryreadmainbook } from './session'
-import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { memoryreadmainbook } from './session'
+import { BOOK, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 const TRACKING_IDS_KEY = 'ids'
 
-export function memorylistallcodepagewithtype<T extends CODE_PAGE_TYPE>(
-  type: T,
-): CODE_PAGE[] {
-  const mainbook = memoryreadmainbook()
-  const matchedpages: Record<string, CODE_PAGE> = {}
-  const mainpages = memorylistcodepagebytype(mainbook, type)
-  for (const page of mainpages) {
-    matchedpages[page.id] = page
-  }
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    if (book.id !== mainbook?.id) {
-      const pages = memorylistcodepagebytype(book, type)
-      for (const page of pages) {
-        matchedpages[page.id] = page
-      }
-    }
-  }
-  return Object.values(matchedpages)
-}
-
-export function memoryreadcodepagebyaddress(address: string): MAYBE<CODE_PAGE> {
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const maybecodedpage = memoryreadcodepage(books[i], address)
-    if (ispresent(maybecodedpage)) {
-      return maybecodedpage
-    }
-  }
-  return undefined
-}
-
-export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
-  type: T,
-  address: string,
+export function memorypickcodepage(
+  books: MAYBE<BOOK> | MAYBE<BOOK>[],
+  type: CODE_PAGE_TYPE,
+  stat: string,
 ): MAYBE<CODE_PAGE> {
-  const cached = memoryreadcodepagepickcache(type, address)
+  const cached = memoryreadcodepagepickcache(type, stat)
   if (cached.hit) {
     return cached.page
   }
   const mainbook = memoryreadmainbook()
+  const allpages = memorylistcodepage(books, { type, stat })
   const matchedpages: Record<string, CODE_PAGE> = {}
-  const pages = memorylistcodepagebytypeandstat(mainbook, type, address)
-  for (const page of pages) {
+  for (let i = 0; i < allpages.length; ++i) {
+    const page = allpages[i]
     matchedpages[page.id] = page
   }
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    if (book.id !== mainbook?.id) {
-      const otherpages = memorylistcodepagebytypeandstat(book, type, address)
-      for (const page of otherpages) {
-        matchedpages[page.id] = page
-      }
-    }
-  }
-  const allpages = Object.values(matchedpages)
   if (allpages.length <= 1) {
     // Deterministic single/miss — safe to memoize across elements of same kind.
-    memorywritecodepagepickcache(type, address, allpages[0])
+    memorywritecodepagepickcache(type, stat, allpages[0])
     return allpages[0]
   }
   let pickmode: 'shuffle' | 'inorder' | '' = ''
   const weights: Record<string, number> = {}
-  for (const page of Object.values(matchedpages)) {
+  for (const page of allpages) {
     const pickstat = memoryreadcodepagestat(page, 'pick')
     if (isstring(pickstat)) {
       const [shuffleorweight, optionalweight] = pickstat.split(' ')
@@ -137,7 +86,7 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
     }
   }
   const hasweights = Object.keys(weights).length > 0
-  const trackingflags = memoryreadbookflags(mainbook, createtrackingid(address))
+  const trackingflags = memoryreadflags(mainbook, createtrackingid(stat))
   switch (pickmode) {
     case 'shuffle': {
       if (hasweights) {
@@ -204,25 +153,4 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
       return pick(allpages)
     }
   }
-}
-
-export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
-  type: T,
-): CODE_PAGE[] {
-  const mainbook = memoryreadmainbook()
-  const found = memorylistcodepagessorted(mainbook).filter(
-    (codepage) => memoryreadcodepagetype(codepage) === type,
-  )
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i]
-    if (book.id !== mainbook?.id) {
-      found.push(
-        ...memorylistcodepagessorted(book).filter(
-          (codepage) => memoryreadcodepagetype(codepage) === type,
-        ),
-      )
-    }
-  }
-  return found
 }

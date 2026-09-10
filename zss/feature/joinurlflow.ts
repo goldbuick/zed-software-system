@@ -13,7 +13,8 @@ import {
   znsread,
 } from 'zss/feature/url'
 import { deepcopy, isstring } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/bookoperations'
+import { memoryreadmainbook } from 'zss/memory/session'
 
 async function resolvepeerid(
   player: string,
@@ -45,7 +46,10 @@ export async function runjoinurldestination(
   }
 
   joinstatusscroll(player, 'peer ready', 'joining... carrying flags')
-  const flags = deepcopy(memoryreadflags(player)) as Record<string, unknown>
+  const flags = deepcopy(memoryreadflags(memoryreadmainbook(), player)) as Record<
+    string,
+    unknown
+  >
   registerjoincrosslogin(SOFTWARE, player, { peerid, flags })
 }
 

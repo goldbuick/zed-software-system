@@ -3,10 +3,17 @@
  * Mirrors decode logic in zzt.ts (Shikadi Modding Wiki ZZT format).
  */
 
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import {
+  MAYBE,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
+import {
+  memoryreadelement,
+} from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
-import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
+import { memorylistcodepage } from 'zss/memory/bookoperations'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
@@ -20,10 +27,12 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
-
 import { ooptuzz } from './ooptuzz'
 import { zztcolorbyte } from './zztcolor'
-import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
+import {
+  ZZT_BOARD_TITLE_FIELD_LEN,
+  zztencodeworld,
+} from './zztencode'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
 const ZZT_BOARD_WIDTH = 60
@@ -91,7 +100,7 @@ function buildsortedboardentries(
   book: BOOK,
   errors: ZZTEXPORTERROR[],
 ): SORTEDENTRY[] | null {
-  const pages = memorylistcodepagebytype(book, CODE_PAGE_TYPE.BOARD)
+  const pages = memorylistcodepage(book, { type: CODE_PAGE_TYPE.BOARD })
   const raw: { codepage: CODE_PAGE; board: BOARD; sortname: string }[] = []
   for (let i = 0; i < pages.length; ++i) {
     const cp = pages[i]
@@ -368,7 +377,7 @@ function applystatunder(
   y: number,
   entries: SORTEDENTRY[],
 ) {
-  const terrain = memoryreadterrain(board, x, y)
+  const terrain = memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' })
   if (!ispresent(terrain) || terrain.removed) {
     return
   }

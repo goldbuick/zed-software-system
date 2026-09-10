@@ -2,7 +2,7 @@
 title: rendering.ts
 ---
 
-**Purpose**: Convert memory state into the per-player gadget layer stack consumed by [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) (which then ships paint/patch to the main-thread `gadgetclient`). Sprite / dither / control / tile **caches** live in the sibling [`renderinglayercache.ts`](../renderinglayercache.ts).
+**Purpose**: Convert memory state into the per-player gadget layer stack consumed by [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) (which then ships paint/patch to the main-thread `gadgetclient`). Sprite / dither / control / tile caches and the board-size array pool are **file-local** helpers inside `rendering.ts` (not public exports).
 
 ## Dependencies
 
@@ -11,18 +11,16 @@ title: rendering.ts
 - `zss/gadget/graphics/layerz` — normalizelayerzvariant
 - `zss/mapping/*` — 2d, guid, types
 - `zss/words/*` — types (COLOR, DIR, NAME, PT, COLLISION)
-- `./boardaccess` — memoryreadobject
+- `./boardaccess` — memoryreadelement
 - `./boardcornerexits` — memorycornerexitboardids
 - `./boardlighting` — memoryboardlightingapplyobject, memoryboardlightingmarkplayer
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementkind, memoryreadelementstat, memoryreadoverboard, memoryreadunderboard
 - `./boardvisuals` — memoryupdateboardvisuals
-- `./bookoperations` — memoryreadelementdisplay
+- `./bookoperations` — memoryreadelementdisplay, memoryreadflags
 - `./codepageoperations` — memoryreadcodepagedata, memoryreadcodepagename, memoryreadcodepagetype
-- `./codepages` — memorypickcodepagewithtypeandstat
-- `./flags` — memoryreadflags
-- `./renderinglayercache` — createcachedcontrol, createcacheddither, createcachedmedia, createcachedtiles, memorycreatecachedsprite, memorycreatecachedsprites
+- `./codepages` — memorypickcodepage
 
-Board / element runtime fields (`named`, `kinddata`, `drawdirtycells`, …) are read directly on the board/element objects.
+Board / element derived fields (`named`, `kinddata`, `drawdirtycells`, …) are read directly on the board/element objects.
 
 ## Key Exports
 
@@ -42,7 +40,7 @@ Board / element runtime fields (`named`, `kinddata`, `drawdirtycells`, …) are 
 
 Aug 2026 optimizations touching this module:
 
-- **Layer flag read cache** — [`gadgetlayersflags.ts`](../gadgetlayersflags.ts) caches `memoryreadbookflags(book, createlayersid(board))` per board; see [render-gadget-optimizations.md](../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker).
+- **Layer flag read cache** — [`gadgetlayersflags.ts`](../gadgetlayersflags.ts) caches `memoryreadflags(book, createlayersid(board))` per board; see [render-gadget-optimizations.md](../../perf/docs/render-gadget-optimizations.md#optimization-1b--layer-store-read-cache-sim-worker).
 - **Incremental layer rebuild** — `memoryconverttogadgetlayers` cache when `PERF_INCREMENTAL_LAYERS`, empty `drawallowids`, **and** empty `drawdirtycells`; see `memoryincrementallayerscachestable` in [`rendering.ts`](../rendering.ts).
 - **Tile dirty cells** — `memoryattachdrawdirtycellstotiles` copies `board.drawdirtycells` (from [`boarddrawdirty.ts`](../boarddrawdirty.ts)) onto `LAYER_TILES.dirtycells` for main-thread `PERF_TILE_SUBIMAGE` uploads.
 

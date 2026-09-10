@@ -3,7 +3,7 @@ import { memorycreateboard } from 'zss/memory/boardlifecycle'
 import {
   memorycreatebook,
   memoryexportbook,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -107,7 +107,7 @@ describe('buildexportidremap', () => {
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board }),
     ])
-    memorywritebookflag(book, oid, 'score', 1 as any)
+    memorywriteflag(book, oid, 'score', 1 as any)
 
     const wire = memoryexportbook(book, { noremap: true })!
     const protectedids = collectflagprotectedids(wire)

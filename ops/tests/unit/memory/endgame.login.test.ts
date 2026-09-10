@@ -1,7 +1,7 @@
 import { apierror } from 'zss/device/api'
 import {
   memorycreatebook,
-  memoryreadbookflag,
+  memoryreadflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -44,14 +44,14 @@ describe('endgame logout then login', () => {
     memorywritemainbook(book.id)
 
     expect(memoryloginplayer(player, {})).toBe(true)
-    expect(memoryreadbookflag(book, player, 'board')).toBe(titleid)
+    expect(memoryreadflag(book, player, 'board')).toBe(titleid)
 
     memorylogoutplayer(player)
     expect(book.activelist).not.toContain(player)
-    expect(memoryreadbookflag(book, player, 'board')).toBeFalsy()
+    expect(memoryreadflag(book, player, 'board')).toBeFalsy()
 
     expect(memoryloginplayer(player, {})).toBe(true)
-    expect(memoryreadbookflag(book, player, 'board')).toBe(titleid)
+    expect(memoryreadflag(book, player, 'board')).toBe(titleid)
     expect(book.activelist).toContain(player)
   })
 
@@ -73,7 +73,7 @@ describe('endgame logout then login', () => {
     expect(memoryloginplayer(player, {})).toBe(true)
     memorylogoutplayer(player)
     expect(memoryloginplayer(player, {})).toBe(true)
-    expect(memoryreadbookflag(opened, player, 'board')).toBe(titlepage.id)
+    expect(memoryreadflag(opened, player, 'board')).toBe(titlepage.id)
   })
 
   it('relogs when player kind is only in another book (pre-regression)', () => {

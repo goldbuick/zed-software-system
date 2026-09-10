@@ -3,11 +3,13 @@
  */
 import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { ispresent, isstring } from 'zss/mapping/types'
-
+import {
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import {
   memorycreatebook,
-  memoryensurebookcodepagewithtype,
+  memoryensurecodepage,
 } from './bookoperations'
 import {
   memoryreadbookbyaddress,
@@ -18,7 +20,6 @@ import {
   memorywritemainbook,
 } from './session'
 import { CODE_PAGE_TYPE } from './types'
-
 export function memorycreatesoftwarebook(maybename?: string) {
   const book = memorycreatebook([])
   if (isstring(maybename)) {
@@ -64,7 +65,7 @@ export function memoryensuremaincodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
-  return memoryensurebookcodepagewithtype(
+  return memoryensurecodepage(
     memoryensuremainbook(),
     createtype,
     address,

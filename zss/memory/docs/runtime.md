@@ -25,7 +25,7 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./bookoperations` — memoryreadcodepage
 - `./books` — memoryensuremainbook
 - `./codepageoperations` — memoryreadcodepagestats
-- `./codepages` — memorypickcodepagewithtypeandstat
+- `./codepages` — memorypickcodepage
 - `./flags` — memoryreadflags
 - `./loader` — memoryloaderarg
 - `./playermanagement` — memoryreadplayerboard

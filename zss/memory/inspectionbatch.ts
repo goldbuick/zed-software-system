@@ -8,7 +8,7 @@ import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
-import { memoryreadelement, memoryreadterrain } from './boardaccess'
+import { memoryreadelement } from './boardaccess'
 import {
   memorycreateboardobject,
   memorysafedeleteelement,
@@ -57,14 +57,14 @@ function createboardelementbuffer(
       const maybeobject = memoryreadelement(board, { x, y })
       if (maybeobject?.kind === 'player') {
         // skip player
-        const under = deepcopy(memoryreadterrain(board, x, y))
+        const under = deepcopy(memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' }))
         terrain.push(under)
         // visible element only
         flattened.push(under)
       } else {
         if (maybeobject?.category === CATEGORY.ISOBJECT) {
           // terrain and object
-          terrain.push(deepcopy(memoryreadterrain(board, x, y)))
+          terrain.push(deepcopy(memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' })))
           objects.push({
             ...deepcopy(maybeobject),
             ...pt,
@@ -132,7 +132,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         let bg = COLOR.ONCLEAR
         content += ''
         for (let x = p1x; x <= p2x; ++x) {
-          const element = memoryreadterrain(board, x, y)
+          const element = memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' })
           const display = memoryreadelementdisplay(element, 0, 0, 0)
           if (display.color != color) {
             color = display.color

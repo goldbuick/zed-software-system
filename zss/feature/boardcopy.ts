@@ -1,9 +1,9 @@
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import {
   memoryboardelementisobject,
-  memorycopyboardelementruntime,
+  memorycopyelementkinddata,
 } from 'zss/memory/boardelement'
 import {
   memoryreadgroup,
@@ -84,6 +84,16 @@ export function mapelementcopy(
   maybenew.p8 = from.p8
   maybenew.p9 = from.p9
   maybenew.p10 = from.p10
+  maybenew.p11 = from.p11
+  maybenew.p12 = from.p12
+  maybenew.p13 = from.p13
+  maybenew.p14 = from.p14
+  maybenew.p15 = from.p15
+  maybenew.p16 = from.p16
+  maybenew.p17 = from.p17
+  maybenew.p18 = from.p18
+  maybenew.p19 = from.p19
+  maybenew.p20 = from.p20
   maybenew.code = from.code
   maybenew.item = from.item
   maybenew.group = from.group
@@ -100,7 +110,7 @@ export function mapelementcopy(
   maybenew.breakable = from.breakable
   maybenew.tickertext = from.tickertext
   maybenew.tickertime = from.tickertime
-  memorycopyboardelementruntime(maybenew, from)
+  memorycopyelementkinddata(maybenew, from)
 }
 
 export function boardcopy(
@@ -185,7 +195,7 @@ export function boardcopy(
         let terrain: MAYBE<BOARD_ELEMENT>
         let object = memoryreadelement(sourceboard, src)
         if (memoryboardelementisobject(object)) {
-          terrain = memoryreadterrain(sourceboard, src.x, src.y)
+          terrain = memoryreadelement(sourceboard, { x: src.x, y: src.y }, { layer: 'terrain' })
           if (ispid(object?.id)) {
             object = undefined
           }

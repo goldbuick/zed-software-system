@@ -1,6 +1,6 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadobjectatpt } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
 import * as boardmovement from 'zss/memory/boardmovement'
@@ -126,10 +126,10 @@ export function boardweave(
       const destidx = tx + ty * BOARD_WIDTH
       const srcidx = x + y * BOARD_WIDTH
       if (weaveobject) {
-        const maybeobject = memoryreadobjectatpt(
+        const maybeobject = memoryreadelement(
           targetboard,
           { x, y },
-          { includeghost: true },
+          { layer: 'object', includeghost: true },
         )
         if (
           memoryboardelementisobject(maybeobject) &&

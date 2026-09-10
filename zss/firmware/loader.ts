@@ -18,7 +18,7 @@ import { ispid } from 'zss/mapping/guid'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memoryreadobject } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
@@ -223,7 +223,7 @@ export const LOADER_FIRMWARE = createfirmware({
       // and it'll update the READ_CONTEXT to point to the given object
       // the intent here is afford !chat to drive behavior of a __specific__ object
       const [id] = readargs(words, 0, [ARG_TYPE.NAME])
-      const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
+      const maybeobject = memoryreadelement(READ_CONTEXT.board, id, { layer: 'object' })
       // #oneof chatuser chatdroid
       // #withobject chatuser
       // #go up ' <- this code

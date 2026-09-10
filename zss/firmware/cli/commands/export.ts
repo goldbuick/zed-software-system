@@ -16,12 +16,12 @@ import { FIRMWARE } from 'zss/firmware'
 import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
 import { ispresent } from 'zss/mapping/types'
 import {
-  memoryexportbookasjson,
-  memorylistcodepagessorted,
+  memoryexportbook,
+  memorylistcodepage,
   memoryreadcodepage,
 } from 'zss/memory/bookoperations'
 import {
-  memoryexportcodepageasjson,
+  memoryexportcodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
@@ -31,9 +31,11 @@ import {
   memoryreadbooklist,
   memoryreadmainbook,
 } from 'zss/memory/session'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import {
+  READ_CONTEXT,
+  readargs,
+} from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
-
 export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('export', ['export menu (operator only)'], () => {
@@ -69,7 +71,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           )
           setTimeout(() => {
             if (book.pages.length) {
-              const sorted = memorylistcodepagessorted(book)
+              const sorted = memorylistcodepage(book, { sort: true })
               const pagelines = sorted.map((page) => {
                 const name = memoryreadcodepagename(page)
                 const type = memoryreadcodepagetypeasstring(page)
@@ -101,7 +103,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           registerdownloadjsonfile(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            memoryexportbookasjson(book),
+            memoryexportbook(book, { format: 'json' }),
             `${book.name}.book.json`,
           )
         }
@@ -149,7 +151,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           registerdownloadjsonfile(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            memoryexportcodepageasjson(codepage, true),
+            memoryexportcodepage(codepage, { format: 'json', strip: true }),
             `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
           )
         }

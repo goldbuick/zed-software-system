@@ -1,7 +1,7 @@
-import { memorylistboardelementsbyidnameorpts } from 'zss/memory/spatialqueries'
+import { memorylistelement } from 'zss/memory/boardaccess'
 import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 
-describe('memorylistboardelementsbyidnameorpts', () => {
+describe('memorylistelement ids filter', () => {
   const MIXED_ID = 'sid_hd0VuNrSi0Cg'
   const object: BOARD_ELEMENT = {
     id: MIXED_ID,
@@ -23,8 +23,6 @@ describe('memorylistboardelementsbyidnameorpts', () => {
 
   it('finds object by exact-case id', () => {
     const board = makeboard()
-    expect(memorylistboardelementsbyidnameorpts(board, [MIXED_ID])).toEqual([
-      object,
-    ])
+    expect(memorylistelement(board, { ids: [MIXED_ID] })).toEqual([object])
   })
 })

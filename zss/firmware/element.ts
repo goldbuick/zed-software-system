@@ -17,8 +17,8 @@ import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
+  memorylistelement,
   memoryreadelement,
-  memoryreadelementbyidorindex,
 } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
@@ -31,15 +31,11 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadelementdisplay, memoryreadflags } from 'zss/memory/bookoperations'
 import { memorysendtoelement } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
-import {
-  memoryfindplayerforelement,
-  memorylistboardnamedelements,
-} from 'zss/memory/spatialqueries'
+import { memoryfindplayerforelement } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -84,6 +80,16 @@ const STANDARD_STAT_NAMES = new Set([
   'p8',
   'p9',
   'p10',
+  'p11',
+  'p12',
+  'p13',
+  'p14',
+  'p15',
+  'p16',
+  'p17',
+  'p18',
+  'p19',
+  'p20',
   'cycle',
   'stepx',
   'stepy',
@@ -108,6 +114,16 @@ const REMOTE_STAT_NAMES = new Set([
   'p8',
   'p9',
   'p10',
+  'p11',
+  'p12',
+  'p13',
+  'p14',
+  'p15',
+  'p16',
+  'p17',
+  'p18',
+  'p19',
+  'p20',
   'cycle',
   'stepx',
   'stepy',
@@ -151,7 +167,7 @@ function resolveremotetarget(
   if (isstring(peek) || isnumber(peek)) {
     const [, ii] = readargs(words, index, [ARG_TYPE.ANY])
     return [
-      memoryreadelementbyidorindex(READ_CONTEXT.board, maptostring(peek)),
+      memoryreadelement(READ_CONTEXT.board, maptostring(peek)),
       ii,
     ]
   }
@@ -265,7 +281,7 @@ function readinput(
   graphics: MAYBE<string>,
   facing: MAYBE<number>,
 ) {
-  const flags = memoryreadflags(player) as PLAYER_INPUT_FLAGS
+  const flags = memoryreadflags(READ_CONTEXT.book, player) as PLAYER_INPUT_FLAGS
   return applyinputqueue(flags, graphics, facing)
 }
 
@@ -340,9 +356,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // sender info
     const maybesender = READ_CONTEXT.element?.sender
-    const sender = memoryreadelementbyidorindex(
-      READ_CONTEXT.board,
-      isstring(maybesender) ? maybesender : '',
+    const sender = memoryreadelement(READ_CONTEXT.board, isstring(maybesender) ? maybesender : '',
     )
 
     // read stat
@@ -352,7 +366,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'graphics':
       case 'facing': {
         // read player flag
-        const value = memoryreadflags(playerid)[name]
+        const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
         return [
           true,
           ispresent(value)
@@ -459,7 +473,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // fallback to player flags
     // read value
-    const value = memoryreadflags(playerid)[name]
+    const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
@@ -736,7 +750,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // fallback to player flags
-    const flags = memoryreadflags(player)
+    const flags = memoryreadflags(READ_CONTEXT.book, player)
     if (ispresent(flags)) {
       flags[name] = value
       // sticky flags persist on the local register tab, not the host sim
@@ -961,7 +975,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     (_, words) => {
       // zed cafe simply copies the code from the given named element
       const [name] = readargs(words, 0, [ARG_TYPE.NAME])
-      const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
+      const elements = memorylistelement(READ_CONTEXT.board, { name })
       if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
         READ_CONTEXT.element.code = pick(...elements).code ?? ''
         memoryhaltchip(READ_CONTEXT.elementid)

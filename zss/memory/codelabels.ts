@@ -1,8 +1,11 @@
-import { label, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
-import { memorylistallcodepagewithtype } from 'zss/memory/codepages'
+import {
+  label,
+  tokenize,
+} from 'zss/feature/lang/backend/typescript/lexer'
+import { memorylistcodepage } from './bookoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
-
+import { memoryreadbooklist } from './session'
 function addlabelsfromcode(code: string, into: Set<string>) {
   const source = code.endsWith('\n') ? code : `${code}\n`
   const result = tokenize(source)
@@ -25,8 +28,8 @@ function addlabelsfromcode(code: string, into: Set<string>) {
 export function memorycollectcodelabels(): string[] {
   const labels = new Set<string>()
   const pages = [
-    ...memorylistallcodepagewithtype(CODE_PAGE_TYPE.OBJECT),
-    ...memorylistallcodepagewithtype(CODE_PAGE_TYPE.LOADER),
+    ...memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.OBJECT }),
+    ...memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.LOADER }),
   ]
   for (let i = 0; i < pages.length; i++) {
     const code = pages[i].code ?? ''

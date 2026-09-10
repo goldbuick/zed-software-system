@@ -1,5 +1,5 @@
 import { LAYER_TYPE } from 'zss/gadget/data/types'
-import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import {
   memorycreateboard,
@@ -62,13 +62,13 @@ describe('bullet soft-delete + incremental layers', () => {
     bullet!.collision = COLLISION.ISBULLET
     memoryensureboardready(board)
 
-    expect(memoryreadobjectatpt(board, { x: 3, y: 0 })?.id).toBe('sid_bullet1')
+    expect(memoryreadelement(board, { x: 3, y: 0 }, { layer: 'object' })?.id).toBe('sid_bullet1')
 
     const ok = memorysafedeleteelement(board, bullet, 100)
     expect(ok).toBe(true)
     expect(bullet!.removed).toBe(100)
     expect(board.objects.sid_bullet1).toBeDefined()
-    expect(memoryreadobjectatpt(board, { x: 3, y: 0 })).toBeUndefined()
+    expect(memoryreadelement(board, { x: 3, y: 0 }, { layer: 'object' })).toBeUndefined()
   })
 
   it('soft-deleted bullet leaves layer sprites after warm cache', () => {
@@ -138,6 +138,6 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(bullet!.y).toBe(0)
 
     memorysafedeleteelement(board, bullet, 50)
-    expect(memoryreadobjectatpt(board, { x: 5, y: 0 })).toBeUndefined()
+    expect(memoryreadelement(board, { x: 5, y: 0 }, { layer: 'object' })).toBeUndefined()
   })
 })

@@ -4,11 +4,11 @@ import { durableget, durableupdate } from 'zss/feature/durable'
 export type INSPECTION_CONFIG_STORE<T> = {
   load(): Promise<void>
   save(): Promise<void>
-  read(): T
-  write(next: T): void
+  memoryread(): T
+  memorywrite(next: T): void
 }
 
-export function createinspectionconfig<T extends Record<string, unknown>>(
+export function memorycreateinspectionconfig<T extends Record<string, unknown>>(
   key: string,
   defaults: T,
 ): INSPECTION_CONFIG_STORE<T> {
@@ -23,10 +23,10 @@ export function createinspectionconfig<T extends Record<string, unknown>>(
     async save() {
       await durableupdate(key, () => current)
     },
-    read() {
+    memoryread() {
       return current
     },
-    write(next: T) {
+    memorywrite(next: T) {
       current = next
     },
   }

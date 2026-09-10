@@ -1,4 +1,7 @@
-import { apitoast, vmpublish } from 'zss/device/api'
+import {
+  apitoast,
+  vmpublish,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { rundeeplinks } from 'zss/feature/deeplinkrun'
 import {
@@ -8,7 +11,11 @@ import {
   storagereadznstoken,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { znslist, znsnormalizepathkey, znsread } from 'zss/feature/url'
+import {
+  znslist,
+  znsnormalizepathkey,
+  znsread,
+} from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -17,17 +24,20 @@ import {
   zsstexttape,
   zsszedlinkline,
 } from 'zss/feature/zsstextui'
-import { isarray, ispresent } from 'zss/mapping/types'
 import {
-  memorylistcodepagessorted,
+  isarray,
+  ispresent,
+} from 'zss/mapping/types'
+import {
+  memorylistcodepage,
   memorywritecodepage,
+  memoryreadcodepage,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   memoryreadbookbyaddress,
@@ -35,9 +45,15 @@ import {
   memoryreadfirstcontentbook,
   memoryreadmainbook,
 } from 'zss/memory/session'
-import { READ_CONTEXT, readargs } from 'zss/words/reader'
-import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
-
+import {
+  READ_CONTEXT,
+  readargs,
+} from 'zss/words/reader'
+import {
+  ARG_TYPE,
+  NAME,
+  WORD,
+} from 'zss/words/types'
 type ZNS_SESSION = { email: string; token: string; namespace: string }
 
 export async function znsreadsession(): Promise<ZNS_SESSION | undefined> {
@@ -77,7 +93,7 @@ function showznspublishbookmenu(player: string, address: string) {
     zsstexttape(zssheaderlines(book.name), zsssectionlines('Pages')),
   )
   //
-  const sorted = memorylistcodepagessorted(book)
+  const sorted = memorylistcodepage(book, { sort: true })
   const pagelines = sorted.map((page) => {
     const name = memoryreadcodepagename(page)
     const type = memoryreadcodepagetypeasstring(page)
@@ -212,7 +228,7 @@ export function znsrunpublish(
         write(SOFTWARE, player, zsstextline(`$red missing codepage address`))
         return
       }
-      const maybecodepage = memoryreadcodepagebyaddress(address)
+      const maybecodepage = memoryreadcodepage(memoryreadbooklist(), address)
       if (!ispresent(maybecodepage)) {
         write(
           SOFTWARE,

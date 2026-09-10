@@ -1,14 +1,28 @@
-import { vmcli, vmplayermovetoboard } from 'zss/device/api'
+import {
+  vmcli,
+  vmplayermovetoboard,
+} from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
-import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
+import {
+  zsstexttape,
+  zsszedlinkline,
+} from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { escapedoublequoted } from 'zss/mapping/string'
-import { MAYBE, ispresent } from 'zss/mapping/types'
-import { statformat, stattypestring } from 'zss/words/stats'
+import {
+  MAYBE,
+  ispresent,
+} from 'zss/mapping/types'
+import {
+  statformat,
+  stattypestring,
+} from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
-
-import { memorylistcodepagebystat, memoryreadcodepage } from './bookoperations'
+import {
+  memorylistcodepage,
+  memoryreadcodepage,
+} from './bookoperations'
 import { memoryensuremaincodepage } from './books'
 import {
   memoryreadcodepagename,
@@ -16,8 +30,12 @@ import {
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { memoryreadbooklist } from './session'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE, CODE_PAGE_TYPE } from './types'
-
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from './types'
 function makeitlinktoken(s: string): string {
   if (/\s/.test(s) || s.length === 0) {
     return `"${escapedoublequoted(s)}"`
@@ -66,30 +84,15 @@ function previewcodepage(codepage: CODE_PAGE, out: string[]) {
 }
 
 function checkforcodepage(name: string, out: string[]) {
-  const books = memoryreadbooklist()
-
-  let nomatch = true
-  for (let i = 0; i < books.length; ++i) {
-    const codepages = memorylistcodepagebystat(books[i], name)
-    for (let c = 0; c < codepages.length; ++c) {
-      nomatch = false
-      previewcodepage(codepages[c], out)
-    }
+  const codepages = memorylistcodepage(memoryreadbooklist(), { stat: name })
+  for (let c = 0; c < codepages.length; ++c) {
+    previewcodepage(codepages[c], out)
   }
-
-  return nomatch
+  return codepages.length === 0
 }
 
 function findcodepage(nameorid: string): MAYBE<CODE_PAGE> {
-  // first check for existing codepage with matching name or id
-  const books = memoryreadbooklist()
-  for (let i = 0; i < books.length; ++i) {
-    const maybecodepage = memoryreadcodepage(books[i], nameorid)
-    if (ispresent(maybecodepage)) {
-      return maybecodepage
-    }
-  }
-  return undefined
+  return memoryreadcodepage(memoryreadbooklist(), nameorid)
 }
 
 export function memorymakeitcommand(

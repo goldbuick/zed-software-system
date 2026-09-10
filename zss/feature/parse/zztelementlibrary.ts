@@ -1,13 +1,13 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
+import { memorypickcodepage } from 'zss/memory/codepages'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
-
+import { memoryreadbooklist } from 'zss/memory/session'
 const ZZT_ELEMENT_LIBRARY_TOAST =
   'import or load an element library book before importing ZZT worlds'
 
 export function haszztelementlibrary(): boolean {
-  return !!memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.TERRAIN, 'solid')
+  return !!memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, 'solid')
 }
 
 /** Browser import paths: toast and return false when no terrain library is loaded. */

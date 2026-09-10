@@ -25,7 +25,11 @@ import {
   resolvehyperlinksharedbridge,
 } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
+import {
+  indextopt,
+  ptstoarea,
+  rectpoints,
+} from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { escapedoublequoted } from 'zss/mapping/string'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
@@ -36,31 +40,39 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { maptonumber, maptostring } from 'zss/mapping/value'
+import {
+  maptonumber,
+  maptostring,
+} from 'zss/mapping/value'
 import { ispt } from 'zss/words/dir'
-import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
-
+import {
+  CATEGORY,
+  COLLISION,
+  NAME,
+  PT,
+  WORD,
+} from 'zss/words/types'
 import {
   memoryboardelementindex,
   memoryreadelement,
-  memoryreadelementbyidorindex,
-  memoryreadobject,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
-import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
+import {
+  memorysafedeleteelement,
+  memorywriteterrain,
+} from './boardlifecycle'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from './boards'
-import { memoryreadelementcodepage } from './bookoperations'
+import { memoryreadelementcodepage, memoryreadcodepage } from './bookoperations'
 import { memoryensuremainbook } from './books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagestatdefaults,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
-import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhassecretheap } from './inspectionbatch'
 import { memoryloadermatches } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
@@ -68,7 +80,11 @@ import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
 } from './rendering'
-import { memoryreadmainbook, memoryreadoperator } from './session'
+import {
+  memoryreadmainbook,
+  memoryreadoperator,
+  memoryreadbooklist,
+} from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -76,7 +92,6 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
   const id = element?.id ?? memoryboardelementindex(board, element)
   return `inspect:${id}`
@@ -98,9 +113,10 @@ function memoryinspectjoinlinkwords(words: WORD[]): string {
 }
 
 export function memoryinspectboardlines(board: string): string[] {
-  const boardcodepage = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.BOARD,
+  const boardcodepage = memoryreadcodepage(
+    memoryreadbooklist(),
     board,
+    CODE_PAGE_TYPE.BOARD,
   )
   const boardname = memoryreadcodepagename(boardcodepage)
   return [
@@ -168,7 +184,7 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
   const maybeboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
   let element: MAYBE<BOARD_ELEMENT>
   if (elementhyperlinkcontext.elementbyid) {
-    element = memoryreadobject(maybeboard, elementhyperlinkcontext.elementbyid)
+    element = memoryreadelement(maybeboard, elementhyperlinkcontext.elementbyid, { layer: 'object' })
   } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
     const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
     element = memoryreadelement(maybeboard, pt)
@@ -212,6 +228,16 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
         case 'p8':
         case 'p9':
         case 'p10':
+        case 'p11':
+        case 'p12':
+        case 'p13':
+        case 'p14':
+        case 'p15':
+        case 'p16':
+        case 'p17':
+        case 'p18':
+        case 'p19':
+        case 'p20':
         case 'item':
         case 'pushable':
         case 'breakable':
@@ -236,7 +262,7 @@ function registerhyperlinksforelementsetvalue(
   const elements: MAYBE<BOARD_ELEMENT>[] = []
   if (elementhyperlinkcontext.elementbyid) {
     elements.push(
-      memoryreadobject(maybeboard, elementhyperlinkcontext.elementbyid),
+      memoryreadelement(maybeboard, elementhyperlinkcontext.elementbyid, { layer: 'object' }),
     )
   } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
     const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
@@ -505,7 +531,7 @@ export function memoryinspectcommand(path: string, player: string) {
     return
   }
   const inspect = parsetarget(path)
-  const element = memoryreadelementbyidorindex(board, inspect.target)
+  const element = memoryreadelement(board, inspect.target)
   if (!ispresent(element)) {
     return
   }

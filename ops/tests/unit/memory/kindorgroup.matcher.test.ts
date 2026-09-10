@@ -1,8 +1,8 @@
+import { memorylistelement } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
   memoryelementisingroup,
   memoryelementmatchesstrgrouponboard,
-  memorylistboardelementsbygroup,
 } from 'zss/memory/boardlifecycle'
 import { memoryinitboard } from 'zss/memory/boards'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from 'zss/memory/types'
@@ -145,7 +145,7 @@ describe('readkind vs readgroup', () => {
   })
 })
 
-describe('memorylistboardelementsbygroup', () => {
+describe('memorylistelement group filter', () => {
   it('includes @group members', () => {
     const lion = makeobject('sid_lion', 2, 2, {
       name: 'lion',
@@ -153,7 +153,10 @@ describe('memorylistboardelementsbygroup', () => {
     })
     const gem = makeobject('sid_gem', 4, 4, { name: 'gem' })
     const board = makeboard([lion, gem])
-    const found = memorylistboardelementsbygroup(board, '', ['combat'])
+    const found = memorylistelement(board, {
+      group: ['combat'],
+      self: '',
+    })
     expect(found.map((el) => el.id)).toEqual(['sid_lion'])
   })
 
@@ -169,10 +172,10 @@ describe('memorylistboardelementsbygroup', () => {
     })
     red.color = COLOR.RED
     const board = makeboard([yellow, red])
-    const found = memorylistboardelementsbygroup(board, '', [
-      'combat',
-      ['YELLOW'],
-    ])
+    const found = memorylistelement(board, {
+      group: ['combat', ['YELLOW']],
+      self: '',
+    })
     expect(found.map((el) => el.id)).toEqual(['sid_yellow'])
   })
 })
@@ -267,9 +270,9 @@ describe('DIR.SELECT with GROUP', () => {
     })
     const self = makeobject('sid_self2', 1, 1, { name: 'object' })
     const board = makeboard([prey, self], 'groupselectboard')
-    expect(memorylistboardelementsbygroup(board, '', ['combat'])).toHaveLength(
-      1,
-    )
+    expect(
+      memorylistelement(board, { group: ['combat'], self: '' }),
+    ).toHaveLength(1)
     const result = memoryevaldir(
       board,
       self,

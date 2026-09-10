@@ -1,15 +1,27 @@
-import { boardsnapshot, boardrevert } from 'zss/feature/boardsnapshot'
+import {
+  boardsnapshot,
+  boardrevert,
+} from 'zss/feature/boardsnapshot'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memoryresetbooks } from 'zss/memory/session'
+import { memorypickcodepage } from 'zss/memory/codepages'
+import {
+  memoryresetbooks,
+  memoryreadbooklist,
+} from 'zss/memory/session'
 import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
-import { BOARD_SIZE, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  BOARD_SIZE,
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { CATEGORY, NAME } from 'zss/words/types'
-
+import {
+  CATEGORY,
+  NAME,
+} from 'zss/words/types'
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
   LANG_TYPES: false,
@@ -87,10 +99,8 @@ describe('boardsnapshot / boardrevert', () => {
     expect(book.pages.length).toBe(pagecountbefore + 1)
 
     const snapname = snapshotpagename(currentcp.id)
-    const snappage = memorypickcodepagewithtypeandstat(
-      CODE_PAGE_TYPE.BOARD,
-      snapname,
-    )
+    const snappage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.BOARD,
+      snapname,)
     expect(snappage).toBeTruthy()
     const snapboard = memoryreadboardbyaddress(snapname)
     expect(snapboard?.terrain[0]?.char).toBe(219)

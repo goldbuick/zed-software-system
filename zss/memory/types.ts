@@ -251,6 +251,16 @@ export type BOARD_ELEMENT = {
   p8?: number | string
   p9?: number | string
   p10?: number | string
+  p11?: number | string
+  p12?: number | string
+  p13?: number | string
+  p14?: number | string
+  p15?: number | string
+  p16?: number | string
+  p17?: number | string
+  p18?: number | string
+  p19?: number | string
+  p20?: number | string
   cycle?: number
   stepx?: number
   stepy?: number

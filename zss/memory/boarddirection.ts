@@ -16,17 +16,16 @@ import { DIR, PT } from 'zss/words/types'
 import {
   memoryboardelementindex,
   memoryfindboardplayer,
+  memorylistelement,
+  memorypicknearest,
   memoryreadelement,
-  memoryreadelementbyidorindex,
   memoryreadidorindex,
-  memoryreadobjectbypt,
-  memoryreadterrain,
 } from './boardaccess'
-import { memorylistboardelementsbygroup } from './boardlifecycle'
 import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
-import { memoryreadflags } from './flags'
-import { memorypickboardnearestpt, memoryreadboardpath } from './spatialqueries'
+import { memoryreadflags } from './bookoperations'
+import { memoryreadmainbook } from './session'
+import { memoryreadboardpath } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 function memoryevaldiraway(
@@ -43,7 +42,7 @@ function memoryevaldiraway(
     const collision = memoryreadelementstat(element, 'collision')
     const maybept = memoryreadboardpath(board, collision, pt, dest, true)
     if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-      const step = memoryreadobjectbypt(board, maybept)
+      const step = memoryreadelement(board, maybept, { layer: 'object' })
       if (!ispresent(step)) {
         pt.x = maybept.x
         pt.y = maybept.y
@@ -68,7 +67,7 @@ function memoryevaldirtoward(
     const collision = memoryreadelementstat(element, 'collision')
     const maybept = memoryreadboardpath(board, collision, pt, dest, false)
     if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-      const step = memoryreadobjectbypt(board, maybept)
+      const step = memoryreadelement(board, maybept, { layer: 'object' })
       if (!ispresent(step)) {
         pt.x = maybept.x
         pt.y = maybept.y
@@ -83,7 +82,7 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
   if (!ispresent(board) || !memoryptwithinboard(startpt)) {
     return []
   }
-  const startterrain = memoryreadterrain(board, startpt.x, startpt.y)
+  const startterrain = memoryreadelement(board, { x: startpt.x, y: startpt.y }, { layer: 'terrain' })
   const startkind = startterrain?.kind ?? ''
   const results: PT[] = []
   const visited = new Set<number>()
@@ -98,7 +97,7 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
       continue
     }
     visited.add(idx)
-    const terrain = memoryreadterrain(board, pt.x, pt.y)
+    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })
     if ((terrain?.kind ?? '') !== startkind) {
       continue
     }
@@ -325,13 +324,12 @@ export function memoryevaldir(
       case DIR.FLEE: {
         const fleegroup = dir[i + 1]
         if (isstrgroup(fleegroup)) {
-          const nearest = memorypickboardnearestpt(
+          const nearest = memorypicknearest(
             pt,
-            memorylistboardelementsbygroup(
-              board,
-              element?.id ?? player,
-              fleegroup,
-            ),
+            memorylistelement(board, {
+              group: fleegroup,
+              self: element?.id ?? player,
+            }),
           )
           if (ispresent(nearest) && ispt(nearest)) {
             memoryevaldiraway(board, element, pt, nearest.x, nearest.y)
@@ -343,13 +341,12 @@ export function memoryevaldir(
       case DIR.FIND: {
         const findgroup = dir[i + 1]
         if (isstrgroup(findgroup)) {
-          const nearest = memorypickboardnearestpt(
+          const nearest = memorypicknearest(
             pt,
-            memorylistboardelementsbygroup(
-              board,
-              element?.id ?? player,
-              findgroup,
-            ),
+            memorylistelement(board, {
+              group: findgroup,
+              self: element?.id ?? player,
+            }),
           )
           if (ispresent(nearest) && ispt(nearest)) {
             memoryevaldirtoward(board, element, pt, nearest.x, nearest.y)
@@ -544,12 +541,14 @@ export function memoryevaldir(
       case DIR.SELECT: {
         const [selectmode, group] = dir.slice(i + 1)
         if (isstrgroup(group)) {
-          const elements = memorylistboardelementsbygroup(
-            board,
-            element?.id ?? player,
+          const elements = memorylistelement(board, {
             group,
+            self: element?.id ?? player,
+          })
+          const tracking = memoryreadflags(
+            memoryreadmainbook(),
+            `tracking_${board.id}`,
           )
-          const tracking = memoryreadflags(`tracking_${board.id}`)
           const [groupname, groupcolor] = group
           const groupflag = [...(groupcolor ?? []), groupname].join('_')
           switch (selectmode) {
@@ -579,7 +578,7 @@ export function memoryevaldir(
               | string
               | number
               | undefined
-            const nextelement = memoryreadelementbyidorindex(board, target)
+            const nextelement = memoryreadelement(board, target)
             if (tracking[groupflag].length < 1) {
               delete tracking[groupflag]
             }

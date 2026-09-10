@@ -3,7 +3,6 @@ import { pttoindex } from 'zss/mapping/2d'
 import { ispresent } from 'zss/mapping/types'
 import {
   memoryexportboard,
-  memoryexportboardasjson,
   memoryimportboard,
 } from 'zss/memory/boardlifecycle'
 import {
@@ -14,9 +13,7 @@ import { memoryreadelementkind } from 'zss/memory/boards'
 import {
   memorycreatebook,
   memoryexportbook,
-  memoryexportbookasjson,
   memoryimportbook,
-  memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
@@ -147,7 +144,7 @@ describe('book export strip', () => {
       makeboard('two', [makecell(3, { char: 219, color: 4, bg: 0 })]),
     ])
 
-    const exported = memoryexportbookasjson(book)
+    const exported = memoryexportbook(book, { format: 'json' })
 
     expect(exported.terrainmap).toBeUndefined()
     const cells = exported.pages
@@ -163,7 +160,7 @@ describe('book export strip', () => {
   it('omits display fields when every stat matches the kind', () => {
     const book = makebook([makeboard('one', [makecell(0, WALL_KIND)])])
 
-    const exported = memoryexportbookasjson(book)
+    const exported = memoryexportbook(book, { format: 'json' })
     const cell = exported.pages
       .filter((page: any) => ispresent(page.board))
       .map((page: any) => page.board.terrain.filter(ispresent)[0])[0]
@@ -177,7 +174,7 @@ describe('book export strip', () => {
     makebook([])
     const board = makeboard('one', [makecell(0, { char: 219, color: 2, bg: 0 })])
 
-    const exported = memoryexportboardasjson(board)
+    const exported = memoryexportboard(board, { format: 'json' })
 
     const cell = exported.terrain.filter(ispresent)[0]
     expect(cell.char).toBe(219)
@@ -188,7 +185,7 @@ describe('book export strip', () => {
     makebook([])
     const board = makeboard('one', [makecell(0, { char: 219, color: 4, bg: 0 })])
 
-    const exported = memoryexportboardasjson(board, true)
+    const exported = memoryexportboard(board, { format: 'json', strip: true })
 
     const cell = exported.terrain.filter(ispresent)[0]
     expect(cell.char).toBeUndefined()
@@ -219,10 +216,10 @@ describe('book strip round trip', () => {
     const book = makebook([makeroundtripboard('one')])
     const before = readcells(readboards(book)[0]).map(readdisplay)
 
-    const exported = throughdisk(memoryexportbookasjson(book))
+    const exported = throughdisk(memoryexportbook(book, { format: 'json' }))
     expect(exported.terrainmap).toBeUndefined()
 
-    const imported = memoryimportbookfromjson(exported)
+    const imported = memoryimportbook(exported, { format: 'json' })
     expect(ispresent(imported)).toBe(true)
     memoryresetbooks([imported!])
 

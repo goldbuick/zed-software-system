@@ -141,7 +141,7 @@ Automatic: any patch that updates `gadget.layers` goes through `attachcontroltog
 
 ### Problem
 
-[`memoryreadbookgadgetlayersforboard`](../../memory/gadgetlayersflags.ts) calls [`memoryreadbookflags`](../../memory/bookoperations.ts) → boundary heap lookup. Called from [`rebuildgadgetlayers`](../../device/vm/handlers/ticktock.ts) **and** [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) for every player/board per tick.
+[`memoryreadbookgadgetlayersforboard`](../../memory/gadgetlayersflags.ts) calls [`memoryreadflags`](../../memory/bookoperations.ts) → boundary heap lookup. Called from [`rebuildgadgetlayers`](../../device/vm/handlers/ticktock.ts) **and** [`gadgetsynctick`](../../device/vm/gadgetsynctick.ts) for every player/board per tick.
 
 ### Intent
 
@@ -153,7 +153,7 @@ Cache the **live store object reference** per `(book, boardId)` for the lifetime
 memoryreadbookgadgetlayersforboard(book, board)
   if book !== cachebook → clear map, cachebook = book
   if map.has(board) → return cached store
-  else → memoryreadbookflags(book, createlayersid(board)), cache, return
+  else → memoryreadflags(book, createlayersid(board)), cache, return
 ```
 
 [`memoryresetbookgadgetlayersreadcache()`](../../memory/gadgetlayersflags.ts) clears when book **reference** changes (call from import/attach if a stale store is ever observed).
@@ -302,7 +302,7 @@ yarn jest ops/tests/unit/feature/lang/backend/typescript/codegenbench.test.ts --
 | `layersreadcontrol` | Near zero in render scenario |
 | `readgadgetcontrol` | Rare |
 | `memoryreadbookgadgetlayersforboard` | Near zero sample count |
-| `memoryreadbookflags` | May still appear elsewhere; should not dominate tick |
+| `memoryreadflags` | May still appear elsewhere; should not dominate tick |
 
 ---
 

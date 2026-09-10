@@ -77,7 +77,7 @@ Inspector stat categories: BOARD, OBJECT, RANGE, HOTKEY, CHAREDIT, etc.
 
 Source: [`zss/words/docs/stats.md`](https://github.com/goldbuick/zed-software-system/blob/main/zss/words/docs/stats.md)
 
-### p1–p10
+### p1–p20
 
 **Audience:** Creator · **Related:** BOARD_ELEMENT, #set
 
@@ -531,7 +531,7 @@ Source: [`zss/memory/types.ts`](https://github.com/goldbuick/zed-software-system
 
 **Audience:** Both · **Related:** CHIP, kind
 
-Single cell occupant: kind, char, color, collision, cycle, movement, params p1–p10.
+Single cell occupant: kind, char, color, collision, cycle, movement, params p1–p20.
 
 Source: [`zss/memory/types.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/types.ts)
 
@@ -557,7 +557,7 @@ Source: [`zss/words/docs/collision.md`](https://github.com/goldbuick/zed-softwar
 
 Named boolean or value bag on books, elements, or players for script state.
 
-Source: [`zss/memory/flags.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/flags.ts)
+Source: [`zss/memory/bookoperations.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/bookoperations.ts)
 
 ### MEMORY_LABEL
 

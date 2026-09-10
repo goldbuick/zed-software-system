@@ -8,11 +8,10 @@ import { ispresent } from 'zss/mapping/types'
 import {
   memorycreatebook,
   memoryexportbook,
-  memoryexportbookasjson,
   memoryimportbook,
-  memoryreadbookflags,
+  memoryreadflags,
   memoryreadcodepage,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -23,7 +22,7 @@ import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
 import { BOOK, BOOK_KEYS } from 'zss/memory/types'
 
 function wiretrimmedbookforimport(book: BOOK): FORMAT_OBJECT {
-  const j = trimmemoryexport(memoryexportbookasjson(book)) ?? {}
+  const j = trimmemoryexport(memoryexportbook(book, { format: 'json' })) ?? {}
   const pageswired = book.pages
     .map((p) => memoryexportcodepage(p))
     .filter(ispresent)
@@ -123,7 +122,7 @@ describe('trimexport', () => {
         },
       })
       const book = memorycreatebook([cp])
-      memorywritebookflag(book, 'player-with-stats', 'deaths', 3 as any)
+      memorywriteflag(book, 'player-with-stats', 'deaths', 3 as any)
 
       const trimmed = trimformatobject(memoryexportbook(book))
       expect(ispresent(trimmed)).toBe(true)
@@ -137,7 +136,7 @@ describe('trimexport', () => {
 
       const importedpage = memoryreadcodepage(again, 'snap')
       expect(importedpage?.board?.exitnorth).toBe('roomn')
-      expect(memoryreadbookflags(again, 'player-with-stats')).toEqual({
+      expect(memoryreadflags(again, 'player-with-stats')).toEqual({
         deaths: 3,
       })
     })

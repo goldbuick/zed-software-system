@@ -1,6 +1,6 @@
 import { memoryreadfrozen, memorywritefrozen } from 'zss/memory/session'
 
-describe('session simfreeze', () => {
+describe('session frozen', () => {
   afterEach(() => {
     memorywritefrozen(false)
   })
@@ -10,7 +10,7 @@ describe('session simfreeze', () => {
     expect(memoryreadfrozen()).toBe(false)
   })
 
-  it('memorywritesimfreeze toggles memoryreadsimfreeze', () => {
+  it('memorywritefrozen toggles memoryreadfrozen', () => {
     memorywritefrozen(true)
     expect(memoryreadfrozen()).toBe(true)
     memorywritefrozen(false)

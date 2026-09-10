@@ -11,11 +11,11 @@ title: expr.ts
 - `zss/mapping/types` — MAYBE, isarray, isnumber, ispresent, isstring
 - `zss/memory` — memoryreadboardbyevaldir
 - `zss/memory/boardmovement` — memorycheckmoveboardobject
-- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain
+- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain, memorylistelement (color / group)
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
-- `zss/memory/spatialqueries` — memoryfindplayerforelement, memorylistboardelementsbycolor
-- `zss/memory/boardlifecycle` — memorylistboardelementsbygroup (soft name / `@group` match)
+- `zss/memory/spatialqueries` — memoryfindplayerforelement
+- `zss/memory/boardlifecycle` — memoryelementmatchesstrgrouponboard (soft name / `@group` match)
 - `zss/memory/types` — BOARD_ELEMENT
 - `./category` — isstrcategory, mapstrcategory, readcategory
 - `./collision` — isstrcollision, mapstrcollision, readcollision

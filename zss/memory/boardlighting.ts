@@ -4,7 +4,7 @@ import { ispresent } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, DIR } from 'zss/words/types'
 
-import { memoryboardelementindex, memoryreadobjectatpt } from './boardaccess'
+import { memoryboardelementindex, memoryreadelement } from './boardaccess'
 import { memoryevaldir } from './boarddirection'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import {
@@ -105,7 +105,7 @@ function lightingappendringocclusions(
     return
   }
 
-  const object = memoryreadobjectatpt(board, pt)
+  const object = memoryreadelement(board, pt, { layer: 'object' })
   if (ispresent(object)) {
     ringout.push({
       x,

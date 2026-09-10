@@ -24,14 +24,17 @@ jest.mock('zss/device/session', () => ({
 }))
 
 const chipflagstore: Record<string, Record<string, unknown>> = {}
-jest.mock('zss/memory/flags', () => ({
-  memoryreadflags: (id: string) => {
+jest.mock('zss/memory/session', () => ({
+  memoryreadmainbook: () => ({ id: 'main' }),
+}))
+jest.mock('zss/memory/bookoperations', () => ({
+  memoryreadflags: (_book: unknown, id: string) => {
     if (!chipflagstore[id]) {
       chipflagstore[id] = {}
     }
     return chipflagstore[id]
   },
-  memoryclearflags: (id: string) => {
+  memoryclearflags: (_book: unknown, id: string) => {
     delete chipflagstore[id]
   },
 }))

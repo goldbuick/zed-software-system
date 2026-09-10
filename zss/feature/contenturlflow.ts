@@ -6,14 +6,18 @@ import {
 } from 'zss/feature/joinstatusscroll'
 import { CONTENT_DESTINATION, parsecontentdestination } from 'zss/feature/url'
 import { deepcopy } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/bookoperations'
+import { memoryreadmainbook } from 'zss/memory/session'
 
 export function runcontenturldestination(
   player: string,
   dest: CONTENT_DESTINATION,
 ): void {
   joinstatusscroll(player, 'loading content...', 'carrying flags')
-  const flags = deepcopy(memoryreadflags(player)) as Record<string, unknown>
+  const flags = deepcopy(memoryreadflags(memoryreadmainbook(), player)) as Record<
+    string,
+    unknown
+  >
   registercontentcrosslogin(SOFTWARE, player, { url: dest.raw, flags })
 }
 
