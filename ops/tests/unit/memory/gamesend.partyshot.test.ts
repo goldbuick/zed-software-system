@@ -14,7 +14,6 @@ jest.mock('zss/memory/runtime', () => {
   }
 })
 
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -28,7 +27,6 @@ import { READ_CONTEXT } from 'zss/words/reader'
 
 describe('player party shot remap', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

@@ -12,9 +12,9 @@ import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
+  READ_LAYER,
+  memorylistelement,
   memoryreadelement,
-  memoryreadobject,
-  memoryreadobjects,
 } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
@@ -22,7 +22,6 @@ import {
   memoryboardelementisobject,
 } from 'zss/memory/boardelement'
 import {
-  memorylistboardelementsbygroup,
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
@@ -43,7 +42,6 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadmainbook } from 'zss/memory/session'
 import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import {
@@ -108,15 +106,15 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   if (READ_CONTEXT.elementisplayer) {
     const maxplayershots = READ_CONTEXT.board?.maxplayershots ?? 0
     if (maxplayershots > 0) {
-      const bulletcount = memoryreadobjects(READ_CONTEXT.board).filter(
-        (obj) => {
-          return (
-            !obj.removed &&
-            ispid(obj.party) &&
-            memoryreadelementstat(obj, 'collision') === COLLISION.ISBULLET
-          )
-        },
-      ).length
+      const bulletcount = memorylistelement(READ_CONTEXT.board, {
+        layer: 'object',
+      }).filter((obj) => {
+        return (
+          !obj.removed &&
+          ispid(obj.party) &&
+          memoryreadelementstat(obj, 'collision') === COLLISION.ISBULLET
+        )
+      }).length
       if (bulletcount >= maxplayershots) {
         chip.set('didfail', 1)
         // yield after shoot
@@ -276,7 +274,7 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
   }
 
   // check if we are blocked by a pushable object element
-  let target = memoryreadelement(board, dir.destpt)
+  let target = memoryreadelement(board, dir.destpt, READ_LAYER.ANY)
   if (
     memoryboardelementisobject(target) &&
     memoryreadelementstat(target, 'pushable')
@@ -286,7 +284,7 @@ function commandput(chip: CHIP, words: WORD[], id?: string, arg?: WORD): 0 | 1 {
     const pt = ptapplydir(pivot, dirfrompts(from, pivot))
     memorymoveobject(READ_CONTEXT.book, board, target, pt)
     // grab new target
-    target = memoryreadelement(board, dir.destpt)
+    target = memoryreadelement(board, dir.destpt, READ_LAYER.ANY)
   }
 
   // handle put empty case
@@ -343,7 +341,7 @@ function commanddupe(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   const dirboard = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
   const dupedirboard = memoryreadboardbyevaldir(dupedir, READ_CONTEXT.board)
 
-  const maybetarget = memoryreadelement(dirboard, dir.destpt)
+  const maybetarget = memoryreadelement(dirboard, dir.destpt, READ_LAYER.ANY)
   if (ispresent(maybetarget) && ispresent(maybetarget.kind)) {
     // handle player case
     const [maybename] = maybetarget.kind
@@ -501,7 +499,11 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       const [target] = readargs(words, 0, [ARG_TYPE.STRING])
-      const maybeobject = memoryreadobject(READ_CONTEXT.board, target)
+      const maybeobject = memoryreadelement(
+        READ_CONTEXT.board,
+        target,
+        READ_LAYER.OBJECT,
+      )
       if (
         ispresent(READ_CONTEXT.element?.x) &&
         ispresent(READ_CONTEXT.element.y) &&
@@ -534,7 +536,11 @@ export const BOARD_FIRMWARE = createfirmware()
           ) {
             break
           }
-          const maybetile = memoryreadelement(READ_CONTEXT.board, scan)
+          const maybetile = memoryreadelement(
+            READ_CONTEXT.board,
+            scan,
+            READ_LAYER.ANY,
+          )
           if (maybetile?.kind === READ_CONTEXT.element.kind) {
             continue
           }
@@ -573,7 +579,11 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
+      const maybetarget = memoryreadelement(
+        targetboard,
+        targetdir.destpt,
+        READ_LAYER.ANY,
+      )
       if (
         ispresent(targetboard) &&
         ispresent(maybetarget) &&
@@ -606,15 +616,18 @@ export const BOARD_FIRMWARE = createfirmware()
         targetdir,
         READ_CONTEXT.board,
       )
-      const maybetarget = memoryreadelement(targetboard, targetdir.destpt)
+      const maybetarget = memoryreadelement(
+        targetboard,
+        targetdir.destpt,
+        READ_LAYER.ANY,
+      )
       if (
         ispresent(targetboard) &&
         ispresent(maybetarget) &&
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
-        const runtime = memoryensureboardelementruntime(maybetarget)
-        if (runtime.pushedtick === READ_CONTEXT.timestamp) {
+        if (maybetarget.pushedtick === READ_CONTEXT.timestamp) {
           return 0
         }
         const shovedir = readevaldirfromtarget(
@@ -633,7 +646,7 @@ export const BOARD_FIRMWARE = createfirmware()
           },
         )
         if (moved) {
-          runtime.pushedtick = READ_CONTEXT.timestamp
+          maybetarget.pushedtick = READ_CONTEXT.timestamp
         }
       }
       return 0
@@ -750,11 +763,10 @@ export const BOARD_FIRMWARE = createfirmware()
       const intoname = readstrkindname(into)
       const intocolor = readstrkindcolor(into)
       const intobg = readstrkindbg(into)
-      memorylistboardelementsbygroup(
-        READ_CONTEXT.board,
-        READ_CONTEXT.elementid,
-        target,
-      ).forEach((element) => {
+      memorylistelement(READ_CONTEXT.board, {
+        group: target,
+        self: READ_CONTEXT.elementid,
+      }).forEach((element) => {
         // modify existing elements
         if (ispresent(intocolor)) {
           element.color = intocolor
@@ -825,7 +837,7 @@ export const BOARD_FIRMWARE = createfirmware()
       // if there is already an object with mark id, bail
       if (
         ispresent(READ_CONTEXT.board) &&
-        memoryreadobject(READ_CONTEXT.board, mark)
+        memoryreadelement(READ_CONTEXT.board, mark, READ_LAYER.OBJECT)
       ) {
         chip.set('didfail', 1)
         return 0
@@ -849,7 +861,7 @@ export const BOARD_FIRMWARE = createfirmware()
       // if there is already an object with mark id, bail
       if (
         ispresent(READ_CONTEXT.board) &&
-        memoryreadobject(READ_CONTEXT.board, mark)
+        memoryreadelement(READ_CONTEXT.board, mark, READ_LAYER.OBJECT)
       ) {
         chip.set('didfail', 1)
         return 0

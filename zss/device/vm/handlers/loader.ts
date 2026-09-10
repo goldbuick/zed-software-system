@@ -4,10 +4,10 @@ import type { MESSAGE } from 'zss/device/types'
 import { parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
-  memoryimportbookfromjson,
+  memoryimportbook,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
-import { memoryimportcodepagefromjson } from 'zss/memory/codepageoperations'
+import { memoryimportcodepage } from 'zss/memory/codepageoperations'
 import { memoryloader } from 'zss/memory/loader'
 import { memoryreadmainbook, memorywritebook } from 'zss/memory/session'
 import { memoryreadconfig } from 'zss/memory/utilities'
@@ -38,7 +38,7 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
         apilog(vm, message.player, `loading ${eventname}`)
         const json = JSON.parse(content.json)
         if (ispresent(json.data) && isstring(json.exported)) {
-          const book = memoryimportbookfromjson(json.data)
+          const book = memoryimportbook(json.data, { format: 'json' })
           if (ispresent(book)) {
             memorywritebook(book)
             apilog(vm, message.player, `loaded ${json.exported}`)
@@ -53,7 +53,7 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
           ispresent(json.data) &&
           isstring(json.exported)
         ) {
-          const codepage = memoryimportcodepagefromjson(json.data)
+          const codepage = memoryimportcodepage(json.data, { format: 'json' })
           if (ispresent(codepage)) {
             memorywritecodepage(mainbook, codepage)
             apilog(vm, message.player, `loaded ${json.exported}`)

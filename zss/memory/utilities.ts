@@ -15,16 +15,15 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { base64urltobase64 } from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
 import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryreadobject } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import {
   memoryexportbook,
-  memoryexportbookasjson,
   memoryimportbook,
-  memoryimportbookfromjson,
   memoryreadelementdisplay,
+  memoryreadflags,
 } from './bookoperations'
 import { bookzstdcompressbase64url } from './bookzstd'
 import {
@@ -32,7 +31,6 @@ import {
   buildexportidremap,
   collectflagprotectedids,
 } from './exportidremap'
-import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
@@ -171,10 +169,10 @@ export function memoryadminmenu(
   rows.push(DIVIDER)
   for (let i = 0; i < activelist.length; ++i) {
     const pid = activelist[i]
-    const { user } = memoryreadflags(pid)
+    const { user } = memoryreadflags(memoryreadmainbook(), pid)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(pid)
-    const playerelement = memoryreadobject(playerboard, pid)
+    const playerelement = memoryreadelement(playerboard, pid, READ_LAYER.OBJECT)
     const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
@@ -260,7 +258,13 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
   if (!Array.isArray(list)) {
     return []
   }
-  return list.map(memoryimportbookfromjson).filter(ispresent)
+  return list
+    .map((entry) =>
+      memoryimportbook(entry as Record<string, unknown>, {
+        format: 'json',
+      }),
+    )
+    .filter(ispresent)
 }
 
 /**
@@ -273,7 +277,9 @@ export async function memorycompressbooks(books: BOOK[]) {
   if (getclimode()) {
     const jsonbooks: unknown[] = []
     for (let i = 0; i < books.length; ++i) {
-      const exported = trimmemoryexport(memoryexportbookasjson(books[i]))
+      const exported = trimmemoryexport(
+        memoryexportbook(books[i], { format: 'json' }),
+      )
       if (exported) {
         jsonbooks.push(exported)
       }
@@ -283,7 +289,9 @@ export async function memorycompressbooks(books: BOOK[]) {
 
   const wires: FORMAT_OBJECT[] = []
   for (let i = 0; i < books.length; ++i) {
-    const wire = memoryexportbook(books[i], { noremap: true })
+    const wire = memoryexportbook(books[i], {
+      noremap: true,
+    }) as MAYBE<FORMAT_OBJECT>
     if (wire) {
       wires.push(wire)
     }

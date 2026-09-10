@@ -1,18 +1,13 @@
+import { pttoindex } from 'zss/mapping/2d'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { CATEGORY, NAME } from 'zss/words/types'
 
-import { memoryboardelementindex } from './boardaccess'
 import { memoryreadelementkind } from './boards'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
   memoryapplyelementstats,
   memoryreadcodepagestatsfromtext,
 } from './codepageoperations'
-import {
-  memoryensureboardelementruntime,
-  memoryensureboardruntime,
-  memoryreadboardruntime,
-} from './runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from './types'
 
 // named-index utils (name -> Set of object id | terrain index)
@@ -26,18 +21,17 @@ export function memorywriteboardnamed(
   if (!ispresent(board) || !ispresent(element)) {
     return
   }
-  const boardruntime = memoryensureboardruntime(board)
-  if (!ispresent(boardruntime.named)) {
+  if (!ispresent(board.named)) {
     return
   }
   // update named
-  const kindname = memoryensureboardelementruntime(element).kinddata?.name
+  const kindname = element.kinddata?.name
   const name = NAME(element.name ?? kindname ?? '')
-  if (!boardruntime.named[name]) {
-    boardruntime.named[name] = new Set<string>()
+  if (!board.named[name]) {
+    board.named[name] = new Set<string>()
   }
   // object.id or terrain index
-  boardruntime.named[name].add(element?.id ?? index ?? '')
+  board.named[name].add(element?.id ?? index ?? '')
 }
 
 export function memorydeleteboardobjectnamedlookup(
@@ -45,14 +39,10 @@ export function memorydeleteboardobjectnamedlookup(
   object: MAYBE<BOARD_ELEMENT>,
 ) {
   if (ispresent(board) && ispresent(object?.id)) {
-    const boardruntime = memoryreadboardruntime(board)
     // remove from named
     const display = memoryreadelementdisplay(object)
-    if (
-      ispresent(boardruntime?.named?.[display.name]) &&
-      ispresent(object.id)
-    ) {
-      boardruntime.named[display.name].delete(object.id)
+    if (ispresent(board.named?.[display.name]) && ispresent(object.id)) {
+      board.named[display.name].delete(object.id)
     }
   }
 }
@@ -96,8 +86,7 @@ export function memoryrebuildboardnamed(board: MAYBE<BOARD>) {
     return
   }
 
-  const boardruntime = memoryensureboardruntime(board)
-  delete boardruntime.named
+  delete board.named
 
   memoryinitboardnamed(board)
 }
@@ -109,8 +98,7 @@ export function memoryinitboardnamed(board: MAYBE<BOARD>) {
   }
 
   // already cached
-  const boardruntime = memoryensureboardruntime(board)
-  if (ispresent(boardruntime.named)) {
+  if (ispresent(board.named)) {
     return
   }
 
@@ -128,7 +116,7 @@ export function memoryinitboardnamed(board: MAYBE<BOARD>) {
       !ispresent(object.removed)
     ) {
       // add category and kinddata
-      memoryensureboardelementruntime(object).category = CATEGORY.ISOBJECT
+      object.category = CATEGORY.ISOBJECT
       memoryreadelementkind(object)
 
       // read code to get name
@@ -153,7 +141,7 @@ export function memoryinitboardnamed(board: MAYBE<BOARD>) {
   let y = 0
   const terrain = board.terrain
   if (!ispresent(terrain)) {
-    boardruntime.named = named
+    board.named = named
     return
   }
   for (let i = 0; i < terrain.length; ++i) {
@@ -164,7 +152,7 @@ export function memoryinitboardnamed(board: MAYBE<BOARD>) {
       tile.y = y
 
       // add category and kinddata
-      memoryensureboardelementruntime(tile).category = CATEGORY.ISTERRAIN
+      tile.category = CATEGORY.ISTERRAIN
       memoryreadelementkind(tile)
 
       // update named lookup
@@ -181,7 +169,7 @@ export function memoryinitboardnamed(board: MAYBE<BOARD>) {
     }
   }
 
-  boardruntime.named = named
+  board.named = named
 }
 
 export function memorydeleteboardterrainnamed(
@@ -189,12 +177,11 @@ export function memorydeleteboardterrainnamed(
   terrain: MAYBE<BOARD_ELEMENT>,
 ) {
   if (ispresent(board) && ispresent(terrain?.x) && ispresent(terrain.y)) {
-    const boardruntime = memoryreadboardruntime(board)
     // remove from named
     const display = memoryreadelementdisplay(terrain)
-    const index = memoryboardelementindex(board, terrain)
-    if (ispresent(boardruntime?.named?.[display.name])) {
-      boardruntime.named[display.name].delete(index)
+    const index = pttoindex({ x: terrain.x, y: terrain.y }, BOARD_WIDTH)
+    if (ispresent(board.named?.[display.name])) {
+      board.named[display.name].delete(index)
     }
   }
 }

@@ -1,7 +1,10 @@
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
-import { memoryboardelementisobject } from 'zss/memory/boardelement'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
+import {
+  memoryboardelementisobject,
+  memorycopyelementkinddata,
+} from 'zss/memory/boardelement'
 import {
   memoryreadgroup,
   memorysafedeleteelement,
@@ -13,7 +16,6 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memorycopyboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -27,7 +29,7 @@ import { PT } from 'zss/words/types'
 function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      const maybeobject = memoryreadelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       if (memoryboardelementisobject(maybeobject)) {
         memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
@@ -47,7 +49,7 @@ function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
 function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      const maybeobject = memoryreadelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       if (memoryboardelementisobject(maybeobject)) {
         memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
@@ -82,6 +84,16 @@ export function mapelementcopy(
   maybenew.p8 = from.p8
   maybenew.p9 = from.p9
   maybenew.p10 = from.p10
+  maybenew.p11 = from.p11
+  maybenew.p12 = from.p12
+  maybenew.p13 = from.p13
+  maybenew.p14 = from.p14
+  maybenew.p15 = from.p15
+  maybenew.p16 = from.p16
+  maybenew.p17 = from.p17
+  maybenew.p18 = from.p18
+  maybenew.p19 = from.p19
+  maybenew.p20 = from.p20
   maybenew.code = from.code
   maybenew.item = from.item
   maybenew.group = from.group
@@ -98,7 +110,7 @@ export function mapelementcopy(
   maybenew.breakable = from.breakable
   maybenew.tickertext = from.tickertext
   maybenew.tickertime = from.tickertime
-  memorycopyboardelementruntime(maybenew, from)
+  memorycopyelementkinddata(maybenew, from)
 }
 
 export function boardcopy(
@@ -181,9 +193,13 @@ export function boardcopy(
         // read source element
         const src: PT = { x: srcp1.x + x, y: srcp1.y + y }
         let terrain: MAYBE<BOARD_ELEMENT>
-        let object = memoryreadelement(sourceboard, src)
+        let object = memoryreadelement(sourceboard, src, READ_LAYER.ANY)
         if (memoryboardelementisobject(object)) {
-          terrain = memoryreadterrain(sourceboard, src.x, src.y)
+          terrain = memoryreadelement(
+            sourceboard,
+            { x: src.x, y: src.y },
+            READ_LAYER.TERRAIN,
+          )
           if (ispid(object?.id)) {
             object = undefined
           }
@@ -301,7 +317,7 @@ export function boardcopygroup(
         y: p1.y + (el.y ?? 0) - corner.y,
       }
 
-      const destelement = memoryreadelement(targetboard, pt)
+      const destelement = memoryreadelement(targetboard, pt, READ_LAYER.ANY)
       if (ispresent(destelement)) {
         if (memoryboardelementisobject(destelement)) {
           memorysafedeleteelement(targetboard, destelement, book.timestamp)

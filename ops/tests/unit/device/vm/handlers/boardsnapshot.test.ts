@@ -1,16 +1,27 @@
-import { boardsnapshot, boardrevert } from 'zss/feature/boardsnapshot'
+import {
+  boardsnapshot,
+  boardrevert,
+} from 'zss/feature/boardsnapshot'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
-import { memoryresetbooks } from 'zss/memory/session'
+import { memorypickcodepage } from 'zss/memory/codepages'
+import {
+  memoryresetbooks,
+  memoryreadbooklist,
+} from 'zss/memory/session'
 import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
-import { BOARD_SIZE, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import {
+  BOARD_SIZE,
+  BOARD_WIDTH,
+  CODE_PAGE_TYPE,
+} from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
-import { CATEGORY, NAME } from 'zss/words/types'
-
+import {
+  CATEGORY,
+  NAME,
+} from 'zss/words/types'
 jest.mock('zss/config', () => ({
   LANG_DEV: false,
   LANG_TYPES: false,
@@ -32,11 +43,10 @@ function makewallterrain(x: number, y: number): BOARD_ELEMENT {
     kind: 'wall',
     char: 219,
     color: 2,
-    runtime: '',
   }
-  memorywriteboardelementruntime(tile, {
+  Object.assign(tile, {
     category: CATEGORY.ISTERRAIN,
-    kinddata: { id: 'wall', name: 'wall', char: 219, runtime: '' },
+    kinddata: { id: 'wall', name: 'wall', char: 219 },
   })
   return tile
 }
@@ -53,7 +63,6 @@ function makeboard(name: string, terrainat?: BOARD_ELEMENT): BOARD {
     name,
     terrain,
     objects: {},
-    runtime: '',
   }
 }
 
@@ -78,7 +87,7 @@ describe('boardsnapshot / boardrevert', () => {
     const wall = makewallterrain(0, 0)
     const currentboard = makeboard('here', wall)
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,
@@ -90,10 +99,8 @@ describe('boardsnapshot / boardrevert', () => {
     expect(book.pages.length).toBe(pagecountbefore + 1)
 
     const snapname = snapshotpagename(currentcp.id)
-    const snappage = memorypickcodepagewithtypeandstat(
-      CODE_PAGE_TYPE.BOARD,
-      snapname,
-    )
+    const snappage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.BOARD,
+      snapname,)
     expect(snappage).toBeTruthy()
     const snapboard = memoryreadboardbyaddress(snapname)
     expect(snapboard?.terrain[0]?.char).toBe(219)
@@ -103,7 +110,7 @@ describe('boardsnapshot / boardrevert', () => {
     const wall = makewallterrain(0, 0)
     const currentboard = makeboard('here', wall)
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,
@@ -132,7 +139,7 @@ describe('boardsnapshot / boardrevert', () => {
     const wall = makewallterrain(0, 0)
     const currentboard = makeboard('here', wall)
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const currentcp = memorycreatecodepage('@board here\n', {
       board: currentboard,

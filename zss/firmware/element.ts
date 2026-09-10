@@ -17,8 +17,9 @@ import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
+  READ_LAYER,
+  memorylistelement,
   memoryreadelement,
-  memoryreadelementbyidorindex,
 } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
@@ -31,16 +32,14 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memoryreadflags } from 'zss/memory/flags'
+import {
+  memoryreadelementdisplay,
+  memoryreadflags,
+} from 'zss/memory/bookoperations'
 import { memorysendtoelement } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
-import {
-  memoryfindplayerforelement,
-  memorylistboardnamedelements,
-} from 'zss/memory/spatialqueries'
+import { memoryfindplayerforelement } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { CATEGORY_CONSTS } from 'zss/words/category'
 import { collisionconsts } from 'zss/words/collision'
@@ -85,6 +84,16 @@ const STANDARD_STAT_NAMES = new Set([
   'p8',
   'p9',
   'p10',
+  'p11',
+  'p12',
+  'p13',
+  'p14',
+  'p15',
+  'p16',
+  'p17',
+  'p18',
+  'p19',
+  'p20',
   'cycle',
   'stepx',
   'stepy',
@@ -109,6 +118,16 @@ const REMOTE_STAT_NAMES = new Set([
   'p8',
   'p9',
   'p10',
+  'p11',
+  'p12',
+  'p13',
+  'p14',
+  'p15',
+  'p16',
+  'p17',
+  'p18',
+  'p19',
+  'p20',
   'cycle',
   'stepx',
   'stepy',
@@ -145,14 +164,14 @@ function resolveremotetarget(
     const [dest, ii] = readargs(words, index, [ARG_TYPE.DIR])
     const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
     if (dest.targets.length) {
-      return [memoryreadelement(board, dest.targets[0]), ii]
+      return [memoryreadelement(board, dest.targets[0], READ_LAYER.ANY), ii]
     }
-    return [memoryreadelement(board, dest.destpt), ii]
+    return [memoryreadelement(board, dest.destpt, READ_LAYER.ANY), ii]
   }
   if (isstring(peek) || isnumber(peek)) {
     const [, ii] = readargs(words, index, [ARG_TYPE.ANY])
     return [
-      memoryreadelementbyidorindex(READ_CONTEXT.board, maptostring(peek)),
+      memoryreadelement(READ_CONTEXT.board, maptostring(peek), READ_LAYER.ANY),
       ii,
     ]
   }
@@ -266,7 +285,7 @@ function readinput(
   graphics: MAYBE<string>,
   facing: MAYBE<number>,
 ) {
-  const flags = memoryreadflags(player) as PLAYER_INPUT_FLAGS
+  const flags = memoryreadflags(READ_CONTEXT.book, player) as PLAYER_INPUT_FLAGS
   return applyinputqueue(flags, graphics, facing)
 }
 
@@ -341,9 +360,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // sender info
     const maybesender = READ_CONTEXT.element?.sender
-    const sender = memoryreadelementbyidorindex(
+    const sender = memoryreadelement(
       READ_CONTEXT.board,
       isstring(maybesender) ? maybesender : '',
+      READ_LAYER.ANY,
     )
 
     // read stat
@@ -353,7 +373,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'graphics':
       case 'facing': {
         // read player flag
-        const value = memoryreadflags(playerid)[name]
+        const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
         return [
           true,
           ispresent(value)
@@ -460,7 +480,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // fallback to player flags
     // read value
-    const value = memoryreadflags(playerid)[name]
+    const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
     return [ispresent(value), value]
   },
   set(_, name, value) {
@@ -510,11 +530,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
       // board displayed over/under this one
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.over !== valuestr) {
-            boardruntime.overboard = undefined
+            READ_CONTEXT.board.overboard = undefined
           }
           READ_CONTEXT.board.over = valuestr
           return [true, valuestr]
@@ -522,11 +541,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'under':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.under !== valuestr) {
-            boardruntime.underboard = undefined
+            READ_CONTEXT.board.underboard = undefined
           }
           READ_CONTEXT.board.under = valuestr
           return [true, valuestr]
@@ -534,11 +552,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'palette':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.palette !== valuestr) {
-            boardruntime.palettepage = undefined
+            READ_CONTEXT.board.palettepage = undefined
           }
           READ_CONTEXT.board.palette = valuestr
           return [true, valuestr]
@@ -546,11 +563,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
         break
       case 'charset':
         if (ispresent(READ_CONTEXT.board)) {
-          const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
           const valuestr = maptostring(value)
           // reset lookup
           if (READ_CONTEXT.board.charset !== valuestr) {
-            boardruntime.charsetpage = undefined
+            READ_CONTEXT.board.charsetpage = undefined
           }
           READ_CONTEXT.board.charset = valuestr
           return [true, valuestr]
@@ -741,7 +757,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     }
 
     // fallback to player flags
-    const flags = memoryreadflags(player)
+    const flags = memoryreadflags(READ_CONTEXT.book, player)
     if (ispresent(flags)) {
       flags[name] = value
       // sticky flags persist on the local register tab, not the host sim
@@ -787,7 +803,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
           dest,
         )
       ) {
-        const blocked = memoryreadelement(READ_CONTEXT.board, dest)
+        const blocked = memoryreadelement(
+          READ_CONTEXT.board,
+          dest,
+          READ_LAYER.ANY,
+        )
         memorysendtoelement(blocked, READ_CONTEXT.element, 'thud')
       }
     }
@@ -942,7 +962,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'morph',
-    [ARG_TYPE.KIND, 'change kind in place, keep stats and id'],
+    [ARG_TYPE.KIND, 'change kind in place, drop code and kinddata'],
     (chip, words) => {
       const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
       const ok = memorymorphboardobject(
@@ -966,7 +986,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
     (_, words) => {
       // zed cafe simply copies the code from the given named element
       const [name] = readargs(words, 0, [ARG_TYPE.NAME])
-      const elements = memorylistboardnamedelements(READ_CONTEXT.board, name)
+      const elements = memorylistelement(READ_CONTEXT.board, { name })
       if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
         READ_CONTEXT.element.code = pick(...elements).code ?? ''
         memoryhaltchip(READ_CONTEXT.elementid)
@@ -994,7 +1014,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           let anyfailed = false
           for (let i = 0; i < dest.targets.length; ++i) {
             const target = dest.targets[i]
-            const element = memoryreadelement(board, target)
+            const element = memoryreadelement(board, target, READ_LAYER.ANY)
             if (ispresent(element)) {
               element.char = charvalue
             } else {
@@ -1006,7 +1026,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
 
         // handle single-target dirs
-        const element = memoryreadelement(board, dest.destpt)
+        const element = memoryreadelement(board, dest.destpt, READ_LAYER.ANY)
         if (ispresent(element)) {
           element.char = charvalue
         } else {
@@ -1039,7 +1059,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
           let anyfailed = false
           for (let i = 0; i < dest.targets.length; ++i) {
             const target = dest.targets[i]
-            const element = memoryreadelement(board, target)
+            const element = memoryreadelement(board, target, READ_LAYER.ANY)
             if (ispresent(element)) {
               memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
             } else {
@@ -1051,7 +1071,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
 
         // handle single-target dirs
-        const element = memoryreadelement(board, dest.destpt)
+        const element = memoryreadelement(board, dest.destpt, READ_LAYER.ANY)
         if (ispresent(element)) {
           memoryapplyboardelementcolor(element, colorvalue ?? COLOR.PURPLE)
           chip.set('didfail', 0)

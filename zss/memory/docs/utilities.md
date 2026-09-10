@@ -25,10 +25,9 @@ title: utilities.ts
 - `zss/mapping/qr` — qrlines
 - `zss/mapping/types` — ispresent, isstring
 - `zss/words/types` — COLOR
-- `./boardaccess` — memoryreadobject
-- `./bookoperations` — memoryexportbook(asjson), memoryimportbook(fromjson), memoryreadelementdisplay
-- `./exportidremap` — cross-book protected dense id remap
-- `./flags` — memoryreadflags
+- `./boardaccess` — memoryreadelement
+- `./bookoperations` — memoryexportbook, memoryimportbook (`format` / `strip` options), memoryreadelementdisplay
+- `./exportidremap` — dense id remap used by compress/export (prefer `memoryexportbook` / `memorycompressbooks`)
 - `./playermanagement` — memoryreadplayerboard
 - `./session` — memoryisoperator, memoryreadmainbook, memoryreadoperator, memoryreadtopic, memorywritehalt
 - `./types` — BOOK, MEMORY_LABEL

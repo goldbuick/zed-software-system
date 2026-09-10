@@ -1,4 +1,3 @@
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -23,20 +22,13 @@ import {
   memoryinvalidatecodepagepickcache,
   memoryreadcodepagepickcache,
 } from 'zss/memory/codepagepickcache'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import {
-  memoryensureboardelementruntime,
-  memoryreadboardruntime,
-  memoryreadboardelementruntime,
-} from 'zss/memory/runtimeboundary'
-import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryresetbooks } from 'zss/memory/session'
+import { memorypickcodepage } from 'zss/memory/codepages'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
+import { memoryresetbooks, memoryreadbooklist } from 'zss/memory/session'
 import { BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { CATEGORY } from 'zss/words/types'
-
 describe('memoryreadelementkind kinddata refresh', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -52,7 +44,7 @@ describe('memoryreadelementkind kinddata refresh', () => {
       'widget',
     )
     expect(object).toBeDefined()
-    memoryensureboardelementruntime(object!).category = CATEGORY.ISOBJECT
+    object!.category = CATEGORY.ISOBJECT
 
     const stub = memoryreadelementkind(object)
     expect(stub?.code).toBe('@widget\n')
@@ -81,8 +73,7 @@ describe('memoryreadelementkind kinddata refresh', () => {
 
     const first = memoryreadelementkind(object)
     expect(first?.char).toBe(178)
-    const rt = memoryreadboardelementruntime(object)
-    expect(rt?.kindsourcepageid).toBe(page.id)
+    expect(object?.kindsourcepageid).toBe(page.id)
 
     memoryinvalidatecodepagepickcache()
     const second = memoryreadelementkind(object)
@@ -114,7 +105,6 @@ describe('memoryreadelementkind kinddata refresh', () => {
 
 describe('codepage pick cache', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -122,7 +112,8 @@ describe('codepage pick cache', () => {
     const page = memorycreatecodepage('@torch\n', {})
     memoryresetbooks([memorycreatebook([page])])
     expect(
-      memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.OBJECT, 'torch')?.id,
+      memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT, 'torch')
+        ?.id,
     ).toBe(page.id)
     expect(
       memoryreadcodepagepickcache(CODE_PAGE_TYPE.OBJECT, 'torch').hit,
@@ -137,7 +128,6 @@ describe('codepage pick cache', () => {
 
 describe('board object occupancy', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -154,15 +144,23 @@ describe('board object occupancy', () => {
       'crate',
     )
     expect(object?.id).toBeDefined()
-    expect(memoryreadobjectatpt(board, { x: 3, y: 4 })?.id).toBe(object!.id)
+    expect(
+      memoryreadelement(board, { x: 3, y: 4 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(object!.id)
 
     const blocked = memorymoveboardobject(board, object, { x: 4, y: 4 })
     expect(blocked).toBeUndefined()
-    expect(memoryreadobjectatpt(board, { x: 3, y: 4 })).toBeUndefined()
-    expect(memoryreadobjectatpt(board, { x: 4, y: 4 })?.id).toBe(object!.id)
+    expect(
+      memoryreadelement(board, { x: 3, y: 4 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 4, y: 4 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(object!.id)
 
     memorydeleteboardobject(board, object!.id!)
-    expect(memoryreadobjectatpt(board, { x: 4, y: 4 })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 4, y: 4 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
     expect(board.objects[object!.id!]).toBeUndefined()
   })
 
@@ -174,16 +172,15 @@ describe('board object occupancy', () => {
     memoryensureboardready(board)
 
     memorywriteterrain(board, { x: 1, y: 1, kind: 'water' })
-    const runtime = memoryreadboardruntime(board)
-    const named = runtime?.named?.water
+    const named = board.named?.water
     expect(named?.has(1 + 1 * BOARD_WIDTH)).toBe(true)
   })
 
   it('memoryensureboardready is lazy when named exists', () => {
     const board = memorycreateboard()
     memoryinitboardnamed(board)
-    const before = memoryreadboardruntime(board)?.named
+    const before = board.named
     memoryensureboardready(board)
-    expect(memoryreadboardruntime(board)?.named).toBe(before)
+    expect(board.named).toBe(before)
   })
 })

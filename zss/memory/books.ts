@@ -5,10 +5,7 @@ import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { ispresent, isstring } from 'zss/mapping/types'
 
-import {
-  memorycreatebook,
-  memoryensurebookcodepagewithtype,
-} from './bookoperations'
+import { memorycreatebook, memoryensurecodepage } from './bookoperations'
 import {
   memoryreadbookbyaddress,
   memoryreadfirstbook,
@@ -18,7 +15,6 @@ import {
   memorywritemainbook,
 } from './session'
 import { CODE_PAGE_TYPE } from './types'
-
 export function memorycreatesoftwarebook(maybename?: string) {
   const book = memorycreatebook([])
   if (isstring(maybename)) {
@@ -64,9 +60,5 @@ export function memoryensuremaincodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
-  return memoryensurebookcodepagewithtype(
-    memoryensuremainbook(),
-    createtype,
-    address,
-  )
+  return memoryensurecodepage(memoryensuremainbook(), createtype, address)
 }

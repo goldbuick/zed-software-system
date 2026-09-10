@@ -6,10 +6,9 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 import {
+  READ_LAYER,
   memoryboardelementindex,
-  memoryreadobject,
-  memoryreadobjectatpt,
-  memoryreadterrain,
+  memoryreadelement,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import {
@@ -53,7 +52,6 @@ export function memorycheckblockedboardobject(
       collision: COLLISION.ISSOLID,
       x: dest.x,
       y: dest.y,
-      runtime: '',
     }
   }
 
@@ -61,7 +59,7 @@ export function memorycheckblockedboardobject(
   const targetidx = dest.x + dest.y * BOARD_WIDTH
 
   // blocked by an object
-  const maybeobject = memoryreadobjectatpt(board, dest)
+  const maybeobject = memoryreadelement(board, dest, READ_LAYER.OBJECT)
   if (ispresent(maybeobject)) {
     if (isplayer) {
       // players do not block players
@@ -94,7 +92,7 @@ export function memorycheckmoveboardobject(
   target: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): boolean {
-  const object = memoryreadobject(board, target?.id ?? '')
+  const object = memoryreadelement(board, target?.id ?? '', READ_LAYER.OBJECT)
   const objectx = object?.x ?? -1
   const objecty = object?.y ?? -1
   // first pass, are we actually trying to move ?
@@ -136,7 +134,11 @@ export function memorymoveboardobject(
   elementtomove: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const movingelement = memoryreadobject(board, elementtomove?.id ?? '')
+  const movingelement = memoryreadelement(
+    board,
+    elementtomove?.id ?? '',
+    READ_LAYER.OBJECT,
+  )
 
   // first pass clipping
   if (
@@ -156,7 +158,6 @@ export function memorymoveboardobject(
       collision: COLLISION.ISSOLID,
       x: dest.x,
       y: dest.y,
-      runtime: '',
     }
   }
 
@@ -184,7 +185,7 @@ export function memorymoveboardobject(
   const movingelementisplayer = ispid(movingelement?.id)
 
   // blocked by an object
-  const maybeobject = memoryreadobjectatpt(board, dest)
+  const maybeobject = memoryreadelement(board, dest, READ_LAYER.OBJECT)
   if (memoryreadelementstat(maybeobject, 'collision') === COLLISION.ISGHOST) {
     // skip ghost
     return undefined
@@ -242,10 +243,10 @@ export function memorymoveobject(
     memoryboardelementisobject(blocked)
   ) {
     // check terrain __under__ blocked
-    const mayberterrain = memoryreadterrain(
+    const mayberterrain = memoryreadelement(
       board,
-      blocked.x ?? -1,
-      blocked.y ?? -1,
+      { x: blocked.x ?? -1, y: blocked.y ?? -1 },
+      READ_LAYER.TERRAIN,
     )
     const terraincollision = memoryreadelementstat(mayberterrain, 'collision')
     if (!memorycheckcollision(elementcollision, terraincollision)) {
@@ -315,7 +316,11 @@ export function memorymoveobject(
         memorysafedeleteelement(board, element, deletestamp)
       }
       if (blockedisbullet && ispresent(blocked.id)) {
-        const blockedobject = memoryreadobject(board, blocked.id)
+        const blockedobject = memoryreadelement(
+          board,
+          blocked.id,
+          READ_LAYER.OBJECT,
+        )
         if (
           ispresent(blockedobject) &&
           memoryreadelementstat(blockedobject, 'breakable')

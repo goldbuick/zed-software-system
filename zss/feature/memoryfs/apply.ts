@@ -9,17 +9,16 @@ import { ispresent } from 'zss/mapping/types'
 import { memorydeleteboardobject } from 'zss/memory/boardlifecycle'
 import { memoryinitboard } from 'zss/memory/boards'
 import {
-  memoryclearbookcodepage,
-  memoryclearbookflags,
-  memoryreadbookflags,
+  memoryclearflags,
+  memorydeletecodepage,
   memoryreadcodepage,
+  memoryreadflags,
   memoryupsertcodepage,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
-  memoryexportcodepageasjson,
+  memoryexportcodepage,
   memoryreadcodepagedata,
-  memoryreadcodepageruntime,
   memoryreadcodepagetype,
 } from 'zss/memory/codepageoperations'
 import {
@@ -135,11 +134,11 @@ function applyflagowner(
       errors.push(`flags/${owner}: not an object`)
       return
     }
-    memoryclearbookflags(book, owner)
+    memoryclearflags(book, owner)
     const keys = Object.keys(parsed)
     for (let i = 0; i < keys.length; ++i) {
       const key = keys[i]
-      memorywritebookflag(book, owner, key, parsed[key])
+      memorywriteflag(book, owner, key, parsed[key])
     }
   } catch (err) {
     errors.push(`flags/${owner}: ${errmessage(err)}`)
@@ -201,7 +200,9 @@ function applypagebags(
     } = { id: pageid, code }
 
     const prior = existing
-      ? (memoryexportcodepageasjson(existing) as Record<string, unknown>)
+      ? (memoryexportcodepage(existing, {
+          format: 'json',
+        }) as Record<string, unknown>)
       : undefined
     const priorboard =
       prior?.board && typeof prior.board === 'object'
@@ -375,7 +376,7 @@ function applydelete(path: string, errors: string[], ignored: { n: number }) {
   if (parts[2] === 'flags' && parts.length >= 4) {
     const owner = parts[3]
     if (memoryfsshouldmirrorflagowner(owner)) {
-      memoryclearbookflags(book, owner)
+      memoryclearflags(book, owner)
     }
     return
   }
@@ -385,16 +386,15 @@ function applydelete(path: string, errors: string[], ignored: { n: number }) {
       return
     }
     if (parts.length === 5 && parts[4] === 'stats.json') {
-      memoryclearbookcodepage(book, pageid)
+      memorydeletecodepage(book, pageid)
       return
     }
     const rest = parts.slice(4).join('/')
     if (rest.startsWith('board/objects/') && rest.endsWith('.json')) {
       const objid = rest.slice('board/objects/'.length, -'.json'.length)
       const page = memoryreadcodepage(book, pageid)
-      const runtime = memoryreadcodepageruntime(page)
-      if (runtime?.board) {
-        memorydeleteboardobject(runtime.board, objid)
+      if (page?.board) {
+        memorydeleteboardobject(page.board, objid)
       }
       return
     }
@@ -402,7 +402,7 @@ function applydelete(path: string, errors: string[], ignored: { n: number }) {
       parts.length === 4 ||
       (parts.length === 5 && parts[4] === 'stats.json')
     ) {
-      memoryclearbookcodepage(book, pageid)
+      memorydeletecodepage(book, pageid)
     }
   }
 }
@@ -461,10 +461,10 @@ export function memoryfsreplaceflagowner(
   if (!memoryfsshouldmirrorflagowner(owner)) {
     return
   }
-  memoryclearbookflags(book, owner)
+  memoryclearflags(book, owner)
   const keys = Object.keys(flags)
   for (let i = 0; i < keys.length; ++i) {
-    memorywritebookflag(book, owner, keys[i], flags[keys[i]])
+    memorywriteflag(book, owner, keys[i], flags[keys[i]])
   }
-  return memoryreadbookflags(book, owner)
+  return memoryreadflags(book, owner)
 }

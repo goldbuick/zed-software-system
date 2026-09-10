@@ -6,11 +6,10 @@ import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
-import { memorylistcodepagewithtype } from 'zss/memory/codepages'
+import { memorylistcodepage } from 'zss/memory/bookoperations'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
-
 jest.mock('zss/config', () => ({
   RUNTIME: {
     YIELD_AT_COUNT: 512,
@@ -60,16 +59,19 @@ jest.mock('zss/memory/utilities', () => ({
   memoryadminmenu: jest.fn(),
 }))
 
-jest.mock('zss/memory/codepages', () => ({
-  memorylistcodepagewithtype: jest.fn(() => []),
+jest.mock('zss/memory/bookoperations', () => ({
+  memorylistcodepage: jest.fn(() => []),
+}))
+
+jest.mock('zss/memory/session', () => ({
+  memoryreadmainbook: jest.fn(),
+  memoryreadbooklist: jest.fn(() => []),
+  memoryreadoperator: jest.fn(() => ''),
+  memoryreadroot: jest.fn(() => ({})),
 }))
 
 jest.mock('zss/memory/codepageoperations', () => ({
   memoryreadcodepagename: jest.fn(),
-}))
-
-jest.mock('zss/memory/boardoperations', () => ({
-  memoryreadobject: jest.fn(),
 }))
 
 jest.mock('zss/memory/playermanagement', () => ({
@@ -84,12 +86,6 @@ jest.mock('zss/memory/gamesend', () => ({
 
 jest.mock('zss/memory/runtime', () => ({
   memorymessagechip: jest.fn(),
-}))
-
-jest.mock('zss/memory/session', () => ({
-  memoryreadmainbook: jest.fn(),
-  memoryreadoperator: jest.fn(() => ''),
-  memoryreadroot: jest.fn(() => ({})),
 }))
 
 jest.mock('zss/memory/inspection', () => ({
@@ -165,8 +161,8 @@ describe('handledefault refscroll', () => {
     jest.mocked(romread).mockReset()
     jest.mocked(romread).mockReturnValue(undefined)
     jest.mocked(memoryadminmenu).mockClear()
-    jest.mocked(memorylistcodepagewithtype).mockReset()
-    jest.mocked(memorylistcodepagewithtype).mockReturnValue([])
+    jest.mocked(memorylistcodepage).mockReset()
+    jest.mocked(memorylistcodepage).mockReturnValue([])
     jest.mocked(memoryreadcodepagename).mockReset()
   })
 
@@ -211,8 +207,9 @@ describe('handledefault refscroll', () => {
       target: 'refscroll:objectlistscroll',
       data: undefined,
     })
-    expect(memorylistcodepagewithtype).toHaveBeenCalledWith(
-      CODE_PAGE_TYPE.OBJECT,
+    expect(memorylistcodepage).toHaveBeenCalledWith(
+      [],
+      { type: CODE_PAGE_TYPE.OBJECT, sort: true },
     )
     expect(scrollwritelines).toHaveBeenCalledWith(
       'p1',
@@ -231,8 +228,9 @@ describe('handledefault refscroll', () => {
       target: 'refscroll:terrainlistscroll',
       data: undefined,
     })
-    expect(memorylistcodepagewithtype).toHaveBeenCalledWith(
-      CODE_PAGE_TYPE.TERRAIN,
+    expect(memorylistcodepage).toHaveBeenCalledWith(
+      [],
+      { type: CODE_PAGE_TYPE.TERRAIN, sort: true },
     )
     expect(scrollwritelines).toHaveBeenCalledWith(
       'p1',
@@ -244,7 +242,7 @@ describe('handledefault refscroll', () => {
 
   it('refscroll:objectlistscroll builds copyit row from code pages', () => {
     jest
-      .mocked(memorylistcodepagewithtype)
+      .mocked(memorylistcodepage)
       .mockReturnValue([{ code: 'a\nhint line' } as any])
     jest.mocked(memoryreadcodepagename).mockReturnValue('obj1')
     handledefault(vm, {

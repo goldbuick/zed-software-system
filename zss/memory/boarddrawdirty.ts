@@ -11,7 +11,6 @@ import { NAME } from 'zss/words/types'
 
 import { memoryreadidorindex } from './boardaccess'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
-import { memoryensureboardruntime } from './runtimeboundary'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 const DRAW_LABEL = 'drawdisplay'
@@ -71,12 +70,11 @@ export function memoryinvalidatedraw(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
   }
-  const boardruntime = memoryensureboardruntime(board)
-  boardruntime.drawneedfull = true
-  delete boardruntime.drawlastfp
-  delete boardruntime.drawlastxy
-  delete boardruntime.drawallowids
-  delete boardruntime.drawdirtycells
+  board.drawneedfull = true
+  delete board.drawlastfp
+  delete board.drawlastxy
+  delete board.drawallowids
+  delete board.drawdirtycells
 }
 
 function expandneighborcells(seed: Set<number>) {
@@ -104,9 +102,8 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
   if (!ispresent(board)) {
     return
   }
-  const boardruntime = memoryensureboardruntime(board)
-  const oldfp = boardruntime.drawlastfp ?? {}
-  const oldxy = boardruntime.drawlastxy ?? {}
+  const oldfp = board.drawlastfp ?? {}
+  const oldxy = board.drawlastxy ?? {}
   const seedcells = new Set<number>()
   const nextfp: Record<string, string> = {}
   const nextxy: Record<string, { x: number; y: number }> = {}
@@ -185,7 +182,7 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
     }
   }
 
-  boardruntime.drawneedfull = false
+  board.drawneedfull = false
 
   const expanded = expandneighborcells(seedcells)
   const allowids = new Set<string>()
@@ -254,8 +251,8 @@ export function memoryupdatedrawdirty(board: MAYBE<BOARD>, timestamp: number) {
     }
   }
 
-  boardruntime.drawlastfp = nextfp
-  boardruntime.drawlastxy = nextxy
-  boardruntime.drawallowids = allowids
-  boardruntime.drawdirtycells = [...expanded]
+  board.drawlastfp = nextfp
+  board.drawlastxy = nextxy
+  board.drawallowids = allowids
+  board.drawdirtycells = [...expanded]
 }

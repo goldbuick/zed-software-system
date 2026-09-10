@@ -18,10 +18,7 @@ import type {
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { creategadgetid, ispid } from 'zss/mapping/guid'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
-import {
-  memoryreadbookflag,
-  memorywritebookflag,
-} from 'zss/memory/bookoperations'
+import { memoryreadflag, memorywriteflag } from 'zss/memory/bookoperations'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
 import {
   memoryreadplayeractive,
@@ -41,14 +38,10 @@ gadgetstateprovider((player) => {
   if (ispid(player)) {
     const mainbook = memoryreadmainbook()
     const owner = creategadgetid(player)
-    let value = memoryreadbookflag(
-      mainbook,
-      owner,
-      'state',
-    ) as MAYBE<GADGET_STATE>
+    let value = memoryreadflag(mainbook, owner, 'state') as MAYBE<GADGET_STATE>
     if (!ispresent(value)) {
       value = initstate()
-      memorywritebookflag(mainbook, owner, 'state', value as any)
+      memorywriteflag(mainbook, owner, 'state', value as any)
     }
     return value
   }

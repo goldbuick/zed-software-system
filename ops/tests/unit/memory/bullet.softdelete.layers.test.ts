@@ -1,5 +1,5 @@
 import { LAYER_TYPE } from 'zss/gadget/data/types'
-import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import {
   memorycreateboard,
@@ -12,11 +12,6 @@ import {
   memoryconverttogadgetlayers,
   memoryincrementallayerscachestable,
 } from 'zss/memory/rendering'
-import {
-  memoryreadboardruntime,
-  memorywriteboardelementruntime,
-} from 'zss/memory/runtimeboundary'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import { memoryresetbooks } from 'zss/memory/session'
 import { COLLISION, DIR } from 'zss/words/types'
 
@@ -51,7 +46,6 @@ function readbulletsprites(
 
 describe('bullet soft-delete + incremental layers', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -68,13 +62,17 @@ describe('bullet soft-delete + incremental layers', () => {
     bullet!.collision = COLLISION.ISBULLET
     memoryensureboardready(board)
 
-    expect(memoryreadobjectatpt(board, { x: 3, y: 0 })?.id).toBe('sid_bullet1')
+    expect(
+      memoryreadelement(board, { x: 3, y: 0 }, READ_LAYER.OBJECT)?.id,
+    ).toBe('sid_bullet1')
 
     const ok = memorysafedeleteelement(board, bullet, 100)
     expect(ok).toBe(true)
     expect(bullet!.removed).toBe(100)
     expect(board.objects.sid_bullet1).toBeDefined()
-    expect(memoryreadobjectatpt(board, { x: 3, y: 0 })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 3, y: 0 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
   })
 
   it('soft-deleted bullet leaves layer sprites after warm cache', () => {
@@ -89,12 +87,11 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(bullet).toBeDefined()
     bullet!.collision = COLLISION.ISBULLET
     bullet!.char = 248
-    memorywriteboardelementruntime(bullet!, {
+    Object.assign(bullet!, {
       category: 1,
       kinddata: {
         id: 'bullet',
         code: '@bullet\n:thud\n#die\n',
-        runtime: '',
       },
     })
     memoryensureboardready(board)
@@ -107,13 +104,11 @@ describe('bullet soft-delete + incremental layers', () => {
     memoryupdatedrawdirty(board, 2)
     layers = memoryconverttogadgetlayers('flat', 0, board, DIR.MID)
     expect(readbulletsprites(layers).length).toBe(1)
-    expect(
-      memoryincrementallayerscachestable(memoryreadboardruntime(board)),
-    ).toBe(true)
+    expect(memoryincrementallayerscachestable(board)).toBe(true)
 
     memorysafedeleteelement(board, bullet, 3)
     memoryupdatedrawdirty(board, 3)
-    const runtime = memoryreadboardruntime(board)
+    const runtime = board
     // Must not reuse stale sprite list that still contains the bullet.
     expect(memoryincrementallayerscachestable(runtime)).toBe(false)
     layers = memoryconverttogadgetlayers('flat', 0, board, DIR.MID)
@@ -145,6 +140,8 @@ describe('bullet soft-delete + incremental layers', () => {
     expect(bullet!.y).toBe(0)
 
     memorysafedeleteelement(board, bullet, 50)
-    expect(memoryreadobjectatpt(board, { x: 5, y: 0 })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 5, y: 0 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
   })
 })

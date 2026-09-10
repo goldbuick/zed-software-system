@@ -184,12 +184,12 @@ export const DEFAULT_ALLOWLIST_BY_ROLE: Record<string, string[]> = {
 }
 
 /** True if the command is permission-controlled (key in PERMISSION_CONTROLLED_COMMANDS table). */
-export function ispermissioncontrolledcommand(command: string): boolean {
+export function memorycheckpermissioncommand(command: string): boolean {
   return command in PERMISSION_CONTROLLED_COMMANDS
 }
 
 function normalizetofamilyforallowlist(input: string): string {
-  if (ispermissioncontrolledcommand(input)) {
+  if (memorycheckpermissioncommand(input)) {
     return PERMISSION_CONTROLLED_COMMANDS[input]
   }
   return input
@@ -433,7 +433,7 @@ export function memoryplayerallowedcommand(
   if (player === memoryreadoperator()) {
     return true
   }
-  if (!ispermissioncontrolledcommand(command)) {
+  if (!memorycheckpermissioncommand(command)) {
     return true
   }
   const family = memorymapcommandtofamily(command)
@@ -471,7 +471,7 @@ export function memorycanruncommand(player: string, command: string): boolean {
   return false
 }
 
-export function memorysetplayertotoken(player: string, token: string) {
+export function memorywriteplayertotoken(player: string, token: string) {
   if (isstring(player) && isstring(token)) {
     PERMISSION_STATE.playertotoken[player] = token
   }
@@ -482,7 +482,7 @@ export function memorysetplayertotoken(player: string, token: string) {
  * Legacy `custom` + allowlist snapshots are migrated to base `lockdown` + overrides.
  * Empty allowlist payloads hydrate from the saved base preset.
  */
-export function memorysetcommandpermissions(
+export function memorywritecommandpermissions(
   bannedtokens: string[],
   rolebytoken: Record<string, string>,
   permissionconfig: string,
@@ -649,7 +649,7 @@ export function memoryrevokecommand(role: string, command: string): boolean {
   return true
 }
 
-export function memorysetrolefortoken(token: string, role: string) {
+export function memorywriterolefortoken(token: string, role: string) {
   if (!PERMISSION_ROLES.includes(role)) {
     return
   }

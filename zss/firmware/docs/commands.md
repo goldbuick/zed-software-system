@@ -105,7 +105,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `clear` | Variables (set to 0) |
 | `set` | Variable to value |
 | `become` | Element into specified kind |
-| `morph` | Change kind in place, keep stats and id |
+| `morph` | Drop code/kinddata, set kind (object source; object or terrain target) |
 | `bind` | Code from named element |
 | `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |

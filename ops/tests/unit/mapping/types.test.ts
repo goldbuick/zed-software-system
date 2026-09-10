@@ -226,7 +226,7 @@ describe('types', () => {
       expect(isbook(validbook)).toBe(true)
     })
 
-    it('should reject legacy page id strings in pages', () => {
+    it('should reject string page ids in pages (pages must be codepage objects)', () => {
       expect(
         isbook({
           id: 'test-id',
@@ -238,12 +238,27 @@ describe('types', () => {
       ).toBe(false)
     })
 
+    it('should accept inline flag bags as objects', () => {
+      expect(
+        isbook({
+          id: 'test-id',
+          name: 'test-name',
+          flags: { a: {} },
+          pages: [],
+          activelist: [],
+        }),
+      ).toBe(true)
+    })
+
     it('should reject objects missing required fields', () => {
       expect(isbook({})).toBe(false)
       expect(isbook({ id: 'test' })).toBe(false)
       expect(isbook({ id: 'test', name: 'test' })).toBe(false)
       expect(isbook({ id: 'test', name: 'test', flags: 'sid_f' })).toBe(false) // string flags invalid
-      expect(isbook({ id: 'test', name: 'test', flags: { a: 1 } })).toBe(false) // non-string map value invalid
+      expect(isbook({ id: 'test', name: 'test', flags: { a: 1 } })).toBe(false) // number bag invalid
+      expect(isbook({ id: 'test', name: 'test', flags: { a: 'sid' } })).toBe(
+        false,
+      ) // string bag ids invalid; bags must be objects
     })
 
     it('should reject non-objects', () => {

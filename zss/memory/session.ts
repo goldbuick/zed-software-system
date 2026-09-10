@@ -6,7 +6,6 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { memoryboundarydelete } from './boundaries'
 import { memoryfreecodepage } from './codepageoperations'
 import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
 import { BOOK } from './types'
@@ -154,10 +153,7 @@ export function memoryfreebook(book: MAYBE<BOOK>) {
     memoryfreecodepage(page)
   }
   book.pages = []
-  const ids = Object.keys(book.flags)
-  for (let i = 0; i < ids.length; ++i) {
-    memoryboundarydelete(book.flags[ids[i]])
-  }
+  book.flags = {}
 }
 
 export function memoryclearbook(address: string) {

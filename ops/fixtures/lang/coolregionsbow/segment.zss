@@ -1,15 +1,22 @@
 @segment
 @char 79
 @cycle 2
-' p4=leader  p5=linkgrace. passive: the head does all the moving.
+' p4=leader  p5=linkgrace (16 thinks)  p6=live probe
+' passive: the head does all the moving.
 ' promote when the leader id no longer resolves (unset, shot, or bombed).
 :think
-#pget "$p4" id live
-#if not live do
- #if p5 do
+#set p6 0
+#if p4 do
+ #pget "$p4" id p6
+#done
+#if p6 do
+ #set p5 0
+#else do
+ #give p5
+ #if p5 above 16 do
+  #set p4 0
+  #set p5 0
   #morph head
- #else do
-  #set p5 1
  #done
 #done
 #idle

@@ -31,7 +31,8 @@ jest.mock('zss/device/modem', () => ({
 }))
 
 jest.mock('zss/memory/boardaccess', () => ({
-  memoryreadobject: jest.fn(),
+  ...jest.requireActual('zss/memory/boardaccess'),
+  memoryreadelement: jest.fn(),
 }))
 
 jest.mock('zss/memory/bookoperations', () => ({
@@ -63,7 +64,7 @@ import {
   handlecodewatch,
 } from 'zss/device/vm/handlers/codewatch'
 import { observers, watching } from 'zss/device/vm/state'
-import { memoryreadobject } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
   memoryapplyelementstats,
@@ -119,7 +120,7 @@ describe('codewatch handlers', () => {
     jest.mocked(memoryresetcodepagestats).mockClear()
     jest.mocked(memoryreadbookbyaddress).mockReturnValue({} as never)
     jest.mocked(memoryreadcodepagedata).mockReturnValue({} as never)
-    jest.mocked(memoryreadobject).mockReturnValue(object as never)
+    jest.mocked(memoryreadelement).mockReturnValue(object as never)
     object.code = 'old'
     page.code = 'oldpage'
   })
@@ -127,9 +128,7 @@ describe('codewatch handlers', () => {
   describe('board object element (deferred)', () => {
     beforeEach(() => {
       jest.mocked(memoryreadcodepage).mockReturnValue({ code: 'page' } as never)
-      jest
-        .mocked(memoryreadcodepagetype)
-        .mockReturnValue(CODE_PAGE_TYPE.BOARD)
+      jest.mocked(memoryreadcodepagetype).mockReturnValue(CODE_PAGE_TYPE.BOARD)
     })
 
     it('does not write MEMORY or observe while typing', () => {
@@ -170,9 +169,7 @@ describe('codewatch handlers', () => {
   describe('codepage (live)', () => {
     beforeEach(() => {
       jest.mocked(memoryreadcodepage).mockReturnValue(page as never)
-      jest
-        .mocked(memoryreadcodepagetype)
-        .mockReturnValue(CODE_PAGE_TYPE.OBJECT)
+      jest.mocked(memoryreadcodepagetype).mockReturnValue(CODE_PAGE_TYPE.OBJECT)
     })
 
     it('registers modem observe and writes MEMORY while typing', () => {

@@ -1,10 +1,9 @@
 import { createsid } from 'zss/mapping/guid'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
   memoryexportbook,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -39,7 +38,6 @@ function formatgetvalue(formatted: unknown, key: number): any {
 describe('buildexportidremap', () => {
   afterEach(() => {
     memoryresetbooks([])
-    memoryboundariesclear()
   })
 
   it('remaps a once-only object id and leaves multi-ref ids alone', () => {
@@ -51,14 +49,12 @@ describe('buildexportidremap', () => {
       kind: 'widget',
       x: 2,
       y: 2,
-      runtime: '',
     }
     board.objects[solo] = {
       id: solo,
       kind: 'widget',
       x: 3,
       y: 3,
-      runtime: '',
     }
     // Extra refs so `shared` appears more than once in the wire JSON.
     board.objects[solo].party = shared
@@ -78,7 +74,7 @@ describe('buildexportidremap', () => {
     const kindid = createsid()
     const book = memorycreatebook([
       memorycreatecodepage('@object widget\n@char 2\n', {
-        object: { id: kindid, char: 2, runtime: '' },
+        object: { id: kindid, char: 2 },
       }),
     ])
     // Force page id === object kind template id (structural alias).
@@ -107,12 +103,11 @@ describe('buildexportidremap', () => {
       kind: 'widget',
       x: 0,
       y: 0,
-      runtime: '',
     }
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board }),
     ])
-    memorywritebookflag(book, oid, 'score', 1 as any)
+    memorywriteflag(book, oid, 'score', 1 as any)
 
     const wire = memoryexportbook(book, { noremap: true })!
     const protectedids = collectflagprotectedids(wire)
@@ -130,7 +125,6 @@ describe('buildexportidremap', () => {
       kind: 'widget',
       x: 4,
       y: 5,
-      runtime: '',
     }
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board }),
@@ -154,14 +148,13 @@ describe('buildexportidremap', () => {
     const board = memorycreateboard()
     const a = createsid()
     const b = createsid()
-    board.objects[a] = { id: a, kind: 'widget', x: 0, y: 0, runtime: '' }
+    board.objects[a] = { id: a, kind: 'widget', x: 0, y: 0 }
     board.objects[b] = {
       id: b,
       kind: 'widget',
       x: 1,
       y: 1,
       p1: a,
-      runtime: '',
     }
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board }),

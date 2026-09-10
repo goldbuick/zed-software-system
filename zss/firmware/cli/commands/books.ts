@@ -22,11 +22,11 @@ import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadobject } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
-  memoryclearbookcodepage,
-  memorylistcodepagessorted,
+  memorydeletecodepage,
+  memorylistcodepage,
   memoryreadcodepage,
   memoryupdatebookname,
 } from 'zss/memory/bookoperations'
@@ -66,7 +66,6 @@ import {
 import { romread } from 'zss/rom'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
-
 export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('bookrename', ['the main book (operator only)'], () => {
@@ -222,7 +221,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           let element: MAYBE<BOARD_ELEMENT> = undefined
           if (ispresent(maybeobject) && type === 'board') {
             const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
-            element = memoryreadobject(board, maybeobject)
+            element = memoryreadelement(board, maybeobject, READ_LAYER.OBJECT)
             if (ispresent(element)) {
               type = 'object'
             }
@@ -267,7 +266,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       (chip, words) => {
         const [page] = readargs(words, 0, [ARG_TYPE.NAME])
         const mainbook = memoryensuremainbook()
-        const codepage = memoryclearbookcodepage(mainbook, page)
+        const codepage = memorydeletecodepage(mainbook, page)
         if (ispresent(page)) {
           const name = memoryreadcodepagename(codepage)
           const pagetype = memoryreadcodepagetypeasstring(codepage)
@@ -343,7 +342,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         zssoptionline('main', `${mainbook.name} $GREEN${mainbook.id}`),
       )
       if (mainbook.pages.length) {
-        const sorted = memorylistcodepagessorted(mainbook)
+        const sorted = memorylistcodepage(mainbook, { sort: true })
         // Batch `!pageopen …;…` rows only; framing stays imperative above.
         const pagerows: string[] = []
         for (let pi = 0; pi < sorted.length; ++pi) {
@@ -376,7 +375,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             READ_CONTEXT.elementfocus,
             zssoptionline('content', `${book.name} $GREEN${book.id}`),
           )
-          const sorted = memorylistcodepagessorted(book)
+          const sorted = memorylistcodepage(book, { sort: true })
           // Batch `!pageopen …;…` rows only.
           const pagerows: string[] = []
           for (let pi = 0; pi < sorted.length; ++pi) {
@@ -413,7 +412,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         // Batch only `!payload;label` tape rows via terminalwritelines; section / zsstextline above stay imperative.
         for (let i = 0; i < booklist.length; ++i) {
           const book = booklist[i]
-          const sorted = memorylistcodepagessorted(book)
+          const sorted = memorylistcodepage(book, { sort: true })
           const matchrows: string[] = []
           for (let p = 0; p < sorted.length; ++p) {
             const page = sorted[p]
@@ -447,7 +446,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         }
         for (let i = 0; i < booklist.length; ++i) {
           const book = booklist[i]
-          const sorted = memorylistcodepagessorted(book)
+          const sorted = memorylistcodepage(book, { sort: true })
           const boardpages = sorted.filter(
             (page: CODE_PAGE) =>
               memoryreadcodepagetype(page) === CODE_PAGE_TYPE.BOARD,
@@ -527,7 +526,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementfocus,
           zssoptionline('main', `${mainbook.name} $GREEN${mainbook.id}`),
         )
-        const sorted = memorylistcodepagessorted(mainbook)
+        const sorted = memorylistcodepage(mainbook, { sort: true })
         // Batch `!boardopen …;…` rows only.
         const mainboardrows: string[] = []
         for (let bi = 0; bi < sorted.length; ++bi) {
@@ -567,7 +566,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
             READ_CONTEXT.elementfocus,
             zssoptionline('content', `${book.name} $GREEN${book.id}`),
           )
-          const sorted = memorylistcodepagessorted(book)
+          const sorted = memorylistcodepage(book, { sort: true })
           // Batch `!boardopen …;…` rows only.
           const boardrows: string[] = []
           for (let bi = 0; bi < sorted.length; ++bi) {
@@ -613,7 +612,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           READ_CONTEXT.elementfocus,
           zsstextline(`pages in open ${book.name} book`),
         )
-        memorylistcodepagessorted(book).forEach((page) => {
+        memorylistcodepage(book, { sort: true }).forEach((page) => {
           const name = memoryreadcodepagename(page)
           const type = memoryreadcodepagetypeasstring(page)
           const prefix = memorycodepagetoprefix(page)

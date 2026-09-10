@@ -1,5 +1,4 @@
-import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -21,7 +20,6 @@ function makeplayer(board: BOARD, x: number, y: number, id: string) {
 
 describe('player occupancy at point', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -34,20 +32,32 @@ describe('player occupancy at point', () => {
 
     const standing = makeplayer(board, 44, 3, 'pid_standing')
     const walker = makeplayer(board, 45, 3, 'pid_walker')
-    expect(memoryreadobjectatpt(board, { x: 44, y: 3 })?.id).toBe(standing.id)
-    expect(memoryreadobjectatpt(board, { x: 45, y: 3 })?.id).toBe(walker.id)
+    expect(
+      memoryreadelement(board, { x: 44, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(standing.id)
+    expect(
+      memoryreadelement(board, { x: 45, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(walker.id)
 
     expect(
       memorymoveboardobject(board, walker, { x: 44, y: 3 }),
     ).toBeUndefined()
-    expect(memoryreadobjectatpt(board, { x: 44, y: 3 })?.id).toBe(standing.id)
-    expect(memoryreadobjectatpt(board, { x: 45, y: 3 })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 44, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(standing.id)
+    expect(
+      memoryreadelement(board, { x: 45, y: 3 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
 
     expect(
       memorymoveboardobject(board, walker, { x: 45, y: 3 }),
     ).toBeUndefined()
-    expect(memoryreadobjectatpt(board, { x: 44, y: 3 })?.id).toBe(standing.id)
-    expect(memoryreadobjectatpt(board, { x: 45, y: 3 })?.id).toBe(walker.id)
+    expect(
+      memoryreadelement(board, { x: 44, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(standing.id)
+    expect(
+      memoryreadelement(board, { x: 45, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(walker.id)
 
     const bullet = memorycreateboardobjectfromkind(
       board,

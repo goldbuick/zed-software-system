@@ -9,7 +9,7 @@ title: loader.ts
 - `zss/mapping/guid` — createsid
 - `zss/mapping/types` — MAYBE, ispresent, isstring
 - `zss/words/types` — WORD
-- `./bookoperations` — memorylistcodepagebytype, memoryreadcodepage
+- `./bookoperations` — memorylistcodepage, memoryreadcodepage
 - `./codepageoperations` — memoryreadcodepagestats
 - `./types` — CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL
 

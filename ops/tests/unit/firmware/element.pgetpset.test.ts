@@ -123,4 +123,25 @@ describe('element #pget / #pset', () => {
     expect(chip.flags.got).toBe('oid_north')
     expect(chip.flags.didfail).toBe(0)
   })
+
+  it('#pset id attr value writes p11 string on target', () => {
+    const { north } = setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    expect(handler).toBeDefined()
+    handler!(chip, ['oid_north', 'p11', 'extra-slot'])
+    expect(north.p11).toBe('extra-slot')
+    expect(chip.flags.didfail).toBe(0)
+  })
+
+  it('#pget dir attr destflag reads neighbor p20 number', () => {
+    const { north } = setupboard()
+    north.p20 = 42
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pget')
+    expect(handler).toBeDefined()
+    handler!(chip, ['n', 'p20', 'got'])
+    expect(chip.flags.got).toBe(42)
+    expect(chip.flags.didfail).toBe(0)
+  })
 })

@@ -21,7 +21,6 @@ import {
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memorysendtoelements } from 'zss/memory/gamesend'
-import { memoryreadboardelementruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
@@ -124,7 +123,7 @@ function aftertickfromcontext(chip: CHIP) {
         const player = ctx.elementfocus
         chip.scrolllock(player)
         const shared = gadgetstate(player)
-        const kinddata = memoryreadboardelementruntime(ctx.element)?.kinddata
+        const kinddata = ctx.element?.kinddata
         shared.scrollname =
           ctx.element?.displayname ??
           kinddata?.displayname ??

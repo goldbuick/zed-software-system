@@ -144,7 +144,8 @@ function buildstatmap(
 
 /**
  * ZZT Leader/Follower are status-element indices. Cafe centipede scripts store
- * those links on element stats: p3=follower id, p4=leader id, p5=linkgrace.
+ * those links on element stats: p3=follower id, p4=leader id,
+ * p5=linkgrace (seeded above the segment grace threshold when Leader < -1).
  */
 function applyzztcentipedelinks(
   allstats: ZZT_STAT[],
@@ -173,8 +174,9 @@ function applyzztcentipedelinks(
         el.p4 = prev.id
       }
     } else if (isnumber(leader) && leader < -1) {
-      // ZZT: Leader < -1 promotes segment to head on the next segment tick
-      el.p5 = 1
+      // ZZT: Leader < -1 promotes segment to head on the next segment tick.
+      // Segment grace is 16 thinks, so seed past it.
+      el.p5 = 17
     }
   }
 }

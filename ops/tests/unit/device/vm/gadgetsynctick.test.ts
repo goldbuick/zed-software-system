@@ -44,8 +44,8 @@ jest.mock('zss/memory/synthstate', () => ({
 }))
 
 jest.mock('zss/memory/bookoperations', () => ({
-  memoryreadbookflag: jest.fn(),
-  memorywritebookflag: jest.fn(),
+  memoryreadflag: jest.fn(),
+  memorywriteflag: jest.fn(),
 }))
 
 jest.mock('zss/gadget/data/api', () => ({

@@ -11,7 +11,7 @@ import {
 import { FIRMWARE } from 'zss/firmware'
 import { PERMISSION_CONFIG_KEYWORDS } from 'zss/firmware/autocompleteconstants'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/bookoperations'
 import {
   PERMISSION_CONFIG_NAME,
   PERMISSION_CONFIG_NAMES,
@@ -27,8 +27,8 @@ import {
   memoryreadrolebytoken,
   memoryrevokecommand,
   memoryserializepermissions,
-  memorysetrolefortoken,
   memoryunbantoken,
+  memorywriterolefortoken,
 } from 'zss/memory/permissions'
 import {
   memoryisoperator,
@@ -262,7 +262,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           )
           return 0
         }
-        memorysetrolefortoken(token, role)
+        memorywriterolefortoken(token, role)
 
         const data = memoryserializepermissions()
         void storagewritevar('rolebytoken', data.rolebytoken)
@@ -314,7 +314,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           const playerrows: string[][] = []
           for (let pi = 0; pi < players.length; ++pi) {
             const pid = players[pi]
-            const flags = memoryreadflags(pid)
+            const flags = memoryreadflags(READ_CONTEXT.book, pid)
             const name = isstring(flags?.user) ? flags.user : pid
             playerrows.push([pid, name])
           }

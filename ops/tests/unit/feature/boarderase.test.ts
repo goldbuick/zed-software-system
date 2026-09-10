@@ -2,7 +2,6 @@ import { boarderase } from 'zss/feature/boarderase'
 import { pttoindex } from 'zss/mapping/2d'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks } from 'zss/memory/session'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -35,11 +34,10 @@ function maketerrain(
     char: 219,
     color: 2,
     group,
-    runtime: '',
   }
-  memorywriteboardelementruntime(tile, {
+  Object.assign(tile, {
     category: CATEGORY.ISTERRAIN,
-    kinddata: { id: 'wall', name: 'wall', char: 219, runtime: '' },
+    kinddata: { id: 'wall', name: 'wall', char: 219 },
   })
   return tile
 }
@@ -59,15 +57,13 @@ function makeobject(
     char: 4,
     color: 14,
     group: opts?.group,
-    runtime: '',
   }
-  memorywriteboardelementruntime(el, {
+  Object.assign(el, {
     category: CATEGORY.ISOBJECT,
     kinddata: {
       id: el.kind,
       name: el.name,
       char: el.char,
-      runtime: '',
     },
   })
   return el
@@ -93,7 +89,6 @@ function makeboard(
     name: id,
     terrain,
     objects: objectmap,
-    runtime: '',
   }
 }
 

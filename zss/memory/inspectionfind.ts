@@ -5,7 +5,7 @@ import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
-import { createinspectionconfig } from './inspectionconfig'
+import { memorycreateinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
 
 export type FINDANY_CONFIG = {
@@ -15,12 +15,15 @@ export type FINDANY_CONFIG = {
   expr4: string
 }
 
-const findanyconfig = createinspectionconfig<FINDANY_CONFIG>('findanyconfig', {
-  expr1: 'player',
-  expr2: '',
-  expr3: '',
-  expr4: '',
-})
+const findanyconfig = memorycreateinspectionconfig<FINDANY_CONFIG>(
+  'findanyconfig',
+  {
+    expr1: 'player',
+    expr2: '',
+    expr3: '',
+    expr4: '',
+  },
+)
 
 export async function memoryfindany(
   path: keyof FINDANY_CONFIG,
@@ -33,7 +36,7 @@ export async function memoryfindany(
 
   await findanyconfig.save()
 
-  const expr = findanyconfig.read()[path] ?? ''
+  const expr = findanyconfig.memoryread()[path] ?? ''
   if (ispresent(expr)) {
     vmcli(SOFTWARE, player, `#findany ${expr ? `any ${expr}` : ''}`)
   } else {
@@ -52,7 +55,7 @@ registerhyperlinksharedbridge(
       key === 'expr3' ||
       key === 'expr4'
     ) {
-      return findanyconfig.read()[key]
+      return findanyconfig.memoryread()[key]
     }
     return ''
   },
@@ -65,7 +68,10 @@ registerhyperlinksharedbridge(
         key === 'expr3' ||
         key === 'expr4'
       ) {
-        findanyconfig.write({ ...findanyconfig.read(), [key]: String(value) })
+        findanyconfig.memorywrite({
+          ...findanyconfig.memoryread(),
+          [key]: String(value),
+        })
       }
     }
   },

@@ -1,10 +1,9 @@
 /**
- * Board and element read/write, board navigation. Uses codepages, boardelement, boardlookup, boardoperations, codepageoperations.
+ * Board and element read/write, board navigation. Uses codepages, boardelement, boardlookup, codepageoperations.
  */
 import { pttoindex } from 'zss/mapping/2d'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { mapcolortostrcolor } from 'zss/words/color'
 import {
   EVAL_DIR,
   dirfrompts,
@@ -12,7 +11,7 @@ import {
   mapstrdirtoconst,
 } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
+import { CATEGORY, COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
 import {
   memoryapplyboardelementcolor,
@@ -20,53 +19,45 @@ import {
 } from './boardelement'
 import {
   memorycreateboardobjectfromkind,
+  memoryunlinkboardobject,
   memorywriteterrainfromkind,
 } from './boardlifecycle'
 import {
   memorydeleteboardobjectnamedlookup,
+  memorydeleteboardterrainnamed,
   memoryrebuildboardnamed,
   memorywriteboardnamed,
 } from './boardlookup'
-import { memoryreadelementdisplay } from './bookoperations'
+import { memoryreadcodepage } from './bookoperations'
 import {
-  memoryapplyelementstats,
   memoryreadcodepagedata,
   memoryreadcodepagestat,
-  memoryreadcodepagestatdefaults,
 } from './codepageoperations'
-import {
-  memorypickcodepagewithtypeandstat,
-  memoryreadcodepagebyaddress,
-} from './codepages'
-import {
-  memoryensureboardelementruntime,
-  memoryensureboardruntime,
-  memoryreadboardelementruntime,
-} from './runtimeboundary'
+import { memorypickcodepage } from './codepages'
+import { memoryreadbooklist } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
-  BOARD_ELEMENT_RUNTIME,
   BOARD_ELEMENT_STAT,
+  BOARD_HEIGHT,
   BOARD_WIDTH,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-
 function memorykinddataisfresh(
-  runtimedata: BOARD_ELEMENT_RUNTIME,
+  element: BOARD_ELEMENT,
   cached: BOARD_ELEMENT,
 ): boolean {
-  const pageid = runtimedata.kindsourcepageid
+  const pageid = element.kindsourcepageid
   if (!isstring(pageid) || !pageid) {
     return false
   }
-  const page = memoryreadcodepagebyaddress(pageid)
+  const page = memoryreadcodepage(memoryreadbooklist(), pageid)
   return ispresent(page) && cached.code === page.code
 }
 
 function memoryapplykinddatafrompage(
-  runtimedata: BOARD_ELEMENT_RUNTIME,
+  element: BOARD_ELEMENT,
   page: CODE_PAGE,
   type: CODE_PAGE_TYPE.OBJECT | CODE_PAGE_TYPE.TERRAIN,
   kind: string,
@@ -78,9 +69,9 @@ function memoryapplykinddatafrompage(
   if (!ispresent(kinddata)) {
     return undefined
   }
-  runtimedata.kinddata = kinddata
-  runtimedata.kindsourcepageid = page.id
-  runtimedata.kindsourcekind = NAME(kind)
+  element.kinddata = kinddata
+  element.kindsourcepageid = page.id
+  element.kindsourcekind = NAME(kind)
   return kinddata
 }
 
@@ -90,71 +81,66 @@ export function memoryclearelementkinddata(
   if (!ispresent(element)) {
     return
   }
-  const runtimedata = memoryreadboardelementruntime(element)
-  if (!ispresent(runtimedata)) {
-    return
-  }
-  delete runtimedata.kinddata
-  delete runtimedata.kindsourcepageid
-  delete runtimedata.kindsourcekind
+  delete element.kinddata
+  delete element.kindsourcepageid
+  delete element.kindsourcekind
 }
 
 export function memoryreadelementkind(
   element: MAYBE<BOARD_ELEMENT>,
 ): MAYBE<BOARD_ELEMENT> {
-  const runtimedata = ispresent(element)
-    ? memoryensureboardelementruntime(element)
-    : undefined
-  if (!ispresent(runtimedata) || !isstring(element?.kind) || !element.kind) {
+  if (!ispresent(element) || !isstring(element.kind) || !element.kind) {
     return undefined
   }
 
   // Hot path: exists -> kind match -> fresh, before any book scan pick.
-  const cached = runtimedata.kinddata
+  const cached = element.kinddata
   if (ispresent(cached)) {
     const kindname = NAME(element.kind)
     if (
-      kindname === runtimedata.kindsourcekind &&
-      memorykinddataisfresh(runtimedata, cached)
+      kindname === element.kindsourcekind &&
+      memorykinddataisfresh(element, cached)
     ) {
       return cached
     }
   }
 
   // Cold path: pick once, rebuild kinddata, stamp kindsourcepageid.
-  const maybeobject = memorypickcodepagewithtypeandstat(
+  const maybeobject = memorypickcodepage(
+    memoryreadbooklist(),
     CODE_PAGE_TYPE.OBJECT,
     element.kind,
   )
   if (ispresent(maybeobject)) {
     return memoryapplykinddatafrompage(
-      runtimedata,
+      element,
       maybeobject,
       CODE_PAGE_TYPE.OBJECT,
       element.kind,
     )
   }
-  const maybeterrain = memorypickcodepagewithtypeandstat(
+  const maybeterrain = memorypickcodepage(
+    memoryreadbooklist(),
     CODE_PAGE_TYPE.TERRAIN,
     element.kind,
   )
   if (ispresent(maybeterrain)) {
     return memoryapplykinddatafrompage(
-      runtimedata,
+      element,
       maybeterrain,
       CODE_PAGE_TYPE.TERRAIN,
       element.kind,
     )
   }
   // No codepage yet (make-it stub / unit fixtures): keep existing kinddata.
-  return runtimedata.kinddata
+  return element.kinddata
 }
 
 export function memoryreadelementstat(
   element: MAYBE<BOARD_ELEMENT>,
   stat: BOARD_ELEMENT_STAT | 'sky',
 ) {
-  const kind = memoryreadboardelementruntime(element)?.kinddata
+  const kind = element?.kinddata
   const kindid = kind?.id ?? ''
   const elementstat = element?.[stat as keyof BOARD_ELEMENT]
   if (ispresent(elementstat)) {
@@ -165,8 +151,8 @@ export function memoryreadelementstat(
     return kindstat
   }
   const codepage =
-    memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.OBJECT, kindid) ??
-    memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.TERRAIN, kindid)
+    memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT, kindid) ??
+    memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, kindid)
   const codepagestat = memoryreadcodepagestat(codepage, stat)
   if (ispresent(codepagestat)) {
     return codepagestat
@@ -186,6 +172,16 @@ export function memoryreadelementstat(
     case 'p8':
     case 'p9':
     case 'p10':
+    case 'p11':
+    case 'p12':
+    case 'p13':
+    case 'p14':
+    case 'p15':
+    case 'p16':
+    case 'p17':
+    case 'p18':
+    case 'p19':
+    case 'p20':
     case 'item':
     case 'pushable':
     case 'breakable':
@@ -219,8 +215,9 @@ export function memorycheckelementpushable(
 }
 
 /**
- * In-place object kind change: same id and instance stats, swap kind + code + display.
- * Object -> object only. Returns false if element is not an object or kind is missing/terrain.
+ * In-place object kind change: drop instance code + kinddata, set kind.
+ * Object -> object keeps id. Object -> terrain moves onto the terrain layer.
+ * Returns false if element is not an object or kind is missing.
  */
 export function memorymorphboardobject(
   board: MAYBE<BOARD>,
@@ -236,68 +233,61 @@ export function memorymorphboardobject(
   ) {
     return false
   }
-  const [kindname, maybecolor] = kind
-  const codepage = memorypickcodepagewithtypeandstat(
+  const [kindname] = kind
+  const objectpage = memorypickcodepage(
+    memoryreadbooklist(),
     CODE_PAGE_TYPE.OBJECT,
     kindname,
   )
-  if (!ispresent(codepage)) {
+  const isterraintarget = !ispresent(objectpage)
+  const terrainpage = isterraintarget
+    ? memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, kindname)
+    : undefined
+  if (!ispresent(objectpage) && !ispresent(terrainpage)) {
     return false
   }
-
-  const display = memoryreadelementdisplay(element)
-  const mergedstrcolor = [
-    ...mapcolortostrcolor(display.color, display.bg),
-    ...(maybecolor ?? []),
-  ]
-
-  // Preserve instance runtime stats across codepage default apply.
-  const kept = {
-    p1: element.p1,
-    p2: element.p2,
-    p3: element.p3,
-    p4: element.p4,
-    p5: element.p5,
-    p6: element.p6,
-    p7: element.p7,
-    p8: element.p8,
-    p9: element.p9,
-    p10: element.p10,
-    cycle: element.cycle,
-    stepx: element.stepx,
-    stepy: element.stepy,
-    shootx: element.shootx,
-    shooty: element.shooty,
+  let terrainindex = -1
+  if (isterraintarget) {
+    const x = element.x
+    const y = element.y
+    if (
+      !ispresent(x) ||
+      !ispresent(y) ||
+      x < 0 ||
+      x >= BOARD_WIDTH ||
+      y < 0 ||
+      y >= BOARD_HEIGHT
+    ) {
+      return false
+    }
+    terrainindex = x + y * BOARD_WIDTH
   }
 
   memorydeleteboardobjectnamedlookup(board, element)
-  element.kind = kindname
-  element.code = codepage.code ?? ''
-  delete element.char
-  delete element.displaychar
-  delete element.name
+  delete element.code
   memoryclearelementkinddata(element)
+  element.kind = kindname
+
+  if (ispresent(objectpage)) {
+    memoryreadelementkind(element)
+    memorywriteboardnamed(board, element)
+    return true
+  }
+
+  // Object -> terrain: move same element onto the terrain layer.
+  const prior = board.terrain[terrainindex]
+  if (ispresent(prior)) {
+    memoryreadelementkind(prior)
+    memorydeleteboardterrainnamed(board, prior)
+  }
+  const objectid = element.id
+  memoryunlinkboardobject(board, objectid)
+  delete element.id
+  element.category = CATEGORY.ISTERRAIN
+  board.terrain[terrainindex] = element
+  delete board.distmaps
   memoryreadelementkind(element)
-  memoryapplyelementstats(memoryreadcodepagestatdefaults(codepage), element)
-
-  element.p1 = kept.p1
-  element.p2 = kept.p2
-  element.p3 = kept.p3
-  element.p4 = kept.p4
-  element.p5 = kept.p5
-  element.p6 = kept.p6
-  element.p7 = kept.p7
-  element.p8 = kept.p8
-  element.p9 = kept.p9
-  element.p10 = kept.p10
-  element.cycle = kept.cycle
-  element.stepx = kept.stepx
-  element.stepy = kept.stepy
-  element.shootx = kept.shootx
-  element.shooty = kept.shooty
-
-  memoryapplyboardelementcolor(element, mergedstrcolor)
-  memorywriteboardnamed(board, element)
+  memorywriteboardnamed(board, element, terrainindex)
   return true
 }
 
@@ -311,7 +301,8 @@ export function memorywriteelementfromkind(
     return undefined
   }
   const [name, maybecolor] = kind
-  const maybeobject = memorypickcodepagewithtypeandstat(
+  const maybeobject = memorypickcodepage(
+    memoryreadbooklist(),
     CODE_PAGE_TYPE.OBJECT,
     name,
   )
@@ -324,7 +315,8 @@ export function memorywriteelementfromkind(
       return object
     }
   }
-  const maybeterrain = memorypickcodepagewithtypeandstat(
+  const maybeterrain = memorypickcodepage(
+    memoryreadbooklist(),
     CODE_PAGE_TYPE.TERRAIN,
     name,
   )
@@ -350,7 +342,8 @@ export function memorywritebullet(
     return undefined
   }
   const [name, maybecolor] = kind
-  const maybeobject = memorypickcodepagewithtypeandstat(
+  const maybeobject = memorypickcodepage(
+    memoryreadbooklist(),
     CODE_PAGE_TYPE.OBJECT,
     name,
   )
@@ -367,9 +360,10 @@ export function memorywritebullet(
 }
 
 export function memoryreadboardbyaddress(address: string): MAYBE<BOARD> {
-  const maybeboard = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.BOARD,
+  const maybeboard = memoryreadcodepage(
+    memoryreadbooklist(),
     address,
+    CODE_PAGE_TYPE.BOARD,
   )
   return memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(maybeboard)
 }
@@ -378,22 +372,21 @@ export function memoryreadoverboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
-  const boardruntime = memoryensureboardruntime(board)
   if (!isstring(board.over)) {
-    delete boardruntime.overboard
+    delete board.overboard
     return undefined
   }
-  if (isstring(boardruntime.overboard)) {
-    const maybeover = memoryreadboardbyaddress(boardruntime.overboard)
+  if (isstring(board.overboard)) {
+    const maybeover = memoryreadboardbyaddress(board.overboard)
     if (ispresent(maybeover)) {
       return maybeover
     }
-    delete boardruntime.overboard
+    delete board.overboard
     return undefined
   }
   const maybeover = memoryreadboardbyaddress(board.over)
   if (ispresent(maybeover)) {
-    boardruntime.overboard = maybeover.id
+    board.overboard = maybeover.id
     return maybeover
   }
   return undefined
@@ -403,22 +396,21 @@ export function memoryreadunderboard(board: MAYBE<BOARD>): MAYBE<BOARD> {
   if (!ispresent(board)) {
     return
   }
-  const boardruntime = memoryensureboardruntime(board)
   if (!isstring(board.under)) {
-    delete boardruntime.underboard
+    delete board.underboard
     return undefined
   }
-  if (isstring(boardruntime.underboard)) {
-    const maybeunder = memoryreadboardbyaddress(boardruntime.underboard)
+  if (isstring(board.underboard)) {
+    const maybeunder = memoryreadboardbyaddress(board.underboard)
     if (ispresent(maybeunder)) {
       return maybeunder
     }
-    delete boardruntime.underboard
+    delete board.underboard
     return undefined
   }
   const maybeunder = memoryreadboardbyaddress(board.under)
   if (ispresent(maybeunder)) {
-    boardruntime.underboard = maybeunder.id
+    board.underboard = maybeunder.id
     return maybeunder
   }
   return undefined

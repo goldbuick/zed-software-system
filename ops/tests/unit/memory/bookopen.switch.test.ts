@@ -1,8 +1,7 @@
 import { apierror } from 'zss/device/api'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
-  memoryreadbookflag,
+  memoryreadflag,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import { memorycreatesoftwarebook } from 'zss/memory/books'
@@ -57,7 +56,6 @@ function maketitleonlybook(name: string) {
 
 describe('memoryswitchopenedbook', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     jest.mocked(apierror).mockClear()
   })
@@ -70,12 +68,12 @@ describe('memoryswitchopenedbook', () => {
 
     const player = 'pid_12_switchplayer01'
     expect(memoryloginplayer(player, {})).toBe(true)
-    expect(memoryreadbookflag(booka, player, 'board')).toBeTruthy()
+    expect(memoryreadflag(booka, player, 'board')).toBeTruthy()
 
     expect(memoryswitchopenedbook(bookb.id)).toBe(true)
     expect(memoryreadmainbook()?.id).toBe(bookb.id)
     // Player state stays on the book they logged into; switch is main-only.
-    expect(memoryreadbookflag(booka, player, 'board')).toBeTruthy()
+    expect(memoryreadflag(booka, player, 'board')).toBeTruthy()
     expect(bookb.activelist).not.toContain(player)
   })
 
@@ -98,7 +96,6 @@ describe('memoryswitchopenedbook', () => {
 
 describe('memoryloginplayer title and player scope', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     jest.mocked(apierror).mockClear()
   })
@@ -109,14 +106,14 @@ describe('memoryloginplayer title and player scope', () => {
     memorywritemainbook(book.id)
     const player = 'pid_12_switchplayer01'
     expect(memoryloginplayer(player, {})).toBe(true)
-    const boardid = memoryreadbookflag(book, player, 'board') as string
+    const boardid = memoryreadflag(book, player, 'board') as string
 
     book.activelist = book.activelist.filter((id) => id !== player)
     expect(book.activelist).not.toContain(player)
 
     expect(memoryloginplayer(player, {})).toBe(true)
     expect(book.activelist).toContain(player)
-    expect(memoryreadbookflag(book, player, 'board')).toBe(boardid)
+    expect(memoryreadflag(book, player, 'board')).toBe(boardid)
   })
 
   it('borrows title from another book when opened has player', () => {
@@ -127,7 +124,7 @@ describe('memoryloginplayer title and player scope', () => {
 
     const player = 'pid_12_logintitle001'
     expect(memoryloginplayer(player, {})).toBe(true)
-    expect(memoryreadbookflag(opened, player, 'board')).toBe(titleid)
+    expect(memoryreadflag(opened, player, 'board')).toBe(titleid)
   })
 
   it('borrows player kind from another book when opened has none', () => {
@@ -141,13 +138,12 @@ describe('memoryloginplayer title and player scope', () => {
 
     const player = 'pid_12_loginborrow001'
     expect(memoryloginplayer(player, {})).toBe(true)
-    expect(memoryreadbookflag(opened, player, 'board')).toBe(titleid)
+    expect(memoryreadflag(opened, player, 'board')).toBe(titleid)
   })
 })
 
 describe('memorycreatesoftwarebook', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -166,7 +162,6 @@ describe('memorycreatesoftwarebook', () => {
 
 describe('memorywritemainbook', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

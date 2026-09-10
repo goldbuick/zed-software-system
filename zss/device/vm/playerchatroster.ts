@@ -7,7 +7,7 @@ import {
 } from 'zss/device/vm/chatrosterformat'
 import { lastinputtime } from 'zss/device/vm/state'
 import { isstring } from 'zss/mapping/types'
-import { memoryreadflags } from 'zss/memory/flags'
+import { memoryreadflags } from 'zss/memory/bookoperations'
 import { memoryreadmainbook, memoryreadoperator } from 'zss/memory/session'
 const PLAYER_ROUTEKEY = 'player'
 
@@ -28,7 +28,7 @@ function sessionrosterentries(nowms: number): CHAT_ROSTER_ENTRY[] {
     if (typeof last !== 'number' && pid !== operator) {
       continue
     }
-    const { user } = memoryreadflags(pid)
+    const { user } = memoryreadflags(memoryreadmainbook(), pid)
     const name = isstring(user) && user.trim() ? user : 'player'
     entries.push({
       name,
@@ -69,7 +69,7 @@ export function maybeemitplayerchatroster(
 }
 
 export function emitchatconnectplayer(vm: DEVICE, player: string): void {
-  const { user } = memoryreadflags(player)
+  const { user } = memoryreadflags(memoryreadmainbook(), player)
   const name = isstring(user) && user.trim() ? user : 'player'
   vmloader(
     vm,
@@ -83,7 +83,7 @@ export function emitchatconnectplayer(vm: DEVICE, player: string): void {
 }
 
 export function emitchatdisconnectplayer(vm: DEVICE, player: string): void {
-  const { user } = memoryreadflags(player)
+  const { user } = memoryreadflags(memoryreadmainbook(), player)
   const name = isstring(user) && user.trim() ? user : 'player'
   vmloader(
     vm,

@@ -9,13 +9,11 @@ jest.mock('zss/memory/runtime', () => {
     ...actual,
     memorychipispresent: (...args: unknown[]) =>
       mockedmemorychipispresent(...args),
-    memorymessagechip: (...args: unknown[]) =>
-      mockedmemorymessagechip(...args),
+    memorymessagechip: (...args: unknown[]) => mockedmemorymessagechip(...args),
   }
 })
 
 import type { CHIP } from 'zss/chip'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -24,11 +22,8 @@ import {
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import {
-  memorysendtoelement,
-  memorysendtoelements,
-} from 'zss/memory/gamesend'
-import { memoryreadterrain } from 'zss/memory/boardaccess'
+import { memorysendtoelement, memorysendtoelements } from 'zss/memory/gamesend'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryresetbooks } from 'zss/memory/session'
 import { BOARD_WIDTH } from 'zss/memory/types'
 import { DIR } from 'zss/words/types'
@@ -42,7 +37,6 @@ function stubchip(): CHIP {
 
 describe('shot damage send to terrain', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     READ_CONTEXT.board = undefined
     READ_CONTEXT.timestamp = 0
@@ -81,9 +75,15 @@ describe('shot damage send to terrain', () => {
       kind: 'breakable',
       breakable: 1,
     })
-    expect(memoryreadterrain(board, pt.x, pt.y)?.kind).toBe('breakable')
+    expect(
+      memoryreadelement(board, { x: pt.x, y: pt.y }, READ_LAYER.TERRAIN)?.kind,
+    ).toBe('breakable')
 
-    const terrain = memoryreadterrain(board, pt.x, pt.y)!
+    const terrain = memoryreadelement(
+      board,
+      { x: pt.x, y: pt.y },
+      READ_LAYER.TERRAIN,
+    )!
     terrain.x = pt.x
     terrain.y = pt.y
     memorysendtoelement(from, terrain, 'shot')
@@ -103,7 +103,11 @@ describe('shot damage send to terrain', () => {
       kind: 'breakable',
       breakable: 1,
     })
-    const terrain = memoryreadterrain(board, pt.x, pt.y)!
+    const terrain = memoryreadelement(
+      board,
+      { x: pt.x, y: pt.y },
+      READ_LAYER.TERRAIN,
+    )!
     terrain.x = pt.x
     terrain.y = pt.y
     memorysendtoelement(from, terrain, 'bombed')

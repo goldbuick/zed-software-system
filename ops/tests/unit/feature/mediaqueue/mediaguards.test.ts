@@ -7,10 +7,9 @@ import {
   mediareaddisplaynamefrompayload,
   mediarequireboardhelper,
 } from 'zss/feature/mediaqueue/mediaguards'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -18,10 +17,9 @@ import {
 } from 'zss/memory/codepageoperations'
 import {
   memoryapplypermissionconfig,
-  memorysetplayertotoken,
-  memorysetrolefortoken,
+  memorywriteplayertotoken,
+  memorywriterolefortoken,
 } from 'zss/memory/permissions'
-import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -39,13 +37,12 @@ describe('mediaguards', () => {
   })
 
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
   it('mediapayloadwithmanage does not deny speaker-only players', () => {
-    memorysetplayertotoken('player1', 'token-a')
-    memorysetrolefortoken('token-a', 'player')
+    memorywriteplayertotoken('player1', 'token-a')
+    memorywriterolefortoken('token-a', 'player')
     expect(mediacanmanagequeue('player1')).toBe(false)
     expect(
       mediapayloadwithmanage('player1', { url: 'https://example.com/v' }),
@@ -58,8 +55,8 @@ describe('mediaguards', () => {
   })
 
   it('mediapayloadwithmanage sets canmanage for bridge role', () => {
-    memorysetplayertotoken('mod1', 'token-mod')
-    memorysetrolefortoken('token-mod', 'mod')
+    memorywriteplayertotoken('mod1', 'token-mod')
+    memorywriterolefortoken('token-mod', 'mod')
     expect(mediacanmanagequeue('mod1')).toBe(true)
     expect(mediapayloadwithmanage('mod1')).toEqual({
       canmanage: true,
@@ -72,7 +69,7 @@ describe('mediaguards', () => {
     const book = memorycreatebook([])
     memoryresetbooks([book])
     memorywritemainbook(book.id)
-    memorywritebookflag(book, 'namedplayer', 'user', 'goldbuick')
+    memorywriteflag(book, 'namedplayer', 'user', 'goldbuick')
     expect(mediapayloadwithmanage('namedplayer')).toEqual({
       canmanage: false,
       displayname: 'goldbuick',
@@ -83,7 +80,7 @@ describe('mediaguards', () => {
     const book = memorycreatebook([])
     memoryresetbooks([book])
     memorywritemainbook(book.id)
-    memorywritebookflag(book, 'namedplayer', 'user', 'goldbuick')
+    memorywriteflag(book, 'namedplayer', 'user', 'goldbuick')
     expect(
       mediapayloadwithmanage('namedplayer', { displayname: 'twitchfan' }),
     ).toEqual({
@@ -131,9 +128,9 @@ describe('mediaguards', () => {
     const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
     bound.id = boarda.id
     other.id = boardb.id
-    memoryensureboardruntime(bound).mediaqueuehelperpeerid = 'mq_helper1'
-    memorywritebookflag(book, 'p1', 'board', bound.id)
-    memorywritebookflag(book, 'p1', 'user', 'goldbuick')
+    bound.mediaqueuehelperpeerid = 'mq_helper1'
+    memorywriteflag(book, 'p1', 'board', bound.id)
+    memorywriteflag(book, 'p1', 'user', 'goldbuick')
     expect(mediarequireboardhelper('p1')).toBe('mq_helper1')
     expect(
       mediapayloadwithboardhelper('p1', { url: 'https://a.example' }),
@@ -144,7 +141,7 @@ describe('mediaguards', () => {
       canmanage: false,
       displayname: 'goldbuick',
     })
-    memorywritebookflag(book, 'p1', 'board', other.id)
+    memorywriteflag(book, 'p1', 'board', other.id)
     expect(mediarequireboardhelper('p1')).toBe('')
     expect(mediapayloadwithboardhelper('p1')).toBeUndefined()
     expect(mockapierror).toHaveBeenCalledWith(
@@ -165,8 +162,8 @@ describe('mediaguards', () => {
     const other = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardb)!
     bound.id = boarda.id
     other.id = boardb.id
-    memoryensureboardruntime(bound).mediaqueuehelperpeerid = 'mq_from_context'
-    memorywritebookflag(book, 'p1', 'board', other.id)
+    bound.mediaqueuehelperpeerid = 'mq_from_context'
+    memorywriteflag(book, 'p1', 'board', other.id)
     const previous = READ_CONTEXT.board
     READ_CONTEXT.board = bound
     try {

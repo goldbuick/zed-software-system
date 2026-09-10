@@ -13,7 +13,6 @@ jest.mock('zss/memory/gamesend', () => {
 
 import type { CHIP } from 'zss/chip'
 import { ELEMENT_FIRMWARE } from 'zss/firmware/element'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -27,7 +26,6 @@ import { READ_CONTEXT } from 'zss/words/reader'
 
 describe('element everytick walk thud', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
     READ_CONTEXT.board = undefined
     READ_CONTEXT.book = undefined

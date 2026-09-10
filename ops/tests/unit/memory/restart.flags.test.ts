@@ -1,10 +1,9 @@
 import { createsid } from 'zss/mapping/guid'
 import { memorycreateboard } from 'zss/memory/boardlifecycle'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
-  memoryreadbookflags,
-  memorywritebookflag,
+  memoryreadflags,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import {
@@ -16,7 +15,6 @@ import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 
 describe('memoryrestartallchipsandflags', () => {
   afterEach(() => {
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 
@@ -33,10 +31,10 @@ describe('memoryrestartallchipsandflags', () => {
     memoryresetbooks([booka, bookb])
     memorywritemainbook(booka.id)
 
-    memorywritebookflag(booka, 'pid_owner_a', 'score', 1 as any)
-    memorywritebookflag(bookb, 'pid_owner_b', 'score', 2 as any)
-    expect(memoryreadbookflags(booka, 'pid_owner_a')).toEqual({ score: 1 })
-    expect(memoryreadbookflags(bookb, 'pid_owner_b')).toEqual({ score: 2 })
+    memorywriteflag(booka, 'pid_owner_a', 'score', 1 as any)
+    memorywriteflag(bookb, 'pid_owner_b', 'score', 2 as any)
+    expect(memoryreadflags(booka, 'pid_owner_a')).toEqual({ score: 1 })
+    expect(memoryreadflags(bookb, 'pid_owner_b')).toEqual({ score: 2 })
 
     const npcid = createsid()
     const board = memorycreateboard()
@@ -46,7 +44,6 @@ describe('memoryrestartallchipsandflags', () => {
       x: 1,
       y: 1,
       code: '@guard\n#end\n',
-      runtime: '',
     }
     memorytickobject(booka, board, board.objects[npcid], '#end\n')
     expect(memorychipispresent(npcid)).toBe(true)

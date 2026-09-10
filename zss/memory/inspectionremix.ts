@@ -11,7 +11,7 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
 import { memoryreadboardbyaddress } from './boards'
-import { createinspectionconfig } from './inspectionconfig'
+import { memorycreateinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
 import { memoryreadoperator } from './session'
 
@@ -21,7 +21,7 @@ type REMIX_CONFIG = {
   mirror: number
 }
 
-const remixconfig = createinspectionconfig<REMIX_CONFIG>('remixconfig', {
+const remixconfig = memorycreateinspectionconfig<REMIX_CONFIG>('remixconfig', {
   stat: '',
   patternsize: 2,
   mirror: 1,
@@ -42,7 +42,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
       break
     }
     case 'remixrun': {
-      const cfg = remixconfig.read()
+      const cfg = remixconfig.memoryread()
       const sourceboard = memoryreadboardbyaddress(cfg.stat)
       if (ispresent(sourceboard)) {
         if (
@@ -83,13 +83,13 @@ registerhyperlinksharedbridge(
   'text',
   (_typ, target) => {
     if (target === 'stat') {
-      return remixconfig.read().stat
+      return remixconfig.memoryread().stat
     }
     return ''
   },
   (_typ, name, value) => {
     if (isstring(value) && name === 'stat') {
-      remixconfig.write({ ...remixconfig.read(), stat: value })
+      remixconfig.memorywrite({ ...remixconfig.memoryread(), stat: value })
     }
   },
 )
@@ -98,7 +98,7 @@ registerhyperlinksharedbridge(
   'remix',
   'number',
   (_typ, target) => {
-    const cfg = remixconfig.read()
+    const cfg = remixconfig.memoryread()
     if (target === 'patternsize') {
       return cfg.patternsize
     }
@@ -109,11 +109,11 @@ registerhyperlinksharedbridge(
   },
   (_typ, name, value) => {
     if (isnumber(value)) {
-      const cfg = remixconfig.read()
+      const cfg = remixconfig.memoryread()
       if (name === 'patternsize') {
-        remixconfig.write({ ...cfg, patternsize: value })
+        remixconfig.memorywrite({ ...cfg, patternsize: value })
       } else if (name === 'mirror') {
-        remixconfig.write({ ...cfg, mirror: value })
+        remixconfig.memorywrite({ ...cfg, mirror: value })
       }
     }
   },

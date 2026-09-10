@@ -43,7 +43,6 @@ import type { MESSAGE } from 'zss/device/api'
 import { apitoast } from 'zss/device/api'
 import { handlerefscroll } from 'zss/device/vm/handlers/scroll'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memoryreadmainbook,
   memoryresetbooks,
@@ -65,7 +64,6 @@ describe('handlerefscroll', () => {
     jest.mocked(romread).mockReset()
     jest.mocked(scrollwritelines).mockClear()
     jest.mocked(apitoast).mockClear()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

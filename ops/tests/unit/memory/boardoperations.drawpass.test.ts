@@ -1,10 +1,6 @@
 import { memoryupdatedrawdirty } from 'zss/memory/boarddrawdirty'
 import { memorytickboard } from 'zss/memory/boardtick'
 import {
-  memoryreadboardruntime,
-  memorywriteboardelementruntime,
-} from 'zss/memory/runtimeboundary'
-import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_SIZE,
@@ -41,7 +37,6 @@ function makeboard(
     name: 'board test',
     objects,
     terrain,
-    runtime: '',
   } as BOARD
 }
 
@@ -50,10 +45,9 @@ function maketerrain(x: number, y: number, code: string): BOARD_ELEMENT {
     x,
     y,
     kind: 'terrain_kind',
-    runtime: '',
   }
-  memorywriteboardelementruntime(terrain, {
-    kinddata: { id: 'terrain_kind', code, runtime: '' },
+  Object.assign(terrain, {
+    kinddata: { id: 'terrain_kind', code },
   })
   return terrain
 }
@@ -69,10 +63,9 @@ function makeobject(
     y: 1,
     collision,
     kind: 'object_kind',
-    runtime: '',
   }
-  memorywriteboardelementruntime(object, {
-    kinddata: { id: 'object_kind', code, runtime: '' },
+  Object.assign(object, {
+    kinddata: { id: 'object_kind', code },
   })
   return object
 }
@@ -199,22 +192,16 @@ describe('memorytickboard draw pass', () => {
     const board = makeboard({ [mover.id ?? '']: mover }, terrain)
 
     memoryupdatedrawdirty(board, 1)
-    expect((memoryreadboardruntime(board)?.drawallowids?.size ?? 0) > 0).toBe(
-      true,
-    )
+    expect((board.drawallowids?.size ?? 0) > 0).toBe(true)
 
     memoryupdatedrawdirty(board, 2)
-    expect(memoryreadboardruntime(board)?.drawallowids?.size ?? 0).toBe(0)
+    expect(board.drawallowids?.size ?? 0).toBe(0)
 
     mover.x = 6
     mover.y = 6
     memoryupdatedrawdirty(board, 3)
 
-    expect(memoryreadboardruntime(board)?.drawallowids?.has(`${tidx}`)).toBe(
-      true,
-    )
-    expect(memoryreadboardruntime(board)?.drawallowids?.has('sid_move')).toBe(
-      true,
-    )
+    expect(board.drawallowids?.has(`${tidx}`)).toBe(true)
+    expect(board.drawallowids?.has('sid_move')).toBe(true)
   })
 })

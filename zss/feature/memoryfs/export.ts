@@ -6,10 +6,10 @@ import {
   readmemoryfsflagstatspath,
   readmemoryfspageprefix,
 } from 'zss/feature/memoryfs/schema'
-import { ispresent } from 'zss/mapping/types'
-import { memoryreadbookflags } from 'zss/memory/bookoperations'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { memoryreadflags } from 'zss/memory/bookoperations'
 import {
-  memoryexportcodepageasjson,
+  memoryexportcodepage,
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
@@ -97,7 +97,10 @@ export function buildmemoryfscodepagefiles(
   page: CODE_PAGE,
 ): MEMORYFS_PATH_FILE[] {
   // strip kind defaults but keep literal overrides; terrain.json stays hand-editable
-  const pagejson = memoryexportcodepageasjson(page, true)
+  const pagejson = memoryexportcodepage(page, {
+    format: 'json',
+    strip: true,
+  }) as MAYBE<Record<string, unknown>>
   if (pagejson === undefined) {
     return []
   }
@@ -162,7 +165,7 @@ export function buildmemoryfsflagfiles(book: BOOK): MEMORYFS_PATH_FILE[] {
     if (!memoryfsshouldmirrorflagowner(owner)) {
       continue
     }
-    const flags = memoryreadbookflags(book, owner)
+    const flags = memoryreadflags(book, owner)
     files.push({
       path: readmemoryfsflagstatspath(book, owner),
       bytes: memoryfsencodejson(flags ?? {}),

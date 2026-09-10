@@ -76,7 +76,10 @@ export function isbook(value: any) {
   const flagsvalid =
     value?.flags !== null &&
     typeof value?.flags === 'object' &&
-    Object.values(value.flags).every((flagid) => isstring(flagid))
+    !Array.isArray(value.flags) &&
+    Object.values(value.flags).every(
+      (bag) => bag !== null && typeof bag === 'object' && !Array.isArray(bag),
+    )
   return (
     value !== null &&
     typeof value === 'object' &&

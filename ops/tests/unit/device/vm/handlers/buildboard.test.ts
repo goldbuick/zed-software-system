@@ -2,14 +2,9 @@ import type { DEVICE } from 'zss/device'
 import { boardbuild } from 'zss/feature/boardbuild'
 import { pttoindex } from 'zss/mapping/2d'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
-import { memorycreatebook } from 'zss/memory/bookoperations'
+import { memorycreatebook, memoryreadflags } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import { memoryreadflags } from 'zss/memory/flags'
-import {
-  memoryreadboardelementruntime,
-  memorywriteboardelementruntime,
-} from 'zss/memory/runtimeboundary'
-import { memoryresetbooks } from 'zss/memory/session'
+import { memoryreadmainbook, memoryresetbooks } from 'zss/memory/session'
 import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -46,11 +41,10 @@ function makewallterrain(x: number, y: number): BOARD_ELEMENT {
     kind: 'wall',
     char: 219,
     color: 2,
-    runtime: '',
   }
-  memorywriteboardelementruntime(tile, {
+  Object.assign(tile, {
     category: CATEGORY.ISTERRAIN,
-    kinddata: { id: 'wall', name: 'wall', char: 219, runtime: '' },
+    kinddata: { id: 'wall', name: 'wall', char: 219 },
   })
   return tile
 }
@@ -67,7 +61,6 @@ function makeboard(name: string, terrainat?: BOARD_ELEMENT): BOARD {
     name,
     terrain,
     objects: {},
-    runtime: '',
   }
 }
 
@@ -90,7 +83,7 @@ describe('boardbuild', () => {
     const hubboard = makeboard('hubboard', wall)
     const currentboard = makeboard('here')
     const wallcp = memorycreatecodepage('@terrain wall\n', {
-      terrain: { id: 'wall', name: 'wall', kind: 'wall', runtime: '' },
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
     })
     const hubcp = memorycreatecodepage('@board hubboard\n', {
       board: hubboard,
@@ -121,9 +114,7 @@ describe('boardbuild', () => {
     const resolved = memoryreadboardbyaddress(newid!)
     expect(resolved?.exitnorth).toBe(currentcp.id)
     expect(resolved?.terrain[0]?.char).toBe(219)
-    expect(
-      memoryreadboardelementruntime(resolved!.terrain[0]!)?.kinddata?.name,
-    ).toBe('wall')
+    expect(resolved?.terrain[0]?.kinddata?.name).toBe('wall')
   })
 
   it('creates blank board with exit back-link when no source', () => {
@@ -183,7 +174,7 @@ describe('boardbuild', () => {
 
     expect(apierror).not.toHaveBeenCalled()
     expect(currentboard.exitsouth).toBeUndefined()
-    const flags = memoryreadflags('pid_builder')
+    const flags = memoryreadflags(memoryreadmainbook(), 'pid_builder')
     expect(typeof flags.myroom).toBe('string')
     expect(flags.myroom).toBeTruthy()
     expect(flags.myroom).not.toBe(hubcp.id)
@@ -198,7 +189,6 @@ describe('boardbuild', () => {
       kind: 'object',
       x: 1,
       y: 1,
-      runtime: '',
     }
     const hubcp = memorycreatecodepage('@board hubboard\n', {
       board: hubboard,
@@ -214,7 +204,7 @@ describe('boardbuild', () => {
     expect(apierror).not.toHaveBeenCalled()
     expect(currentboard.objects.el1.p1).toBeTruthy()
     expect(currentboard.objects.el1.p1).not.toBe(hubcp.id)
-    expect(memoryreadflags('pid_builder').p1).toBeUndefined()
+    expect(memoryreadflags(memoryreadmainbook(), 'pid_builder').p1).toBeUndefined()
   })
 
   it('fails loud when standard element stat has missing element', () => {
@@ -234,6 +224,6 @@ describe('boardbuild', () => {
 
     expect(apierror).toHaveBeenCalled()
     expect(book.pages.length).toBe(pagecountbefore)
-    expect(memoryreadflags('pid_builder').p1).toBeUndefined()
+    expect(memoryreadflags(memoryreadmainbook(), 'pid_builder').p1).toBeUndefined()
   })
 })

@@ -1,6 +1,6 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadobjectatpt } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
 import * as boardmovement from 'zss/memory/boardmovement'
@@ -11,7 +11,6 @@ import {
   memoryreadelementstat,
 } from 'zss/memory/boards'
 import { memoryptwithinboard } from 'zss/memory/boardtransitions'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { type BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -105,7 +104,7 @@ export function boardweave(
 
   // apply weave (terrain from snapshot; object destinations collected then applied once
   // so objects are not chain-moved when dest lies inside the woven rectangle).
-  // includeghost finds objects by x/y (including ghosts, which are omitted from occupancy).
+  // OBJECTGHOST finds objects by x/y (including ghosts, which are omitted from occupancy).
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       let weaveobject = false
@@ -127,10 +126,10 @@ export function boardweave(
       const destidx = tx + ty * BOARD_WIDTH
       const srcidx = x + y * BOARD_WIDTH
       if (weaveobject) {
-        const maybeobject = memoryreadobjectatpt(
+        const maybeobject = memoryreadelement(
           targetboard,
           { x, y },
-          { includeghost: true },
+          READ_LAYER.OBJECTGHOST,
         )
         if (
           memoryboardelementisobject(maybeobject) &&
@@ -234,7 +233,7 @@ export function boardweavegroup(
     const fromindex = pttoindex(from, BOARD_WIDTH)
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
-      const destelement = memoryreadelement(targetboard, dest)
+      const destelement = memoryreadelement(targetboard, dest, READ_LAYER.ANY)
       const destid = destelement?.id ?? ''
       const destpt = { x: destelement?.x ?? 0, y: destelement?.y ?? 0 }
       const destindex = pttoindex(destpt, BOARD_WIDTH)
@@ -251,7 +250,7 @@ export function boardweavegroup(
         let pushfromelement = false
         const hasfromelement = carriedindexes.includes(fromindex)
         const carriedelement = hasfromelement
-          ? memoryreadelement(targetboard, from)
+          ? memoryreadelement(targetboard, from, READ_LAYER.ANY)
           : undefined
         const carriedispushable = hasfromelement
           ? memoryreadelementstat(carriedelement, 'pushable')
@@ -331,7 +330,7 @@ export function boardweavegroup(
     const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
-      const destelement = memoryreadelement(targetboard, dest)
+      const destelement = memoryreadelement(targetboard, dest, READ_LAYER.ANY)
       const destid = destelement?.id ?? ''
       const destcollision: COLLISION = memoryreadelementstat(
         destelement,
@@ -438,10 +437,7 @@ export function boardweavegroup(
   }
 
   targetboard.terrain = newterrain
-  const boardruntime = memoryreadboardruntime(targetboard)
-  if (boardruntime) {
-    delete boardruntime.distmaps
-  }
+  delete targetboard.distmaps
 
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]

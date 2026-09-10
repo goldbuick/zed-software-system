@@ -2,13 +2,18 @@ import {
   memoryelementtologprefix,
   memoryelementtotickerprefix,
 } from 'zss/memory/rendering'
-import { memorywriteboardelementruntime } from 'zss/memory/runtimeboundary'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 import { COLOR } from 'zss/words/types'
 
 const mockedmemoryreadflags = jest.fn()
 
-jest.mock('zss/memory/flags', () => ({
+jest.mock('zss/memory/session', () => ({
+  ...jest.requireActual('zss/memory/session'),
+  memoryreadmainbook: () => ({ id: 'main' }),
+}))
+
+jest.mock('zss/memory/bookoperations', () => ({
+  ...jest.requireActual('zss/memory/bookoperations'),
   memoryreadflags: (...args: unknown[]) => mockedmemoryreadflags(...args),
 }))
 
@@ -20,10 +25,9 @@ function baseelement(over: Partial<BOARD_ELEMENT> = {}): BOARD_ELEMENT {
     char: 2,
     color: COLOR.WHITE,
     bg: COLOR.BLACK,
-    runtime: '',
     ...over,
   }
-  memorywriteboardelementruntime(element, {
+  Object.assign(element, {
     kinddata: {
       id: 'chest',
       name: 'chest',
@@ -49,7 +53,7 @@ describe('memoryelementtotickerprefix', () => {
 
   it('falls back to kind displayname when element displayname unset', () => {
     const el = baseelement()
-    memorywriteboardelementruntime(el, {
+    Object.assign(el, {
       kinddata: { id: 'chest', name: 'chest', displayname: 'FromKind' },
     })
     expect(memoryelementtotickerprefix(el)).toContain('$CYAN fromkind:$WHITE ')

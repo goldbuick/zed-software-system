@@ -2,7 +2,11 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import {
+  READ_LAYER,
+  memorylistelement,
+  memoryreadelement,
+} from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memorysafedeleteelement,
@@ -15,7 +19,6 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memorylistboardnamedelements } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'
@@ -61,7 +64,7 @@ export function boardremix(
   const data = new Uint8Array(BOARD_SIZE * 4)
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
-      const el = memoryreadelement(sourceboard, { x, y })
+      const el = memoryreadelement(sourceboard, { x, y }, READ_LAYER.ANY)
       const r = el?.char ?? 0 // in this case we have to ignore 0
       const g = el?.color ?? NO_COLOR // onclear here means unset
       const b = el?.bg ?? NO_COLOR // onclear here means unset
@@ -122,7 +125,11 @@ export function boardremix(
       // blank target region
       switch (targetset) {
         case 'all': {
-          const maybeobject = memoryreadelement(targetboard, { x, y })
+          const maybeobject = memoryreadelement(
+            targetboard,
+            { x, y },
+            READ_LAYER.ANY,
+          )
           if (memoryboardelementisobject(maybeobject)) {
             memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
           }
@@ -130,7 +137,11 @@ export function boardremix(
           break
         }
         case 'object': {
-          const maybeobject = memoryreadelement(targetboard, { x, y })
+          const maybeobject = memoryreadelement(
+            targetboard,
+            { x, y },
+            READ_LAYER.ANY,
+          )
           if (memoryboardelementisobject(maybeobject)) {
             memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
           }
@@ -173,7 +184,11 @@ export function boardremix(
           }
           if (maybekind) {
             // blank target region
-            const maybeobject = memoryreadelement(targetboard, { x, y })
+            const maybeobject = memoryreadelement(
+              targetboard,
+              { x, y },
+              READ_LAYER.ANY,
+            )
             if (memoryboardelementisobject(maybeobject)) {
               memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
             }
@@ -208,13 +223,15 @@ export function boardremix(
       // sample if element category is object
       if (memoryboardelementisobject(maybenew)) {
         // sample t board example of 'kind'
-        const sample = pick(
-          memorylistboardnamedelements(sourceboard, maybekind),
-        )
+        const sample = pick(memorylistelement(sourceboard, { name: maybekind }))
         if (ispresent(sample)) {
           // copy terrain element from under sample
           memorywriteterrain(targetboard, {
-            ...memoryreadterrain(sourceboard, sample.x ?? 0, sample.y ?? 0),
+            ...memoryreadelement(
+              sourceboard,
+              { x: sample.x ?? 0, y: sample.y ?? 0 },
+              READ_LAYER.TERRAIN,
+            ),
             x,
             y,
           })

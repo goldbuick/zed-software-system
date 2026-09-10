@@ -8,7 +8,7 @@ import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
-import { memoryreadelement, memoryreadterrain } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import {
   memorycreateboardobject,
   memorysafedeleteelement,
@@ -19,7 +19,6 @@ import { memoryensuremainbook } from './books'
 import { memoryinspectempty, memoryinspectemptymenu } from './inspection'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
-import { memoryreadboardelementruntime } from './runtimeboundary'
 import { memoryreadoperator } from './session'
 import { BOARD, BOARD_ELEMENT } from './types'
 
@@ -55,20 +54,23 @@ function createboardelementbuffer(
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
       const pt = { x: x - x1, y: y - y1 }
-      const maybeobject = memoryreadelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       if (maybeobject?.kind === 'player') {
         // skip player
-        const under = deepcopy(memoryreadterrain(board, x, y))
+        const under = deepcopy(
+          memoryreadelement(board, { x: x, y: y }, READ_LAYER.TERRAIN),
+        )
         terrain.push(under)
         // visible element only
         flattened.push(under)
       } else {
-        if (
-          memoryreadboardelementruntime(maybeobject)?.category ===
-          CATEGORY.ISOBJECT
-        ) {
+        if (maybeobject?.category === CATEGORY.ISOBJECT) {
           // terrain and object
-          terrain.push(deepcopy(memoryreadterrain(board, x, y)))
+          terrain.push(
+            deepcopy(
+              memoryreadelement(board, { x: x, y: y }, READ_LAYER.TERRAIN),
+            ),
+          )
           objects.push({
             ...deepcopy(maybeobject),
             ...pt,
@@ -136,7 +138,11 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         let bg = COLOR.ONCLEAR
         content += ''
         for (let x = p1x; x <= p2x; ++x) {
-          const element = memoryreadterrain(board, x, y)
+          const element = memoryreadelement(
+            board,
+            { x: x, y: y },
+            READ_LAYER.TERRAIN,
+          )
           const display = memoryreadelementdisplay(element, 0, 0, 0)
           if (display.color != color) {
             color = display.color
@@ -288,11 +294,8 @@ export async function memoryinspectcut(
     case 'cutall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y })
-          if (
-            memoryreadboardelementruntime(maybeobject)?.category ===
-            CATEGORY.ISOBJECT
-          ) {
+          const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
           memorywriteterrain(board, { x, y })
@@ -303,11 +306,8 @@ export async function memoryinspectcut(
     case 'cutobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y })
-          if (
-            memoryreadboardelementruntime(maybeobject)?.category ===
-            CATEGORY.ISOBJECT
-          ) {
+          const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
+          if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
         }

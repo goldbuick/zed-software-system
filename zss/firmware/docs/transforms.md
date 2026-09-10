@@ -37,11 +37,11 @@ title: transforms.ts
 Filter controls which elements are affected:
 
 - Built-ins: `all`, `terrain`, `object` (and `self` / `others` where applicable)
-- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistboardelementsbygroup`
+- **`<group>`** — parsed via `ARG_TYPE.GROUP` (optional color prefix); matches `@group` **or** element display name via `memoryreadgroup` / `memorylistelement({ group, self })`
 
-## pickcodepagewithtype
+## pickcodepage
 
-Helper that searches all books for a codepage of given type and stat/address. Used to resolve `stat` in copy/remix to a source board.
+Helper that searches books for a codepage of given type and stat/address (`memorypickcodepage(memoryreadbooklist(), type, stat)`). Used to resolve `stat` in copy/remix to a source board.
 
 ## Implementation Notes
 

@@ -70,6 +70,16 @@ export enum BOARD_ELEMENT_KEYS {
   p10,
   didfail,
   displayname,
+  p11,
+  p12,
+  p13,
+  p14,
+  p15,
+  p16,
+  p17,
+  p18,
+  p19,
+  p20,
 }
 
 export enum BOARD_KEYS {
@@ -181,7 +191,21 @@ export type BOARD = {
   // runtime only
   id: string
   name: string
-  runtime?: string
+  named?: Record<string, Set<string | number>>
+  distmaps?: Record<string, number[]>
+  overboard?: string
+  underboard?: string
+  charsetpage?: string
+  palettepage?: string
+  drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
+  drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
+  drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
+  drawdirtycells?: number[] // expanded cell indices for partial tile upload
+  drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
+  /** Desktop media-queue helper Peer id when #media is bound to this board. */
+  mediaqueuehelperpeerid?: string
+  /** Now-playing marquee label for board TV (synced from helper status). */
+  mediaqueuenowplayingtitle?: string
 }
 
 export type BOARD_ELEMENT = {
@@ -227,6 +251,16 @@ export type BOARD_ELEMENT = {
   p8?: number | string
   p9?: number | string
   p10?: number | string
+  p11?: number | string
+  p12?: number | string
+  p13?: number | string
+  p14?: number | string
+  p15?: number | string
+  p16?: number | string
+  p17?: number | string
+  p18?: number | string
+  p19?: number | string
+  p20?: number | string
   cycle?: number
   stepx?: number
   stepy?: number
@@ -239,7 +273,14 @@ export type BOARD_ELEMENT = {
   // cleanup
   removed?: number
   // runtime only
-  runtime?: string
+  category?: CATEGORY
+  kinddata?: BOARD_ELEMENT
+  /** Codepage id that produced kinddata; used for cheap freshness checks. */
+  kindsourcepageid?: string
+  /** NAME(element.kind) at resolve time; detects kind string changes without pick. */
+  kindsourcekind?: string
+  /** Book timestamp of last successful `#push` displacement (once per tick). */
+  pushedtick?: number
 }
 
 export type BOARD_ELEMENT_STAT = keyof BOARD_ELEMENT
@@ -250,25 +291,21 @@ export type BOOK = {
   token?: string // unique token
   timestamp: number
   activelist: string[]
-  pages: CODE_PAGE[] // Ordered code page shells; shells may also be registered at `boundaries[page.id]` for sync.
-  flags: Record<string, string> // Per-owner boundary ids; each owner id maps to a boundary-backed `BOOK_FLAGS` record.
+  pages: CODE_PAGE[]
+  flags: Record<string, BOOK_FLAGS>
 }
 
 export type BOOK_FLAGS = Record<string, WORD>
-
-/** Slot payload stored at `boundaries[codepage.id]` (same id as the shell `id`). */
-export type CODE_PAGE_RUNTIME = {
-  board?: BOARD
-  object?: BOARD_ELEMENT
-  terrain?: BOARD_ELEMENT
-  charset?: BITMAP
-  palette?: BITMAP
-}
 
 export type CODE_PAGE = {
   id: string
   code: string
   stats?: CODE_PAGE_STATS
+  board?: BOARD
+  object?: BOARD_ELEMENT
+  terrain?: BOARD_ELEMENT
+  charset?: BITMAP
+  palette?: BITMAP
 }
 
 export type CODE_PAGE_STATS = {
@@ -289,32 +326,3 @@ export type CODE_PAGE_TYPE_MAP = {
 }
 
 export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
-
-export type BOARD_RUNTIME = {
-  named?: Record<string, Set<string | number>>
-  distmaps?: Record<string, number[]>
-  overboard?: string
-  underboard?: string
-  charsetpage?: string
-  palettepage?: string
-  drawlastfp?: Record<string, string> // post-tick draw fingerprints; keys match `memoryelementdrawreadid`
-  drawlastxy?: Record<string, { x: number; y: number }> // last known cells for objects (ids); used when objects are removed
-  drawallowids?: Set<string> // ids allowed for `:drawdisplay` next tick; undefined means full draw pass
-  drawdirtycells?: number[] // expanded cell indices for partial tile upload
-  drawneedfull?: boolean // force full draw next tick (e.g. palette swap); cleared after dirty update
-  /** Desktop media-queue helper Peer id when #media is bound to this board. */
-  mediaqueuehelperpeerid?: string
-  /** Now-playing marquee label for board TV (synced from helper status). */
-  mediaqueuenowplayingtitle?: string
-}
-
-export type BOARD_ELEMENT_RUNTIME = {
-  category?: CATEGORY
-  kinddata?: BOARD_ELEMENT
-  /** Codepage id that produced kinddata; used for cheap freshness checks. */
-  kindsourcepageid?: string
-  /** NAME(element.kind) at resolve time; detects kind string changes without pick. */
-  kindsourcekind?: string
-  /** Book timestamp of last successful `#push` displacement (once per tick). */
-  pushedtick?: number
-}

@@ -8,7 +8,6 @@ jest.mock('zss/device/api', () => ({
 
 import { BOOKMARK_NAME_TARGET } from 'zss/feature/bookmarks'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorybookmarkscroll,
   memorymainbookisempty,
@@ -23,7 +22,6 @@ import {
 describe('memorybookmarkscroll url save gating', () => {
   beforeEach(() => {
     jest.mocked(scrollwritelines).mockClear()
-    memoryboundariesclear()
     memoryresetbooks([])
   })
 

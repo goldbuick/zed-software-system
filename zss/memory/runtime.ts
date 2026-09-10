@@ -19,17 +19,18 @@ import { perfmeasure } from 'zss/perf/ui'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
-import { memoryreadobject } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryensureboardready } from './boardlookup'
 import { memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
-import { memoryreadcodepage } from './bookoperations'
+import {
+  memoryclearflags,
+  memoryreadcodepage,
+  memoryreadflags,
+} from './bookoperations'
 import { memoryensuremainbook } from './books'
-import { memoryboundarydelete } from './boundaries'
 import { memoryreadcodepagestats } from './codepageoperations'
-import { memorypickcodepagewithtypeandstat } from './codepages'
-import { memoryclearflags, memoryreadflags } from './flags'
 import {
   memoryloaderarg,
   memoryloaderreadcontextapply,
@@ -37,10 +38,6 @@ import {
   memoryloaderrelease,
 } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
-import {
-  memoryreadboardelementruntime,
-  memoryreadboardruntime,
-} from './runtimeboundary'
 import {
   memoryreadbooklist,
   memoryreadloaders,
@@ -53,7 +50,6 @@ import {
   memoryreadsynthplay,
 } from './synthstate'
 import { BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE_TYPE } from './types'
-
 // manages chips
 const os = createos()
 
@@ -66,7 +62,7 @@ export function memoryhaltchip(id: string) {
   os.halt(id)
   // ensure we clear flags
   const mem = createchipid(id)
-  memoryclearflags(mem)
+  memoryclearflags(memoryreadmainbook(), mem)
 }
 
 /** Halt every running chip and clear chip flags on the opened book. */
@@ -83,12 +79,7 @@ export function memoryrestartallchipsandflags() {
 
   const books = memoryreadbooklist()
   for (let b = 0; b < books.length; ++b) {
-    const book = books[b]
-    const flagids = Object.keys(book.flags)
-    for (let i = 0; i < flagids.length; ++i) {
-      memoryboundarydelete(book.flags[flagids[i]])
-    }
-    book.flags = {}
+    books[b].flags = {}
   }
 }
 
@@ -99,7 +90,7 @@ export function memorymessagechip(message: MESSAGE) {
 // CLI Operations
 
 export function memoryrepeatclilast(player: string) {
-  const flags = memoryreadflags(player)
+  const flags = memoryreadflags(memoryreadmainbook(), player)
   // setup as array of invokes
   const maybecli = (flags.playbuffer = isstring(flags.playbuffer)
     ? flags.playbuffer
@@ -192,10 +183,9 @@ export function memorytickmain(
           memoryapplyboardsynthstats(board)
         }
 
-        const boardruntime = memoryreadboardruntime(board)
-        const drawallowforqueue = boardruntime?.drawneedfull
+        const drawallowforqueue = board.drawneedfull
           ? undefined
-          : boardruntime?.drawallowids
+          : board.drawallowids
         const rundraw =
           drawallowforqueue === undefined || drawallowforqueue.size > 0
         const run = memorytickboard(
@@ -294,9 +284,7 @@ export function memorytickobject(
 
   // run chip code
   const id = object.id ?? ''
-  const itemname = NAME(
-    object.name ?? memoryreadboardelementruntime(object)?.kinddata?.name ?? '',
-  )
+  const itemname = NAME(object.name ?? object.kinddata?.name ?? '')
   os.tick(id, DRIVER_TYPE.RUNTIME, cycle, itemname, code)
 
   // clear ticker
@@ -310,7 +298,7 @@ export function memorytickobject(
 
   // clear used input
   if (READ_CONTEXT.elementisplayer) {
-    const flags = memoryreadflags(READ_CONTEXT.elementid)
+    const flags = memoryreadflags(READ_CONTEXT.book, READ_CONTEXT.elementid)
     if (isnumber(flags.inputcurrent)) {
       flags.inputcurrent = 0
     }
@@ -348,11 +336,7 @@ export function memorytickonce(
 
   READ_CONTEXT.usedisplaystats = true
 
-  const itemname = NAME(
-    element.name ??
-      memoryreadboardelementruntime(element)?.kinddata?.name ??
-      '',
-  )
+  const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 
   objectKeys(OLD_CONTEXT).forEach((key) => {
@@ -376,7 +360,11 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = memoryreadobject(READ_CONTEXT.board, player)
+  READ_CONTEXT.element = memoryreadelement(
+    READ_CONTEXT.board,
+    player,
+    READ_LAYER.OBJECT,
+  )
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player
@@ -389,7 +377,7 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
 
   // track invoke
   if (tracking) {
-    const flags = memoryreadflags(player)
+    const flags = memoryreadflags(memoryreadmainbook(), player)
     // track value of invoke
     flags.playbuffer = cli
   }
@@ -413,9 +401,7 @@ export function memoryruncodepage(address: string, label: string) {
 
   const id = `${address}_run`
   const itemname =
-    READ_CONTEXT.element?.name ??
-    memoryreadboardelementruntime(READ_CONTEXT.element)?.kinddata?.name ??
-    ''
+    READ_CONTEXT.element?.name ?? READ_CONTEXT.element?.kinddata?.name ?? ''
   const itemcode = codepage?.code ?? ''
 
   // set arg to value on chip with id = id
@@ -478,9 +464,10 @@ function memoryapplysynthvoicefx(
 }
 
 export function memoryapplyboardsynthstats(board: MAYBE<BOARD>) {
-  const codepage = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.BOARD,
+  const codepage = memoryreadcodepage(
+    memoryreadbooklist(),
     board?.id ?? '',
+    CODE_PAGE_TYPE.BOARD,
   )
   if (!ispresent(codepage)) {
     return

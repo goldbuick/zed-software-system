@@ -4,56 +4,95 @@
 @p1 range;Intelligence?
 @p2 range;Deviance?
 ' p3=follower  p4=leader (head writes both while dragging)
-' walk first, then drag the chain into the cells we vacate -- same tick.
+' p5/p6=step then scratch  p7/p8=vacated  p9=cursor  p10=next
+' no walk command -- everytick would move us before the drag runs.
 :think
-#if p1 below random 10 do
- #walk rnd
-#else if p2 above random 9 do
- #walk rnd
+' pick a step delta: intel roll or deviance roll picks random, else seek
+#set p9 0
+#if p1 below (random 10) set p9 1
+#if p2 above (random 9) set p9 1
+#if p9 do
+ #set p9 random 0 3
+ #set p5 0
+ #set p6 0
+ #if p9 is 0 set p6 -1
+ #if p9 is 1 set p6 1
+ #if p9 is 2 set p5 -1
+ #if p9 is 3 set p5 1
 #else do
- #walk seek
-#done
-#if blocked flow do
- #walk rnd
-#done
-' adopt a segment trailing right behind us
-#if not p3 do
- #if any opp flow segment do
-  #pget opp flow id p3
+ #set p5 0
+ #set p6 0
+ #if playerx below thisx set p5 -1
+ #if playerx above thisx set p5 1
+ #if playery below thisy set p6 -1
+ #if playery above thisy set p6 1
+ #if p5 and p6 do
+  #if random 0 1 do
+   #set p5 0
+  #else do
+   #set p6 0
+  #done
  #done
 #done
-#set destx thisx
-#set desty thisy
-#set nextx thisx + stepx
-#set nexty thisy + stepy
-#if any at nextx nexty player do
- #send at nextx nexty shot
+' one random retry when the chosen cell is blocked
+#if blocked by p5 p6 do
+ #set p9 random 0 3
+ #set p5 0
+ #set p6 0
+ #if p9 is 0 set p6 -1
+ #if p9 is 1 set p6 1
+ #if p9 is 2 set p5 -1
+ #if p9 is 3 set p5 1
+#done
+' adopt a segment trailing right behind us (cell opposite the step)
+#if not p3 do
+ #if p5 is 1 do
+  #if any w segment do
+   #pget w id p3
+  #done
+ #done
+ #if p5 is -1 do
+  #if any e segment do
+   #pget e id p3
+  #done
+ #done
+ #if p6 is 1 do
+  #if any n segment do
+   #pget n id p3
+  #done
+ #done
+ #if p6 is -1 do
+  #if any s segment do
+   #pget s id p3
+  #done
+ #done
+#done
+#set p7 thisx
+#set p8 thisy
+#if any by p5 p6 player do
+ #send by p5 p6 shot
  #die
 #done
 ' pset moves without yielding, so the drag below still runs this tick
-#pset "$thisid" x nextx
-#pset "$thisid" y nexty
-#walk idle
-#set cur thisid
-#set hops 0
-#while cur do
- #give hops
- #if hops above 24 break
- #pget "$cur" p3 nxt
- #pget "$nxt" id live
- #if not live do
-  #pset "$cur" p3 0
-  #clear cur
- #else do
-  #pget "$nxt" x oldx
-  #pget "$nxt" y oldy
-  #pset "$nxt" p4 cur
-  #pset "$nxt" x destx
-  #pset "$nxt" y desty
-  #set destx oldx
-  #set desty oldy
-  #set cur nxt
+#pset "$thisid" x p7 + p5
+#pset "$thisid" y p8 + p6
+#set p9 thisid
+#repeat 32 do
+ #pget "$p9" p3 p10
+ #if not p10 break
+ #pget "$p10" id p5
+ #if not p5 do
+  #pset "$p9" p3 0
+  #break
  #done
+ #pget "$p10" x p5
+ #pget "$p10" y p6
+ #pset "$p10" p4 p9
+ #pset "$p10" x p7
+ #pset "$p10" y p8
+ #set p7 p5
+ #set p8 p6
+ #set p9 p10
 #done
 #idle
 #think

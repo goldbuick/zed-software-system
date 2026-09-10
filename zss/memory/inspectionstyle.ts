@@ -5,11 +5,11 @@ import { ptstoarea, pttoindex } from 'zss/mapping/2d'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
-import { memoryreadelement, memoryreadterrain } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryreadsecretheap } from './inspectionbatch'
-import { createinspectionconfig } from './inspectionconfig'
+import { memorycreateinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
 
 type STYLE_CONFIG = {
@@ -18,7 +18,7 @@ type STYLE_CONFIG = {
   stylebgs: number
 }
 
-const styleconfig = createinspectionconfig<STYLE_CONFIG>('styleconfig', {
+const styleconfig = memorycreateinspectionconfig<STYLE_CONFIG>('styleconfig', {
   stylechars: 1,
   stylecolors: 1,
   stylebgs: 1,
@@ -45,7 +45,7 @@ export async function memoryinspectstyle(
   const height = y2 - y1 + 1
   const iwidth = Math.min(secretheap.width, width)
   const iheight = Math.min(secretheap.height, height)
-  const cfg = styleconfig.read()
+  const cfg = styleconfig.memoryread()
 
   for (let y = 0; y < iheight; ++y) {
     for (let x = 0; x < iwidth; ++x) {
@@ -54,7 +54,7 @@ export async function memoryinspectstyle(
       const display = memoryreadelementdisplay(maybeelement)
       const pt = { x: x1 + x, y: y1 + y }
       if (mode === 'styleall' || mode === 'styleobjects') {
-        const element = memoryreadelement(board, pt)
+        const element = memoryreadelement(board, pt, READ_LAYER.ANY)
         if (ispresent(element) && memoryboardelementisobject(element)) {
           if (cfg.stylechars) {
             element.char = display.char
@@ -68,7 +68,7 @@ export async function memoryinspectstyle(
         }
       }
       if (mode === 'styleall' || mode === 'styleterrain') {
-        const element = memoryreadterrain(board, pt.x, pt.y)
+        const element = memoryreadelement(board, pt, READ_LAYER.TERRAIN)
         if (ispresent(element)) {
           if (cfg.stylechars) {
             element.char = display.char
@@ -91,7 +91,7 @@ registerhyperlinksharedbridge(
   (_typ, target) => {
     const key = target as keyof STYLE_CONFIG
     if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
-      return styleconfig.read()[key]
+      return styleconfig.memoryread()[key]
     }
     return 0
   },
@@ -99,7 +99,10 @@ registerhyperlinksharedbridge(
     if (isnumber(value) || isstring(value)) {
       const key = name as keyof STYLE_CONFIG
       if (key === 'stylechars' || key === 'stylecolors' || key === 'stylebgs') {
-        styleconfig.write({ ...styleconfig.read(), [key]: Number(value) })
+        styleconfig.memorywrite({
+          ...styleconfig.memoryread(),
+          [key]: Number(value),
+        })
       }
     }
   },

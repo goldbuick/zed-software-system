@@ -6,7 +6,7 @@
 import { createlayersid } from 'zss/mapping/guid'
 import { MAYBE } from 'zss/mapping/types'
 
-import { memoryreadbookflags } from './bookoperations'
+import { memoryreadflags } from './bookoperations'
 import type { MEMORY_GADGET_LAYERS } from './rendering'
 import type { BOOK } from './types'
 
@@ -33,10 +33,10 @@ export function memoryreadbookgadgetlayersforboard(
   }
   const store = layerstorecache.get(board)
   if (!store) {
-    const fresh = memoryreadbookflags(book, createlayersid(board)) as Record<
-      string,
-      MEMORY_GADGET_LAYERS
-    >
+    const fresh = memoryreadflags(
+      book,
+      createlayersid(board),
+    ) as unknown as Record<string, MEMORY_GADGET_LAYERS>
     layerstorecache.set(board, fresh)
     return fresh
   }

@@ -11,12 +11,11 @@ import {
   MEMORYFS_SKILL_NAMES,
   buildmemoryfsskills,
 } from 'zss/feature/memoryfs/skills'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatebook,
-  memoryexportbookasjson,
-  memoryreadbookflags,
-  memorywritebookflag,
+  memoryexportbook,
+  memoryreadflags,
+  memorywriteflag,
   memorywritecodepage,
   memoryupsertcodepage,
 } from 'zss/memory/bookoperations'
@@ -28,7 +27,6 @@ import {
 } from 'zss/memory/session'
 
 afterEach(() => {
-  memoryboundariesclear()
   memoryresetbooks([])
 })
 
@@ -56,9 +54,9 @@ function makebookwithpage() {
       isdark: 0,
     },
   })
-  memorywritebookflag(book, 'contentowner', 'score', 10)
-  memorywritebookflag(book, 'sid_titlepage1_chip', 'cycle', 1)
-  memorywritebookflag(book, 'sid_titlepage1_tracking', 'ids', ['a'])
+  memorywriteflag(book, 'contentowner', 'score', 10)
+  memorywriteflag(book, 'sid_titlepage1_chip', 'cycle', 1)
+  memorywriteflag(book, 'sid_titlepage1_tracking', 'ids', ['a'])
   memorywritebook(book)
   memorywritemainbook(book.id)
   memoryresetbooks([book])
@@ -123,7 +121,7 @@ describe('memoryfs export import', () => {
 
   it('round-trips book content ignoring timestamp', () => {
     const book = makebookwithpage()
-    const before = memoryexportbookasjson(book)
+    const before = memoryexportbook(book, { format: 'json' })
     const files = buildmemoryfsexportfiles()
     const flagpath = files.find((f) =>
       f.path.includes('/flags/contentowner/stats.json'),
@@ -142,8 +140,8 @@ describe('memoryfs export import', () => {
       [],
     )
     expect(result.errors).toEqual([])
-    expect(memoryreadbookflags(book, 'contentowner').score).toBe(99)
-    const after = memoryexportbookasjson(book)
+    expect(memoryreadflags(book, 'contentowner').score).toBe(99)
+    const after = memoryexportbook(book, { format: 'json' })
     expect(after.id).toBe(before.id)
     expect(after.name).toBe(before.name)
   })

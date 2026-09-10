@@ -8,24 +8,21 @@ import { ispresent } from 'zss/mapping/types'
 import {
   memorycreatebook,
   memoryexportbook,
-  memoryexportbookasjson,
   memoryimportbook,
-  memoryreadbookflags,
+  memoryreadflags,
   memoryreadcodepage,
-  memorywritebookflag,
+  memorywriteflag,
 } from 'zss/memory/bookoperations'
-import { memoryboundariesclear } from 'zss/memory/boundaries'
 import {
   memorycreatecodepage,
   memoryexportcodepage,
-  memoryreadcodepageruntime,
 } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
 import { trimformatobject, trimmemoryexport } from 'zss/memory/trimexport'
 import { BOOK, BOOK_KEYS } from 'zss/memory/types'
 
 function wiretrimmedbookforimport(book: BOOK): FORMAT_OBJECT {
-  const j = trimmemoryexport(memoryexportbookasjson(book)) ?? {}
+  const j = trimmemoryexport(memoryexportbook(book, { format: 'json' })) ?? {}
   const pageswired = book.pages
     .map((p) => memoryexportcodepage(p))
     .filter(ispresent)
@@ -125,7 +122,7 @@ describe('trimexport', () => {
         },
       })
       const book = memorycreatebook([cp])
-      memorywritebookflag(book, 'player-with-stats', 'deaths', 3 as any)
+      memorywriteflag(book, 'player-with-stats', 'deaths', 3 as any)
 
       const trimmed = trimformatobject(memoryexportbook(book))
       expect(ispresent(trimmed)).toBe(true)
@@ -133,15 +130,13 @@ describe('trimexport', () => {
       const packed = packformat(trimmed!)
       expect(packed).toBeDefined()
 
-      memoryboundariesclear()
       const again = memoryimportbook(unpackformat(packed!))
       expect(ispresent(again)).toBe(true)
       expect(again!.pages.length).toBe(1)
 
       const importedpage = memoryreadcodepage(again, 'snap')
-      const runtime = memoryreadcodepageruntime(importedpage)
-      expect(runtime?.board?.exitnorth).toBe('roomn')
-      expect(memoryreadbookflags(again, 'player-with-stats')).toEqual({
+      expect(importedpage?.board?.exitnorth).toBe('roomn')
+      expect(memoryreadflags(again, 'player-with-stats')).toEqual({
         deaths: 3,
       })
     })
@@ -153,7 +148,6 @@ describe('trimexport', () => {
       const packed = packformat(trimmed)
       expect(packed).toBeDefined()
 
-      memoryboundariesclear()
       const again = memoryimportbook(unpackformat(packed!))
       expect(ispresent(again)).toBe(true)
       expect(memoryreadcodepage(again, cp.id)?.id).toBe(cp.id)

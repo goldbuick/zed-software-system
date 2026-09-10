@@ -19,7 +19,8 @@ import {
 } from 'zss/feature/zsstextui'
 import { isarray, ispresent } from 'zss/mapping/types'
 import {
-  memorylistcodepagessorted,
+  memorylistcodepage,
+  memoryreadcodepage,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
@@ -27,7 +28,6 @@ import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   memoryreadbookbyaddress,
@@ -37,7 +37,6 @@ import {
 } from 'zss/memory/session'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
-
 type ZNS_SESSION = { email: string; token: string; namespace: string }
 
 export async function znsreadsession(): Promise<ZNS_SESSION | undefined> {
@@ -77,7 +76,7 @@ function showznspublishbookmenu(player: string, address: string) {
     zsstexttape(zssheaderlines(book.name), zsssectionlines('Pages')),
   )
   //
-  const sorted = memorylistcodepagessorted(book)
+  const sorted = memorylistcodepage(book, { sort: true })
   const pagelines = sorted.map((page) => {
     const name = memoryreadcodepagename(page)
     const type = memoryreadcodepagetypeasstring(page)
@@ -212,7 +211,7 @@ export function znsrunpublish(
         write(SOFTWARE, player, zsstextline(`$red missing codepage address`))
         return
       }
-      const maybecodepage = memoryreadcodepagebyaddress(address)
+      const maybecodepage = memoryreadcodepage(memoryreadbooklist(), address)
       if (!ispresent(maybecodepage)) {
         write(
           SOFTWARE,

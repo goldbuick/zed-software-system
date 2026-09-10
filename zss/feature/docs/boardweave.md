@@ -14,7 +14,6 @@ title: boardweave.ts
 - `zss/memory/boardmovement` — `* as boardmovement`
 - `zss/memory/boards` — memorycheckelementpushable, memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
 - `zss/memory/boardtransitions` — memoryptwithinboard
-- `zss/memory/runtimeboundary` — memorycloneboardelement, memoryreadboardruntime
 - `zss/memory/spatialqueries` — memorycheckcollision
 - `zss/words/reader` — READ_CONTEXT
 - `zss/words/types` — COLLISION, PT
@@ -31,12 +30,12 @@ title: boardweave.ts
 ### Rectangular path (`all` / `object` / `terrain`)
 
 - **Terrain / `all`:** `tmpboard.terrain` is seeded with a **copy** of the full board terrain, then each cell `(x,y)` in `[p1,p2]` writes `orig[src] → tmp[dest]` with torus wrapping on `dest`. Cells inside the rectangle that are **not** in the image of the rectangle under that map are cleared (`undefined`). Cells **outside** the rectangle are unchanged. Finally `targetboard.terrain` is replaced with the tmp array.
-- **Objects / `all`:** Objects at each source cell are found via `memoryreadobjectatpt(..., { includeghost: true })`; coordinates are set to wrapped `dest`.
+- **Objects / `all`:** Objects at each source cell are found via `memoryreadelement(..., READ_LAYER.OBJECTGHOST)`; coordinates are set to wrapped `dest`.
 - **Objects-only:** Terrain array is not replaced; only object coordinates update.
 
 ### Group path (`boardweavegroup`)
 
 - **Sort:** One deterministic sweep order — primary axis is whichever has larger `|delta|` (`x` if tied with `y`); direction follows the sign of that axis; when both `|delta.x|` and `|delta.y|` match, `x` is compared first, then `y`.
-- **Terrain apply:** Builds a new terrain array from a snapshot, places each group cell’s tile at `from + delta` (no wrap; off-board is rejected in the collision pass). Each placed or displaced tile is written via `memorycloneboardelement` so the new terrain object gets its **own** runtime boundary (cloned payload, not a shared id). **Displaced terrain:** cells that receive a group tile but were not group sources (“incoming-only”) previously held non-group terrain; that terrain is **not** discarded. Those tiles are paired in sorted order (same sweep comparator as above) with vacated group source cells (`gset \ dest`) and written into the vacated indices with updated `x`/`y`, so terrain swaps into the leading edge instead of being overwritten. Vacated cells with no displaced partner (or empty source) become `undefined`.
+- **Terrain apply:** Builds a new terrain array from a snapshot, places each group cell’s tile at `from + delta` (no wrap; off-board is rejected in the collision pass). Each placed or displaced tile is written via `deepcopy` so the new terrain object is a distinct element (including any inline `kinddata` / `category`). **Displaced terrain:** cells that receive a group tile but were not group sources (“incoming-only”) previously held non-group terrain; that terrain is **not** discarded. Those tiles are paired in sorted order (same sweep comparator as above) with vacated group source cells (`gset \ dest`) and written into the vacated indices with updated `x`/`y`, so terrain swaps into the leading edge instead of being overwritten. Vacated cells with no displaced partner (or empty source) become `undefined`.
 - **Carried objects:** After terrain writes, objects found at original `from` positions (via `memoryreadelement`) are shifted by `delta`.
 - **Objects:** `boardmovement.memorymoveobject` for each group object. If any apply-phase move fails, the board is restored from a `memoryexportboard` snapshot taken immediately before terrain mutation, then the function returns `false`.

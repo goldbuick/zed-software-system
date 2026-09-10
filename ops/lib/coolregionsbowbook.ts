@@ -1,11 +1,10 @@
-import { memoryimportbookfromjson } from 'zss/memory/bookoperations'
-import { memorypickcodepagewithtypeandstat } from 'zss/memory/codepages'
-import { memorywritebook } from 'zss/memory/session'
+import { memoryimportbook } from 'zss/memory/bookoperations'
+import { memorypickcodepage } from 'zss/memory/codepages'
+import { memoryreadbooklist, memorywritebook } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 
 import { COOLREGIONSBOW_BOOK_JSON_PATH } from './fixturepaths'
-
 export type COOLREGIONSBOW_BOOK_EXPORT = {
   exported?: string
   data: BOOK
@@ -31,10 +30,14 @@ export function readcoolregionsbowbooks(): BOOK[] {
 
 /** Load coolregionsbow terrain/object pages when no element library is in memory. */
 export function loadcoolregionsbowelementlibrary() {
-  if (memorypickcodepagewithtypeandstat(CODE_PAGE_TYPE.TERRAIN, 'solid')) {
+  if (
+    memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, 'solid')
+  ) {
     return
   }
-  const book = memoryimportbookfromjson(readcoolregionsbowbookexport().data)
+  const book = memoryimportbook(readcoolregionsbowbookexport().data, {
+    format: 'json',
+  })
   if (book) {
     memorywritebook(book)
   }

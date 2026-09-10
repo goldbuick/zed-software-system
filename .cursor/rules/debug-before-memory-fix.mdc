@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Debug before memory / sync fixes
 
-Do not change multiplayer, boundary sync, gadget projection, or host/join memory paths until runtime evidence and a repro scenario exist.
+Do not change multiplayer, memory sync, gadget projection, or host/join memory paths until runtime evidence and a repro scenario exist.
 
 Broader prove-gate / human-checkpoint rules (camera, framing, “implement the plan” vs skip manual A/B): [evidence-before-fix.mdc](evidence-before-fix.mdc).
 
@@ -16,7 +16,7 @@ Broader prove-gate / human-checkpoint rules (camera, framing, “implement the p
    - an automated spec / fixture (`ops/fixtures/e2e/*`), or
    - a headed Playwright validator under `tasks/groups/`.
 2. **Log-pinned diagnosis** — capture runtime evidence and identify **which memory is wrong**:
-   - **host sim** — authoritative board terrain and boundary store in sim worker
+   - **host sim** — authoritative MEMORY (boards, elements, flags) in sim worker
    - **join tab (thin client)** — gadgetclient zustand projection only; host owns MEMORY
    - **main-thread gadget** — `gadgetclient` / zustand projection from paint/patch
 3. **Hypothesis tied to logs** — state what event produces the stale write before editing code.

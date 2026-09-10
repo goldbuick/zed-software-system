@@ -4,9 +4,9 @@
  */
 
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
-import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
+import { memorylistcodepage } from 'zss/memory/bookoperations'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
@@ -91,7 +91,7 @@ function buildsortedboardentries(
   book: BOOK,
   errors: ZZTEXPORTERROR[],
 ): SORTEDENTRY[] | null {
-  const pages = memorylistcodepagebytype(book, CODE_PAGE_TYPE.BOARD)
+  const pages = memorylistcodepage(book, { type: CODE_PAGE_TYPE.BOARD })
   const raw: { codepage: CODE_PAGE; board: BOARD; sortname: string }[] = []
   for (let i = 0; i < pages.length; ++i) {
     const cp = pages[i]
@@ -368,7 +368,7 @@ function applystatunder(
   y: number,
   entries: SORTEDENTRY[],
 ) {
-  const terrain = memoryreadterrain(board, x, y)
+  const terrain = memoryreadelement(board, { x: x, y: y }, READ_LAYER.TERRAIN)
   if (!ispresent(terrain) || terrain.removed) {
     return
   }
@@ -444,7 +444,7 @@ function memoryboardtozzt(
   const centipedelinks: { stati: number; el: BOARD_ELEMENT }[] = []
   for (let y = 0; y < ZZT_BOARD_HEIGHT; ++y) {
     for (let x = 0; x < ZZT_BOARD_WIDTH; ++x) {
-      const el = memoryreadelement(board, { x, y })
+      const el = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       const r = kindtozzt(el, x, y, board, entries)
       if (!r.ok) {
         errors.push({ message: r.message, board: exportname })

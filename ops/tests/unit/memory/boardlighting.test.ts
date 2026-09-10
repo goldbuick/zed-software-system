@@ -7,9 +7,6 @@ import {
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
-const MOCK_BOARD_WIDTH = 60
-const MOCK_BOARD_HEIGHT = 25
-
 jest.mock('zss/words/dir', () => {
   const { DIR: D } =
     jest.requireActual<typeof import('zss/words/types')>('zss/words/types')
@@ -91,39 +88,8 @@ jest.mock('zss/memory/boards', () => {
   }
 })
 
-jest.mock('zss/memory/boardoperations', () => ({
-  memoryboardelementindex(
-    board: { terrain?: unknown[] } | undefined,
-    pt: { x: number; y: number },
-  ) {
-    if (!board || pt?.x == null || pt?.y == null) {
-      return -1
-    }
-    if (
-      pt.x < 0 ||
-      pt.x >= MOCK_BOARD_WIDTH ||
-      pt.y < 0 ||
-      pt.y >= MOCK_BOARD_HEIGHT
-    ) {
-      return -1
-    }
-    return pt.x + pt.y * MOCK_BOARD_WIDTH
-  },
-  memoryreadobject(
-    board: { objects?: Record<string, unknown> } | undefined,
-    id: string,
-  ) {
-    return board?.objects?.[id] as
-      | import('zss/memory/types').BOARD_ELEMENT
-      | undefined
-  },
-  memoryevaldir() {
-    return { destpt: { x: 0, y: 0 } }
-  },
-}))
-
 function emptyterrain(): BOARD_ELEMENT[] {
-  return Array.from({ length: BOARD_SIZE }, () => ({ runtime: '' }))
+  return Array.from({ length: BOARD_SIZE }, () => ({}))
 }
 
 function makeboard(patch?: (terrain: BOARD_ELEMENT[]) => void): BOARD {
@@ -134,7 +100,6 @@ function makeboard(patch?: (terrain: BOARD_ELEMENT[]) => void): BOARD {
     name: 'test',
     terrain,
     objects: {},
-    runtime: '',
   }
 }
 
@@ -216,7 +181,6 @@ describe('boardlighting', () => {
         id: blockerid,
         x: bx,
         y: by,
-        runtime: '',
       }
 
       const sprite = testsprite(15, 10)
@@ -248,7 +212,7 @@ describe('boardlighting', () => {
         const board = makeboard()
         for (let i = 0; i < ids.length; i++) {
           const { id, x } = ids[i]
-          board.objects[id] = { id, x, y, runtime: '' }
+          board.objects[id] = { id, x, y }
         }
         const alphas = new Array<number>(BOARD_SIZE).fill(1)
         memoryboardlightingapplyobject(board, alphas, {}, sprite, light)

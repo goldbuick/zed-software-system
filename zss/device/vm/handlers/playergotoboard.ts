@@ -3,10 +3,10 @@ import { gadgetclientgotofade } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { applyplayermovetoboard } from 'zss/device/vm/handlers/playermovetoboard'
 import { isnumber, ispresent } from 'zss/mapping/types'
+import { memorylistelement } from 'zss/memory/boardaccess'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memorylistboardelementsbykind } from 'zss/memory/spatialqueries'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import type { STR_COLOR } from 'zss/words/color'
 import type { PT } from 'zss/words/types'
@@ -36,10 +36,9 @@ export function resolveplayergotodestpt(
 
   // explicit x,y wins; otherwise try passage kind+color match
   if (ispresent(match) && !isnumber(maybex) && !isnumber(maybey)) {
-    const gotoelements = memorylistboardelementsbykind(targetboard, [
-      match.name,
-      match.color,
-    ])
+    const gotoelements = memorylistelement(targetboard, {
+      kind: [match.name, match.color],
+    })
 
     const [gotoelement] = gotoelements.sort((a, b) => {
       const ay = a.y ?? 10000

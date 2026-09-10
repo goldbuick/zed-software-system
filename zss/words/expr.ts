@@ -7,19 +7,17 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
 import {
-  memoryelementmatchesstrgrouponboard,
-  memorylistboardelementsbygroup,
-} from 'zss/memory/boardlifecycle'
+  READ_LAYER,
+  memorylistelement,
+  memoryreadelement,
+} from 'zss/memory/boardaccess'
+import { memoryelementmatchesstrgrouponboard } from 'zss/memory/boardlifecycle'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryruncodepage } from 'zss/memory/runtime'
-import {
-  memoryfindplayerforelement,
-  memorylistboardelementsbycolor,
-} from 'zss/memory/spatialqueries'
+import { memoryfindplayerforelement } from 'zss/memory/spatialqueries'
 import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 
 import { isstrcategory, mapstrcategory, readcategory } from './category'
@@ -48,8 +46,8 @@ function readdirelementmatch(
 ): MAYBE<BOARD_ELEMENT> {
   const maybelement =
     layer === DIR.GROUND
-      ? memoryreadterrain(board, pt.x, pt.y)
-      : memoryreadelement(board, pt)
+      ? memoryreadelement(board, pt, READ_LAYER.TERRAIN)
+      : memoryreadelement(board, pt, READ_LAYER.ANY)
   if (!ispresent(maybelement)) {
     return undefined
   }
@@ -289,20 +287,18 @@ export function readexpr(index: number): [any, number] {
 
         // color check
         if (isstrcolor(match)) {
-          const matchedelements = memorylistboardelementsbycolor(
-            READ_CONTEXT.board,
-            match,
-          )
+          const matchedelements = memorylistelement(READ_CONTEXT.board, {
+            color: match,
+          })
           return [matchedelements, iii]
         }
 
         // group check
         if (isstrgroup(match)) {
-          const matchedelements = memorylistboardelementsbygroup(
-            READ_CONTEXT.board,
-            READ_CONTEXT.elementid,
-            match,
-          )
+          const matchedelements = memorylistelement(READ_CONTEXT.board, {
+            group: match,
+            self: READ_CONTEXT.elementid,
+          })
           return [matchedelements, iii]
         }
         return [[], iii]
@@ -358,20 +354,18 @@ export function readexpr(index: number): [any, number] {
 
         // color check
         if (isstrcolor(match)) {
-          const matchedelements = memorylistboardelementsbycolor(
-            READ_CONTEXT.board,
-            match,
-          )
+          const matchedelements = memorylistelement(READ_CONTEXT.board, {
+            color: match,
+          })
           return [matchedelements.length, iii]
         }
 
         // group check
         if (isstrgroup(match)) {
-          const matchedelements = memorylistboardelementsbygroup(
-            READ_CONTEXT.board,
-            READ_CONTEXT.elementid,
-            match,
-          )
+          const matchedelements = memorylistelement(READ_CONTEXT.board, {
+            group: match,
+            self: READ_CONTEXT.elementid,
+          })
           return [matchedelements.length, iii]
         }
         return [0, iii]

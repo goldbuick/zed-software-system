@@ -7,7 +7,6 @@ import {
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
 import { READ_CONTEXT } from 'zss/words/reader'
 
@@ -52,7 +51,6 @@ describe('#push once per tick', () => {
       'oid_crate',
     )!
     crate.pushable = 1
-    memoryensureboardelementruntime(crate)
     READ_CONTEXT.book = book
     READ_CONTEXT.board = board
     READ_CONTEXT.element = self
