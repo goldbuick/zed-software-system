@@ -15,7 +15,7 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { base64urltobase64 } from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
 import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
-import { ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { memoryreadelement } from './boardaccess'
@@ -291,7 +291,9 @@ export async function memorycompressbooks(books: BOOK[]) {
 
   const wires: FORMAT_OBJECT[] = []
   for (let i = 0; i < books.length; ++i) {
-    const wire = memoryexportbook(books[i], { noremap: true })
+    const wire = memoryexportbook(books[i], {
+      noremap: true,
+    }) as MAYBE<FORMAT_OBJECT>
     if (wire) {
       wires.push(wire)
     }

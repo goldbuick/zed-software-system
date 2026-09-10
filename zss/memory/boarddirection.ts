@@ -586,6 +586,9 @@ export function memoryevaldir(
               | string
               | number
               | undefined
+            if (!ispresent(target)) {
+              return { dir, startpt, destpt: startpt, layer, targets: [] }
+            }
             const nextelement = memoryreadelement(board, target)
             if (tracking[groupflag].length < 1) {
               delete tracking[groupflag]

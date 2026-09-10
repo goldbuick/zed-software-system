@@ -245,7 +245,7 @@ export function memoryimportbook(
     for (let i = 0; i < names.length; ++i) {
       const name = names[i]
       const bag = book.flags[name]
-      flagsout[name] = isplainobject(bag) ? bag : {}
+      flagsout[name] = isplainobject(bag) ? (bag as BOOK_FLAGS) : {}
     }
 
     return {

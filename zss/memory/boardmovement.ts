@@ -48,7 +48,6 @@ export function memorycheckblockedboardobject(
       collision: COLLISION.ISSOLID,
       x: dest.x,
       y: dest.y,
-      runtime: '',
     }
   }
 
@@ -153,7 +152,6 @@ export function memorymoveboardobject(
       collision: COLLISION.ISSOLID,
       x: dest.x,
       y: dest.y,
-      runtime: '',
     }
   }
 

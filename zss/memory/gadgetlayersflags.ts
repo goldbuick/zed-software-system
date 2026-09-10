@@ -33,10 +33,10 @@ export function memoryreadbookgadgetlayersforboard(
   }
   const store = layerstorecache.get(board)
   if (!store) {
-    const fresh = memoryreadflags(book, createlayersid(board)) as Record<
-      string,
-      MEMORY_GADGET_LAYERS
-    >
+    const fresh = memoryreadflags(
+      book,
+      createlayersid(board),
+    ) as unknown as Record<string, MEMORY_GADGET_LAYERS>
     layerstorecache.set(board, fresh)
     return fresh
   }

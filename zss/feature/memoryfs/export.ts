@@ -6,7 +6,7 @@ import {
   readmemoryfsflagstatspath,
   readmemoryfspageprefix,
 } from 'zss/feature/memoryfs/schema'
-import { ispresent } from 'zss/mapping/types'
+import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memoryreadflags } from 'zss/memory/bookoperations'
 import {
   memoryexportcodepage,
@@ -97,7 +97,10 @@ export function buildmemoryfscodepagefiles(
   page: CODE_PAGE,
 ): MEMORYFS_PATH_FILE[] {
   // strip kind defaults but keep literal overrides; terrain.json stays hand-editable
-  const pagejson = memoryexportcodepage(page, { format: 'json', strip: true })
+  const pagejson = memoryexportcodepage(page, {
+    format: 'json',
+    strip: true,
+  }) as MAYBE<Record<string, unknown>>
   if (pagejson === undefined) {
     return []
   }
