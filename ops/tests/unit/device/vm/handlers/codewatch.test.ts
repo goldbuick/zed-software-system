@@ -31,7 +31,7 @@ jest.mock('zss/device/modem', () => ({
 }))
 
 jest.mock('zss/memory/boardaccess', () => ({
-  memoryreadobject: jest.fn(),
+  memoryreadelement: jest.fn(),
 }))
 
 jest.mock('zss/memory/bookoperations', () => ({
@@ -63,7 +63,7 @@ import {
   handlecodewatch,
 } from 'zss/device/vm/handlers/codewatch'
 import { observers, watching } from 'zss/device/vm/state'
-import { memoryreadobject } from 'zss/memory/boardaccess'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
   memoryapplyelementstats,
@@ -119,7 +119,7 @@ describe('codewatch handlers', () => {
     jest.mocked(memoryresetcodepagestats).mockClear()
     jest.mocked(memoryreadbookbyaddress).mockReturnValue({} as never)
     jest.mocked(memoryreadcodepagedata).mockReturnValue({} as never)
-    jest.mocked(memoryreadobject).mockReturnValue(object as never)
+    jest.mocked(memoryreadelement).mockReturnValue(object as never)
     object.code = 'old'
     page.code = 'oldpage'
   })

@@ -342,7 +342,6 @@ export function memoryreadcodepage(
   type?: CODE_PAGE_TYPE,
 ): MAYBE<CODE_PAGE> {
   const books = normalizebooklist(bookorbooks)
-  const laddress = NAME(address)
   for (let b = 0; b < books.length; ++b) {
     const book = books[b]
     for (let i = 0; i < book.pages.length; ++i) {
@@ -350,7 +349,8 @@ export function memoryreadcodepage(
       if (ispresent(type) && memoryreadcodepagetype(page) !== type) {
         continue
       }
-      if (page.id === address || laddress === memoryreadcodepagename(page)) {
+      // id, name, or page stat (e.g. @zztboard0 from ZZT import)
+      if (codepagematchesstat(page, address)) {
         return page
       }
     }

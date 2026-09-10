@@ -9,8 +9,8 @@
 :think
 ' pick a step delta: intel roll or deviance roll picks random, else seek
 #set p9 0
-#if p1 below random 10 set p9 1
-#if p2 above random 9 set p9 1
+#if p1 below (random 10) set p9 1
+#if p2 above (random 9) set p9 1
 #if p9 do
  #set p9 random 0 3
  #set p5 0
@@ -44,10 +44,27 @@
  #if p9 is 2 set p5 -1
  #if p9 is 3 set p5 1
 #done
-' adopt a segment trailing right behind us
+' adopt a segment trailing right behind us (cell opposite the step)
 #if not p3 do
- #if any at thisx - p5 thisy - p6 segment do
-  #pget at thisx - p5 thisy - p6 id p3
+ #if p5 is 1 do
+  #if any w segment do
+   #pget w id p3
+  #done
+ #done
+ #if p5 is -1 do
+  #if any e segment do
+   #pget e id p3
+  #done
+ #done
+ #if p6 is 1 do
+  #if any n segment do
+   #pget n id p3
+  #done
+ #done
+ #if p6 is -1 do
+  #if any s segment do
+   #pget s id p3
+  #done
  #done
 #done
 #set p7 thisx

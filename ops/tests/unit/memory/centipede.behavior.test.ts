@@ -52,7 +52,7 @@ describe('centipede script layout', () => {
       HEAD_CODE.indexOf(':thud'),
     )
     expect(HEAD_CODE).toMatch(/#pset "\$thisid"/)
-    expect(HEAD_CODE).toMatch(/#while cur do/)
+    expect(HEAD_CODE).toMatch(/#repeat 32 do/)
     expect(HEAD_CODE).not.toMatch(/:preparefollow/)
     expect(HEAD_CODE).not.toMatch(/:dofollow/)
     expect(HEAD_CODE).toMatch(/#idle\n#think/)
@@ -63,7 +63,7 @@ describe('centipede script layout', () => {
     expect(SEGMENT_CODE).not.toMatch(/:preparefollow/)
     expect(SEGMENT_CODE).not.toMatch(/:dofollow/)
     expect(SEGMENT_CODE).not.toMatch(/:trylink/)
-    expect(SEGMENT_CODE).toMatch(/:think[\s\S]*#pget "\$p4" id live/)
+    expect(SEGMENT_CODE).toMatch(/:think[\s\S]*#pget "\$p4" id p6/)
   })
 })
 
@@ -241,7 +241,7 @@ describe('centipede behaviors', () => {
     head.removed = 1
     delete board.objects?.oid_dead_head
     let promoted = false
-    for (let i = 0; i < 8; ++i) {
+    for (let i = 0; i < 20; ++i) {
       book.timestamp += 1
       READ_CONTEXT.timestamp = book.timestamp
       memorytickobject(book, board, seg, SEGMENT_CODE)
@@ -307,7 +307,7 @@ describe('centipede behaviors', () => {
     memorytickobject(book, board, seg, SEGMENT_CODE)
     let sawgrace = false
     let promoted = false
-    for (let i = 0; i < 8; ++i) {
+    for (let i = 0; i < 20; ++i) {
       book.timestamp += 1
       READ_CONTEXT.timestamp = book.timestamp
       memorytickobject(book, board, seg, SEGMENT_CODE)
