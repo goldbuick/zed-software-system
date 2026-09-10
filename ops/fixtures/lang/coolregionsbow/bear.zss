@@ -6,34 +6,37 @@
 @p1 range
 @light 4
 :think
-#set p2 playerx - thisx
-#set p3 playery - thisy
-#if not p2 is 0 do
- #if abs p3 below or eq 8 - p1 do
-  #if p2 below 0 do
-   ?left
-  #else do
-   ?right
-  #done
-  #think
+#set p2 0
+#set p3 0
+#if not thisx is playerx do
+ #if abs playery - thisy below or eq 8 - p1 do
+  #set p2 playerx - thisx
+  #if p2 below 0 set p2 -1
+  #if p2 above 0 set p2 1
+  #set p3 0
  #done
 #done
-#if abs p2 below or eq 8 - p1 do
- #if p3 below 0 do
-  ?up
- #else do
-  ?down
+#if p2 is 0 do
+ #if abs playerx - thisx below or eq 8 - p1 do
+  #set p3 playery - thisy
+  #if p3 below 0 set p3 -1
+  #if p3 above 0 set p3 1
+  #set p2 0
  #done
+#done
+' --- Movement ---
+#if any by p2 p3 player do
+ #send by p2 p3 shot
+ #die
+#else if any by p2 p3 breakable do
+ #send by p2 p3 shot
+ #die
 #else do
- #idle
+ ?by p2 p3
 #done
 #think
-:thud
-#if any at senderx sendery player do
- #shoot at senderx sendery
-#else if any at senderx sendery breakable do
- #shoot at senderx sendery
-#done
+:touch
+#send at senderx sendery shot
 #idle
 #think
 :shot

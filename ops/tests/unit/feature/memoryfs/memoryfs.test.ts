@@ -24,7 +24,7 @@ import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import {
   memoryresetbooks,
   memorywritebook,
-  memorywritesoftwarebook,
+  memorywritemainbook,
 } from 'zss/memory/session'
 
 afterEach(() => {
@@ -60,7 +60,7 @@ function makebookwithpage() {
   memorywritebookflag(book, 'sid_titlepage1_chip', 'cycle', 1)
   memorywritebookflag(book, 'sid_titlepage1_tracking', 'ids', ['a'])
   memorywritebook(book)
-  memorywritesoftwarebook('main', book.id)
+  memorywritemainbook(book.id)
   memoryresetbooks([book])
   return book
 }

@@ -11,11 +11,10 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import {
-  memoryreadbookbysoftware,
   memoryreadbooklist,
+  memoryreadmainbook,
   memoryreadoperator,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { memorycompressbooks } from 'zss/memory/utilities'
 
 export const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
@@ -29,7 +28,7 @@ function localcalendardate(d = new Date()): string {
 
 export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   const books = memoryreadbooklist()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
     const operator = memoryreadoperator()
     workstatus(vm, operator, 'compress url')
@@ -42,7 +41,7 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
 /** Non-operator personal save: compress host books into a URL bookmark on the requester. */
 export async function savebookmarkstate(vm: DEVICELIKE, player: string) {
   const books = memoryreadbooklist()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
     workstatus(vm, player, 'compress url')
     const compressed = await memorycompressbooks(books)
@@ -57,7 +56,7 @@ export async function forkstate(
   player?: string,
 ) {
   const books = memoryreadbooklist()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
     const target = player ?? memoryreadoperator()
     workstatus(vm, target, 'compress url')
@@ -68,7 +67,7 @@ export async function forkstate(
 
 export async function compressedbookstate(): Promise<string> {
   const books = memoryreadbooklist()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
     return await memorycompressbooks(books)
   }

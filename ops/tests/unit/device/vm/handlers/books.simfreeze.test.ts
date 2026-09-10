@@ -30,7 +30,9 @@ describe('handlebooks sim freeze', () => {
   const vm = {} as DEVICE
   const player = 'pid_simfreeze_test'
 
-  let resolver: ((books: BOOK[]) => void) | undefined
+  let resolver:
+    | ((bundle: { books: BOOK[]; main?: string }) => void)
+    | undefined
 
   const flushmicrotasks = () => Promise.resolve()
 
@@ -74,7 +76,7 @@ describe('handlebooks sim freeze', () => {
     expect(tracking[player]).toBe(0)
 
     expect(resolver).toBeDefined()
-    resolver!([minimalbook])
+    resolver!({ books: [minimalbook], main: minimalbook.id })
 
     await flushmicrotasks()
     await flushmicrotasks()
@@ -82,7 +84,10 @@ describe('handlebooks sim freeze', () => {
     expect(session.memoryreadfrozen()).toBe(false)
     expect(registerloginready).toHaveBeenCalledWith(vm, player)
     expect(workstatus).toHaveBeenCalledWith(vm, player, 'load books')
-    expect(session.memoryresetbooks).toHaveBeenCalledWith([minimalbook])
+    expect(session.memoryresetbooks).toHaveBeenCalledWith(
+      [minimalbook],
+      minimalbook.id,
+    )
   })
 
   it('clears simfreeze in finally when decompress rejects', async () => {

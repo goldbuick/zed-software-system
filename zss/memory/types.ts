@@ -132,9 +132,8 @@ export enum CODE_PAGE_TYPE {
   TXT,
 }
 
+/** Login / spawn page names (not book pointers). */
 export enum MEMORY_LABEL {
-  MAIN = 'main',
-  TEMP = 'temp',
   TITLE = 'title',
   PLAYER = 'player',
 }
@@ -149,8 +148,7 @@ export type BOARD = {
   isdark?: number
   startx?: number
   starty?: number
-  // board displayed over/under this one
-  // uses content slot book
+  // board displayed over/under this one (resolved by name across loaded books)
   over?: string
   under?: string
   // control camera zoom
@@ -294,7 +292,6 @@ export type MAYBE_CODE_PAGE = MAYBE<CODE_PAGE>
 
 export type BOARD_RUNTIME = {
   named?: Record<string, Set<string | number>>
-  lookup?: MAYBE<string>[]
   distmaps?: Record<string, number[]>
   overboard?: string
   underboard?: string
@@ -318,4 +315,6 @@ export type BOARD_ELEMENT_RUNTIME = {
   kindsourcepageid?: string
   /** NAME(element.kind) at resolve time; detects kind string changes without pick. */
   kindsourcekind?: string
+  /** Book timestamp of last successful `#push` displacement (once per tick). */
+  pushedtick?: number
 }

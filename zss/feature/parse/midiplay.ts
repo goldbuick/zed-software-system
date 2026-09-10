@@ -1,7 +1,7 @@
 /**
  * MIDI (@tonejs/midi) → ZZT-style `#play` strings for `parseplay`.
  *
- * Per `;` segment: default octave **3** (matches `invokeplay` in playnotation.ts). For **melodic** notes we
+ * Per `;` segment: default octave **4** (matches `PLAYNOTATION_START_OCTAVE` / `invokeplay` in playnotation.ts). For **melodic** notes we
  * emit **`+` / `-` first**, then duration **`ytsiqhw`**, then pitch (`c#`, `b!`, …). Duration still applies
  * to following notes, drum tokens (`0`–`9`, **`p`** clap), and rests **`x`** (drum/rest lines keep duration
  * before hit or rest).
@@ -12,6 +12,7 @@
  */
 
 import type { Midi } from '@tonejs/midi'
+import { PLAYNOTATION_START_OCTAVE } from 'zss/feature/synth/playnotation'
 
 export const MAX_NOTE_EVENTS_MIDI = 12000
 
@@ -26,9 +27,6 @@ export const MAX_TRACKS_VOICES_MIDI = MAX_VOICES_PER_PLAY
 
 /** Between voices in one `#play` line (`parseplay` ignores spaces). */
 export const PLAY_VOICE_SEPARATOR = '; '
-
-/** Initial octave per `#play` segment; must match `invokeplay` in playnotation.ts. */
-export const PLAYNOTATION_START_OCTAVE = 3
 
 /** GM drum note → ZZT play drum token (CHAR_OP_MAP: digits + `p` clap); partial map. */
 const GM_DRUM_TO_DIGIT: Record<number, string> = {

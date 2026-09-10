@@ -17,7 +17,7 @@ The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime
 | Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
 | Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
-| Board lookup tables (id → pt, named indices) | [`boardlookup.ts`](../boardlookup.ts) |
+| Board lookup tables (named indices) | [`boardlookup.ts`](../boardlookup.ts) |
 | Movement (push, collision) | [`boardmovement.ts`](../boardmovement.ts) — `memorycheckblockedboardobject`, `memorycheckmoveboardobject`, `memorymoveboardobject`, `memorymoveobject`, `memorycleanupboard` |
 | Edge / corner-exit detection | [`boardtransitions.ts`](../boardtransitions.ts), [`boardcornerexits.ts`](../boardcornerexits.ts) |
 | Lighting | [`boardlighting.ts`](../boardlighting.ts), [`lightinggeometry.ts`](../lightinggeometry.ts) |

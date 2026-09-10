@@ -1,0 +1,39 @@
+---
+description: LF-only text files; never write CRLF Windows line endings
+alwaysApply: true
+---
+
+# No Windows line endings
+
+All text in this repo must use **Unix LF** (`\n`). Do not write **CRLF** (`\r\n`) or mix the two in one file.
+
+## Prohibited
+
+- Saving or committing `\r\n` in any text file
+- Introducing CRLF via Write / StrReplace / generated output
+- Leaving CRLF in place because a file is third-party, historical, or a fixture
+
+```text
+# ❌ BAD — CRLF
+const x = 1;\r\n
+
+# ✅ GOOD — LF
+const x = 1;\n
+```
+
+## Required instead
+
+- Write every new or edited text file with LF only
+- If a text file has `\r`, convert it to LF
+- Git attribute `* text=auto eol=lf` keeps checkouts LF; do not override it
+
+## Out of scope (do not rewrite)
+
+- Binary files
+- `submodules/**`
+
+## Check
+
+```bash
+git ls-files --eol | awk '$0 !~ /submodules\// && ($2 ~ /w\/crlf/ || $2 ~ /w\/mixed/)'
+```

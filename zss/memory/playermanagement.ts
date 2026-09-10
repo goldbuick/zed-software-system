@@ -24,7 +24,6 @@ import {
   memorydeleteboardobjectnamedlookup,
   memoryensureboardready,
   memorywriteboardnamed,
-  memorywriteboardobjectlookup,
 } from './boardlookup'
 import { memorycheckblockedboardobject } from './boardmovement'
 import { memoryreadboardbyaddress, memoryreadelementstat } from './boards'
@@ -32,15 +31,23 @@ import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearbookflags,
   memorylistcodepagebytype,
+  memorylistcodepagebytypeandstat,
   memoryreadbookflag,
   memoryreadbookflags,
+  memoryreadcodepagewithtype,
   memorywritebookflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
 import { memorypickcodepagewithtypeandstat } from './codepages'
 import { memoryhaltchip } from './runtime'
 import { memoryreadboardruntime } from './runtimeboundary'
-import { memoryisoperator, memoryreadbookbysoftware } from './session'
+import {
+  memoryisoperator,
+  memoryreadbookbyaddress,
+  memoryreadbooklist,
+  memoryreadmainbook,
+  memorywritemainbook,
+} from './session'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -60,7 +67,7 @@ export function memorydebugcountplayerboards(player: string): {
   boardids: string[]
   flagsboard: string
 } {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const flagvalue = memoryreadbookflag(mainbook, player, 'board')
   const flagsboard = isstring(flagvalue) ? flagvalue : ''
   const boardids: string[] = []
@@ -79,7 +86,7 @@ export function memorypurgeplayerboardcopies(
   player: string,
   keepboardid?: string,
 ) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const pages = memorylistcodepagebytype(mainbook, CODE_PAGE_TYPE.BOARD)
   for (let i = 0; i < pages.length; ++i) {
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(pages[i])
@@ -106,7 +113,7 @@ export function memorymoveplayertoboard(
     return false
   }
 
-  // ensure lookup exists for the current board
+  // ensure named index exists for the current board
   memoryensureboardready(currentboard)
 
   // player element
@@ -124,7 +131,7 @@ export function memorymoveplayertoboard(
     return false
   }
 
-  // make sure lookup is created
+  // make sure named index is created
   memoryensureboardready(destboard)
 
   // read target spot
@@ -151,9 +158,8 @@ export function memorymoveplayertoboard(
   element.y = dest.y
   destboard.objects[element.id] = element
 
-  // add to dest board lookups
+  // add to dest board named index
   memorywriteboardnamed(destboard, element)
-  memorywriteboardobjectlookup(destboard, element)
 
   // updating tracking
   memorywritebookflag(book, player, 'enterx', dest.x)
@@ -244,7 +250,7 @@ export function memoryloginplayer(
     )
   }
 
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return apierror(
       SOFTWARE,
@@ -261,15 +267,29 @@ export function memoryloginplayer(
   if (ispresent(currentboard?.objects[player])) {
     const flags = memoryreadbookflags(mainbook, player)
     Object.assign(flags, stickyflags)
+    // Ensure activelist + board flag even when the object already exists
+    // (stale dest-book visits used to early-return without activelist → void gadget).
+    memorywritebookplayerboard(mainbook, player, currentboard.id)
     return true
   }
 
-  // fallback to placing on the title board
+  // place on opened book's title, else any title board across loaded books
   if (!ispresent(currentboard)) {
-    const titlepage = memorypickcodepagewithtypeandstat(
-      CODE_PAGE_TYPE.BOARD,
-      MEMORY_LABEL.TITLE,
-    )
+    const titlepage =
+      memoryreadcodepagewithtype(
+        mainbook,
+        CODE_PAGE_TYPE.BOARD,
+        MEMORY_LABEL.TITLE,
+      ) ??
+      memorylistcodepagebytypeandstat(
+        mainbook,
+        CODE_PAGE_TYPE.BOARD,
+        MEMORY_LABEL.TITLE,
+      )[0] ??
+      memorypickcodepagewithtypeandstat(
+        CODE_PAGE_TYPE.BOARD,
+        MEMORY_LABEL.TITLE,
+      )
     currentboard = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(titlepage)
   }
 
@@ -283,11 +303,22 @@ export function memoryloginplayer(
     )
   }
 
-  // unable to find kind
-  const playerkind = memorypickcodepagewithtypeandstat(
-    CODE_PAGE_TYPE.OBJECT,
-    MEMORY_LABEL.PLAYER,
-  )
+  // player kind: opened book first, else any loaded book
+  const playerkind =
+    memoryreadcodepagewithtype(
+      mainbook,
+      CODE_PAGE_TYPE.OBJECT,
+      MEMORY_LABEL.PLAYER,
+    ) ??
+    memorylistcodepagebytypeandstat(
+      mainbook,
+      CODE_PAGE_TYPE.OBJECT,
+      MEMORY_LABEL.PLAYER,
+    )[0] ??
+    memorypickcodepagewithtypeandstat(
+      CODE_PAGE_TYPE.OBJECT,
+      MEMORY_LABEL.PLAYER,
+    )
   if (!ispresent(playerkind)) {
     return apierror(
       SOFTWARE,
@@ -343,8 +374,33 @@ export function memoryloginplayer(
   return false
 }
 
+export function memoryswitchopenedbook(destaddress: string): boolean {
+  // check if we are actually switching books
+  const current = memoryreadmainbook()
+  const dest = memoryreadbookbyaddress(destaddress)
+  if (!ispresent(dest) || current?.id === dest.id) {
+    return false
+  }
+
+  // switch to dest book
+  memorywritemainbook(dest.id)
+  return true
+}
+
+/** After trashing the opened book, open another loaded book or leave main empty. */
+export function memoryreopenaftertrash() {
+  const remaining = memoryreadbooklist()
+  if (remaining.length === 0) {
+    memorywritemainbook('')
+    return undefined
+  }
+  const next = remaining[0]
+  memorywritemainbook(next.id)
+  return next
+}
+
 export function memorylogoutplayer(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -396,7 +452,7 @@ export function memorylogoutplayer(player: string) {
 }
 
 export function memoryscanplayers(players: Record<string, number>) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
 
   // ensure we're tracking all ids listed in book
   const activelist = mainbook?.activelist ?? []
@@ -428,7 +484,7 @@ export function memoryscanplayers(players: Record<string, number>) {
 }
 
 export function memoryreadplayeractive(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const isactive = memoryreadbookplayeractive(mainbook, player)
   const board = memoryreadplayerboard(player)
   const playerelement = memoryreadobject(board, player)
@@ -436,7 +492,7 @@ export function memoryreadplayeractive(player: string) {
 }
 
 export function memoryreadplayerboard(player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const address = memoryreadbookflag(mainbook, player, 'board') as string
   const codepage = memorypickcodepagewithtypeandstat(
     CODE_PAGE_TYPE.BOARD,
@@ -449,7 +505,7 @@ const WITHPLAYERBOARD_TRACKING = 'withplayerboard'
 const TRACKING_IDS_KEY = 'ids'
 
 function memorylistactiveplayerids(): string[] {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const activelist = mainbook?.activelist ?? []
   const out: string[] = []
   for (let i = 0; i < activelist.length; ++i) {
@@ -466,7 +522,7 @@ function memorylistactiveplayerids(): string[] {
  * `withplayerboard_tracking.ids` shuffle queue (same pattern as @pick shuffle).
  */
 export function memorypicknextactiveplayerboard(): MAYBE<BOARD> {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return undefined
   }

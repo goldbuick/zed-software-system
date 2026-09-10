@@ -4,7 +4,7 @@
  */
 
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { memoryreadelement, memoryreadterrain } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorylistcodepagebytype } from 'zss/memory/bookoperations'
 import {
@@ -22,6 +22,7 @@ import {
 import { NAME } from 'zss/words/types'
 
 import { ooptuzz } from './ooptuzz'
+import { zztcolorbyte } from './zztcolor'
 import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
@@ -78,10 +79,6 @@ export type ZZTEXPORTERROR = { message: string; board?: string }
 export type ZZTEXPORTRESULT =
   | { ok: true; bytes: Uint8Array }
   | { ok: false; errors: ZZTEXPORTERROR[] }
-
-function zztcolorbyte(fg: number, bg: number): number {
-  return (fg & 15) + 16 * (bg & 15)
-}
 
 type SORTEDENTRY = {
   codepage: CODE_PAGE
@@ -219,8 +216,8 @@ function kindtozzt(
     p1: numberorzero(el.p1),
     p2: numberorzero(el.p2),
     p3: numberorzero(el.p3),
-    follower: 0,
-    leader: 0,
+    follower: -1,
+    leader: -1,
     underelement: 0,
     undercolor: 0,
     pointer: 0,
@@ -230,6 +227,7 @@ function kindtozzt(
 
   if (memoryboardelementisobject(el)) {
     const st = basestat()
+    applystatunder(st, board, x, y, entries)
     st.p1 = el.char ?? st.p1
     if (kind === 'object' || !kind) {
       return { ok: true, tile: { type: T_OBJECT, color: z() }, stat: st }
@@ -286,7 +284,7 @@ function kindtozzt(
     }
     case 'bomb':
       return { ok: true, tile: { type: T_BOMB, color: z() }, stat: basestat() }
-    case 'energize':
+    case 'energizer':
       return { ok: true, tile: { type: T_ENERGIZE, color: z() } }
     case 'star':
       return { ok: true, tile: { type: T_STAR, color: z() } }
@@ -362,6 +360,26 @@ function numberorzero(v: number | string | undefined): number {
   return 0
 }
 
+/** Cafe terrain under an object → ZZT Stat UnderElement / UnderColor. */
+function applystatunder(
+  st: ZZT_STAT,
+  board: BOARD,
+  x: number,
+  y: number,
+  entries: SORTEDENTRY[],
+) {
+  const terrain = memoryreadterrain(board, x, y)
+  if (!ispresent(terrain) || terrain.removed) {
+    return
+  }
+  // (-1,-1) skips startx/starty player remap in kindtozzt
+  const r = kindtozzt(terrain, -1, -1, board, entries)
+  if (r.ok && r.tile.type !== T_EMPTY) {
+    st.underelement = r.tile.type
+    st.undercolor = r.tile.color
+  }
+}
+
 function creaturekindtotile(kind: string): number | undefined {
   switch (kind) {
     case 'bear':
@@ -422,6 +440,8 @@ function memoryboardtozzt(
   const { board, exportname } = entry
   const elements: ZZT_ELEMENT[] = []
   const stats: ZZT_STAT[] = []
+  const idtostati = new Map<string, number>()
+  const centipedelinks: { stati: number; el: BOARD_ELEMENT }[] = []
   for (let y = 0; y < ZZT_BOARD_HEIGHT; ++y) {
     for (let x = 0; x < ZZT_BOARD_WIDTH; ++x) {
       const el = memoryreadelement(board, { x, y })
@@ -432,8 +452,42 @@ function memoryboardtozzt(
       }
       elements.push(r.tile)
       if (r.stat && zzttypewantsstat(r.tile.type)) {
+        const kind = NAME(el?.kind ?? '')
+        if (kind === 'head' || kind === 'segment') {
+          // p3/p4 are cafe object ids; ZZT uses Follower/Leader indices
+          r.stat.p3 = 0
+          r.stat.follower = -1
+          r.stat.leader = -1
+        }
+        const stati = stats.length
         stats.push(r.stat)
+        if (ispresent(el?.id)) {
+          idtostati.set(el.id, stati)
+        }
+        if (kind === 'head' || kind === 'segment') {
+          centipedelinks.push({ stati, el: el! })
+        }
       }
+    }
+  }
+
+  for (let i = 0; i < centipedelinks.length; ++i) {
+    const { stati, el } = centipedelinks[i]
+    const st = stats[stati]
+    if (isstring(el.p3) && el.p3) {
+      const fi = idtostati.get(el.p3)
+      if (isnumber(fi)) {
+        st.follower = fi
+      }
+    }
+    if (isstring(el.p4) && el.p4) {
+      const li = idtostati.get(el.p4)
+      if (isnumber(li)) {
+        st.leader = li
+      }
+    } else if (el.p5) {
+      // orphan ready to promote (ZZT Leader < -1)
+      st.leader = -2
     }
   }
 

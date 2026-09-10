@@ -1,5 +1,6 @@
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
+  memoryelementisingroup,
   memoryelementmatchesstrgrouponboard,
   memorylistboardelementsbygroup,
 } from 'zss/memory/boardlifecycle'
@@ -119,10 +120,30 @@ describe('readkind vs readgroup', () => {
     expect(next).toBe(2)
   })
 
-  it('ARG_TYPE.GROUP parses unknown names via readargs', () => {
-    READ_CONTEXT.words = ['combat']
-    const [group, next] = readargs(READ_CONTEXT.words, 0, [ARG_TYPE.GROUP])
-    expect(group).toEqual(['combat', undefined])
+  it('ARG_TYPE.COLOR_OR_GROUP parses color+name as a group', () => {
+    READ_CONTEXT.words = ['white', 'blinkew']
+    const [match, next] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.COLOR_OR_GROUP,
+    ])
+    expect(match).toEqual(['blinkew', ['WHITE']])
+    expect(next).toBe(2)
+  })
+
+  it('ARG_TYPE.COLOR_OR_GROUP still accepts color-only', () => {
+    READ_CONTEXT.words = ['white']
+    const [match, next] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.COLOR_OR_GROUP,
+    ])
+    expect(match).toEqual(['WHITE'])
+    expect(next).toBe(1)
+  })
+
+  it('ARG_TYPE.COLOR_OR_GROUP still accepts name-only group', () => {
+    READ_CONTEXT.words = ['blinkew']
+    const [match, next] = readargs(READ_CONTEXT.words, 0, [
+      ARG_TYPE.COLOR_OR_GROUP,
+    ])
+    expect(match).toEqual(['blinkew', undefined])
     expect(next).toBe(1)
   })
 })
@@ -156,6 +177,23 @@ describe('memorylistboardelementsbygroup', () => {
       ['YELLOW'],
     ])
     expect(found.map((el) => el.id)).toEqual(['sid_yellow'])
+  })
+})
+
+describe('memoryelementisingroup breakable flag', () => {
+  it('does not treat default breakable 0 as matching group breakable', () => {
+    const bear = makeobject('sid_bear', 2, 2, { name: 'bear' })
+    expect(memoryelementisingroup(bear, '', 'breakable', false)).toBe(false)
+    expect(memoryelementisingroup(bear, '', 'bear', false)).toBe(true)
+  })
+
+  it('matches breakable when breakable stat is non-zero or kind name is breakable', () => {
+    const gem = makeobject('sid_gem', 3, 3, { name: 'gem' })
+    gem.breakable = 1
+    expect(memoryelementisingroup(gem, '', 'breakable', false)).toBe(true)
+
+    const wall = makeobject('sid_wall', 4, 4, { name: 'breakable' })
+    expect(memoryelementisingroup(wall, '', 'breakable', false)).toBe(true)
   })
 })
 

@@ -54,7 +54,7 @@ import {
   memoryreadelementstat,
 } from './boards'
 import { memoryreadelementcodepage } from './bookoperations'
-import { memoryensuresoftwarebook } from './books'
+import { memoryensuremainbook } from './books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagestatdefaults,
@@ -72,14 +72,13 @@ import {
   memoryensureboardruntime,
   memoryreadboardelementruntime,
 } from './runtimeboundary'
-import { memoryreadbookbysoftware, memoryreadoperator } from './session'
+import { memoryreadmainbook, memoryreadoperator } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_WIDTH,
   CODE_PAGE,
   CODE_PAGE_TYPE,
-  MEMORY_LABEL,
 } from './types'
 
 function chipfromelement(board: MAYBE<BOARD>, element: MAYBE<BOARD_ELEMENT>) {
@@ -338,7 +337,7 @@ function registerhyperlinksforelement(
 }
 
 export async function memoryinspect(player: string, p1: PT, p2: PT) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   const showpaste = await memoryhassecretheap()
   if (!ispresent(mainbook)) {
     return
@@ -349,12 +348,12 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
     return
   }
 
-  // ensure lookup
+  // ensure named index
   memoryinitboard(board)
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = memoryreadelement(board, p1, true)
+    const element = memoryreadelement(board, p1, { includeghost: true })
     const codepage = memoryreadelementcodepage(mainbook, element)
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
@@ -395,7 +394,7 @@ export function memoryinspectarea(
   p2: PT,
   memoryhassecretheap: boolean,
 ) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -501,7 +500,7 @@ export function memoryinspectarea(
 }
 
 export function memoryinspectcommand(path: string, player: string) {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -551,7 +550,7 @@ export function memoryinspectelement(
   p1: PT,
   isobject: boolean,
 ) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -717,7 +716,7 @@ export function memoryinspectempty(
   p2: PT,
   mode: string,
 ) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return
   }
@@ -746,7 +745,13 @@ export function memoryinspectempty(
     case 'emptyobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y }, true)
+          const maybeobject = memoryreadelement(
+            board,
+            { x, y },
+            {
+              includeghost: true,
+            },
+          )
           if (
             memoryreadboardelementruntime(maybeobject)?.category ===
             CATEGORY.ISOBJECT
@@ -769,7 +774,7 @@ export function memoryinspectempty(
 }
 
 export function memoryinspectemptymenu(player: string, p1: PT, p2: PT) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return
   }

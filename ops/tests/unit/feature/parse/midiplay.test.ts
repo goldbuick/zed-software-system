@@ -24,10 +24,10 @@ describe('midiplay helpers', () => {
     expect(durationticksToOp(1920, 480)).toBe('w')
   })
 
-  it('playpitchfromscientificname uses start octave 3 and suffix accidentals', () => {
-    expect(playpitchfromscientificname('C4')).toBe('+c')
-    expect(playpitchfromscientificname('F#5')).toBe('++f#')
-    expect(playpitchfromscientificname('Bb3')).toBe('b!')
+  it('playpitchfromscientificname uses start octave 4 and suffix accidentals', () => {
+    expect(playpitchfromscientificname('C4')).toBe('c')
+    expect(playpitchfromscientificname('F#5')).toBe('+f#')
+    expect(playpitchfromscientificname('Bb3')).toBe('-b!')
   })
 
   it('monophoneline emits octave then duration then pitch; rest is x when duration still q', () => {
@@ -38,7 +38,7 @@ describe('midiplay helpers', () => {
       ],
       480,
     )
-    expect(line).toBe('+qcxe')
+    expect(line).toBe('qcxe')
   })
 
   it('monophoneline skips overlapping notes (chord → one voice keeps first by sort order)', () => {
@@ -49,7 +49,7 @@ describe('midiplay helpers', () => {
       ],
       480,
     )
-    expect(line).toBe('+qc')
+    expect(line).toBe('qc')
   })
 
   it('drumline uses duration-before-digit', () => {
@@ -92,7 +92,7 @@ describe('midivoicesfrommidi', () => {
     track.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
     const { voices, truncatedbynotes } = midivoicesfrommidi(midi)
     expect(truncatedbynotes).toBe(false)
-    expect(voices).toEqual(['+qc'])
+    expect(voices).toEqual(['qc'])
   })
 
   it('round-trip through SMF bytes', () => {
@@ -103,7 +103,7 @@ describe('midivoicesfrommidi', () => {
     const bytes = midi.toArray()
     const parsed = new Midi(bytes)
     const { voices } = midivoicesfrommidi(parsed)
-    expect(voices).toEqual(['+ig'])
+    expect(voices).toEqual(['ig'])
   })
 
   it('channel 9 → drumline voice', () => {
@@ -124,7 +124,7 @@ describe('midivoicesfrommidi', () => {
     b.channel = 1
     b.addNote({ midi: 72, ticks: 0, durationTicks: 480, velocity: 0.8 })
     const { voices } = midivoicesfrommidi(midi)
-    expect(voices).toEqual(['+qc', '++qc'])
+    expect(voices).toEqual(['qc', '+qc'])
   })
 
   it(`first ${MAX_VOICES_PER_PLAY} distinct tracks by global note order when ${MAX_VOICES_PER_PLAY + 1} tracks have notes at tick 0`, () => {
@@ -163,10 +163,10 @@ describe('midivoicesfrommidi', () => {
     const { voices } = midivoicesfrommidi(midi)
     expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1, 2, 3])
     expect(voices).toHaveLength(MAX_VOICES_PER_PLAY)
-    expect(voices[0]).toBe('+qc')
-    expect(voices[1]).toBe('+qc')
+    expect(voices[0]).toBe('qc')
+    expect(voices[1]).toBe('qc')
     expect(voices[2]).toBe('q9')
-    expect(voices[3]).toBe('+qc')
+    expect(voices[3]).toBe('qc')
   })
 
   it('ignores drum track if four other tracks appear first in global note order', () => {
@@ -194,7 +194,7 @@ describe('midivoicesfrommidi', () => {
     mel.addNote({ midi: 60, ticks: 0, durationTicks: 480, velocity: 0.8 })
     const { voices } = midivoicesfrommidi(midi)
     expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1])
-    expect(voices).toEqual(['q9', '+qc'])
+    expect(voices).toEqual(['q9', 'qc'])
   })
 
   it('multiple drum tracks merge into one line', () => {
@@ -244,7 +244,7 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     expect(truncatedbynotes).toBe(false)
     expect(midiselecttracksfromfirstnotes(midi)).toEqual([0, 1])
     const playlines = snippets.map((s) => `#play ${s}`)
-    expect(playlines).toEqual(['#play +qcdef; wx', '#play +qgaa#+c; +qefga'])
+    expect(playlines).toEqual(['#play qcdef; wx', '#play qgaa#+c; qefga'])
   })
 
   it('many early notes on one track still allow a later track in U', () => {
@@ -316,7 +316,7 @@ describe('midiplaysnippetsbymeasure (fixture .mid)', () => {
     const { snippets } = midiplaysnippetsbymeasure(midi)
     expect(snippets).toHaveLength(2)
     expect(snippets[0]).toContain('x')
-    expect(snippets[1]).toMatch(/^\+qc/)
+    expect(snippets[1]).toMatch(/^qc/)
     expect(snippets[1]).toMatch(/x$/)
   })
 })

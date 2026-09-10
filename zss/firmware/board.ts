@@ -43,14 +43,14 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
+import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
+import { memoryreadmainbook } from 'zss/memory/session'
 import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
-  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
 import { type EVAL_DIR, dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
@@ -467,7 +467,7 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const mainbook = memoryreadmainbook()
       if (!ispresent(mainbook)) {
         return 0
       }
@@ -613,16 +613,28 @@ export const BOARD_FIRMWARE = createfirmware()
         memoryboardelementisobject(maybetarget) &&
         memoryreadelementstat(maybetarget, 'pushable')
       ) {
+        const runtime = memoryensureboardelementruntime(maybetarget)
+        if (runtime.pushedtick === READ_CONTEXT.timestamp) {
+          return 0
+        }
         const shovedir = readevaldirfromtarget(
           words,
           ii,
           maybetarget,
           targetboard,
         )
-        memorymoveobject(READ_CONTEXT.book, targetboard, maybetarget, {
-          x: shovedir.destpt.x,
-          y: shovedir.destpt.y,
-        })
+        const moved = memorymoveobject(
+          READ_CONTEXT.book,
+          targetboard,
+          maybetarget,
+          {
+            x: shovedir.destpt.x,
+            y: shovedir.destpt.y,
+          },
+        )
+        if (moved) {
+          runtime.pushedtick = READ_CONTEXT.timestamp
+        }
       }
       return 0
     },

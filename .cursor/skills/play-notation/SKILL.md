@@ -1,6 +1,6 @@
 ---
 name: play-notation
-description: Writes valid ZSS #play strings for parseplay/invokeplay — ROM/MIDI style (+hc, +qcde), not Tone C4 literals. Use for parity patches, level-stability scenarios, ROM copyit #play, and synth notation.
+description: Writes valid ZSS #play strings for parseplay/invokeplay — ROM/MIDI style (hc, qcde at default octave 4), not Tone C4 literals. Use for parity patches, level-stability scenarios, ROM copyit #play, and synth notation.
 ---
 
 # Play notation (`#play`)
@@ -17,14 +17,14 @@ description: Writes valid ZSS #play strings for parseplay/invokeplay — ROM/MID
 
 1. **One character = one op** (left to right).
 2. **`;` separates voices** (up to 4 segments per line).
-3. **Default octave is 3** — bare `c` → scheduled **C3**.
+3. **Default octave is 4** — bare `c` → scheduled **C4**.
 4. **Octave only via `+` / `-`** — never digits for octave.
 5. **Digits `0`–`9` and `p` are drums only** — e.g. `4` = hi snare, not “octave 4”.
 6. **Pitch letters:** prefer lowercase `a`–`g`; `#` / `!` after the letter (`c#`, `b!`).
 7. **Duration before each note:** `y/t/s/i/q/h/w` (64th→whole); `3` triplet; `.` dotted.
-8. **ROM/MIDI order:** `+`/`-` then duration then pitch — e.g. `+hc` = half **C4**.
+8. **ROM/MIDI order:** `+`/`-` then duration then pitch — e.g. `hc` = half **C4**, `+hc` = half **C5**.
 
-Scheduled pitch is built as `Note + accidental + octave` inside `invokeplay` (e.g. `c` after leading `+` → `C4`). Do not type `C4` in the play buffer unless calling `invokeplay` with a raw string (bypasses op stream).
+Scheduled pitch is built as `Note + accidental + octave` inside `invokeplay` (e.g. `c` → `C4`; after leading `+` → `C5`). Do not type `C4` in the play buffer unless calling `invokeplay` with a raw string (bypasses op stream).
 
 ## Character map
 
@@ -54,10 +54,10 @@ Scheduled pitch is built as `Note + accidental + octave` inside `invokeplay` (e.
 
 | String | Meaning | Wrong |
 |--------|---------|-------|
-| `+hc` | Half note C4 | `hC4` (`4` = snare) |
-| `+qcde` | Quarter C4 D4 E4 | `qC4qD4qE4` |
-| `+icdeg` | 8th C4 D4 E4 G4 | `iC4iD4iE4iG4` |
-| `+qcdef;wx` | Voice0 melody + voice1 rest/drums | |
+| `hc` | Half note C4 | `hC4` (`4` = snare) |
+| `qcde` | Quarter C4 D4 E4 | `qC4qD4qE4` |
+| `icdeg` | 8th C4 D4 E4 G4 | `iC4iD4iE4iG4` |
+| `qcdef;wx` | Voice0 melody + voice1 rest/drums | |
 | `x` | Rest | |
 
 ## Codegen
@@ -65,7 +65,7 @@ Scheduled pitch is built as `Note + accidental + octave` inside `invokeplay` (e.
 ```typescript
 import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 
-const ops = parseplay('+hc')[0]
+const ops = parseplay('hc')[0]
 const ticks = invokeplay(0, 0, ops, true)
 ```
 

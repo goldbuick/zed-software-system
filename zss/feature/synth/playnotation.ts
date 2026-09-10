@@ -3,6 +3,9 @@ import { isnumber, ispresent, isstring } from 'zss/mapping/types'
 
 export const SYNTH_SFX_RESET = 4
 
+/** Initial octave for each `#play` / `#bgplay` voice (`invokeplay`). */
+export const PLAYNOTATION_START_OCTAVE = 4
+
 export enum SYNTH_OP {
   OFF,
   NOTE_A,
@@ -246,7 +249,7 @@ export function invokeplay(
 ) {
   // translate ops into time, note pairs
   let time = starttime
-  let octave = 3
+  let octave = PLAYNOTATION_START_OCTAVE
   let duration = 2
   let accidental = ''
   let note: SYNTH_NOTE = ''

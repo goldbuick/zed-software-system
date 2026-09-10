@@ -43,14 +43,14 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 | `duplicate` / `dupe` | `dir` `dupedir` | Duplicate element at dir in dupedir direction |
 | `duplicatewith` / `dupewith` | `arg` `dir` `dupedir` | Duplicate with arg |
 | `shove` | `dir` `movedir` | Move object at dir by movedir delta |
-| `push` | `dir` `movedir` | Same as shove but only for pushable objects |
+| `push` | `dir` `movedir` | Same as shove but only for pushable objects; a given object succeeds at most once per tick |
 | `transport` | `target` | Transport object along transporter line (finds opposite transporter, moves object) |
 | `change` | `target` `into` | Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind. |
 | `write` | `dir` `color` `text…` | Write colored text on board at direction (E/W/N/S) |
 
 ## Internal Functions
 
-- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields
+- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields. For **contact damage**, prefer `#send at x y shot` (see [gamesend.md](../../memory/docs/gamesend.md)) instead of point-blank `#shoot`.
 - **`commandput`** — Handles put: validates context, parses dir+kind, handles multi-target dirs, clipping, ghost vs solid, pushable shove, empty delete, color apply, object/terrain write
 - **`commanddupe`** — Duplicates element at dir in dupedir; blocks on player kind and blocked dest
 

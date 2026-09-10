@@ -17,7 +17,7 @@ import {
 } from 'zss/memory/playermanagement'
 import { memoryensureboardelementruntime } from 'zss/memory/runtimeboundary'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryresetbooks,
 } from 'zss/memory/session'
 import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
@@ -45,7 +45,7 @@ function makeboardpage(name: string, pageid: string) {
 }
 
 function placeplayer(boardid: string, player: string, x: number, y: number) {
-  const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const main = memoryreadmainbook()
   const page = main?.pages.find((p) => p.id === boardid)
   const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(page)
   if (!board) {
@@ -96,7 +96,7 @@ describe('memorypicknextactiveplayerboard', () => {
   })
 
   it('cycles each active player once then reshuffles', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     placeplayer(boarda, playera, 1, 1)
     placeplayer(boardb, playerb, 2, 2)
     memorywritebookplayerboard(mainbook, playera, boarda)
@@ -113,7 +113,7 @@ describe('memorypicknextactiveplayerboard', () => {
   })
 
   it('skips stale players removed from activelist mid-queue', () => {
-    const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+    const mainbook = memoryreadmainbook()
     placeplayer(boarda, playera, 1, 1)
     placeplayer(boardb, playerb, 2, 2)
     memorywritebookplayerboard(mainbook, playera, boarda)

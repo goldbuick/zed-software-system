@@ -1,4 +1,4 @@
-import { compress, decompress } from '@bokuweb/zstd-wasm'
+import { decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
 import { pack, unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
@@ -12,11 +12,7 @@ import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import {
-  arraybuffertobase64,
-  base64tobase64url,
-  base64urltobase64,
-} from 'zss/mapping/encode'
+import { base64urltobase64 } from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
 import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
 import { ispresent, isstring } from 'zss/mapping/types'
@@ -30,20 +26,23 @@ import {
   memoryimportbookfromjson,
   memoryreadelementdisplay,
 } from './bookoperations'
+import { bookzstdcompressbase64url } from './bookzstd'
+import {
+  applyexportidremap,
+  buildexportidremap,
+  collectflagprotectedids,
+} from './exportidremap'
 import { memoryreadflags } from './flags'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
   memoryreadtopic,
   memorywritehalt,
 } from './session'
 import { trimformatobject, trimmemoryexport } from './trimexport'
-import { BOOK, MEMORY_LABEL } from './types'
-
-/** zstd level for URL book payloads (measured: 19 vs 15 ~0.8%, 22 triples CPU). */
-const BOOK_ZSTD_LEVEL = 19
+import { BOOK } from './types'
 
 function base64tobytes(base64: string): Uint8Array {
   const binary = atob(base64)
@@ -162,7 +161,7 @@ export function memoryadminmenu(
   idletimes?: Record<string, number>,
 ) {
   const isop = memoryisoperator(player)
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
   activelistvalues.add(memoryreadoperator())
   const activelist = [...activelistvalues]
@@ -237,39 +236,91 @@ export function memoryadminmenu(
   scrollwritelines(player, 'cpu #admin', zsstexttape(...rows), 'refscroll')
 }
 
-export async function memorycompressbooks(books: BOOK[]) {
-  const jsonbooks = books.map((book) =>
-    trimmemoryexport(memoryexportbookasjson(book)),
-  )
-  if (getclimode()) {
-    return JSON.stringify(jsonbooks)
+/** Save/load payload: books plus optional opened-book id (`MEMORY.main`). */
+export type MEMORY_BOOKS_BUNDLE = {
+  books: BOOK[]
+  main?: string
+}
+
+function memoryimportbooklist(list: unknown): BOOK[] {
+  if (!Array.isArray(list)) {
+    return []
   }
-
-  await ensurezstdwasm()
-
-  const exported: FORMAT_OBJECT[] = []
-  for (let i = 0; i < books.length; ++i) {
-    const exportedbook = trimformatobject(memoryexportbook(books[i]))
-    if (exportedbook) {
-      exported.push(exportedbook)
+  const books: BOOK[] = []
+  for (let i = 0; i < list.length; ++i) {
+    const book = memoryimportbook(list[i] as FORMAT_OBJECT)
+    if (ispresent(book)) {
+      books.push(book)
     }
   }
+  return books
+}
 
-  // Single zstd frame over a msgpack array of books (no JSZip envelope).
-  const bin = pack(exported)
-  const binsquash = compress(bin, BOOK_ZSTD_LEVEL)
-  const bytes =
-    binsquash instanceof Uint8Array
-      ? binsquash
-      : new Uint8Array(binsquash as ArrayBuffer)
-  return base64tobase64url(
-    arraybuffertobase64(
-      bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength,
-      ) as ArrayBuffer,
-    ),
-  )
+function memoryimportbooklistfromjson(list: unknown): BOOK[] {
+  if (!Array.isArray(list)) {
+    return []
+  }
+  return list.map(memoryimportbookfromjson).filter(ispresent)
+}
+
+/**
+ * Compress books for URL save / fork / share.
+ * Sim owns export + cross-book id protect + msgpack; browser zstd runs on the
+ * compress worker (in-process fallback / Jest). Climode uses JSON envelope.
+ */
+export async function memorycompressbooks(books: BOOK[]) {
+  const main = memoryreadmainbook()?.id
+  if (getclimode()) {
+    const jsonbooks: unknown[] = []
+    for (let i = 0; i < books.length; ++i) {
+      const exported = trimmemoryexport(memoryexportbookasjson(books[i]))
+      if (exported) {
+        jsonbooks.push(exported)
+      }
+    }
+    return JSON.stringify({ main, books: jsonbooks })
+  }
+
+  const wires: FORMAT_OBJECT[] = []
+  for (let i = 0; i < books.length; ++i) {
+    const wire = memoryexportbook(books[i], { noremap: true })
+    if (wire) {
+      wires.push(wire)
+    }
+  }
+  const protectedids = new Set<string>()
+  for (let i = 0; i < wires.length; ++i) {
+    const ids = collectflagprotectedids(wires[i])
+    for (const id of ids) {
+      protectedids.add(id)
+    }
+  }
+  const exported: FORMAT_OBJECT[] = []
+  for (let i = 0; i < wires.length; ++i) {
+    applyexportidremap(wires[i], buildexportidremap(wires[i], protectedids))
+    const trimmed = trimformatobject(wires[i])
+    if (trimmed) {
+      exported.push(trimmed)
+    }
+  }
+  const bin = pack({ main, books: exported })
+  const bytes = bin instanceof Uint8Array ? bin : new Uint8Array(bin)
+
+  // Jest has no Vite ??worker transform for compressspace.
+  if (
+    typeof process !== 'undefined' &&
+    typeof process.env?.JEST_WORKER_ID === 'string'
+  ) {
+    return bookzstdcompressbase64url(bytes)
+  }
+
+  try {
+    const { compressbookbytesoffthread } =
+      await import('zss/compressworkerclient')
+    return await compressbookbytesoffthread(bytes)
+  } catch {
+    return bookzstdcompressbase64url(bytes)
+  }
 }
 
 async function memorydecompressbookszip(content: string): Promise<BOOK[]> {
@@ -317,11 +368,21 @@ async function memorydecompressbookszip(content: string): Promise<BOOK[]> {
 
 export async function memorydecompressbooks(
   base64bytes: string,
-): Promise<BOOK[]> {
+): Promise<MEMORY_BOOKS_BUNDLE> {
   const trimmed = base64bytes.trim()
   if (trimmed.startsWith('[')) {
-    const json = JSON.parse(base64bytes) as BOOK[]
-    return json.map(memoryimportbookfromjson).filter(ispresent)
+    const json = JSON.parse(base64bytes) as unknown
+    return { books: memoryimportbooklistfromjson(json) }
+  }
+  if (trimmed.startsWith('{')) {
+    const json = JSON.parse(base64bytes) as {
+      main?: string
+      books?: unknown
+    }
+    return {
+      books: memoryimportbooklistfromjson(json.books),
+      main: isstring(json.main) ? json.main : undefined,
+    }
   }
 
   await ensurezstdwasm()
@@ -331,22 +392,21 @@ export async function memorydecompressbooks(
 
   // Legacy: JSZip envelope (PK..) with per-book zstd|msgpack|json entries.
   if (iszipbytes(raw)) {
-    return memorydecompressbookszip(content)
+    return { books: await memorydecompressbookszip(content) }
   }
 
-  // Current: zstd(msgpack(FORMAT_OBJECT[]))
+  // Current: zstd(msgpack({ main?, books })) — legacy: zstd(msgpack(FORMAT_OBJECT[]))
   const ubin = decompress(raw)
-  const list = unpack(ubin) as unknown
-  if (!Array.isArray(list)) {
-    return []
+  const payload = unpack(ubin) as unknown
+  if (Array.isArray(payload)) {
+    return { books: memoryimportbooklist(payload) }
   }
-  const books: BOOK[] = []
-  for (let i = 0; i < list.length; ++i) {
-    const entry = list[i] as FORMAT_OBJECT
-    const book = memoryimportbook(entry)
-    if (ispresent(book)) {
-      books.push(book)
+  if (payload && typeof payload === 'object') {
+    const envelope = payload as { main?: unknown; books?: unknown }
+    return {
+      books: memoryimportbooklist(envelope.books),
+      main: isstring(envelope.main) ? envelope.main : undefined,
     }
   }
-  return books
+  return { books: [] }
 }

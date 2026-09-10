@@ -48,7 +48,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
-| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only) |
 | `media` | Board TV media queue: `#media` (queue list), `#media <url>` (submit), `#media playlist` (copy played + queue URLs) |
 | `queue` | Media helper admin: `#queue` (menu), `#queue <peerid>` (bind), `#queue skip` / `clear` / `stop` / `limit <N>` / `approve <N>` / `reject <N>` |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
@@ -105,6 +105,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `clear` | Variables (set to 0) |
 | `set` | Variable to value |
 | `become` | Element into specified kind |
+| `morph` | Change kind in place, keep stats and id |
 | `bind` | Code from named element |
 | `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
@@ -122,6 +123,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `runwith` | Function with argument |
 | `array` | Array variable |
 | `read` | Property from object into variable |
+| `pget` | Attr from dir or object id into variable (Weave-like) |
+| `pset` | Attr on dir or object id (Weave-like; `step` sets stepx/stepy) |
 | `toast` | Toast notification |
 | `ticker` | Element ticker text |
 
@@ -135,7 +138,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `goto` | Teleport player via `memorymoveplayertoboard` — board by name or address with optional x, y |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
-| `push` | Target object in direction ONLY if pushable |
+| `push` | Target object in direction ONLY if pushable (at most once per tick) |
 | `duplicate` | Element at direction in given direction |
 | `duplicatewith` | Element with argument |
 | `dupe` | Element at direction in given direction |

@@ -87,7 +87,7 @@ jest.mock('zss/memory/runtime', () => ({
 }))
 
 jest.mock('zss/memory/session', () => ({
-  memoryreadbookbysoftware: jest.fn(),
+  memoryreadmainbook: jest.fn(),
   memoryreadoperator: jest.fn(() => ''),
   memoryreadroot: jest.fn(() => ({})),
 }))

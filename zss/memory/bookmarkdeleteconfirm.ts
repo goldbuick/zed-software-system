@@ -7,9 +7,7 @@ import {
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryensuresoftwarebook } from 'zss/memory/books'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
+import { memoryensuremainbook } from 'zss/memory/books'
 export type BOOKMARK_LIST_CACHE =
   | {
       source: 'bookmarkscroll'
@@ -98,7 +96,7 @@ export function memorybookmarkdeleteprompt(
   chip: typeof BOOKMARK_SCROLL_CHIP | typeof EDITOR_BOOKMARK_SCROLL_CHIP,
   labelfromcaller?: string,
 ): boolean {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return false
   }

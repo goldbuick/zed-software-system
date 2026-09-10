@@ -17,7 +17,7 @@ Bridge resolves sources today: main game `<canvas>` + `synthbroadcastdestination
 
 | Kind | Auth | Endpoint |
 |------|------|----------|
-| `ivs-low-latency` | IVS / Twitch stream key | `https://g.webrtc.live-video.net:4443/v1/offer` (default) |
+| `ivs-low-latency` | IVS stream key | `https://g.webrtc.live-video.net:4443/v1/offer` (default) |
 | `whip` | Bearer token (required) | **Any WHIP URL** or alias (`twitch`, `ivs`) |
 | `ivs-whip` | IVS Real-Time participant token | `https://global.whip.live-video.net` (default) |
 
@@ -36,17 +36,24 @@ client.on('error', (message) => { /* ... */ })
 await client.addimagesource(canvas, 'video', { index: 1 })
 await client.addaudioinputdevice(audio.stream, 'audio')
 
-// Low-latency channel (#broadcast <stream-key>)
-await client.start({ kind: 'ivs-low-latency', streamKey: 'sk_...' })
-
-// Generic WHIP (LiveKit Ingress, Cloudflare Stream, Twitch v2, etc.)
+// Twitch WHIP v2 (#broadcast <stream-key>)
 await client.start({
   kind: 'whip',
   endpoint: 'https://g.webrtc.live-video.net:4443/v2/offer',
-  bearer: '<stream-key-or-token>',
+  bearer: '<twitch-stream-key>',
 })
 
-// IVS Real-Time stage (default WHIP endpoint)
+// IVS low-latency (#broadcast ivs-ll <stream-key>)
+await client.start({ kind: 'ivs-low-latency', streamKey: 'sk_...' })
+
+// Generic WHIP (LiveKit Ingress, Cloudflare Stream, etc.)
+await client.start({
+  kind: 'whip',
+  endpoint: 'https://whip.example/ingest',
+  bearer: '<token>',
+})
+
+// IVS Real-Time stage (#broadcast ivs-rt <token>)
 await client.start({ kind: 'ivs-whip', token: 'participant-token' })
 
 client.stop()
@@ -57,16 +64,18 @@ client.delete()
 
 `bridge:streamstart` accepts:
 
-- **String** — `{ kind: 'ivs-low-latency', streamKey }` (`#broadcast <key>`).
+- **String** — Twitch WHIP v2 (`#broadcast <key>`).
 - **Object** — `ivs-low-latency`, `whip` (`endpoint` + `bearer`), or `ivs-whip` (`token`, optional `endpoint`).
 
 CLI:
 
 ```text
-#broadcast <stream-key>                              # IVS low-latency / Twitch
+#broadcast <stream-key>                              # Twitch WebRTC v2 (WHIP)
+#broadcast ivs-ll <stream-key>                       # IVS low-latency
+#broadcast ivs-rt <participant-token>                # IVS Real-Time stage
 #broadcast whip <endpoint|alias> <bearer>            # generic WHIP
-#broadcast whip twitch <twitch-stream-key>           # Twitch WebRTC v2 (WHIP)
-#broadcast whip ivs <participant-token>              # IVS Real-Time stage
+#broadcast whip twitch <twitch-stream-key>           # same as bare key (alias)
+#broadcast whip ivs <participant-token>              # same as ivs-rt via whip alias
 ```
 
 Full URL still works: `#broadcast whip https://… <bearer>`.

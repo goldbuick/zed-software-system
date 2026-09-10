@@ -26,7 +26,7 @@ import {
   memoryclearbook,
   memoryreadbookbyaddress,
   memoryreadbooklist,
-  memorywritesoftwarebook,
+  memorywritemainbook,
 } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
@@ -87,13 +87,12 @@ function findpageidfromdirname(
 function applyrootstats(bytes: Uint8Array, errors: string[]) {
   try {
     const parsed = decodejson(bytes) as {
-      software?: { main?: string; temp?: string }
+      main?: string
+      software?: { main?: string }
     }
-    if (parsed.software?.main) {
-      memorywritesoftwarebook('main', parsed.software.main)
-    }
-    if (parsed.software?.temp) {
-      memorywritesoftwarebook('temp', parsed.software.temp)
+    const opened = parsed.main ?? parsed.software?.main
+    if (opened) {
+      memorywritemainbook(opened)
     }
   } catch (err) {
     errors.push(`root stats.json: ${errmessage(err)}`)

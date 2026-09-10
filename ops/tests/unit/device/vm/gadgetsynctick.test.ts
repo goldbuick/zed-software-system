@@ -3,7 +3,7 @@ jest.mock('zss/device/patchapi', () => ({
 }))
 
 jest.mock('zss/memory/session', () => ({
-  memoryreadbookbysoftware: jest.fn(),
+  memoryreadmainbook: jest.fn(),
   memoryreadoperator: jest.fn(),
 }))
 
@@ -77,7 +77,7 @@ import {
 import { memoryconverttogadgetcontrollayer } from 'zss/memory/rendering'
 import type { MEMORY_GADGET_LAYERS } from 'zss/memory/rendering'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
 } from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
@@ -138,7 +138,7 @@ describe('gadgetsynctick', () => {
   beforeEach(() => {
     stubgadget = createstubgadget()
     jest.mocked(gadgetstate).mockReturnValue(stubgadget)
-    jest.mocked(memoryreadbookbysoftware).mockReturnValue(stubbook)
+    jest.mocked(memoryreadmainbook).mockReturnValue(stubbook)
     jest.mocked(memoryreadoperator).mockReturnValue('p1')
     jest.mocked(memoryreadplayeractive).mockReturnValue(true)
     jest.mocked(memoryreadplayerboard).mockReturnValue({
@@ -157,7 +157,7 @@ describe('gadgetsynctick', () => {
   })
 
   it('skips when main book is missing', () => {
-    jest.mocked(memoryreadbookbysoftware).mockReturnValue(undefined)
+    jest.mocked(memoryreadmainbook).mockReturnValue(undefined)
     gadgetsynctick(vm)
     expect(gadgetclientpatch).not.toHaveBeenCalled()
   })
@@ -211,7 +211,7 @@ describe('gadgetsynctick', () => {
 
   it('leaves layer stack empty on void tick when nothing was cached', () => {
     jest.mocked(memoryreadoperator).mockReturnValue('p2')
-    jest.mocked(memoryreadbookbysoftware).mockReturnValue({
+    jest.mocked(memoryreadmainbook).mockReturnValue({
       ...stubbook,
       activelist: ['p2'],
     })
@@ -232,7 +232,7 @@ describe('gadgetsynctick', () => {
 
   it('emits void state when player is inactive and layers are missing', () => {
     jest.mocked(memoryreadoperator).mockReturnValue('p-inactive')
-    jest.mocked(memoryreadbookbysoftware).mockReturnValue({
+    jest.mocked(memoryreadmainbook).mockReturnValue({
       ...stubbook,
       activelist: ['p-inactive'],
     })

@@ -30,14 +30,21 @@ import {
   memoryreadcodepage,
   memoryupdatebookname,
 } from 'zss/memory/bookoperations'
-import { memoryensuresoftwarebook } from 'zss/memory/books'
+import {
+  memorycreatesoftwarebook,
+  memoryensuremainbook,
+} from 'zss/memory/books'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
+import {
+  memorymoveplayertoboard,
+  memoryreopenaftertrash,
+  memoryswitchopenedbook,
+} from 'zss/memory/playermanagement'
 import {
   memorycodepagetoprefix,
   memoryelementtodisplayprefix,
@@ -45,9 +52,8 @@ import {
 import {
   memoryclearbook,
   memoryreadbookbyaddress,
-  memoryreadbookbysoftware,
   memoryreadbooklist,
-  memorywritesoftwarebook,
+  memoryreadmainbook,
 } from 'zss/memory/session'
 import {
   BOARD_ELEMENT,
@@ -56,7 +62,6 @@ import {
   BOOK,
   CODE_PAGE,
   CODE_PAGE_TYPE,
-  MEMORY_LABEL,
 } from 'zss/memory/types'
 import { romread } from 'zss/rom'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
@@ -65,7 +70,7 @@ import { ARG_TYPE } from 'zss/words/types'
 export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
   return fw
     .command('bookrename', ['the main book (operator only)'], () => {
-      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      const mainbook = memoryensuremainbook()
       memoryupdatebookname(mainbook)
       if (ispresent(mainbook)) {
         write(
@@ -84,13 +89,27 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       [ARG_TYPE.NAME, 'a book by address (operator only)'],
       (chip, words) => {
         const [address] = readargs(words, 0, [ARG_TYPE.NAME])
-        const opened = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const opened = memoryreadmainbook()
         const book = memoryreadbookbyaddress(address)
         if (ispresent(book)) {
-          if (opened === book) {
-            memorywritesoftwarebook(MEMORY_LABEL.MAIN, '')
-          }
+          const wasopened = opened === book
           memoryclearbook(address)
+          if (wasopened) {
+            const next = memoryreopenaftertrash()
+            if (ispresent(next)) {
+              apilog(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `opened [book] ${next.name} after trash`,
+              )
+            } else {
+              apilog(
+                SOFTWARE,
+                READ_CONTEXT.elementfocus,
+                `no books left after trash`,
+              )
+            }
+          }
           apilog(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
@@ -99,6 +118,48 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           vmflushop()
           chip.command('pages')
         }
+        return 0
+      },
+    )
+    .command(
+      'bookopen',
+      [ARG_TYPE.NAME, 'switch opened book by id or name'],
+      (_, words) => {
+        const [address] = readargs(words, 0, [ARG_TYPE.NAME])
+        const dest = memoryreadbookbyaddress(address)
+        if (!ispresent(dest)) {
+          apierror(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            'bookopen',
+            `book not found ${address}`,
+          )
+          return 0
+        }
+        if (memoryswitchopenedbook(dest.id)) {
+          apilog(
+            SOFTWARE,
+            READ_CONTEXT.elementfocus,
+            `opened [book] ${dest.name}`,
+          )
+          vmflushop()
+        }
+        return 0
+      },
+    )
+    .command(
+      'bookcreate',
+      [ARG_TYPE.MAYBE_NAME, 'create an empty book (does not open it)'],
+      (_, words) => {
+        const [maybename] = readargs(words, 0, [ARG_TYPE.MAYBE_NAME])
+        const book = memorycreatesoftwarebook(
+          isstring(maybename) && maybename ? maybename : undefined,
+        )
+        apilog(
+          SOFTWARE,
+          READ_CONTEXT.elementfocus,
+          `created [book] ${book.name} (not opened)`,
+        )
         return 0
       },
     )
@@ -205,7 +266,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       [ARG_TYPE.NAME, 'a code page (operator only)'],
       (chip, words) => {
         const [page] = readargs(words, 0, [ARG_TYPE.NAME])
-        const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+        const mainbook = memoryensuremainbook()
         const codepage = memoryclearbookcodepage(mainbook, page)
         if (ispresent(page)) {
           const name = memoryreadcodepagename(codepage)
@@ -232,32 +293,24 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         READ_CONTEXT.elementfocus,
         zsstexttape(zsssectionlines(`books`)),
       )
-      const main = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const opened = memoryreadmainbook()
       write(
         SOFTWARE,
         READ_CONTEXT.elementfocus,
         zssoptionline(
-          'main',
-          `${main?.name ?? 'empty'} $GREEN${main?.id ?? ''}`,
-        ),
-      )
-      const content = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
-      write(
-        SOFTWARE,
-        READ_CONTEXT.elementfocus,
-        zssoptionline(
-          'content',
-          `${content?.name ?? 'empty'} ${content?.id ?? ''}`,
+          'opened',
+          `${opened?.name ?? 'empty'} $GREEN${opened?.id ?? ''}`,
         ),
       )
       write(SOFTWARE, READ_CONTEXT.elementfocus, zssbbarline(7))
       const list = memoryreadbooklist()
       if (list.length) {
         list.forEach((book) => {
+          const marker = book.id === opened?.id ? 'opened ' : ''
           write(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            `!bookopen ${book.id};${book.name}`,
+            `!bookopen ${book.id};${marker}${book.name}`,
           )
         })
       } else {
@@ -275,7 +328,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
       return 0
     })
     .command('pages', ['all pages in all loaded books'], () => {
-      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      const mainbook = memoryensuremainbook()
       if (!ispresent(mainbook)) {
         return 0
       }
@@ -467,7 +520,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         READ_CONTEXT.elementfocus,
         zsstexttape(zsssectionlines(`boards`)),
       )
-      const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+      const mainbook = memoryensuremainbook()
       if (ispresent(mainbook)) {
         write(
           SOFTWARE,
@@ -553,7 +606,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
         })
         write(SOFTWARE, READ_CONTEXT.elementfocus, '')
       }
-      const book = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const book = memoryreadmainbook()
       if (ispresent(book)) {
         write(
           SOFTWARE,

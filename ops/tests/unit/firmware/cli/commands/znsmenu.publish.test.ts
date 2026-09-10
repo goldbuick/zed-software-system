@@ -22,7 +22,7 @@ jest.mock('zss/feature/writeui', () => ({
 jest.mock('zss/memory/session', () => ({
   memoryreadbooklist: jest.fn(() => []),
   memoryreadbookbyaddress: jest.fn(),
-  memoryreadbookbysoftware: jest.fn(),
+  memoryreadmainbook: jest.fn(),
   memoryreadfirstbook: jest.fn(),
   memoryreadfirstcontentbook: jest.fn(),
 }))

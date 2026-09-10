@@ -20,9 +20,8 @@ import {
   memorybookmarkscroll,
   memorymainbookisempty,
 } from 'zss/memory/bookmarkscroll'
-import { memoryensuresoftwarebook } from 'zss/memory/books'
+import { memoryensuremainbook } from 'zss/memory/books'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
 function readstringarg(message: MESSAGE): string | undefined {
@@ -57,7 +56,7 @@ function restorebookmarklist(player: string): void {
 
 export function handlebookmarkscroll(vm: DEVICE, message: MESSAGE): void {
   // register:bookmarkscroll skips memoryruncli; gadget state + gadgetsynctick need MAIN.
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     apitoast(vm, message.player, 'gadget scroll: need main book')
     return

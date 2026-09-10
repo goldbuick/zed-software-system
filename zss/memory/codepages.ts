@@ -35,15 +35,15 @@ import {
   memoryreadcodepagepickcache,
   memorywritecodepagepickcache,
 } from './codepagepickcache'
-import { memoryreadbookbysoftware, memoryreadbooklist } from './session'
-import { CODE_PAGE, CODE_PAGE_TYPE, MEMORY_LABEL } from './types'
+import { memoryreadbooklist, memoryreadmainbook } from './session'
+import { CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 const TRACKING_IDS_KEY = 'ids'
 
 export function memorylistallcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
 ): CODE_PAGE[] {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const matchedpages: Record<string, CODE_PAGE> = {}
   const mainpages = memorylistcodepagebytype(mainbook, type)
   for (const page of mainpages) {
@@ -81,7 +81,7 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
   if (cached.hit) {
     return cached.page
   }
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const matchedpages: Record<string, CODE_PAGE> = {}
   const pages = memorylistcodepagebytypeandstat(mainbook, type, address)
   for (const page of pages) {
@@ -209,7 +209,7 @@ export function memorypickcodepagewithtypeandstat<T extends CODE_PAGE_TYPE>(
 export function memorylistcodepagewithtype<T extends CODE_PAGE_TYPE>(
   type: T,
 ): CODE_PAGE[] {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   const found = memorylistcodepagessorted(mainbook).filter(
     (codepage) => memoryreadcodepagetype(codepage) === type,
   )

@@ -17,12 +17,16 @@ Implementation reference for fixing the cafe element library so each kind matche
 | `Cycle` (lower = faster; `-1` = no tick/stat) | `TElementDef.Cycle` | `@cycle N` |
 | `Stat.P1/P2/P3` | `TStat` | `p1`/`p2`/`p3` |
 | `Stat.StepX/StepY` | `TStat` | `stepx`/`stepy` (`#walk`, `?dir`) |
-| `BoardAttack` -- contact damage to player | `Game.pas` | melee idiom: `#shoot at senderx sendery` toward the player on `:thud`, then `#die` on `:shot` |
+| `BoardAttack` -- contact damage to player | `Game.pas` | melee idiom: `#send at senderx sendery shot` on `:thud` / `:touch` (not a point-blank `#shoot`) |
 | `BoardShoot` -- spawn bullet/star | `Game.pas` | `#shoot dir` / `#shoot dir star` |
-| `DamageStat` / `BoardDamageTile` | `Game.pas` | `:shot` / `:bombed` -> `#die` |
+| `DamageStat` / `BoardDamageTile` | `Game.pas` | `:shot` (and bomb also `:bombed`) -> `#die` / breakable auto-clear on `:shot` |
 | `OopSend(-stat,'SHOT')` from a bullet hit | bullet tick | target `:shot` label |
+| `OopSend(-stat,'THUD')` from object walk | `ElementObjectTick` | blocked stepx/stepy walk in element everytick → `:thud` **to the walker** (sender = blocker); not `memorymoveobject` |
+| `OopSend(-stat,'TOUCH')` | `ElementObjectTouch` | player walks into object → `:touch` to that object |
 
-Contact damage (`BoardAttack`) mapping: the engine only auto-sends `:touch` (to both parties) when a creature bumps the player -- `:shot` is delivered by bullets. **In cafe, a creature's melee is represented by `#shoot at senderx sendery` on `:thud`** (a point-blank shot toward the player that lands as a `:shot` on the player). This is the intended idiom, so the `#shoot`-on-thud pattern in lion/tiger/bear/ruffian is correct and should be kept -- not converted to a separate melee command. Real creature bugs are about *movement/AI* (water gating, centipede chains, missing kinds), not the melee representation.
+**Blocked-walk labels (RoZZT `ElementObjectTick`):** cafe sends `:thud` from element everytick when a stepx/stepy walk fails; target is the **moving** object, sender is the blocker (wall, player, other object). `#go` / shove / weave do not emit this walk thud. Player tile is not walkable, so creature → player is `:thud` on the creature (not dual `:touch`). No second label to the obstacle on this path (`:bump` remains same-party `:touch` remap only).
+
+**Player-initiated contact:** player walks into an object → `:touch` (RoZZT `TOUCH` / `ElementDamagingTouch`). Melee kinds use `:thud` / `:touch` fallthrough + `#send at senderx sendery shot` to approximate `BoardAttack`. Ranged fire still uses `#shoot`.
 
 ## Animated glyphs: use `:drawdisplay`, not `:think`
 
@@ -56,7 +60,7 @@ In cafe these are **player flags by convention** (set/read with `#give`/`#take`/
 | `gems` | gem +1 | `World.Info.Gems` |
 | `torches` | torch +1; lighting -1 | `World.Info.Torches` |
 | `score` | gem +10, kills (`ScoreValue`) | `World.Info.Score` |
-| `key<color>` (cafe: `key0`,`key9`..`key15`) | key grants, door consumes | `World.Info.Keys[1..7]` |
+| `key<color>` (cafe: `keyblack`, `keyblue`..`keywhite` via `$color` name) | key grants, door consumes | `World.Info.Keys[1..7]` |
 | `energized` / `wick` (cafe) | energizer / torch upkeep timers | `EnergizerTicks` / `TorchTicks` |
 
 ### Element stats (engine, per-element)
@@ -77,9 +81,9 @@ Also common as kind headers: `@isitem` (grabbable, triggers `:touch`), `@ispusha
 
 ### Labels and movement idioms
 
-- **Labels:** `:think` (tick loop), `:touch` (walked into), `:thud` (movement blocked), `:shot` (hit by bullet), `:bombed` (bomb blast), `:bump`, `:drawdisplay` (render pass).
+- **Labels:** `:think` (tick loop), `:touch` (walked into), `:thud` (movement blocked), `:shot` (damage event -- bullet hit, melee `#send … shot`, bomb blast), `:bombed` (bomb blast companion label; no engine auto-delete), `:bump`, `:drawdisplay` (render pass).
 - **Direction words (`?dir` / `#walk`):** `rnd`, `seek`, `flow`, `cw`, `ccw`, `at <x> <y>`, plus `n/s/e/w`.
-- **Move/act:** `#go <dir>` (move+yield), `#walk <dir>` (set step), `#idle` (yield), `#shoot <dir> [kind]` / `#shoot at <x> <y>` (projectile; melee idiom), `#become <kind>`, `#die`, `#put`, `#send`, `#give`/`#take`/`#set`/`#clear`.
+- **Move/act:** `#go <dir>` (move+yield), `#walk <dir>` (set step), `#idle` (yield), `#shoot <dir> [kind]` (projectile), `#send at <x> <y> shot` (contact / cell damage), `#become <kind>`, `#die`, `#put`, `#send`, `#give`/`#take`/`#set`/`#clear`.
 
 ## Master parity table
 
@@ -122,14 +126,14 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 31 | Line | line | object | -1 | - | ok | - | wall glyph by line/edge neighbors | `:drawdisplay` (no `:calcdisplay` fan-out) |
 | 32 | Ricochet | ricochet | terrain | -1 | - | ok | - | bounces bullets | `@issolid` (bullet handles bounce) |
 | 33 | Blink ray EW | blinkew | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
-| 34 | Bear | bear | object | 3 | destruct, push | ok | - | seek within `8-P1`, contact damage | seek + `#shoot` melee; `:shot #give score 1` |
-| 35 | Ruffian | ruffian | object | 1 | destruct, push | ok | - | rest/rush, contact damage | seek/rest + `#shoot`; `:shot #give score 2` |
+| 34 | Bear | bear | object | 3 | destruct, push | ok | - | seek within `8-P1`, contact damage | `p2`/`p3` deltas + Movement `#send by` / `?by`; `:touch` send-shot |
+| 35 | Ruffian | ruffian | object | 1 | destruct, push | ok | - | rest/rush, contact damage | seek/rest + `#send … shot`; `:shot #give score 2` |
 | 36 | Object | object | object | 3 | - | ok | - | author OOP program | zssedit stub (author-provided) |
 | 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
 | 38 | Shark | shark | object | 3 | destruct=no | ok | - | swim in water only, contact damage | `@isswimming` + `@notbreakable` + `:thud` melee |
 | 39 | Spinning gun | spinninggun | object | 2 | - | ok | - | fire bullet/star by P1/P2 | `:drawdisplay` arrows; fire in `:think` |
-| 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | `#push`+`#go flow`; idle if step 0,0 |
-| 41 | Lion | lion | object | 2 | destruct, push | ok | - | `P1<rnd10` rnd else seek, contact damage | seek/rnd + `#shoot`; `:shot #give score 1` |
+| 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | glyph from step; `#idle`/`#think` (move+push via everytick step) |
+| 41 | Lion | lion | object | 2 | destruct, push | ok | - | `P1<rnd10` rnd else seek, contact damage | seek/rnd + `#send … shot`; `:shot #give score 1` |
 | 42 | Tiger | tiger | object | 2 | destruct, push | ok | - | lion move + fire bullet/star by P2 | move + fire; `:shot #give score 2` |
 | 43 | Blink ray NS | blinkns | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
 | 44 | Centipede head | head | object | 2 | destruct | ok | - | seek P1/deviance P2, drag segment chain | script chain; `:shot #give score 1` |
@@ -141,7 +145,7 @@ Coverage gaps at a glance:
 
 - **P0 creatures done:** `pusher` added; `head`/`segment` script-only chain; `shark` water-gated + non-destructible. Also mirrored into darkpianoshammer ZTK.
 - **P1 items/interactions done:** energizer invuln (128 vs 75 kept); star/bullet damage + creature score; water msg + forest `@isitem`; bomb cycle 12 kept; passage color `#goto`; transporter landing search; blink-wall ray `:shot` along path; `:drawdisplay` glyph migration.
-- **Melee note:** `lion`/`tiger`/`bear`/`ruffian` `#shoot`-on-thud is the intended contact-damage idiom -- keep it (not a bug).
+- **Melee note:** `lion`/`tiger`/`ruffian` use `#send at senderx sendery shot` on `:thud` / `:touch`. Bear uses dest pre-check `#send by p2 p3 shot` in `:think` (no `#walk`/`:thud`) and plain `:touch` `#send at senderx sendery shot`.
 - **Naming:** cafe page is `energizer`; ZZT import kind is `energize` in [`zzt.ts`](../../../../zss/feature/parse/zzt.ts).
 - **Cafe-only:** `bombsmoke` (VFX helper, keep).
 
@@ -149,51 +153,53 @@ Coverage gaps at a glance:
 
 ## Creatures
 
-Melee reminder: contact damage is represented by `#shoot at senderx sendery` on `:thud` (see the tick-model note) -- this is the intended idiom, so it is correct in lion/tiger/bear/ruffian below. The creature bugs worth fixing are in *movement/AI*.
+Melee reminder: contact damage is `#send at senderx sendery shot` on `:thud` / `:touch` (blocked walk = RoZZT `THUD` to mover; player walks in = `:touch`) -- not point-blank `#shoot`. Correct in lion/tiger/bear/ruffian/shark/head/segment/star. The creature bugs worth fixing are in *movement/AI*.
 
 ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirectionSeek` = step toward player (`?seek`), `Signum` = -1/0/1, `Difference` = abs delta.
 
 ### Lion (41) -- `lion-sid_8jzLhq6RieiL`
 
 - **ZZT tick:** `if P1 < Random(10) then rnd else seek`; if dest walkable `MoveStat`, else if dest is player `BoardAttack`. Cycle 2. `ElementDamagingTouch` = `BoardAttack` when the player pushes into it. Score 1. P1 = Intelligence.
-- **Cafe now:** picks `?rnd`/`?seek`, then `:thud` -> `#if any at senderx sendery player #shoot at senderx sendery`; `:shot #give score 1` then `#die`.
-- **Status:** ok. The `#shoot`-on-thud melee is the intended idiom. Just confirm `?rnd/?seek` alternate correctly with P1 (Intelligence). No change required.
+- **Cafe now:** picks `?rnd`/`?seek`, then `:thud` / `:touch` -> `#if any at senderx sendery player #send at senderx sendery shot`; `:shot #give score 1` then `#die`.
+- **Status:** ok. The `#send … shot` melee is the intended idiom. Just confirm `?rnd/?seek` alternate correctly with P1 (Intelligence). No change required.
 
 ### Tiger (42) -- `tiger-sid_6e_bOqewuBBk`
 
 - **ZZT tick:** shoots `E_BULLET` (or `E_STAR` if `P2 >= $80`) when `(Random(10)*3) <= (P2 mod $80)` and player within 2 tiles on an axis; then runs the **lion** tick (move + melee). P1 intel, P2 firing rate (+high bit = star).
-- **Cafe now:** fires when `(random 10)*3 <= p2` and `abs dx<=2 or abs dy<=2`, type from `p3` (bullet/star), then `?rnd/?seek`; `:thud #shoot at ... player`; `:shot #give score 2` then `#die`.
-- **Status:** ok. Splitting firing-type into `p3` is a fine, flagged deviation (ZZT overloads the P2 high bit); melee `:thud` idiom is correct. Optional parity tweak: ZZT checks X-within-2 then Y-within-2 separately rather than either-axis.
+- **Cafe now:** fires when `(random 10)*3 <= p2` and `abs dx<=2 or abs dy<=2`, type from `p3` (bullet/star), then `?rnd/?seek`; `:thud` / `:touch` `#send at ... shot` on player; `:shot #give score 2` then `#die`.
+- **Status:** ok. Splitting firing-type into `p3` is a fine, flagged deviation (ZZT overloads the P2 high bit); melee `:thud` send-shot is correct. Optional parity tweak: ZZT checks X-within-2 then Y-within-2 separately rather than either-axis.
 
 ### Bear (34) -- `bear-sid_V5FcTvuWHYOr`
 
 - **ZZT tick:** if `X != playerX` and `Difference(Y,playerY) <= 8-P1` -> step in X toward player; else if `Difference(X,playerX) <= 8-P1` -> step in Y; else stand. Move if walkable; `BoardAttack` if dest is player **or breakable**. Cycle 3, P1 = Sensitivity, score 1.
-- **Cafe now:** computes dx/dy, moves toward player within `8-p1` band on each axis, `:thud` shoots player or breakable; `:shot #give score 1` then `#die`.
-- **Status:** ok. Movement band and cycle 3 are correct; the `#shoot`-melee against player and breakable is the intended idiom (bear "eats" breakable walls by contact). No change required.
+- **Cafe now:** RoZZT shape in one `:think` -- `p2`/`p3` as clamped deltaX/deltaY, then Movement: `#send by p2 p3 shot` + `#die` on player/breakable else `?by p2 p3` (`#go`, not `#walk`, so no `:thud`). `:touch` is only `#send at senderx sendery shot`. Keeps `@ispushable` (ZZT Pushable). `:shot` score 1 `#die`.
+- **Status:** ok (parity-noted). Bear-initiated contact uses dest pre-check so a pushable player is not shoved past `BoardAttack`.
 
 ### Ruffian (35) -- `ruffian-sid_Rpd0b1r0fOsp`
 
 - **ZZT tick:** if stopped: with `(P2+8) <= Random(17)` start moving, seek if `P1 >= Random(9)` else random. If moving: when aligned with player and `Random(9) <= P1` re-seek; move; when `(P2+8) <= Random(17)` stop. Melee on player. P1 intel, P2 resting time, score 2.
-- **Cafe now:** mirrors the rest/rush with `#walk seek/rnd/idle`, `:thud` shoots player; `:shot #give score 2` then `#die`.
-- **Status:** ok. Logic structure matches; `#shoot`-melee idiom is correct. Verify `aligned` matches ZZT (same row or column as player).
+- **Cafe now:** mirrors the rest/rush with `#walk seek/rnd/idle`, `:thud` / `:touch` shoots player; `:shot #give score 2` then `#die`.
+- **Status:** ok. Logic structure matches; `#send … shot` melee idiom is correct. Verify `aligned` matches ZZT (same row or column as player).
 
 ### Shark (38) -- `shark-sid_xoTocNz9Bkeo`
 
 - **ZZT tick:** `if P1 < Random(10) then rnd else seek`; **move only onto `E_WATER`**; if dest is player `BoardAttack`. Not destructible. Cycle 3, P1 intel.
-- **Cafe now:** `@isswimming` (engine gates move to `@isswimable` water), `@notbreakable`, `?rnd/?seek`, `:thud` -> `#shoot at senderx sendery` on player. No `:shot #die`.
+- **Cafe now:** `@isswimming` (engine gates move to `@isswimable` water), `@notbreakable`, `?rnd/?seek`, `:thud` / `:touch` -> `#send at senderx sendery shot` on player. No `:shot #die`.
+- **Under:** ZZT stores water in `Stat.UnderElement`/`UnderColor`; cafe import writes that as terrain under the shark (`writefromzztelement`); export restores Under from terrain (`applystatunder`).
+- **Color:** import/export use blink-aware CGA attributes (`zztcolor.ts`). Editor default water `0xF9` → `@color blblue` `@bg ltgrey`; DEMO cooler water `0x9F` → `@color blwhite` `@bg dkblue`.
 - **Status:** ok. Intentional: sharks **block** bullets and survive (ZZT “pass over” was imprecise; no collision change).
 
 ### Centipede head (44) / segment (45) -- `head-sid_wG_XV_VD57jG`, `segment-sid_jCUP_m2AaDhb`
 
 - **ZZT head tick:** align to player with prob `P1/10` (deviance `P2` adds random turns); if blocked, try perpendicular then reverse then back-follower; if truly stuck, **head becomes a segment and the tail reverses (chain flips direction)**; on hitting player `BoardAttack`; otherwise `MoveStat` and drag each follower into the previous cell, linking new segments found adjacent. P1 intel, P2 deviance, score 1.
 - **ZZT segment tick:** passive; only promotes to head if its leader link is broken (`Leader < -1`). Score 3.
-- **Cafe now:** script-only chain via custom `leader`/`follower` element ids. Head links one adjacent unclaimed `segment` when `follower` empty (`:trylink` / `:acceptlink`). Before move, `:preparefollow` records dest cells down the chain; after a successful step, `:dofollow` walks `#go toward destx desty` and cascades. Stuck: try `?rnd`, then promote **immediate** follower (`:becomehead`) and `#become segment`. Death sends `:leaderdied` so the next segment promotes. Melee via `:thud`/`:touch` `#shoot` idiom.
-- **Status:** ok (parity-noted). Intentional deviations: adjacency link when `follower` empty (not ZZT load-time indices); stuck promotes immediate follower only; one-tick unlink after `#become`; rely on `:leaderdied` rather than polling a dead leader id.
+- **Cafe now:** head-driven same-think drag (no TickProc, no `:preparefollow` / `:dofollow` cascade). Element stats: `p3`=follower id, `p4`=leader id, `p5`=linkgrace. **ZZT import** maps `Follower`/`Leader` onto `p3`/`p4` (and `Leader < -1` onto `p5=1`). Head `:think` (lion-style, first in the script): `#walk rnd` on the `p1` intel roll or the `p2` deviance roll else `#walk seek`, one `#walk rnd` retry when `blocked flow`, adopt a trailing segment with `#pget opp flow id p3`, attack when the dest cell holds the player, else `#pset "$thisid" x|y` (moves without yielding, unlike `#go`) + `#walk idle`, then one `#while` that `#pset`s each follower into the cell the node ahead vacated. Segments are fully passive: `#pget "$p4" id live` and morph to head after the `p5` grace when the leader id no longer resolves -- that one probe covers unlinked, shot, and bombed leaders, so nothing needs `:leaderdied` / `:trylink`. Melee via `:thud`/`:touch` `#send … shot`. Cafe `#morph` is in-place kind change (same id/stats, swap code).
+- **Status:** ok (parity-noted). Deliberate simplifications vs `ELEMENTS.PAS`: no alignment-only chase (`seek` approximates it), no cw/ccw/opp turn cascade, and **no full-chain reverse when boxed in** -- a stuck head re-rolls `rnd` instead of flipping the chain, so only a fully enclosed 1-tile pocket holds it. Add the reverse back if stuck centipedes show up in play. After editing kind codepages, `#restart` (chips do not hot-reload). A/B: θ drags ○ same tick; deviance rooms differ; mid-body shot splits via `p5` grace.
 
 ### Pusher (40) -- `pusher-sid_u6ehMs9Uc1SI`
 
 - **ZZT tick:** if the tile ahead (`Step`) is not walkable, `ElementPushablePush` it; then if now walkable, `MoveStat` forward and play a sound; if the pusher two tiles **behind** (`-2*Step`) is another pusher facing the same way, tick it too (chain). Cycle 4, glyph by direction (`16 > `, `17 <`, `30 ^`, `31 v`), dir param.
-- **Cafe now:** `@cycle 4`, glyph from `stepx`/`stepy` in `:think`, idle when step is 0,0, else `#push flow flow` then `#go flow`. Import already maps `E_PUSHER` -> `pusher`.
+- **Cafe now:** `@cycle 4`, glyph from `stepx`/`stepy` in `:think`, then `#idle`/`#think`. March + pushables come from everytick step via `memorymoveobject` (no `#go` / `#push` — those double-acted). Import already maps `E_PUSHER` -> `pusher`.
 - **Status:** ok (parity-noted). Intentional: no explicit “tick pusher two behind”; sequential ticks + auto-push cover most chains. Push does not destroy breakable terrain (existing cafe push gap).
 
 ---
@@ -209,12 +215,12 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 - **ZZT key:** `key := Color mod 8`; if already held -> "already have"; else set flag, remove tile, "you now have the KEY key".
 - **ZZT door:** `key := (Color div 16) mod 8` (the **background/high nibble** picks the color); if held -> open (clear flag, remove tile); else "locked".
-- **Import normalization (important):** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) imports a door with `strcolorflipped` = `mapcolortostrcolor((bg+8)%16, fg)`, so the ZZT door's **background-nibble key color becomes the cafe door's foreground**. Keys import with plain `strcolor` (fg kept). Net: an imported blue door and a blue key both end up with fg `color` 9 -> flag `key9`. So matching on foreground `color` is **correct and consistent**, not a bug.
-- **Cafe now:** key maps fg `color` (9-15) to a name, sets `key$color`, `#die`; door renders `displaycolor white` on `displaybg = color % 8` and opens when `key$color` is held (`#clear` + `#die`), else "locked". Blocking works because an unopened door is an object the player can't pass.
-- **Real latent issues (not the nibble):**
-  1. Placeholder name `#set p1 "#$%@!"` leaks into the message ("You now have the `#$%@!` key") if an authored key/door has a `color` outside 9-15. Give a sane default.
-  2. Only 7 colors (9-15) are handled -- fine for ZZT parity; revisit only if cafe wants keys/doors in all colors.
-  3. `key0` is cleared by the player setup but never granted/consumed by key/door (dead flag).
+- **Import normalization (important):** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) imports a door with `strcolorflipped` = `mapcolortostrcolor((bg+8)%16, fg)`, so the ZZT door's **background-nibble key color becomes the cafe door's foreground**. Keys import with plain `strcolor` (fg kept). Net: an imported blue door and a blue key both end up with fg `color` 9 -> flag `keyblue` (via `"key$color"` template print). So matching on foreground `color` is **correct and consistent**, not a bug.
+- **Cafe now:** key/door use `$color` in messages and `#set`/`#clear "key$color"` (prints as `keyblue`, etc.); door renders `displaycolor white` on `displaybg = color % 8` and opens when the named key flag is held (`#clear` + `#die`), else "locked". Blocking works because an unopened door is an object the player can't pass.
+- **Notes:**
+  1. `$color` prints the COLOR enum name for any fg index (not only 9-15).
+  2. Player sidebar clears/tests named flags (`keyblue` … `keywhite`, plus `keyblack`).
+  3. Existing saves with numeric `key9` flags need a re-pickup (breaking rename).
 
 ### Passage (11) -- `passage-...`
 
@@ -225,8 +231,8 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Bomb (13) -- `bomb-...`
 
 - **ZZT:** touch with `P1=0` arms it (`P1:=9`, "Bomb activated!"); tick counts `P1` down, at `P1=1` pre-blast, at `P1=0` `DrawPlayerSurroundings(phase 2)` damages/removes destructibles in radius. Pushable, cycle 6, glyph `48+P1` while counting.
-- **Cafe now:** `@cycle 12`, `:shot`/`:touch`/`:bombed` arm `p1 9`, tick counts down, at 0 `#put within 5 i bombsmoke` + `#send within 5 i bombed` + `#die`; glyph via `:drawdisplay`.
-- **Status:** ok with intentional deviations: **cycle 12 vs ZZT 6** (slower fuse); blast radius `within 5` approximates the torch ellipse. Keep `bombsmoke`.
+- **Cafe now:** `@cycle 12`, `:shot`/`:touch`/`:bombed` arm `p1 9`, tick counts down, at 0 `#put within 5 i bombsmoke` + `#send within 5 i bombed` + `#send within 5 i shot` + `#die`; glyph via `:drawdisplay`.
+- **Status:** ok with intentional deviations: **cycle 12 vs ZZT 6** (slower fuse); blast radius `within 5` approximates the torch ellipse. Keep `bombsmoke`. Blast sends **`bombed` then `shot`** so breakable terrain clears via the engine `:shot` rule while `:bombed`-only handlers still run.
 
 ### Energizer (14) -- `energizer-...`
 
@@ -237,18 +243,25 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Star (15) -- `star-...`
 
 - **ZZT:** `P2` = lifetime; each tick `P2--`, die at 0; on even `P2` seek player and `BoardAttack` player/breakable, else push/move. Not destructible; draw cycles `/-|\` and rotates color 9-15.
-- **Cafe now:** `@notbreakable`, `@p2 100`, `:drawdisplay` rainbow + glyph spin, `:think` lifetime + even-tick `?seek`, `:thud` `#shoot` player or clear breakable.
+- **Cafe now:** `@notbreakable`, `@p2 100`, `:drawdisplay` rainbow + glyph spin, `:think` lifetime + even-tick `?seek`, `:thud` `#send … shot` at player or breakable.
 - **Status:** ok. Hand-placed default `p2 100` only; spawned stars use shoot-time lifetime.
 
 ### Bullet (18) -- `bullet-...`
 
-- **ZZT:** move in step dir; onto walkable/water -> continue; onto ricochet -> reverse and retry; onto breakable or destructible (`P1=0` or player) -> `BoardAttack` (+score); check perpendicular ricochets; else remove and send `SHOT` to an object/scroll it hit.
-- **Cafe now:** on blocked, tries cw/ccw/opposite ricochet neighbors and re-walks; else idle; `:thud/:shot #die`. Engine delivers `:shot` when mover is `ISBULLET` (`#shoot`). Creatures award ZZT ScoreValues on `:shot` before `#die`.
-- **Status:** ok.
+- **ZZT:** move in step dir; onto walkable/water -> continue; onto ricochet -> reverse and retry; onto breakable or destructible (`P1=0` or player) -> `BoardAttack` (+score); check perpendicular ricochets; else remove and send `SHOT` to an object/scroll it hit. OOP `#SHOOT` uses `SHOT_SOURCE_ENEMY` (`P1=1`), so object/tiger bullets do **not** `BoardAttack` creatures.
+- **Cafe now:** on blocked, tries cw/ccw/opposite ricochet neighbors and re-walks; else idle; `:thud/:shot #die`. Engine picks collision label via `memorybulletcollisionlabel` (`party` ≈ ZZT `P1`) for **both** bullet→target and walker→bullet:
+
+| Source (`bullet.party`) | Player | Creature (lion, …) | `object` / `scroll` | `@isbreakable` |
+|---|---|---|---|---|
+| Player (`ispid`) | `:shot` / `:partyshot` remap | `:shot` | `:shot` | `:shot` + softdelete |
+| Object / tiger (`sid_…`) | `:shot` | `:partyshot` (no kill) | `:shot` | `:shot` + softdelete |
+
+  Non-breakable creatures (lion, tiger, head, …) get `:partyshot` from enemy-source bullets (including when they walk into the projectile). `@isbreakable` (breakable wall, gem, …) gets `:shot` + softdelete from any source. Creatures award ZZT ScoreValues on `:shot` before `#die`. Breakable projectiles soft-delete after either collision direction.
+- **Status:** ok (RoZZT no-creature-kill mapped to cafe `:partyshot` when not `@isbreakable`).
 
 ### Water (19) / Forest (20) / Fake (27)
 
-- **ZZT water:** not walkable for player (message "blocked by water"), but bullets and sharks pass. **Cafe:** `@isswimable` terrain; player `:thud` shows `blocked by water`. Status: ok.
+- **ZZT water:** not walkable for player (message "blocked by water"), but bullets and sharks pass. **Cafe:** `@isswimable` terrain; player `:thud` shows `blocked by water`. Color bytes use blink-aware decode (`0xF9` editor / `0x9F` DEMO). Status: ok.
 - **ZZT forest:** blocks movement; touching clears it to empty ("path is cleared"). **Cafe:** keep `@isitem` object that dies on touch with note (item `#die` yoink). Status: ok -- do not drop `@isitem`.
 - **ZZT fake:** walkable wall; first touch shows "fake wall - secret passage!". **Cafe:** `@iswalkable` terrain, no message. Fix (P2): optionally restore the one-time message.
 
@@ -274,7 +287,7 @@ Cafe flags match ZZT. Breakable is destroyed by shots/creatures (bullet special-
 ### Blink wall (29) + rays (33/43) -- `blinkwall-...`, `blinkew`, `blinkns`
 
 - **ZZT:** `P3` timer starts at `P1+1`; when it hits 1, either clears its existing ray (matching element+color along the step dir) or, if none, extends a ray until blocked -- damaging destructibles and pinning/killing a player caught in it -- then resets `P3 := P2*2+1`. Ray element is `E_BLINK_RAY_EW`/`NS` by orientation.
-- **Cafe:** `blinkwall` implements start/period with `p3`, clears then writes `blinkew`/`blinkns` tiles along `shootx/shooty`, `#send … shot` at **each** ray cell (and tip). Ray kinds are terrain shells.
+- **Cafe:** `blinkwall` implements start/period with `p3`, clears then writes solid `blinkew`/`blinkns` along `shootx/shooty`, `#send … shot` at **each** ray cell **before** `#put` (and at the tip). Send-before-put matters because `#put` shoves `@ispushable` occupants (the player) off the cell first. Ray kinds use `@issolid`.
 - **Status:** ok. Keep `blinkew`/`blinkns` as runtime-only tiles.
 
 ### Line (31) -- `line-...`
@@ -300,7 +313,7 @@ Large custom script (sidebar rendering, hotkeys, input, torch/energizer upkeep).
 
 ## Shared mechanics appendix
 
-- **Damaging/contact (`BoardAttack`)** -- creature deals damage to the player (or is destroyed hitting a player shot). Model as melee on adjacency + `#die` on `:shot`, never as a projectile. Used by lion, tiger, bear, ruffian, shark, head, segment, star, bullet.
+- **Damaging/contact (`BoardAttack`)** -- creature deals damage to the player (or is destroyed hitting a player shot). Model as `#send at senderx sendery shot` on adjacency + `#die` on `:shot`, never as a melee projectile. Used by lion, tiger, bear, ruffian, shark, head, segment, star; bullets still use `#shoot` / `ISBULLET`.
 - **Push (`ElementPushablePush`)** -- recursive: push the tile ahead first; if the pushed-into tile is a transporter, transport; damage a destructible non-player tile blocking the way; slider axis guard. Boulder/sliders/creatures rely on this.
 - **Conveyor rotation** -- 8-neighbor ring shift; only pushable tiles move; stat tiles via `MoveStat`.
 - **Bomb blast / torch radius** -- `DrawPlayerSurroundings` uses `TORCH_DX=8, TORCH_DY=5, TORCH_DIST_SQR=50`; the bomb blast damages destructibles within that lit area. Cafe approximates with `within 5`.

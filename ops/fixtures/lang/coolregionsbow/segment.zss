@@ -1,48 +1,27 @@
 @segment
 @char 79
 @cycle 2
-@isbreakable
+' p4=leader  p5=linkgrace. passive: the head does all the moving.
+' promote when the leader id no longer resolves (unset, shot, or bombed).
 :think
-#if not leader do
- #become head
+#pget "$p4" id live
+#if not live do
+ #if p5 do
+  #morph head
+ #else do
+  #set p5 1
+ #done
 #done
 #idle
 #think
-:trylink
-#if not leader do
- #set leader senderid
- #send sender :acceptlink
-#done
-#end
-:preparefollow
-#set destx senderx
-#set desty sendery
-#if follower do
- #send "$follower" :preparefollow
-#done
-#end
-:dofollow
-#go toward destx desty
-#if follower do
- #send "$follower" :dofollow
-#done
-#end
-:becomehead
-#become head
-:leaderdied
-#clear leader
-#become head
 :thud
 :touch
 #if any at senderx sendery player do
- #shoot at senderx sendery
+ #send at senderx sendery shot
 #done
 #idle
-#end
+#think
 :shot
 :bombed
-#if follower do
- #send "$follower" :leaderdied
-#done
 #give score 3
 #die

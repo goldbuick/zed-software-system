@@ -10,15 +10,13 @@ import {
   memoryreadcodepagetype,
 } from 'zss/memory/codepageoperations'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
   memorywritefrozen,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
 export function handlepage(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook) || message.player !== operator) {
     return
   }

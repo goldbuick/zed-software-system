@@ -16,12 +16,10 @@ import {
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryresetbooks,
-  memorywritesoftwarebook,
+  memorywritemainbook,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
 describe('memorybookmarkscroll url save gating', () => {
   beforeEach(() => {
     jest.mocked(scrollwritelines).mockClear()
@@ -33,15 +31,15 @@ describe('memorybookmarkscroll url save gating', () => {
     expect(memorymainbookisempty()).toBe(true)
     const empty = memorycreatebook([])
     memoryresetbooks([empty])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, empty.id)
+    memorywritemainbook(empty.id)
     expect(memorymainbookisempty()).toBe(true)
   })
 
   it('omits name and save links when MAIN has no pages', () => {
     const empty = memorycreatebook([])
     memoryresetbooks([empty])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, empty.id)
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)?.pages).toHaveLength(0)
+    memorywritemainbook(empty.id)
+    expect(memoryreadmainbook()?.pages).toHaveLength(0)
 
     memorybookmarkscroll(
       'p1',
@@ -69,7 +67,7 @@ describe('memorybookmarkscroll url save gating', () => {
     const page = memorycreatecodepage('@board room\n', {})
     const book = memorycreatebook([page])
     memoryresetbooks([book])
-    memorywritesoftwarebook(MEMORY_LABEL.MAIN, book.id)
+    memorywritemainbook(book.id)
     expect(memorymainbookisempty()).toBe(false)
 
     memorybookmarkscroll('p1', [], [])

@@ -25,5 +25,5 @@ title: boardsnapshot.ts
 
 ## Flow
 
-1. **Snapshot**: Clear existing snapshot codepage from all books → `memoryensuresoftwarecodepage(MAIN, name, BOARD)` → `boardcopy` full region to snapshot (with MAIN as `READ_CONTEXT.book`)
+1. **Snapshot**: Clear existing snapshot codepage from all books → `memoryensuremaincodepage(MAIN, name, BOARD)` → `boardcopy` full region to snapshot (with opened book as `READ_CONTEXT.book`)
 2. **Revert**: Read snapshot board → `boardcopy` snapshot back to target (same MAIN book context)

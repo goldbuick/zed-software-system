@@ -2,8 +2,7 @@ import type { DEVICE } from 'zss/device'
 import type { MESSAGE } from 'zss/device/types'
 import { ispresent } from 'zss/mapping/types'
 import { memorymoveplayertoboard } from 'zss/memory/playermanagement'
-import { memoryreadbookbysoftware } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadmainbook } from 'zss/memory/session'
 import type { PT } from 'zss/words/types'
 
 export function applyplayermovetoboard(
@@ -13,7 +12,7 @@ export function applyplayermovetoboard(
   targetboard: string,
   targetpt: PT,
 ): boolean {
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return false
   }

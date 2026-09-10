@@ -28,10 +28,9 @@ import {
 import { memorycodepagetoprefix } from 'zss/memory/rendering'
 import {
   memoryreadbookbyaddress,
-  memoryreadbookbysoftware,
   memoryreadbooklist,
+  memoryreadmainbook,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 
@@ -159,7 +158,7 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
       { lists: [CODEPAGE_NAME_LISTS] },
     )
     .command('itchiopublish', ['zip file for itch.io (operator only)'], () => {
-      const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+      const mainbook = memoryreadmainbook()
       vmpublish(
         SOFTWARE,
         READ_CONTEXT.elementfocus,

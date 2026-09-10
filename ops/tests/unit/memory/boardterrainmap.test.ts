@@ -260,7 +260,7 @@ describe('book strip round trip', () => {
   it('restores identical cells through a verbatim export and import', () => {
     makebook([])
     const board = makeroundtripboard('one')
-    // terrain x / y and runtime are not persisted; memoryinitboardlookup rebuilds them
+    // terrain x / y and runtime are not persisted; memoryinitboardnamed rebuilds them
     const readpayload = (cells: BOARD_ELEMENT[]) =>
       cells.map(({ runtime: _r, x: _x, y: _y, ...rest }) => rest)
     const before = readpayload(readcells(board))

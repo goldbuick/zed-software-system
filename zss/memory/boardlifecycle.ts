@@ -24,7 +24,6 @@ import {
   memorydeleteboardobjectnamedlookup,
   memorydeleteboardterrainnamed,
   memorywriteboardnamed,
-  memorywriteboardobjectlookup,
 } from './boardlookup'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryexportterrainelement } from './boardterrainmap'
@@ -177,7 +176,6 @@ export function memorycreateboardobject(
   board.objects[object.id] = object
   memoryreadelementkind(object)
   memorywriteboardnamed(board, object)
-  memorywriteboardobjectlookup(board, object)
   return board.objects[object.id]
 }
 
@@ -216,7 +214,8 @@ export function memoryelementisingroup(
     targetgroup as BOARD_ELEMENT_STAT,
   )
   return (
-    ispresent(statnamed) ||
+    // we only care about truthy statnamed
+    !!statnamed ||
     memoryreadelementdisplay(element).name === targetgroup ||
     memoryreadelementstat(element, 'group') === targetgroup
   )
@@ -397,11 +396,26 @@ export function memorysafedeleteelement(
     element.removed = timestamp
     memorydeleteboardobjectnamedlookup(board, element)
   } else {
-    memorywriteterrain(board, {
-      x: element?.x ?? 0,
-      y: element?.y ?? 0,
-    })
+    // Clear slot to undefined; kindless {x,y} stubs falsely match color queries.
+    if (
+      !ispresent(board) ||
+      !ispresent(element.x) ||
+      !ispresent(element.y) ||
+      element.x < 0 ||
+      element.x >= BOARD_WIDTH ||
+      element.y < 0 ||
+      element.y >= BOARD_HEIGHT
+    ) {
+      return false
+    }
+    memoryreadelementkind(element)
     memorydeleteboardterrainnamed(board, element)
+    memorydeleteboardelementruntime(element)
+    board.terrain[element.x + element.y * BOARD_WIDTH] = undefined
+    const boardruntime = memoryreadboardruntime(board)
+    if (ispresent(boardruntime)) {
+      delete boardruntime.distmaps
+    }
   }
   return true
 }

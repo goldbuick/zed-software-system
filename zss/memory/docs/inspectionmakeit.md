@@ -17,7 +17,7 @@ title: inspectionmakeit.ts
 - `zss/words/stats` — statformat, stattypestring
 - `zss/words/types` — STAT_TYPE
 - `./bookoperations` — memorylistcodepagebystat, memoryreadcodepage
-- `./books` — memoryensuresoftwarecodepage
+- `./books` — memoryensuremaincodepage
 - `./codepageoperations` — memoryreadcodepagename, memoryreadcodepagetype, memoryreadcodepagetypeasstring
 - `./session` — memoryreadbooklist
 

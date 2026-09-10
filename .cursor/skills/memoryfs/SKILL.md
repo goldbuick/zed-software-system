@@ -36,7 +36,7 @@ Paths are relative to the `memoryfs/` sync root:
 
 ```text
 memoryfs/
-  stats.json                          # software.main/temp + book index
+  stats.json                          # opened main book id + book index
   books/{kebab-name}-{id}/
     stats.json                        # id, name, token, activelist, pages[]
                                       # NO timestamp; NO inline flags blob

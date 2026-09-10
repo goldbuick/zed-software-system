@@ -4,7 +4,7 @@ import { ispresent } from 'zss/mapping/types'
 import { dirfrompts, isstrdir } from 'zss/words/dir'
 import { COLLISION, DIR } from 'zss/words/types'
 
-import { memoryboardelementindex, memoryreadobject } from './boardaccess'
+import { memoryboardelementindex, memoryreadobjectatpt } from './boardaccess'
 import { memoryevaldir } from './boarddirection'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import {
@@ -12,7 +12,6 @@ import {
   lightingmixmaxrange,
   memorylightingaddrangetoblocked,
 } from './lightinggeometry'
-import { memoryreadboardruntime } from './runtimeboundary'
 import { memorycheckcollision } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT } from './types'
 
@@ -88,7 +87,6 @@ function lightingforeachchebyshevingcell(
 
 function lightingappendringocclusions(
   board: BOARD,
-  lookup: (string | undefined)[] | undefined,
   sprite: SPRITE,
   radius: number,
   x: number,
@@ -107,7 +105,7 @@ function lightingappendringocclusions(
     return
   }
 
-  const object = memoryreadobject(board, lookup?.[idx] ?? '')
+  const object = memoryreadobjectatpt(board, pt)
   if (ispresent(object)) {
     ringout.push({
       x,
@@ -208,7 +206,6 @@ export function memoryboardlightingapplyobject(
     return
   }
 
-  const lookup = memoryreadboardruntime(board)?.lookup
   const blocked: [number, number, number][] = []
   const ringocclusions: LightingRingOcclusion[] = []
 
@@ -235,15 +232,7 @@ export function memoryboardlightingapplyobject(
     }
     ringocclusions.length = 0
     lightingforeachchebyshevingcell(sprite.x, sprite.y, r, (x, y) => {
-      lightingappendringocclusions(
-        board,
-        lookup,
-        sprite,
-        radius,
-        x,
-        y,
-        ringocclusions,
-      )
+      lightingappendringocclusions(board, sprite, radius, x, y, ringocclusions)
     })
     lightingforeachchebyshevingcell(sprite.x, sprite.y, r, (x, y) => {
       lightingrayshade(

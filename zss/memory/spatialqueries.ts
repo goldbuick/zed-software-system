@@ -12,7 +12,11 @@ import {
 } from 'zss/words/kind'
 import { COLLISION, COLOR, NAME, PT } from 'zss/words/types'
 
-import { memoryreadelement, memoryreadterrain } from './boardaccess'
+import {
+  memoryreadelement,
+  memoryreadobjectatpt,
+  memoryreadterrain,
+} from './boardaccess'
 import { memoryreadelementstat } from './boards'
 import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadelementdisplay } from './bookoperations'
@@ -156,9 +160,9 @@ export function memorylistboardelementsbyidnameorpts(
         idnameorpt.y < BOARD_HEIGHT
       ) {
         const idx = idnameorpt.x + idnameorpt.y * BOARD_WIDTH
-        const maybeid = memoryreadboardruntime(board)?.lookup?.[idx]
-        // check lookup first, then fallback to terrain
-        return ispresent(maybeid) ? board.objects[maybeid] : board.terrain[idx]
+        const maybeobject = memoryreadobjectatpt(board, idnameorpt)
+        // object first, then terrain
+        return ispresent(maybeobject) ? maybeobject : board.terrain[idx]
       }
       // no idea what you gave me
       return undefined

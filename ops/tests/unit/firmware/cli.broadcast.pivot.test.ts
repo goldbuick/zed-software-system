@@ -15,8 +15,7 @@ describe('broadcast argmeta shape', () => {
       },
     }
     expect(keywordsforcommandargcomplete(meta, 0, '')).toEqual([
-      'stop',
-      'whip',
+      ...BROADCAST_HEAD_KEYWORDS,
     ])
     expect(keywordsforcommandargcomplete(meta, 1, 'whip')).toEqual([
       'twitch',

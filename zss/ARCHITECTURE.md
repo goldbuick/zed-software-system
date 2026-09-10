@@ -139,7 +139,7 @@ The **`register`** device ([`zss/device/register.ts`](device/register.ts)) is th
 
 Documented in [`zss/memory/docs/README.md`](memory/docs/README.md):
 
-- **MEMORY** singleton: books, software slots, loaders, session, operator, etc.
+- **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, etc.
 - **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader)
 - **BOARD**: 60×25-style grid, elements, named lookup
 - **BOARD_ELEMENT**: kind, position, char, color, code, collision, …

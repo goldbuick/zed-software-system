@@ -10,10 +10,13 @@
  #set p3 p1 + 1
 #else if p3 is 1 do
  ' either clear or shoot
- #if shooty is 0 do
+ #if shootx do
   #set p4 blinkew
- #else do
+ #else if shooty do
   #set p4 blinkns
+ #else do
+  #idle
+  #think
  #done
  #set p5 thisx + shootx
  #set p6 thisy + shooty
@@ -26,10 +29,11 @@
   #give p6 shooty
  #done 
  ' write blink walls and damage along the ray
+ ' send before put -- #put shoves pushable (player) off the cell first
  #if p5 is p7 and p6 is p8 do
   #while not blocked at p5 p6 do
-   #put at p5 p6 "$color" "$p4"
    #send at p5 p6 shot
+   #put at p5 p6 "$color" "$p4"
    #give p5 shootx
    #give p6 shooty
   #done

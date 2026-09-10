@@ -26,9 +26,10 @@
 #idle
 #think
 :thud
+:touch
 #walk idle
 #if any at senderx sendery player do
- #shoot at senderx sendery
+ #send at senderx sendery shot
 #done
 #idle
 #think

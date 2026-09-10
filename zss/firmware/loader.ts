@@ -226,7 +226,7 @@ export const LOADER_FIRMWARE = createfirmware({
       const maybeobject = memoryreadobject(READ_CONTEXT.board, id)
       // #oneof chatuser chatdroid
       // #withobject chatuser
-      // #goup ' <- this code
+      // #go up ' <- this code
       if (ispresent(maybeobject)) {
         // write context
         READ_CONTEXT.element = maybeobject

@@ -32,10 +32,9 @@ import {
 } from 'zss/memory/permissions'
 import {
   memoryisoperator,
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -308,7 +307,7 @@ export function registerpermissionscommands(fw: FIRMWARE): FIRMWARE {
           )
         } else {
           const nonestr = '(none)'
-          const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+          const mainbook = memoryreadmainbook()
           const activelistvalues = new Set<string>(mainbook?.activelist ?? [])
           activelistvalues.add(memoryreadoperator())
           const players = [...activelistvalues]

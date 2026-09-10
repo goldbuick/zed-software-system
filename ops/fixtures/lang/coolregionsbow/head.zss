@@ -1,63 +1,70 @@
 @head
 @char 233
 @cycle 2
-@isbreakable
 @p1 range;Intelligence?
 @p2 range;Deviance?
+' p3=follower  p4=leader (head writes both while dragging)
+' walk first, then drag the chain into the cells we vacate -- same tick.
 :think
-#if not follower do
- #if any n segment do
-  #send n trylink
- #else if any s segment do
-  #send s trylink
- #else if any e segment do
-  #send e trylink
- #else if any w segment do
-  #send w trylink
- #done
-#done
-#set prevx thisx
-#set prevy thisy
-#if follower do
- #send "$follower" :preparefollow
-#done
-#if p2 above random 10 do
- ?rnd
-#else if p1 below random 10 do
- ?rnd
+#if p1 below random 10 do
+ #walk rnd
+#else if p2 above random 9 do
+ #walk rnd
 #else do
- ?seek
+ #walk seek
 #done
-#if thisx is prevx and thisy is prevy do
- ?rnd
+#if blocked flow do
+ #walk rnd
 #done
-#if thisx is prevx and thisy is prevy do
- #if follower do
-  #send "$follower" :becomehead
-  #become segment
- #done
-#else do
- #if follower do
-  #send "$follower" :dofollow
+' adopt a segment trailing right behind us
+#if not p3 do
+ #if any opp flow segment do
+  #pget opp flow id p3
  #done
 #done
-#think
-:acceptlink
-#if not follower do
- #set follower senderid
+#set destx thisx
+#set desty thisy
+#set nextx thisx + stepx
+#set nexty thisy + stepy
+#if any at nextx nexty player do
+ #send at nextx nexty shot
+ #die
 #done
+' pset moves without yielding, so the drag below still runs this tick
+#pset "$thisid" x nextx
+#pset "$thisid" y nexty
+#walk idle
+#set cur thisid
+#set hops 0
+#while cur do
+ #give hops
+ #if hops above 24 break
+ #pget "$cur" p3 nxt
+ #pget "$nxt" id live
+ #if not live do
+  #pset "$cur" p3 0
+  #clear cur
+ #else do
+  #pget "$nxt" x oldx
+  #pget "$nxt" y oldy
+  #pset "$nxt" p4 cur
+  #pset "$nxt" x destx
+  #pset "$nxt" y desty
+  #set destx oldx
+  #set desty oldy
+  #set cur nxt
+ #done
+#done
+#idle
 #think
 :thud
 :touch
 #if any at senderx sendery player do
- #shoot at senderx sendery
+ #send at senderx sendery shot
 #done
 #idle
 #think
 :shot
 :bombed
-#if follower do
- #send "$follower" :leaderdied
-#done
 #give score 1
 #die

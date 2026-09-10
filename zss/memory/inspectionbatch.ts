@@ -15,13 +15,13 @@ import {
   memorywriteterrain,
 } from './boardlifecycle'
 import { memoryreadelementdisplay } from './bookoperations'
-import { memoryensuresoftwarebook } from './books'
+import { memoryensuremainbook } from './books'
 import { memoryinspectempty, memoryinspectemptymenu } from './inspection'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
 import { memoryreadboardelementruntime } from './runtimeboundary'
 import { memoryreadoperator } from './session'
-import { BOARD, BOARD_ELEMENT, MEMORY_LABEL } from './types'
+import { BOARD, BOARD_ELEMENT } from './types'
 
 // COPY & PASTE buffers
 
@@ -264,7 +264,7 @@ export async function memoryinspectcut(
   p2: PT,
   mode: string,
 ) {
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     return
   }

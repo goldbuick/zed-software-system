@@ -15,19 +15,18 @@ import {
   memoryreadbookmarklistcache,
 } from 'zss/memory/bookmarkdeleteconfirm'
 import { memorybookmarkscroll } from 'zss/memory/bookmarkscroll'
-import { memoryensuresoftwarebook } from 'zss/memory/books'
+import { memoryensuremainbook } from 'zss/memory/books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
 import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
-import { MEMORY_LABEL } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 
 export function handleeditorbookmarkscroll(vm: DEVICE, message: MESSAGE): void {
   // register:editorbookmarkscroll skips memoryruncli; gadget state + gadgetsynctick need MAIN.
-  const mainbook = memoryensuresoftwarebook(MEMORY_LABEL.MAIN)
+  const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
     apitoast(vm, message.player, 'gadget scroll: need main book')
     return

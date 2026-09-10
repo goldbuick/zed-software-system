@@ -8,15 +8,8 @@ import { memorymoveboardobject } from './boardmovement'
 import { memoryreadboardbyaddress } from './boards'
 import { memoryreadbookflag } from './bookoperations'
 import { memorymoveplayertoboard } from './playermanagement'
-import { memoryreadbookbysoftware } from './session'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  BOOK,
-  MEMORY_LABEL,
-} from './types'
+import { memoryreadmainbook } from './session'
+import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH, BOOK } from './types'
 
 function memorytryexitaddress(
   elementid: string,
@@ -33,7 +26,7 @@ function memorytryexitaddress(
   if (!ispresent(destboard)) {
     return false
   }
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return false
   }

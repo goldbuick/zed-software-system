@@ -29,10 +29,7 @@ export function memoryfsencodejson(value: unknown): Uint8Array {
 export function buildmemoryfsrootstats(books: BOOK[]) {
   const root = memoryreadroot()
   return {
-    software: {
-      main: root.software.main,
-      temp: root.software.temp,
-    },
+    main: root.main,
     bookCount: books.length,
     books: books.map((book) => ({
       id: book.id,

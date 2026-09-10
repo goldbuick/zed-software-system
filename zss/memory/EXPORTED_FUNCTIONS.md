@@ -17,17 +17,16 @@ The MEMORY singleton plus its book/loader/operator/topic accessors.
 - **memoryreadloaders()**, **memorystartloader(id, code)** - Loader map accessors
 - **memoryreadbooklist()**, **memoryreadfirstbook()**, **memoryreadfirstcontentbook()** - Book listing
 - **memoryreadbookbyaddress(address)**, **memorywritebook(book)**, **memoryresetbooks(books)**, **memoryclearbook(address)**, **memoryfreebook(book)** - Book CRUD
-- **memorywritesoftwarebook(slot, book)**, **memoryreadbookbysoftware(slot)** - Software slot (`main` / `temp`) accessors
-- **SOFTWARE_SLOT** (type)
+- **memorywritemainbook(address)**, **memoryreadmainbook()** - Opened book (`MEMORY.main`) accessors
 
 ## books.ts
 
 Higher-level book ensure helpers built on `session.ts`.
 
-- **memorycreatesoftwarebook(maybename?)** - Creates a new software book and registers it
+- **memorycreatesoftwarebook(maybename?)** - Creates a new book and registers it
 - **memoryensurebookbyname(name)** - Returns the matching book, creating one if missing
-- **memoryensuresoftwarebook(slot, maybename?)** - Ensures the software slot has a book
-- **memoryensuresoftwarecodepage(slot, address, createtype)** - Ensures the named codepage exists in a software book
+- **memoryensuremainbook(maybename?)** - Ensures there is an opened book
+- **memoryensuremaincodepage(address, createtype)** - Ensures the named codepage exists in the opened book
 
 ## flags.ts
 
@@ -54,7 +53,7 @@ Board runtime readiness helpers for tests and boundary collection.
 
 ## jsonpipefilter.ts
 
-- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `lookup` / `named`)
+- **memoryrootshouldemitpath(path)** - Symmetric `shouldemitpath` predicate used by every memory jsonpipe (drops runtime-only paths like `named`)
 
 ## boardaccess.ts
 
@@ -62,7 +61,8 @@ Board element / point lookups (no mutation).
 
 - **memoryreadidorindex(element)**, **memoryboardelementindex(board, pt)**
 - **memoryreadterrain(board, x, y)**, **memoryreadobject(board, id)**, **memoryreadobjectbypt(board, pt)**
-- **memoryreadelement(board, pt)**, **memoryreadelementbyidorindex(board, idorindex)**
+- **memoryreadobjectatpt(board, pt, options?)** - authoritative object-at-cell scan (player wins; ghosts skipped unless `includeghost`)
+- **memoryreadelement(board, pt, options?)**, **memoryreadelementbyidorindex(board, idorindex)**
 - **memoryreadobjects(board)**, **memoryreadplayersonboard(board)**
 - **memoryfindboardplayer(board, target, player)**
 
@@ -71,7 +71,7 @@ Board element / point lookups (no mutation).
 Board / element / kind reads + creators.
 
 - **memoryreadelementkind(element)**, **memoryreadelementstat(element, stat)**, **memorycheckelementpushable(pusher, target)**
-- **memorywriteelementfromkind(board, kind, dest, id?)**, **memorywritebullet(board, kind, dest)**
+- **memorywriteelementfromkind(board, kind, dest, id?)**, **memorywritebullet(board, kind, dest)**, **memorymorphboardobject(board, element, kind)**
 - **memoryreadboardbyaddress(address)**, **memoryreadoverboard(board)**, **memoryreadunderboard(board)**, **memoryreadboardbyevaldir(dir, board)**
 - **memoryinitboard(board)**
 
@@ -100,11 +100,11 @@ Terrain kind-default strip for persisted exports (see [docs](docs/boardterrainma
 
 ## boardlookup.ts
 
-Lookup tables (object id → pt, named indices).
+Named index (name → Set of object id | terrain index).
 
-- **memorywriteboardnamed**, **memorywriteboardobjectlookup**
-- **memorydeleteboardobjectnamedlookup**, **memorydeleteboardterrainnamed**
-- **memoryresetboardlookups(board)**, **memoryinitboardlookup(board)**
+- **memorywriteboardnamed**, **memorydeleteboardobjectnamedlookup**, **memorydeleteboardterrainnamed**
+- **memoryrebuildboardnamed(board)**, **memoryinitboardnamed(board)**, **memoryensureboardready(board)**
+- **memoryensureterraincoords(board)**
 
 ## boardmovement.ts
 
@@ -210,6 +210,7 @@ Chip OS / tick loop.
 - **memoryreadbookplayeractive(book, player)**, **memoryreadplayeractive(player)**, **memoryreadplayerboard(player)**, **memoryreadbookplayerboards(book)**, **memorypicknextactiveplayerboard()**
 - **memorywritebookplayerboard(book, player, board)**
 - **memoryloginplayer(player, stickyflags)**, **memorylogoutplayer(player, isendgame)**
+- **memoryswitchopenedbook(dest)**, **memoryreopenaftertrash()**
 - **memoryscanplayers(players)**
 
 ## gamesend.ts

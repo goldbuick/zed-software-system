@@ -11,13 +11,13 @@ From [zss/rom/refscroll/notescalesmajor.md](../../../zss/rom/refscroll/notescale
 MIDI import style ([midi-import.mdx](../../../zss/feature/parse/docs/midi-import.mdx)):
 
 ```
-#play +qcdef;wx
-#play +qgaa#+c; +qefga
+#play qcdef;wx
+#play qgaa#+c; qefga
 ```
 
 ADSR env parity (half sustain / 8th retrigger):
 
 ```
-+hc
-+icdeg
+hc
+icdeg
 ```

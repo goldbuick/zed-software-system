@@ -52,7 +52,7 @@ describe('handletick sim freeze', () => {
 
   it('skips tick body when simfreeze is on', () => {
     jest
-      .spyOn(session, 'memoryreadbookbysoftware')
+      .spyOn(session, 'memoryreadmainbook')
       .mockReturnValue(stubmainbook)
     session.memorywritefrozen(true)
     handleticktock(vm, msg)
@@ -62,7 +62,7 @@ describe('handletick sim freeze', () => {
 
   it('runs loader tick when simfreeze is off', () => {
     jest
-      .spyOn(session, 'memoryreadbookbysoftware')
+      .spyOn(session, 'memoryreadmainbook')
       .mockReturnValue(stubmainbook)
     session.memorywritefrozen(false)
 

@@ -4,6 +4,7 @@
 import { pttoindex } from 'zss/mapping/2d'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { mapcolortostrcolor } from 'zss/words/color'
 import {
   EVAL_DIR,
   dirfrompts,
@@ -13,19 +14,25 @@ import {
 import { STR_KIND } from 'zss/words/kind'
 import { COLLISION, DIR, NAME, PT } from 'zss/words/types'
 
-import { memoryapplyboardelementcolor } from './boardelement'
+import {
+  memoryapplyboardelementcolor,
+  memoryboardelementisobject,
+} from './boardelement'
 import {
   memorycreateboardobjectfromkind,
   memorywriteterrainfromkind,
 } from './boardlifecycle'
 import {
-  memoryresetboardlookups,
+  memorydeleteboardobjectnamedlookup,
+  memoryrebuildboardnamed,
   memorywriteboardnamed,
-  memorywriteboardobjectlookup,
 } from './boardlookup'
+import { memoryreadelementdisplay } from './bookoperations'
 import {
+  memoryapplyelementstats,
   memoryreadcodepagedata,
   memoryreadcodepagestat,
+  memoryreadcodepagestatdefaults,
 } from './codepageoperations'
 import {
   memorypickcodepagewithtypeandstat,
@@ -211,6 +218,89 @@ export function memorycheckelementpushable(
   return false
 }
 
+/**
+ * In-place object kind change: same id and instance stats, swap kind + code + display.
+ * Object -> object only. Returns false if element is not an object or kind is missing/terrain.
+ */
+export function memorymorphboardobject(
+  board: MAYBE<BOARD>,
+  element: MAYBE<BOARD_ELEMENT>,
+  kind: MAYBE<STR_KIND>,
+): boolean {
+  if (
+    !ispresent(board) ||
+    !ispresent(element) ||
+    !ispresent(kind) ||
+    !ispresent(element.id) ||
+    !memoryboardelementisobject(element)
+  ) {
+    return false
+  }
+  const [kindname, maybecolor] = kind
+  const codepage = memorypickcodepagewithtypeandstat(
+    CODE_PAGE_TYPE.OBJECT,
+    kindname,
+  )
+  if (!ispresent(codepage)) {
+    return false
+  }
+
+  const display = memoryreadelementdisplay(element)
+  const mergedstrcolor = [
+    ...mapcolortostrcolor(display.color, display.bg),
+    ...(maybecolor ?? []),
+  ]
+
+  // Preserve instance runtime stats across codepage default apply.
+  const kept = {
+    p1: element.p1,
+    p2: element.p2,
+    p3: element.p3,
+    p4: element.p4,
+    p5: element.p5,
+    p6: element.p6,
+    p7: element.p7,
+    p8: element.p8,
+    p9: element.p9,
+    p10: element.p10,
+    cycle: element.cycle,
+    stepx: element.stepx,
+    stepy: element.stepy,
+    shootx: element.shootx,
+    shooty: element.shooty,
+  }
+
+  memorydeleteboardobjectnamedlookup(board, element)
+  element.kind = kindname
+  element.code = codepage.code ?? ''
+  delete element.char
+  delete element.displaychar
+  delete element.name
+  memoryclearelementkinddata(element)
+  memoryreadelementkind(element)
+  memoryapplyelementstats(memoryreadcodepagestatdefaults(codepage), element)
+
+  element.p1 = kept.p1
+  element.p2 = kept.p2
+  element.p3 = kept.p3
+  element.p4 = kept.p4
+  element.p5 = kept.p5
+  element.p6 = kept.p6
+  element.p7 = kept.p7
+  element.p8 = kept.p8
+  element.p9 = kept.p9
+  element.p10 = kept.p10
+  element.cycle = kept.cycle
+  element.stepx = kept.stepx
+  element.stepy = kept.stepy
+  element.shootx = kept.shootx
+  element.shooty = kept.shooty
+
+  memoryapplyboardelementcolor(element, mergedstrcolor)
+  memorywriteboardnamed(board, element)
+  return true
+}
+
 export function memorywriteelementfromkind(
   board: MAYBE<BOARD>,
   kind: MAYBE<STR_KIND>,
@@ -230,7 +320,6 @@ export function memorywriteelementfromkind(
     if (ispresent(object)) {
       memoryapplyboardelementcolor(object, maybecolor)
       memoryreadelementkind(object)
-      memorywriteboardobjectlookup(board, object)
       memorywriteboardnamed(board, object)
       return object
     }
@@ -270,7 +359,6 @@ export function memorywritebullet(
     memoryapplyboardelementcolor(object, maybecolor)
     if (ispresent(object)) {
       memoryreadelementkind(object)
-      memorywriteboardobjectlookup(board, object)
       memorywriteboardnamed(board, object)
     }
     return object
@@ -350,10 +438,10 @@ export function memoryreadboardbyevaldir(dir: EVAL_DIR, board: MAYBE<BOARD>) {
   }
 }
 
-/** Structural / tools: full kind resolve + wipe/rebuild lookup+named. Not for tick path. */
+/** Structural / tools: full kind resolve + wipe/rebuild named. Not for tick path. */
 export function memoryinitboard(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
   }
-  memoryresetboardlookups(board)
+  memoryrebuildboardnamed(board)
 }

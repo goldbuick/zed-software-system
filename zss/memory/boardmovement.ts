@@ -8,6 +8,7 @@ import { COLLISION, PT } from 'zss/words/types'
 import {
   memoryboardelementindex,
   memoryreadobject,
+  memoryreadobjectatpt,
   memoryreadterrain,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
@@ -20,8 +21,7 @@ import {
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
 } from './boardtransitions'
-import { memorysendtoelement } from './gamesend'
-import { memoryreadboardruntime } from './runtimeboundary'
+import { memorybulletcollisionlabel, memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -32,44 +32,15 @@ import {
   CODE_PAGE_TYPE,
 } from './types'
 
-function memoryidstillatxy(
-  board: BOARD,
-  x: number,
-  y: number,
-  skipid: string,
-): string | undefined {
-  const objects = Object.values(board.objects)
-  let found: string | undefined
-  for (let i = 0; i < objects.length; ++i) {
-    const object = objects[i]
-    if (
-      object.x !== x ||
-      object.y !== y ||
-      !ispresent(object.id) ||
-      object.id === skipid ||
-      ispresent(object.removed)
-    ) {
-      continue
-    }
-    if (ispid(object.id)) {
-      return object.id
-    }
-    found ??= object.id
-  }
-  return found
-}
-
 export function memorycheckblockedboardobject(
   board: MAYBE<BOARD>,
   collision: MAYBE<COLLISION>,
   dest: PT,
   isplayer = false,
 ): MAYBE<BOARD_ELEMENT> {
-  const lookup = memoryreadboardruntime(board)?.lookup
   // first pass clipping
   if (
     !ispresent(board) ||
-    !ispresent(lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
@@ -90,7 +61,7 @@ export function memorycheckblockedboardobject(
   const targetidx = dest.x + dest.y * BOARD_WIDTH
 
   // blocked by an object
-  const maybeobject = memoryreadobject(board, lookup[targetidx] ?? '404')
+  const maybeobject = memoryreadobjectatpt(board, dest)
   if (ispresent(maybeobject)) {
     if (isplayer) {
       // players do not block players
@@ -166,7 +137,6 @@ export function memorymoveboardobject(
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
   const movingelement = memoryreadobject(board, elementtomove?.id ?? '')
-  const lookup = memoryreadboardruntime(board)?.lookup
 
   // first pass clipping
   if (
@@ -174,7 +144,6 @@ export function memorymoveboardobject(
     !ispresent(movingelement) ||
     !ispresent(movingelement.x) ||
     !ispresent(movingelement.y) ||
-    !ispresent(lookup) ||
     dest.x < 0 ||
     dest.x >= BOARD_WIDTH ||
     dest.y < 0 ||
@@ -198,7 +167,6 @@ export function memorymoveboardobject(
   }
 
   // gather meta for move
-  const startidx = memoryboardelementindex(board, movingelement)
   const destidx = memoryboardelementindex(board, dest)
   const movingelementcollision = memoryreadelementstat(
     movingelement,
@@ -216,7 +184,7 @@ export function memorymoveboardobject(
   const movingelementisplayer = ispid(movingelement?.id)
 
   // blocked by an object
-  const maybeobject = memoryreadobject(board, lookup[destidx] ?? '')
+  const maybeobject = memoryreadobjectatpt(board, dest)
   if (memoryreadelementstat(maybeobject, 'collision') === COLLISION.ISGHOST) {
     // skip ghost
     return undefined
@@ -243,28 +211,9 @@ export function memorymoveboardobject(
     return { ...mayberterrain, x: dest.x, y: dest.y }
   }
 
-  const startx = movingelement.x
-  const starty = movingelement.y
-
   // update object location
   movingelement.x = dest.x
   movingelement.y = dest.y
-
-  // if not removed, update lookup without stealing another occupant
-  if (!ispresent(movingelement.removed)) {
-    if (lookup[startidx] === movingelement.id) {
-      lookup[startidx] = memoryidstillatxy(
-        board,
-        startx,
-        starty,
-        movingelement.id ?? '',
-      )
-    }
-    const destowner = lookup[destidx]
-    if (!destowner || destowner === movingelement.id) {
-      lookup[destidx] = movingelement.id ?? ''
-    }
-  }
 
   // no interaction
   return undefined
@@ -335,32 +284,29 @@ export function memorymoveobject(
     const blockedisedge = blocked.kind === 'edge'
     if (elementisplayer) {
       if (blockedisedge) {
-        if (!memoryplayerblockedbyedge(board, element, dest)) {
-          memorysendtoelement(blocked, element, 'thud')
-        }
+        memoryplayerblockedbyedge(board, element, dest)
       } else if (blockedisbullet) {
         if (board?.restartonzap) {
           memoryplayerwaszapped(book, board, element, element.id ?? '')
         }
         memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
       } else {
         memorysendtoelement(blocked, element, 'touch')
         memorysendtoelement(element, blocked, 'touch')
       }
     } else if (elementisbullet) {
-      if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
+      if (!blockedisbullet) {
         if (blockedbyplayer && board?.restartonzap) {
           memoryplayerwaszapped(book, board, blocked, blocked.id ?? '')
         }
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'shot')
+        memorysendtoelement(
+          element,
+          blocked,
+          memorybulletcollisionlabel(element, blocked),
+        )
       }
-      // Breakable projectiles must leave lookup even when the chip skips :thud
-      // #die. A leftover id after a wall thud would block later bullets.
+      // Breakable projectiles must leave the cell even when the chip skips :thud
+      // #die. A leftover occupant after a wall thud would block later bullets.
       const contextstamp = READ_CONTEXT.timestamp
       const bookstamp = book?.timestamp ?? 0
       const deletestamp =
@@ -377,16 +323,19 @@ export function memorymoveobject(
           memorysafedeleteelement(board, blockedobject, deletestamp)
         }
       }
-    } else {
-      if (blockedbyplayer) {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
-      } else if (blockedisbullet) {
-        memorysendtoelement(blocked, element, 'shot')
-        memorysendtoelement(element, blocked, 'thud')
-      } else {
-        memorysendtoelement(blocked, element, 'thud')
-        memorysendtoelement(element, blocked, 'bump')
+    } else if (blockedisbullet) {
+      // Walker hits a bullet: same shot/partyshot policy as bullet→target.
+      memorysendtoelement(
+        blocked,
+        element,
+        memorybulletcollisionlabel(blocked, element),
+      )
+      const contextstamp = READ_CONTEXT.timestamp
+      const bookstamp = book?.timestamp ?? 0
+      const deletestamp =
+        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
+      if (memoryreadelementstat(blocked, 'breakable')) {
+        memorysafedeleteelement(board, blocked, deletestamp)
       }
     }
 

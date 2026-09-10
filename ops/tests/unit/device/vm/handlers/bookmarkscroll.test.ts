@@ -20,11 +20,9 @@ import {
 } from 'zss/memory/bookmarkscroll'
 import { memorybookmarkdeleteprompt } from 'zss/memory/bookmarkdeleteconfirm'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryresetbooks,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
 jest.mock('zss/device/api', () => ({
   apitoast: jest.fn(),
   apilog: jest.fn(),
@@ -66,7 +64,7 @@ describe('handlebookmarkscroll', () => {
   })
 
   it('without MAIN creates the book then opens bookmark scroll', () => {
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeUndefined()
+    expect(memoryreadmainbook()).toBeUndefined()
     const message: MESSAGE = {
       session: '',
       player: 'p1',
@@ -76,7 +74,7 @@ describe('handlebookmarkscroll', () => {
       data: [[{ kind: 'url', id: 'u1', name: 'n', href: 'https://x' }], []],
     }
     handlebookmarkscroll(vm, message)
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeDefined()
+    expect(memoryreadmainbook()).toBeDefined()
     expect(memorybookmarkscroll).toHaveBeenCalled()
   })
 })

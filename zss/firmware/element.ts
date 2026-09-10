@@ -20,17 +20,20 @@ import {
   memoryreadelement,
   memoryreadelementbyidorindex,
 } from 'zss/memory/boardaccess'
+import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
 import {
+  memorymorphboardobject,
   memoryreadboardbyevaldir,
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
 import { memoryreadflags } from 'zss/memory/flags'
+import { memorysendtoelement } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryensureboardruntime } from 'zss/memory/runtimeboundary'
 import { memoryreadoperator } from 'zss/memory/session'
@@ -93,6 +96,170 @@ const STANDARD_STAT_NAMES = new Set([
   // run & with arg
   'arg',
 ])
+
+/** Remote attrs for Weave-like #pget / #pset (v1). */
+const REMOTE_STAT_NAMES = new Set([
+  'p1',
+  'p2',
+  'p3',
+  'p4',
+  'p5',
+  'p6',
+  'p7',
+  'p8',
+  'p9',
+  'p10',
+  'cycle',
+  'stepx',
+  'stepy',
+  'char',
+  'color',
+  'bg',
+  'x',
+  'y',
+])
+
+function mapremotestatname(name: string): string {
+  switch (NAME(name)) {
+    case 'intel':
+    case 'intelligence':
+      return 'p1'
+    case 'speed':
+    case 'rate':
+      return 'p2'
+    case 'thisx':
+      return 'x'
+    case 'thisy':
+      return 'y'
+    default:
+      return NAME(name)
+  }
+}
+
+function resolveremotetarget(
+  words: WORD[],
+  index: number,
+): [MAYBE<BOARD_ELEMENT>, number] {
+  const [peek] = readargs(words, index, [ARG_TYPE.ANY])
+  if (isstrdir(peek)) {
+    const [dest, ii] = readargs(words, index, [ARG_TYPE.DIR])
+    const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
+    if (dest.targets.length) {
+      return [memoryreadelement(board, dest.targets[0]), ii]
+    }
+    return [memoryreadelement(board, dest.destpt), ii]
+  }
+  if (isstring(peek) || isnumber(peek)) {
+    const [, ii] = readargs(words, index, [ARG_TYPE.ANY])
+    return [
+      memoryreadelementbyidorindex(READ_CONTEXT.board, maptostring(peek)),
+      ii,
+    ]
+  }
+  return [undefined, index]
+}
+
+function readremoteattr(element: BOARD_ELEMENT, attr: string): WORD {
+  const statname = mapremotestatname(attr)
+  if (statname === 'id') {
+    return element.id ?? ''
+  }
+  if (statname === 'x') {
+    return element.x ?? 0
+  }
+  if (statname === 'y') {
+    return element.y ?? 0
+  }
+  if (statname === 'color') {
+    return element.color ?? 0
+  }
+  if (statname === 'bg') {
+    return element.bg ?? 0
+  }
+  if (REMOTE_STAT_NAMES.has(statname)) {
+    const value = memoryreadelementstat(
+      element,
+      statname as Parameters<typeof memoryreadelementstat>[1],
+    )
+    return (value ?? 0) as WORD
+  }
+  return 0
+}
+
+function writeremoteattr(
+  chip: CHIP,
+  element: BOARD_ELEMENT,
+  attr: string,
+  words: WORD[],
+  valueindex: number,
+): 0 | 1 {
+  const statname = mapremotestatname(attr)
+  if (statname === 'step') {
+    // Parse dir under caller (flag/stat exprs), apply from target cell.
+    const [ascaller] = readargs(words, valueindex, [ARG_TYPE.DIR])
+    const dest = memoryevaldir(READ_CONTEXT.board, element, '', ascaller.dir, {
+      x: element.x ?? 0,
+      y: element.y ?? 0,
+    })
+    const x = element.x ?? 0
+    const y = element.y ?? 0
+    element.stepx = dest.destpt.x - x
+    element.stepy = dest.destpt.y - y
+    chip.set('didfail', 0)
+    return 0
+  }
+  if (!REMOTE_STAT_NAMES.has(statname)) {
+    chip.set('didfail', 1)
+    return 0
+  }
+  if (statname === 'x' || statname === 'y') {
+    const [coord] = readargs(words, valueindex, [ARG_TYPE.NUMBER])
+    const dest: PT = {
+      x: statname === 'x' ? coord : (element.x ?? 0),
+      y: statname === 'y' ? coord : (element.y ?? 0),
+    }
+    const moved = memorymoveobject(
+      READ_CONTEXT.book,
+      READ_CONTEXT.board,
+      element,
+      dest,
+    )
+    chip.set('didfail', moved ? 0 : 1)
+    return 0
+  }
+  if (statname === 'color') {
+    const [colorvalue] = readargs(words, valueindex, [ARG_TYPE.COLOR])
+    if (ispresent(colorvalue)) {
+      memoryapplyboardelementcolor(element, colorvalue)
+      chip.set('didfail', 0)
+    } else {
+      chip.set('didfail', 1)
+    }
+    return 0
+  }
+  if (statname === 'bg') {
+    const [value] = readargs(words, valueindex, [ARG_TYPE.ANY])
+    if (isstrcolor(value)) {
+      const { color, bg } = mapstrcolortoattributes(value)
+      element.bg = color ?? bg ?? COLOR.PURPLE
+      chip.set('didfail', 0)
+    } else if (isnumber(value)) {
+      element.bg = value
+      chip.set('didfail', 0)
+    } else {
+      chip.set('didfail', 1)
+    }
+    return 0
+  }
+  const [value] = readargs(words, valueindex, [ARG_TYPE.ANY])
+  if (statname === 'cycle' && isnumber(value)) {
+    element.cycle = clamp(Math.round(value), 1, 255)
+  } else {
+    element[statname as keyof BOARD_ELEMENT] = value as never
+  }
+  chip.set('didfail', 0)
+  return 0
+}
 
 function readinput(
   player: string,
@@ -204,7 +371,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
       case 'starty':
         return [true, READ_CONTEXT.board?.starty ?? 0]
       // board displayed over/under this one
-      // uses content slot book
       case 'over':
         return [true, READ_CONTEXT.board?.over ?? '']
       case 'under':
@@ -267,6 +433,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, READ_CONTEXT.element?.x ?? -1]
       case 'thisy':
         return [true, READ_CONTEXT.element?.y ?? -1]
+      case 'kind':
+        return [true, READ_CONTEXT.element?.kind ?? '']
       case 'senderid':
         return [true, sender?.id ?? '']
       case 'senderx':
@@ -340,7 +508,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
         break
       // board displayed over/under this one
-      // uses content slot book
       case 'over':
         if (ispresent(READ_CONTEXT.board)) {
           const boardruntime = memoryensureboardruntime(READ_CONTEXT.board)
@@ -608,15 +775,21 @@ export const ELEMENT_FIRMWARE = createfirmware({
       ispresent(READ_CONTEXT.element.stepy) &&
       (READ_CONTEXT.element.stepx || READ_CONTEXT.element.stepy)
     ) {
-      memorymoveobject(
-        READ_CONTEXT.book,
-        READ_CONTEXT.board,
-        READ_CONTEXT.element,
-        {
-          x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
-          y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
-        },
-      )
+      const dest = {
+        x: READ_CONTEXT.element.x + READ_CONTEXT.element.stepx,
+        y: READ_CONTEXT.element.y + READ_CONTEXT.element.stepy,
+      }
+      if (
+        !memorymoveobject(
+          READ_CONTEXT.book,
+          READ_CONTEXT.board,
+          READ_CONTEXT.element,
+          dest,
+        )
+      ) {
+        const blocked = memoryreadelement(READ_CONTEXT.board, dest)
+        memorysendtoelement(blocked, READ_CONTEXT.element, 'thud')
+      }
     }
   },
   aftertick(chip) {
@@ -655,6 +828,22 @@ export const ELEMENT_FIRMWARE = createfirmware({
     [ARG_TYPE.NAME, 'variable to value; multiple words joined with spaces'],
     (chip, words) => {
       const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
+      // Weave: #SET <counter> PGET <target> <attr>
+      if (ii < words.length) {
+        const [maybepget] = readargs(words, ii, [ARG_TYPE.ANY])
+        if (isstring(maybepget) && NAME(maybepget) === 'pget') {
+          const [target, attrii] = resolveremotetarget(words, ii + 1)
+          const [attr] = readargs(words, attrii, [ARG_TYPE.NAME])
+          if (!ispresent(target)) {
+            chip.set(name, 0)
+            chip.set('didfail', 1)
+            return 0
+          }
+          chip.set(name, readremoteattr(target, attr))
+          chip.set('didfail', 0)
+          return 0
+        }
+      }
       const [parts] = readargsuntilend(words, ii, ARG_TYPE.ANY)
       let value: any
       if (parts.length === 0) {
@@ -668,6 +857,45 @@ export const ELEMENT_FIRMWARE = createfirmware({
       return 0
     },
     { editor: ['variables'], lists: ['flags'] },
+  )
+  .command(
+    'pget',
+    [
+      ARG_TYPE.ANY,
+      ARG_TYPE.NAME,
+      ARG_TYPE.NAME,
+      'attr from dir or id into variable',
+    ],
+    (chip, words) => {
+      const [target, attrii] = resolveremotetarget(words, 0)
+      const [attr, destii] = readargs(words, attrii, [ARG_TYPE.NAME])
+      const [destflag] = readargs(words, destii, [ARG_TYPE.NAME])
+      if (!ispresent(target)) {
+        chip.set(destflag, 0)
+        chip.set('didfail', 1)
+        return 0
+      }
+      chip.set(destflag, readremoteattr(target, attr))
+      chip.set('didfail', 0)
+      return 0
+    },
+    {
+      editor: [undefined, undefined, 'variables'],
+      lists: [undefined, undefined, 'flags'],
+    },
+  )
+  .command(
+    'pset',
+    [ARG_TYPE.ANY, ARG_TYPE.NAME, ARG_TYPE.ANY, 'attr on dir or id'],
+    (chip, words) => {
+      const [target, attrii] = resolveremotetarget(words, 0)
+      const [attr, valueii] = readargs(words, attrii, [ARG_TYPE.NAME])
+      if (!ispresent(target)) {
+        chip.set('didfail', 1)
+        return 0
+      }
+      return writeremoteattr(chip, target, attr, words, valueii)
+    },
   )
   .command(
     'become',
@@ -708,6 +936,26 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
       // halt execution
       chip.endofprogram()
+      return 0
+    },
+    { lists: ['kinds'] },
+  )
+  .command(
+    'morph',
+    [ARG_TYPE.KIND, 'change kind in place, keep stats and id'],
+    (chip, words) => {
+      const [kind] = readargs(words, 0, [ARG_TYPE.KIND])
+      const ok = memorymorphboardobject(
+        READ_CONTEXT.board,
+        READ_CONTEXT.element,
+        kind,
+      )
+      if (ok) {
+        memoryhaltchip(READ_CONTEXT.elementid)
+        chip.set('didfail', 0)
+      } else {
+        chip.set('didfail', 1)
+      }
       return 0
     },
     { lists: ['kinds'] },

@@ -15,11 +15,9 @@ import { memoryreadcodepagebyaddress } from 'zss/memory/codepages'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
 import { memorybookmarkdeleteprompt } from 'zss/memory/bookmarkdeleteconfirm'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryresetbooks,
 } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
-
 jest.mock('zss/device/api', () => {
   const actual = jest.requireActual('zss/device/api')
   return {
@@ -97,12 +95,12 @@ describe('handleeditorbookmarkscroll', () => {
   })
 
   it('without MAIN creates the book then opens editor bookmark scroll', () => {
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeUndefined()
+    expect(memoryreadmainbook()).toBeUndefined()
     handleeditorbookmarkscroll(vm, {
       ...base,
       data: [[editbookmark], 'page-name', ['a', 'b']],
     })
-    expect(memoryreadbookbysoftware(MEMORY_LABEL.MAIN)).toBeDefined()
+    expect(memoryreadmainbook()).toBeDefined()
     expect(memoryeditorbookmarkscroll).toHaveBeenCalledWith(
       player,
       expect.arrayContaining([

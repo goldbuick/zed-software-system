@@ -63,14 +63,14 @@
 " $yellow    Score:$score
 ' make keys section of sidebar
 #set keylist " $white$12 $yellow   Keys:"
-#if key0 set keylist keylist + "$black$12"
-#if key9 set keylist keylist + "$blue$12"
-#if key10 set keylist keylist + "$green$12"
-#if key11 set keylist keylist + "$cyan$12"
-#if key12 set keylist keylist + "$red$12"
-#if key13 set keylist keylist + "$purple$12"
-#if key14 set keylist keylist + "$yellow$12"
-#if key15 set keylist keylist + "$white$12"
+#if keyblack set keylist keylist + "$black$12"
+#if keyblue set keylist keylist + "$blue$12"
+#if keygreen set keylist keylist + "$green$12"
+#if keycyan set keylist keylist + "$cyan$12"
+#if keyred set keylist keylist + "$red$12"
+#if keypurple set keylist keylist + "$purple$12"
+#if keyyellow set keylist keylist + "$yellow$12"
+#if keywhite set keylist keylist + "$white$12"
 "$keylist
 ' hotkeys and input info
 "

@@ -1,20 +1,15 @@
+import { memoryreadobjectatpt } from 'zss/memory/boardaccess'
 import { memoryboundariesclear } from 'zss/memory/boundaries'
-import {
-  memorycreateboardobjectfromkind,
-  memorysafedeleteelement,
-} from 'zss/memory/boardlifecycle'
+import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
-import {
-  memorycreatebook,
-} from 'zss/memory/bookoperations'
+import { memorycreatebook } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
 import { memorytickobject } from 'zss/memory/runtime'
-import { memoryreadboardruntime } from 'zss/memory/runtimeboundary'
-import { memoryresetbooks, memorywritesoftwarebook } from 'zss/memory/session'
-import { BOARD_WIDTH, CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
+import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
 
@@ -36,12 +31,12 @@ describe('bullet edge thud die', () => {
     memoryresetbooks([])
   })
 
-  it('dies and clears lookup after walking into board edge', () => {
+  it('does not remove a non-breakable bullet that walks into board edge', () => {
     const bulletpage = memorycreatecodepage(BULLET_CODE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([bulletpage, boardpage])
     memoryresetbooks([book])
-    memorywritesoftwarebook('main', book.id)
+    memorywritemainbook(book.id)
 
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardpage)!
     board.id = boardpage.id
@@ -60,17 +55,18 @@ describe('bullet edge thud die', () => {
     bullet!.stepy = -1
     book.timestamp = 10
 
-    // several ticks: everytick walks into edge, once should process :thud #die
+    // Edge block sends shot/partyshot to the edge, not :thud to the bullet.
+    // Soft-delete only runs for breakable projectiles.
     for (let t = 0; t < 5; t++) {
       book.timestamp = 10 + t
       memorytickobject(book, board, bullet, BULLET_CODE)
-      if (bullet!.removed) {
-        break
-      }
     }
 
-    expect(bullet!.removed).toBeDefined()
-    const idx = 5 + 0 * BOARD_WIDTH
-    expect(memoryreadboardruntime(board)?.lookup?.[idx]).toBeUndefined()
+    expect(bullet!.removed).toBeUndefined()
+    expect(bullet!.x).toBe(5)
+    expect(bullet!.y).toBe(0)
+    expect(memoryreadobjectatpt(board, { x: 5, y: 0 })?.id).toBe(
+      'sid_bullet_edge',
+    )
   })
 })

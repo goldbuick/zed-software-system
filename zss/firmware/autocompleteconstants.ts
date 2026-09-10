@@ -109,7 +109,12 @@ export const TTS_FISH_MODEL_KEYWORDS = [
   's1',
 ] as const
 
-export const BROADCAST_HEAD_KEYWORDS = ['stop', 'whip'] as const
+export const BROADCAST_HEAD_KEYWORDS = [
+  'stop',
+  'whip',
+  'ivs-ll',
+  'ivs-rt',
+] as const
 
 export const QUEUE_ACTION_KEYWORDS = [
   'skip',

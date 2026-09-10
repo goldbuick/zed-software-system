@@ -9,20 +9,14 @@ import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
 
 import { memorylistcodepagebystat, memoryreadcodepage } from './bookoperations'
-import { memoryensuresoftwarecodepage } from './books'
+import { memoryensuremaincodepage } from './books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { memoryreadbooklist } from './session'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-  MEMORY_LABEL,
-} from './types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 function makeitlinktoken(s: string): string {
   if (/\s/.test(s) || s.length === 0) {
@@ -133,8 +127,7 @@ export function memorymakeitcommand(
       // attempt to check first word as codepage type to create
       switch (type) {
         case stattypestring(STAT_TYPE.LOADER): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage, didcreate] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.LOADER,
           )
@@ -142,14 +135,13 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.BOARD): {
-          const [codepage] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.BOARD,
           )
           if (ispresent(codepage)) {
             writeopenpage(codepage)
-            // const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+            // const mainbook = memoryreadmainbook()
             const dest = {
               x: Math.round(BOARD_WIDTH * 0.5),
               y: Math.round(BOARD_HEIGHT * 0.5),
@@ -160,8 +152,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.OBJECT): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage, didcreate] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.OBJECT,
           )
@@ -169,8 +160,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.TERRAIN): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage, didcreate] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.TERRAIN,
           )
@@ -178,8 +168,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.CHARSET): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage, didcreate] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.CHARSET,
           )
@@ -187,8 +176,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.PALETTE): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage, didcreate] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.PALETTE,
           )
@@ -196,8 +184,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.TXT): {
-          const [codepage, didcreate] = memoryensuresoftwarecodepage(
-            MEMORY_LABEL.MAIN,
+          const [codepage, didcreate] = memoryensuremaincodepage(
             name,
             CODE_PAGE_TYPE.TXT,
           )

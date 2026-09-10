@@ -4,7 +4,12 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
-import { humanizeonset } from 'zss/feature/synth/backend/wasm/playhumanize'
+import { gateoffstillactive } from 'zss/feature/synth/backend/wasm/notegate'
+import {
+  HUMANIZE_BGPLAY_SEC,
+  HUMANIZE_SEC,
+  humanizeonset,
+} from 'zss/feature/synth/backend/wasm/playhumanize'
 import {
   playpatternendtime,
   resolveplaystarttime,
@@ -179,6 +184,8 @@ export function createdaisysynth(
   }
   const scheduler = createwasmplayscheduler(maxi)
   const notestrikebychan = new Map<number, number>()
+  let notegen = 0
+  const activegatebychan = new Map<number, number>()
 
   function pushfxstate() {
     pushwasmfxsab(maxi, fxsab)
@@ -241,6 +248,8 @@ export function createdaisysynth(
     const livehumanize =
       recording.recordisrendering <= 0 &&
       !isofflineaudiocontext(maxi.audioContext)
+    const humanizepeak =
+      chan >= SYNTH_SFX_RESET ? HUMANIZE_BGPLAY_SEC : HUMANIZE_SEC
 
     if (isnumber(note)) {
       if (note === -1) {
@@ -256,7 +265,9 @@ export function createdaisysynth(
         return
       }
       if (note >= 0 && note < WASM_DRUM_COUNT) {
-        const when = livehumanize ? humanizeonset(gridwhen) : gridwhen
+        const when = livehumanize
+          ? humanizeonset(gridwhen, undefined, humanizepeak)
+          : gridwhen
         scheduledrum(
           when,
           note,
@@ -271,7 +282,9 @@ export function createdaisysynth(
     if (note.startsWith('#')) {
       return
     }
-    const when = livehumanize ? humanizeonset(gridwhen) : gridwhen
+    const when = livehumanize
+      ? humanizeonset(gridwhen, undefined, humanizepeak)
+      : gridwhen
     schedulenote(chan, when, note, tonenotationseconds(notation))
   }
 
@@ -344,6 +357,7 @@ export function createdaisysynth(
   function clearschedules() {
     scheduler.clear()
     notestrikebychan.clear()
+    activegatebychan.clear()
     pacercount = 0
     for (let i = 0; i < WASM_VOICE_COUNT; i++) {
       const base = i * WASM_VOICE_STRIDE
@@ -415,6 +429,7 @@ export function createdaisysynth(
 
     const strike = (notestrikebychan.get(chan) ?? 0) + 1
     notestrikebychan.set(chan, strike)
+    const noteid = ++notegen
     const voicetype = voicecfg[chan]?.type
     const velocitytypes =
       voicetype === SOURCE_TYPE.PIANO_VOICE ||
@@ -425,6 +440,7 @@ export function createdaisysynth(
       voicetype === SOURCE_TYPE.BELLS ? detune : velocitytypes ? 1 : strike
 
     scheduler.schedule(when, () => {
+      activegatebychan.set(chan, noteid)
       voicestate[base] = freq
       voicestate[base + 1] = 1
       voicestate[base + 4] = strikedetune
@@ -433,6 +449,9 @@ export function createdaisysynth(
     })
 
     scheduler.schedule(endwhen, () => {
+      if (!gateoffstillactive(activegatebychan, chan, noteid)) {
+        return
+      }
       voicestate[base + 1] = 0
       pushplayvoicestate()
     })

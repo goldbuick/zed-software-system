@@ -280,6 +280,38 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           bridgestreamstop(SOFTWARE, player)
           return 0
         }
+        if (NAME(String(first)) === 'ivs-ll') {
+          if (endpoint) {
+            bridgestreamstart(SOFTWARE, player, {
+              kind: 'ivs-low-latency',
+              streamKey: String(endpoint),
+            })
+          } else {
+            apierror(
+              SOFTWARE,
+              player,
+              'broadcast',
+              'usage: broadcast ivs-ll <stream-key>',
+            )
+          }
+          return 0
+        }
+        if (NAME(String(first)) === 'ivs-rt') {
+          if (endpoint) {
+            bridgestreamstart(SOFTWARE, player, {
+              kind: 'ivs-whip',
+              token: String(endpoint),
+            })
+          } else {
+            apierror(
+              SOFTWARE,
+              player,
+              'broadcast',
+              'usage: broadcast ivs-rt <participant-token>',
+            )
+          }
+          return 0
+        }
         if (NAME(String(first)) === 'whip') {
           if (endpoint && bearer) {
             const resolved = resolvewhipendpoint(String(endpoint))

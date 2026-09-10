@@ -7,7 +7,7 @@ jest.mock('zss/memory/playermanagement', () => ({
 }))
 
 jest.mock('zss/memory/session', () => ({
-  memoryreadbookbysoftware: jest.fn(() => ({ id: 'main' })),
+  memoryreadmainbook: jest.fn(() => ({ id: 'main' })),
 }))
 
 import { memorymoveplayertoboard } from 'zss/memory/playermanagement'

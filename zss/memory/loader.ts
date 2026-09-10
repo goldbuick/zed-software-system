@@ -6,17 +6,11 @@ import { WORD } from 'zss/words/types'
 import { memorylistcodepagebytype, memoryreadcodepage } from './bookoperations'
 import { memoryreadcodepagestats } from './codepageoperations'
 import {
-  memoryreadbookbysoftware,
+  memoryreadmainbook,
   memoryreadoperator,
   memorystartloader,
 } from './session'
-import {
-  BOARD,
-  BOARD_ELEMENT,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-  MEMORY_LABEL,
-} from './types'
+import { BOARD, BOARD_ELEMENT, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 
 export type LOADER_READ_CONTEXT_SNAPSHOT = {
   board: MAYBE<BOARD>
@@ -122,7 +116,7 @@ export function memoryloadermatches(
   idoreventname: string,
 ): CODE_PAGE[] {
   // we scan main book for loaders
-  const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+  const mainbook = memoryreadmainbook()
   if (!ispresent(mainbook)) {
     return []
   }

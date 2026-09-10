@@ -11,6 +11,7 @@
   #bgplay t+++c-c-c-c-c-c
   #put within 5 i bombsmoke
   #send within 5 i bombed
+  #send within 5 i shot
   #die
  #else do
   #if p1 % 2 is 0 do

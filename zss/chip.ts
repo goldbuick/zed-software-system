@@ -29,6 +29,7 @@ import {
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory/flags'
 import { memorycanruncommand } from './memory/permissions'
+import { formatprintvalue } from './words/printvalue'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { MaybeFlag, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
@@ -228,11 +229,12 @@ export type CHIP = {
   hyperlink: (...words: WORD[]) => void
 
   /**
-   * Formats a value for printing/display.
-   * @param name - The value to print
-   * @returns A formatted string representation of the value
+   * Formats a value for `$flag` template expansion / display.
+   * @param value - The flag or stat value to format
+   * @param name - Optional flag/stat name so numeric enums (color, collision, …) can be labeled
+   * @returns A display string, or a raw number/boolean when no special formatting applies
    */
-  print: (name: string) => string
+  print: (value: unknown, name?: string) => string | number | boolean
 
   /**
    * Processes a template string, replacing variables (prefixed with special characters) with their values.
@@ -864,23 +866,18 @@ export function createchip(
     hyperlink(...words) {
       return invokecommand('hyperlink', words)
     },
-    print(value) {
-      if (isarray(value)) {
-        return `array ${value.length} ${value.length === 1 ? 'item' : 'items'}`
-      }
-      if (typeof value === 'object') {
-        return `obj ${Object.keys(value).join(', ')}`
-      }
-      return value
+    print(value, name) {
+      return formatprintvalue(value, name)
     },
     template(words) {
       const result = tokenize(words.join(' '), true)
       return result.tokens
         .map((token) => {
           if (token.tokenType === MaybeFlag) {
-            const maybevalue = chip.get(token.image.substring(1))
+            const flagname = token.image.substring(1)
+            const maybevalue = chip.get(flagname)
             if (ispresent(maybevalue)) {
-              return maybevalue
+              return formatprintvalue(maybevalue, flagname)
             }
           }
           return token.image

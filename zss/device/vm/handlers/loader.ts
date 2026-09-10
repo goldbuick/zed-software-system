@@ -9,8 +9,7 @@ import {
 } from 'zss/memory/bookoperations'
 import { memoryimportcodepagefromjson } from 'zss/memory/codepageoperations'
 import { memoryloader } from 'zss/memory/loader'
-import { memoryreadbookbysoftware, memorywritebook } from 'zss/memory/session'
-import { MEMORY_LABEL } from 'zss/memory/types'
+import { memoryreadmainbook, memorywritebook } from 'zss/memory/session'
 import { memoryreadconfig } from 'zss/memory/utilities'
 
 function iscodepagejsonfile(eventname: string) {
@@ -48,7 +47,7 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
       } else if (iscodepagejsonfile(eventname)) {
         apilog(vm, message.player, `loading ${eventname}`)
         const json = JSON.parse(content.json)
-        const mainbook = memoryreadbookbysoftware(MEMORY_LABEL.MAIN)
+        const mainbook = memoryreadmainbook()
         if (
           ispresent(mainbook) &&
           ispresent(json.data) &&
