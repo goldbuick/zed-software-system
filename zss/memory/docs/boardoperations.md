@@ -8,7 +8,7 @@ Everything that used to live under that name is now in:
 
 | Area | Module |
 |------|--------|
-| Per-element / per-point reads | [`boardaccess.ts`](../boardaccess.ts) — `memoryboardelementindex`, `memoryreadelement`, `memoryreadterrain`, `memoryreadobject`, `memoryreadobjects`, `memorylistelement` (layer / color / kind / name / group / ids / pts), `memorypicknearest`, `memoryreadelementbyidorindex`, `memoryfindboardplayer`, `memoryreadplayersonboard`, `memoryreadidorindex` |
+| Per-element / per-point reads | [`boardaccess.ts`](../boardaccess.ts) — `READ_LAYER`, `memoryboardelementindex`, `memoryreadelement(board, query, layer)`, `memorylistelement` (layer / color / kind / name / group / ids / pts), `memorypicknearest`, `memoryfindboardplayer`, `memoryreadplayersonboard`, `memoryreadidorindex` |
 | Element kind / stat / push checks / write-from-kind | [`boards.ts`](../boards.ts) — `memoryreadelementkind`, `memoryreadelementstat`, `memorycheckelementpushable`, `memorywriteelementfromkind`, `memorywritebullet` |
 | Board lookup / over / under / evaldir / init | [`boards.ts`](../boards.ts) — `memoryreadboardbyaddress`, `memoryreadoverboard`, `memoryreadunderboard`, `memoryreadboardbyevaldir`, `memoryinitboard` |
 | Direction evaluation (BY / AT / FLOW / SEEK / RND / AWAY / TOWARD / WITHIN / AWAYBY / ELEMENTS) | [`boarddirection.ts`](../boarddirection.ts) — `memoryevaldir` |

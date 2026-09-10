@@ -1,4 +1,4 @@
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -63,8 +63,8 @@ describe('bullet edge thud die', () => {
     expect(bullet!.removed).toBeUndefined()
     expect(bullet!.x).toBe(5)
     expect(bullet!.y).toBe(0)
-    expect(memoryreadelement(board, { x: 5, y: 0 }, { layer: 'object' })?.id).toBe(
-      'sid_bullet_edge',
-    )
+    expect(
+      memoryreadelement(board, { x: 5, y: 0 }, READ_LAYER.OBJECT)?.id,
+    ).toBe('sid_bullet_edge')
   })
 })

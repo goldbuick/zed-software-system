@@ -1,7 +1,7 @@
 import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbook,
@@ -62,10 +62,10 @@ describe('zzt tile import kind names', () => {
   })
 
   it('resolves every mapped tile to an element library codepage', () => {
-    const elements = Array.from(
-      { length: BOARD_WIDTH * BOARD_HEIGHT },
-      () => ({ type: 0, color: 0 }),
-    )
+    const elements = Array.from({ length: BOARD_WIDTH * BOARD_HEIGHT }, () => ({
+      type: 0,
+      color: 0,
+    }))
     const cells: [number, string, number, number][] = EXPECTED_KINDS.map(
       ([type, kind], i) => {
         const x = 1 + (i % (BOARD_WIDTH - 2))
@@ -104,7 +104,7 @@ describe('zzt tile import kind names', () => {
 
     const missing: string[] = []
     for (const [type, kind, x, y] of cells) {
-      const el = memoryreadelement(memboard, { x, y })
+      const el = memoryreadelement(memboard, { x, y }, READ_LAYER.ANY)
       const got = NAME(el?.kind ?? '')
       if (got !== kind) {
         missing.push(`tile ${type}: expected ${kind}, got "${got}"`)

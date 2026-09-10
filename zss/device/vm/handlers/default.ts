@@ -24,7 +24,7 @@ import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { isarray, ispresent } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memorylistcodepage } from 'zss/memory/bookoperations'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorysendtoboards } from 'zss/memory/gamesend'
@@ -72,9 +72,11 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
     }
     case 'admingoto': {
       const playerboard = memoryreadplayerboard(path)
-      const playerelement = memoryreadelement(playerboard, path, {
-        layer: 'object',
-      })
+      const playerelement = memoryreadelement(
+        playerboard,
+        path,
+        READ_LAYER.OBJECT,
+      )
       if (ispresent(playerboard) && ispresent(playerelement)) {
         const dest = {
           x: playerelement.x ?? 0,

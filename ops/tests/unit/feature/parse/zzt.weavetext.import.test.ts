@@ -1,8 +1,11 @@
 import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { memoryreadelement } from 'zss/memory/boardaccess'
-import { memoryreadelementstat, memoryreadboardbyaddress } from 'zss/memory/boards'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
+import {
+  memoryreadelementstat,
+  memoryreadboardbyaddress,
+} from 'zss/memory/boards'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import {
@@ -59,7 +62,10 @@ describe('zzt Weave text import', () => {
     expect(lib).toBeDefined()
     memorywritecodepage(
       lib,
-      memorycreatecodepage('@terrain customtext\n@issolid\n@color blwhite\n', {}),
+      memorycreatecodepage(
+        '@terrain customtext\n@issolid\n@color blwhite\n',
+        {},
+      ),
     )
 
     const cells = [
@@ -79,23 +85,23 @@ describe('zzt Weave text import', () => {
     const memboard = memoryreadboardbyaddress(boardaddresses[0])
     expect(memboard).toBeDefined()
 
-    const mid = memoryreadelement(memboard, { x: 2, y: 2 })
+    const mid = memoryreadelement(memboard, { x: 2, y: 2 }, READ_LAYER.ANY)
     expect(NAME(mid?.kind ?? '')).toBe('customtext')
     expect(mid?.char).toBe(65)
 
-    const fancy0 = memoryreadelement(memboard, { x: 3, y: 2 })
+    const fancy0 = memoryreadelement(memboard, { x: 3, y: 2 }, READ_LAYER.ANY)
     expect(NAME(fancy0?.kind ?? '')).toBe('text')
     expect(fancy0?.char).toBe(66)
     expect(memoryreadelementstat(fancy0, 'color')).toBe(COLOR.BLACK)
     expect(memoryreadelementstat(fancy0, 'bg')).toBe(COLOR.BLACK)
 
-    const fancy15 = memoryreadelement(memboard, { x: 4, y: 2 })
+    const fancy15 = memoryreadelement(memboard, { x: 4, y: 2 }, READ_LAYER.ANY)
     expect(NAME(fancy15?.kind ?? '')).toBe('text')
     expect(fancy15?.char).toBe(67)
     expect(memoryreadelementstat(fancy15, 'color')).toBe(COLOR.WHITE)
     expect(memoryreadelementstat(fancy15, 'bg')).toBe(COLOR.BLACK)
 
-    const classic = memoryreadelement(memboard, { x: 5, y: 2 })
+    const classic = memoryreadelement(memboard, { x: 5, y: 2 }, READ_LAYER.ANY)
     expect(NAME(classic?.kind ?? '')).toBe('text')
     expect(classic?.char).toBe(68)
     // type 47 -> (47-46)*16+15 = 31 -> fg 15 white, bg 1 dkblue

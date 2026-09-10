@@ -26,14 +26,15 @@ import { memoryboardelementisobject } from './boardelement'
 import { memoryreadgroup } from './boardlifecycle'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
-export type MEMORY_READ_ELEMENT_LAYER = 'any' | 'object' | 'terrain'
-
-export type MEMORY_READ_ELEMENT_OPTIONS = {
-  /** Which layer to read. Default `any`: object then terrain. */
-  layer?: MEMORY_READ_ELEMENT_LAYER
-  /** Include ISGHOST objects (default false: occupancy skips ghosts). */
-  includeghost?: boolean
+export enum READ_LAYER {
+  ANY,
+  TERRAIN,
+  OBJECT,
+  ANYGHOST,
+  OBJECTGHOST,
 }
+
+export type MEMORY_READ_ELEMENT_LAYER = 'any' | 'object' | 'terrain'
 
 export type MEMORY_LIST_ELEMENT_FILTER = {
   layer?: MEMORY_READ_ELEMENT_LAYER
@@ -201,23 +202,27 @@ export function memoryboardelementindex(
 
 /**
  * Unified board element read.
- * - PT + layer any (default): object-at-pt then terrain
- * - PT + layer object / terrain: that layer only
- * - string / number: object by id, else terrain by numeric index (layer any)
+ * - ANY / ANYGHOST: object-at-pt then terrain (ghosts only with ANYGHOST)
+ * - OBJECT / OBJECTGHOST: object layer only
+ * - TERRAIN: terrain only
+ * - string / number: object by id, else terrain by numeric index (ANY / ANYGHOST)
  */
 export function memoryreadelement(
   board: MAYBE<BOARD>,
   query: PT | string | number,
-  options?: MEMORY_READ_ELEMENT_OPTIONS,
+  layer: READ_LAYER,
 ): MAYBE<BOARD_ELEMENT> {
-  const layer = options?.layer ?? 'any'
-  const includeghost = options?.includeghost === true
+  const includeghost =
+    layer === READ_LAYER.ANYGHOST || layer === READ_LAYER.OBJECTGHOST
+  const objectonly =
+    layer === READ_LAYER.OBJECT || layer === READ_LAYER.OBJECTGHOST
+  const terrainonly = layer === READ_LAYER.TERRAIN
 
   if (memoryisquerypt(query)) {
-    if (layer === 'object') {
+    if (objectonly) {
       return memoryreadobjectatpt(board, query, includeghost)
     }
-    if (layer === 'terrain') {
+    if (terrainonly) {
       return memoryreadterraincell(board, query.x, query.y)
     }
     const index = memoryboardelementindex(board, query)
@@ -232,10 +237,10 @@ export function memoryreadelement(
   }
 
   if (isstring(query) || isnumber(query)) {
-    if (layer === 'object') {
+    if (objectonly) {
       return memoryreadobjectbyid(board, `${query}`)
     }
-    if (layer === 'terrain') {
+    if (terrainonly) {
       const maybeindex = parseFloat(`${query}`)
       const pt = indextopt(isNaN(maybeindex) ? -1 : maybeindex, BOARD_WIDTH)
       return memoryreadterraincell(board, pt.x, pt.y)

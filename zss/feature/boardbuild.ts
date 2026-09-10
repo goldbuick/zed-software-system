@@ -3,7 +3,7 @@ import type { DEVICELIKE } from 'zss/device/types'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createsid } from 'zss/mapping/guid'
 import { ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memoryreadflags } from 'zss/memory/bookoperations'
 import { memoryensuremaincodepage } from 'zss/memory/books'
@@ -148,9 +148,11 @@ function writebuildstat(
   }
 
   if (isstandardelementstat(stat)) {
-    const element = memoryreadelement(currentboard, elementid, {
-      layer: 'object',
-    })
+    const element = memoryreadelement(
+      currentboard,
+      elementid,
+      READ_LAYER.OBJECT,
+    )
     if (!ispresent(element)) {
       apierror(device, player, 'build', `build: element not found ${elementid}`)
       return false
@@ -181,7 +183,7 @@ export function boardbuild(
   if (
     !isexitstat(stat) &&
     isstandardelementstat(stat) &&
-    !ispresent(memoryreadelement(currentboard, elementid, { layer: 'object' }))
+    !ispresent(memoryreadelement(currentboard, elementid, READ_LAYER.OBJECT))
   ) {
     apierror(device, player, 'build', `build: element not found ${elementid}`)
     return

@@ -1,4 +1,4 @@
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
@@ -32,20 +32,32 @@ describe('player occupancy at point', () => {
 
     const standing = makeplayer(board, 44, 3, 'pid_standing')
     const walker = makeplayer(board, 45, 3, 'pid_walker')
-    expect(memoryreadelement(board, { x: 44, y: 3 }, { layer: 'object' })?.id).toBe(standing.id)
-    expect(memoryreadelement(board, { x: 45, y: 3 }, { layer: 'object' })?.id).toBe(walker.id)
+    expect(
+      memoryreadelement(board, { x: 44, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(standing.id)
+    expect(
+      memoryreadelement(board, { x: 45, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(walker.id)
 
     expect(
       memorymoveboardobject(board, walker, { x: 44, y: 3 }),
     ).toBeUndefined()
-    expect(memoryreadelement(board, { x: 44, y: 3 }, { layer: 'object' })?.id).toBe(standing.id)
-    expect(memoryreadelement(board, { x: 45, y: 3 }, { layer: 'object' })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 44, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(standing.id)
+    expect(
+      memoryreadelement(board, { x: 45, y: 3 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
 
     expect(
       memorymoveboardobject(board, walker, { x: 45, y: 3 }),
     ).toBeUndefined()
-    expect(memoryreadelement(board, { x: 44, y: 3 }, { layer: 'object' })?.id).toBe(standing.id)
-    expect(memoryreadelement(board, { x: 45, y: 3 }, { layer: 'object' })?.id).toBe(walker.id)
+    expect(
+      memoryreadelement(board, { x: 44, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(standing.id)
+    expect(
+      memoryreadelement(board, { x: 45, y: 3 }, READ_LAYER.OBJECT)?.id,
+    ).toBe(walker.id)
 
     const bullet = memorycreateboardobjectfromkind(
       board,

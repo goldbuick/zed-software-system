@@ -1,4 +1,4 @@
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
@@ -59,7 +59,9 @@ describe('bullet blocked breakable softdelete', () => {
     memorytickobject(book, board, bullet, BULLET_CODE_NO_DIE)
 
     expect(bullet!.removed).toBe(20)
-    expect(memoryreadelement(board, { x: 5, y: 5 }, { layer: 'object' })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 5, y: 5 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
   })
 
   it('removes both breakable bullets when one walks into the other', () => {
@@ -101,7 +103,11 @@ describe('bullet blocked breakable softdelete', () => {
 
     expect(follower!.removed).toBe(30)
     expect(lead!.removed).toBe(30)
-    expect(memoryreadelement(board, { x: 8, y: 15 }, { layer: 'object' })).toBeUndefined()
-    expect(memoryreadelement(board, { x: 9, y: 15 }, { layer: 'object' })).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 8, y: 15 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 9, y: 15 }, READ_LAYER.OBJECT),
+    ).toBeUndefined()
   })
 })

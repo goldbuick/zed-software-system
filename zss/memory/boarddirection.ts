@@ -14,6 +14,7 @@ import { isstrgroup } from 'zss/words/group'
 import { DIR, PT } from 'zss/words/types'
 
 import {
+  READ_LAYER,
   memoryboardelementindex,
   memoryfindboardplayer,
   memorylistelement,
@@ -42,7 +43,7 @@ function memoryevaldiraway(
     const collision = memoryreadelementstat(element, 'collision')
     const maybept = memoryreadboardpath(board, collision, pt, dest, true)
     if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-      const step = memoryreadelement(board, maybept, { layer: 'object' })
+      const step = memoryreadelement(board, maybept, READ_LAYER.OBJECT)
       if (!ispresent(step)) {
         pt.x = maybept.x
         pt.y = maybept.y
@@ -67,7 +68,7 @@ function memoryevaldirtoward(
     const collision = memoryreadelementstat(element, 'collision')
     const maybept = memoryreadboardpath(board, collision, pt, dest, false)
     if (ispresent(maybept) && (maybept.x !== x || maybept.y !== y)) {
-      const step = memoryreadelement(board, maybept, { layer: 'object' })
+      const step = memoryreadelement(board, maybept, READ_LAYER.OBJECT)
       if (!ispresent(step)) {
         pt.x = maybept.x
         pt.y = maybept.y
@@ -85,7 +86,7 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
   const startterrain = memoryreadelement(
     board,
     { x: startpt.x, y: startpt.y },
-    { layer: 'terrain' },
+    READ_LAYER.TERRAIN,
   )
   const startkind = startterrain?.kind ?? ''
   const results: PT[] = []
@@ -101,11 +102,7 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
       continue
     }
     visited.add(idx)
-    const terrain = memoryreadelement(
-      board,
-      { x: pt.x, y: pt.y },
-      { layer: 'terrain' },
-    )
+    const terrain = memoryreadelement(board, pt, READ_LAYER.TERRAIN)
     if ((terrain?.kind ?? '') !== startkind) {
       continue
     }
@@ -479,7 +476,11 @@ export function memoryevaldir(
             if (x === startpt.x) {
               continue
             }
-            const element = memoryreadelement(board, { x, y: startpt.y })
+            const element = memoryreadelement(
+              board,
+              { x, y: startpt.y },
+              READ_LAYER.ANY,
+            )
             if (ispt(element)) {
               modeval.targets.push(element)
             }
@@ -488,7 +489,11 @@ export function memoryevaldir(
             if (y === startpt.y) {
               continue
             }
-            const element = memoryreadelement(board, { x: startpt.x, y })
+            const element = memoryreadelement(
+              board,
+              { x: startpt.x, y },
+              READ_LAYER.ANY,
+            )
             if (ispt(element)) {
               modeval.targets.push(element)
             }
@@ -589,7 +594,7 @@ export function memoryevaldir(
             if (!ispresent(target)) {
               return { dir, startpt, destpt: startpt, layer, targets: [] }
             }
-            const nextelement = memoryreadelement(board, target)
+            const nextelement = memoryreadelement(board, target, READ_LAYER.ANY)
             if (tracking[groupflag].length < 1) {
               delete tracking[groupflag]
             }

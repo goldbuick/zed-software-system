@@ -4,7 +4,7 @@ import { modemobservevaluestring } from 'zss/device/modem'
 import type { MESSAGE } from 'zss/device/types'
 import { observers, watching } from 'zss/device/vm/state'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import {
   memoryapplyelementstats,
@@ -36,7 +36,7 @@ function applymodemcodetomemory(
     ispresent(maybeobject)
   ) {
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(content)
-    const object = memoryreadelement(board, maybeobject, { layer: 'object' })
+    const object = memoryreadelement(board, maybeobject, READ_LAYER.OBJECT)
     if (ispresent(object)) {
       object.code = value
       memoryapplyelementstats(memoryreadcodepagestatsfromtext(value), object)

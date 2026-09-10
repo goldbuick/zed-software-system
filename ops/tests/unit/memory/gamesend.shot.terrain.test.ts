@@ -9,8 +9,7 @@ jest.mock('zss/memory/runtime', () => {
     ...actual,
     memorychipispresent: (...args: unknown[]) =>
       mockedmemorychipispresent(...args),
-    memorymessagechip: (...args: unknown[]) =>
-      mockedmemorymessagechip(...args),
+    memorymessagechip: (...args: unknown[]) => mockedmemorymessagechip(...args),
   }
 })
 
@@ -23,11 +22,8 @@ import {
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
-import {
-  memorysendtoelement,
-  memorysendtoelements,
-} from 'zss/memory/gamesend'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { memorysendtoelement, memorysendtoelements } from 'zss/memory/gamesend'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryresetbooks } from 'zss/memory/session'
 import { BOARD_WIDTH } from 'zss/memory/types'
 import { DIR } from 'zss/words/types'
@@ -79,9 +75,15 @@ describe('shot damage send to terrain', () => {
       kind: 'breakable',
       breakable: 1,
     })
-    expect(memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })?.kind).toBe('breakable')
+    expect(
+      memoryreadelement(board, { x: pt.x, y: pt.y }, READ_LAYER.TERRAIN)?.kind,
+    ).toBe('breakable')
 
-    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })!
+    const terrain = memoryreadelement(
+      board,
+      { x: pt.x, y: pt.y },
+      READ_LAYER.TERRAIN,
+    )!
     terrain.x = pt.x
     terrain.y = pt.y
     memorysendtoelement(from, terrain, 'shot')
@@ -101,7 +103,11 @@ describe('shot damage send to terrain', () => {
       kind: 'breakable',
       breakable: 1,
     })
-    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })!
+    const terrain = memoryreadelement(
+      board,
+      { x: pt.x, y: pt.y },
+      READ_LAYER.TERRAIN,
+    )!
     terrain.x = pt.x
     terrain.y = pt.y
     memorysendtoelement(from, terrain, 'bombed')

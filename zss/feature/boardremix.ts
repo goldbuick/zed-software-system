@@ -2,7 +2,11 @@
 import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
 import { isnumber, ispresent } from 'zss/mapping/types'
-import { memorylistelement, memoryreadelement } from 'zss/memory/boardaccess'
+import {
+  READ_LAYER,
+  memorylistelement,
+  memoryreadelement,
+} from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memorysafedeleteelement,
@@ -60,7 +64,7 @@ export function boardremix(
   const data = new Uint8Array(BOARD_SIZE * 4)
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
-      const el = memoryreadelement(sourceboard, { x, y })
+      const el = memoryreadelement(sourceboard, { x, y }, READ_LAYER.ANY)
       const r = el?.char ?? 0 // in this case we have to ignore 0
       const g = el?.color ?? NO_COLOR // onclear here means unset
       const b = el?.bg ?? NO_COLOR // onclear here means unset
@@ -121,7 +125,11 @@ export function boardremix(
       // blank target region
       switch (targetset) {
         case 'all': {
-          const maybeobject = memoryreadelement(targetboard, { x, y })
+          const maybeobject = memoryreadelement(
+            targetboard,
+            { x, y },
+            READ_LAYER.ANY,
+          )
           if (memoryboardelementisobject(maybeobject)) {
             memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
           }
@@ -129,7 +137,11 @@ export function boardremix(
           break
         }
         case 'object': {
-          const maybeobject = memoryreadelement(targetboard, { x, y })
+          const maybeobject = memoryreadelement(
+            targetboard,
+            { x, y },
+            READ_LAYER.ANY,
+          )
           if (memoryboardelementisobject(maybeobject)) {
             memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
           }
@@ -172,7 +184,11 @@ export function boardremix(
           }
           if (maybekind) {
             // blank target region
-            const maybeobject = memoryreadelement(targetboard, { x, y })
+            const maybeobject = memoryreadelement(
+              targetboard,
+              { x, y },
+              READ_LAYER.ANY,
+            )
             if (memoryboardelementisobject(maybeobject)) {
               memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
             }
@@ -214,7 +230,7 @@ export function boardremix(
             ...memoryreadelement(
               sourceboard,
               { x: sample.x ?? 0, y: sample.y ?? 0 },
-              { layer: 'terrain' },
+              READ_LAYER.TERRAIN,
             ),
             x,
             y,

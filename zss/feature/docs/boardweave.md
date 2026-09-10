@@ -30,7 +30,7 @@ title: boardweave.ts
 ### Rectangular path (`all` / `object` / `terrain`)
 
 - **Terrain / `all`:** `tmpboard.terrain` is seeded with a **copy** of the full board terrain, then each cell `(x,y)` in `[p1,p2]` writes `orig[src] → tmp[dest]` with torus wrapping on `dest`. Cells inside the rectangle that are **not** in the image of the rectangle under that map are cleared (`undefined`). Cells **outside** the rectangle are unchanged. Finally `targetboard.terrain` is replaced with the tmp array.
-- **Objects / `all`:** Objects at each source cell are found via `memoryreadobjectatpt(..., { includeghost: true })`; coordinates are set to wrapped `dest`.
+- **Objects / `all`:** Objects at each source cell are found via `memoryreadelement(..., READ_LAYER.OBJECTGHOST)`; coordinates are set to wrapped `dest`.
 - **Objects-only:** Terrain array is not replaced; only object coordinates update.
 
 ### Group path (`boardweavegroup`)

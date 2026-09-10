@@ -5,6 +5,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLLISION, PT } from 'zss/words/types'
 
 import {
+  READ_LAYER,
   memorylistelement,
   memorypicknearest,
   memoryreadelement,
@@ -73,7 +74,7 @@ export function memorylistboardptsbyempty(board: MAYBE<BOARD>): PT[] {
   for (let y = 0; y < BOARD_HEIGHT; ++y) {
     for (let x = 0; x < BOARD_WIDTH; ++x) {
       const pt = { x, y }
-      const el = memoryreadelement(board, pt)
+      const el = memoryreadelement(board, pt, READ_LAYER.ANY)
       if (!el?.name && !el?.kind) {
         pts.push(pt)
       }
@@ -119,7 +120,7 @@ function memoryboardreaddistmap(
           const terrain = memoryreadelement(
             board,
             { x: check.x, y: check.y },
-            { layer: 'terrain' },
+            READ_LAYER.TERRAIN,
           )
           if (
             !memorycheckcollision(

@@ -4,6 +4,7 @@ Generated from `export function` / `export const` under `zss/memory/`.
 
 ## boardaccess.ts
 
+- **READ_LAYER** (`ANY` | `TERRAIN` | `OBJECT` | `ANYGHOST` | `OBJECTGHOST`) — required third arg for `memoryreadelement`
 - **memoryreadidorindex**, **memoryboardelementindex**, **memoryreadelement**, **memorypicknearest**, **memorylistelement**, **memoryfindboardplayer**, **memoryreadplayersonboard**
 
 ## boardcornerexits.ts

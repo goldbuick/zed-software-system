@@ -6,7 +6,7 @@ import {
 } from 'zss/feature/boardpivotmath'
 import { indextopt, pttoindex } from 'zss/mapping/2d'
 import { deepcopy, ispresent } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import {
   memorycreateboard,
@@ -305,7 +305,7 @@ export function boardpivotgroup(
   for (let i = 0; i < terrainelements.length; ++i) {
     const fromelement = terrainelements[i]
     const from: PT = { x: fromelement.x ?? -1, y: fromelement.y ?? -1 }
-    const maybefromobject = memoryreadelement(targetboard, from)
+    const maybefromobject = memoryreadelement(targetboard, from, READ_LAYER.ANY)
     if (
       ispresent(maybefromobject) &&
       memoryboardelementisobject(maybefromobject)
@@ -327,7 +327,7 @@ export function boardpivotgroup(
     const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
 
     if (memoryptwithinboard(dest)) {
-      const destelement = memoryreadelement(targetboard, dest)
+      const destelement = memoryreadelement(targetboard, dest, READ_LAYER.ANY)
       const destid = destelement?.id ?? ''
       const destindex = pttoindex(
         { x: destelement?.x ?? 0, y: destelement?.y ?? 0 },
@@ -369,7 +369,7 @@ export function boardpivotgroup(
     const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
     const dest = pivotcellmishin(from.x, from.y, w, h, theta, cx, cy, disc)
     if (memoryptwithinboard(dest)) {
-      const destelement = memoryreadelement(targetboard, dest)
+      const destelement = memoryreadelement(targetboard, dest, READ_LAYER.ANY)
       const destid = destelement?.id ?? ''
       const destcollision: COLLISION = memoryreadelementstat(
         destelement,

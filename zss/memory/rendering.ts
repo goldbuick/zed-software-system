@@ -25,7 +25,7 @@ import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { measurestage } from 'zss/perf/ticktimingstats'
 import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 
-import { memoryreadelement } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memorycornerexitboardids } from './boardcornerexits'
 import { memorydepth2exitboardids } from './boarddepth2exits'
 import {
@@ -352,7 +352,7 @@ export function memoryconverttogadgetcontrollayer(
   board: MAYBE<BOARD>,
 ): LAYER[] {
   const control = createcachedcontrol(player, index)
-  const maybeobject = memoryreadelement(board, player, { layer: 'object' })
+  const maybeobject = memoryreadelement(board, player, READ_LAYER.OBJECT)
   if (!ispresent(board) || !ispresent(maybeobject)) {
     return []
   }

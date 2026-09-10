@@ -40,7 +40,11 @@ import { maptonumber, maptostring } from 'zss/mapping/value'
 import { ispt } from 'zss/words/dir'
 import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
 
-import { memoryboardelementindex, memoryreadelement } from './boardaccess'
+import {
+  READ_LAYER,
+  memoryboardelementindex,
+  memoryreadelement,
+} from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
 import {
@@ -169,15 +173,15 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
     element = memoryreadelement(
       maybeboard,
       elementhyperlinkcontext.elementbyid,
-      { layer: 'object' },
+      READ_LAYER.OBJECT,
     )
   } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
     const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
-    element = memoryreadelement(maybeboard, pt)
+    element = memoryreadelement(maybeboard, pt, READ_LAYER.ANY)
   } else if (isarray(elementhyperlinkcontext.elementsbypoints)) {
     const [first] = elementhyperlinkcontext.elementsbypoints
     if (ispt(first)) {
-      element = memoryreadelement(maybeboard, first)
+      element = memoryreadelement(maybeboard, first, READ_LAYER.ANY)
     }
   }
   // get falls back to kind data
@@ -248,17 +252,19 @@ function registerhyperlinksforelementsetvalue(
   const elements: MAYBE<BOARD_ELEMENT>[] = []
   if (elementhyperlinkcontext.elementbyid) {
     elements.push(
-      memoryreadelement(maybeboard, elementhyperlinkcontext.elementbyid, {
-        layer: 'object',
-      }),
+      memoryreadelement(
+        maybeboard,
+        elementhyperlinkcontext.elementbyid,
+        READ_LAYER.OBJECT,
+      ),
     )
   } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
     const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
-    elements.push(memoryreadelement(maybeboard, pt))
+    elements.push(memoryreadelement(maybeboard, pt, READ_LAYER.ANY))
   } else if (isarray(elementhyperlinkcontext.elementsbypoints)) {
     for (const pt of elementhyperlinkcontext.elementsbypoints) {
       if (ispt(pt)) {
-        elements.push(memoryreadelement(maybeboard, pt))
+        elements.push(memoryreadelement(maybeboard, pt, READ_LAYER.ANY))
       }
     }
   }
@@ -363,7 +369,7 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
 
   // one element, or many ?
   if (p1.x === p2.x && p1.y === p2.y) {
-    const element = memoryreadelement(board, p1, { includeghost: true })
+    const element = memoryreadelement(board, p1, READ_LAYER.ANYGHOST)
     const codepage = memoryreadelementcodepage(mainbook, element)
     // found element def
     if (ispresent(element) && ispresent(codepage)) {
@@ -486,7 +492,7 @@ export function memoryinspectarea(
   const ids = new Set<string>()
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
-      const element = memoryreadelement(board, { x, y })
+      const element = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       const codepage = memoryreadelementcodepage(mainbook, element)
       if (ispresent(codepage) && !ids.has(codepage.id)) {
         ids.add(codepage.id)
@@ -519,7 +525,7 @@ export function memoryinspectcommand(path: string, player: string) {
     return
   }
   const inspect = parsetarget(path)
-  const element = memoryreadelement(board, inspect.target)
+  const element = memoryreadelement(board, inspect.target, READ_LAYER.ANY)
   if (!ispresent(element)) {
     return
   }
@@ -732,7 +738,7 @@ export function memoryinspectempty(
     case 'emptyall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
@@ -747,9 +753,7 @@ export function memoryinspectempty(
           const maybeobject = memoryreadelement(
             board,
             { x, y },
-            {
-              includeghost: true,
-            },
+            READ_LAYER.OBJECTGHOST,
           )
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)

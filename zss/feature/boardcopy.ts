@@ -1,6 +1,6 @@
 import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import {
   memoryboardelementisobject,
   memorycopyelementkinddata,
@@ -29,7 +29,7 @@ import { PT } from 'zss/words/types'
 function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      const maybeobject = memoryreadelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       if (memoryboardelementisobject(maybeobject)) {
         memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
@@ -49,7 +49,7 @@ function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
 function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
-      const maybeobject = memoryreadelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       if (memoryboardelementisobject(maybeobject)) {
         memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
@@ -193,12 +193,12 @@ export function boardcopy(
         // read source element
         const src: PT = { x: srcp1.x + x, y: srcp1.y + y }
         let terrain: MAYBE<BOARD_ELEMENT>
-        let object = memoryreadelement(sourceboard, src)
+        let object = memoryreadelement(sourceboard, src, READ_LAYER.ANY)
         if (memoryboardelementisobject(object)) {
           terrain = memoryreadelement(
             sourceboard,
             { x: src.x, y: src.y },
-            { layer: 'terrain' },
+            READ_LAYER.TERRAIN,
           )
           if (ispid(object?.id)) {
             object = undefined
@@ -317,7 +317,7 @@ export function boardcopygroup(
         y: p1.y + (el.y ?? 0) - corner.y,
       }
 
-      const destelement = memoryreadelement(targetboard, pt)
+      const destelement = memoryreadelement(targetboard, pt, READ_LAYER.ANY)
       if (ispresent(destelement)) {
         if (memoryboardelementisobject(destelement)) {
           memorysafedeleteelement(targetboard, destelement, book.timestamp)

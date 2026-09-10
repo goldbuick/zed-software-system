@@ -19,7 +19,7 @@ import { perfmeasure } from 'zss/perf/ui'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
 
-import { memoryreadelement } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
 import { memoryensureboardready } from './boardlookup'
 import { memoryreadelementstat } from './boards'
@@ -360,9 +360,11 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
   READ_CONTEXT.timestamp = mainbook.timestamp
   READ_CONTEXT.book = mainbook
   READ_CONTEXT.board = memoryreadplayerboard(player)
-  READ_CONTEXT.element = memoryreadelement(READ_CONTEXT.board, player, {
-    layer: 'object',
-  })
+  READ_CONTEXT.element = memoryreadelement(
+    READ_CONTEXT.board,
+    player,
+    READ_LAYER.OBJECT,
+  )
   READ_CONTEXT.elementid = READ_CONTEXT.element?.id ?? ''
   READ_CONTEXT.elementisplayer = true
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementid || player

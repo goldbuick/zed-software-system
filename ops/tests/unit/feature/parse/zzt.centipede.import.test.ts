@@ -1,7 +1,7 @@
 import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memoryclearbook,
@@ -84,8 +84,8 @@ describe('zzt centipede Leader/Follower import', () => {
       return
     }
 
-    const head = memoryreadelement(memboard, { x: hx, y: hy })
-    const seg = memoryreadelement(memboard, { x: sx, y: sy })
+    const head = memoryreadelement(memboard, { x: hx, y: hy }, READ_LAYER.ANY)
+    const seg = memoryreadelement(memboard, { x: sx, y: sy }, READ_LAYER.ANY)
     expect(NAME(head?.kind ?? '')).toBe('head')
     expect(NAME(seg?.kind ?? '')).toBe('segment')
     expect(head?.p1).toBe(4)
@@ -138,7 +138,7 @@ describe('zzt centipede Leader/Follower import', () => {
     memorywritebook(book)
 
     const memboard = memoryreadboardbyaddress(boardaddresses[0])
-    const seg = memoryreadelement(memboard, { x: sx, y: sy })
+    const seg = memoryreadelement(memboard, { x: sx, y: sy }, READ_LAYER.ANY)
     expect(NAME(seg?.kind ?? '')).toBe('segment')
     expect(seg?.p5).toBe(17)
     expect(seg?.p4).toBeUndefined()

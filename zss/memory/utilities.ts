@@ -18,7 +18,7 @@ import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
-import { memoryreadelement } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import {
   memoryexportbook,
   memoryimportbook,
@@ -172,9 +172,7 @@ export function memoryadminmenu(
     const { user } = memoryreadflags(memoryreadmainbook(), pid)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(pid)
-    const playerelement = memoryreadelement(playerboard, pid, {
-      layer: 'object',
-    })
+    const playerelement = memoryreadelement(playerboard, pid, READ_LAYER.OBJECT)
     const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`

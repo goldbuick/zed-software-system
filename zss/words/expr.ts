@@ -7,7 +7,11 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import { memorylistelement, memoryreadelement } from 'zss/memory/boardaccess'
+import {
+  READ_LAYER,
+  memorylistelement,
+  memoryreadelement,
+} from 'zss/memory/boardaccess'
 import { memoryelementmatchesstrgrouponboard } from 'zss/memory/boardlifecycle'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
@@ -42,8 +46,8 @@ function readdirelementmatch(
 ): MAYBE<BOARD_ELEMENT> {
   const maybelement =
     layer === DIR.GROUND
-      ? memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })
-      : memoryreadelement(board, pt)
+      ? memoryreadelement(board, pt, READ_LAYER.TERRAIN)
+      : memoryreadelement(board, pt, READ_LAYER.ANY)
   if (!ispresent(maybelement)) {
     return undefined
   }

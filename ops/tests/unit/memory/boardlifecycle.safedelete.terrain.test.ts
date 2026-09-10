@@ -3,7 +3,7 @@ import {
   memorysafedeleteelement,
   memorywriteterrain,
 } from 'zss/memory/boardlifecycle'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorylistboardptsbyempty } from 'zss/memory/spatialqueries'
 import { BOARD_WIDTH } from 'zss/memory/types'
@@ -27,9 +27,11 @@ describe('memorysafedeleteelement terrain', () => {
     const ok = memorysafedeleteelement(board, board.terrain[index], 1)
     expect(ok).toBe(true)
     expect(board.terrain[index]).toBeUndefined()
-    expect(memoryreadelement(board, pt)).toBeUndefined()
+    expect(memoryreadelement(board, pt, READ_LAYER.ANY)).toBeUndefined()
     expect(
-      memorylistboardptsbyempty(board).some((p) => p.x === pt.x && p.y === pt.y),
+      memorylistboardptsbyempty(board).some(
+        (p) => p.x === pt.x && p.y === pt.y,
+      ),
     ).toBe(true)
   })
 })

@@ -22,7 +22,7 @@ import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
 import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
   memorydeletecodepage,
@@ -221,7 +221,7 @@ export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
           let element: MAYBE<BOARD_ELEMENT> = undefined
           if (ispresent(maybeobject) && type === 'board') {
             const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(codepage)
-            element = memoryreadelement(board, maybeobject, { layer: 'object' })
+            element = memoryreadelement(board, maybeobject, READ_LAYER.OBJECT)
             if (ispresent(element)) {
               type = 'object'
             }

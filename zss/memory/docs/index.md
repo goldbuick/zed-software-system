@@ -48,7 +48,7 @@ No `'main'` / `'all'` tokens. No silent “if book missing, use main” defaults
 
 | Noun | Prefer | Notes |
 |------|--------|-------|
-| Element | `memoryreadelement(board, query, options?)`, `memorylistelement(board, filter?)` | Named-index fast path stays on `board.named` |
+| Element | `memoryreadelement(board, query, READ_LAYER)`, `memorylistelement(board, filter?)` | `READ_LAYER`: ANY / TERRAIN / OBJECT / ANYGHOST / OBJECTGHOST; named-index fast path stays on `board.named` |
 | Flags | `memoryreadflags(book, id)` (+ write / has / clear) | Book-scoped only; no `flags.ts` facade |
 | Codepage | `memoryreadcodepage(book\|books, …)`, `memorylistcodepage(…)`, `memorypickcodepage(…)` | Pick stays separate (weights + cache) |
 | Export | `memoryexport*(entity, { format?, strip? })` | `format: 'wire' \| 'json'`; no `asjson` twins |

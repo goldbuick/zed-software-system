@@ -4,7 +4,7 @@
  */
 
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
-import { memoryreadelement } from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorylistcodepage } from 'zss/memory/bookoperations'
 import {
@@ -368,7 +368,7 @@ function applystatunder(
   y: number,
   entries: SORTEDENTRY[],
 ) {
-  const terrain = memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' })
+  const terrain = memoryreadelement(board, { x: x, y: y }, READ_LAYER.TERRAIN)
   if (!ispresent(terrain) || terrain.removed) {
     return
   }
@@ -444,7 +444,7 @@ function memoryboardtozzt(
   const centipedelinks: { stati: number; el: BOARD_ELEMENT }[] = []
   for (let y = 0; y < ZZT_BOARD_HEIGHT; ++y) {
     for (let x = 0; x < ZZT_BOARD_WIDTH; ++x) {
-      const el = memoryreadelement(board, { x, y })
+      const el = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       const r = kindtozzt(el, x, y, board, entries)
       if (!r.ok) {
         errors.push({ message: r.message, board: exportname })

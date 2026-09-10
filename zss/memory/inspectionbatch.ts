@@ -8,7 +8,7 @@ import { ptstoarea, pttoindex, ptwithin } from 'zss/mapping/2d'
 import { MAYBE, deepcopy, ispresent } from 'zss/mapping/types'
 import { CATEGORY, COLOR, PT } from 'zss/words/types'
 
-import { memoryreadelement } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import {
   memorycreateboardobject,
   memorysafedeleteelement,
@@ -54,11 +54,11 @@ function createboardelementbuffer(
   for (let y = y1; y <= y2; ++y) {
     for (let x = x1; x <= x2; ++x) {
       const pt = { x: x - x1, y: y - y1 }
-      const maybeobject = memoryreadelement(board, { x, y })
+      const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
       if (maybeobject?.kind === 'player') {
         // skip player
         const under = deepcopy(
-          memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' }),
+          memoryreadelement(board, { x: x, y: y }, READ_LAYER.TERRAIN),
         )
         terrain.push(under)
         // visible element only
@@ -68,7 +68,7 @@ function createboardelementbuffer(
           // terrain and object
           terrain.push(
             deepcopy(
-              memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' }),
+              memoryreadelement(board, { x: x, y: y }, READ_LAYER.TERRAIN),
             ),
           )
           objects.push({
@@ -141,7 +141,7 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
           const element = memoryreadelement(
             board,
             { x: x, y: y },
-            { layer: 'terrain' },
+            READ_LAYER.TERRAIN,
           )
           const display = memoryreadelementdisplay(element, 0, 0, 0)
           if (display.color != color) {
@@ -294,7 +294,7 @@ export async function memoryinspectcut(
     case 'cutall': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }
@@ -306,7 +306,7 @@ export async function memoryinspectcut(
     case 'cutobjects': {
       for (let y = p1.y; y <= p2.y; ++y) {
         for (let x = p1.x; x <= p2.x; ++x) {
-          const maybeobject = memoryreadelement(board, { x, y })
+          const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
           if (maybeobject?.category === CATEGORY.ISOBJECT) {
             memorysafedeleteelement(board, maybeobject, mainbook.timestamp)
           }

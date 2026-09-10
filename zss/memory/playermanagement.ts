@@ -13,7 +13,7 @@ import {
 import { maptonumber } from 'zss/mapping/value'
 import { COLLISION, PT } from 'zss/words/types'
 
-import { memoryreadelement } from './boardaccess'
+import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import {
   memorycreateboardobjectfromkind,
@@ -94,7 +94,7 @@ export function memorypurgeplayerboardcopies(
     }
     memorydeleteboardobjectnamedlookup(
       board,
-      memoryreadelement(board, player, { layer: 'object' }),
+      memoryreadelement(board, player, READ_LAYER.OBJECT),
     )
     memorydeleteboardobject(board, player)
   }
@@ -116,7 +116,7 @@ export function memorymoveplayertoboard(
   memoryensureboardready(currentboard)
 
   // player element
-  const element = memoryreadelement(currentboard, player, { layer: 'object' })
+  const element = memoryreadelement(currentboard, player, READ_LAYER.OBJECT)
   if (!memoryboardelementisobject(element)) {
     return false
   }
@@ -468,7 +468,7 @@ export function memoryreadplayeractive(player: string) {
   const mainbook = memoryreadmainbook()
   const isactive = memoryreadbookplayeractive(mainbook, player)
   const board = memoryreadplayerboard(player)
-  const playerelement = memoryreadelement(board, player, { layer: 'object' })
+  const playerelement = memoryreadelement(board, player, READ_LAYER.OBJECT)
   return isactive && ispresent(playerelement)
 }
 
