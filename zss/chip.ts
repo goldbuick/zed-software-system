@@ -27,10 +27,7 @@ import {
   ispresent,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
-import {
-  memoryclearflags,
-  memoryreadflags,
-} from './memory/bookoperations'
+import { memoryclearflags, memoryreadflags } from './memory/bookoperations'
 import { memorycanruncommand } from './memory/permissions'
 import { memoryreadmainbook } from './memory/session'
 import { formatprintvalue } from './words/printvalue'

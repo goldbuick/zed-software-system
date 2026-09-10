@@ -116,7 +116,11 @@ function memoryboardreaddistmap(
         // unwritten
         if (distmap[index] === -2) {
           // check terrain if its passible
-          const terrain = memoryreadelement(board, { x: check.x, y: check.y }, { layer: 'terrain' })
+          const terrain = memoryreadelement(
+            board,
+            { x: check.x, y: check.y },
+            { layer: 'terrain' },
+          )
           if (
             !memorycheckcollision(
               forcollision,

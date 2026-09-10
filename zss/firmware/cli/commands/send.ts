@@ -15,7 +15,10 @@ import { mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
-import { memoryreadelementdisplay, memoryreadflags } from 'zss/memory/bookoperations'
+import {
+  memoryreadelementdisplay,
+  memoryreadflags,
+} from 'zss/memory/bookoperations'
 import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memorycanruncommand } from 'zss/memory/permissions'
 import { memoryelementtologprefix } from 'zss/memory/rendering'

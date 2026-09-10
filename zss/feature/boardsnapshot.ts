@@ -3,17 +3,11 @@ import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorydeletecodepage } from 'zss/memory/bookoperations'
 import { memoryensuremaincodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
-import {
-  memoryreadbooklist,
-  memoryreadmainbook,
-} from 'zss/memory/session'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+import { memoryreadbooklist, memoryreadmainbook } from 'zss/memory/session'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME } from 'zss/words/types'
+
 import { boardcopy } from './boardcopy'
 function snapshotname(target: string) {
   // memory codepage name lookups compare via NAME(); keep snapshot keys lowercased

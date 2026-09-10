@@ -68,7 +68,11 @@ export async function memoryinspectstyle(
         }
       }
       if (mode === 'styleall' || mode === 'styleterrain') {
-        const element = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })
+        const element = memoryreadelement(
+          board,
+          { x: pt.x, y: pt.y },
+          { layer: 'terrain' },
+        )
         if (ispresent(element)) {
           if (cfg.stylechars) {
             element.char = display.char

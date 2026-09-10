@@ -3,15 +3,8 @@
  * Mirrors decode logic in zzt.ts (Shikadi Modding Wiki ZZT format).
  */
 
-import {
-  MAYBE,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
-import {
-  memoryreadelement,
-} from 'zss/memory/boardaccess'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorylistcodepage } from 'zss/memory/bookoperations'
 import {
@@ -27,12 +20,10 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
+
 import { ooptuzz } from './ooptuzz'
 import { zztcolorbyte } from './zztcolor'
-import {
-  ZZT_BOARD_TITLE_FIELD_LEN,
-  zztencodeworld,
-} from './zztencode'
+import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
 const ZZT_BOARD_WIDTH = 60

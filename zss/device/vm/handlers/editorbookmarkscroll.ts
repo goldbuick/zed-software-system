@@ -9,25 +9,21 @@ import {
 import type { MESSAGE } from 'zss/device/types'
 import { EDITOR_BOOKMARK_SCROLL_CHIP } from 'zss/feature/bookmarks'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
-import {
-  isarray,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memorybookmarkdeleteprompt,
   memoryreadbookmarklistcache,
 } from 'zss/memory/bookmarkdeleteconfirm'
 import { memorybookmarkscroll } from 'zss/memory/bookmarkscroll'
+import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import { memoryensuremainbook } from 'zss/memory/books'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetypeasstring,
 } from 'zss/memory/codepageoperations'
-import { memoryreadcodepage } from 'zss/memory/bookoperations'
 import { memoryeditorbookmarkscroll } from 'zss/memory/editorbookmarkscroll'
-import { NAME } from 'zss/words/types'
 import { memoryreadbooklist } from 'zss/memory/session'
+import { NAME } from 'zss/words/types'
 export function handleeditorbookmarkscroll(vm: DEVICE, message: MESSAGE): void {
   // register:editorbookmarkscroll skips memoryruncli; gadget state + gadgetsynctick need MAIN.
   const mainbook = memoryensuremainbook()
@@ -96,7 +92,10 @@ export function handleeditorbookmarkscrollpanel(
         if (isstring(maybeelement)) {
           // TODO
         } else if (isstring(maybeaddress)) {
-          const maybecodepage = memoryreadcodepage(memoryreadbooklist(), maybeaddress)
+          const maybecodepage = memoryreadcodepage(
+            memoryreadbooklist(),
+            maybeaddress,
+          )
           if (ispresent(maybecodepage)) {
             registerbookmarkcodepagesave(
               vm,

@@ -21,20 +21,10 @@ import {
 import { normalizelayerzvariant } from 'zss/gadget/graphics/layerz'
 import { pttoindex } from 'zss/mapping/2d'
 import { ispid } from 'zss/mapping/guid'
-import {
-  MAYBE,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { measurestage } from 'zss/perf/ticktimingstats'
-import {
-  COLLISION,
-  COLOR,
-  DIR,
-  NAME,
-  PT,
-} from 'zss/words/types'
+import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
+
 import { memoryreadelement } from './boardaccess'
 import { memorycornerexitboardids } from './boardcornerexits'
 import { memorydepth2exitboardids } from './boarddepth2exits'
@@ -51,16 +41,14 @@ import {
   memoryreadunderboard,
 } from './boards'
 import { memoryupdateboardvisuals } from './boardvisuals'
-import {
-  memoryreadelementdisplay,
-  memoryreadflags,
-} from './bookoperations'
+import { memoryreadelementdisplay, memoryreadflags } from './bookoperations'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagename,
   memoryreadcodepagetype,
 } from './codepageoperations'
 import { memorypickcodepage } from './codepages'
+import { memoryreadbooklist, memoryreadmainbook } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -70,7 +58,6 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-import { memoryreadbooklist, memoryreadmainbook } from './session'
 
 /** Board-size number[] pool + keyed LAYER/SPRITE cache (memory-internal). */
 const MAX_POOLED_BOARD_ARRAYS = 128
@@ -251,10 +238,7 @@ function createcachedmedia(
   return layermedia
 }
 
-function createcachedcontrol(
-  player: string,
-  index: number,
-): LAYER_CONTROL {
+function createcachedcontrol(player: string, index: number): LAYER_CONTROL {
   const id = `control:${player}:${index}`
   if (!ispresent(LAYER_CACHE[id])) {
     LAYER_CACHE[id] = createcontrol(player, index)
@@ -685,8 +669,11 @@ export function memoryconverttogadgetlayers(
 
     // check for palette
     if (isstring(board.palettepage)) {
-      const codepage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.PALETTE,
-        board.palettepage,)
+      const codepage = memorypickcodepage(
+        memoryreadbooklist(),
+        CODE_PAGE_TYPE.PALETTE,
+        board.palettepage,
+      )
       const palette = memoryreadcodepagedata<CODE_PAGE_TYPE.PALETTE>(codepage)
       if (ispresent(palette?.bits)) {
         layers.push(
@@ -701,8 +688,11 @@ export function memoryconverttogadgetlayers(
     }
     // check for charset
     if (isstring(board.charsetpage)) {
-      const codepage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.CHARSET,
-        board.charsetpage,)
+      const codepage = memorypickcodepage(
+        memoryreadbooklist(),
+        CODE_PAGE_TYPE.CHARSET,
+        board.charsetpage,
+      )
       const charset = memoryreadcodepagedata<CODE_PAGE_TYPE.CHARSET>(codepage)
       if (ispresent(charset?.bits)) {
         layers.push(

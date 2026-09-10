@@ -1,14 +1,8 @@
 import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
-import {
-  shuffle,
-  unique,
-} from 'zss/mapping/array'
-import {
-  createtrackingid,
-  ispid,
-} from 'zss/mapping/guid'
+import { shuffle, unique } from 'zss/mapping/array'
+import { createtrackingid, ispid } from 'zss/mapping/guid'
 import {
   MAYBE,
   isarray,
@@ -17,10 +11,8 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptonumber } from 'zss/mapping/value'
-import {
-  COLLISION,
-  PT,
-} from 'zss/words/types'
+import { COLLISION, PT } from 'zss/words/types'
+
 import { memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import {
@@ -34,17 +26,14 @@ import {
   memorywriteboardnamed,
 } from './boardlookup'
 import { memorycheckblockedboardobject } from './boardmovement'
-import {
-  memoryreadboardbyaddress,
-  memoryreadelementstat,
-} from './boards'
+import { memoryreadboardbyaddress, memoryreadelementstat } from './boards'
 import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearflags,
   memorylistcodepage,
+  memoryreadcodepage,
   memoryreadflag,
   memoryreadflags,
-  memoryreadcodepage,
   memorywriteflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
@@ -103,7 +92,10 @@ export function memorypurgeplayerboardcopies(
     if (!ispresent(board.objects[player])) {
       continue
     }
-    memorydeleteboardobjectnamedlookup(board, memoryreadelement(board, player, { layer: 'object' }))
+    memorydeleteboardobjectnamedlookup(
+      board,
+      memoryreadelement(board, player, { layer: 'object' }),
+    )
     memorydeleteboardobject(board, player)
   }
 }

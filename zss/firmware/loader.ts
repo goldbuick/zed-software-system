@@ -223,7 +223,9 @@ export const LOADER_FIRMWARE = createfirmware({
       // and it'll update the READ_CONTEXT to point to the given object
       // the intent here is afford !chat to drive behavior of a __specific__ object
       const [id] = readargs(words, 0, [ARG_TYPE.NAME])
-      const maybeobject = memoryreadelement(READ_CONTEXT.board, id, { layer: 'object' })
+      const maybeobject = memoryreadelement(READ_CONTEXT.board, id, {
+        layer: 'object',
+      })
       // #oneof chatuser chatdroid
       // #withobject chatuser
       // #go up ' <- this code

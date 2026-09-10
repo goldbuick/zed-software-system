@@ -82,7 +82,11 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
   if (!ispresent(board) || !memoryptwithinboard(startpt)) {
     return []
   }
-  const startterrain = memoryreadelement(board, { x: startpt.x, y: startpt.y }, { layer: 'terrain' })
+  const startterrain = memoryreadelement(
+    board,
+    { x: startpt.x, y: startpt.y },
+    { layer: 'terrain' },
+  )
   const startkind = startterrain?.kind ?? ''
   const results: PT[] = []
   const visited = new Set<number>()
@@ -97,7 +101,11 @@ function memoryfloodfrompt(board: MAYBE<BOARD>, startpt: PT): PT[] {
       continue
     }
     visited.add(idx)
-    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })
+    const terrain = memoryreadelement(
+      board,
+      { x: pt.x, y: pt.y },
+      { layer: 'terrain' },
+    )
     if ((terrain?.kind ?? '') !== startkind) {
       continue
     }

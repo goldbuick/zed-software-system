@@ -57,14 +57,20 @@ function createboardelementbuffer(
       const maybeobject = memoryreadelement(board, { x, y })
       if (maybeobject?.kind === 'player') {
         // skip player
-        const under = deepcopy(memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' }))
+        const under = deepcopy(
+          memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' }),
+        )
         terrain.push(under)
         // visible element only
         flattened.push(under)
       } else {
         if (maybeobject?.category === CATEGORY.ISOBJECT) {
           // terrain and object
-          terrain.push(deepcopy(memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' })))
+          terrain.push(
+            deepcopy(
+              memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' }),
+            ),
+          )
           objects.push({
             ...deepcopy(maybeobject),
             ...pt,
@@ -132,7 +138,11 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
         let bg = COLOR.ONCLEAR
         content += ''
         for (let x = p1x; x <= p2x; ++x) {
-          const element = memoryreadelement(board, { x: x, y: y }, { layer: 'terrain' })
+          const element = memoryreadelement(
+            board,
+            { x: x, y: y },
+            { layer: 'terrain' },
+          )
           const display = memoryreadelementdisplay(element, 0, 0, 0)
           if (display.color != color) {
             color = display.color

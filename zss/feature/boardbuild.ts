@@ -2,20 +2,14 @@ import { apierror } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
 import { boardcopy } from 'zss/feature/boardcopy'
 import { createsid } from 'zss/mapping/guid'
-import {
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
+import { memoryreadflags } from 'zss/memory/bookoperations'
 import { memoryensuremaincodepage } from 'zss/memory/books'
 import { memoryreadcodepagedata } from 'zss/memory/codepageoperations'
 import { memorypickcodepage } from 'zss/memory/codepages'
-import { memoryreadflags } from 'zss/memory/bookoperations'
-import {
-  memoryreadmainbook,
-  memoryreadbooklist,
-} from 'zss/memory/session'
+import { memoryreadbooklist, memoryreadmainbook } from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -154,7 +148,9 @@ function writebuildstat(
   }
 
   if (isstandardelementstat(stat)) {
-    const element = memoryreadelement(currentboard, elementid, { layer: 'object' })
+    const element = memoryreadelement(currentboard, elementid, {
+      layer: 'object',
+    })
     if (!ispresent(element)) {
       apierror(device, player, 'build', `build: element not found ${elementid}`)
       return false
@@ -193,8 +189,11 @@ export function boardbuild(
 
   let sourceboard: BOARD | undefined
   if (isstring(maybesource) && maybesource.length > 0) {
-    const sourcepage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.BOARD,
-      maybesource,)
+    const sourcepage = memorypickcodepage(
+      memoryreadbooklist(),
+      CODE_PAGE_TYPE.BOARD,
+      maybesource,
+    )
     if (!ispresent(sourcepage)) {
       apierror(device, player, 'build', `build: board not found ${maybesource}`)
       return

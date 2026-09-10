@@ -9,10 +9,7 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { SEND_META } from 'zss/words/send'
 import { NAME, PT } from 'zss/words/types'
 
-import {
-  memorylistelement,
-  memoryreadelement,
-} from './boardaccess'
+import { memorylistelement, memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
@@ -238,7 +235,9 @@ export function memorysendtoelements(
       case 'all':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryreadelement(READ_CONTEXT.board, id, { layer: 'object' })
+          const object = memoryreadelement(READ_CONTEXT.board, id, {
+            layer: 'object',
+          })
           if (ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -247,7 +246,9 @@ export function memorysendtoelements(
       case 'others':
         for (let i = 0; i < objectids.length; ++i) {
           const id = objectids[i]
-          const object = memoryreadelement(READ_CONTEXT.board, id, { layer: 'object' })
+          const object = memoryreadelement(READ_CONTEXT.board, id, {
+            layer: 'object',
+          })
           if (id !== chip.id() && ispresent(object)) {
             memorysendtoelement(fromelement, object, send.label)
           }
@@ -255,7 +256,9 @@ export function memorysendtoelements(
         break
       case 'sender': {
         // sender info
-        const sender = memoryreadelement(READ_CONTEXT.board, READ_CONTEXT.element?.sender ?? '',
+        const sender = memoryreadelement(
+          READ_CONTEXT.board,
+          READ_CONTEXT.element?.sender ?? '',
         )
         if (ispresent(sender) && memoryboardelementisobject(sender)) {
           memorysendtoelement(fromelement, sender, send.label)
@@ -316,7 +319,11 @@ function memorysendtolabelatpt(
     if (ispresent(object)) {
       memorysendtoelement(fromelement, object, label)
     }
-    const terrain = memoryreadelement(board, { x: pt.x, y: pt.y }, { layer: 'terrain' })
+    const terrain = memoryreadelement(
+      board,
+      { x: pt.x, y: pt.y },
+      { layer: 'terrain' },
+    )
     if (ispresent(terrain)) {
       // Ensure x/y for softdelete / sender index when terrain lacks them
       if (!ispresent(terrain.x)) {

@@ -11,10 +11,7 @@ import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
 import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
-import {
-  memorylistelement,
-  memoryreadelement,
-} from 'zss/memory/boardaccess'
+import { memorylistelement, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import {
   memoryapplyboardelementcolor,
@@ -105,15 +102,15 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
   if (READ_CONTEXT.elementisplayer) {
     const maxplayershots = READ_CONTEXT.board?.maxplayershots ?? 0
     if (maxplayershots > 0) {
-      const bulletcount = memorylistelement(READ_CONTEXT.board, { layer: 'object' }).filter(
-        (obj) => {
-          return (
-            !obj.removed &&
-            ispid(obj.party) &&
-            memoryreadelementstat(obj, 'collision') === COLLISION.ISBULLET
-          )
-        },
-      ).length
+      const bulletcount = memorylistelement(READ_CONTEXT.board, {
+        layer: 'object',
+      }).filter((obj) => {
+        return (
+          !obj.removed &&
+          ispid(obj.party) &&
+          memoryreadelementstat(obj, 'collision') === COLLISION.ISBULLET
+        )
+      }).length
       if (bulletcount >= maxplayershots) {
         chip.set('didfail', 1)
         // yield after shoot
@@ -498,7 +495,9 @@ export const BOARD_FIRMWARE = createfirmware()
       }
 
       const [target] = readargs(words, 0, [ARG_TYPE.STRING])
-      const maybeobject = memoryreadelement(READ_CONTEXT.board, target, { layer: 'object' })
+      const maybeobject = memoryreadelement(READ_CONTEXT.board, target, {
+        layer: 'object',
+      })
       if (
         ispresent(READ_CONTEXT.element?.x) &&
         ispresent(READ_CONTEXT.element.y) &&

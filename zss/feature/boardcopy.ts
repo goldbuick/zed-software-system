@@ -195,7 +195,11 @@ export function boardcopy(
         let terrain: MAYBE<BOARD_ELEMENT>
         let object = memoryreadelement(sourceboard, src)
         if (memoryboardelementisobject(object)) {
-          terrain = memoryreadelement(sourceboard, { x: src.x, y: src.y }, { layer: 'terrain' })
+          terrain = memoryreadelement(
+            sourceboard,
+            { x: src.x, y: src.y },
+            { layer: 'terrain' },
+          )
           if (ispid(object?.id)) {
             object = undefined
           }

@@ -439,10 +439,7 @@ export function memoryfindboardplayer(
   if (!memoryisquerypt(target)) {
     return undefined
   }
-  return memorypicknearest(
-    target,
-    memorylistelement(board, { name: 'player' }),
-  )
+  return memorypicknearest(target, memorylistelement(board, { name: 'player' }))
 }
 
 export function memoryreadplayersonboard(board: MAYBE<BOARD>): string[] {

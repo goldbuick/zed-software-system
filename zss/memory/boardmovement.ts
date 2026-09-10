@@ -5,10 +5,7 @@ import { dirfrompts, ptapplydir } from 'zss/words/dir'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
-import {
-  memoryboardelementindex,
-  memoryreadelement,
-} from './boardaccess'
+import { memoryboardelementindex, memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import {
   memorydeleteboardobject,
@@ -134,7 +131,9 @@ export function memorymoveboardobject(
   elementtomove: MAYBE<BOARD_ELEMENT>,
   dest: PT,
 ): MAYBE<BOARD_ELEMENT> {
-  const movingelement = memoryreadelement(board, elementtomove?.id ?? '', { layer: 'object' })
+  const movingelement = memoryreadelement(board, elementtomove?.id ?? '', {
+    layer: 'object',
+  })
 
   // first pass clipping
   if (
@@ -240,8 +239,11 @@ export function memorymoveobject(
     memoryboardelementisobject(blocked)
   ) {
     // check terrain __under__ blocked
-    const mayberterrain = memoryreadelement(board, { x: blocked.x ?? -1, y: blocked.y ?? -1,
-     }, { layer: 'terrain' })
+    const mayberterrain = memoryreadelement(
+      board,
+      { x: blocked.x ?? -1, y: blocked.y ?? -1 },
+      { layer: 'terrain' },
+    )
     const terraincollision = memoryreadelementstat(mayberterrain, 'collision')
     if (!memorycheckcollision(elementcollision, terraincollision)) {
       const elementisplayer = ispid(element?.id)
@@ -310,7 +312,9 @@ export function memorymoveobject(
         memorysafedeleteelement(board, element, deletestamp)
       }
       if (blockedisbullet && ispresent(blocked.id)) {
-        const blockedobject = memoryreadelement(board, blocked.id, { layer: 'object' })
+        const blockedobject = memoryreadelement(board, blocked.id, {
+          layer: 'object',
+        })
         if (
           ispresent(blockedobject) &&
           memoryreadelementstat(blockedobject, 'breakable')

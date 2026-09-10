@@ -6,44 +6,20 @@ import {
   pivotdiscfromkeyword,
 } from 'zss/feature/boardpivotmath'
 import { boardremix } from 'zss/feature/boardremix'
-import {
-  boardrevert,
-  boardsnapshot,
-} from 'zss/feature/boardsnapshot'
+import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { PIVOT_SHEAR_KEYWORDS } from 'zss/firmware/autocompleteconstants'
-import {
-  MAYBE,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memorypickcodepage } from 'zss/memory/codepages'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE_TYPE,
-} from 'zss/memory/types'
+import { memoryreadbooklist } from 'zss/memory/session'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
 import { isstrcolor } from 'zss/words/color'
 import { isstrdir } from 'zss/words/dir'
-import {
-  isstrgroup,
-  readgroup,
-  readstrgroupname,
-} from 'zss/words/group'
-import {
-  READ_CONTEXT,
-  readargs,
-} from 'zss/words/reader'
-import {
-  ARG_TYPE,
-  NAME,
-  PT,
-  WORD,
-} from 'zss/words/types'
-import { memoryreadbooklist } from 'zss/memory/session'
+import { isstrgroup, readgroup, readstrgroupname } from 'zss/words/group'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'
 /** Same shape as `ptstoarea` / batch paths: one token `x1,y1,x2,y2` (optional whitespace). */
 const FILTER_RECT_ONEWORD =
   /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/
@@ -189,8 +165,11 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         return 0
       }
       const [stat, ii] = readargs(words, 0, [ARG_TYPE.STRING])
-      const sourceboard = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.BOARD,
-        stat,)
+      const sourceboard = memorypickcodepage(
+        memoryreadbooklist(),
+        CODE_PAGE_TYPE.BOARD,
+        stat,
+      )
       if (!ispresent(sourceboard)) {
         chip.set('didfail', 1)
         return 0
@@ -230,8 +209,11 @@ export const TRANSFORM_FIRMWARE = createfirmware()
         ARG_TYPE.NUMBER,
         ARG_TYPE.NUMBER,
       ])
-      const sourceboard = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.BOARD,
-        stat,)
+      const sourceboard = memorypickcodepage(
+        memoryreadbooklist(),
+        CODE_PAGE_TYPE.BOARD,
+        stat,
+      )
       if (!ispresent(sourceboard)) {
         chip.set('didfail', 1)
         return 0

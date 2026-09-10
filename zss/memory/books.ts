@@ -3,14 +3,9 @@
  */
 import { apilog } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import {
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
-import {
-  memorycreatebook,
-  memoryensurecodepage,
-} from './bookoperations'
+import { ispresent, isstring } from 'zss/mapping/types'
+
+import { memorycreatebook, memoryensurecodepage } from './bookoperations'
 import {
   memoryreadbookbyaddress,
   memoryreadfirstbook,
@@ -65,9 +60,5 @@ export function memoryensuremaincodepage<T extends CODE_PAGE_TYPE>(
   address: string,
   createtype: T,
 ) {
-  return memoryensurecodepage(
-    memoryensuremainbook(),
-    createtype,
-    address,
-  )
+  return memoryensurecodepage(memoryensuremainbook(), createtype, address)
 }

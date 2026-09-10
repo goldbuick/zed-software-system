@@ -14,10 +14,9 @@ export function runcontenturldestination(
   dest: CONTENT_DESTINATION,
 ): void {
   joinstatusscroll(player, 'loading content...', 'carrying flags')
-  const flags = deepcopy(memoryreadflags(memoryreadmainbook(), player)) as Record<
-    string,
-    unknown
-  >
+  const flags = deepcopy(
+    memoryreadflags(memoryreadmainbook(), player),
+  ) as Record<string, unknown>
   registercontentcrosslogin(SOFTWARE, player, { url: dest.raw, flags })
 }
 

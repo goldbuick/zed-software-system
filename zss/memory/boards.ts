@@ -3,12 +3,7 @@
  */
 import { pttoindex } from 'zss/mapping/2d'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
-import {
-  MAYBE,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import {
   EVAL_DIR,
   dirfrompts,
@@ -16,13 +11,8 @@ import {
   mapstrdirtoconst,
 } from 'zss/words/dir'
 import { STR_KIND } from 'zss/words/kind'
-import {
-  CATEGORY,
-  COLLISION,
-  DIR,
-  NAME,
-  PT,
-} from 'zss/words/types'
+import { CATEGORY, COLLISION, DIR, NAME, PT } from 'zss/words/types'
+
 import {
   memoryapplyboardelementcolor,
   memoryboardelementisobject,
@@ -38,12 +28,13 @@ import {
   memoryrebuildboardnamed,
   memorywriteboardnamed,
 } from './boardlookup'
+import { memoryreadcodepage } from './bookoperations'
 import {
   memoryreadcodepagedata,
   memoryreadcodepagestat,
 } from './codepageoperations'
-import { memoryreadcodepage } from './bookoperations'
 import { memorypickcodepage } from './codepages'
+import { memoryreadbooklist } from './session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -53,7 +44,6 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-import { memoryreadbooklist } from './session'
 function memorykinddataisfresh(
   element: BOARD_ELEMENT,
   cached: BOARD_ELEMENT,
@@ -116,8 +106,11 @@ export function memoryreadelementkind(
   }
 
   // Cold path: pick once, rebuild kinddata, stamp kindsourcepageid.
-  const maybeobject = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
-    element.kind,)
+  const maybeobject = memorypickcodepage(
+    memoryreadbooklist(),
+    CODE_PAGE_TYPE.OBJECT,
+    element.kind,
+  )
   if (ispresent(maybeobject)) {
     return memoryapplykinddatafrompage(
       element,
@@ -126,8 +119,11 @@ export function memoryreadelementkind(
       element.kind,
     )
   }
-  const maybeterrain = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN,
-    element.kind,)
+  const maybeterrain = memorypickcodepage(
+    memoryreadbooklist(),
+    CODE_PAGE_TYPE.TERRAIN,
+    element.kind,
+  )
   if (ispresent(maybeterrain)) {
     return memoryapplykinddatafrompage(
       element,
@@ -238,8 +234,11 @@ export function memorymorphboardobject(
     return false
   }
   const [kindname] = kind
-  const objectpage = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
-    kindname,)
+  const objectpage = memorypickcodepage(
+    memoryreadbooklist(),
+    CODE_PAGE_TYPE.OBJECT,
+    kindname,
+  )
   const isterraintarget = !ispresent(objectpage)
   const terrainpage = isterraintarget
     ? memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN, kindname)
@@ -302,8 +301,11 @@ export function memorywriteelementfromkind(
     return undefined
   }
   const [name, maybecolor] = kind
-  const maybeobject = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
-    name,)
+  const maybeobject = memorypickcodepage(
+    memoryreadbooklist(),
+    CODE_PAGE_TYPE.OBJECT,
+    name,
+  )
   if (ispresent(maybeobject)) {
     const object = memorycreateboardobjectfromkind(board, dest, name, id)
     if (ispresent(object)) {
@@ -313,8 +315,11 @@ export function memorywriteelementfromkind(
       return object
     }
   }
-  const maybeterrain = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.TERRAIN,
-    name,)
+  const maybeterrain = memorypickcodepage(
+    memoryreadbooklist(),
+    CODE_PAGE_TYPE.TERRAIN,
+    name,
+  )
   if (ispresent(maybeterrain)) {
     const terrain = memorywriteterrainfromkind(board, dest, name)
     if (ispresent(terrain)) {
@@ -337,8 +342,11 @@ export function memorywritebullet(
     return undefined
   }
   const [name, maybecolor] = kind
-  const maybeobject = memorypickcodepage(memoryreadbooklist(), CODE_PAGE_TYPE.OBJECT,
-    name,)
+  const maybeobject = memorypickcodepage(
+    memoryreadbooklist(),
+    CODE_PAGE_TYPE.OBJECT,
+    name,
+  )
   if (ispresent(maybeobject)) {
     const object = memorycreateboardobjectfromkind(board, dest, name)
     memoryapplyboardelementcolor(object, maybecolor)

@@ -7,10 +7,7 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import {
-  memorylistelement,
-  memoryreadelement,
-} from 'zss/memory/boardaccess'
+import { memorylistelement, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryelementmatchesstrgrouponboard } from 'zss/memory/boardlifecycle'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'

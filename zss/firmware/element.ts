@@ -16,10 +16,7 @@ import { pick } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
-import {
-  memorylistelement,
-  memoryreadelement,
-} from 'zss/memory/boardaccess'
+import { memorylistelement, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
@@ -31,7 +28,10 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { memoryreadelementdisplay, memoryreadflags } from 'zss/memory/bookoperations'
+import {
+  memoryreadelementdisplay,
+  memoryreadflags,
+} from 'zss/memory/bookoperations'
 import { memorysendtoelement } from 'zss/memory/gamesend'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
@@ -166,10 +166,7 @@ function resolveremotetarget(
   }
   if (isstring(peek) || isnumber(peek)) {
     const [, ii] = readargs(words, index, [ARG_TYPE.ANY])
-    return [
-      memoryreadelement(READ_CONTEXT.board, maptostring(peek)),
-      ii,
-    ]
+    return [memoryreadelement(READ_CONTEXT.board, maptostring(peek)), ii]
   }
   return [undefined, index]
 }
@@ -356,7 +353,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // sender info
     const maybesender = READ_CONTEXT.element?.sender
-    const sender = memoryreadelement(READ_CONTEXT.board, isstring(maybesender) ? maybesender : '',
+    const sender = memoryreadelement(
+      READ_CONTEXT.board,
+      isstring(maybesender) ? maybesender : '',
     )
 
     // read stat

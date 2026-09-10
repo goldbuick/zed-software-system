@@ -31,10 +31,7 @@ import {
   memoryreadbooklist,
   memoryreadmainbook,
 } from 'zss/memory/session'
-import {
-  READ_CONTEXT,
-  readargs,
-} from 'zss/words/reader'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
   return fw

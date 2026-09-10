@@ -1,28 +1,14 @@
-import {
-  vmcli,
-  vmplayermovetoboard,
-} from 'zss/device/api'
+import { vmcli, vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
-import {
-  zsstexttape,
-  zsszedlinkline,
-} from 'zss/feature/zsstextui'
+import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { escapedoublequoted } from 'zss/mapping/string'
-import {
-  MAYBE,
-  ispresent,
-} from 'zss/mapping/types'
-import {
-  statformat,
-  stattypestring,
-} from 'zss/words/stats'
+import { MAYBE, ispresent } from 'zss/mapping/types'
+import { statformat, stattypestring } from 'zss/words/stats'
 import { STAT_TYPE } from 'zss/words/types'
-import {
-  memorylistcodepage,
-  memoryreadcodepage,
-} from './bookoperations'
+
+import { memorylistcodepage, memoryreadcodepage } from './bookoperations'
 import { memoryensuremaincodepage } from './books'
 import {
   memoryreadcodepagename,
@@ -30,12 +16,7 @@ import {
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
 import { memoryreadbooklist } from './session'
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  CODE_PAGE,
-  CODE_PAGE_TYPE,
-} from './types'
+import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE, CODE_PAGE_TYPE } from './types'
 function makeitlinktoken(s: string): string {
   if (/\s/.test(s) || s.length === 0) {
     return `"${escapedoublequoted(s)}"`

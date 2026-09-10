@@ -46,10 +46,9 @@ export async function runjoinurldestination(
   }
 
   joinstatusscroll(player, 'peer ready', 'joining... carrying flags')
-  const flags = deepcopy(memoryreadflags(memoryreadmainbook(), player)) as Record<
-    string,
-    unknown
-  >
+  const flags = deepcopy(
+    memoryreadflags(memoryreadmainbook(), player),
+  ) as Record<string, unknown>
   registerjoincrosslogin(SOFTWARE, player, { peerid, flags })
 }
 

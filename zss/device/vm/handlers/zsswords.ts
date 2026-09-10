@@ -17,9 +17,9 @@ import {
 } from 'zss/firmware/runner'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { ispresent } from 'zss/mapping/types'
+import { memorylistcodepage, memoryreadflags } from 'zss/memory/bookoperations'
 import { memorycollectcodelabels } from 'zss/memory/codelabels'
 import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
-import { memorylistcodepage, memoryreadflags } from 'zss/memory/bookoperations'
 import {
   PERMISSION_CONFIG_NAMES,
   PERMISSION_ROLES,
@@ -135,24 +135,24 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
     statsinteraction: STATS_INTERACTION,
     statsboolean: STATS_BOOLEAN,
     statsconfig: STATS_CONFIG,
-    objects: memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.OBJECT }).map(
-      (codepage) => memoryreadcodepagename(codepage),
-    ),
-    terrains: memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.TERRAIN }).map(
-      (codepage) => memoryreadcodepagename(codepage),
-    ),
-    boards: memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.BOARD }).map(
-      (codepage) => memoryreadcodepagename(codepage),
-    ),
-    palettes: memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.PALETTE }).map(
-      (codepage) => memoryreadcodepagename(codepage),
-    ),
-    charsets: memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.CHARSET }).map(
-      (codepage) => memoryreadcodepagename(codepage),
-    ),
-    loaders: memorylistcodepage(memoryreadbooklist(), { type: CODE_PAGE_TYPE.LOADER }).map(
-      (codepage) => memoryreadcodepagename(codepage),
-    ),
+    objects: memorylistcodepage(memoryreadbooklist(), {
+      type: CODE_PAGE_TYPE.OBJECT,
+    }).map((codepage) => memoryreadcodepagename(codepage)),
+    terrains: memorylistcodepage(memoryreadbooklist(), {
+      type: CODE_PAGE_TYPE.TERRAIN,
+    }).map((codepage) => memoryreadcodepagename(codepage)),
+    boards: memorylistcodepage(memoryreadbooklist(), {
+      type: CODE_PAGE_TYPE.BOARD,
+    }).map((codepage) => memoryreadcodepagename(codepage)),
+    palettes: memorylistcodepage(memoryreadbooklist(), {
+      type: CODE_PAGE_TYPE.PALETTE,
+    }).map((codepage) => memoryreadcodepagename(codepage)),
+    charsets: memorylistcodepage(memoryreadbooklist(), {
+      type: CODE_PAGE_TYPE.CHARSET,
+    }).map((codepage) => memoryreadcodepagename(codepage)),
+    loaders: memorylistcodepage(memoryreadbooklist(), {
+      type: CODE_PAGE_TYPE.LOADER,
+    }).map((codepage) => memoryreadcodepagename(codepage)),
     categories: [...objectKeys(CATEGORY_CONSTS)],
     colors: [...objectKeys(colorconsts)],
     dirs: [

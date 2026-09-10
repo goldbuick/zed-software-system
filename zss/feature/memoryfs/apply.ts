@@ -9,10 +9,10 @@ import { ispresent } from 'zss/mapping/types'
 import { memorydeleteboardobject } from 'zss/memory/boardlifecycle'
 import { memoryinitboard } from 'zss/memory/boards'
 import {
-  memorydeletecodepage,
   memoryclearflags,
-  memoryreadflags,
+  memorydeletecodepage,
   memoryreadcodepage,
+  memoryreadflags,
   memoryupsertcodepage,
   memorywriteflag,
 } from 'zss/memory/bookoperations'

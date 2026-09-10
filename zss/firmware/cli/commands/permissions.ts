@@ -27,8 +27,8 @@ import {
   memoryreadrolebytoken,
   memoryrevokecommand,
   memoryserializepermissions,
-  memorywriterolefortoken,
   memoryunbantoken,
+  memorywriterolefortoken,
 } from 'zss/memory/permissions'
 import {
   memoryisoperator,

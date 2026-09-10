@@ -172,7 +172,9 @@ export function memoryadminmenu(
     const { user } = memoryreadflags(memoryreadmainbook(), pid)
     const withuser = isstring(user) ? user : 'player'
     const playerboard = memoryreadplayerboard(pid)
-    const playerelement = memoryreadelement(playerboard, pid, { layer: 'object' })
+    const playerelement = memoryreadelement(playerboard, pid, {
+      layer: 'object',
+    })
     const icon = memoryreadelementdisplay(playerelement)
     const icontext = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR$CYAN`
     const location = `$WHITEis on ${playerboard?.name ?? 'void board'}`
@@ -259,9 +261,11 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
     return []
   }
   return list
-    .map((entry) => memoryimportbook(entry as Record<string, unknown>, {
-      format: 'json',
-    }))
+    .map((entry) =>
+      memoryimportbook(entry as Record<string, unknown>, {
+        format: 'json',
+      }),
+    )
     .filter(ispresent)
 }
 

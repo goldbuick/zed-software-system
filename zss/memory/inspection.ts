@@ -25,11 +25,7 @@ import {
   resolvehyperlinksharedbridge,
 } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import {
-  indextopt,
-  ptstoarea,
-  rectpoints,
-} from 'zss/mapping/2d'
+import { indextopt, ptstoarea, rectpoints } from 'zss/mapping/2d'
 import { range } from 'zss/mapping/array'
 import { escapedoublequoted } from 'zss/mapping/string'
 import { CYCLE_DEFAULT } from 'zss/mapping/tick'
@@ -40,33 +36,19 @@ import {
   ispresent,
   isstring,
 } from 'zss/mapping/types'
-import {
-  maptonumber,
-  maptostring,
-} from 'zss/mapping/value'
+import { maptonumber, maptostring } from 'zss/mapping/value'
 import { ispt } from 'zss/words/dir'
-import {
-  CATEGORY,
-  COLLISION,
-  NAME,
-  PT,
-  WORD,
-} from 'zss/words/types'
-import {
-  memoryboardelementindex,
-  memoryreadelement,
-} from './boardaccess'
+import { CATEGORY, COLLISION, NAME, PT, WORD } from 'zss/words/types'
+
+import { memoryboardelementindex, memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
-import {
-  memorysafedeleteelement,
-  memorywriteterrain,
-} from './boardlifecycle'
+import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
 import {
   memoryinitboard,
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from './boards'
-import { memoryreadelementcodepage, memoryreadcodepage } from './bookoperations'
+import { memoryreadcodepage, memoryreadelementcodepage } from './bookoperations'
 import { memoryensuremainbook } from './books'
 import {
   memoryreadcodepagename,
@@ -81,9 +63,9 @@ import {
   memoryelementtodisplayprefix,
 } from './rendering'
 import {
+  memoryreadbooklist,
   memoryreadmainbook,
   memoryreadoperator,
-  memoryreadbooklist,
 } from './session'
 import {
   BOARD,
@@ -184,7 +166,11 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
   const maybeboard = memoryreadboardbyaddress(elementhyperlinkcontext.board)
   let element: MAYBE<BOARD_ELEMENT>
   if (elementhyperlinkcontext.elementbyid) {
-    element = memoryreadelement(maybeboard, elementhyperlinkcontext.elementbyid, { layer: 'object' })
+    element = memoryreadelement(
+      maybeboard,
+      elementhyperlinkcontext.elementbyid,
+      { layer: 'object' },
+    )
   } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
     const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)
     element = memoryreadelement(maybeboard, pt)
@@ -262,7 +248,9 @@ function registerhyperlinksforelementsetvalue(
   const elements: MAYBE<BOARD_ELEMENT>[] = []
   if (elementhyperlinkcontext.elementbyid) {
     elements.push(
-      memoryreadelement(maybeboard, elementhyperlinkcontext.elementbyid, { layer: 'object' }),
+      memoryreadelement(maybeboard, elementhyperlinkcontext.elementbyid, {
+        layer: 'object',
+      }),
     )
   } else if (isnumber(elementhyperlinkcontext.elementbyindex)) {
     const pt = indextopt(elementhyperlinkcontext.elementbyindex, BOARD_WIDTH)

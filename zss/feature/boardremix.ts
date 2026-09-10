@@ -207,13 +207,15 @@ export function boardremix(
       // sample if element category is object
       if (memoryboardelementisobject(maybenew)) {
         // sample t board example of 'kind'
-        const sample = pick(
-          memorylistelement(sourceboard, { name: maybekind }),
-        )
+        const sample = pick(memorylistelement(sourceboard, { name: maybekind }))
         if (ispresent(sample)) {
           // copy terrain element from under sample
           memorywriteterrain(targetboard, {
-            ...memoryreadelement(sourceboard, { x: sample.x ?? 0, y: sample.y ?? 0 }, { layer: 'terrain' }),
+            ...memoryreadelement(
+              sourceboard,
+              { x: sample.x ?? 0, y: sample.y ?? 0 },
+              { layer: 'terrain' },
+            ),
             x,
             y,
           })

@@ -19,17 +19,9 @@ import {
 } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import { CODEPAGE_NAME_LISTS } from 'zss/firmware/autocompleteconstants'
-import {
-  codepagepicksuffix,
-  vmflushop,
-} from 'zss/firmware/cli/utils'
+import { codepagepicksuffix, vmflushop } from 'zss/firmware/cli/utils'
 import { randominteger } from 'zss/mapping/number'
-import {
-  MAYBE,
-  isnumber,
-  ispresent,
-  isstring,
-} from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import {
@@ -72,11 +64,7 @@ import {
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
 import { romread } from 'zss/rom'
-import {
-  READ_CONTEXT,
-  readargs,
-  readargsuntilend,
-} from 'zss/words/reader'
+import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import { ARG_TYPE } from 'zss/words/types'
 export function registerbookscommands(fw: FIRMWARE): FIRMWARE {
   return fw

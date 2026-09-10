@@ -396,11 +396,7 @@ export function memorylistcodepage(
   return out
 }
 
-export function memoryreadflag(
-  book: MAYBE<BOOK>,
-  id: string,
-  name: string,
-) {
+export function memoryreadflag(book: MAYBE<BOOK>, id: string, name: string) {
   const flags = memoryreadflags(book, id)
   return flags?.[name]
 }

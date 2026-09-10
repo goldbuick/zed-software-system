@@ -1,7 +1,4 @@
-import {
-  apitoast,
-  vmpublish,
-} from 'zss/device/api'
+import { apitoast, vmpublish } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { rundeeplinks } from 'zss/feature/deeplinkrun'
 import {
@@ -11,11 +8,7 @@ import {
   storagereadznstoken,
 } from 'zss/feature/storage'
 import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import {
-  znslist,
-  znsnormalizepathkey,
-  znsread,
-} from 'zss/feature/url'
+import { znslist, znsnormalizepathkey, znsread } from 'zss/feature/url'
 import { write } from 'zss/feature/writeui'
 import {
   zssheaderlines,
@@ -24,14 +17,11 @@ import {
   zsstexttape,
   zsszedlinkline,
 } from 'zss/feature/zsstextui'
-import {
-  isarray,
-  ispresent,
-} from 'zss/mapping/types'
+import { isarray, ispresent } from 'zss/mapping/types'
 import {
   memorylistcodepage,
-  memorywritecodepage,
   memoryreadcodepage,
+  memorywritecodepage,
 } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -45,15 +35,8 @@ import {
   memoryreadfirstcontentbook,
   memoryreadmainbook,
 } from 'zss/memory/session'
-import {
-  READ_CONTEXT,
-  readargs,
-} from 'zss/words/reader'
-import {
-  ARG_TYPE,
-  NAME,
-  WORD,
-} from 'zss/words/types'
+import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 type ZNS_SESSION = { email: string; token: string; namespace: string }
 
 export async function znsreadsession(): Promise<ZNS_SESSION | undefined> {
