@@ -39,8 +39,8 @@ Parses text-based notation and converts it to scheduled note events.
 ## Parse Format
 
 - Multiple voices separated by `;`
-- Example: `"#play +qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
-- **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `+qcde` (octave `+`, duration `q`, notes `cde`).
+- Example: `"#play qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
+- **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `qcde` (duration `q`, notes `cde` at default octave 4).
 
 ## invokeplay()
 
@@ -74,4 +74,11 @@ Triplet divides current duration by 3; dotted multiplies by 1.5.
 
 ## Live onset humanize
 
-Live `#play` / `#bgplay` note and drum onsets get a fixed random jitter of up to **±4 ms** (`HUMANIZE_SEC` in [`playhumanize.ts`](../backend/wasm/playhumanize.ts)) so grid music feels slightly organic. Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter).
+Live note and drum onsets get a small random jitter so grid music feels slightly organic (`playhumanize.ts`):
+
+| Surface | Channels | Peak |
+|---------|----------|------|
+| `#play` | 0–3 | ±8 ms (`HUMANIZE_SEC`) |
+| `#bgplay` | 4–7 | ±4 ms (`HUMANIZE_BGPLAY_SEC`) |
+
+Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.

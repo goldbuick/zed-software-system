@@ -23,7 +23,7 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./boards` — memoryinitboard, memoryreadelementstat
 - `./boardtick` — memorytickboard
 - `./bookoperations` — memoryreadcodepage
-- `./books` — memoryensuresoftwarebook
+- `./books` — memoryensuremainbook
 - `./boundaries` — memoryboundarydelete
 - `./codepageoperations` — memoryreadcodepagestats
 - `./codepages` — memorypickcodepagewithtypeandstat
@@ -31,14 +31,14 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./loader` — memoryloaderarg
 - `./playermanagement` — memoryreadplayerboard
 - `./runtimeboundary` — memoryreadboardelementruntime, memoryreadboardruntime
-- `./session` — memoryreadbookbysoftware, memoryreadloaders, memoryreadoperator
+- `./session` — memoryreadmainbook, memoryreadloaders, memoryreadoperator
 - `./synthstate` — memorymergesynthvoice, memorymergesynthvoicefx, memoryreadsynthplay
 
 ## Exports
 
 | Category | Function | Notes |
 |----------|----------|-------|
-| Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` also frees every flag-backed boundary |
+| Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` frees flag-backed boundaries on every loaded book |
 | CLI | `memoryrepeatclilast(player)`, `memoryruncli(player, cli, tracking?)` | `tracking=true` saves into `flags.playbuffer` |
 | Tick | `memorytickloaders()` | Increments `mainbook.timestamp`, runs every loader; restores/saves per-loader board/object targeting via [`loader.ts`](loader.md) snapshot helpers |
 | Tick | `memorytickmain(timestamp, boards, playeronly?)` | Runs draw + update passes for every supplied board; called from sim `handleticktock` |

@@ -28,6 +28,7 @@ Domain-specific readers (`readcategory`, `readcolor`, `readdir`, `readkind`) con
 | [send.md](send.md) | Send/message parsing (target:label args) |
 | [stats.md](stats.md) | Stat format parsing (loader, board, range, select, etc.) |
 | [textformat.md](textformat.md) | Text formatting with colors, $flags, and layout |
+| [printvalue.md](printvalue.md) | `$name` display stringify (COLOR/DIR/KIND/GROUP/COLLISION/CATEGORY) |
 | [system.md](system.md) | Platform detection (ismac, metakey) |
 
 ## Data Flow

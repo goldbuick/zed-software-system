@@ -30,14 +30,17 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 
 | Command | Description |
 |---------|-------------|
-| `bookrename` | Rename main book (operator) |
+| `books` | List loaded books; mark opened |
+| `bookopen` | Switch opened (live) book by id or name |
+| `bookcreate` | Create an empty book without opening it |
+| `bookrename` | Rename opened book (operator) |
 | `booktrash` | Delete book by address (operator) |
-| `pages` | List pages in open book(s) |
+| `pages` | List pages in all loaded books |
 | `pageopen` | Open code editor for page; writes modem init string |
-| `pagetrash` | Delete page from main book (operator) |
-| `books` | List books |
-| `boards` | List boards |
+| `pagetrash` | Delete page from opened book (operator) |
+| `boards` | List boards in all loaded books |
 | `boardopen` | Teleport player to board by stat |
+| `search` | Search pages and boards across all loaded books |
 | `trash` | Show trash menu (books + pages) |
 
 ### Game State

@@ -23,5 +23,5 @@ title: bookoperations.ts
 | Flags | memoryclearbookflags, memoryreadbookflags, memoryhasbookflags, memoryhasbookmatch, memoryreadbookflag, memorywritebookflag |
 | Book | memorycreatebook, memoryexportbook, memoryexportbookasjson, memoryimportbook, memoryimportbookfromjson, memoryupdatebookname, memoryupdatebooktoken |
 
-> Higher-level `memoryensurebookbyname` / `memoryensuresoftwarebook` / `memorycreatesoftwarebook` / `memoryensuresoftwarecodepage` live in [`books.ts`](../books.ts) (separate module).
+> Higher-level `memoryensurebookbyname` / `memoryensuremainbook` / `memorycreatesoftwarebook` / `memoryensuremaincodepage` live in [`books.ts`](../books.ts) (separate module).
 > Per-id flag bag accessors (`memoryreadflags` / `memoryhasflags` / `memoryclearflags`, **not** the per-book flag helpers above) live in [`flags.ts`](../flags.ts).

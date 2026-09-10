@@ -86,7 +86,7 @@ flowchart TB
 - **Voice cap:** at most **four** `;`-separated segments per `#play` (`MAX_VOICES_PER_PLAY`). Layers follow **U** order (melodic track = one segment; selected drums = one merged segment).
 - **Measure boundaries:** [`midimeasurespans`](../midiplay.ts) walks the file using [`miditickspersmeasure`](../midiplay.ts) at each bar start so **meter changes** stay aligned (previously a single length from tick 0 was used for every bar).
 - **Per voice in bar:** [`monophonelineinmeasure`](../midiplay.ts) / [`drumlineinmeasure`](../midiplay.ts) — notes filtered to `[start, end)`, gaps filled with [`appendplayrests`](../midiplay.ts) (internal).
-- **Token shape (ZZT-style):** **Melodic:** for each note, `+`/`-` to target octave (from baseline 3), then duration op (`ytsiqhw`), then letter + optional `#`/`!` (see [`playnotation.ts`](../../synth/playnotation.ts)). **Drums:** duration then drum token (digits `0`–`9` or `p` for GM note 39 hand clap; see map in [`midiplay.ts`](../midiplay.ts)). **Rests:** duration then `x` (duration carries until the next op). [`playreststringforticks`](../midiplay.ts) builds a rest-only first voice when needed.
+- **Token shape (ZZT-style):** **Melodic:** for each note, `+`/`-` to target octave (from baseline 4), then duration op (`ytsiqhw`), then letter + optional `#`/`!` (see [`playnotation.ts`](../../synth/playnotation.ts)). **Drums:** duration then drum token (digits `0`–`9` or `p` for GM note 39 hand clap; see map in [`midiplay.ts`](../midiplay.ts)). **Rests:** duration then `x` (duration carries until the next op). [`playreststringforticks`](../midiplay.ts) builds a rest-only first voice when needed.
 - **Drum-only:** on **measure 0 only**, prepend full-bar rest (e.g. `wx; ` before drums) so the first voice is silent and drums land on the next parseplay segment; later measures omit this pad (see [`midiplaysnippetsbymeasure`](../midiplay.ts) tail).
 
 ## 3. Target codepage layout (`parsemidi` output)
@@ -114,8 +114,8 @@ Structure matches [`.zzm` import](../zzm.ts): one `:song_0` block with **multipl
 Example (`twomeasures.mid` fixture): track **0** is seen first globally; track **1** is added when its first note appears at the next measure boundary, so both voices import:
 
 ```text
-#play +qcdef; wx
-#play +qgaa#+c; +qefga
+#play qcdef; wx
+#play qgaa#+c; qefga
 ```
 
 ## 4. One `#play` line → runtime (`parseplay`)

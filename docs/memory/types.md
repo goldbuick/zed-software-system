@@ -36,7 +36,7 @@ title: types.ts
 
 | Type | Description |
 |------|-------------|
-| BOARD | terrain, objects, lookup, named, exits, over/under, etc. |
+| BOARD | terrain, objects, named (runtime), exits, over/under, etc. |
 | BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, category, etc. |
 | BOOK | id, name, pages, flags, activelist |
 | CODE_PAGE | id, code, board/object/terrain/charset/palette, stats |

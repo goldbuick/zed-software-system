@@ -4,6 +4,8 @@ title: textformat.ts
 
 **Purpose**: Tokenizes and renders formatted text with colors, `$name` flags, `$CENTER`, `$META`, and numeric char codes. Used for chat, ticker, hyperlinks, and any text display that supports inline formatting.
 
+`$name` placeholders in scroll text and double-quoted template strings are expanded at compile time to `api.print(api.get('name'), 'name')`. Display naming for COLOR / DIR / KIND / GROUP / COLLISION / CATEGORY lives in [`printvalue.ts`](../printvalue.ts) (`formatprintvalue`).
+
 ## Dependencies
 
 - `chevrotain` — Lexer, createToken, createTokenInstance

@@ -193,6 +193,7 @@
 - [dir.ts](https://zed.cafe/docs/words/dir)
 - [expr.ts](https://zed.cafe/docs/words/expr)
 - [kind.ts](https://zed.cafe/docs/words/kind)
+- [printvalue.ts](https://zed.cafe/docs/words/printvalue)
 - [reader.ts](https://zed.cafe/docs/words/reader)
 - [send.ts](https://zed.cafe/docs/words/send)
 - [stats.ts](https://zed.cafe/docs/words/stats)

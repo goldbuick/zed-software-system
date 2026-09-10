@@ -840,7 +840,7 @@ Source: https://zed.cafe/docs/feature/boardsnapshot
 
 ## Flow
 
-1. **Snapshot**: Clear existing snapshot codepage from all books → `memoryensuresoftwarecodepage(MAIN, name, BOARD)` → `boardcopy` full region to snapshot (with MAIN as `READ_CONTEXT.book`)
+1. **Snapshot**: Clear existing snapshot codepage from all books → `memoryensuremaincodepage(MAIN, name, BOARD)` → `boardcopy` full region to snapshot (with opened book as `READ_CONTEXT.book`)
 2. **Revert**: Read snapshot board → `boardcopy` snapshot back to target (same MAIN book context)
 
 ---
@@ -854,7 +854,7 @@ Source: https://zed.cafe/docs/feature/boardweave
 
 - `zss/mapping/2d` — indextopt, pttoindex
 - `zss/mapping/types` — ispresent
-- `zss/memory/boardaccess` — memoryreadelement
+- `zss/memory/boardaccess` — memoryreadelement, memoryreadobjectatpt
 - `zss/memory/boardelement` — memoryboardelementisobject
 - `zss/memory/boardlifecycle` — memorycreateboard, memoryreadgroup
 - `zss/memory/boardmovement` — `* as boardmovement`
@@ -877,14 +877,14 @@ Source: https://zed.cafe/docs/feature/boardweave
 ### Rectangular path (`all` / `object` / `terrain`)
 
 - **Terrain / `all`:** `tmpboard.terrain` is seeded with a **copy** of the full board terrain, then each cell `(x,y)` in `[p1,p2]` writes `orig[src] → tmp[dest]` with torus wrapping on `dest`. Cells inside the rectangle that are **not** in the image of the rectangle under that map are cleared (`undefined`). Cells **outside** the rectangle are unchanged. Finally `targetboard.terrain` is replaced with the tmp array.
-- **Objects / `all`:** Objects are read via the **stale** `board.lookup` per cell (unchanged until `memoryinitboard` at the end), so each source cell still sees its pre-weave occupant; coordinates are set to wrapped `dest`.
+- **Objects / `all`:** Objects at each source cell are found via `memoryreadobjectatpt(..., { includeghost: true })`; coordinates are set to wrapped `dest`.
 - **Objects-only:** Terrain array is not replaced; only object coordinates update.
 
 ### Group path (`boardweavegroup`)
 
 - **Sort:** One deterministic sweep order — primary axis is whichever has larger `|delta|` (`x` if tied with `y`); direction follows the sign of that axis; when both `|delta.x|` and `|delta.y|` match, `x` is compared first, then `y`.
 - **Terrain apply:** Builds a new terrain array from a snapshot, places each group cell’s tile at `from + delta` (no wrap; off-board is rejected in the collision pass). Each placed or displaced tile is written via `memorycloneboardelement` so the new terrain object gets its **own** runtime boundary (cloned payload, not a shared id). **Displaced terrain:** cells that receive a group tile but were not group sources (“incoming-only”) previously held non-group terrain; that terrain is **not** discarded. Those tiles are paired in sorted order (same sweep comparator as above) with vacated group source cells (`gset \ dest`) and written into the vacated indices with updated `x`/`y`, so terrain swaps into the leading edge instead of being overwritten. Vacated cells with no displaced partner (or empty source) become `undefined`.
-- **Carried objects:** After terrain writes, objects found at original `from` positions (via `memoryreadelement(..., true)` / nolookup) are shifted by `delta`.
+- **Carried objects:** After terrain writes, objects found at original `from` positions (via `memoryreadelement`) are shifted by `delta`.
 - **Objects:** `boardmovement.memorymoveobject` for each group object. If any apply-phase move fails, the board is restored from a `memoryexportboard` snapshot taken immediately before terrain mutation, then the function returns `false`.
 
 ---
@@ -2122,14 +2122,14 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 | `duplicate` / `dupe` | `dir` `dupedir` | Duplicate element at dir in dupedir direction |
 | `duplicatewith` / `dupewith` | `arg` `dir` `dupedir` | Duplicate with arg |
 | `shove` | `dir` `movedir` | Move object at dir by movedir delta |
-| `push` | `dir` `movedir` | Same as shove but only for pushable objects |
+| `push` | `dir` `movedir` | Same as shove but only for pushable objects; a given object succeeds at most once per tick |
 | `transport` | `target` | Transport object along transporter line (finds opposite transporter, moves object) |
 | `change` | `target` `into` | Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind. |
 | `write` | `dir` `color` `text…` | Write colored text on board at direction (E/W/N/S) |
 
 ## Internal Functions
 
-- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields
+- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields. For **contact damage**, prefer `#send at x y shot` (see [gamesend.md](../../memory/docs/gamesend.md)) instead of point-blank `#shoot`.
 - **`commandput`** — Handles put: validates context, parses dir+kind, handles multi-target dirs, clipping, ghost vs solid, pushable shove, empty delete, color apply, object/terrain write
 - **`commanddupe`** — Duplicates element at dir in dupedir; blocks on player kind and blocked dest
 
@@ -2173,14 +2173,17 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 
 | Command | Description |
 |---------|-------------|
-| `bookrename` | Rename main book (operator) |
+| `books` | List loaded books; mark opened |
+| `bookopen` | Switch opened (live) book by id or name |
+| `bookcreate` | Create an empty book without opening it |
+| `bookrename` | Rename opened book (operator) |
 | `booktrash` | Delete book by address (operator) |
-| `pages` | List pages in open book(s) |
+| `pages` | List pages in all loaded books |
 | `pageopen` | Open code editor for page; writes modem init string |
-| `pagetrash` | Delete page from main book (operator) |
-| `books` | List books |
-| `boards` | List boards |
+| `pagetrash` | Delete page from opened book (operator) |
+| `boards` | List boards in all loaded books |
 | `boardopen` | Teleport player to board by stat |
+| `search` | Search pages and boards across all loaded books |
 | `trash` | Show trash menu (books + pages) |
 
 ### Game State
@@ -2293,7 +2296,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
-| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (IVS low-latency), `#broadcast whip twitch <key>`, `#broadcast whip ivs <token>`, or `#broadcast whip <url> <bearer>` (operator only) |
+| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only) |
 | `media` | Board TV media queue: `#media` (queue list), `#media <url>` (submit), `#media playlist` (copy played + queue URLs) |
 | `queue` | Media helper admin: `#queue` (menu), `#queue <peerid>` (bind), `#queue skip` / `clear` / `stop` / `limit <N>` / `approve <N>` / `reject <N>` |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
@@ -2350,6 +2353,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `clear` | Variables (set to 0) |
 | `set` | Variable to value |
 | `become` | Element into specified kind |
+| `morph` | Change kind in place, keep stats and id |
 | `bind` | Code from named element |
 | `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
@@ -2367,6 +2371,8 @@ All firmware commands and their descriptions. Commands are available depending o
 | `runwith` | Function with argument |
 | `array` | Array variable |
 | `read` | Property from object into variable |
+| `pget` | Attr from dir or object id into variable (Weave-like) |
+| `pset` | Attr on dir or object id (Weave-like; `step` sets stepx/stepy) |
 | `toast` | Toast notification |
 | `ticker` | Element ticker text |
 
@@ -2380,7 +2386,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `goto` | Teleport player via `memorymoveplayertoboard` — board by name or address with optional x, y |
 | `transport` | Element across board with transporter logic |
 | `shove` | Target object in direction |
-| `push` | Target object in direction ONLY if pushable |
+| `push` | Target object in direction ONLY if pushable (at most once per tick) |
 | `duplicate` | Element at direction in given direction |
 | `duplicatewith` | Element with argument |
 | `dupe` | Element at direction in given direction |
@@ -2539,7 +2545,7 @@ Writes stats:
 ### everytick(chip)
 
 - **Health** — If player and health ≤ 0: endofprogram, vmlogout
-- **Walk** — If element has stepx/stepy: move object
+- **Walk** — If element has stepx/stepy: move object; on blocked move send `:thud` (blocker → walker)
 
 ## Commands
 
@@ -2547,8 +2553,10 @@ Writes stats:
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `set` | `name` `value` | Set stat (default value 1) |
+| `set` | `name` `value` | Set stat (default value 1). Weave form: `set name pget <dir\|id> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
+| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p10`, …) |
+| `pset` | `<dir\|id>` `attr` `value` | Write remote element attr (`step <walkdir>` sets stepx/stepy) |
 | `cycle` | `value` | Set cycle (1–255) |
 
 ### Movement
@@ -2564,6 +2572,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `become` | `kind` | Transform into kind (preserve color), delete self, create new, endofprogram |
+| `morph` | `kind` | Change kind in place (keep id and stats), swap code/display, halt chip |
 | `bind` | `name` | Copy code from first named element; halt chip |
 | `char` | [dir] `value` | Set char at dir or self |
 | `color` | [dir] `color` | Set color at dir or self |
@@ -4784,7 +4793,7 @@ try {
 - **`transformNode`** — Dispatches by NODE type; recursive
 - **`indexnode`** — Assigns lineindex; fills linelookup for MARK nodes
 - **`writelookup`** / **`writelookupline`** — Connect skip/done labels to case numbers
-- **`writeTemplateString`** — Interpolates `$name` via `api.print(api.get('name'))`
+- **`writeTemplateString`** — Interpolates `$name` via `api.print(api.get('name'), 'name')` (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)
 - **`writeApi`** — `api.method(param1, param2, ...)`
 - **`transformprogramlines`** — Fuses straight-line runs at program level and inside `#if` / `#else` / loop / `#waitfor` bodies (fallthrough cases + mid-block `sy` yield)
 
@@ -5519,7 +5528,7 @@ const MEMORY = {
   session: createsid(),
   operator: '',
   simfreeze: false,
-  software: { main: '', temp: '' },
+  main: '', // opened book id
   books: {} as Record<string, BOOK>,
   loaders: {} as Record<string, string>,
 }
@@ -5534,7 +5543,7 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 | Former category | New module(s) |
 |------------------|---------------|
 | Session, operator, topic, halt, simfreeze | [`session.ts`](../session.ts) |
-| Software slots (`main` / `temp`), book CRUD | [`session.ts`](../session.ts) + [`books.ts`](../books.ts) |
+| Opened book (`main`), book CRUD | [`session.ts`](../session.ts) + [`books.ts`](../books.ts) |
 | Loaders | [`session.ts`](../session.ts) (storage) + [`loader.ts`](../loader.ts) (dispatch) |
 | Per-id flags | [`flags.ts`](../flags.ts) |
 | Codepage discovery (across books) | [`codepages.ts`](../codepages.ts) |
@@ -5552,9 +5561,9 @@ Everything below the surface (boards, elements, codepages, flags) lives **inside
 
 ## Conceptual model
 
-- **MEMORY** singleton: books, software slots, loaders, session, operator, topic, halt, simfreeze.
+- **MEMORY** singleton: books, opened book (`main`), loaders, session, operator, topic, halt, simfreeze.
 - **BOOK** → **CODE_PAGE** (board / object / terrain / charset / palette / loader) + per-id flag bag.
-- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (lookup, named).
+- **BOARD**: 60×25 grid, terrain[], objects{}, plus runtime caches (named).
 - **BOARD_ELEMENT**: kind, position, char, color, code, collision, …
 - **Boundary**: an opaque keyed slice of nested memory (board runtime, chip, player, gadget, synth, layers, tracking) used internally and for jsonpipe gadget projection.
 
@@ -5612,13 +5621,13 @@ Source: https://zed.cafe/docs/memory/boardelement
 # boardlookup.ts
 Source: https://zed.cafe/docs/memory/boardlookup
 
-**Purpose**: Board lookup tables — lookup (id at index) and named (name → Set<id|index>). Indexes objects and terrain for O(1) access and name resolution.
+**Purpose**: Board named index (name → Set of id|index). Indexes objects and terrain for name resolution. Object-at-cell queries live in [`boardaccess.ts`](../boardaccess.ts) (`memoryreadobjectatpt`).
 
 ## Dependencies
 
 - `zss/mapping/types` — MAYBE, ispresent, isstring
-- `zss/words/types` — CATEGORY, COLLISION, NAME
-- `./boardaccess` — memoryboardelementindex (moved out of `boardoperations.ts`)
+- `zss/words/types` — CATEGORY, NAME
+- `./boardaccess` — memoryboardelementindex
 - `./bookoperations` — memoryreadelementdisplay
 - `./codepageoperations` — memoryapplyelementstats, memoryreadcodepagestatsfromtext
 
@@ -5627,32 +5636,34 @@ Source: https://zed.cafe/docs/memory/boardlookup
 | Export | Description |
 |--------|-------------|
 | `memorywriteboardnamed` | Add element to board.named[name] |
-| `memorywriteboardobjectlookup` | Set board.lookup[idx] = object.id |
-| `memorydeleteboardobjectnamedlookup` | Remove from lookup and named |
-| `memoryresetboardlookups` | Clear and rebuild lookup, named |
-| `memoryinitboardlookup` | Build lookup and named from terrain/objects |
+| `memorydeleteboardobjectnamedlookup` | Remove object from named |
+| `memoryrebuildboardnamed` | Clear and rebuild named |
+| `memoryinitboardnamed` | Build named from terrain/objects (lazy) |
+| `memoryensureboardready` | Ensure named + terrain coords without wipe |
 | `memorydeleteboardterrainnamed` | Remove terrain from named |
+| `memoryensureterraincoords` | Fill missing terrain x/y from index |
 
 ---
 
 # boardmovement.ts
 Source: https://zed.cafe/docs/memory/boardmovement
 
-**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/shot/thud. Orchestrates movement with gamesend and player exits.
+**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here.
 
 ## Dependencies
 
 - `zss/mapping/guid` — ispid
 - `zss/mapping/tick` — TICK_FPS
+- `zss/mapping/types` — MAYBE, ispresent
 - `zss/words/dir` — dirfrompts, ptapplydir
+- `zss/words/reader` — READ_CONTEXT
 - `zss/words/types` — COLLISION, PT
-- `./boardaccess` — memoryboardelementindex, memoryreadobject, memoryreadterrain
+- `./boardaccess` — memoryboardelementindex, memoryreadobject, memoryreadobjectatpt, memoryreadterrain
 - `./boardelement` — memoryboardelementisobject
-- `./boardlifecycle` — memorydeleteboardobject
+- `./boardlifecycle` — memorydeleteboardobject, memorysafedeleteelement
 - `./boards` — memorycheckelementpushable, memoryreadelementstat
 - `./boardtransitions` — memoryplayerblockedbyedge, memoryplayerwaszapped
 - `./gamesend` — memorysendtoelement
-- `./runtimeboundary` — memoryreadboardruntime (for the cached `lookup` table)
 - `./spatialqueries` — memorycheckcollision
 
 > **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`.
@@ -5664,8 +5675,9 @@ Source: https://zed.cafe/docs/memory/boardmovement
 | `memorycheckblockedboardobject` | Returns blocking element or edge phantom |
 | `memorycheckmoveboardobject` | True if dest is blocked |
 | `memorycleanupboard` | Remove objects marked removed > 5s |
-| `memorymoveboardobject` | Move object; update lookup; return blocked or undefined |
-| `memorymoveobject` | Full move with push chain and send (touch/shot/thud) |
+| `memorymoveboardobject` | Move object by x/y; return blocked or undefined |
+| `memorymoveobject` | Full move with push chain and send (touch/shot); no thud |
+| `BOOK_RUN_ARGS` | Tick/draw run arg type |
 
 ---
 
@@ -5687,7 +5699,7 @@ The current `boardoperations.ts` only re-exports `memoryfreeboardelementsruntime
 | Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
 | Per-board / per-element transient runtime | [`runtimeboundary.ts`](../runtimeboundary.ts) |
-| Board lookup tables (id → pt, named indices) | [`boardlookup.ts`](../boardlookup.ts) |
+| Board lookup tables (named indices) | [`boardlookup.ts`](../boardlookup.ts) |
 | Movement (push, collision) | [`boardmovement.ts`](../boardmovement.ts) — `memorycheckblockedboardobject`, `memorycheckmoveboardobject`, `memorymoveboardobject`, `memorymoveobject`, `memorycleanupboard` |
 | Edge / corner-exit detection | [`boardtransitions.ts`](../boardtransitions.ts), [`boardcornerexits.ts`](../boardcornerexits.ts) |
 | Lighting | [`boardlighting.ts`](../boardlighting.ts), [`lightinggeometry.ts`](../lightinggeometry.ts) |
@@ -5755,7 +5767,7 @@ Source: https://zed.cafe/docs/memory/bookoperations
 | Flags | memoryclearbookflags, memoryreadbookflags, memoryhasbookflags, memoryhasbookmatch, memoryreadbookflag, memorywritebookflag |
 | Book | memorycreatebook, memoryexportbook, memoryexportbookasjson, memoryimportbook, memoryimportbookfromjson, memoryupdatebookname, memoryupdatebooktoken |
 
-> Higher-level `memoryensurebookbyname` / `memoryensuresoftwarebook` / `memorycreatesoftwarebook` / `memoryensuresoftwarecodepage` live in [`books.ts`](../books.ts) (separate module).
+> Higher-level `memoryensurebookbyname` / `memoryensuremainbook` / `memorycreatesoftwarebook` / `memoryensuremaincodepage` live in [`books.ts`](../books.ts) (separate module).
 > Per-id flag bag accessors (`memoryreadflags` / `memoryhasflags` / `memoryclearflags`, **not** the per-book flag helpers above) live in [`flags.ts`](../flags.ts).
 
 ---
@@ -5790,13 +5802,49 @@ Source: https://zed.cafe/docs/memory/gamesend
 
 **Purpose**: Game message dispatch — send to element, send to boards, send to elements from chip. Handles target resolution (all, self, others, named) and directional send.
 
+## Damage protocol (`:shot` / `:partyshot`)
+
+`:shot` is the damaging hit. Prefer `#send … shot` over spawning a point-blank bullet with `#shoot` for contact damage.
+
+Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` ownership mapped to cafe `bullet.party`):
+
+| Bullet source (`party`) | Target | Label |
+|-------------------------|--------|-------|
+| Player (`ispid(party)`) | creature / object / scroll / breakable wall | `:shot` |
+| Player | other player | `:shot` then remap → `:partyshot` |
+| Object / creature (`sid_…`) | player | `:shot` |
+| Object / creature | `object` / `scroll` | `:shot` |
+| Object / creature | breakable (`@isbreakable`) | `:shot` (+ softdelete) |
+| Object / creature | built-in enemy without breakable | `:partyshot` (no kill; RoZZT no `BoardAttack`) |
+
+| Path | Behavior |
+|------|----------|
+| Bullet collision | Both directions (bullet→walker and walker→bullet) use `memorybulletcollisionlabel` via board movement; walk `:thud` via element everytick |
+| `#send at x y shot` / `#send within N i shot` | Chip directional send |
+| Breakable + real `:shot` | `memorysendtoelement` softdeletes the target (object or terrain) |
+| `:bombed` | Content/blast label only — **no** auto-delete |
+| `:partyshot` | No auto-delete; multiplayer friendly fire **or** enemy-source vs creature |
+
+**Dual-layer directional `:shot`:** when `#send` targets a cell with label `shot`, both the object (if any) and the terrain (if any) at that PT receive `:shot`. Other labels still use a single `memoryreadelement` (object preferred, else terrain).
+
+Canonical forms:
+
+```text
+#send at senderx sendery shot
+#send within 5 i bombed
+#send within 5 i shot
+#send at p5 p6 shot
+```
+
+Bomb blasts send **`bombed` then `shot`** so `:bombed`-only handlers run before `:shot` may clear breakables.
+
 ## Dependencies
 
 - `zss/chip` — CHIP, senderid
 - `zss/device/session` — SOFTWARE
 - `zss/mapping/*` — guid, 2d, types
 - `zss/words/*` — dir, reader, send, types
-- `./boardaccess` — memoryreadelement
+- `./boardaccess` — memoryreadelement, memoryreadobjectbypt, memoryreadterrain
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorysafedeleteelement
 - `./playermanagement` — memoryreadbookplayerboards
@@ -5808,8 +5856,9 @@ Source: https://zed.cafe/docs/memory/gamesend
 | Export | Description |
 |--------|-------------|
 | `memorysendtoboards` | Send message to elements on boards (target or PT) |
-| `memorysendtoelement` | Send label from element to element (touch/shot/thud/partyshot) |
-| `memorysendtoelements` | Chip sends to targetname or targetdir |
+| `memorysendtoelement` | Send label from element to element (touch/shot/thud/partyshot); breakable+shot softdelete |
+| `memorysendtoelements` | Chip sends to targetname or targetdir (shot hits both layers) |
+| `memorybulletcollisionlabel` | RoZZT-style `shot` vs `partyshot` for ISBULLET hits |
 
 ---
 
@@ -5911,7 +5960,7 @@ Source: https://zed.cafe/docs/memory/inspectionmakeit
 - `zss/words/stats` — statformat, stattypestring
 - `zss/words/types` — STAT_TYPE
 - `./bookoperations` — memorylistcodepagebystat, memoryreadcodepage
-- `./books` — memoryensuresoftwarecodepage
+- `./books` — memoryensuremaincodepage
 - `./codepageoperations` — memoryreadcodepagename, memoryreadcodepagetype, memoryreadcodepagetypeasstring
 - `./session` — memoryreadbooklist
 
@@ -6032,7 +6081,7 @@ Source: https://zed.cafe/docs/memory/playermanagement
 - `./boardaccess` — memoryreadobject
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorycreateboardobjectfromkind, memorydeleteboardobject
-- `./boardlookup` — memorydeleteboardobjectnamedlookup, memorywriteboardnamed, memorywriteboardobjectlookup
+- `./boardlookup` — memorydeleteboardobjectnamedlookup, memorywriteboardnamed, memoryensureboardready
 - `./boardmovement` — memorycheckblockedboardobject
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
 - `./boardvisuals` — memoryupdateboardvisuals
@@ -6041,7 +6090,7 @@ Source: https://zed.cafe/docs/memory/playermanagement
 - `./codepages` — memorypickcodepagewithtypeandstat
 - `./runtime` — memoryhaltchip
 - `./runtimeboundary` — memoryreadboardruntime
-- `./session` — memoryisoperator, memoryreadbookbysoftware
+- `./session` — memoryisoperator, memoryreadmainbook
 - `./spatialqueries` — memorycheckcollision
 
 ## Key Exports
@@ -6068,10 +6117,10 @@ The memory system manages the ZSS game state — books, codepages, boards, eleme
 
 ## Architecture Overview
 
-- **MEMORY** — Singleton: books Map, software slots (main/temp), loaders, session, operator, topic, halt
+- **MEMORY** — Singleton: books Map, opened book (`main`), loaders, session, operator, topic, halt
 - **BOOK** — Contains pages (codepages), flags, activelist
 - **CODE_PAGE** — Board, object, terrain, charset, palette, loader
-- **BOARD** — terrain[], objects{}, lookup, named; 60×25 grid
+- **BOARD** — terrain[], objects{}, named; 60×25 grid
 - **BOARD_ELEMENT** — kind, id, x, y, char, color, code, collision, etc.
 
 ## Module Index
@@ -6083,11 +6132,10 @@ The previous `index.ts` was split into smaller files (`session.ts`, `boards.ts`,
 | [types.md](types.md) | BOARD, BOARD_ELEMENT, BOOK, CODE_PAGE, enums |
 | [index.md](index.md) | Tour of the MEMORY singleton + which file holds which API (replaces the old `index.ts` doc) |
 | [boardelement.md](boardelement.md) | Element create, color, export/import |
-| [boardlookup.md](boardlookup.md) | lookup, named indexing |
+| [boardlookup.md](boardlookup.md) | named indexing |
 | [boardmovement.md](boardmovement.md) | Move, blocked check, cleanup |
 | [boardoperations.md](boardoperations.md) | CRUD, eval dir, tick, path |
 | [boardterrainmap.md](boardterrainmap.md) | Terrain kind-default strip for persisted exports |
-| [boardlookup.md](boardlookup.md) | lookup, named indexing |
 | [bookoperations.md](bookoperations.md) | Book/codepage CRUD, flags, display |
 | [codepageoperations.md](codepageoperations.md) | Parse, apply stats, import/export |
 | [gamesend.md](gamesend.md) | Send to element/boards |
@@ -6181,7 +6229,7 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./boards` — memoryinitboard, memoryreadelementstat
 - `./boardtick` — memorytickboard
 - `./bookoperations` — memoryreadcodepage
-- `./books` — memoryensuresoftwarebook
+- `./books` — memoryensuremainbook
 - `./boundaries` — memoryboundarydelete
 - `./codepageoperations` — memoryreadcodepagestats
 - `./codepages` — memorypickcodepagewithtypeandstat
@@ -6189,14 +6237,14 @@ The sim VM calls `memorytickmain` directly from [`handleticktock`](../../device/
 - `./loader` — memoryloaderarg
 - `./playermanagement` — memoryreadplayerboard
 - `./runtimeboundary` — memoryreadboardelementruntime, memoryreadboardruntime
-- `./session` — memoryreadbookbysoftware, memoryreadloaders, memoryreadoperator
+- `./session` — memoryreadmainbook, memoryreadloaders, memoryreadoperator
 - `./synthstate` — memorymergesynthvoice, memorymergesynthvoicefx, memoryreadsynthplay
 
 ## Exports
 
 | Category | Function | Notes |
 |----------|----------|-------|
-| Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` also frees every flag-backed boundary |
+| Chip lifecycle | `memorygc()`, `memoryhaltchip(id)`, `memoryrestartallchipsandflags()`, `memorymessagechip(message)` | `memoryrestartallchipsandflags` frees flag-backed boundaries on every loaded book |
 | CLI | `memoryrepeatclilast(player)`, `memoryruncli(player, cli, tracking?)` | `tracking=true` saves into `flags.playbuffer` |
 | Tick | `memorytickloaders()` | Increments `mainbook.timestamp`, runs every loader; restores/saves per-loader board/object targeting via [`loader.ts`](loader.md) snapshot helpers |
 | Tick | `memorytickmain(timestamp, boards, playeronly?)` | Runs draw + update passes for every supplied board; called from sim `handleticktock` |
@@ -6277,7 +6325,7 @@ Source: https://zed.cafe/docs/memory/types
 
 | Type | Description |
 |------|-------------|
-| BOARD | terrain, objects, lookup, named, exits, over/under, etc. |
+| BOARD | terrain, objects, named (runtime), exits, over/under, etc. |
 | BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, category, etc. |
 | BOOK | id, name, pages, flags, activelist |
 | CODE_PAGE | id, code, board/object/terrain/charset/palette, stats |
@@ -6301,10 +6349,12 @@ Source: https://zed.cafe/docs/memory/utilities
 - `zss/feature/storage` — storagewriteconfig
 - `zss/device/session` — SOFTWARE
 - `zss/feature/detect` — getclimode
-- `zss/feature/format` — unpackformat
+- `zss/feature/format` — FORMAT_OBJECT, unpackformat
 - `zss/feature/url` — isjoin
 - `zss/feature/zsstextui` — DIVIDER, zsstexttape, zsszedlinklinechip
 - `zss/feature/zstdwasm` — ensurezstdwasm
+- `zss/memory/bookzstd` — shared zstd level + base64url (sim fallback + compress worker)
+- `zss/compressworkerclient` — off-thread zstd of packed book bytes (browser)
 - `zss/gadget/data/api` — registerhyperlinksharedbridge
 - `zss/gadget/data/scrollwritelines` — scrollwritelines, scrolllinkescapefrag
 - `zss/mapping/encode` — arraybuffertobase64, base64url helpers
@@ -6313,9 +6363,10 @@ Source: https://zed.cafe/docs/memory/utilities
 - `zss/words/types` — COLOR
 - `./boardaccess` — memoryreadobject
 - `./bookoperations` — memoryexportbook(asjson), memoryimportbook(fromjson), memoryreadelementdisplay
+- `./exportidremap` — cross-book protected dense id remap
 - `./flags` — memoryreadflags
 - `./playermanagement` — memoryreadplayerboard
-- `./session` — memoryisoperator, memoryreadbookbysoftware, memoryreadoperator, memoryreadtopic, memorywritehalt
+- `./session` — memoryisoperator, memoryreadmainbook, memoryreadoperator, memoryreadtopic, memorywritehalt
 - `./types` — BOOK, MEMORY_LABEL
 
 ## Exports
@@ -6328,8 +6379,8 @@ Source: https://zed.cafe/docs/memory/utilities
 | `memoryreadconfigall()` | Snapshot every config flag |
 | `memorywriteconfig(name, value)` | Write a single config flag |
 | `memoryadminmenu(player)` | Admin scroll: player list, util, config, multiplayer QR |
-| `memorycompressbooks(books)` (async) | msgpack array + zstd-19 → base64url (CLI: trimmed JSON) |
-| `memorydecompressbooks(base64bytes)` (async) | base64url → books; also loads legacy JSZip and JSON array payloads |
+| `memorycompressbooks(books)` (async) | sim: export + cross-book id protect + msgpack `{ main?, books }`; browser: zstd on compress worker (Jest/fallback in-process); climode: JSON envelope |
+| `memorydecompressbooks(base64bytes)` (async) | base64url → `{ books, main? }`; also loads legacy JSZip / bare book-array payloads |
 
 ---
 
@@ -6442,7 +6493,7 @@ Paths are relative to the `memoryfs/` sync root:
 
 ```text
 memoryfs/
-  stats.json                          # software.main/temp + book index
+  stats.json                          # opened main book id + book index
   books/{kebab-name}-{id}/
     stats.json                        # id, name, token, activelist, pages[]
                                       # NO timestamp; NO inline flags blob
@@ -7107,7 +7158,7 @@ flowchart TB
 - **Voice cap:** at most **four** `;`-separated segments per `#play` (`MAX_VOICES_PER_PLAY`). Layers follow **U** order (melodic track = one segment; selected drums = one merged segment).
 - **Measure boundaries:** [`midimeasurespans`](../midiplay.ts) walks the file using [`miditickspersmeasure`](../midiplay.ts) at each bar start so **meter changes** stay aligned (previously a single length from tick 0 was used for every bar).
 - **Per voice in bar:** [`monophonelineinmeasure`](../midiplay.ts) / [`drumlineinmeasure`](../midiplay.ts) — notes filtered to `[start, end)`, gaps filled with [`appendplayrests`](../midiplay.ts) (internal).
-- **Token shape (ZZT-style):** **Melodic:** for each note, `+`/`-` to target octave (from baseline 3), then duration op (`ytsiqhw`), then letter + optional `#`/`!` (see [`playnotation.ts`](../../synth/playnotation.ts)). **Drums:** duration then drum token (digits `0`–`9` or `p` for GM note 39 hand clap; see map in [`midiplay.ts`](../midiplay.ts)). **Rests:** duration then `x` (duration carries until the next op). [`playreststringforticks`](../midiplay.ts) builds a rest-only first voice when needed.
+- **Token shape (ZZT-style):** **Melodic:** for each note, `+`/`-` to target octave (from baseline 4), then duration op (`ytsiqhw`), then letter + optional `#`/`!` (see [`playnotation.ts`](../../synth/playnotation.ts)). **Drums:** duration then drum token (digits `0`–`9` or `p` for GM note 39 hand clap; see map in [`midiplay.ts`](../midiplay.ts)). **Rests:** duration then `x` (duration carries until the next op). [`playreststringforticks`](../midiplay.ts) builds a rest-only first voice when needed.
 - **Drum-only:** on **measure 0 only**, prepend full-bar rest (e.g. `wx; ` before drums) so the first voice is silent and drums land on the next parseplay segment; later measures omit this pad (see [`midiplaysnippetsbymeasure`](../midiplay.ts) tail).
 
 ## 3. Target codepage layout (`parsemidi` output)
@@ -7135,8 +7186,8 @@ Structure matches [`.zzm` import](../zzm.ts): one `:song_0` block with **multipl
 Example (`twomeasures.mid` fixture): track **0** is seen first globally; track **1** is added when its first note appears at the next measure boundary, so both voices import:
 
 ```text
-#play +qcdef; wx
-#play +qgaa#+c; +qefga
+#play qcdef; wx
+#play qgaa#+c; qefga
 ```
 
 ## 4. One `#play` line → runtime (`parseplay`)
@@ -8324,8 +8375,8 @@ Parses text-based notation and converts it to scheduled note events.
 ## Parse Format
 
 - Multiple voices separated by `;`
-- Example: `"#play +qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
-- **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `+qcde` (octave `+`, duration `q`, notes `cde`).
+- Example: `"#play qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
+- **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `qcde` (duration `q`, notes `cde` at default octave 4).
 
 ## invokeplay()
 
@@ -8359,7 +8410,14 @@ Triplet divides current duration by 3; dotted multiplies by 1.5.
 
 ## Live onset humanize
 
-Live `#play` / `#bgplay` note and drum onsets get a fixed random jitter of up to **±4 ms** (`HUMANIZE_SEC` in [`playhumanize.ts`](../backend/wasm/playhumanize.ts)) so grid music feels slightly organic. Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter).
+Live note and drum onsets get a small random jitter so grid music feels slightly organic (`playhumanize.ts`):
+
+| Surface | Channels | Peak |
+|---------|----------|------|
+| `#play` | 0–3 | ±8 ms (`HUMANIZE_SEC`) |
+| `#bgplay` | 4–7 | ±4 ms (`HUMANIZE_BGPLAY_SEC`) |
+
+Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.
 
 ---
 
@@ -9751,6 +9809,28 @@ Source: https://zed.cafe/docs/words/kind
 
 ---
 
+# printvalue.ts
+Source: https://zed.cafe/docs/words/printvalue
+
+**Purpose**: Display stringify for `$name` template expansion in scroll text and double-quoted strings (`#set "key$color"`, etc.).
+
+## Export
+
+| Export | Description |
+|--------|-------------|
+| `formatprintvalue(value, name?)` | Returns a printable string/number/boolean for chip `print` / `template` |
+
+## Behavior
+
+- **Name-hinted numeric stats**: `color` / `bg` / `displaycolor` / `displaybg` → `COLOR[n].toLowerCase()`; `collision` → `COLLISION[n]`; `category` → `CATEGORY[n]`
+- **Typed arrays**: `STR_COLOR`, `STR_COLLISION`, `STR_CATEGORY`, `STR_DIR` (nested `STR_GROUP` formatted), KIND/GROUP `[name, STR_COLOR?]`
+- **Const strings** from firmware `maptoconst` (`BLUE`, `NORTH`, `ISWALK`, …) → lowercase
+- Other numbers/strings unchanged; unknown arrays/objects keep the old `array N items` / `obj …` labels
+
+Without a name hint, `9` stays `9` (so `$char` / `$cycle` are not treated as colors).
+
+---
+
 # reader.ts
 Source: https://zed.cafe/docs/words/reader
 
@@ -9839,6 +9919,7 @@ Domain-specific readers (`readcategory`, `readcolor`, `readdir`, `readkind`) con
 | [send.md](send.md) | Send/message parsing (target:label args) |
 | [stats.md](stats.md) | Stat format parsing (loader, board, range, select, etc.) |
 | [textformat.md](textformat.md) | Text formatting with colors, $flags, and layout |
+| [printvalue.md](printvalue.md) | `$name` display stringify (COLOR/DIR/KIND/GROUP/COLLISION/CATEGORY) |
 | [system.md](system.md) | Platform detection (ismac, metakey) |
 
 ## Data Flow
@@ -9973,6 +10054,8 @@ Used by textformat for `$META` substitution and by editor/hotkey logic for short
 Source: https://zed.cafe/docs/words/textformat
 
 **Purpose**: Tokenizes and renders formatted text with colors, `$name` flags, `$CENTER`, `$META`, and numeric char codes. Used for chat, ticker, hyperlinks, and any text display that supports inline formatting.
+
+`$name` placeholders in scroll text and double-quoted template strings are expanded at compile time to `api.print(api.get('name'), 'name')`. Display naming for COLOR / DIR / KIND / GROUP / COLLISION / CATEGORY lives in [`printvalue.ts`](../printvalue.ts) (`formatprintvalue`).
 
 ## Dependencies
 
