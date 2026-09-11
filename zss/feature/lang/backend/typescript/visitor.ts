@@ -46,6 +46,7 @@ import {
   Dir_withinCstChildren,
   ExprCstChildren,
   Expr_anyCstChildren,
+  Expr_list_itemCstChildren,
   Expr_valueCstChildren,
   FactorCstChildren,
   ICstNodeVisitor,
@@ -78,14 +79,15 @@ import {
   Token_expr_absCstChildren,
   Token_expr_anyCstChildren,
   Token_expr_blockedCstChildren,
-  Token_expr_pgetCstChildren,
   Token_expr_clampCstChildren,
   Token_expr_countCstChildren,
   Token_expr_intceilCstChildren,
   Token_expr_intfloorCstChildren,
   Token_expr_introundCstChildren,
+  Token_expr_intsignCstChildren,
   Token_expr_maxCstChildren,
   Token_expr_minCstChildren,
+  Token_expr_pgetCstChildren,
   Token_expr_pickCstChildren,
   Token_expr_pickwithCstChildren,
   Token_expr_randomCstChildren,
@@ -2043,6 +2045,20 @@ class ScriptVisitor
     ]
   }
 
+  token_expr_intsign(
+    ctx: Token_expr_intsignCstChildren,
+    location: CstNodeLocation,
+  ) {
+    return [
+      ...this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'intsign',
+      }),
+      ...this.go(ctx.simple_token),
+    ]
+  }
+
   token_expr_clamp(
     ctx: Token_expr_clampCstChildren,
     location: CstNodeLocation,
@@ -2086,7 +2102,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'pick',
       }),
-      ...this.go(ctx.simple_token),
+      ...this.go(ctx.expr_list_item),
     ]
   }
 
@@ -2101,7 +2117,18 @@ class ScriptVisitor
         value: 'pickwith',
       }),
       ...this.go(ctx.simple_token),
+      ...this.go(ctx.expr_list_item),
     ]
+  }
+
+  expr_list_item(ctx: Expr_list_itemCstChildren, _location: CstNodeLocation) {
+    if (ctx.simple_token) {
+      return this.go(ctx.simple_token)
+    }
+    if (ctx.dir) {
+      return this.go(ctx.dir)
+    }
+    return []
   }
 
   token_expr_random(
@@ -2196,6 +2223,9 @@ class ScriptVisitor
     }
     if (ctx.token_expr_intround) {
       return this.go(ctx.token_expr_intround)
+    }
+    if (ctx.token_expr_intsign) {
+      return this.go(ctx.token_expr_intsign)
     }
     if (ctx.token_expr_clamp) {
       return this.go(ctx.token_expr_clamp)

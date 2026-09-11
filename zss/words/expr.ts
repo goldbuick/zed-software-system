@@ -407,6 +407,11 @@ export function readexpr(index: number): [any, number] {
         const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         return [Math.round(a), iii]
       }
+      case 'intsign': {
+        // INTSIGN <a>
+        const [a, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
+        return [a > 0 ? 1 : a < 0 ? -1 : 0, iii]
+      }
       case 'clamp': {
         // CLAMP <a> <min> <max>
         const [a, min, max, iii] = readargs(READ_CONTEXT.words, ii, [

@@ -37,6 +37,12 @@ import {
   memoryreadflags,
 } from 'zss/memory/bookoperations'
 import { memorysendtoelement } from 'zss/memory/gamesend'
+import {
+  memoryclearlightstat,
+  memoryparselightstatvalue,
+  memoryreadlightpsetargs,
+  memorywritelightstat,
+} from 'zss/memory/lightstat'
 import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
 import { memoryfindplayerforelement } from 'zss/memory/spatialqueries'
@@ -106,10 +112,30 @@ const STANDARD_STAT_NAMES = new Set([
   'shooty',
   'didfail',
   'light',
-  'lightdir',
+  'lightsteps',
+  'lightx',
+  'lighty',
   // run & with arg
   'arg',
 ])
+
+function writeremotedeltadir(
+  element: BOARD_ELEMENT,
+  words: WORD[],
+  valueindex: number,
+  writex: 'stepx' | 'shootx',
+  writey: 'stepy' | 'shooty',
+) {
+  const [ascaller] = readargs(words, valueindex, [ARG_TYPE.DIR])
+  const dest = memoryevaldir(READ_CONTEXT.board, element, '', ascaller.dir, {
+    x: element.x ?? 0,
+    y: element.y ?? 0,
+  })
+  const x = element.x ?? 0
+  const y = element.y ?? 0
+  element[writex] = dest.destpt.x - x
+  element[writey] = dest.destpt.y - y
+}
 
 function writeremoteattr(
   chip: CHIP,
@@ -120,16 +146,21 @@ function writeremoteattr(
 ): 0 | 1 {
   const statname = mapremotestatname(attr)
   if (statname === 'step') {
-    // Parse dir under caller (flag/stat exprs), apply from target cell.
-    const [ascaller] = readargs(words, valueindex, [ARG_TYPE.DIR])
-    const dest = memoryevaldir(READ_CONTEXT.board, element, '', ascaller.dir, {
-      x: element.x ?? 0,
-      y: element.y ?? 0,
-    })
-    const x = element.x ?? 0
-    const y = element.y ?? 0
-    element.stepx = dest.destpt.x - x
-    element.stepy = dest.destpt.y - y
+    writeremotedeltadir(element, words, valueindex, 'stepx', 'stepy')
+    chip.set('didfail', 0)
+    return 0
+  }
+  if (statname === 'shoot') {
+    writeremotedeltadir(element, words, valueindex, 'shootx', 'shooty')
+    chip.set('didfail', 0)
+    return 0
+  }
+  if (statname === 'light') {
+    const { radius, dirwords, setdir } = memoryreadlightpsetargs(
+      words,
+      valueindex,
+    )
+    memorywritelightstat(READ_CONTEXT.board, element, radius, dirwords, setdir)
     chip.set('didfail', 0)
     return 0
   }
@@ -369,6 +400,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, sender?.y ?? -1]
       default: {
         // return result
+        if (name === 'light') {
+          const maybevalue = memoryreadelementstat(
+            READ_CONTEXT.element,
+            'lightsteps',
+          )
+          return [true, maybevalue ?? 0]
+        }
         if (STANDARD_STAT_NAMES.has(name)) {
           const statname = mapdisplaystatname(
             READ_CONTEXT.usedisplaystats,
@@ -593,6 +631,26 @@ export const ELEMENT_FIRMWARE = createfirmware({
         return [true, value] // readonly
       default: {
         // we have to check the object's stats first
+        if (name === 'light' && ispresent(READ_CONTEXT.element)) {
+          if (value === 0 || value === '0') {
+            memoryclearlightstat(READ_CONTEXT.element)
+            return [true, 0]
+          }
+          const parsed = memoryparselightstatvalue(value)
+          if (ispresent(parsed)) {
+            // number-only: leave cone; string with dir tokens: set cone
+            const setdir = parsed.dirwords.length > 0
+            memorywritelightstat(
+              READ_CONTEXT.board,
+              READ_CONTEXT.element,
+              parsed.radius,
+              parsed.dirwords,
+              setdir,
+            )
+            return [true, parsed.radius]
+          }
+          return [true, value]
+        }
         if (STANDARD_STAT_NAMES.has(name)) {
           if (ispresent(READ_CONTEXT.element)) {
             const statname = mapdisplaystatname(

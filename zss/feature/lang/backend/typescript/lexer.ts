@@ -381,6 +381,7 @@ export const expr_abs = createWordToken('abs')
 export const expr_intceil = createWordToken('intceil')
 export const expr_intfloor = createWordToken('intfloor')
 export const expr_intround = createWordToken('intround')
+export const expr_intsign = createWordToken('intsign')
 export const expr_clamp = createWordToken('clamp')
 export const expr_min = createWordToken('min')
 export const expr_max = createWordToken('max')
@@ -668,6 +669,7 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     expr_intceil,
     expr_intfloor,
     expr_intround,
+    expr_intsign,
     expr_clamp,
     expr_min,
     expr_max,

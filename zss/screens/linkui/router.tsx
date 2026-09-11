@@ -3,6 +3,7 @@ import { NAME } from 'zss/words/types'
 import { LinkCharEdit } from './charedit'
 import { LinkColorEdit } from './coloredit'
 import { LinkCopyIt } from './copyit'
+import { LinkDir } from './dir'
 import { LinkHotkey } from './hotkey'
 import { LinkHyperlink } from './hyperlink'
 import { LinkNumber } from './number'
@@ -45,6 +46,8 @@ export function LinkRouter({ linktype, surface }: LinkRouterProps) {
     case 'tx':
     case 'text':
       return <LinkText surface={surface} />
+    case 'dir':
+      return <LinkDir surface={surface} />
     case 'zssedit':
       return <LinkZSSEdit surface={surface} />
     case 'charedit':

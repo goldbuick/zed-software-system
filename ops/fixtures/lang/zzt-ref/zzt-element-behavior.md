@@ -65,7 +65,7 @@ In cafe these are **player flags by convention** (set/read with `#give`/`#take`/
 
 ### Element stats (engine, per-element)
 
-`char`, `color`, `bg`, `displaychar`/`displaycolor`/`displaybg`, `displayname`, `cycle`, `stepx`/`stepy`, `shootx`/`shooty`, `p1`..`p10`, `light`, `lightdir`, `group`, `party`, `item`, `pushable`, `breakable`, `collision`, `player`, `arg`. Map ZZT `P1/P2/P3` -> `p1/p2/p3` and `StepX/StepY` -> `stepx/stepy`.
+`char`, `color`, `bg`, `displaychar`/`displaycolor`/`displaybg`, `displayname`, `cycle`, `stepx`/`stepy`, `shootx`/`shooty`, `p1`..`p10`, `lightsteps`/`lightx`/`lighty` (`@light <radius> [dir]`), `group`, `party`, `item`, `pushable`, `breakable`, `collision`, `player`, `arg`. Map ZZT `P1/P2/P3` -> `p1/p2/p3` and `StepX/StepY` -> `stepx/stepy`.
 
 ### Collision flags (kind headers)
 

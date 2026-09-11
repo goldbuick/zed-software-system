@@ -1,7 +1,7 @@
 import { SPRITE } from 'zss/gadget/data/types'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
-import { dirfrompts, isstrdir } from 'zss/words/dir'
+import { dirfromdelta } from 'zss/words/dir'
 import { COLLISION, DIR } from 'zss/words/types'
 
 import {
@@ -9,7 +9,6 @@ import {
   memoryboardelementindex,
   memoryreadelement,
 } from './boardaccess'
-import { memoryevaldir } from './boarddirection'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import {
   LIGHTING_RAY_TILE_YSCALE,
@@ -215,10 +214,10 @@ export function memoryboardlightingapplyobject(
 
   for (let r = 1; r <= radius; ++r) {
     if (r === 1) {
-      const maybedir = memoryreadelementstat(object, 'lightdir')
-      if (isstrdir(maybedir)) {
-        const lightdir = memoryevaldir(board, object, '', maybedir, sprite)
-        switch (dirfrompts(sprite, lightdir.destpt)) {
+      const lightx = (memoryreadelementstat(object, 'lightx') as number) ?? 0
+      const lighty = (memoryreadelementstat(object, 'lighty') as number) ?? 0
+      if (lightx !== 0 || lighty !== 0) {
+        switch (dirfromdelta(lightx, lighty)) {
           case DIR.EAST:
             blocked.push([45, 315, LIGHTING_TERRAIN_SOLID_OCCLUSION])
             break

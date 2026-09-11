@@ -1,3 +1,3 @@
 ---
-hint: "Light radius of this element"
+hint: "Light radius (and optional cone dir): @light <radius> [dir]"
 ---

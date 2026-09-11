@@ -234,13 +234,14 @@ const HYPERLINK_WITH_SHARED = new Set([
   'number',
   'tx',
   'text',
+  'dir',
   'zssedit',
   'charedit',
   'coloredit',
   'bgedit',
 ])
 
-const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text'])
+const HYPERLINK_WITH_SHARED_TEXT = new Set(['tx', 'text', 'dir'])
 
 const HYPERLINK_WITH_SHARED_DEFAULTS = {
   rn: 1,
@@ -251,6 +252,7 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   number: 0,
   tx: '',
   text: '',
+  dir: 'north',
   zssedit: '',
   charedit: 0,
   coloredit: 0,

@@ -35,6 +35,10 @@ Generated from `export function` / `export const` under `zss/memory/`.
 
 - **memoryboardlightingapplyobject**, **memoryboardlightingmarkplayer**
 
+## lightstat.ts
+
+- **memorystrdirfromdelta**, **memorywritelightstat**, **memoryparselightstatvalue**, **memoryreadlightpsetargs**, **memoryclearlightstat**
+
 ## boardlookup.ts
 
 - **memorywriteboardnamed**, **memorydeleteboardobjectnamedlookup**, **memoryensureterraincoords**, **memoryensureboardready**, **memoryrebuildboardnamed**, **memoryinitboardnamed**, **memorydeleteboardterrainnamed**

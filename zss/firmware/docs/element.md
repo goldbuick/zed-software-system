@@ -21,7 +21,7 @@ Provides stat/variable access for the chip:
 - **Input flags** — For players: `inputmove`, `inputshoot`, `inputok`, `inputcancel`, `inputmenu`, `inputa`/`inputb`/`inputx`/`inputy`, `inputl1`/`inputl2`, `inputr1`/`inputr2`, `inputalt`, `inputctrl`, `inputshift` (from input queue; `inputmove`/`inputshoot` may list two dirs for diagonals; FPV remaps dirs)
 - **Board stats** — `isdark`, `startx`, `starty`, `over`, `under`, `palette`, `charset`, exits, `timelimit`, `restartonzap`, `maxplayershots`, `b1`–`b10`, `camera`, `graphics`, `facing`
 - **Env** — `currenttick`, `boardid`, `playerid`, `playerx`, `playery`, `thisid`, `thisx`, `thisy`, `senderid`, `senderx`, `sendery`
-- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light, lightdir, arg
+- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light (`lightsteps` + `lightx`/`lighty`; `@light <radius> [dir]`), arg
 - **Fallback** — Player flags
 
 ### set(chip, name, value)
@@ -46,7 +46,7 @@ Writes stats:
 |---------|------|-------------|
 | `set` | `name` `value` | Set stat (default value 1). Value may be an expr, e.g. `set name pget <dir> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
-| `pset` | `<dir>` `attr` `value` | Write remote element attr at dir (`step <walkdir>` sets stepx/stepy) |
+| `pset` | `<dir>` `attr` `value` | Write remote attr (`step`/`shoot` ← dir → axes; `light <n> [dir]` → lightsteps + cone) |
 | `cycle` | `value` | Set cycle (1–255) |
 
 ### Movement

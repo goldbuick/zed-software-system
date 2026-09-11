@@ -45,6 +45,11 @@ import {
   memoryboardelementindex,
   memoryreadelement,
 } from './boardaccess'
+import {
+  memoryclampdireditcardinal,
+  memorycardinaldirfromdelta,
+  memorywritedeltadirstat,
+} from './deltadirstat'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
 import {
@@ -149,6 +154,7 @@ const elementhyperlinktypes = [
   'number',
   'tx',
   'text',
+  'dir',
   'zssedit',
   'charedit',
   'coloredit',
@@ -239,6 +245,21 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
     case 'text':
     case 'zssedit':
       return maptostring(maybevalue)
+    case 'dir':
+      switch (name) {
+        case 'step':
+          return memorycardinaldirfromdelta(
+            (element?.stepx ?? kind?.stepx ?? 0) as number,
+            (element?.stepy ?? kind?.stepy ?? 0) as number,
+          )
+        case 'shoot':
+          return memorycardinaldirfromdelta(
+            (element?.shootx ?? kind?.shootx ?? 0) as number,
+            (element?.shooty ?? kind?.shooty ?? 0) as number,
+          )
+        default:
+          return memoryclampdireditcardinal(maybevalue)
+      }
   }
   return 0
 }
@@ -310,6 +331,34 @@ function registerhyperlinksforelementsetvalue(
           for (const element of elements) {
             if (ispresent(element)) {
               element[name as keyof BOARD_ELEMENT] = withvalue
+            }
+          }
+          break
+        }
+        case 'dir': {
+          const cardinal = memoryclampdireditcardinal(value)
+          if (name === 'step' || name === 'shoot') {
+            const writex = name === 'step' ? 'stepx' : 'shootx'
+            const writey = name === 'step' ? 'stepy' : 'shooty'
+            for (const element of elements) {
+              if (ispresent(element)) {
+                memorywritedeltadirstat(
+                  maybeboard,
+                  element,
+                  [cardinal],
+                  writex,
+                  writey,
+                )
+              }
+            }
+            if (ispresent(maybeboard)) {
+              maybeboard.drawneedfull = true
+            }
+          } else {
+            for (const element of elements) {
+              if (ispresent(element)) {
+                element[name as keyof BOARD_ELEMENT] = cardinal
+              }
             }
           }
           break

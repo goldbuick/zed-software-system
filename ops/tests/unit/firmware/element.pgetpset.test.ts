@@ -103,6 +103,71 @@ describe('element pget expr / #pset', () => {
     expect(chip.flags.didfail).toBe(0)
   })
 
+  it('pget dir step returns STR_DIR from stepx/stepy', () => {
+    setupboard()
+    READ_CONTEXT.words = ['pget', 'n', 'step']
+    const [value] = readexpr(0)
+    expect(value).toEqual(['NORTH'])
+  })
+
+  it('#pset dir shoot walkdir sets shootx/shooty from target cell', () => {
+    const { north } = setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    handler!(chip, ['n', 'shoot', 'e'])
+    expect(north.shootx).toBe(1)
+    expect(north.shooty).toBe(0)
+    expect(chip.flags.didfail).toBe(0)
+  })
+
+  it('pget dir shoot returns STR_DIR from shootx/shooty', () => {
+    const { north } = setupboard()
+    north.shootx = 1
+    north.shooty = 0
+    READ_CONTEXT.words = ['pget', 'n', 'shoot']
+    const [value] = readexpr(0)
+    expect(value).toEqual(['EAST'])
+  })
+
+  it('pget idle step is IDLE when axes are zero', () => {
+    const { self } = setupboard()
+    self.stepx = 0
+    self.stepy = 0
+    READ_CONTEXT.words = ['pget', 'idle', 'step']
+    const [value] = readexpr(0)
+    expect(value).toEqual(['IDLE'])
+  })
+
+  it('#pset light n sets lightsteps only', () => {
+    const { north } = setupboard()
+    north.lightx = 1
+    north.lighty = 0
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    handler!(chip, ['n', 'light', 7])
+    expect(north.lightsteps).toBe(7)
+    expect(north.lightx).toBe(1)
+    expect(north.lighty).toBe(0)
+  })
+
+  it('#pset light n dir sets lightsteps and cone', () => {
+    const { north } = setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    handler!(chip, ['n', 'light', 5, 'e'])
+    expect(north.lightsteps).toBe(5)
+    expect(north.lightx).toBe(1)
+    expect(north.lighty).toBe(0)
+  })
+
+  it('pget light returns lightsteps radius', () => {
+    const { north } = setupboard()
+    north.lightsteps = 9
+    READ_CONTEXT.words = ['pget', 'n', 'light']
+    const [value] = readexpr(0)
+    expect(value).toBe(9)
+  })
+
   it('pget missing target returns 0', () => {
     setupboard()
     READ_CONTEXT.words = ['pget', 'e', 'p3']

@@ -123,7 +123,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `runwith` | Function with argument |
 | `array` | Array variable |
 | `read` | Property from object into variable |
-| `pset` | Attr on dir (Weave-like; `step` sets stepx/stepy) |
+| `pset` | Attr on dir (Weave-like; `step`/`shoot` set axes; `light <n> [dir]` sets radius/cone) |
 | `toast` | Toast notification |
 | `ticker` | Element ticker text |
 

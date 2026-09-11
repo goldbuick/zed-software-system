@@ -19,6 +19,7 @@ const KNOWN_LINK_TYPES = new Set([
   'number',
   'tx',
   'text',
+  'dir',
   'zssedit',
   'charedit',
   'coloredit',

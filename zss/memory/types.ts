@@ -1,6 +1,5 @@
 import { BITMAP } from 'zss/gadget/data/bitmap'
 import { MAYBE } from 'zss/mapping/types'
-import { STR_DIR } from 'zss/words/dir'
 import { CATEGORY, COLLISION, WORD } from 'zss/words/types'
 
 // constants
@@ -34,7 +33,7 @@ export enum BOARD_ELEMENT_KEYS {
   char,
   color,
   bg,
-  light,
+  lightsteps,
   player,
   bucket,
   pushable,
@@ -54,7 +53,8 @@ export enum BOARD_ELEMENT_KEYS {
   removed,
   party,
   group,
-  lightdir,
+  lightx,
+  lighty,
   item,
   p4,
   p5,
@@ -228,8 +228,9 @@ export type BOARD_ELEMENT = {
   displaycolor?: number
   displaybg?: number
   displayname?: string
-  light?: number
-  lightdir?: STR_DIR
+  lightsteps?: number
+  lightx?: number
+  lighty?: number
   // interaction
   item?: number
   group?: string

@@ -1,12 +1,10 @@
 import { MAYBE } from 'zss/mapping/types'
-import {
-  READ_LAYER,
-  memoryreadelement,
-} from 'zss/memory/boardaccess'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import {
   memoryreadboardbyevaldir,
   memoryreadelementstat,
 } from 'zss/memory/boards'
+import { memorystrdirfromdelta } from 'zss/memory/lightstat'
 import { BOARD_ELEMENT } from 'zss/memory/types'
 
 import { READ_CONTEXT, readargs } from './reader'
@@ -37,6 +35,11 @@ const REMOTE_STAT_NAMES = new Set([
   'cycle',
   'stepx',
   'stepy',
+  'shootx',
+  'shooty',
+  'lightsteps',
+  'lightx',
+  'lighty',
   'char',
   'color',
   'bg',
@@ -94,6 +97,15 @@ export function readremoteattr(element: BOARD_ELEMENT, attr: string): WORD {
   }
   if (statname === 'bg') {
     return element.bg ?? 0
+  }
+  if (statname === 'step') {
+    return memorystrdirfromdelta(element.stepx ?? 0, element.stepy ?? 0)
+  }
+  if (statname === 'shoot') {
+    return memorystrdirfromdelta(element.shootx ?? 0, element.shooty ?? 0)
+  }
+  if (statname === 'light') {
+    return (memoryreadelementstat(element, 'lightsteps') ?? 0) as WORD
   }
   if (REMOTE_STAT_NAMES.has(statname)) {
     const value = memoryreadelementstat(

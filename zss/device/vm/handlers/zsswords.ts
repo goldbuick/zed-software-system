@@ -180,6 +180,7 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       'intceil',
       'intfloor',
       'intround',
+      'intsign',
       'clamp',
       'min',
       'max',

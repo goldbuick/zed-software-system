@@ -54,6 +54,11 @@ import {
 import { remapcodepageidsforfilenamesafety } from './bookidremap'
 import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
 import {
+  memoryparsedirstatvalue,
+  memorywritedeltadirstat,
+} from './deltadirstat'
+import { memoryparselightstatvalue, memorywritelightstat } from './lightstat'
+import {
   BITMAP_KEYS,
   BOARD,
   BOARD_ELEMENT,
@@ -125,6 +130,15 @@ export function memoryapplyelementstats(
             element[key as keyof BOARD_ELEMENT] = firstvalue
           }
           break
+        case 'dir':
+          // step/shoot dir widgets drive stepx/stepy (shootx/shooty) live
+          if (key === 'step' || key === 'shoot') {
+            break
+          }
+          if (!ispresent(element[key as keyof BOARD_ELEMENT])) {
+            element[key as keyof BOARD_ELEMENT] = 'north'
+          }
+          break
       }
       // non-const stats here don't make sense
       continue
@@ -132,7 +146,6 @@ export function memoryapplyelementstats(
     switch (key) {
       case 'name':
       case 'char':
-      case 'light':
       case 'group':
       case 'p1':
       case 'p2':
@@ -159,10 +172,53 @@ export function memoryapplyelementstats(
       case 'stepy':
       case 'shootx':
       case 'shooty':
+      case 'lightsteps':
+      case 'lightx':
+      case 'lighty':
       case 'displaychar':
       case 'displayname':
         element[key as keyof BOARD_ELEMENT] = value
         break
+      case 'light': {
+        const parsed = memoryparselightstatvalue(value)
+        if (ispresent(parsed)) {
+          // @light always applies cone: bare radius → circle (0,0)
+          memorywritelightstat(
+            undefined,
+            element,
+            parsed.radius,
+            parsed.dirwords,
+            true,
+          )
+        }
+        break
+      }
+      case 'step': {
+        const dirwords = memoryparsedirstatvalue(value)
+        if (ispresent(dirwords)) {
+          memorywritedeltadirstat(
+            undefined,
+            element,
+            dirwords,
+            'stepx',
+            'stepy',
+          )
+        }
+        break
+      }
+      case 'shoot': {
+        const dirwords = memoryparsedirstatvalue(value)
+        if (ispresent(dirwords)) {
+          memorywritedeltadirstat(
+            undefined,
+            element,
+            dirwords,
+            'shootx',
+            'shooty',
+          )
+        }
+        break
+      }
       case 'color':
       case 'displaycolor': {
         if (isnumber(value)) {
@@ -199,7 +255,6 @@ export function memoryapplyelementstats(
         break
       }
       case 'bg':
-      case 'lightdir':
       case 'displaybg':
         // @ts-expect-error - we are doing this on purpose
         element[key] = mapstrtoconsts(value) ?? value
@@ -684,7 +739,8 @@ export function memoryreadcodepagestatsfromtext(
             const maybevalue = maybevalues.join(' ')
             if (isstring(maybevalue)) {
               const numbervalue = parseFloat(maybevalue)
-              if (isnumber(numbervalue)) {
+              // Multi-word consts (e.g. `@light 6 n`) must stay strings; parseFloat("6 n") === 6.
+              if (maybevalues.length === 1 && isnumber(numbervalue)) {
                 stats[name] = numbervalue
               } else {
                 if (!ispresent(stats[name])) {
@@ -707,6 +763,7 @@ export function memoryreadcodepagestatsfromtext(
         case STAT_TYPE.SELECT:
         case STAT_TYPE.NUMBER:
         case STAT_TYPE.TEXT:
+        case STAT_TYPE.DIR:
         case STAT_TYPE.HOTKEY:
         case STAT_TYPE.ZSSEDIT:
         case STAT_TYPE.CHAREDIT:
