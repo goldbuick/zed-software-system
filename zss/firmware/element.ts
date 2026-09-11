@@ -53,6 +53,11 @@ import { DIR_CONSTS, isstrdir } from 'zss/words/dir'
 import { mapdisplaystatname } from 'zss/words/displaystatname'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
+import {
+  isremotestatname,
+  mapremotestatname,
+  resolveremotedir,
+} from 'zss/words/remoteattr'
 import { parsesend } from 'zss/words/send'
 import { ARG_TYPE, COLOR, NAME, PT, WORD } from 'zss/words/types'
 
@@ -106,105 +111,6 @@ const STANDARD_STAT_NAMES = new Set([
   'arg',
 ])
 
-/** Remote attrs for Weave-like #pget / #pset (v1). */
-const REMOTE_STAT_NAMES = new Set([
-  'p1',
-  'p2',
-  'p3',
-  'p4',
-  'p5',
-  'p6',
-  'p7',
-  'p8',
-  'p9',
-  'p10',
-  'p11',
-  'p12',
-  'p13',
-  'p14',
-  'p15',
-  'p16',
-  'p17',
-  'p18',
-  'p19',
-  'p20',
-  'cycle',
-  'stepx',
-  'stepy',
-  'char',
-  'color',
-  'bg',
-  'x',
-  'y',
-])
-
-function mapremotestatname(name: string): string {
-  switch (NAME(name)) {
-    case 'intel':
-    case 'intelligence':
-      return 'p1'
-    case 'speed':
-    case 'rate':
-      return 'p2'
-    case 'thisx':
-      return 'x'
-    case 'thisy':
-      return 'y'
-    default:
-      return NAME(name)
-  }
-}
-
-function resolveremotetarget(
-  words: WORD[],
-  index: number,
-): [MAYBE<BOARD_ELEMENT>, number] {
-  const [peek] = readargs(words, index, [ARG_TYPE.ANY])
-  if (isstrdir(peek)) {
-    const [dest, ii] = readargs(words, index, [ARG_TYPE.DIR])
-    const board = memoryreadboardbyevaldir(dest, READ_CONTEXT.board)
-    if (dest.targets.length) {
-      return [memoryreadelement(board, dest.targets[0], READ_LAYER.ANY), ii]
-    }
-    return [memoryreadelement(board, dest.destpt, READ_LAYER.ANY), ii]
-  }
-  if (isstring(peek) || isnumber(peek)) {
-    const [, ii] = readargs(words, index, [ARG_TYPE.ANY])
-    return [
-      memoryreadelement(READ_CONTEXT.board, maptostring(peek), READ_LAYER.ANY),
-      ii,
-    ]
-  }
-  return [undefined, index]
-}
-
-function readremoteattr(element: BOARD_ELEMENT, attr: string): WORD {
-  const statname = mapremotestatname(attr)
-  if (statname === 'id') {
-    return element.id ?? ''
-  }
-  if (statname === 'x') {
-    return element.x ?? 0
-  }
-  if (statname === 'y') {
-    return element.y ?? 0
-  }
-  if (statname === 'color') {
-    return element.color ?? 0
-  }
-  if (statname === 'bg') {
-    return element.bg ?? 0
-  }
-  if (REMOTE_STAT_NAMES.has(statname)) {
-    const value = memoryreadelementstat(
-      element,
-      statname as Parameters<typeof memoryreadelementstat>[1],
-    )
-    return (value ?? 0) as WORD
-  }
-  return 0
-}
-
 function writeremoteattr(
   chip: CHIP,
   element: BOARD_ELEMENT,
@@ -227,7 +133,7 @@ function writeremoteattr(
     chip.set('didfail', 0)
     return 0
   }
-  if (!REMOTE_STAT_NAMES.has(statname)) {
+  if (!isremotestatname(statname)) {
     chip.set('didfail', 1)
     return 0
   }
@@ -848,22 +754,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
     [ARG_TYPE.NAME, 'variable to value; multiple words joined with spaces'],
     (chip, words) => {
       const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
-      // Weave: #SET <counter> PGET <target> <attr>
-      if (ii < words.length) {
-        const [maybepget] = readargs(words, ii, [ARG_TYPE.ANY])
-        if (isstring(maybepget) && NAME(maybepget) === 'pget') {
-          const [target, attrii] = resolveremotetarget(words, ii + 1)
-          const [attr] = readargs(words, attrii, [ARG_TYPE.NAME])
-          if (!ispresent(target)) {
-            chip.set(name, 0)
-            chip.set('didfail', 1)
-            return 0
-          }
-          chip.set(name, readremoteattr(target, attr))
-          chip.set('didfail', 0)
-          return 0
-        }
-      }
       const [parts] = readargsuntilend(words, ii, ARG_TYPE.ANY)
       let value: any
       if (parts.length === 0) {
@@ -879,36 +769,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
     { editor: ['variables'], lists: ['flags'] },
   )
   .command(
-    'pget',
-    [
-      ARG_TYPE.ANY,
-      ARG_TYPE.NAME,
-      ARG_TYPE.NAME,
-      'attr from dir or id into variable',
-    ],
-    (chip, words) => {
-      const [target, attrii] = resolveremotetarget(words, 0)
-      const [attr, destii] = readargs(words, attrii, [ARG_TYPE.NAME])
-      const [destflag] = readargs(words, destii, [ARG_TYPE.NAME])
-      if (!ispresent(target)) {
-        chip.set(destflag, 0)
-        chip.set('didfail', 1)
-        return 0
-      }
-      chip.set(destflag, readremoteattr(target, attr))
-      chip.set('didfail', 0)
-      return 0
-    },
-    {
-      editor: [undefined, undefined, 'variables'],
-      lists: [undefined, undefined, 'flags'],
-    },
-  )
-  .command(
     'pset',
-    [ARG_TYPE.ANY, ARG_TYPE.NAME, ARG_TYPE.ANY, 'attr on dir or id'],
+    [ARG_TYPE.DIR, ARG_TYPE.NAME, ARG_TYPE.ANY, 'attr on dir'],
     (chip, words) => {
-      const [target, attrii] = resolveremotetarget(words, 0)
+      const [target, attrii] = resolveremotedir(words, 0)
       const [attr, valueii] = readargs(words, attrii, [ARG_TYPE.NAME])
       if (!ispresent(target)) {
         chip.set('didfail', 1)

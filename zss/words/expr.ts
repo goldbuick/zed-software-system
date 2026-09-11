@@ -33,6 +33,7 @@ import {
 import { isstrdir, mapstrdir, readdir } from './dir'
 import { STR_GROUP, isstrgroup } from './group'
 import { READ_CONTEXT, readargs } from './reader'
+import { readremoteattr, resolveremotedir } from './remoteattr'
 import { parsesend } from './send'
 import { ARG_TYPE, DIR, NAME, PT } from './types'
 
@@ -238,6 +239,17 @@ export function readexpr(index: number): [any, number] {
           dir.destpt,
         )
         return [isblocked ? 1 : 0, iii]
+      }
+      case 'pget': {
+        // PGET <dir> <attribute>
+        const [target, attrii] = resolveremotedir(READ_CONTEXT.words, ii)
+        const [attr, iii] = readargs(READ_CONTEXT.words, attrii, [
+          ARG_TYPE.NAME,
+        ])
+        if (!ispresent(target)) {
+          return [0, iii]
+        }
+        return [readremoteattr(target, attr), iii]
       }
       case 'any': {
         // ANY <group>

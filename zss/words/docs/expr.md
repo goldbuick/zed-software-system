@@ -45,6 +45,7 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `aligned`, `alligned` | 1 if element aligned (same row/col) with player |
 | `contact` | 1 if element adjacent to player |
 | `blocked` dir | 1 if movement blocked in direction |
+| `pget` dir attr | Remote element attr at dir (`id`, `x`/`y`, `p1`–`p20`, …); 0 if missing |
 
 ### ZZT-style Queries
 

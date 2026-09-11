@@ -3,8 +3,8 @@
 @cycle 2
 @p1 range;Intelligence?
 @p2 range;Deviance?
-' p3=follower  p4=leader (head writes both while dragging)
-' p5/p6=step then scratch  p7/p8=vacated  p9=cursor  p10=next
+' p3=follower id  p4=drag prev id
+' p5/p6=step then scratch  p7/p8=vacated  p9/p10=cursor cell
 ' no walk command -- everytick would move us before the drag runs.
 :think
 ' pick a step delta: intel roll or deviance roll picks random, else seek
@@ -48,22 +48,22 @@
 #if not p3 do
  #if p5 is 1 do
   #if any w segment do
-   #pget w id p3
+   #set p3 pget w id
   #done
  #done
  #if p5 is -1 do
   #if any e segment do
-   #pget e id p3
+   #set p3 pget e id
   #done
  #done
  #if p6 is 1 do
   #if any n segment do
-   #pget n id p3
+   #set p3 pget n id
   #done
  #done
  #if p6 is -1 do
   #if any s segment do
-   #pget s id p3
+   #set p3 pget s id
   #done
  #done
 #done
@@ -74,25 +74,46 @@
  #die
 #done
 ' pset moves without yielding, so the drag below still runs this tick
-#pset "$thisid" x p7 + p5
-#pset "$thisid" y p8 + p6
-#set p9 thisid
-#repeat 32 do
- #pget "$p9" p3 p10
- #if not p10 break
- #pget "$p10" id p5
- #if not p5 do
-  #pset "$p9" p3 0
-  #break
+#pset idle x p7 + p5
+#pset idle y p8 + p6
+#if p3 do
+ #set p4 thisid
+ #set p9 p7 - p5
+ #set p10 p8 - p6
+ #set p6 p3
+ #repeat 32 do
+  #if not any at p9 p10 segment break
+  #if not pget at p9 p10 id is p6 break
+  #set p5 pget at p9 p10 id
+  #set p6 pget at p9 p10 p3
+  #pset at p9 p10 p4 p4
+  #pset at p9 p10 x p7
+  #pset at p9 p10 y p8
+  #set p7 p9
+  #set p8 p10
+  #set p4 p5
+  #if not p6 break
+  #set p9 p7
+  #set p10 p8 - 1
+  #if pget at p9 p10 id is p6 do
+  #else do
+   #set p10 p8 + 1
+   #if pget at p9 p10 id is p6 do
+   #else do
+    #set p10 p8
+    #set p9 p7 - 1
+    #if pget at p9 p10 id is p6 do
+    #else do
+     #set p9 p7 + 1
+     #if pget at p9 p10 id is p6 do
+     #else do
+      #pset at p7 p8 p3 0
+      #break
+     #done
+    #done
+   #done
+  #done
  #done
- #pget "$p10" x p5
- #pget "$p10" y p6
- #pset "$p10" p4 p9
- #pset "$p10" x p7
- #pset "$p10" y p8
- #set p7 p5
- #set p8 p6
- #set p9 p10
 #done
 #idle
 #think

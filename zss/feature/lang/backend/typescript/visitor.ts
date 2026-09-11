@@ -78,6 +78,7 @@ import {
   Token_expr_absCstChildren,
   Token_expr_anyCstChildren,
   Token_expr_blockedCstChildren,
+  Token_expr_pgetCstChildren,
   Token_expr_clampCstChildren,
   Token_expr_countCstChildren,
   Token_expr_intceilCstChildren,
@@ -1977,6 +1978,18 @@ class ScriptVisitor
     ].flat()
   }
 
+  token_expr_pget(ctx: Token_expr_pgetCstChildren, location: CstNodeLocation) {
+    return [
+      this.createcodenode(location, {
+        type: NODE.LITERAL,
+        literal: LITERAL.STRING,
+        value: 'pget',
+      }),
+      this.go(ctx.dir),
+      this.go(ctx.simple_token),
+    ].flat()
+  }
+
   token_expr_abs(ctx: Token_expr_absCstChildren, location: CstNodeLocation) {
     return [
       ...this.createcodenode(location, {
@@ -2168,6 +2181,9 @@ class ScriptVisitor
     }
     if (ctx.token_expr_blocked) {
       return this.go(ctx.token_expr_blocked)
+    }
+    if (ctx.token_expr_pget) {
+      return this.go(ctx.token_expr_pget)
     }
     if (ctx.token_expr_abs) {
       return this.go(ctx.token_expr_abs)

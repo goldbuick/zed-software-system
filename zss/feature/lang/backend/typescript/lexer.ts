@@ -374,6 +374,7 @@ export const expr_aligned = createSimpleToken({
 
 export const expr_contact = createWordToken('contact')
 export const expr_blocked = createWordToken('blocked')
+export const expr_pget = createWordToken('pget')
 export const expr_any = createWordToken('any')
 export const expr_count = createWordToken('countof')
 export const expr_abs = createWordToken('abs')
@@ -660,6 +661,7 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     expr_aligned,
     expr_contact,
     expr_blocked,
+    expr_pget,
     expr_any,
     expr_count,
     expr_abs,

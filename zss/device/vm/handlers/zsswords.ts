@@ -171,6 +171,7 @@ export function handlezsswords(vm: DEVICE, message: MESSAGE): void {
       'alligned',
       'contact',
       'blocked',
+      'pget',
       'any',
       'countof',
       'color',
