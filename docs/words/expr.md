@@ -45,6 +45,7 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `aligned`, `alligned` | 1 if element aligned (same row/col) with player |
 | `contact` | 1 if element adjacent to player |
 | `blocked` dir | 1 if movement blocked in direction |
+| `pget` dir attr | Remote attr (`id`, `x`/`y`, `p*`, `step`/`shoot` as dir, `light` as radius, …); 0 if missing |
 
 ### ZZT-style Queries
 
@@ -64,6 +65,7 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `rnd` min max | min to max |
 | `abs` a | Math.abs |
 | `intceil`, `intfloor`, `intround` | Math variants |
+| `intsign` a | -1, 0, or 1 from sign of a |
 | `clamp` a min max | clamp |
 | `min`, `max` | Math.min/max over args |
 | `pick` … | random pick from args |

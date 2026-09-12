@@ -2370,8 +2370,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `runwith` | Function with argument |
 | `array` | Array variable |
 | `read` | Property from object into variable |
-| `pget` | Attr from dir or object id into variable (Weave-like) |
-| `pset` | Attr on dir or object id (Weave-like; `step` sets stepx/stepy) |
+| `pset` | Attr on dir (Weave-like; `step`/`shoot` set axes; `light <n> [dir]` sets radius/cone) |
 | `toast` | Toast notification |
 | `ticker` | Element ticker text |
 
@@ -2529,7 +2528,7 @@ Provides stat/variable access for the chip:
 - **Input flags** — For players: `inputmove`, `inputshoot`, `inputok`, `inputcancel`, `inputmenu`, `inputa`/`inputb`/`inputx`/`inputy`, `inputl1`/`inputl2`, `inputr1`/`inputr2`, `inputalt`, `inputctrl`, `inputshift` (from input queue; `inputmove`/`inputshoot` may list two dirs for diagonals; FPV remaps dirs)
 - **Board stats** — `isdark`, `startx`, `starty`, `over`, `under`, `palette`, `charset`, exits, `timelimit`, `restartonzap`, `maxplayershots`, `b1`–`b10`, `camera`, `graphics`, `facing`
 - **Env** — `currenttick`, `boardid`, `playerid`, `playerx`, `playery`, `thisid`, `thisx`, `thisy`, `senderid`, `senderx`, `sendery`
-- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light, lightdir, arg
+- **Standard stats** — char, color, bg, displaychar/color/bg, displayname (ticker prefix only; see below), item, group, party, player, pushable, collision, breakable, p1–p20, cycle, stepx/y, shootx/y, light (`lightsteps` + `lightx`/`lighty`; `@light <radius> [dir]`), arg
 - **Fallback** — Player flags
 
 ### set(chip, name, value)
@@ -2552,10 +2551,9 @@ Writes stats:
 
 | Command | Args | Description |
 |---------|------|-------------|
-| `set` | `name` `value` | Set stat (default value 1). Weave form: `set name pget <dir\|id> <attr>` |
+| `set` | `name` `value` | Set stat (default value 1). Value may be an expr, e.g. `set name pget <dir> <attr>` |
 | `clear` | stat… | Set listed stats to 0 |
-| `pget` | `<dir\|id>` `attr` `destflag` | Read remote element attr into flag (`id`, `x`/`y`, `p1`–`p20`, …) |
-| `pset` | `<dir\|id>` `attr` `value` | Write remote element attr (`step <walkdir>` sets stepx/stepy) |
+| `pset` | `<dir>` `attr` `value` | Write remote attr (`step`/`shoot` ← dir → axes; `light <n> [dir]` → lightsteps + cone) |
 | `cycle` | `value` | Set cycle (1–255) |
 
 ### Movement
@@ -9763,6 +9761,7 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `aligned`, `alligned` | 1 if element aligned (same row/col) with player |
 | `contact` | 1 if element adjacent to player |
 | `blocked` dir | 1 if movement blocked in direction |
+| `pget` dir attr | Remote attr (`id`, `x`/`y`, `p*`, `step`/`shoot` as dir, `light` as radius, …); 0 if missing |
 
 ### ZZT-style Queries
 
@@ -9782,6 +9781,7 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `rnd` min max | min to max |
 | `abs` a | Math.abs |
 | `intceil`, `intfloor`, `intround` | Math variants |
+| `intsign` a | -1, 0, or 1 from sign of a |
 | `clamp` a min max | clamp |
 | `min`, `max` | Math.min/max over args |
 | `pick` … | random pick from args |
