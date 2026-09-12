@@ -679,6 +679,12 @@ class ScriptParser extends CstParser {
     this.SUBRULE(this.dir)
   })
 
+  token_expr_pget = this.RULED('token_expr_pget', () => {
+    this.CONSUME(lexer.expr_pget)
+    this.SUBRULE(this.dir)
+    this.SUBRULE(this.simple_token)
+  })
+
   token_expr_abs = this.RULED('token_expr_abs', () => {
     this.CONSUME(lexer.expr_abs)
     this.SUBRULE(this.simple_token)
@@ -699,6 +705,11 @@ class ScriptParser extends CstParser {
     this.SUBRULE(this.simple_token)
   })
 
+  token_expr_intsign = this.RULED('token_expr_intsign', () => {
+    this.CONSUME(lexer.expr_intsign)
+    this.SUBRULE(this.simple_token)
+  })
+
   token_expr_clamp = this.RULED('token_expr_clamp', () => {
     this.CONSUME(lexer.expr_clamp)
     this.SUBRULE1(this.simple_token)
@@ -716,15 +727,22 @@ class ScriptParser extends CstParser {
     this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
   })
 
+  expr_list_item = this.RULED('expr_list_item', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.simple_token) },
+      { ALT: () => this.SUBRULE(this.dir) },
+    ])
+  })
+
   token_expr_pick = this.RULED('token_expr_pick', () => {
     this.CONSUME(lexer.expr_pick)
-    this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.expr_list_item))
   })
 
   token_expr_pickwith = this.RULED('token_expr_pickwith', () => {
     this.CONSUME(lexer.expr_pickwith)
-    this.SUBRULE1(this.simple_token)
-    this.AT_LEAST_ONE(() => this.SUBRULE2(this.simple_token))
+    this.SUBRULE(this.simple_token)
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.expr_list_item))
   })
 
   token_expr_random = this.RULED('token_expr_random', () => {
@@ -758,10 +776,12 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.token_expr_any) },
       { ALT: () => this.SUBRULE(this.token_expr_count) },
       { ALT: () => this.SUBRULE(this.token_expr_blocked) },
+      { ALT: () => this.SUBRULE(this.token_expr_pget) },
       { ALT: () => this.SUBRULE(this.token_expr_abs) },
       { ALT: () => this.SUBRULE(this.token_expr_intceil) },
       { ALT: () => this.SUBRULE(this.token_expr_intfloor) },
       { ALT: () => this.SUBRULE(this.token_expr_intround) },
+      { ALT: () => this.SUBRULE(this.token_expr_intsign) },
       { ALT: () => this.SUBRULE(this.token_expr_clamp) },
       { ALT: () => this.SUBRULE(this.token_expr_min) },
       { ALT: () => this.SUBRULE(this.token_expr_max) },

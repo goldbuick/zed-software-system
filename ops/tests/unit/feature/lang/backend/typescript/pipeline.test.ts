@@ -114,6 +114,22 @@ describe('compileast pipeline', () => {
     expect(code).toContain('pick')
   })
 
+  it('parses pick with direction args', () => {
+    const code = emit('#set p10 pick north south east west\n')
+    expect(code).toContain('pick')
+    expect(code).toContain('north')
+    expect(code).toContain('south')
+    expect(code).toContain('east')
+    expect(code).toContain('west')
+  })
+
+  it('parses pickwith with direction value args', () => {
+    const code = emit('#if pickwith seed n s\n')
+    expect(code).toContain('api.if')
+    expect(code).toContain('pickwith')
+    expect(code).toContain('seed')
+  })
+
   it('returns human-readable parse errors without token_ names', () => {
     const result = compileast('#put opp')
     expect(result.errors?.length).toBeGreaterThan(0)

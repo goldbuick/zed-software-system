@@ -254,6 +254,7 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.expr_intceil.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.expr_intfloor.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.expr_intround.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
+  [lexer.expr_intsign.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.expr_clamp.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.expr_min.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.expr_max.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
@@ -607,6 +608,7 @@ export function applycodetokencolors(
           case STAT_TYPE.SELECT:
           case STAT_TYPE.NUMBER:
           case STAT_TYPE.TEXT:
+          case STAT_TYPE.DIR:
           case STAT_TYPE.HOTKEY:
           case STAT_TYPE.COPYIT:
           case STAT_TYPE.OPENIT:

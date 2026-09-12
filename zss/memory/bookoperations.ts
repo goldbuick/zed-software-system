@@ -111,7 +111,7 @@ export function memoryreadelementdisplay(
       element?.bg ??
       kind?.bg ??
       defaultbg,
-    light: element?.light ?? kind?.light ?? 0,
+    light: element?.lightsteps ?? kind?.lightsteps ?? 0,
   }
 }
 

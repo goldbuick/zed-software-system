@@ -81,6 +81,7 @@ describe('linkexpandrowheight', () => {
 describe('known / expandable flags', () => {
   it('classifies types', () => {
     expect(isknownlinktype('HK')).toBe(true)
+    expect(isknownlinktype('dir')).toBe(true)
     expect(istargetlesslinktype('copyit')).toBe(true)
     expect(isexpandablelinktype('charedit')).toBe(true)
     expect(isexpandablelinktype('select')).toBe(false)

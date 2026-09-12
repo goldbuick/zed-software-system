@@ -131,6 +131,13 @@ describe('stats', () => {
         })
       })
 
+      it('returns DIR for dir', () => {
+        expect(statformat('step', ['step', 'dir'], false)).toEqual({
+          type: STAT_TYPE.DIR,
+          values: ['step', 'step'],
+        })
+      })
+
       it('returns HOTKEY for hk/hotkey', () => {
         expect(statformat('l', ['t', 'hk', 'k'], false)).toEqual({
           type: STAT_TYPE.HOTKEY,
@@ -189,6 +196,7 @@ describe('stats', () => {
       expect(stattypestring(STAT_TYPE.SELECT)).toBe('select')
       expect(stattypestring(STAT_TYPE.NUMBER)).toBe('number')
       expect(stattypestring(STAT_TYPE.TEXT)).toBe('text')
+      expect(stattypestring(STAT_TYPE.DIR)).toBe('dir')
       expect(stattypestring(STAT_TYPE.HOTKEY)).toBe('hotkey')
       expect(stattypestring(STAT_TYPE.COPYIT)).toBe('copyit')
       expect(stattypestring(STAT_TYPE.OPENIT)).toBe('openit')

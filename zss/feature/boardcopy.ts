@@ -99,8 +99,9 @@ export function mapelementcopy(
   maybenew.group = from.group
   maybenew.party = from.party
   maybenew.cycle = from.cycle
-  maybenew.light = from.light
-  maybenew.lightdir = from.lightdir
+  maybenew.lightsteps = from.lightsteps
+  maybenew.lightx = from.lightx
+  maybenew.lighty = from.lighty
   maybenew.stepx = from.stepx
   maybenew.stepy = from.stepy
   maybenew.shootx = from.shootx

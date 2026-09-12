@@ -316,6 +316,7 @@ export function memorymakeitscroll(makeit: string, player: string) {
             case STAT_TYPE.SELECT:
             case STAT_TYPE.NUMBER:
             case STAT_TYPE.TEXT:
+            case STAT_TYPE.DIR:
             case STAT_TYPE.HOTKEY:
             case STAT_TYPE.COPYIT:
             case STAT_TYPE.OPENIT:

@@ -374,12 +374,14 @@ export const expr_aligned = createSimpleToken({
 
 export const expr_contact = createWordToken('contact')
 export const expr_blocked = createWordToken('blocked')
+export const expr_pget = createWordToken('pget')
 export const expr_any = createWordToken('any')
 export const expr_count = createWordToken('countof')
 export const expr_abs = createWordToken('abs')
 export const expr_intceil = createWordToken('intceil')
 export const expr_intfloor = createWordToken('intfloor')
 export const expr_intround = createWordToken('intround')
+export const expr_intsign = createWordToken('intsign')
 export const expr_clamp = createWordToken('clamp')
 export const expr_min = createWordToken('min')
 export const expr_max = createWordToken('max')
@@ -660,12 +662,14 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     expr_aligned,
     expr_contact,
     expr_blocked,
+    expr_pget,
     expr_any,
     expr_count,
     expr_abs,
     expr_intceil,
     expr_intfloor,
     expr_intround,
+    expr_intsign,
     expr_clamp,
     expr_min,
     expr_max,

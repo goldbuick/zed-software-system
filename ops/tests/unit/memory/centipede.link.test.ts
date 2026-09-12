@@ -26,15 +26,14 @@ function stripcomments(code: string): string {
     .join('\n')
 }
 
-/** Collect destinations of #set / #pget / #clear outside p1-p10. */
+/** Collect destinations of #set / #clear outside p1-p10. */
 function nonpslotnames(code: string): string[] {
   const body = stripcomments(code)
   const names = new Set<string>()
-  const re =
-    /#(?:set|clear)\s+([a-z][a-z0-9]*)|#pget\s+[^\n]*?\s([a-z][a-z0-9]*)\s*$/gim
+  const re = /#(?:set|clear)\s+([a-z][a-z0-9]*)/gim
   let match: RegExpExecArray | null
   while ((match = re.exec(body)) !== null) {
-    const name = (match[1] ?? match[2] ?? '').toLowerCase()
+    const name = (match[1] ?? '').toLowerCase()
     if (!/^p([1-9]|10)$/.test(name)) {
       names.add(name)
     }
@@ -44,12 +43,12 @@ function nonpslotnames(code: string): string[] {
 
 describe('centipede head/segment p-slot scripts', () => {
   it('stores chain links on p3/p4 via pget/pset (not custom follower/leader flags)', () => {
-    expect(HEAD_CODE).toMatch(/#pset "\$p9" p3/)
-    expect(HEAD_CODE).toMatch(/#pset "\$p10" p4/)
+    expect(HEAD_CODE).toMatch(/#pset at p9 p10 p4/)
+    expect(HEAD_CODE).toMatch(/#set p3 pget/)
     expect(HEAD_CODE).not.toMatch(/#set follower/)
     expect(HEAD_CODE).not.toMatch(/\$follower/)
 
-    expect(SEGMENT_CODE).toMatch(/#pget "\$p4" id p6/)
+    expect(SEGMENT_CODE).toMatch(/#if pget n id is p4/)
     expect(SEGMENT_CODE).toMatch(/#if p5 above 16/)
     expect(SEGMENT_CODE).not.toMatch(/#set leader/)
     expect(SEGMENT_CODE).not.toMatch(/#set follower/)
@@ -63,8 +62,8 @@ describe('centipede head/segment p-slot scripts', () => {
 
   it('does not use the walk command for head movement', () => {
     expect(stripcomments(HEAD_CODE)).not.toMatch(/#walk\b/)
-    expect(HEAD_CODE).toMatch(/#pset "\$thisid" x/)
-    expect(HEAD_CODE).toMatch(/#pset "\$thisid" y/)
+    expect(HEAD_CODE).toMatch(/#pset idle x/)
+    expect(HEAD_CODE).toMatch(/#pset idle y/)
   })
 
   it('only writes script state into p1-p10', () => {

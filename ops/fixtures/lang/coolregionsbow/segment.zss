@@ -7,7 +7,10 @@
 :think
 #set p6 0
 #if p4 do
- #pget "$p4" id p6
+ #if pget n id is p4 set p6 1
+ #if pget s id is p4 set p6 1
+ #if pget e id is p4 set p6 1
+ #if pget w id is p4 set p6 1
 #done
 #if p6 do
  #set p5 0

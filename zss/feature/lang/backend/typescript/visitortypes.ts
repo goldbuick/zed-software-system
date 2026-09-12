@@ -509,6 +509,12 @@ export type Token_expr_blockedCstChildren = {
   dir: CstNode[]
 }
 
+export type Token_expr_pgetCstChildren = {
+  token_pget: IToken[]
+  dir: CstNode[]
+  simple_token: CstNode[]
+}
+
 export type Token_expr_absCstChildren = {
   token_abs: IToken[]
   simple_token: CstNode[]
@@ -529,6 +535,11 @@ export type Token_expr_introundCstChildren = {
   simple_token: CstNode[]
 }
 
+export type Token_expr_intsignCstChildren = {
+  token_intsign: IToken[]
+  simple_token: CstNode[]
+}
+
 export type Token_expr_clampCstChildren = {
   token_clamp: IToken[]
   simple_token: CstNode[]
@@ -544,14 +555,20 @@ export type Token_expr_maxCstChildren = {
   simple_token: CstNode[]
 }
 
+export type Expr_list_itemCstChildren = {
+  simple_token?: CstNode[]
+  dir?: CstNode[]
+}
+
 export type Token_expr_pickCstChildren = {
   token_pick: IToken[]
-  simple_token: CstNode[]
+  expr_list_item: CstNode[]
 }
 
 export type Token_expr_pickwithCstChildren = {
   token_pickwith: IToken[]
   simple_token: CstNode[]
+  expr_list_item: CstNode[]
 }
 
 export type Token_expr_randomCstChildren = {
@@ -581,10 +598,12 @@ export type Token_exprCstChildren = {
   token_expr_any?: CstNode[]
   token_expr_count?: CstNode[]
   token_expr_blocked?: CstNode[]
+  token_expr_pget?: CstNode[]
   token_expr_abs?: CstNode[]
   token_expr_intceil?: CstNode[]
   token_expr_intfloor?: CstNode[]
   token_expr_intround?: CstNode[]
+  token_expr_intsign?: CstNode[]
   token_expr_clamp?: CstNode[]
   token_expr_min?: CstNode[]
   token_expr_max?: CstNode[]
@@ -695,13 +714,16 @@ export type ICstNodeVisitor<IN, OUT> = {
   token_expr_any(children: Token_expr_anyCstChildren, param?: IN): OUT
   token_expr_count(children: Token_expr_countCstChildren, param?: IN): OUT
   token_expr_blocked(children: Token_expr_blockedCstChildren, param?: IN): OUT
+  token_expr_pget(children: Token_expr_pgetCstChildren, param?: IN): OUT
   token_expr_abs(children: Token_expr_absCstChildren, param?: IN): OUT
   token_expr_intceil(children: Token_expr_intceilCstChildren, param?: IN): OUT
   token_expr_intfloor(children: Token_expr_intfloorCstChildren, param?: IN): OUT
   token_expr_intround(children: Token_expr_introundCstChildren, param?: IN): OUT
+  token_expr_intsign(children: Token_expr_intsignCstChildren, param?: IN): OUT
   token_expr_clamp(children: Token_expr_clampCstChildren, param?: IN): OUT
   token_expr_min(children: Token_expr_minCstChildren, param?: IN): OUT
   token_expr_max(children: Token_expr_maxCstChildren, param?: IN): OUT
+  expr_list_item(children: Expr_list_itemCstChildren, param?: IN): OUT
   token_expr_pick(children: Token_expr_pickCstChildren, param?: IN): OUT
   token_expr_pickwith(children: Token_expr_pickwithCstChildren, param?: IN): OUT
   token_expr_random(children: Token_expr_randomCstChildren, param?: IN): OUT

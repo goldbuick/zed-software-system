@@ -123,5 +123,7 @@ export const STATS_CONFIG = [
   'shootx',
   'shooty',
   'light',
-  'lightdir',
+  'lightsteps',
+  'lightx',
+  'lighty',
 ]

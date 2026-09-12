@@ -65,7 +65,9 @@ const STANDARD_ELEMENT_STAT_NAMES = new Set([
   'shooty',
   'didfail',
   'light',
-  'lightdir',
+  'lightsteps',
+  'lightx',
+  'lighty',
   'arg',
 ])
 

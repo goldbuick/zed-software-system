@@ -34,6 +34,7 @@ export const STAT_LINK_KIND_ALIASES: Record<string, string> = {
   sl: 'select',
   text: 'text',
   tx: 'text',
+  dir: 'dir',
   hotkey: 'hotkey',
   hk: 'hotkey',
   copyit: 'copyit',
@@ -56,6 +57,7 @@ export const STAT_LINK_KIND_CANONICALS: string[] = [
   'range',
   'select',
   'text',
+  'dir',
   'hotkey',
   'copyit',
   'openit',
@@ -141,6 +143,11 @@ export function statformat(label: string, words: string[], first = true) {
           type: STAT_TYPE.TEXT,
           values,
         }
+      case 'dir':
+        return {
+          type: STAT_TYPE.DIR,
+          values,
+        }
       case 'hk':
       case 'hotkey':
         return {
@@ -212,6 +219,8 @@ export function stattypestring(type: STAT_TYPE) {
       return 'number'
     case STAT_TYPE.TEXT:
       return 'text'
+    case STAT_TYPE.DIR:
+      return 'dir'
     case STAT_TYPE.HOTKEY:
       return 'hotkey'
     case STAT_TYPE.COPYIT:

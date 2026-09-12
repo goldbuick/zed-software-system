@@ -8,6 +8,7 @@ import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import { memoryresetbooks, memorywritemainbook } from 'zss/memory/session'
+import { readexpr } from 'zss/words/expr'
 import { READ_CONTEXT } from 'zss/words/reader'
 
 function makechip() {
@@ -21,7 +22,7 @@ function makechip() {
   } as unknown as CHIP & { flags: Record<string, unknown> }
 }
 
-describe('element #pget / #pset', () => {
+describe('element pget expr / #pset', () => {
   afterEach(() => {
     READ_CONTEXT.board = undefined
     READ_CONTEXT.book = undefined
@@ -67,22 +68,27 @@ describe('element #pget / #pset', () => {
     return { board, self, north }
   }
 
-  it('#pget dir attr destflag reads neighbor p3', () => {
+  it('pget dir attr reads neighbor p3', () => {
     setupboard()
-    const chip = makechip()
-    const handler = ELEMENT_FIRMWARE.getcommand('pget')
-    expect(handler).toBeDefined()
-    handler!(chip, ['n', 'p3', 'got'])
-    expect(chip.flags.got).toBe('link-a')
-    expect(chip.flags.didfail).toBe(0)
+    READ_CONTEXT.words = ['pget', 'n', 'p3']
+    const [value] = readexpr(0)
+    expect(value).toBe('link-a')
   })
 
-  it('#pset id attr value writes p4 on target', () => {
+  it('#set dest pget dir attr assigns via expr', () => {
+    setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('set')
+    handler!(chip, ['apples', 'pget', 'n', 'p3'])
+    expect(chip.flags.apples).toBe('link-a')
+  })
+
+  it('#pset dir attr value writes p4 on target', () => {
     const { north } = setupboard()
     const chip = makechip()
     const handler = ELEMENT_FIRMWARE.getcommand('pset')
     expect(handler).toBeDefined()
-    handler!(chip, ['oid_north', 'p4', 'new-leader'])
+    handler!(chip, ['n', 'p4', 'new-leader'])
     expect(north.p4).toBe('new-leader')
     expect(chip.flags.didfail).toBe(0)
   })
@@ -97,51 +103,104 @@ describe('element #pget / #pset', () => {
     expect(chip.flags.didfail).toBe(0)
   })
 
-  it('#set dest pget id attr matches Weave RHS form', () => {
+  it('pget dir step returns STR_DIR from stepx/stepy', () => {
     setupboard()
-    const chip = makechip()
-    const handler = ELEMENT_FIRMWARE.getcommand('set')
-    handler!(chip, ['apples', 'pget', 'oid_north', 'p3'])
-    expect(chip.flags.apples).toBe('link-a')
-    expect(chip.flags.didfail).toBe(0)
+    READ_CONTEXT.words = ['pget', 'n', 'step']
+    const [value] = readexpr(0)
+    expect(value).toEqual(['NORTH'])
   })
 
-  it('#pget missing target sets dest 0 and didfail', () => {
-    setupboard()
-    const chip = makechip()
-    const handler = ELEMENT_FIRMWARE.getcommand('pget')
-    handler!(chip, ['missing-id', 'p3', 'got'])
-    expect(chip.flags.got).toBe(0)
-    expect(chip.flags.didfail).toBe(1)
-  })
-
-  it('#pget dir id reads neighbor object id', () => {
-    setupboard()
-    const chip = makechip()
-    const handler = ELEMENT_FIRMWARE.getcommand('pget')
-    handler!(chip, ['n', 'id', 'got'])
-    expect(chip.flags.got).toBe('oid_north')
-    expect(chip.flags.didfail).toBe(0)
-  })
-
-  it('#pset id attr value writes p11 string on target', () => {
+  it('#pset dir shoot walkdir sets shootx/shooty from target cell', () => {
     const { north } = setupboard()
     const chip = makechip()
     const handler = ELEMENT_FIRMWARE.getcommand('pset')
-    expect(handler).toBeDefined()
-    handler!(chip, ['oid_north', 'p11', 'extra-slot'])
-    expect(north.p11).toBe('extra-slot')
+    handler!(chip, ['n', 'shoot', 'e'])
+    expect(north.shootx).toBe(1)
+    expect(north.shooty).toBe(0)
     expect(chip.flags.didfail).toBe(0)
   })
 
-  it('#pget dir attr destflag reads neighbor p20 number', () => {
+  it('pget dir shoot returns STR_DIR from shootx/shooty', () => {
+    const { north } = setupboard()
+    north.shootx = 1
+    north.shooty = 0
+    READ_CONTEXT.words = ['pget', 'n', 'shoot']
+    const [value] = readexpr(0)
+    expect(value).toEqual(['EAST'])
+  })
+
+  it('pget idle step is IDLE when axes are zero', () => {
+    const { self } = setupboard()
+    self.stepx = 0
+    self.stepy = 0
+    READ_CONTEXT.words = ['pget', 'idle', 'step']
+    const [value] = readexpr(0)
+    expect(value).toEqual(['IDLE'])
+  })
+
+  it('#pset light n sets lightsteps only', () => {
+    const { north } = setupboard()
+    north.lightx = 1
+    north.lighty = 0
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    handler!(chip, ['n', 'light', 7])
+    expect(north.lightsteps).toBe(7)
+    expect(north.lightx).toBe(1)
+    expect(north.lighty).toBe(0)
+  })
+
+  it('#pset light n dir sets lightsteps and cone', () => {
+    const { north } = setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    handler!(chip, ['n', 'light', 5, 'e'])
+    expect(north.lightsteps).toBe(5)
+    expect(north.lightx).toBe(1)
+    expect(north.lighty).toBe(0)
+  })
+
+  it('pget light returns lightsteps radius', () => {
+    const { north } = setupboard()
+    north.lightsteps = 9
+    READ_CONTEXT.words = ['pget', 'n', 'light']
+    const [value] = readexpr(0)
+    expect(value).toBe(9)
+  })
+
+  it('pget missing target returns 0', () => {
+    setupboard()
+    READ_CONTEXT.words = ['pget', 'e', 'p3']
+    const [value] = readexpr(0)
+    expect(value).toBe(0)
+  })
+
+  it('pget dir id reads neighbor object id', () => {
+    setupboard()
+    READ_CONTEXT.words = ['pget', 'n', 'id']
+    const [value] = readexpr(0)
+    expect(value).toBe('oid_north')
+  })
+
+  it('#pset idle attr value writes p11 on self', () => {
+    const { self } = setupboard()
+    const chip = makechip()
+    const handler = ELEMENT_FIRMWARE.getcommand('pset')
+    expect(handler).toBeDefined()
+    handler!(chip, ['idle', 'p11', 'extra-slot'])
+    expect(self.p11).toBe('extra-slot')
+    expect(chip.flags.didfail).toBe(0)
+  })
+
+  it('pget dir attr reads neighbor p20 number', () => {
     const { north } = setupboard()
     north.p20 = 42
-    const chip = makechip()
-    const handler = ELEMENT_FIRMWARE.getcommand('pget')
-    expect(handler).toBeDefined()
-    handler!(chip, ['n', 'p20', 'got'])
-    expect(chip.flags.got).toBe(42)
-    expect(chip.flags.didfail).toBe(0)
+    READ_CONTEXT.words = ['pget', 'n', 'p20']
+    const [value] = readexpr(0)
+    expect(value).toBe(42)
+  })
+
+  it('pget is not a firmware command', () => {
+    expect(ELEMENT_FIRMWARE.getcommand('pget')).toBeUndefined()
   })
 })

@@ -51,7 +51,7 @@ describe('centipede script layout', () => {
     expect(HEAD_CODE.indexOf(':think')).toBeLessThan(
       HEAD_CODE.indexOf(':thud'),
     )
-    expect(HEAD_CODE).toMatch(/#pset "\$thisid"/)
+    expect(HEAD_CODE).toMatch(/#pset idle/)
     expect(HEAD_CODE).toMatch(/#repeat 32 do/)
     expect(HEAD_CODE).not.toMatch(/:preparefollow/)
     expect(HEAD_CODE).not.toMatch(/:dofollow/)
@@ -63,7 +63,7 @@ describe('centipede script layout', () => {
     expect(SEGMENT_CODE).not.toMatch(/:preparefollow/)
     expect(SEGMENT_CODE).not.toMatch(/:dofollow/)
     expect(SEGMENT_CODE).not.toMatch(/:trylink/)
-    expect(SEGMENT_CODE).toMatch(/:think[\s\S]*#pget "\$p4" id p6/)
+    expect(SEGMENT_CODE).toMatch(/:think[\s\S]*#if pget n id is p4/)
   })
 })
 
@@ -78,7 +78,7 @@ describe('centipede behaviors', () => {
     expect(firmwarelistcommands(DRIVER_TYPE.RUNTIME)).toContain('shortsend')
     expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'shortsend')).toBeTruthy()
     expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'stat')).toBeTruthy()
-    expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'pget')).toBeTruthy()
+    expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'pget')).toBeFalsy()
     expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'pset')).toBeTruthy()
 
     const headpage = memorycreatecodepage(HEAD_CODE, {})
