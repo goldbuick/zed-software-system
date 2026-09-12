@@ -2121,7 +2121,7 @@ class ScriptVisitor
     ]
   }
 
-  expr_list_item(ctx: Expr_list_itemCstChildren, _location: CstNodeLocation) {
+  expr_list_item(ctx: Expr_list_itemCstChildren) {
     if (ctx.simple_token) {
       return this.go(ctx.simple_token)
     }

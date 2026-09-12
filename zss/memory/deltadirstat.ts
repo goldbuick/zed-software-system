@@ -18,7 +18,10 @@ export const DIR_EDIT_CARDINALS = ['north', 'south', 'west', 'east'] as const
 export type DIR_EDIT_CARDINAL = (typeof DIR_EDIT_CARDINALS)[number]
 
 /** Map axis deltas to a dir-edit cardinal (idle / non-cardinal → north). */
-export function memorycardinaldirfromdelta(dx: number, dy: number): DIR_EDIT_CARDINAL {
+export function memorycardinaldirfromdelta(
+  dx: number,
+  dy: number,
+): DIR_EDIT_CARDINAL {
   const d = dirfromdelta(dx, dy)
   switch (d) {
     case DIR.SOUTH:

@@ -45,11 +45,6 @@ import {
   memoryboardelementindex,
   memoryreadelement,
 } from './boardaccess'
-import {
-  memoryclampdireditcardinal,
-  memorycardinaldirfromdelta,
-  memorywritedeltadirstat,
-} from './deltadirstat'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement, memorywriteterrain } from './boardlifecycle'
 import {
@@ -64,6 +59,11 @@ import {
   memoryreadcodepagestatdefaults,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
+import {
+  memorycardinaldirfromdelta,
+  memoryclampdireditcardinal,
+  memorywritedeltadirstat,
+} from './deltadirstat'
 import { memoryhassecretheap } from './inspectionbatch'
 import { memoryloadermatches } from './loader'
 import { memoryreadplayerboard } from './playermanagement'
@@ -249,13 +249,13 @@ function registerhyperlinksforelementgetvalue(typ: string, name: string) {
       switch (name) {
         case 'step':
           return memorycardinaldirfromdelta(
-            (element?.stepx ?? kind?.stepx ?? 0) as number,
-            (element?.stepy ?? kind?.stepy ?? 0) as number,
+            element?.stepx ?? kind?.stepx ?? 0,
+            element?.stepy ?? kind?.stepy ?? 0,
           )
         case 'shoot':
           return memorycardinaldirfromdelta(
-            (element?.shootx ?? kind?.shootx ?? 0) as number,
-            (element?.shooty ?? kind?.shooty ?? 0) as number,
+            element?.shootx ?? kind?.shootx ?? 0,
+            element?.shooty ?? kind?.shooty ?? 0,
           )
         default:
           return memoryclampdireditcardinal(maybevalue)
