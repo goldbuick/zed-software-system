@@ -145,8 +145,8 @@ describe('wasmplayscheduler offline', () => {
 })
 
 describe('wasmplayscheduler live', () => {
-  it('arms setTimeout for future notes', () => {
-    jest.useFakeTimers()
+  it('does not fire future notes until pump (worklet wake)', () => {
+    const settimeoutspy = jest.spyOn(globalThis, 'setTimeout')
     const ctx = {
       currentTime: 1,
       state: 'running',
@@ -158,12 +158,21 @@ describe('wasmplayscheduler live', () => {
     scheduler.schedule(1.5, () => runs.push(1))
 
     expect(runs).toEqual([])
+    expect(
+      settimeoutspy.mock.calls.some(
+        (call) => typeof call[0] === 'function' && call[0].name === 'pump',
+      ),
+    ).toBe(false)
+
+    ctx.currentTime = 1.4
+    scheduler.pump()
+    expect(runs).toEqual([])
 
     ctx.currentTime = 1.5
-    jest.advanceTimersByTime(500)
+    scheduler.pump()
     expect(runs).toEqual([1])
 
-    jest.useRealTimers()
+    settimeoutspy.mockRestore()
   })
 
   it('fires immediately when when is already due', () => {
@@ -178,20 +187,5 @@ describe('wasmplayscheduler live', () => {
     scheduler.schedule(1.5, () => runs.push(1))
     scheduler.schedule(2, () => runs.push(2))
     expect(runs).toEqual([1, 2])
-  })
-
-  it('pump from worklet wake also fires due notes', () => {
-    const ctx = {
-      currentTime: 1,
-      state: 'running',
-    }
-    const scheduler = createwasmplayscheduler({
-      audioContext: ctx as BaseAudioContext,
-    })
-    const runs: number[] = []
-    scheduler.schedule(1.5, () => runs.push(1))
-    ctx.currentTime = 1.5
-    scheduler.pump()
-    expect(runs).toEqual([1])
   })
 })
