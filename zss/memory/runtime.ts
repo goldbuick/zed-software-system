@@ -261,11 +261,12 @@ export function memorytickmain(
 
 const DRAW_LABEL = 'drawdisplay'
 
-export function memorydraindrawpending(
-  book: MAYBE<BOOK>,
-  board: MAYBE<BOARD>,
-) {
-  if (!ispresent(book) || !ispresent(board) || !ispresent(board.drawpendingids)) {
+export function memorydraindrawpending(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
+  if (
+    !ispresent(book) ||
+    !ispresent(board) ||
+    !ispresent(board.drawpendingids)
+  ) {
     return
   }
   const pending = board.drawpendingids

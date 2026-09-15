@@ -12,20 +12,18 @@ import {
 
 describe('wasm drum scheduling', () => {
   it('increments drum strike counters for digit notes', () => {
-    jest.useFakeTimers()
     const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('0')
+    synth.pump()
     const drums = snapshot('zss_drums')
     expect(drums[0]).toBe(1)
     expect(drums).toHaveLength(WASM_DRUM_SAB_LEN)
     expect(drums[WASM_DRUM_COUNT]).toBeCloseTo(tonenotationseconds('16n'), 4)
     synth.destroy()
-    jest.useRealTimers()
   })
 
   it('schedules crash and ride from k and r play chars', () => {
-    jest.useFakeTimers()
     const { maxi, snapshot } = createmockmaxi()
     const maxiwithclock = maxi as typeof maxi & {
       advance: (ms: number) => void
@@ -34,13 +32,12 @@ describe('wasm drum scheduling', () => {
     synth.addplay('kr')
     for (let step = 0; step < 20; step++) {
       maxiwithclock.advance(100)
-      jest.advanceTimersByTime(100)
+      synth.pump()
     }
     const drums = snapshot('zss_drums')
     expect(drums[10]).toBe(1)
     expect(drums[11]).toBe(1)
     synth.destroy()
-    jest.useRealTimers()
   })
 
   it('parseplay maps k and r to drum ids 10 and 11', () => {
@@ -50,14 +47,13 @@ describe('wasm drum scheduling', () => {
   })
 
   it('passes pattern note duration for cowbell hits', () => {
-    jest.useFakeTimers()
     const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('2')
+    synth.pump()
     const drums = snapshot('zss_drums')
     expect(drums[2]).toBe(1)
     expect(drums[WASM_DRUM_COUNT + 2]).toBeGreaterThan(0)
     synth.destroy()
-    jest.useRealTimers()
   })
 })

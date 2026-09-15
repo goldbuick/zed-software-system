@@ -7,11 +7,10 @@ import {
 
 describe('wasm stopplay', () => {
   it('stopplay gates off play voices in zss_voices sab', () => {
-    jest.useFakeTimers()
     const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('c')
-    jest.advanceTimersByTime(1)
+    synth.pump()
     expect(snapshot('zss_voices')[1]).toBe(1)
 
     synth.stopplay()
@@ -22,7 +21,6 @@ describe('wasm stopplay', () => {
     expect(voices[13]).toBe(0)
     expect(voices[19]).toBe(0)
     synth.destroy()
-    jest.useRealTimers()
   })
 
   it('restart clears fx sends after echo was enabled', () => {

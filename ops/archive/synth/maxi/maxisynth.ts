@@ -540,6 +540,10 @@ export function createwasmsynth(
     addplay,
     addbgplay,
     stopplay,
+    /** Simulate Daisy worklet zss_dsp_tick wake (tests). */
+    pump: () => {
+      scheduler.pump()
+    },
     setplayvolume,
     setbgplayvolume,
     setttsvolume,

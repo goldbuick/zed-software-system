@@ -6,11 +6,11 @@ import { PERF_SPATIAL_INDEX } from 'zss/config'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
-import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import {
   memorycodehasdrawdisplay,
   memoryelementdrawreadid,
 } from './boarddrawqueue'
+import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 function isactiveobject(object: BOARD_ELEMENT, timestamp: number) {

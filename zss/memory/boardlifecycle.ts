@@ -15,11 +15,11 @@ import {
 } from 'zss/words/group'
 import { CATEGORY, COLOR, NAME, PT } from 'zss/words/types'
 
+import { memoryqueuedrawdisplay } from './boarddrawqueue'
 import {
   memoryexportboardelement,
   memoryimportboardelement,
 } from './boardelement'
-import { memoryqueuedrawdisplay } from './boarddrawqueue'
 import {
   memorydeleteboardobjectnamedlookup,
   memorydeleteboardterrainnamed,
