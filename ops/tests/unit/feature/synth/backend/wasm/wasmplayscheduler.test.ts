@@ -143,3 +143,55 @@ describe('wasmplayscheduler offline', () => {
     expect(suspendmock).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('wasmplayscheduler live', () => {
+  it('arms setTimeout for future notes', () => {
+    jest.useFakeTimers()
+    const ctx = {
+      currentTime: 1,
+      state: 'running',
+    }
+    const scheduler = createwasmplayscheduler({
+      audioContext: ctx as BaseAudioContext,
+    })
+    const runs: number[] = []
+    scheduler.schedule(1.5, () => runs.push(1))
+
+    expect(runs).toEqual([])
+
+    ctx.currentTime = 1.5
+    jest.advanceTimersByTime(500)
+    expect(runs).toEqual([1])
+
+    jest.useRealTimers()
+  })
+
+  it('fires immediately when when is already due', () => {
+    const ctx = {
+      currentTime: 2,
+      state: 'running',
+    }
+    const scheduler = createwasmplayscheduler({
+      audioContext: ctx as BaseAudioContext,
+    })
+    const runs: number[] = []
+    scheduler.schedule(1.5, () => runs.push(1))
+    scheduler.schedule(2, () => runs.push(2))
+    expect(runs).toEqual([1, 2])
+  })
+
+  it('pump from worklet wake also fires due notes', () => {
+    const ctx = {
+      currentTime: 1,
+      state: 'running',
+    }
+    const scheduler = createwasmplayscheduler({
+      audioContext: ctx as BaseAudioContext,
+    })
+    const runs: number[] = []
+    scheduler.schedule(1.5, () => runs.push(1))
+    ctx.currentTime = 1.5
+    scheduler.pump()
+    expect(runs).toEqual([1])
+  })
+})

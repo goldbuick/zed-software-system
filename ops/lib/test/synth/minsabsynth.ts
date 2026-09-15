@@ -189,6 +189,10 @@ export function createminsabsynth(engine: SabEngine) {
         )
       }
     },
+    /** Simulate Daisy worklet zss_dsp_tick wake. */
+    pump() {
+      scheduler.pump()
+    },
     setvoiceconfig(
       index: number,
       config: number | string,

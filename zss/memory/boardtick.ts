@@ -3,7 +3,7 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { COLLISION } from 'zss/words/types'
 
 import { memoryreadidorindex } from './boardaccess'
-import { memorycodehasdrawdisplay } from './boarddrawdirty'
+import { memorycodehasdrawdisplay } from './boarddrawqueue'
 import { BOOK_RUN_ARGS, memorycleanupboard } from './boardmovement'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'

@@ -395,7 +395,7 @@
       },
       {
         "id": "sid_YfADg1Nq89xx",
-        "code": "@star\n@cycle 1\n@char 83\n@notbreakable\n@p2 100\n:think\n#take p2\n#if p2 below or eq 0 do\n #die\n#else if p2 % 2 is 0 do\n #walk seek\n#else do\n #idle\n#done\n#think\n:thud\n:touch\n#if any at senderx sendery player do\n #send at senderx sendery shot\n#else if any at senderx sendery breakable do\n #send at senderx sendery shot\n#done\n#idle\n#think\n:drawdisplay\n#give color\n#if color above 15 set color 9\n#set p4 currenttick % 4\n#if p4 is 0 char 179\n#if p4 is 1 char 47\n#if p4 is 2 char 196\n#if p4 is 3 char 92\n#end\n"
+        "code": "@star\n@cycle 1\n@char 83\n@notbreakable\n@p2 100\n:think\n#take p2\n#if p2 below or eq 0 do\n #die\n#else if p2 % 2 is 0 do\n ?seek\n#else idle\n#done\n#send flow shot\n#think\n:touch\n#send at senderx sendery shot\n#think\n:bombed\n#die\n:drawdisplay\n#give color\n#if color above 15 set color 9\n#set p4 currenttick % 4\n#if p4 is 0 char 179\n#if p4 is 1 char 47\n#if p4 is 2 char 196\n#if p4 is 3 char 92\n"
       },
       {
         "id": "sid_0TOoer5HeouV",

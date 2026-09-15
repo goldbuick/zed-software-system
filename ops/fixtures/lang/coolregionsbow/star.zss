@@ -8,20 +8,16 @@
 #if p2 below or eq 0 do
  #die
 #else if p2 % 2 is 0 do
- #walk seek
-#else do
- #idle
+ ?seek
+#else idle
 #done
+#send flow shot
 #think
-:thud
 :touch
-#if any at senderx sendery player do
- #send at senderx sendery shot
-#else if any at senderx sendery breakable do
- #send at senderx sendery shot
-#done
-#idle
+#send at senderx sendery shot
 #think
+:bombed
+#die
 :drawdisplay
 #give color
 #if color above 15 set color 9
@@ -30,4 +26,3 @@
 #if p4 is 1 char 47
 #if p4 is 2 char 196
 #if p4 is 3 char 92
-#end

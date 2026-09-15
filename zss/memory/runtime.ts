@@ -21,8 +21,12 @@ import { NAME } from 'zss/words/types'
 
 import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memoryupdatedrawdirty } from './boarddrawdirty'
+import {
+  memorycodehasdrawdisplay,
+  memoryelementdrawreadid,
+} from './boarddrawqueue'
 import { memoryensureboardready } from './boardlookup'
-import { memoryreadelementstat } from './boards'
+import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import {
   memoryclearflags,
@@ -244,12 +248,52 @@ export function memorytickmain(
           }
         }
 
+        // mid-tick creates (:drawdisplay) before dirty / gadget paint
+        memorydraindrawpending(mainbook, board)
+
         measurestage('tick:drawdirty', () =>
           memoryupdatedrawdirty(board, timestamp),
         )
       }
     }),
   )
+}
+
+const DRAW_LABEL = 'drawdisplay'
+
+export function memorydraindrawpending(
+  book: MAYBE<BOOK>,
+  board: MAYBE<BOARD>,
+) {
+  if (!ispresent(book) || !ispresent(board) || !ispresent(board.drawpendingids)) {
+    return
+  }
+  const pending = board.drawpendingids
+  delete board.drawpendingids
+  for (const readid of pending) {
+    const object = board.objects[readid]
+    let element: MAYBE<BOARD_ELEMENT> = object
+    if (!ispresent(element)) {
+      const maybeidx = Number(readid)
+      if (
+        Number.isInteger(maybeidx) &&
+        maybeidx >= 0 &&
+        maybeidx < board.terrain.length
+      ) {
+        element = board.terrain[maybeidx]
+      }
+    }
+    if (!ispresent(element)) {
+      continue
+    }
+    const kind = memoryreadelementkind(element)
+    const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
+    if (!code || !memorycodehasdrawdisplay(code)) {
+      continue
+    }
+    const id = memoryelementdrawreadid(element)
+    memorytickonce(book, board, element, code, `${id}_draw`, DRAW_LABEL)
+  }
 }
 
 export function memorytickobject(

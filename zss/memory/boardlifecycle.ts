@@ -19,6 +19,7 @@ import {
   memoryexportboardelement,
   memoryimportboardelement,
 } from './boardelement'
+import { memoryqueuedrawdisplay } from './boarddrawqueue'
 import {
   memorydeleteboardobjectnamedlookup,
   memorydeleteboardterrainnamed,
@@ -49,6 +50,7 @@ const BOARD_RUNTIME_SKIP = {
   drawlastfp: FORMAT_SKIP,
   drawlastxy: FORMAT_SKIP,
   drawallowids: FORMAT_SKIP,
+  drawpendingids: FORMAT_SKIP,
   drawdirtycells: FORMAT_SKIP,
   drawneedfull: FORMAT_SKIP,
   mediaqueuehelperpeerid: FORMAT_SKIP,
@@ -222,7 +224,9 @@ export function memorycreateboardobject(
   board.objects[object.id] = object
   memoryreadelementkind(object)
   memorywriteboardnamed(board, object)
-  return board.objects[object.id]
+  const created = board.objects[object.id]
+  memoryqueuedrawdisplay(board, created)
+  return created
 }
 
 export function memorycreateboardobjectfromkind(
@@ -395,7 +399,9 @@ export function memorywriteterrain(
     memoryreadelementkind(terrain)
     memorywriteboardnamed(board, terrain, index)
   }
-  return board.terrain[index]
+  const created = board.terrain[index]
+  memoryqueuedrawdisplay(board, created)
+  return created
 }
 
 export function memorywriteterrainfromkind(
