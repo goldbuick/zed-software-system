@@ -64,6 +64,42 @@ describe('bullet blocked breakable softdelete', () => {
     ).toBeUndefined()
   })
 
+  it('does not soft-delete a notbreakable bullet that walks into solid', () => {
+    const bulletpage = memorycreatecodepage(BULLET_CODE_NO_DIE, {})
+    const boardpage = memorycreatecodepage('@board arena\n', {})
+    const book = memorycreatebook([bulletpage, boardpage])
+    memoryresetbooks([book])
+    memorywritemainbook(book.id)
+
+    const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardpage)!
+    board.id = boardpage.id
+    const wallidx = 4 + 5 * BOARD_WIDTH
+    board.terrain[wallidx] = { kind: 'solid', collision: COLLISION.ISSOLID }
+    memoryensureboardready(board)
+
+    const bullet = memorycreateboardobjectfromkind(
+      board,
+      { x: 5, y: 5 },
+      'bullet',
+      'sid_bullet_wall_nb',
+    )
+    expect(bullet).toBeDefined()
+    bullet!.collision = COLLISION.ISBULLET
+    bullet!.breakable = 0
+    bullet!.cycle = 1
+    bullet!.stepx = -1
+    bullet!.stepy = 0
+    book.timestamp = 20
+    READ_CONTEXT.timestamp = 20
+
+    memorytickobject(book, board, bullet, BULLET_CODE_NO_DIE)
+
+    expect(bullet!.removed).toBeUndefined()
+    expect(
+      memoryreadelement(board, { x: 5, y: 5 }, READ_LAYER.OBJECT)?.id,
+    ).toBe('sid_bullet_wall_nb')
+  })
+
   it('removes both breakable bullets when one walks into the other', () => {
     const bulletpage = memorycreatecodepage(BULLET_CODE_NO_DIE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})

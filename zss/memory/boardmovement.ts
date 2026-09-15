@@ -306,8 +306,8 @@ export function memorymoveobject(
           memorybulletcollisionlabel(element, blocked),
         )
       }
-      // Breakable projectiles must leave the cell even when the chip skips :thud
-      // #die. A leftover occupant after a wall thud would block later bullets.
+      // @isbreakable projectiles leave the cell even when the chip skips :thud
+      // #die. @notbreakable projectiles (e.g. star) stay until the chip #dies.
       const contextstamp = READ_CONTEXT.timestamp
       const bookstamp = book?.timestamp ?? 0
       const deletestamp =

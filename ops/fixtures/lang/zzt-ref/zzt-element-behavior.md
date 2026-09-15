@@ -256,7 +256,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 | Player (`ispid`) | `:shot` / `:partyshot` remap | `:shot` | `:shot` | `:shot` + softdelete |
 | Object / tiger (`sid_…`) | `:shot` | `:partyshot` (no kill) | `:shot` | `:shot` + softdelete |
 
-  Non-breakable creatures (lion, tiger, head, …) get `:partyshot` from enemy-source bullets (including when they walk into the projectile). `@isbreakable` (breakable wall, gem, …) gets `:shot` + softdelete from any source. Creatures award ZZT ScoreValues on `:shot` before `#die`. Breakable projectiles soft-delete after either collision direction.
+  Non-breakable creatures (lion, tiger, head, …) get `:partyshot` from enemy-source bullets (including when they walk into the projectile). `@isbreakable` (breakable wall, gem, …) gets `:shot` + softdelete from any source. Creatures award ZZT ScoreValues on `:shot` before `#die`. Breakable projectiles (`@isbreakable`) soft-delete after either collision direction; `@notbreakable` projectiles (e.g. star) do not.
 - **Status:** ok (RoZZT no-creature-kill mapped to cafe `:partyshot` when not `@isbreakable`).
 
 ### Water (19) / Forest (20) / Fake (27)

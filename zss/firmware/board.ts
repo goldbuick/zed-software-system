@@ -161,10 +161,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     bullet.cycle = 1
     // write party info
     bullet.party = READ_CONTEXT.element.party ?? READ_CONTEXT.element.id ?? ''
-    // ensure correct collection type
+    // ensure correct collision type; breakable stays from kind (@isbreakable / @notbreakable)
     bullet.collision = COLLISION.ISBULLET
-    // ensure breakable
-    bullet.breakable = 1
     // set walking direction
     bullet.stepx = dir.destpt.x - READ_CONTEXT.element.x
     bullet.stepy = dir.destpt.y - READ_CONTEXT.element.y
