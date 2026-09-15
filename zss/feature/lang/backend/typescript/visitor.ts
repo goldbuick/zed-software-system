@@ -8,6 +8,7 @@ import { tokenstring } from './visitor/helpers'
 import {
   And_testCstChildren,
   And_test_valueCstChildren,
+  Additive_exprCstChildren,
   Arith_exprCstChildren,
   Arith_expr_itemCstChildren,
   CategoryCstChildren,
@@ -1073,11 +1074,14 @@ class ScriptVisitor
     return []
   }
 
-  arith_expr(ctx: Arith_exprCstChildren, location: CstNodeLocation) {
+  arith_expr(ctx: Arith_exprCstChildren) {
     if (ctx.LHS) {
       return this.go(ctx.LHS)
     }
+    return this.go(ctx.additive_expr)
+  }
 
+  additive_expr(ctx: Additive_exprCstChildren, location: CstNodeLocation) {
     const term = this.go(ctx.term)
     if (!ctx.RHS) {
       return term
@@ -1999,7 +2003,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'abs',
       }),
-      ...this.go(ctx.simple_token),
+      this.createexprnodeondemand(this.go(ctx.arith_expr), location),
     ]
   }
 
@@ -2013,7 +2017,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'intceil',
       }),
-      ...this.go(ctx.simple_token),
+      this.createexprnodeondemand(this.go(ctx.arith_expr), location),
     ]
   }
 
@@ -2027,7 +2031,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'intfloor',
       }),
-      ...this.go(ctx.simple_token),
+      this.createexprnodeondemand(this.go(ctx.arith_expr), location),
     ]
   }
 
@@ -2041,7 +2045,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'intround',
       }),
-      ...this.go(ctx.simple_token),
+      this.createexprnodeondemand(this.go(ctx.arith_expr), location),
     ]
   }
 
@@ -2055,7 +2059,7 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'intsign',
       }),
-      ...this.go(ctx.simple_token),
+      this.createexprnodeondemand(this.go(ctx.arith_expr), location),
     ]
   }
 
@@ -2069,7 +2073,9 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'clamp',
       }),
-      ...this.go(ctx.simple_token),
+      ...(ctx.arith_expr ?? []).map((cst) =>
+        this.createexprnodeondemand(this.go(cst), location),
+      ),
     ]
   }
 
@@ -2080,7 +2086,9 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'min',
       }),
-      ...this.go(ctx.simple_token),
+      ...(ctx.arith_expr ?? []).map((cst) =>
+        this.createexprnodeondemand(this.go(cst), location),
+      ),
     ]
   }
 
@@ -2091,7 +2099,9 @@ class ScriptVisitor
         literal: LITERAL.STRING,
         value: 'max',
       }),
-      ...this.go(ctx.simple_token),
+      ...(ctx.arith_expr ?? []).map((cst) =>
+        this.createexprnodeondemand(this.go(cst), location),
+      ),
     ]
   }
 

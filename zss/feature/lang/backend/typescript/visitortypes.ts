@@ -238,7 +238,11 @@ export type Not_test_valueCstChildren = {
 
 export type Arith_exprCstChildren = {
   LHS?: CstNode[]
-  term?: CstNode[]
+  additive_expr?: CstNode[]
+}
+
+export type Additive_exprCstChildren = {
+  term: CstNode[]
   RHS?: CstNode[]
 }
 
@@ -517,42 +521,42 @@ export type Token_expr_pgetCstChildren = {
 
 export type Token_expr_absCstChildren = {
   token_abs: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_intceilCstChildren = {
   token_intceil: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_intfloorCstChildren = {
   token_intfloor: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_introundCstChildren = {
   token_intround: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_intsignCstChildren = {
   token_intsign: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_clampCstChildren = {
   token_clamp: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_minCstChildren = {
   token_min: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Token_expr_maxCstChildren = {
   token_max: IToken[]
-  simple_token: CstNode[]
+  arith_expr: CstNode[]
 }
 
 export type Expr_list_itemCstChildren = {
@@ -686,6 +690,7 @@ export type ICstNodeVisitor<IN, OUT> = {
   and_test_value(children: And_test_valueCstChildren, param?: IN): OUT
   not_test_value(children: Not_test_valueCstChildren, param?: IN): OUT
   arith_expr(children: Arith_exprCstChildren, param?: IN): OUT
+  additive_expr(children: Additive_exprCstChildren, param?: IN): OUT
   arith_expr_item(children: Arith_expr_itemCstChildren, param?: IN): OUT
   term(children: TermCstChildren, param?: IN): OUT
   term_item(children: Term_itemCstChildren, param?: IN): OUT
