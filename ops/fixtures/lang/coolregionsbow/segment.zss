@@ -1,36 +1,7 @@
 @segment
 @char 79
 @cycle 2
-' p4=leader  p5=linkgrace (16 thinks)  p6=live probe
-' passive: the head does all the moving.
-' promote when the leader id no longer resolves (unset, shot, or bombed).
-:think
-#set p6 0
-#if p4 do
- #if pget n id is p4 set p6 1
- #if pget s id is p4 set p6 1
- #if pget e id is p4 set p6 1
- #if pget w id is p4 set p6 1
-#done
-#if p6 do
- #set p5 0
-#else do
- #give p5
- #if p5 above 16 do
-  #set p4 0
-  #set p5 0
-  #morph head
- #done
-#done
-#idle
-#think
-:thud
-:touch
-#if any at senderx sendery player do
- #send at senderx sendery shot
-#done
-#idle
-#think
+#end
 :shot
 :bombed
 #give score 3

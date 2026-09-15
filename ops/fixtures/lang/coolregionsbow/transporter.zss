@@ -1,8 +1,7 @@
 @transporter
 @cycle 2
 @char 197
-@shootx number -1 1
-@shooty number -1 1
+@shoot dir;Facing
 :think
 #idle
 #think

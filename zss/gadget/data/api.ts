@@ -252,7 +252,7 @@ const HYPERLINK_WITH_SHARED_DEFAULTS = {
   number: 0,
   tx: '',
   text: '',
-  dir: 'north',
+  dir: 'idle',
   zssedit: '',
   charedit: 0,
   coloredit: 0,

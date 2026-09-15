@@ -8,7 +8,7 @@
 #if p2 below or eq 0 do
  #die
 #else if p2 % 2 is 0 do
- ?seek
+ #walk seek
 #else do
  #idle
 #done

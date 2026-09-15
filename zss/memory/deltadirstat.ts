@@ -13,11 +13,17 @@ import { DIR, NAME, PT, WORD } from 'zss/words/types'
 import { memoryevaldir } from './boarddirection'
 import { BOARD, BOARD_ELEMENT } from './types'
 
-export const DIR_EDIT_CARDINALS = ['north', 'south', 'west', 'east'] as const
+export const DIR_EDIT_CARDINALS = [
+  'idle',
+  'north',
+  'south',
+  'west',
+  'east',
+] as const
 
 export type DIR_EDIT_CARDINAL = (typeof DIR_EDIT_CARDINALS)[number]
 
-/** Map axis deltas to a dir-edit cardinal (idle / non-cardinal → north). */
+/** Map axis deltas to a dir-edit choice (idle / non-cardinal → idle). */
 export function memorycardinaldirfromdelta(
   dx: number,
   dy: number,
@@ -31,15 +37,21 @@ export function memorycardinaldirfromdelta(
     case DIR.EAST:
       return 'east'
     case DIR.NORTH:
-    default:
       return 'north'
+    case DIR.IDLE:
+    default:
+      return 'idle'
   }
 }
 
-/** Clamp any word to a dir-edit cardinal. */
+/** Clamp any word to a dir-edit choice. */
 export function memoryclampdireditcardinal(value: unknown): DIR_EDIT_CARDINAL {
   const name = NAME(maptostring(value))
   switch (name) {
+    case 'idle':
+    case 'i':
+    case 'stop':
+      return 'idle'
     case 'south':
     case 's':
     case 'down':
@@ -59,8 +71,9 @@ export function memoryclampdireditcardinal(value: unknown): DIR_EDIT_CARDINAL {
     case 'n':
     case 'up':
     case 'u':
-    default:
       return 'north'
+    default:
+      return 'idle'
   }
 }
 

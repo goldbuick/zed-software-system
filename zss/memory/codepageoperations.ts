@@ -136,7 +136,7 @@ export function memoryapplyelementstats(
             break
           }
           if (!ispresent(element[key as keyof BOARD_ELEMENT])) {
-            element[key as keyof BOARD_ELEMENT] = 'north'
+            element[key as keyof BOARD_ELEMENT] = 'idle'
           }
           break
       }

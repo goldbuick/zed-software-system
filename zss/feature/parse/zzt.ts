@@ -181,6 +181,31 @@ function applyzztcentipedelinks(
   }
 }
 
+const ZZT_P2_STAR_BIT = 0x80
+const ZZT_P2_RATE_MASK = 0x7f
+
+/**
+ * ZZT tiger/spinninggun pack firing type in P2 bit 7 (star when set);
+ * rate is P2 & $7F. Cafe kinds use p2=rate and p3=0 bullet / 1 star.
+ */
+function remapzztp2firingtype(addstats: BOARD_ELEMENT) {
+  if (!isnumber(addstats.p2)) {
+    return
+  }
+  const packed = addstats.p2
+  addstats.p3 = (packed & ZZT_P2_STAR_BIT) !== 0 ? 1 : 0
+  addstats.p2 = packed & ZZT_P2_RATE_MASK
+}
+
+/** ZZT bullet P1: 0 = player-owned, else enemy. Cafe uses party + ispid. */
+function remapzztbulletparty(addstats: BOARD_ELEMENT) {
+  const p1 = addstats.p1
+  delete addstats.p1
+  if (p1 === 0) {
+    addstats.party = 'pid_zztimport'
+  }
+}
+
 type PROCESS_LAYOUT = {
   tilewidth: number
   tileheight: number
@@ -352,6 +377,7 @@ function processboards(
         writefromkind(board, ['counter', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_BULLET:
+        remapzztbulletparty(addstats)
         writefromkind(board, ['bullet', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_WATER:
@@ -445,6 +471,7 @@ function processboards(
         writefromkind(board, ['shark', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_SPINNINGGUN:
+        remapzztp2firingtype(addstats)
         writefromkind(board, ['spinninggun', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_PUSHER:
@@ -454,6 +481,7 @@ function processboards(
         writefromkind(board, ['lion', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_TIGER:
+        remapzztp2firingtype(addstats)
         writefromkind(board, ['tiger', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_BLINKNS:
@@ -462,11 +490,17 @@ function processboards(
       case ZZT_TILE_HEAD:
         // p3 reserved for follower object id (ZZT Follower index)
         delete addstats.p3
+        // plank stub: no movement from ZZT Step
+        addstats.stepx = 0
+        addstats.stepy = 0
         remember(writefromkind(board, ['head', strcolor], { x, y }, addstats))
         break
       case ZZT_TILE_SEGMENT:
         // p3 reserved for follower object id (ZZT Follower index)
         delete addstats.p3
+        // plank stub: no movement from ZZT Step
+        addstats.stepx = 0
+        addstats.stepy = 0
         remember(
           writefromkind(board, ['segment', strcolor], { x, y }, addstats),
         )
