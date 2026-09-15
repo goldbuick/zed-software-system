@@ -41,15 +41,17 @@ function nonpslotnames(code: string): string[] {
   return [...names].sort()
 }
 
-describe('centipede head/segment p-slot scripts', () => {
-  it('stores chain links on p3/p4 via pget/pset (not custom follower/leader flags)', () => {
-    expect(HEAD_CODE).toMatch(/#pset at p9 p10 p4/)
-    expect(HEAD_CODE).toMatch(/#set p3 pget/)
+describe('centipede head/segment plank stubs', () => {
+  it('are bombed-score stubs without chain/follow scripting', () => {
+    expect(HEAD_CODE).toMatch(/:bombed/)
+    expect(HEAD_CODE).toMatch(/#give score 1/)
+    expect(HEAD_CODE).not.toMatch(/#pset |#walk |#go /)
     expect(HEAD_CODE).not.toMatch(/#set follower/)
     expect(HEAD_CODE).not.toMatch(/\$follower/)
 
-    expect(SEGMENT_CODE).toMatch(/#if pget n id is p4/)
-    expect(SEGMENT_CODE).toMatch(/#if p5 above 16/)
+    expect(SEGMENT_CODE).toMatch(/:bombed/)
+    expect(SEGMENT_CODE).toMatch(/#give score 3/)
+    expect(SEGMENT_CODE).not.toMatch(/#morph |#pset /)
     expect(SEGMENT_CODE).not.toMatch(/#set leader/)
     expect(SEGMENT_CODE).not.toMatch(/#set follower/)
     expect(SEGMENT_CODE).not.toMatch(/#set linkgrace/)
@@ -60,10 +62,9 @@ describe('centipede head/segment p-slot scripts', () => {
     expect(HEAD_CODE).toMatch(/@p2 range;Deviance\?/)
   })
 
-  it('does not use the walk command for head movement', () => {
+  it('does not use walk or idle pset movement helpers', () => {
     expect(stripcomments(HEAD_CODE)).not.toMatch(/#walk\b/)
-    expect(HEAD_CODE).toMatch(/#pset idle x/)
-    expect(HEAD_CODE).toMatch(/#pset idle y/)
+    expect(HEAD_CODE).not.toMatch(/#pset idle/)
   })
 
   it('only writes script state into p1-p10', () => {
