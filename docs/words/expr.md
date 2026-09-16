@@ -63,15 +63,17 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `rnd` | 0 or 1 |
 | `rnd` n | 0 to n |
 | `rnd` min max | min to max |
-| `abs` a | Math.abs |
-| `intceil`, `intfloor`, `intround` | Math variants |
-| `intsign` a | -1, 0, or 1 from sign of a |
-| `clamp` a min max | clamp |
-| `min`, `max` | Math.min/max over args |
+| `abs` a | Math.abs; a may be a full arith expression |
+| `intceil`, `intfloor`, `intround` | Math variants; arg may be a full arith expression |
+| `intsign` a | -1, 0, or 1 from sign of a; a may be a full arith expression |
+| `clamp` a min max | clamp; each slot may be a full arith expression |
+| `min`, `max` | Math.min/max over args; each arg may be a full arith expression |
 | `pick` … | random pick from args |
 | `pickwith` seed … | deterministic pick |
 | `random` a [b] | random integer |
 | `randomwith` seed a [b] | deterministic random |
+
+Nested unaries without parens are valid (`intsign abs p1`, `intsign abs playery - thisy`). Multi-arg slots each consume one arith expression, so `min a + b c` is `min(a+b, c)`; use parens to separate: `min (a + b) (c + d)`.
 
 ### Advanced
 

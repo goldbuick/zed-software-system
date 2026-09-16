@@ -17,7 +17,7 @@ title: boardmovement.ts
 - `./boardlifecycle` — memorydeleteboardobject, memorysafedeleteelement
 - `./boards` — memorycheckelementpushable, memoryreadelementstat
 - `./boardtransitions` — memoryplayerblockedbyedge, memoryplayerwaszapped
-- `./gamesend` — memorysendtoelement
+- `./gamesend` — memorybulletcollisionlabel, memorysendtoelement
 - `./spatialqueries` — memorycheckcollision
 
 > **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`.
@@ -30,5 +30,5 @@ title: boardmovement.ts
 | `memorycheckmoveboardobject` | True if dest is blocked |
 | `memorycleanupboard` | Remove objects marked removed > 5s |
 | `memorymoveboardobject` | Move object by x/y; return blocked or undefined |
-| `memorymoveobject` | Full move with push chain and send (touch/shot); no thud |
+| `memorymoveobject` | Full move with push chain and send (touch/shot); soft-deletes `@isbreakable` ISBULLET on block |
 | `BOOK_RUN_ARGS` | Tick/draw run arg type |

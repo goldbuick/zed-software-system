@@ -132,7 +132,7 @@
 </table></div>
 <h2 id="internal-functions"><a class="blume-heading-anchor" href="#internal-functions">Internal Functions</a></h2>
 <ul>
-<li><strong><code>commandshoot</code></strong> — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets <code>didshoot</code>, yields. For <strong>contact damage</strong>, prefer <code>#send at x y shot</code> (see <a href="../../memory/docs/gamesend.md">gamesend.md</a>) instead of point-blank <code>#shoot</code>.</li>
+<li><strong><code>commandshoot</code></strong> — Handles shoot logic: validates player/element, enforces maxplayershots, writes projectile with direction/party, forces <code>ISBULLET</code> collision (breakable stays from kind <code>@isbreakable</code> / <code>@notbreakable</code>), sets <code>didfail</code>, yields. For <strong>contact damage</strong>, prefer <code>#send at x y shot</code> (see <a href="../../memory/docs/gamesend.md">gamesend.md</a>) instead of point-blank <code>#shoot</code>.</li>
 <li><strong><code>commandput</code></strong> — Handles put: validates context, parses dir+kind, handles multi-target dirs, clipping, ghost vs solid, pushable shove, empty delete, color apply, object/terrain write</li>
 <li><strong><code>commanddupe</code></strong> — Duplicates element at dir in dupedir; blocks on player kind and blocked dest</li>
 </ul>

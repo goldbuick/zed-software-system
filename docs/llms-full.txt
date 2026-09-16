@@ -2128,7 +2128,7 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 
 ## Internal Functions
 
-- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes bullet with direction/party/breakable, sets `didshoot`, yields. For **contact damage**, prefer `#send at x y shot` (see [gamesend.md](../../memory/docs/gamesend.md)) instead of point-blank `#shoot`.
+- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes projectile with direction/party, forces `ISBULLET` collision (breakable stays from kind `@isbreakable` / `@notbreakable`), sets `didfail`, yields. For **contact damage**, prefer `#send at x y shot` (see [gamesend.md](../../memory/docs/gamesend.md)) instead of point-blank `#shoot`.
 - **`commandput`** — Handles put: validates context, parses dir+kind, handles multi-target dirs, clipping, ghost vs solid, pushable shove, empty delete, color apply, object/terrain write
 - **`commanddupe`** — Duplicates element at dir in dupedir; blocks on player kind and blocked dest
 
@@ -5704,7 +5704,7 @@ Source: https://zed.cafe/docs/memory/boardmovement
 - `./boardlifecycle` — memorydeleteboardobject, memorysafedeleteelement
 - `./boards` — memorycheckelementpushable, memoryreadelementstat
 - `./boardtransitions` — memoryplayerblockedbyedge, memoryplayerwaszapped
-- `./gamesend` — memorysendtoelement
+- `./gamesend` — memorybulletcollisionlabel, memorysendtoelement
 - `./spatialqueries` — memorycheckcollision
 
 > **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`.
@@ -5717,7 +5717,7 @@ Source: https://zed.cafe/docs/memory/boardmovement
 | `memorycheckmoveboardobject` | True if dest is blocked |
 | `memorycleanupboard` | Remove objects marked removed > 5s |
 | `memorymoveboardobject` | Move object by x/y; return blocked or undefined |
-| `memorymoveobject` | Full move with push chain and send (touch/shot); no thud |
+| `memorymoveobject` | Full move with push chain and send (touch/shot); soft-deletes `@isbreakable` ISBULLET on block |
 | `BOOK_RUN_ARGS` | Tick/draw run arg type |
 
 ---
@@ -9779,15 +9779,17 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 | `rnd` | 0 or 1 |
 | `rnd` n | 0 to n |
 | `rnd` min max | min to max |
-| `abs` a | Math.abs |
-| `intceil`, `intfloor`, `intround` | Math variants |
-| `intsign` a | -1, 0, or 1 from sign of a |
-| `clamp` a min max | clamp |
-| `min`, `max` | Math.min/max over args |
+| `abs` a | Math.abs; a may be a full arith expression |
+| `intceil`, `intfloor`, `intround` | Math variants; arg may be a full arith expression |
+| `intsign` a | -1, 0, or 1 from sign of a; a may be a full arith expression |
+| `clamp` a min max | clamp; each slot may be a full arith expression |
+| `min`, `max` | Math.min/max over args; each arg may be a full arith expression |
 | `pick` … | random pick from args |
 | `pickwith` seed … | deterministic pick |
 | `random` a [b] | random integer |
 | `randomwith` seed a [b] | deterministic random |
+
+Nested unaries without parens are valid (`intsign abs p1`, `intsign abs playery - thisy`). Multi-arg slots each consume one arith expression, so `min a + b c` is `min(a+b, c)`; use parens to separate: `min (a + b) (c + d)`.
 
 ### Advanced
 

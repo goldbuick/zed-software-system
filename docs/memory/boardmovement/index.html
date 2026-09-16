@@ -12,7 +12,7 @@
 <li><code>./boardlifecycle</code> — memorydeleteboardobject, memorysafedeleteelement</li>
 <li><code>./boards</code> — memorycheckelementpushable, memoryreadelementstat</li>
 <li><code>./boardtransitions</code> — memoryplayerblockedbyedge, memoryplayerwaszapped</li>
-<li><code>./gamesend</code> — memorysendtoelement</li>
+<li><code>./gamesend</code> — memorybulletcollisionlabel, memorysendtoelement</li>
 <li><code>./spatialqueries</code> — memorycheckcollision</li>
 </ul>
 <blockquote>
@@ -45,7 +45,7 @@
 </tr>
 <tr>
 <td><code>memorymoveobject</code></td>
-<td>Full move with push chain and send (touch/shot); no thud</td>
+<td>Full move with push chain and send (touch/shot); soft-deletes <code>@isbreakable</code> ISBULLET on block</td>
 </tr>
 <tr>
 <td><code>BOOK_RUN_ARGS</code></td>

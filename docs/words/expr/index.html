@@ -116,23 +116,23 @@
 </tr>
 <tr>
 <td><code>abs</code> a</td>
-<td>Math.abs</td>
+<td>Math.abs; a may be a full arith expression</td>
 </tr>
 <tr>
 <td><code>intceil</code>, <code>intfloor</code>, <code>intround</code></td>
-<td>Math variants</td>
+<td>Math variants; arg may be a full arith expression</td>
 </tr>
 <tr>
 <td><code>intsign</code> a</td>
-<td>-1, 0, or 1 from sign of a</td>
+<td>-1, 0, or 1 from sign of a; a may be a full arith expression</td>
 </tr>
 <tr>
 <td><code>clamp</code> a min max</td>
-<td>clamp</td>
+<td>clamp; each slot may be a full arith expression</td>
 </tr>
 <tr>
 <td><code>min</code>, <code>max</code></td>
-<td>Math.min/max over args</td>
+<td>Math.min/max over args; each arg may be a full arith expression</td>
 </tr>
 <tr>
 <td><code>pick</code> …</td>
@@ -152,6 +152,7 @@
 </tr>
 </tbody>
 </table></div>
+<p>Nested unaries without parens are valid (<code>intsign abs p1</code>, <code>intsign abs playery - thisy</code>). Multi-arg slots each consume one arith expression, so <code>min a + b c</code> is <code>min(a+b, c)</code>; use parens to separate: <code>min (a + b) (c + d)</code>.</p>
 <h3 id="advanced"><a class="blume-heading-anchor" href="#advanced">Advanced</a></h3>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>

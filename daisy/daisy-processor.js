@@ -33,6 +33,8 @@ const DAISY_SAB_CHANNEL_LEN = {
 // @generated-end daisy-sab-layout
 
 const DAISY_EM_INIT_TIMEOUT_SEC = 5
+/** Live play-scheduler wake cadence (quanta). ~10ms @ 48kHz. */
+const DAISY_DSP_TICK_EVERY_QUANTA = 4
 
 function postdspstage(port, stage) {
   port.postMessage({ zss_dsp_stage: stage })
@@ -50,6 +52,7 @@ class DaisyProcessor extends AudioWorkletProcessor {
     this.pendingwasmbytes = null
     this.eminitstartframe = null
     this.eminiterrposted = false
+    this.dsptickquantum = 0
     const optbytes = options?.processorOptions?.wasmbytes
     if (optbytes) {
       this.pendingwasmbytes = optbytes
@@ -229,6 +232,11 @@ class DaisyProcessor extends AudioWorkletProcessor {
     const base = this.outptr >> 2
     for (let i = 0; i < output.length; i++) {
       output[i] = heap[base + i]
+    }
+    this.dsptickquantum++
+    if (this.dsptickquantum >= DAISY_DSP_TICK_EVERY_QUANTA) {
+      this.dsptickquantum = 0
+      this.port.postMessage({ zss_dsp_tick: 1 })
     }
     return true
   }
