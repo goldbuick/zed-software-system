@@ -8,21 +8,18 @@
 #if p2 below or eq 0 do
  #die
 #else if p2 % 2 is 0 do
- ' capture stepx stepy destx desty
  #walk seek p3 p4
- #set p5 thisx + p3
- #set p6 thisy + p4
- #if any at p5 p6 player do
-  #send at p5 p6 shot
+ #if any by p3 p4 player do
+  #send by p3 p4 shot
   #die
- #else if any at p5 p6 breakable do
-  #send at p5 p6 shot
+ #else if any by p3 p4 breakable do
+  #send by p3 p4 shot
   #die
  #else do
   ?by p3 p4
  #done
-#else idle
 #done
+#idle
 #think
 :touch
 #send at senderx sendery shot

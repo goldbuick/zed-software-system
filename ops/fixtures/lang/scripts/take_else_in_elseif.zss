@@ -1,9 +1,9 @@
 #if not isdark do
- "$ticker a
+ $ticker a
 #else if light do
- "$ticker b
+ $ticker b
 #else take torches do
- "$ticker c
+ $ticker c
 #else do
  #set light 9
 #done

@@ -20,18 +20,20 @@
  #shoot seek "$p6"
 #done
 #if p1 below random 10 do
- ?rnd
+ #walk rnd p7 p8
 #else do
- ?seek
+ #walk seek p7 p8
+#done
+#if any by p7 p8 player do
+ #send by p7 p8 shot
+ #die
+#else do
+ ?by p7 p8
 #done
 #think
-:thud
 :touch
-#if any at senderx sendery player do
- #send at senderx sendery shot
-#done
-#idle
-#think
+#send at senderx sendery shot
+#die
 :shot
 #give score 2
 #die

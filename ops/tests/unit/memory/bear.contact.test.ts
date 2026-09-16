@@ -68,7 +68,8 @@ describe('bear RoZZT contact script', () => {
     expect(BEAR_CODE).toMatch(/#send by p2 p3 shot/)
     expect(BEAR_CODE).toMatch(/any by p2 p3 breakable/)
     expect(BEAR_CODE).toMatch(/\?by p2 p3/)
-    expect(BEAR_CODE).toMatch(/:touch\n#send at senderx sendery shot/)
+    expect(BEAR_CODE).toMatch(/:touch\n#send at senderx sendery shot\n#die/)
+    expect(BEAR_CODE).not.toMatch(/@light /)
   })
 })
 

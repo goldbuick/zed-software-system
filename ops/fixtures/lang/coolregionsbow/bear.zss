@@ -4,7 +4,6 @@
 @char 153
 @color 6
 @p1 range
-@light 4
 :think
 #set p2 0
 #set p3 0
@@ -33,8 +32,7 @@
 #think
 :touch
 #send at senderx sendery shot
-#idle
-#think
+#die
 :shot
 #give score 1
 #die

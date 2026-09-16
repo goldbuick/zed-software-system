@@ -9,30 +9,50 @@
 #if stepx is 0 and stepy is 0 do
  #if p2 + 8 below or eq random 17 do
   #if random 9 below or eq p1 do
-   #walk seek
+   #walk seek p3 p4
   #else do
-   #walk rnd
+   #walk rnd p3 p4
+  #done
+  #if any by p3 p4 player do
+   #send by p3 p4 shot
+   #die
+  #else do
+   #walk by p3 p4
   #done
  #done
 #else do
  #if aligned and random 9 below or eq p1 do
-  #walk seek
+  #walk seek p3 p4
+  #if any by p3 p4 player do
+   #send by p3 p4 shot
+   #die
+  #else do
+   #walk by p3 p4
+  #done
   #idle
  #done
- #if p2 + 8 below or eq random 17 do
+ #if any by stepx stepy player do
+  #send by stepx stepy shot
+  #die
+ #else if blocked by stepx stepy do
+  #walk idle
+ #else if p2 + 8 below or eq random 17 do
   #walk idle
  #done
 #done
 #idle
 #think
 :thud
-:touch
-#walk idle
 #if any at senderx sendery player do
  #send at senderx sendery shot
+ #die
 #done
+#walk idle
 #idle
 #think
+:touch
+#send at senderx sendery shot
+#die
 :shot
 #give score 2
 #die

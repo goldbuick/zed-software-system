@@ -5,7 +5,7 @@
  #if not reload do
   #give reload 3
   #take ammo do
-   "$ticker You don't have any ammo!
+   $ticker You don't have any ammo!
   #else do
    #shoot inputmove
   #done

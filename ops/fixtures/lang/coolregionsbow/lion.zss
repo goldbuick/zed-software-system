@@ -6,17 +6,20 @@
 @p1 range;Intelligence?
 :think
 #if p1 below random 10 do
- ?rnd
+ #walk rnd p2 p3
 #else do
- ?seek
+ #walk seek p2 p3
 #done
-:thud
-:touch
-#if any at senderx sendery player do
- #send at senderx sendery shot
+#if any by p2 p3 player do
+ #send by p2 p3 shot
+ #die
+#else do
+ ?by p2 p3
 #done
-#idle
 #think
+:touch
+#send at senderx sendery shot
+#die
 :shot
 #give score 1
 #die

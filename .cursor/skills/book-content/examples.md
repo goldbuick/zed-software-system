@@ -61,7 +61,7 @@ For a full perimeter, repeat for x=0..59, y=0 and y=24, then x=0 and x=59 for y=
 
 ```json
 {
-  "code": "@gem\n@isitem\n@char 4\n@color yellow\n:touch\n\"$ticker You found a gem!\n#die\n"
+  "code": "@gem\n@isitem\n@char 4\n@color yellow\n:touch\n$ticker You found a gem!\n#die\n"
 }
 ```
 
