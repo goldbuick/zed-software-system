@@ -5,17 +5,28 @@
 @p2 range;firing rate
 @p3 select bullet 0 star 1;firing type?
 :think
-#if random 20 below p2 do
+#if random 9 below p2 do
  #if p3 is 0 do
   #set p5 bullet
  #else do
   #set p5 star
  #done
  #if random 9 below or eq p1 do
+  #set p6 0
   #if abs thisx - playerx below or eq 2 do
-   #if not blocked seek shoot seek "$p5"
-  #else if abs thisy - playery below or eq 2 do
-   #shoot not blocked seek shoot seek "$p5"
+   #set p8 intsign playery - thisy
+   #if not blocked by 0 p8 do
+    #shoot by 0 p8 "$p5"
+    #set p6 1
+   #done
+  #done
+  #if p6 is 0 do
+   #if abs thisy - playery below or eq 2 do
+    #set p7 intsign playerx - thisx
+    #if not blocked by p7 0 do
+     #shoot by p7 0 "$p5"
+    #done
+   #done
   #done
  #else do
   #shoot rnd "$p5"

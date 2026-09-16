@@ -183,6 +183,17 @@ export function createdaisysynth(
     recordisrendering: 0,
   }
   const scheduler = createwasmplayscheduler(maxi)
+  if (!isofflineaudiocontext(maxi.audioContext)) {
+    // After boot, waitfordaisyready clears port.onmessage. Listen for DSP ticks
+    // so note-on/off keep firing when Safari throttles main-thread timers.
+    maxi.audioWorkletNode.port.addEventListener('message', (event: Event) => {
+      const data = (event as MessageEvent).data as { zss_dsp_tick?: number }
+      if (data?.zss_dsp_tick) {
+        scheduler.pump()
+      }
+    })
+    maxi.audioWorkletNode.port.start?.()
+  }
   const notestrikebychan = new Map<number, number>()
   let notegen = 0
   const activegatebychan = new Map<number, number>()

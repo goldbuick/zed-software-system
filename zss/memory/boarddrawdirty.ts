@@ -3,34 +3,15 @@
  * and next-tick allow-lists. Non-local draw logic must call `memoryinvalidatedraw`.
  */
 import { PERF_SPATIAL_INDEX } from 'zss/config'
-import { compilescript } from 'zss/feature/lang/langcompileclient'
 import { indextox, indextoy, pttoindex } from 'zss/mapping/2d'
-import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { NAME } from 'zss/words/types'
 
-import { memoryreadidorindex } from './boardaccess'
+import {
+  memorycodehasdrawdisplay,
+  memoryelementdrawreadid,
+} from './boarddrawqueue'
 import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
-
-const DRAW_LABEL = 'drawdisplay'
-const DRAWHASCACHE: Record<string, boolean> = {}
-
-export function memorycodehasdrawdisplay(code: string) {
-  const drawlabel = NAME(DRAW_LABEL)
-  const key = `${drawlabel}:${code}`
-  if (ispresent(DRAWHASCACHE[key])) {
-    return DRAWHASCACHE[key]
-  }
-  const labels = compilescript('drawpass', code).labels ?? {}
-  const result = ispresent(labels[drawlabel])
-  DRAWHASCACHE[key] = result
-  return result
-}
-
-export function memoryelementdrawreadid(element: BOARD_ELEMENT) {
-  return element.id ?? `${memoryreadidorindex(element) ?? createsid()}`
-}
 
 function isactiveobject(object: BOARD_ELEMENT, timestamp: number) {
   if (!object.removed) {
@@ -75,6 +56,7 @@ export function memoryinvalidatedraw(board: MAYBE<BOARD>) {
   delete board.drawlastfp
   delete board.drawlastxy
   delete board.drawallowids
+  delete board.drawpendingids
   delete board.drawdirtycells
 }
 

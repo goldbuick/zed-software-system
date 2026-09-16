@@ -10,20 +10,17 @@ import {
 
 describe('wasm play timing', () => {
   it('starts semicolon voices on the same beat', () => {
-    jest.useFakeTimers()
     const { maxi, snapshot } = createmockmaxi()
     const synth = createwasmsynth(maxi as any)
     synth.addplay('c;e')
-    jest.advanceTimersByTime(1)
+    synth.pump()
     const voices = snapshot(WASM_VOICES_SAB)
     expect(voices[1]).toBe(1)
     expect(voices[7]).toBe(1)
     synth.destroy()
-    jest.useRealTimers()
   })
 
   it('staggers consecutive addplay by last pattern time, not extra 8n', () => {
-    jest.useFakeTimers()
     const gateat: number[] = []
     const { maxi, getclock } = createmockmaxi()
     setwasmsabwritehook((channelid, view) => {
@@ -42,11 +39,11 @@ describe('wasm play timing', () => {
     synth.addplay('e')
 
     maxiwithclock.advance(1)
-    jest.advanceTimersByTime(1)
+    synth.pump()
     expect(gateat).toEqual([0])
 
     maxiwithclock.advance(Math.max(0, nextstart * 1000))
-    jest.advanceTimersByTime(Math.max(0, nextstart * 1000))
+    synth.pump()
     expect(gateat[0]).toBe(0)
     expect(gateat[1] ?? 0).toBeLessThan(
       nextstart + tonenotationseconds('8n') * 0.5,
@@ -54,6 +51,5 @@ describe('wasm play timing', () => {
     expect(Math.abs((gateat[1] ?? 0) - nextstart)).toBeLessThan(0.01)
 
     synth.destroy()
-    jest.useRealTimers()
   })
 })

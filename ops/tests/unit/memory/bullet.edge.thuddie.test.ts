@@ -53,8 +53,8 @@ describe('bullet edge thud die', () => {
     bullet!.stepy = -1
     book.timestamp = 10
 
-    // Edge block sends shot/partyshot to the edge, not :thud to the bullet.
-    // Soft-delete only runs for breakable projectiles.
+    // Edge block sends shot/partyshot to the edge; soft-delete only runs for
+    // @isbreakable projectiles. This instance is not breakable.
     for (let t = 0; t < 5; t++) {
       book.timestamp = 10 + t
       memorytickobject(book, board, bullet, BULLET_CODE)

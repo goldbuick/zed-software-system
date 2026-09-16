@@ -3,8 +3,7 @@
 @char 206
 @p1 range;starting time
 @p2 range;period
-@shootx number -1 1
-@shooty number -1 1
+@shoot dir;Ray
 :think 
 #if p3 is 0 do
  #set p3 p1 + 1

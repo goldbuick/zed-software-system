@@ -358,13 +358,13 @@ class ScriptParser extends CstParser {
   arith_expr = this.RULED('arith_expr', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.token_expr, { LABEL: 'LHS' }) },
-      {
-        ALT: () => {
-          this.SUBRULE1(this.term)
-          this.MANY(() => this.SUBRULE2(this.arith_expr_item, { LABEL: 'RHS' }))
-        },
-      },
+      { ALT: () => this.SUBRULE(this.additive_expr) },
     ])
+  })
+
+  additive_expr = this.RULED('additive_expr', () => {
+    this.SUBRULE1(this.term)
+    this.MANY(() => this.SUBRULE2(this.arith_expr_item, { LABEL: 'RHS' }))
   })
 
   arith_expr_item = this.RULED('arith_expr_item', () => {
@@ -687,44 +687,44 @@ class ScriptParser extends CstParser {
 
   token_expr_abs = this.RULED('token_expr_abs', () => {
     this.CONSUME(lexer.expr_abs)
-    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.arith_expr)
   })
 
   token_expr_intceil = this.RULED('token_expr_intceil', () => {
     this.CONSUME(lexer.expr_intceil)
-    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.arith_expr)
   })
 
   token_expr_intfloor = this.RULED('token_expr_intfloor', () => {
     this.CONSUME(lexer.expr_intfloor)
-    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.arith_expr)
   })
 
   token_expr_intround = this.RULED('token_expr_intround', () => {
     this.CONSUME(lexer.expr_intround)
-    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.arith_expr)
   })
 
   token_expr_intsign = this.RULED('token_expr_intsign', () => {
     this.CONSUME(lexer.expr_intsign)
-    this.SUBRULE(this.simple_token)
+    this.SUBRULE(this.arith_expr)
   })
 
   token_expr_clamp = this.RULED('token_expr_clamp', () => {
     this.CONSUME(lexer.expr_clamp)
-    this.SUBRULE1(this.simple_token)
-    this.SUBRULE2(this.simple_token)
-    this.SUBRULE3(this.simple_token)
+    this.SUBRULE1(this.arith_expr)
+    this.SUBRULE2(this.arith_expr)
+    this.SUBRULE3(this.arith_expr)
   })
 
   token_expr_min = this.RULED('token_expr_min', () => {
     this.CONSUME(lexer.expr_min)
-    this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
+    this.AT_LEAST_ONE(() => this.SUBRULE1(this.arith_expr))
   })
 
   token_expr_max = this.RULED('token_expr_max', () => {
     this.CONSUME(lexer.expr_max)
-    this.AT_LEAST_ONE(() => this.SUBRULE1(this.simple_token))
+    this.AT_LEAST_ONE(() => this.SUBRULE1(this.arith_expr))
   })
 
   expr_list_item = this.RULED('expr_list_item', () => {

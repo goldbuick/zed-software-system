@@ -3,6 +3,7 @@
  * Mirrors decode logic in zzt.ts (Shikadi Modding Wiki ZZT format).
  */
 
+import { ispid } from 'zss/mapping/guid'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
@@ -234,6 +235,17 @@ function kindtozzt(
     }
     const creature = creaturekindtotile(kind)
     if (creature !== undefined) {
+      if (kind === 'tiger' || kind === 'spinninggun') {
+        // Inverse of import remapzztp2firingtype: rate in low 7 bits, star in bit 7.
+        const rate = numberorzero(el.p2) & 0x7f
+        const starbit = numberorzero(el.p3) !== 0 ? 0x80 : 0
+        st.p2 = rate | starbit
+        st.p3 = 0
+      }
+      if (kind === 'bullet') {
+        // Inverse of import remapzztbulletparty: player party -> P1 0, else 1.
+        st.p1 = ispid(el.party) ? 0 : 1
+      }
       return { ok: true, tile: { type: creature, color: z() }, stat: st }
     }
     return { ok: false, message: `unsupported object kind ${kind}` }
@@ -292,12 +304,15 @@ function kindtozzt(
       return { ok: true, tile: { type: T_CLOCKWISE, color: z() } }
     case 'counter':
       return { ok: true, tile: { type: T_COUNTER, color: z() } }
-    case 'bullet':
+    case 'bullet': {
+      const st = basestat()
+      st.p1 = ispid(el.party) ? 0 : 1
       return {
         ok: true,
         tile: { type: T_BULLET, color: z() },
-        stat: basestat(),
+        stat: st,
       }
+    }
     case 'water':
       return { ok: true, tile: { type: T_WATER, color: z() } }
     case 'forest':
@@ -402,6 +417,10 @@ function creaturekindtotile(kind: string): number | undefined {
       return T_HEAD
     case 'segment':
       return T_SEGMENT
+    case 'bullet':
+      return T_BULLET
+    case 'star':
+      return T_STAR
     default:
       return undefined
   }

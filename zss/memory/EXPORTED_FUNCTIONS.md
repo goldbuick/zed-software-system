@@ -21,7 +21,9 @@ Generated from `export function` / `export const` under `zss/memory/`.
 
 ## boarddrawdirty.ts
 
-- **memorycodehasdrawdisplay**, **memoryelementdrawreadid**, **memoryinvalidatedraw**, **memoryupdatedrawdirty**
+- **memorycodehasdrawdisplay**, **memoryelementdrawreadid**, **memoryqueuedrawdisplay** ([`boarddrawqueue.ts`](boarddrawqueue.ts))
+- **memoryinvalidatedraw**, **memoryupdatedrawdirty** ([`boarddrawdirty.ts`](boarddrawdirty.ts))
+- **memorydraindrawpending** ([`runtime.ts`](runtime.ts))
 
 ## boardelement.ts
 

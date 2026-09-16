@@ -34,7 +34,7 @@ export function LinkDir({ surface }: LinkWidgetProps) {
 
   const address = linkmodemaddress(surface, target)
   const value = useWaitForValueString(address)
-  const raw = value?.toJSON() ?? 'north'
+  const raw = value?.toJSON() ?? 'idle'
   const state = memoryclampdireditcardinal(raw)
   let stateindex = DIR_CHOICES.indexOf(state)
   if (stateindex < 0) {

@@ -6,7 +6,6 @@ import { invokeplay, parseplay } from 'zss/feature/synth/playnotation'
 
 describe('wasm drum pattern', () => {
   it('schedules all play drums from 0x1x2xpx4x5x6x7x8x9xkr', () => {
-    jest.useFakeTimers()
     const { maxi } = createmockmaxi()
     const maxiwithclock = maxi as typeof maxi & {
       advance: (ms: number) => void
@@ -31,7 +30,7 @@ describe('wasm drum pattern', () => {
     const peak = new Array(WASM_DRUM_COUNT).fill(0)
     for (let step = 0; step < 50; step++) {
       maxiwithclock.advance(100)
-      jest.advanceTimersByTime(100)
+      synth.pump()
       const row = wasmsabsnapshot('zss_drums')
       for (let i = 0; i < WASM_DRUM_COUNT; i++) {
         peak[i] = Math.max(peak[i], row[i] ?? 0)
@@ -39,6 +38,5 @@ describe('wasm drum pattern', () => {
     }
     expect(peak).toEqual(new Array(WASM_DRUM_COUNT).fill(1))
     synth.destroy()
-    jest.useRealTimers()
   })
 })

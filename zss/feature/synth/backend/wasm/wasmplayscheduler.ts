@@ -35,24 +35,22 @@ function sortscheduled(a: SCHEDULED_ITEM, b: SCHEDULED_ITEM) {
   return a.order - b.order
 }
 
-/** Schedule callbacks on AudioContext time (not wall-clock setTimeout). */
+/**
+ * Schedule callbacks on AudioContext time.
+ * Live wake is external (Daisy worklet MessagePort ticks call pump).
+ * Offline uses armofflinerender / armsamplerender instead.
+ */
 export function createwasmplayscheduler(engine: AUDIOCTX_ENGINE) {
   let items: SCHEDULED_ITEM[] = []
   let samplerenderqueue: SCHEDULED_ITEM[] = []
   let samplerenderidx = 0
   let orderseq = 0
-  let timer: ReturnType<typeof setTimeout> | undefined
 
   function clear() {
     items = []
-    if (timer !== undefined) {
-      clearTimeout(timer)
-      timer = undefined
-    }
   }
 
   function pump() {
-    timer = undefined
     const now = engine.audioContext.currentTime
     const due: SCHEDULED_ITEM[] = []
     const pending: SCHEDULED_ITEM[] = []
@@ -69,26 +67,6 @@ export function createwasmplayscheduler(engine: AUDIOCTX_ENGINE) {
     for (let i = 0; i < due.length; i++) {
       due[i].run()
     }
-    arm()
-  }
-
-  function arm() {
-    if (timer !== undefined) {
-      clearTimeout(timer)
-      timer = undefined
-    }
-    if (items.length === 0) {
-      return
-    }
-    const now = engine.audioContext.currentTime
-    let nextwhen = items[0].when
-    for (let i = 1; i < items.length; i++) {
-      if (items[i].when < nextwhen) {
-        nextwhen = items[i].when
-      }
-    }
-    const delayms = Math.max(0, (nextwhen - now) * 1000 - 0.25)
-    timer = setTimeout(pump, delayms)
   }
 
   function schedule(when: number, run: () => void) {
@@ -96,9 +74,7 @@ export function createwasmplayscheduler(engine: AUDIOCTX_ENGINE) {
     const now = engine.audioContext.currentTime
     if (when <= now) {
       pump()
-      return
     }
-    arm()
   }
 
   function pumpat(time: number) {

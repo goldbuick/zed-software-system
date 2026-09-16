@@ -10,17 +10,13 @@
 #set p3 0
 #if not thisx is playerx do
  #if abs playery - thisy below or eq 8 - p1 do
-  #set p2 playerx - thisx
-  #if p2 below 0 set p2 -1
-  #if p2 above 0 set p2 1
+  #set p2 intsign playerx - thisx
   #set p3 0
  #done
 #done
 #if p2 is 0 do
  #if abs playerx - thisx below or eq 8 - p1 do
-  #set p3 playery - thisy
-  #if p3 below 0 set p3 -1
-  #if p3 above 0 set p3 1
+  #set p3 intsign playery - thisy
   #set p2 0
  #done
 #done

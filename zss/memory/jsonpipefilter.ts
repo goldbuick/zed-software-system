@@ -7,7 +7,7 @@ const TERRAIN_EMIT_SKIP_PROP =
 
 /** Board / element runtime-only fields (not persisted over jsonpipe). */
 const RUNTIME_EMIT_SKIP_SEGMENT =
-  /(?:^|\/)(?:named|distmaps|overboard|underboard|charsetpage|palettepage|drawlastfp|drawlastxy|drawallowids|drawdirtycells|drawneedfull|mediaqueuehelperpeerid|mediaqueuenowplayingtitle|category|kinddata|kindsourcepageid|kindsourcekind|pushedtick)(?:\/|$)/
+  /(?:^|\/)(?:named|distmaps|overboard|underboard|charsetpage|palettepage|drawlastfp|drawlastxy|drawallowids|drawpendingids|drawdirtycells|drawneedfull|mediaqueuehelperpeerid|mediaqueuenowplayingtitle|category|kinddata|kindsourcepageid|kindsourcekind|pushedtick)(?:\/|$)/
 
 /** Ephemeral flag-owner bags (chips, caches, tracking). */
 const FLAG_EPHEMERAL_EMIT_SKIP =
