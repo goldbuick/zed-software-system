@@ -379,8 +379,6 @@ export function memorytickonce(
     ? READ_CONTEXT.elementid
     : playerfromelement
 
-  READ_CONTEXT.usedisplaystats = true
-
   const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
   os.once(id, DRIVER_TYPE.RUNTIME, itemname, code, label)
 

@@ -28,7 +28,6 @@ describe('draw pass GET vs SET color', () => {
     READ_CONTEXT.book = undefined
     READ_CONTEXT.element = undefined
     READ_CONTEXT.elementid = ''
-    READ_CONTEXT.usedisplaystats = false
     memoryresetbooks([])
   })
 
@@ -52,11 +51,10 @@ describe('draw pass GET vs SET color', () => {
     READ_CONTEXT.board = board
     READ_CONTEXT.element = self
     READ_CONTEXT.elementid = self.id ?? ''
-    READ_CONTEXT.usedisplaystats = true
     return { self }
   }
 
-  it('GET color returns instance color when usedisplaystats is true', () => {
+  it('GET color returns instance color', () => {
     setupboard()
     const chip = makechip()
     const [ok, value] = ELEMENT_FIRMWARE.get!(chip, 'color')
@@ -64,7 +62,7 @@ describe('draw pass GET vs SET color', () => {
     expect(value).toBe(COLOR.BLUE)
   })
 
-  it('SET color writes instance color when usedisplaystats is true', () => {
+  it('SET color writes instance color', () => {
     const { self } = setupboard()
     const chip = makechip()
     const [ok] = ELEMENT_FIRMWARE.set!(chip, 'color', COLOR.RED)
@@ -73,7 +71,7 @@ describe('draw pass GET vs SET color', () => {
     expect(self.displaycolor).toBe(COLOR.WHITE)
   })
 
-  it('SET displaycolor writes displaycolor when usedisplaystats is true', () => {
+  it('SET displaycolor writes displaycolor', () => {
     const { self } = setupboard()
     const chip = makechip()
     const [ok] = ELEMENT_FIRMWARE.set!(chip, 'displaycolor', COLOR.GREEN)

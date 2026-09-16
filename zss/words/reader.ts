@@ -30,8 +30,6 @@ export const READ_CONTEXT = {
   elementid: '',
   elementisplayer: false,
   elementfocus: '',
-  // true during :drawdisplay once(); GET/SET use instance names (no display* alias)
-  usedisplaystats: false,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,
