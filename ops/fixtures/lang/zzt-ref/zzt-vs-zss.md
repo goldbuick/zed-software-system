@@ -18,8 +18,7 @@
 
 - **Structured control flow:** `#if` … `#do` … `#done`, `#else`, `#while`, `#repeat`, `#waitfor`, `#foreach`, `#break`, `#continue`
 - **Codepage headers:** `@object`, `@lion`, `@cycle`, `@color`, … (see `commands.json` → `zss_stat_keywords`)
-- **Formatting:** `$CENTER` (ZZT used `$` prefix for centered scroll lines)
-- **Extra commands:** `#toast`, `#ticker`, …
+- **Formatting:** `$CENTER` (ZZT used `$` prefix for centered scroll lines), `$TICKER` / `$TOAST` text-line directives
 
 ## Keyword collision
 

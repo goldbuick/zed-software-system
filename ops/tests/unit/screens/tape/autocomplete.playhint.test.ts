@@ -19,7 +19,6 @@ import type { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { ARG_TYPE } from 'zss/words/types'
 
 const playsig = [ARG_TYPE.MAYBE_NAME, 'music notes'] as const
-const toastsig = ['toast notification'] as const
 
 const words = {
   langcommands: {},
@@ -28,8 +27,6 @@ const words = {
   runtimecommands: {
     play: [...playsig],
     bgplay: [ARG_TYPE.MAYBE_NAME, '#play but for sound effects'],
-    toast: [...toastsig],
-    ticker: ['element ticker text'],
     clear: [ARG_TYPE.NAME, 'flag name to clear'],
   },
   flags: [],
@@ -69,7 +66,7 @@ function rowforcode(code: string): EDITOR_CODE_ROW {
   }
 }
 
-describe('getautocomplete free-form play/toast/ticker hints', () => {
+describe('getautocomplete free-form play hints', () => {
   it('resolves #play notation to play signature, not send-the-message fallback', () => {
     const row = rowforcode('#play c c c')
     // Cursor on the free-form play token (after "#play ").
@@ -89,14 +86,6 @@ describe('getautocomplete free-form play/toast/ticker hints', () => {
     expect(ac.endoflineargs[ac.endoflineargs.length - 1]).toBe(
       '#play but for sound effects',
     )
-    expect(ac.suggestions).toEqual([])
-  })
-
-  it('resolves #toast free-form line', () => {
-    const row = rowforcode('#toast hello world')
-    const ac = getautocomplete(row, 8, words)
-    expect(ac.hintcommandname).toBe('toast')
-    expect(ac.endoflineargs).toEqual([...toastsig])
     expect(ac.suggestions).toEqual([])
   })
 

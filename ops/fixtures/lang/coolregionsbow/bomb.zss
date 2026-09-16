@@ -34,8 +34,8 @@ Bomb activated!
 #think
 :drawdisplay
 #if p1 below 1 do
- #char 11
+ #set displaychar 11
 #else do
- #char 48 + p1
+ #set displaychar 48 + p1
 #done
 #end

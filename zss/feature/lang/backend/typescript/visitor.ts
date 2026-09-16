@@ -25,8 +25,6 @@ import {
   Command_if_blockCstChildren,
   Command_playCstChildren,
   Command_repeatCstChildren,
-  Command_tickerCstChildren,
-  Command_toastCstChildren,
   Command_waitforCstChildren,
   Command_whileCstChildren,
   Comp_opCstChildren,
@@ -903,24 +901,6 @@ class ScriptVisitor
     return [
       this.createstringnode(location, cmd),
       this.createstringnode(location, words.join(' ')),
-    ].flat()
-  }
-
-  command_toast(ctx: Command_toastCstChildren, location: CstNodeLocation) {
-    const toaststr = tokenstring(ctx.token_command_toast, '')
-    const toastcontent = toaststr.replace('toast', '').trim()
-    return [
-      this.createstringnode(location, 'toast'),
-      this.createtemplatenode(location, toastcontent),
-    ].flat()
-  }
-
-  command_ticker(ctx: Command_tickerCstChildren, location: CstNodeLocation) {
-    const tickerstr = tokenstring(ctx.token_command_ticker, '')
-    const tickercontent = tickerstr.replace('ticker', '').trim()
-    return [
-      this.createstringnode(location, 'ticker'),
-      this.createtemplatenode(location, tickercontent),
     ].flat()
   }
 
@@ -2339,12 +2319,6 @@ class ScriptVisitor
     }
     if (ctx.command_play) {
       return this.go(ctx.command_play)
-    }
-    if (ctx.command_toast) {
-      return this.go(ctx.command_toast)
-    }
-    if (ctx.command_ticker) {
-      return this.go(ctx.command_ticker)
     }
 
     if (ctx.token_label) {

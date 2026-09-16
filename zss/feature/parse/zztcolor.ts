@@ -22,6 +22,24 @@ export function zztcolorfrombyte(zcolor: number): {
   }
 }
 
+/**
+ * ZZT door key id is the high (bg) nibble `(byte >> 4) & 7`.
+ * Cafe stores that slot on instance `color` using the bright palette
+ * (nibbles 1-7 -> BLUE..WHITE / 9-15; nibble 0 -> BLACK).
+ */
+export function zztdoorkeysloctocafecolor(keyslot: number): COLOR {
+  const slot = keyslot & 0x07
+  if (slot === 0) {
+    return COLOR.BLACK
+  }
+  return (slot + 8) as COLOR
+}
+
+/** Inverse of zztdoorkeysloctocafecolor: cafe instance color -> ZZT bg nibble. */
+export function zztdoorcafecolortokeyslot(color: COLOR): number {
+  return (color & 0xff) % 8
+}
+
 /** Encode cafe fg/bg into a ZZT attribute color byte. */
 export function zztcolorbyte(fg: number, bg: number): number {
   let blink = 0

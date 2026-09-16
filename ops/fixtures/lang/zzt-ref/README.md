@@ -24,7 +24,7 @@ ZZT 3.2 parser/compiler, spec-driven by [RoZZT `OOP.PAS`](https://github.com/asi
 It emits the shared `CodeNode` AST and reuses the lang `transformast` +
 `generator`, so compiled objects run on the existing ZSS runtime. It is distinct
 from [`zss/feature/lang`](../../../../zss/feature/lang), which remains the ZSS
-superset (`#do`/`#while`, arithmetic `expr_*`, `#toast`, codepage `@` headers).
+superset (`#do`/`#while`, arithmetic `expr_*`, `$toast`/`$ticker` text, codepage `@` headers).
 
 The lexer runs two modes that mirror `OopExecute`: a line-classification mode
 and a `cmd` word-stream mode entered after `#`, `/`, or `?` (the `OopReadWord`

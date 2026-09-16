@@ -5,7 +5,7 @@ title: Board lighting (dark boards)
 Runtime lighting for `board.isdark` lives outside [`rendering.ts`](../rendering.ts):
 
 - [`lightinggeometry.ts`](../lightinggeometry.ts) — angular frusta (`lightingmixmaxrange`), tile Y scale, full-shadow sector merge (`memorylightingaddrangetoblocked`).
-- [`boardlighting.ts`](../boardlighting.ts) — Chebyshev ring pass, occlusion collection, shading (`memoryboardlightingapplyobject`, `memoryboardlightingmarkplayer`). Occlusion strengths along a ray **add** (see `LIGHTING_OBJECT_OCCLUSION` / `LIGHTING_FULL_SHADOW_OCCLUSION`); combined occlusion plus distance falloff is **capped at 1** per shading step.
+- [`boardlighting.ts`](../boardlighting.ts) — Chebyshev ring pass, occlusion collection, shading (`memoryboardlightingapplyobject`). Dark-cell visibility is opt-in via `@light` / `lightsteps`; there is no pid special-case glow. Occlusion strengths along a ray **add** (see `LIGHTING_OBJECT_OCCLUSION` / `LIGHTING_FULL_SHADOW_OCCLUSION`); combined occlusion plus distance falloff is **capped at 1** per shading step.
 
 Shading rays use **cell center to cell center** in aspect-corrected tile space (`LIGHTING_RAY_TILE_YSCALE`); `lightingmixmaxrange` uses the source cell **center** and the destination tile’s **full pixel rectangle** for angular sectors.
 
@@ -14,6 +14,6 @@ Shading rays use **cell center to cell center** in aspect-corrected tile space (
 ## Tests
 
 - [`__tests__/lightinggeometry.test.ts`](../../../ops/tests/unit/memory/lightinggeometry.test.ts) — geometry merge + `lightingmixmaxrange`.
-- [`__tests__/boardlighting.test.ts`](../../../ops/tests/unit/memory/boardlighting.test.ts) — `memoryboardlightingapplyobject` / `memoryboardlightingmarkplayer` with Jest mocks for the heavy memory graph (see file header).
+- [`__tests__/boardlighting.test.ts`](../../../ops/tests/unit/memory/boardlighting.test.ts) — `memoryboardlightingapplyobject` with Jest mocks for the heavy memory graph (see file header).
 
 Dark-board **rendering** is still easiest to validate visually in the gadget.

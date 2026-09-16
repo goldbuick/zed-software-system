@@ -269,14 +269,6 @@ class ScriptParser extends CstParser {
     this.CONSUME(lexer.command_play)
   })
 
-  command_toast = this.RULED('command_toast', () => {
-    this.CONSUME(lexer.command_toast)
-  })
-
-  command_ticker = this.RULED('command_ticker', () => {
-    this.CONSUME(lexer.command_ticker)
-  })
-
   // expressions
 
   // expr root is or_test
@@ -817,8 +809,6 @@ class ScriptParser extends CstParser {
       { ALT: () => this.SUBRULE(this.color) },
       { ALT: () => this.SUBRULE(this.dir) },
       { ALT: () => this.SUBRULE(this.command_play) },
-      { ALT: () => this.SUBRULE(this.command_toast) },
-      { ALT: () => this.SUBRULE(this.command_ticker) },
       { ALT: () => this.CONSUME(lexer.label) },
       { ALT: () => this.CONSUME(lexer.stringliteraldouble) },
       { ALT: () => this.CONSUME(lexer.stringliteral) },

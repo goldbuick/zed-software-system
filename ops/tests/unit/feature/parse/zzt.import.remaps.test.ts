@@ -59,10 +59,16 @@ describe('zzt import remaps + kind headers', () => {
     expect(segment).not.toMatch(/#morph |#pset /)
   })
 
-  it('star uses ?seek and not #walk seek', () => {
+  it('star uses #walk seek capture and ?by p3 p4', () => {
     const star = readkindzss('star')
-    expect(star).toMatch(/\?seek/)
-    expect(star).not.toMatch(/#walk seek/)
+    expect(star).toMatch(/#walk seek p3 p4/)
+    expect(star).toMatch(/#set p5 thisx \+ p3/)
+    expect(star).toMatch(/#set p6 thisy \+ p4/)
+    expect(star).not.toMatch(/#walk idle/)
+    expect(star).toMatch(/#send at p5 p6 shot/)
+    expect(star).toMatch(/\?by p3 p4/)
+    expect(star).not.toMatch(/\?seek/)
+    expect(star).not.toMatch(/#send flow shot/)
   })
 
   it('spinninggun uses RoZZT rate, axis-locked intsign aim, and drawdisplay', () => {

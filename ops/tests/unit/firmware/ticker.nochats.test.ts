@@ -1,7 +1,6 @@
 import type { CHIP } from 'zss/chip'
 import { apichat, vmloader } from 'zss/device/api'
 import { CLI_FIRMWARE } from 'zss/firmware/cli'
-import { ELEMENT_FIRMWARE } from 'zss/firmware/element'
 import { RUNTIME_FIRMWARE } from 'zss/firmware/runtime'
 import { gadgetcheckqueue } from 'zss/gadget/data/api'
 import { memoryreadflags } from 'zss/memory/bookoperations'
@@ -53,15 +52,6 @@ describe('ticker without chat', () => {
     READ_CONTEXT.elementid = 'obj1'
     READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.elementfocus = 'player1'
-  })
-
-  it('#ticker sets tickertext and does not emit chat', () => {
-    const handler = ELEMENT_FIRMWARE.getcommand('ticker')
-    expect(handler).toBeDefined()
-    handler!(chip, ['Choice', 'A', 'has', 1, 'vote(s)'])
-    expect(READ_CONTEXT.element?.tickertext).toBe('Choice A has 1 vote(s)')
-    expect(READ_CONTEXT.element?.tickertime).toBe(42)
-    expect(apichat).not.toHaveBeenCalled()
   })
 
   it('runtime $ticker #text sets tickertext and does not emit chat', () => {

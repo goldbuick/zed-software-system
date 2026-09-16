@@ -49,7 +49,7 @@ The write context (`WRITE_TEXT_CONTEXT` in `zss/words/textformat`) has parallel 
 | WHITE | NUMBER | numberliteral |
 | DKYELLOW | FLAGMOD | or, not, and |
 | GREEN | MUSIC | command_play |
-| DKGREEN | COMMAND | command_ticker, command_toast, command_if, command_else, command_while, command_repeat, command_waitfor, command_foreach, command_break, command_continue |
+| DKGREEN | COMMAND | command_if, command_else, command_while, command_repeat, command_waitfor, command_foreach, command_break, command_continue |
 | DKCYAN | BLOCK | command_do, command_done |
 | YELLOW | EXPRS | category_isterrain, category_isobject, collision_is*, expr_* |
 | RED | COLOR | color_* (fg, bg, blink variants) |

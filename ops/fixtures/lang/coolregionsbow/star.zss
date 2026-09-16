@@ -8,10 +8,21 @@
 #if p2 below or eq 0 do
  #die
 #else if p2 % 2 is 0 do
- ?seek
+ ' capture stepx stepy destx desty
+ #walk seek p3 p4
+ #set p5 thisx + p3
+ #set p6 thisy + p4
+ #if any at p5 p6 player do
+  #send at p5 p6 shot
+  #die
+ #else if any at p5 p6 breakable do
+  #send at p5 p6 shot
+  #die
+ #else do
+  ?by p3 p4
+ #done
 #else idle
 #done
-#send flow shot
 #think
 :touch
 #send at senderx sendery shot
@@ -19,10 +30,10 @@
 :bombed
 #die
 :drawdisplay
-#give color
-#if color above 15 set color 9
+#give displaycolor
+#if displaycolor above 15 set displaycolor 9
 #set p4 currenttick % 4
-#if p4 is 0 char 179
-#if p4 is 1 char 47
-#if p4 is 2 char 196
-#if p4 is 3 char 92
+#if p4 is 0 set displaychar 179
+#if p4 is 1 set displaychar 47
+#if p4 is 2 set displaychar 196
+#if p4 is 3 set displaychar 92

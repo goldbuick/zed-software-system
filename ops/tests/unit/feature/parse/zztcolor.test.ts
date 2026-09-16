@@ -1,6 +1,8 @@
 import {
   zztcolorbyte,
   zztcolorfrombyte,
+  zztdoorcafecolortokeyslot,
+  zztdoorkeysloctocafecolor,
 } from 'zss/feature/parse/zztcolor'
 import { COLOR } from 'zss/words/types'
 
@@ -34,6 +36,21 @@ describe('zztcolor attribute byte', () => {
     for (const b of [0x9f, 0xf9, 0x19]) {
       const { color, bg } = zztcolorfrombyte(b)
       expect(zztcolorbyte(color, bg)).toBe(b)
+    }
+  })
+})
+
+describe('zzt door key slot to cafe color', () => {
+  it('maps nibble 0 to BLACK and 1-7 to BLUE..WHITE', () => {
+    expect(zztdoorkeysloctocafecolor(0)).toBe(COLOR.BLACK)
+    expect(zztdoorkeysloctocafecolor(1)).toBe(COLOR.BLUE)
+    expect(zztdoorkeysloctocafecolor(7)).toBe(COLOR.WHITE)
+  })
+
+  it('round-trips cafe key colors back to the bg nibble', () => {
+    for (let slot = 0; slot <= 7; ++slot) {
+      const cafecolor = zztdoorkeysloctocafecolor(slot)
+      expect(zztdoorcafecolortokeyslot(cafecolor)).toBe(slot)
     }
   })
 })

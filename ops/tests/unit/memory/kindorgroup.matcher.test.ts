@@ -32,7 +32,11 @@ jest.mock('zss/memory/boards', () => {
   return {
     ...actual,
     memoryreadelementkind: (el: { kind?: string }) => {
-      if (el.kind === 'bear' || el.kind === 'empty') {
+      if (
+        el.kind === 'bear' ||
+        el.kind === 'empty' ||
+        el.kind === 'breakable'
+      ) {
         return { id: el.kind, name: el.kind }
       }
       return undefined
@@ -99,6 +103,13 @@ describe('readkind vs readgroup', () => {
     READ_CONTEXT.words = ['bear']
     const [kind, next] = readkind(0)
     expect(kind).toEqual(['bear', undefined])
+    expect(next).toBe(1)
+  })
+
+  it('readkind accepts registered breakable kind', () => {
+    READ_CONTEXT.words = ['breakable']
+    const [kind, next] = readkind(0)
+    expect(kind).toEqual(['breakable', undefined])
     expect(next).toBe(1)
   })
 
@@ -248,6 +259,50 @@ describe('any DIR group match', () => {
     READ_CONTEXT.words = ['any', 'at', 5, 6, 'combat']
     const [found] = readexpr(0)
     expect(found).toEqual([prey])
+  })
+})
+
+describe('any DIR kind breakable vs @isbreakable', () => {
+  afterEach(() => {
+    READ_CONTEXT.words = []
+    READ_CONTEXT.board = undefined
+    READ_CONTEXT.element = undefined
+    READ_CONTEXT.elementid = ''
+  })
+
+  it('matches terrain kind breakable and not a gem with @isbreakable', () => {
+    const self = makeobject('sid_self', 1, 1, { name: 'object' })
+    const gem = makeobject('sid_gem', 7, 7, { name: 'gem' })
+    gem.breakable = 1
+    const wallx = 5
+    const wally = 6
+    const board = {
+      id: 'anykindbreakableboard',
+      terrain: Array.from({ length: BOARD_WIDTH * 25 }, () => undefined),
+      objects: {
+        [self.id!]: self,
+        [gem.id!]: gem,
+      } as Record<string, BOARD_ELEMENT>,
+    } as BOARD
+    board.terrain[wallx + wally * BOARD_WIDTH] = {
+      kind: 'breakable',
+      x: wallx,
+      y: wally,
+      breakable: 1,
+    }
+    memoryinitboard(board)
+    READ_CONTEXT.board = board
+    READ_CONTEXT.element = self
+    READ_CONTEXT.elementid = self.id!
+
+    READ_CONTEXT.words = ['any', 'at', wallx, wally, 'breakable']
+    const [wallhit] = readexpr(0)
+    expect(Array.isArray(wallhit)).toBe(true)
+    expect((wallhit as { kind?: string }[])[0]?.kind).toBe('breakable')
+
+    READ_CONTEXT.words = ['any', 'at', 7, 7, 'breakable']
+    const [gemhit] = readexpr(0)
+    expect(gemhit).toEqual([])
   })
 })
 

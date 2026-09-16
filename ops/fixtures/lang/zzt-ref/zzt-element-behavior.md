@@ -42,7 +42,7 @@ How it works (see [`zss/memory/boardtick.ts`](../../../../zss/memory/boardtick.t
 Implications for the elements below:
 
 - Put animated/derived glyphs in `:drawdisplay` (ending `#end`): star `/-|\` spin + rainbow, duplicator `250/249/248/o/O` phase, transporter `( < (` / `^ ~ ^`, spinning gun `24/26/25/27`, bomb `48+P1` countdown, conveyor `| / - \`. **P1 done** for these kinds (+ `line`). Place the `:drawdisplay` label **last** in the codepage.
-- Set `char`/`color` (or `displaychar`/`displaycolor`/`displaybg`) there; keep `:think` for movement/AI only.
+- Set `displaychar` / `displaycolor` / `displaybg` there (`#set displaychar`, `#set displaycolor`, `#give displaycolor`); keep `:think` for movement/AI only. SET of `char` / `color` / `bg` always writes instance stats.
 - The cafe `line` uses `:drawdisplay` with neighbor bitmask (8-neighbor dirty) -- no `:calcdisplay` / `#send` fan-out.
 
 ## ZSS stat and flag reference
@@ -101,7 +101,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 6 | Torch | torch | object | -1 | darkvis | ok | - | +1 torch, msg | `#give torches`, die |
 | 7 | Gem | gem | object | -1 | destruct, push | ok | - | +1 gem, +1 health, +10 score | matches |
 | 8 | Key | key | object | -1 | push | ok | P2 | grab key by `color mod 8` | matches on fg `color` (correct); only garbage-default name |
-| 9 | Door | door | object | -1 | - | ok | P2 | open if key `(color div 16) mod 8` | matches on fg `color` (importer-flipped, correct) |
+| 9 | Door | door | object | -1 | - | ok | P2 | open if key `(color div 16) mod 8` | import maps bg nibble to cafe `color` 9-15 / 0, `bg=0`; `:drawdisplay` maps display |
 | 10 | Scroll | scroll | object | 1 | push | ok | - | run OOP text, rainbow, remove | zssedit text, rainbow, die |
 | 11 | Passage | passage | object | 0 | darkvis | ok | - | teleport to matching passage on target board | `#goto p3` + firmware color match |
 | 12 | Duplicator | duplicator | object | 2 | - | ok | - | copy element at +step to -step; rate `(9-P2)*3` | `:drawdisplay` phase glyphs |
@@ -172,7 +172,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Bear (34) -- `bear-sid_V5FcTvuWHYOr`
 
 - **ZZT tick:** if `X != playerX` and `Difference(Y,playerY) <= 8-P1` -> step in X toward player; else if `Difference(X,playerX) <= 8-P1` -> step in Y; else stand. Move if walkable; `BoardAttack` if dest is player **or breakable**. Cycle 3, P1 = Sensitivity, score 1.
-- **Cafe now:** RoZZT shape in one `:think` -- `p2`/`p3` as clamped deltaX/deltaY, then Movement: `#send by p2 p3 shot` + `#die` on player/breakable else `?by p2 p3` (`#go`, not `#walk`, so no `:thud`). `:touch` is only `#send at senderx sendery shot`. Keeps `@ispushable` (ZZT Pushable). `:shot` score 1 `#die`.
+- **Cafe now:** RoZZT shape in one `:think` -- `p2`/`p3` as clamped deltaX/deltaY, then Movement: `#if any by p2 p3 player` / `breakable` (kind `breakable` when that terrain page is loaded, not `@isbreakable`) then `#send by p2 p3 shot` + `#die` else `?by p2 p3` (`#go`, not `#walk`, so no `:thud`). `:touch` is only `#send at senderx sendery shot`. Keeps `@ispushable` (ZZT Pushable). `:shot` score 1 `#die`.
 - **Status:** ok (parity-noted). Bear-initiated contact uses dest pre-check so a pushable player is not shoved past `BoardAttack`.
 
 ### Ruffian (35) -- `ruffian-sid_Rpd0b1r0fOsp`
@@ -215,8 +215,9 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 - **ZZT key:** `key := Color mod 8`; if already held -> "already have"; else set flag, remove tile, "you now have the KEY key".
 - **ZZT door:** `key := (Color div 16) mod 8` (the **background/high nibble** picks the color); if held -> open (clear flag, remove tile); else "locked".
-- **Import normalization (important):** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) imports a door with `strcolorflipped` = `mapcolortostrcolor((bg+8)%16, fg)`, so the ZZT door's **background-nibble key color becomes the cafe door's foreground**. Keys import with plain `strcolor` (fg kept). Net: an imported blue door and a blue key both end up with fg `color` 9 -> flag `keyblue` (via `"key$color"` template print). So matching on foreground `color` is **correct and consistent**, not a bug.
-- **Cafe now:** key/door use `$color` in messages and `#set`/`#clear "key$color"` (prints as `keyblue`, etc.); door renders `displaycolor white` on `displaybg = color % 8` and opens when the named key flag is held (`#clear` + `#die`), else "locked". Blocking works because an unopened door is an object the player can't pass.
+- **Import:** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) maps the ZZT bg nibble `(byte >> 4) & 7` to cafe instance `color` (nibbles 1-7 -> BLUE..WHITE / 9-15; nibble 0 -> BLACK) and sets `bg` to BLACK. A typical ZZT blue door (white on dkblue) becomes cafe `color=BLUE`, `bg=BLACK` so `$color` / `"key$color"` match imported keys.
+- **Export:** [`zss/feature/parse/zztexport.ts`](../../../../zss/feature/parse/zztexport.ts) inverts that as `zztcolorbyte(WHITE, color % 8)` (normalized instance stats only).
+- **Cafe now:** `:drawdisplay` `#set displaycolor white` / `#set displaybg color % 8` (instance `color` stays the key color; GET of `color` / `char` / `bg` is always instance). `:touch` still uses `$color` / `"key$color"` for messages and flags. Blocking works because an unopened door is an object the player can't pass.
 - **Notes:**
   1. `$color` prints the COLOR enum name for any fg index (not only 9-15).
   2. Player sidebar clears/tests named flags (`keyblue` … `keywhite`, plus `keyblack`).
@@ -243,7 +244,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Star (15) -- `star-...`
 
 - **ZZT:** `P2` = lifetime; each tick `P2--`, die at 0; on even `P2` seek player and `BoardAttack` player/breakable, else push/move. Not destructible; draw cycles `/-|\` and rotates color 9-15.
-- **Cafe now:** `@notbreakable`, `@p2 100`, `:drawdisplay` rainbow + glyph spin, `:think` lifetime + even-tick `?seek`, `:thud` `#send … shot` at player or breakable.
+- **Cafe now:** `@notbreakable`, `@p2 100`, `:drawdisplay` rainbow + glyph spin, `:think` lifetime; even-tick `#walk seek p3 p4` capture dest (`#set p5`/`p6` from `thisx`/`thisy`) then `#send at p5 p6 shot` + `#die` on player/kind `breakable` else `?by p3 p4`. No per-tick `#send flow shot`.
 - **Status:** ok. Hand-placed default `p2 100` only; spawned stars use shoot-time lifetime.
 
 ### Bullet (18) -- `bullet-...`

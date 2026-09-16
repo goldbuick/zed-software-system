@@ -106,7 +106,7 @@ This document categorizes and summarizes all exported functions, types, enums, a
 - Flow control: `command_if`, `command_else`, `command_while`, `command_repeat`
 - `command_foreach`, `command_waitfor`, `command_break`, `command_continue`
 - `command_do`, `command_done`
-- Actions: `command_play`, `command_toast`, `command_ticker`
+- Actions: `command_play`
 
 **Operator/Punctuation Tokens:**
 - `lparen`, `rparen`, `lsquare`, `rsquare`, `lcurly`, `rcurly`

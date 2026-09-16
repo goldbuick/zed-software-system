@@ -30,7 +30,7 @@ export const READ_CONTEXT = {
   elementid: '',
   elementisplayer: false,
   elementfocus: '',
-  // draw pass: #color/#char/#bg alias to display* stats
+  // true during :drawdisplay once(); GET/SET use instance names (no display* alias)
   usedisplaystats: false,
   // for commands to use readargs
   words: [] as WORD[],

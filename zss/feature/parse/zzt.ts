@@ -41,7 +41,7 @@ import {
 } from 'zss/memory/types'
 import { STR_COLOR, mapcolortostrcolor } from 'zss/words/color'
 import { STR_KIND } from 'zss/words/kind'
-import { NAME, PT } from 'zss/words/types'
+import { COLOR, NAME, PT } from 'zss/words/types'
 
 import {
   LAYOUT_SZZT,
@@ -56,7 +56,7 @@ import {
   readworldheaderzzt,
   zztparseboard,
 } from './zztbinparse'
-import { zztcolorfrombyte } from './zztcolor'
+import { zztcolorfrombyte, zztdoorkeysloctocafecolor } from './zztcolor'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 import { zztoop } from './zztoop'
 
@@ -251,10 +251,6 @@ function processboards(
       maincolor.color,
       maincolor.bg,
     )
-    const strcolorflipped: STR_COLOR = mapcolortostrcolor(
-      (maincolor.bg + 8) % 16,
-      maincolor.color,
-    )
 
     const addstats: BOARD_ELEMENT = {}
     const stomentry = statmap.get(x + y * tilewidth)
@@ -336,9 +332,16 @@ function processboards(
       case ZZT_TILE_KEY:
         writefromkind(board, ['key', strcolor], { x, y }, addstats)
         break
-      case ZZT_TILE_DOOR:
-        writefromkind(board, ['door', strcolorflipped], { x, y }, addstats)
+      case ZZT_TILE_DOOR: {
+        const written = writefromkind(board, ['door'], { x, y }, addstats)
+        const keyslot = maincolor.bg & 0x07
+        const cafekeycolor = zztdoorkeysloctocafecolor(keyslot)
+        if (ispresent(written)) {
+          written.color = cafekeycolor
+          written.bg = COLOR.BLACK
+        }
         break
+      }
       case ZZT_TILE_SCROLL:
         writefromkind(board, ['scroll', strcolor], { x, y }, addstats)
         break
