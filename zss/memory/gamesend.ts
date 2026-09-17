@@ -174,7 +174,7 @@ export function memorysendtoelement(
         toelement,
       )
       if (sameparty) {
-        withlabel = 'bump'
+        withlabel = 'partytouch'
       } else {
         withplayer = fromelementplayer
       }

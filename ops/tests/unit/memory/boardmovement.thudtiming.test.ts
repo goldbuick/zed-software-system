@@ -92,7 +92,7 @@ describe('memorymoveobject does not emit thud', () => {
     expect(moved).toBe(false)
     expect(labelsfor('sid_bear')).toEqual([])
     expect(
-      mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'bump'),
+      mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'partytouch'),
     ).toBe(false)
   })
 

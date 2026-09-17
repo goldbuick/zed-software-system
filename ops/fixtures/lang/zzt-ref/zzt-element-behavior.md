@@ -24,7 +24,7 @@ Implementation reference for fixing the cafe element library so each kind matche
 | `OopSend(-stat,'THUD')` from object walk | `ElementObjectTick` | blocked stepx/stepy walk in element everytick → `:thud` **to the walker** (sender = blocker); not `memorymoveobject` |
 | `OopSend(-stat,'TOUCH')` | `ElementObjectTouch` | player walks into object → `:touch` to that object |
 
-**Blocked-walk labels (RoZZT `ElementObjectTick`):** cafe sends `:thud` from element everytick when a stepx/stepy walk fails; target is the **moving** object, sender is the blocker (wall, player, other object). `#go` / shove / weave do not emit this walk thud. Player tile is not walkable, so creature → player is `:thud` on the creature (not dual `:touch`). No second label to the obstacle on this path (`:bump` remains same-party `:touch` remap only).
+**Blocked-walk labels (RoZZT `ElementObjectTick`):** cafe sends `:thud` from element everytick when a stepx/stepy walk fails; target is the **moving** object, sender is the blocker (wall, player, other object). `#go` / shove / weave do not emit this walk thud. Player tile is not walkable, so creature → player is `:thud` on the creature (not dual `:touch`). No second label to the obstacle on this path (`:partytouch` remains same-party `:touch` remap only).
 
 **Player-initiated contact:** player walks into an object → `:touch` (RoZZT `TOUCH` / `ElementDamagingTouch`). Melee kinds use `:thud` / `:touch` fallthrough + `#send at senderx sendery shot` to approximate `BoardAttack`. Ranged fire still uses `#shoot`.
 
@@ -81,7 +81,7 @@ Also common as kind headers: `@isitem` (grabbable, triggers `:touch`), `@ispusha
 
 ### Labels and movement idioms
 
-- **Labels:** `:think` (tick loop), `:touch` (walked into), `:thud` (movement blocked), `:shot` (damage event -- bullet hit, melee `#send … shot`, bomb blast), `:bombed` (bomb blast companion label; no engine auto-delete), `:bump`, `:drawdisplay` (render pass).
+- **Labels:** `:think` (tick loop), `:touch` (walked into), `:thud` (movement blocked), `:shot` (damage event -- bullet hit, melee `#send … shot`, bomb blast), `:bombed` (bomb blast companion label; no engine auto-delete), `:partytouch` (same-party `:touch` remap), `:drawdisplay` (render pass).
 - **Direction words (`?dir` / `#walk`):** `rnd`, `seek`, `flow`, `cw`, `ccw`, `at <x> <y>`, plus `n/s/e/w`.
 - **Move/act:** `#go <dir>` (move+yield), `#walk <dir>` (set step), `#idle` (yield), `#shoot <dir> [kind]` (projectile), `#send at <x> <y> shot` (contact / cell damage), `#become <kind>`, `#die`, `#put`, `#send`, `#give`/`#take`/`#set`/`#clear`.
 
