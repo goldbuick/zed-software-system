@@ -130,7 +130,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 34 | Bear | bear | object | 3 | destruct, push | ok | - | seek within `8-P1`, contact damage | `p2`/`p3` deltas + Movement `#send by` / `?by`; `:touch` send-shot |
 | 35 | Ruffian | ruffian | object | 1 | destruct, push | ok | - | rest/rush, contact damage | dest `#walk` capture + `#send by`; `:thud`/`:touch` `#die` |
 | 36 | Object | object | object | 3 | - | ok | - | author OOP program | zssedit stub (author-provided) |
-| 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
+| 37 | Slime | slime | object | 3 | destruct=no | ok | P2 | spread leaving breakable trail | P2 delay (`F....S`); `#pset` copies p2 |
 | 38 | Shark | shark | object | 3 | destruct=no | ok | - | swim in water only, contact damage | `@isswimming` dest `#walk` + `#send by`; `:touch` `#die` |
 | 39 | Spinning gun | spinninggun | object | 2 | - | ok | - | fire bullet/star by P1/P2 | `:think` arrows; fire in `:think` |
 | 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | glyph from step; `#idle`/`#think` (move+push via everytick step) |
@@ -326,7 +326,7 @@ Large custom script (sidebar rendering, hotkeys, input, torch/energizer upkeep).
 
 1. **P0 creatures:** done (`pusher`, `head`/`segment` chain, `shark`). Mirrored in coolregionsbow + darkpianoshammer ZTK.
 2. **P1 items/interactions:** done -- energizer invincibility (128 vs 75 kept); star/bullet contact damage + score; water/forest; bomb (cycle 12 kept); passage color pairing; transporter landing search; blink-wall ray damage; `:drawdisplay` glyph migration.
-3. **P2 terrain/visual:** fake message; text color variants; conveyor stat-tile edge cases; slime polish.
+3. **P2 terrain/visual:** fake message; text color variants; conveyor stat-tile edge cases.
 4. **P3:** engine-only ids (empty/edge/message/monitor, blink rays) -- no codepage.
 
 ## Verification

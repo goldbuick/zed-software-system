@@ -21,3 +21,6 @@
 :touch
 #send at senderx sendery shot
 #die
+:shot
+#bgplay t+c---c++++c--c
+#die

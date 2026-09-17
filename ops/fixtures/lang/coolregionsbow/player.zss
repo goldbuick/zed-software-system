@@ -123,6 +123,7 @@
    $ticker You don't have any ammo!
   #else do
    #shoot inputmove
+   #bgplay t+c-c-c
   #done
  #done
  #idle
