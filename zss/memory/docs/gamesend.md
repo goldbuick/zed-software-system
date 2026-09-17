@@ -21,12 +21,11 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 
 ## Contact protocol (`:touch` / `:partytouch`)
 
-Player-initiated blocked walks send `:touch`. Same-party contact remaps like `:shot` → `:partyshot`:
-
 | Contact | Label |
 |---------|-------|
-| Player walks into object / different party | `:touch` |
+| Player walks into object / different party | dual `:touch` |
 | Same-party contact (neither side `object` / `scroll` kind) | `:touch` remapped → `:partytouch` |
+| Non-player object blocked by another object | dual engine `:partytouch` (literal label; not a remap) |
 
 | Path | Behavior |
 |------|----------|
@@ -34,7 +33,9 @@ Player-initiated blocked walks send `:touch`. Same-party contact remaps like `:s
 | `#send at x y shot` / `#send within N i shot` | Chip directional send |
 | Breakable + real `:shot` | `memorysendtoelement` softdeletes the target (object or terrain) |
 | `:partyshot` | No auto-delete; multiplayer friendly fire **or** enemy-source vs creature |
-| `:partytouch` | Same-party friendly contact; no damage / no softdelete |
+| `:partytouch` | Same-party player remap **or** object↔object contact; no damage / no softdelete |
+
+Player-initiated blocked walks send `:touch` (with same-party remap). Object↔object blocks dual-emit `:partytouch` from [`boardmovement.ts`](boardmovement.ts) so pushables can wake transporters (`#transport senderid`).
 
 **Dual-layer directional `:shot`:** when `#send` targets a cell with label `shot`, both the object (if any) and the terrain (if any) at that PT receive `:shot`. Other labels still use a single `memoryreadelement` (object preferred, else terrain).
 

@@ -47,7 +47,7 @@ describe('memorymoveobject does not emit thud', () => {
       .map((call) => call[2] as string)
   }
 
-  it('does not send thud when creature blocked by player', () => {
+  it('dual-emits partytouch (not thud) when creature blocked by player', () => {
     const board = setupboard('@bear\n', '@player\n')
     const player = memorycreateboardobjectfromkind(
       board,
@@ -67,8 +67,11 @@ describe('memorymoveobject does not emit thud', () => {
 
     const moved = memorymoveobject(undefined, board, bear!, { x: 3, y: 2 })
     expect(moved).toBe(false)
-    expect(labelsfor('sid_bear')).toEqual([])
-    expect(labelsfor('pid_hero')).toEqual([])
+    expect(labelsfor('sid_bear')).toEqual(['partytouch'])
+    expect(labelsfor('pid_hero')).toEqual(['partytouch'])
+    expect(
+      mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'thud'),
+    ).toBe(false)
   })
 
   it('does not send thud when creature blocked by solid', () => {

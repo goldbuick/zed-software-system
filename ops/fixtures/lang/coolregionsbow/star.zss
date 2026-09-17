@@ -19,14 +19,6 @@
   ?by p3 p4
  #done
 #done
-#idle
-#think
-:touch
-#send at senderx sendery shot
-#think
-:bombed
-#die
-:drawdisplay
 #give displaycolor
 #if displaycolor above 15 set displaycolor 9
 #set p4 currenttick % 4
@@ -34,3 +26,10 @@
 #if p4 is 1 set displaychar 47
 #if p4 is 2 set displaychar 196
 #if p4 is 3 set displaychar 92
+#idle
+#think
+:touch
+#send at senderx sendery shot
+#think
+:bombed
+#die

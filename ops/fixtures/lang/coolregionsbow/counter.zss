@@ -14,13 +14,11 @@
  #if p1 is 7 push by -1  1 right
  #give p1
 #done
-#idle
-#think
-:drawdisplay
 #set p1 currenttick / cycle
 #set p1 (intround p1) % 4
 #if p1 is 0 set displaychar 92
 #if p1 is 1 set displaychar 196
 #if p1 is 2 set displaychar 47
 #if p1 is 3 set displaychar 179
-#end
+#idle
+#think

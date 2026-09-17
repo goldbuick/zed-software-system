@@ -70,7 +70,7 @@ describe('zzt import remaps + kind headers', () => {
     expect(star).not.toMatch(/#send flow shot/)
   })
 
-  it('spinninggun uses RoZZT rate, axis-locked intsign aim, and drawdisplay', () => {
+  it('spinninggun uses RoZZT rate, axis-locked intsign aim, and think glyph spin', () => {
     const gun = readkindzss('spinninggun')
     expect(gun).toMatch(/#if random 9 below p2 do/)
     expect(gun).not.toMatch(/#if random 20 below p2/)
@@ -81,7 +81,9 @@ describe('zzt import remaps + kind headers', () => {
     expect(gun).toMatch(/#if not blocked by 0 p8/)
     expect(gun).toMatch(/#if not blocked by p7 0/)
     expect(gun).not.toMatch(/blocked seek shoot seek/)
-    expect(gun).toMatch(/:drawdisplay/)
+    expect(gun).toMatch(/#set p4 currenttick % 8/)
+    expect(gun).toMatch(/set displaychar/)
+    expect(gun).not.toMatch(/:drawdisplay/)
   })
 
   it('bear Signum uses intsign one-liners', () => {

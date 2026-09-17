@@ -10,7 +10,7 @@ import { createfirmware } from 'zss/firmware'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
   READ_LAYER,
   memorylistelement,
@@ -508,13 +508,12 @@ export const BOARD_FIRMWARE = createfirmware()
         ispresent(maybeobject?.x) &&
         ispresent(maybeobject.y)
       ) {
-        let placing = true
-        const scan: PT = {
+        const source: PT = {
           x: READ_CONTEXT.element.x,
           y: READ_CONTEXT.element.y,
         }
-        const deltax = scan.x - maybeobject.x
-        const deltay = scan.y - maybeobject.y
+        const deltax = source.x - maybeobject.x
+        const deltay = source.y - maybeobject.y
         if (
           memoryreadelementstat(READ_CONTEXT.element, 'shootx') !== deltax ||
           memoryreadelementstat(READ_CONTEXT.element, 'shooty') !== deltay
@@ -522,41 +521,78 @@ export const BOARD_FIRMWARE = createfirmware()
           // transporters are one direction
           return 0
         }
-        // ZZT: search along step for first walkable landing, skipping transporters
-        while (placing) {
-          scan.x += deltax
-          scan.y += deltay
-          if (
-            scan.x < 0 ||
-            scan.x >= BOARD_WIDTH ||
-            scan.y < 0 ||
-            scan.y >= BOARD_HEIGHT
-          ) {
+
+        const transportinbounds = (pt: PT) =>
+          pt.x >= 0 && pt.x < BOARD_WIDTH && pt.y >= 0 && pt.y < BOARD_HEIGHT
+
+        const transporttrymove = (pt: PT) =>
+          memorymoveobject(
+            READ_CONTEXT.book,
+            READ_CONTEXT.board,
+            maybeobject,
+            pt,
+          )
+
+        // Pass 1: first same-kind transporter on the ray; land past, then on pair.
+        const pairscan: PT = { x: source.x, y: source.y }
+        let pairpt: MAYBE<PT>
+        let pairscanning = true
+        while (pairscanning) {
+          pairscan.x += deltax
+          pairscan.y += deltay
+          if (!transportinbounds(pairscan)) {
+            pairscanning = false
             break
           }
           const maybetile = memoryreadelement(
             READ_CONTEXT.board,
-            scan,
+            pairscan,
+            READ_LAYER.ANY,
+          )
+          if (maybetile?.kind === READ_CONTEXT.element.kind) {
+            pairpt = { x: pairscan.x, y: pairscan.y }
+            pairscanning = false
+          }
+        }
+
+        if (ispresent(pairpt)) {
+          const pastpair: PT = {
+            x: pairpt.x + deltax,
+            y: pairpt.y + deltay,
+          }
+          if (transportinbounds(pastpair) && transporttrymove(pastpair)) {
+            return 0
+          }
+          if (transporttrymove(pairpt)) {
+            return 0
+          }
+        }
+
+        // Pass 2: first open cell, skipping same-kind transporters.
+        const openscan: PT = { x: source.x, y: source.y }
+        let placing = true
+        while (placing) {
+          openscan.x += deltax
+          openscan.y += deltay
+          if (!transportinbounds(openscan)) {
+            break
+          }
+          const maybetile = memoryreadelement(
+            READ_CONTEXT.board,
+            openscan,
             READ_LAYER.ANY,
           )
           if (maybetile?.kind === READ_CONTEXT.element.kind) {
             continue
           }
-          if (
-            memorymoveobject(
-              READ_CONTEXT.book,
-              READ_CONTEXT.board,
-              maybeobject,
-              { x: scan.x, y: scan.y },
-            )
-          ) {
+          if (transporttrymove({ x: openscan.x, y: openscan.y })) {
             placing = false
           }
         }
         if (placing) {
-          memorymoveobject(READ_CONTEXT.book, READ_CONTEXT.board, maybeobject, {
-            x: READ_CONTEXT.element.x + deltax,
-            y: READ_CONTEXT.element.y + deltay,
+          transporttrymove({
+            x: source.x + deltax,
+            y: source.y + deltay,
           })
         }
       }

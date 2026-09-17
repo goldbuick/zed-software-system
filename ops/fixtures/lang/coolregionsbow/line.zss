@@ -1,5 +1,4 @@
-@line
-@cycle 1
+@terrain line
 @char 249
 :drawdisplay
 #set p1 1
@@ -7,20 +6,19 @@
 #if any s line give p1 2
 #if any w line give p1 4
 #if any e line give p1 8
-#if p1 is 1 set displaychar 249
-#if p1 is 2 set displaychar 208
-#if p1 is 3 set displaychar 210
-#if p1 is 4 set displaychar 186
-#if p1 is 5 set displaychar 181
-#if p1 is 6 set displaychar 188
-#if p1 is 7 set displaychar 187
-#if p1 is 8 set displaychar 185
-#if p1 is 9 set displaychar 198
-#if p1 is 10 set displaychar 200
-#if p1 is 11 set displaychar 201
-#if p1 is 12 set displaychar 204
-#if p1 is 13 set displaychar 205
-#if p1 is 14 set displaychar 202
-#if p1 is 15 set displaychar 203
-#if p1 is 16 set displaychar 206
-#end
+#if p1 is 1 char 249
+#if p1 is 2 char 208
+#if p1 is 3 char 210
+#if p1 is 4 char 186
+#if p1 is 5 char 181
+#if p1 is 6 char 188
+#if p1 is 7 char 187
+#if p1 is 8 char 185
+#if p1 is 9 char 198
+#if p1 is 10 char 200
+#if p1 is 11 char 201
+#if p1 is 12 char 204
+#if p1 is 13 char 205
+#if p1 is 14 char 202
+#if p1 is 15 char 203
+#if p1 is 16 char 206

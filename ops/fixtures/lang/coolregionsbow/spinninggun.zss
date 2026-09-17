@@ -32,9 +32,6 @@
   #shoot rnd "$p5"
  #done
 #done
-#idle
-#think
-:drawdisplay
 #set p4 currenttick % 8
 #if p4 is 0 or p4 is 1 do
  #set displaychar 24
@@ -45,4 +42,5 @@
 #else do
  #set displaychar 27
 #done
-#end
+#idle
+#think

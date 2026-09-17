@@ -13,7 +13,7 @@ Implementation reference for fixing the cafe element library so each kind matche
 |-------------|-------|----------------|
 | `TickProc(statId)` -- runs each cycle | `ElementDefs[e].TickProc` | `:think` loop (`#idle`/`#go` then `#think`) |
 | `TouchProc(x,y,src,dx,dy)` -- player walks into it | `ElementDefs[e].TouchProc` | `:touch` label |
-| `DrawProc(x,y,ch)` -- animated glyph | `ElementDefs[e].DrawProc` | `:drawdisplay` label (see below), not `#char` in `:think` |
+| `DrawProc(x,y,ch)` -- animated glyph | `ElementDefs[e].DrawProc` | time/stat spins in `:think`; neighbor glyphs in `:drawdisplay` (see below) |
 | `Cycle` (lower = faster; `-1` = no tick/stat) | `TElementDef.Cycle` | `@cycle N` |
 | `Stat.P1/P2/P3` | `TStat` | `p1`/`p2`/`p3` |
 | `Stat.StepX/StepY` | `TStat` | `stepx`/`stepy` (`#walk`, `?dir`) |
@@ -28,22 +28,23 @@ Implementation reference for fixing the cafe element library so each kind matche
 
 **Player-initiated contact:** player walks into an object → `:touch` (RoZZT `TOUCH` / `ElementDamagingTouch`). Melee kinds use `:thud` / `:touch` fallthrough + `#send at senderx sendery shot` to approximate `BoardAttack`. Ranged fire still uses `#shoot`.
 
-## Animated glyphs: use `:drawdisplay`, not `:think`
+## Animated glyphs: `:think` for time/stat; `:drawdisplay` for neighbors
 
-ZZT `DrawProc` is a **render-time** hook: it recomputes an element's glyph every frame from `CurrentTick` and neighbors, separately from gameplay. The zss equivalent is the `:drawdisplay` label, not per-tick `#char` inside `:think`.
+ZZT `DrawProc` is a **render-time** hook. Cafe's `:drawdisplay` is **incremental** (see [`boarddrawdirty.ts`](../../../../zss/memory/boarddrawdirty.ts)): it only re-runs for fingerprint changes or 8-neighbor dirtiness. Fingerprints do **not** include `currenttick`, `cycle`, or `p1`–`pN`, so time-based or `p*`-driven spins stall in `:drawdisplay` unless something else dirties the cell.
 
-How it works (see [`zss/memory/boardtick.ts`](../../../../zss/memory/boardtick.ts) and [`zss/memory/boarddrawdirty.ts`](../../../../zss/memory/boarddrawdirty.ts)):
+How it works (see [`boardtick.ts`](../../../../zss/memory/boardtick.ts) and [`boarddrawdirty.ts`](../../../../zss/memory/boarddrawdirty.ts)):
 
-- Each board tick builds two passes. The **draw pass** runs only the `:drawdisplay` label (dispatched with `label: 'drawdisplay'`); an element is included only if its code defines that label (`memorycodehasdrawdisplay`, compiled + cached). The draw pass is resolved **before** the tick/`:think` pass each frame.
-- **Terrain participates.** Terrain never `:think`s, but terrain with `:drawdisplay` still redraws -- this is the correct home for wall-glyph logic (e.g. `line`).
-- **Incremental + neighbor-aware.** `memoryupdatedrawdirty` fingerprints each element (x, y, char, color, bg, `display*`, light, code, ...); changed cells seed an **8-neighbor** expansion into a `drawallowids` set, and only those ids re-run `:drawdisplay` next frame. So a neighbor-dependent glyph (line connectors, blink rays) recomputes automatically when an adjacent cell changes -- no manual `#send` fan-out needed.
+- Each board tick builds two passes. The **draw pass** runs only `:drawdisplay` for ids in `drawallowids` (or full when `drawneedfull`). Draw runs **before** the tick/`:think` pass.
+- **Terrain participates.** Terrain never `:think`s, but terrain with `:drawdisplay` still redraws -- correct home for neighbor glyph logic (e.g. `line`).
+- **Incremental + neighbor-aware.** Changed cells seed an **8-neighbor** expansion into `drawallowids`. Neighbor-dependent glyphs (line connectors, blink rays) recompute when an adjacent cell changes.
 - For non-local visual changes fingerprints can't see, call `memoryinvalidatedraw(board)` to force a full redraw.
 
 Implications for the elements below:
 
-- Put animated/derived glyphs in `:drawdisplay` (ending `#end`): star `/-|\` spin + rainbow, duplicator `250/249/248/o/O` phase, transporter `( < (` / `^ ~ ^`, spinning gun `24/26/25/27`, bomb `48+P1` countdown, conveyor `| / - \`. **P1 done** for these kinds (+ `line`). Place the `:drawdisplay` label **last** in the codepage.
-- Set `displaychar` / `displaycolor` / `displaybg` there (`#set displaychar`, `#set displaycolor`, `#give displaycolor`); keep `:think` for movement/AI only. SET of `char` / `color` / `bg` always writes instance stats.
-- The cafe `line` uses `:drawdisplay` with neighbor bitmask (8-neighbor dirty) -- no `:calcdisplay` / `#send` fan-out.
+- Put **time-based / `p*`-driven** glyph updates in `:think` (write `displaychar` / `displaycolor` there): star spin + rainbow, duplicator phase, transporter frames, spinning gun arrows, bomb countdown, conveyor `| / - \`.
+- Put **neighbor/stat fingerprint** glyphs in `:drawdisplay`: `line` autotile, door `displaycolor`/`displaybg` from `color`, pusher facing from step (updates when it moves).
+- SET of `char` / `color` / `bg` always writes instance stats; prefer `#set displaychar` / `#set displaycolor` for display overlays.
+- Cafe `line` is `@terrain line` with `:drawdisplay` neighbor bitmask -- no `:calcdisplay` / `#send` fan-out.
 
 ## ZSS stat and flag reference
 
@@ -104,12 +105,12 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 9 | Door | door | object | -1 | - | ok | P2 | open if key `(color div 16) mod 8` | import maps bg nibble to cafe `color` 9-15 / 0, `bg=0`; `:drawdisplay` maps display |
 | 10 | Scroll | scroll | object | 1 | push | ok | - | run OOP text, rainbow, remove | zssedit text, rainbow, die |
 | 11 | Passage | passage | object | 0 | darkvis | ok | - | teleport to matching passage on target board | `#goto p3` + firmware color match |
-| 12 | Duplicator | duplicator | object | 2 | - | ok | - | copy element at +step to -step; rate `(9-P2)*3` | `:drawdisplay` phase glyphs |
-| 13 | Bomb | bomb | object | 6 | push | ok | - | P1 9->0 countdown, blast radius | cycle **12** (vs ZZT 6), `within 5` + bombsmoke |
+| 12 | Duplicator | duplicator | object | 2 | - | ok | - | copy element at +step to -step; rate `(9-P2)*3` | `:think` phase glyphs |
+| 13 | Bomb | bomb | object | 6 | push | ok | - | P1 9->0 countdown, blast radius | cycle **12** (vs ZZT 6), `within 5` + bombsmoke; `:think` countdown glyph |
 | 14 | Energizer | energize | energizer | -1 | - | ok | - | 75 invincible ticks, `ALL:ENERGIZE` | `energized` **128** (vs 75); invuln on `:shot` |
-| 15 | Star | star | object | 1 | destruct=no | ok | - | seek player, life P2, damage, push | `:drawdisplay` spin; dest `#walk seek` + `#send by` |
-| 16 | Clockwise | clockwise | object | 3 | - | ok | - | rotate 8 neighbors CW | `:drawdisplay` spin; push in `:think` |
-| 17 | Counter | counter | object | 2 | - | ok | - | rotate 8 neighbors CCW | `:drawdisplay` spin; push in `:think` |
+| 15 | Star | star | object | 1 | destruct=no | ok | - | seek player, life P2, damage, push | `:think` spin; dest `#walk seek` + `#send by` |
+| 16 | Clockwise | clockwise | object | 3 | - | ok | - | rotate 8 neighbors CW | `:think` spin; push in `:think` |
+| 17 | Counter | counter | object | 2 | - | ok | - | rotate 8 neighbors CCW | `:think` spin; push in `:think` |
 | 18 | Bullet | bullet | object | 1 | destruct | ok | - | move, ricochet, damage, SHOT to obj/scroll | ricochet; engine `:shot`; creature score |
 | 19 | Water | water | terrain | -1 | placeontop | ok | - | blocks player (msg), bullets/shark pass | `@isswimable`; player `:thud` msg |
 | 20 | Forest | forest | object | -1 | - | ok | - | blocks; cleared to empty on touch | `@isitem`, die on touch (keep) |
@@ -122,8 +123,8 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 27 | Fake | fake | terrain | -1 | walk, placeontop | partial | P2 | walkable wall + msg | `@iswalkable` (no msg) |
 | 28 | Invisible | invisible | object | -1 | - | ok | - | reveal to normal on touch | `#become normal` |
 | 29 | Blink wall | blinkwall | object | 1 | - | ok | - | emit/retract blink ray, P1 start P2 period | `#send shot` along full ray |
-| 30 | Transporter | transporter | object | 2 | - | ok | - | teleport across gap in step dir | `#transport` skips transporters, lands first walkable |
-| 31 | Line | line | object | -1 | - | ok | - | wall glyph by line/edge neighbors | `:drawdisplay` (no `:calcdisplay` fan-out) |
+| 30 | Transporter | transporter | object | 2 | - | ok | - | teleport across gap in step dir | `#transport` pair-first (land past/on first same-kind), else first open; `:touch`/`:partytouch` |
+| 31 | Line | line | terrain | -1 | - | ok | - | wall glyph by line/edge neighbors | `@terrain line` + `:drawdisplay` (no `:calcdisplay` fan-out) |
 | 32 | Ricochet | ricochet | terrain | -1 | - | ok | - | bounces bullets | `@issolid` (bullet handles bounce) |
 | 33 | Blink ray EW | blinkew | terrain | -1 | - | ok | P3 | runtime ray from blink wall | terrain shell |
 | 34 | Bear | bear | object | 3 | destruct, push | ok | - | seek within `8-P1`, contact damage | `p2`/`p3` deltas + Movement `#send by` / `?by`; `:touch` send-shot |
@@ -131,7 +132,7 @@ Priority: **P0** wrong AI/contact, **P1** item/interaction, **P2** terrain/visua
 | 36 | Object | object | object | 3 | - | ok | - | author OOP program | zssedit stub (author-provided) |
 | 37 | Slime | slime | object | 3 | destruct=no | partial | P2 | spread leaving breakable trail | matches roughly |
 | 38 | Shark | shark | object | 3 | destruct=no | ok | - | swim in water only, contact damage | `@isswimming` dest `#walk` + `#send by`; `:touch` `#die` |
-| 39 | Spinning gun | spinninggun | object | 2 | - | ok | - | fire bullet/star by P1/P2 | `:drawdisplay` arrows; fire in `:think` |
+| 39 | Spinning gun | spinninggun | object | 2 | - | ok | - | fire bullet/star by P1/P2 | `:think` arrows; fire in `:think` |
 | 40 | Pusher | pusher | object | 4 | - | ok | - | march in step dir, push, chain pushers | glyph from step; `#idle`/`#think` (move+push via everytick step) |
 | 41 | Lion | lion | object | 2 | destruct, push | ok | - | `P1<rnd10` rnd else seek, contact damage | dest `#walk` capture + `#send by` player; `:touch` `#die` |
 | 42 | Tiger | tiger | object | 2 | destruct, push | ok | - | lion move + fire bullet/star by P2 | fire then dest `#walk` p7 p8; `:touch` `#die` |
@@ -232,7 +233,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Bomb (13) -- `bomb-...`
 
 - **ZZT:** touch with `P1=0` arms it (`P1:=9`, "Bomb activated!"); tick counts `P1` down, at `P1=1` pre-blast, at `P1=0` `DrawPlayerSurroundings(phase 2)` damages/removes destructibles in radius. Pushable, cycle 6, glyph `48+P1` while counting.
-- **Cafe now:** `@cycle 12`, `:shot`/`:touch`/`:bombed` arm `p1 9`, tick counts down, at 0 `#put within 5 i bombsmoke` + `#send within 5 i bombed` + `#send within 5 i shot` + `#die`; glyph via `:drawdisplay`.
+- **Cafe now:** `@cycle 12`, `:shot`/`:touch`/`:bombed` arm `p1 9`, tick counts down, at 0 `#put within 5 i bombsmoke` + `#send within 5 i bombed` + `#send within 5 i shot` + `#die`; glyph via `:think`.
 - **Status:** ok with intentional deviations: **cycle 12 vs ZZT 6** (slower fuse); blast radius `within 5` approximates the torch ellipse. Keep `bombsmoke`. Blast sends **`bombed` then `shot`** so breakable terrain clears via the engine `:shot` rule while `:bombed`-only handlers still run.
 
 ### Energizer (14) -- `energizer-...`
@@ -244,7 +245,7 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 ### Star (15) -- `star-...`
 
 - **ZZT:** `P2` = lifetime; each tick `P2--`, die at 0; on even `P2` seek player and `BoardAttack` player/breakable, else push/move. Not destructible; draw cycles `/-|\` and rotates color 9-15.
-- **Cafe now:** `@notbreakable`, `@p2 100`, `:drawdisplay` rainbow + glyph spin, `:think` lifetime; even-tick `#walk seek p3 p4` then `#if any by p3 p4 player` / `breakable` `#send by p3 p4 shot` `#die` else `?by p3 p4`. Trailing `#idle`. No per-tick `#send flow shot`.
+- **Cafe now:** `@notbreakable`, `@p2 100`, `:think` rainbow + glyph spin + lifetime; even-tick `#walk seek p3 p4` then `#if any by p3 p4 player` / `breakable` `#send by p3 p4 shot` `#die` else `?by p3 p4`. Trailing `#idle`. No per-tick `#send flow shot`.
 - **Status:** ok. Hand-placed default `p2 100` only; spawned stars use shoot-time lifetime.
 
 ### Bullet (18) -- `bullet-...`
@@ -282,7 +283,7 @@ Cafe flags match ZZT. Breakable is destroyed by shots/creatures (bullet special-
 ### Transporter (30) -- `transporter-...`
 
 - **ZZT:** on touch from the matching step direction, search along the dir for the next walkable landing (skipping paired transporters), push obstacles, move the entrant there, sound. Draw animates `( < (` / `^ ~ ^` by direction.
-- **Cafe:** `:drawdisplay` glyph by `shootx/shooty`; `:touch #transport senderid`. Firmware `#transport` gates on entrant delta == shoot dir, skips same-kind transporters along the scan, lands on first successful `memorymoveobject` cell (push included).
+- **Cafe:** `:think` glyph by `shootx/shooty` + `currenttick`; `:partytouch` / `:touch` `#transport senderid`. Firmware `#transport` gates on entrant delta == shoot dir, then **pair-first**: scan the full ray for the first same-kind transporter, land one cell past it (else on the pair cell); only if no pair (or land fails) use first-open scan (skipping same-kind). Object↔object contact dual-emits `:partytouch` so pushables can trigger transport.
 - **Status:** ok.
 
 ### Blink wall (29) + rays (33/43) -- `blinkwall-...`, `blinkew`, `blinkns`
