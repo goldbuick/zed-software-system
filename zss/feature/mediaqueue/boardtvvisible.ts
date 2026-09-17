@@ -3,6 +3,7 @@ import {
   mediaqueuehelperconnected,
   mediaqueueisboundboard,
   mediaqueueislistening,
+  mediaqueuereadboardtvframesready,
   mediaqueuereadboardtvgatesnapshot,
   mediaqueuereadboardtvhasvideo,
   mediaqueuereadhelperforboard,
@@ -45,4 +46,17 @@ export function useBoardTvVisible(gadgetboard: string): boolean {
     mediaqueuereadboardtvgatesnapshot,
   )
   return boardtvshouldshow(gadgetboard)
+}
+
+/**
+ * 0 until the decode element has frames, then 1. Used to remount EffectComposer
+ * and BoardTvSink together (same commit) without remounting board pan groups.
+ */
+export function useBoardTvFramesReady(): number {
+  useSyncExternalStore(
+    mediaqueuesubscribeboardtvgate,
+    mediaqueuereadboardtvgatesnapshot,
+    mediaqueuereadboardtvgatesnapshot,
+  )
+  return mediaqueuereadboardtvframesready() ? 1 : 0
 }

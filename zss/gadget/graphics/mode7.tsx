@@ -451,9 +451,8 @@ export const Mode7Graphics = memo(function Mode7Graphics({
                       />
                     ))}
                     <InspectorComponent z={inspectorz} />
+                    <BoardTvSink graphics="mode7" />
                   </group>
-                  {/* Outside liveboard so edge-pan board offset does not steal the slide-out. */}
-                  <BoardTvSink graphics="mode7" />
                   {exitpreviewgroups.map(({ key, preview, position }) =>
                     preview.layers.length > 0 ? (
                       <group

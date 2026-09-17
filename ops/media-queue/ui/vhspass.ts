@@ -34,8 +34,6 @@ const VHS_RESOLUTION = new Vector2(640, 480)
 const VHS_CREASE_NOISE = 1.0
 /** Crease flash opacity. */
 const VHS_CREASE_OPACITY = 0.5
-/** YIQ filter intensity. */
-const VHS_FILTER_INTENSITY = 0.1
 /** Tape crease horizontal smear. */
 const VHS_TAPE_CREASE_SMEAR = 0.2
 /** Tape crease band strength. */
@@ -52,10 +50,8 @@ const VHS_BOTTOM_BORDER_THICKNESS = 6.0
 const VHS_BOTTOM_BORDER_JITTER = 6.0
 /** Color noise from noise texture. */
 const VHS_NOISE_INTENSITY = 0.1
-/** Overall gain after Godot YIQ filter (restores midtones vs source). */
+/** Overall midtone gain after VHS artifacts. */
 const VHS_GAIN = 1.42
-/** Additive lift on crushed shadows (not near-pure black); applied after VHS, before gain. */
-const VHS_SHADOW_LIFT = 0.1
 
 const NOISE_SIZE = 256
 
@@ -74,7 +70,6 @@ uniform float time;
 uniform vec2 vhsResolution;
 uniform float creaseNoise;
 uniform float creaseOpacity;
-uniform float filterIntensity;
 uniform float tapeCreaseSmear;
 uniform float tapeCreaseIntensity;
 uniform float tapeCreaseJitter;
@@ -84,7 +79,6 @@ uniform float bottomBorderThickness;
 uniform float bottomBorderJitter;
 uniform float noiseIntensity;
 uniform float gain;
-uniform float shadowLift;
 
 varying vec2 vUv;
 
@@ -133,14 +127,6 @@ vec3 vhxTex2D(sampler2D tex, vec2 uv, float rot) {
     yiq.yz *= rotate2D(rot * tapeCreaseDiscoloration);
   }
   return yiq2rgb(yiq);
-}
-
-vec3 liftshadows(vec3 rgb, float amount) {
-  float luma = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
-  // Bell in crushed shadows: leave near-pure black alone, fade out into midtones.
-  float w = smoothstep(0.025, 0.06, luma)
-    * (1.0 - smoothstep(0.06, 0.22, luma));
-  return rgb + amount * w;
 }
 
 void main() {
@@ -209,14 +195,6 @@ void main() {
         noiseTexture,
         mod(uvn * vec2(1.0, 1.0) + time * vec2(5.97, 4.45), vec2(1.0))
       ).xyz;
-  col = clamp(col, 0.0, 1.0);
-
-  // YIQ filter.
-  col = rgb2yiq(col);
-  col = vec3(0.9, 1.1, 1.5) * col + vec3(0.1, -0.1, 0.0) * filterIntensity;
-  col = yiq2rgb(col);
-
-  col = liftshadows(col, shadowLift);
   col *= gain;
   col = clamp(col, 0.0, 1.0);
 
@@ -325,7 +303,6 @@ export function ensurevhspass(
       vhsResolution: { value: VHS_RESOLUTION.clone() },
       creaseNoise: { value: VHS_CREASE_NOISE },
       creaseOpacity: { value: VHS_CREASE_OPACITY },
-      filterIntensity: { value: VHS_FILTER_INTENSITY },
       tapeCreaseSmear: { value: VHS_TAPE_CREASE_SMEAR },
       tapeCreaseIntensity: { value: VHS_TAPE_CREASE_INTENSITY },
       tapeCreaseJitter: { value: VHS_TAPE_CREASE_JITTER },
@@ -335,7 +312,6 @@ export function ensurevhspass(
       bottomBorderJitter: { value: VHS_BOTTOM_BORDER_JITTER },
       noiseIntensity: { value: VHS_NOISE_INTENSITY },
       gain: { value: VHS_GAIN },
-      shadowLift: { value: VHS_SHADOW_LIFT },
     },
     vertexShader: vhsvertexshader,
     fragmentShader: vhsfragmentshader,

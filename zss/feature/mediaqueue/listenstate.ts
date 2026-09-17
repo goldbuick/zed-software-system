@@ -8,6 +8,7 @@ const boardhelpers = new Map<string, string>()
 const connectedhelpers = new Set<string>()
 let hasactiveroomstream = false
 let boardtvhasvideo = false
+let boardtvframesready = false
 let boardtvgateepoch = 0
 const boardtvgatesubs = new Set<() => void>()
 
@@ -23,11 +24,32 @@ export function mediaqueuesetboardtvhasvideo(active: boolean) {
     return
   }
   boardtvhasvideo = active
+  if (!active) {
+    boardtvframesready = false
+  }
   bumpboardtvgate()
 }
 
 export function mediaqueuereadboardtvhasvideo(): boolean {
   return boardtvhasvideo
+}
+
+/** True when the decode element has videoWidth/Height (frames exist). */
+export function mediaqueuereadboardtvframesready(): boolean {
+  return boardtvframesready
+}
+
+/**
+ * Flip when helper video gets (or loses) a real frame size. Bumps the board TV
+ * gate so EffectComposer and BoardTvSink remount together without tearing down
+ * board focus/pan groups.
+ */
+export function mediaqueuesetboardtvframesready(ready: boolean) {
+  if (boardtvframesready === ready) {
+    return
+  }
+  boardtvframesready = ready
+  bumpboardtvgate()
 }
 
 export function mediaqueuesubscribeboardtvgate(onstorechange: () => void) {
@@ -117,6 +139,7 @@ export function mediaqueueclearlistenstate() {
   listenplayer = ''
   hasactiveroomstream = false
   boardtvhasvideo = false
+  boardtvframesready = false
   bumpboardtvgate()
 }
 
