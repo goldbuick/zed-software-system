@@ -38,9 +38,7 @@
     "waitfor",
     "foreach",
     "break",
-    "continue",
-    "toast",
-    "ticker"
+    "continue"
   ],
   "zss_stat_keywords": [
     "object",

@@ -24,9 +24,9 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const BEAR_CODE = fs
+const STAR_CODE = fs
   .readFileSync(
-    path.join(__dirname, '../../../fixtures/lang/coolregionsbow/bear.zss'),
+    path.join(__dirname, '../../../fixtures/lang/coolregionsbow/star.zss'),
     'utf8',
   )
   .replace(/\r\n/g, '\n')
@@ -57,88 +57,39 @@ const GEM_CODE = `@object gem
 #end
 `
 
-describe('bear RoZZT contact script', () => {
-  it('uses p2/p3 deltas, ispushable, no thud', () => {
-    const build = compilescript('bear', BEAR_CODE)
+describe('star even-tick dest script', () => {
+  it('captures walk seek dest and sends shot, not flow shot', () => {
+    const build = compilescript('star', STAR_CODE)
     expect(build.errors ?? []).toEqual([])
-    expect(BEAR_CODE).toMatch(/@ispushable/)
-    expect(BEAR_CODE).not.toMatch(/:thud/)
-    expect(BEAR_CODE).toMatch(/#set p2 0/)
-    expect(BEAR_CODE).toMatch(/#set p3 0/)
-    expect(BEAR_CODE).toMatch(/#send by p2 p3 shot/)
-    expect(BEAR_CODE).toMatch(/any by p2 p3 breakable/)
-    expect(BEAR_CODE).toMatch(/\?by p2 p3/)
-    expect(BEAR_CODE).toMatch(/:touch\n#send at senderx sendery shot\n#die/)
-    expect(BEAR_CODE).not.toMatch(/@light /)
+    expect(STAR_CODE).toMatch(/#walk seek p3 p4/)
+    expect(STAR_CODE).toMatch(/#send by p3 p4 shot/)
+    expect(STAR_CODE).toMatch(/any by p3 p4 player/)
+    expect(STAR_CODE).toMatch(/any by p3 p4 breakable/)
+    expect(STAR_CODE).toMatch(/\?by p3 p4/)
+    expect(STAR_CODE).not.toMatch(/#set p5 /)
+    expect(STAR_CODE).not.toMatch(/\?seek/)
+    expect(STAR_CODE).not.toMatch(/#send flow shot/)
   })
 })
 
-describe('bear BoardAttack on adjacent pushable player', () => {
+describe('star BoardAttack on captured dest', () => {
   afterEach(() => {
     cleartickreadcontextall()
     memoryhaltallchips()
     memoryresetbooks([])
   })
 
-  it('sends shot and dies instead of shoving the player', () => {
-    expect(firmwarelistcommands(DRIVER_TYPE.RUNTIME)).toContain('shortsend')
-    expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'shortsend')).toBeTruthy()
-    expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'stat')).toBeTruthy()
+  function setupdestboard(starx: number, stary: number, playerx: number) {
+    expect(firmwarelistcommands(DRIVER_TYPE.RUNTIME)).toContain('walk')
+    expect(firmwaregetcommand(DRIVER_TYPE.RUNTIME, 'walk')).toBeTruthy()
 
-    const bearpage = memorycreatecodepage(BEAR_CODE, {})
-    const playerpage = memorycreatecodepage(PLAYER_CODE, {})
-    const boardpage = memorycreatecodepage('@board arena\n', {})
-    const book = memorycreatebook([bearpage, playerpage, boardpage])
-    memoryresetbooks([book])
-    memorywritemainbook(book.id)
-    const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(boardpage)!
-    board.id = boardpage.id
-    memoryensureboardready(board)
-
-    const pid = `pid_${createsid()}`
-    const player = memorycreateboardobjectfromkind(
-      board,
-      { x: 6, y: 5 },
-      'player',
-      pid,
-    )!
-    const bear = memorycreateboardobjectfromkind(
-      board,
-      { x: 5, y: 5 },
-      'bear',
-      'oid_bear',
-    )!
-    bear.player = pid
-    bear.cycle = 1
-    player.cycle = 1
-    // band 0: only exact axis alignment wakes (same row here)
-    bear.p1 = 8
-    book.timestamp = 100
-    READ_CONTEXT.timestamp = 100
-
-    memorytickobject(book, board, bear, BEAR_CODE)
-
-    expect(player.x).toBe(6)
-    expect(player.y).toBe(5)
-    expect(bear.removed).toBeTruthy()
-  })
-})
-
-describe('bear dest kind breakable vs @isbreakable gem', () => {
-  afterEach(() => {
-    cleartickreadcontextall()
-    memoryhaltallchips()
-    memoryresetbooks([])
-  })
-
-  function setupdestboard() {
-    const bearpage = memorycreatecodepage(BEAR_CODE, {})
+    const starpage = memorycreatecodepage(STAR_CODE, {})
     const playerpage = memorycreatecodepage(PLAYER_CODE, {})
     const breakablepage = memorycreatecodepage(BREAKABLE_CODE, {})
     const gempage = memorycreatecodepage(GEM_CODE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([
-      bearpage,
+      starpage,
       playerpage,
       breakablepage,
       gempage,
@@ -153,27 +104,39 @@ describe('bear dest kind breakable vs @isbreakable gem', () => {
     const pid = `pid_${createsid()}`
     const player = memorycreateboardobjectfromkind(
       board,
-      { x: 8, y: 5 },
+      { x: playerx, y: stary },
       'player',
       pid,
     )!
-    const bear = memorycreateboardobjectfromkind(
+    const star = memorycreateboardobjectfromkind(
       board,
-      { x: 5, y: 5 },
-      'bear',
-      'oid_bear',
+      { x: starx, y: stary },
+      'star',
+      'oid_star',
     )!
-    bear.player = pid
-    bear.cycle = 1
+    star.player = pid
+    star.cycle = 1
     player.cycle = 1
-    bear.p1 = 8
+    // after #take p2, 100 is even so dest check runs
+    star.p2 = 101
     book.timestamp = 100
     READ_CONTEXT.timestamp = 100
-    return { book, board, bear, player }
+    return { book, board, star, player }
   }
 
+  it('sends shot at captured dest player and dies', () => {
+    const { book, board, star, player } = setupdestboard(5, 5, 6)
+
+    memorytickobject(book, board, star, STAR_CODE)
+
+    expect(star.removed).toBeTruthy()
+    expect(player.x).toBe(6)
+    expect(player.y).toBe(5)
+    expect(player.removed).toBeFalsy()
+  })
+
   it('softdeletes dest wall kind breakable and dies', () => {
-    const { book, board, bear, player } = setupdestboard()
+    const { book, board, star, player } = setupdestboard(5, 5, 10)
     const dest = { x: 6, y: 5 }
     memorywriteterrain(board, {
       x: dest.x,
@@ -182,16 +145,16 @@ describe('bear dest kind breakable vs @isbreakable gem', () => {
       breakable: 1,
     })
 
-    memorytickobject(book, board, bear, BEAR_CODE)
+    memorytickobject(book, board, star, STAR_CODE)
 
     const idx = dest.x + dest.y * BOARD_WIDTH
     expect(board.terrain[idx]?.kind).toBeUndefined()
-    expect(bear.removed).toBeTruthy()
+    expect(star.removed).toBeTruthy()
     expect(player.washurt).toBeUndefined()
   })
 
   it('does not shot dest gem with @isbreakable and does not die', () => {
-    const { book, board, bear } = setupdestboard()
+    const { book, board, star } = setupdestboard(5, 5, 10)
     const gem = memorycreateboardobjectfromkind(
       board,
       { x: 6, y: 5 },
@@ -199,9 +162,9 @@ describe('bear dest kind breakable vs @isbreakable gem', () => {
       'oid_gem',
     )!
 
-    memorytickobject(book, board, bear, BEAR_CODE)
+    memorytickobject(book, board, star, STAR_CODE)
 
-    expect(bear.removed).toBeFalsy()
+    expect(star.removed).toBeFalsy()
     expect(board.objects[gem.id!]).toBe(gem)
     expect(gem.removed).toBeFalsy()
     expect(gem.gemshot).toBeUndefined()

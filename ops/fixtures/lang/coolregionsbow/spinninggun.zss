@@ -37,12 +37,12 @@
 :drawdisplay
 #set p4 currenttick % 8
 #if p4 is 0 or p4 is 1 do
- #char 24
+ #set displaychar 24
 #else if p4 is 2 or p4 is 3 do
- #char 26
+ #set displaychar 26
 #else if p4 is 4 or p4 is 5 do
- #char 25
+ #set displaychar 25
 #else do
- #char 27
+ #set displaychar 27
 #done
 #end

@@ -35,7 +35,7 @@ Generated from `export function` / `export const` under `zss/memory/`.
 
 ## boardlighting.ts
 
-- **memoryboardlightingapplyobject**, **memoryboardlightingmarkplayer**
+- **memoryboardlightingapplyobject**
 
 ## lightstat.ts
 

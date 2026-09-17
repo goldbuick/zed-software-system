@@ -4,7 +4,7 @@
 @step dir;March
 #end
 :drawdisplay
-#if stepx above 0 set char 16
-#if stepx below 0 set char 17
-#if stepy below 0 set char 30
-#if stepy above 0 set char 31
+#if stepx above 0 set displaychar 16
+#if stepx below 0 set displaychar 17
+#if stepy below 0 set displaychar 30
+#if stepy above 0 set displaychar 31

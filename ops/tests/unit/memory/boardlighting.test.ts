@@ -1,9 +1,6 @@
 import { SPRITE } from 'zss/gadget/data/types'
 import { memoryboardelementindex } from 'zss/memory/boardaccess'
-import {
-  memoryboardlightingapplyobject,
-  memoryboardlightingmarkplayer,
-} from 'zss/memory/boardlighting'
+import { memoryboardlightingapplyobject } from 'zss/memory/boardlighting'
 import { BOARD, BOARD_ELEMENT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
 import { COLLISION } from 'zss/words/types'
 
@@ -116,20 +113,6 @@ function testsprite(x: number, y: number): SPRITE {
 }
 
 describe('boardlighting', () => {
-  describe('memoryboardlightingmarkplayer', () => {
-    it('brightens a 3x3 neighborhood around the player (center 0, cardinals 0.7, corners 0.9)', () => {
-      const board = makeboard()
-      const sprite = testsprite(12, 7)
-      const alphas = new Array<number>(BOARD_SIZE).fill(1)
-      memoryboardlightingmarkplayer(board, alphas, sprite)
-      const idx = memoryboardelementindex(board, sprite)
-      expect(alphas[idx]).toBe(0)
-      expect(alphas[idx + 1]).toBe(0.7)
-      const northeast = memoryboardelementindex(board, { x: 13, y: 6 })
-      expect(alphas[northeast]).toBe(0.9)
-    })
-  })
-
   describe('memoryboardlightingapplyobject', () => {
     it('only touches the center when light radius rounds to 1', () => {
       const board = makeboard()

@@ -177,14 +177,6 @@ export type Command_playCstChildren = {
   token_command_play: IToken[]
 }
 
-export type Command_toastCstChildren = {
-  token_command_toast: IToken[]
-}
-
-export type Command_tickerCstChildren = {
-  token_command_ticker: IToken[]
-}
-
 export type ExprCstChildren = {
   LHS: CstNode[]
   token_or?: IToken[]
@@ -637,8 +629,6 @@ export type TokenCstChildren = {
   color?: CstNode[]
   dir?: CstNode[]
   command_play?: CstNode[]
-  command_toast?: CstNode[]
-  command_ticker?: CstNode[]
   token_label?: IToken[]
   token_stringliteraldouble?: IToken[]
   token_stringliteral?: IToken[]
@@ -679,8 +669,6 @@ export type ICstNodeVisitor<IN, OUT> = {
   command_break(children: Command_breakCstChildren, param?: IN): OUT
   command_continue(children: Command_continueCstChildren, param?: IN): OUT
   command_play(children: Command_playCstChildren, param?: IN): OUT
-  command_toast(children: Command_toastCstChildren, param?: IN): OUT
-  command_ticker(children: Command_tickerCstChildren, param?: IN): OUT
   expr(children: ExprCstChildren, param?: IN): OUT
   and_test(children: And_testCstChildren, param?: IN): OUT
   not_test(children: Not_testCstChildren, param?: IN): OUT

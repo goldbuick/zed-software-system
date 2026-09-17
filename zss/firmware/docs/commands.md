@@ -110,7 +110,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `go` | Element in direction |
-| `walk` | Cause element to move in direction each tick |
+| `walk` | Cause element to move in direction each tick, or capture deltas into names |
 | `idle` | Execution until next tick |
 | `end` | Program (optionally set 'arg' variable) |
 | `lock` | Against external messages |
@@ -124,8 +124,6 @@ All firmware commands and their descriptions. Commands are available depending o
 | `array` | Array variable |
 | `read` | Property from object into variable |
 | `pset` | Attr on dir (Weave-like; `step`/`shoot` set axes; `light <n> [dir]` sets radius/cone) |
-| `toast` | Toast notification |
-| `ticker` | Element ticker text |
 
 ---
 

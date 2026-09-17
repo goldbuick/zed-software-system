@@ -211,16 +211,11 @@ function codepagecompletenames(
   return out
 }
 
-/** play/toast/ticker lexer tokens swallow args into one image; use the first word. */
+/** play lexer tokens swallow args into one image; use the first word. */
 function isfreeformcommandtoken(token: {
   tokenTypeIdx?: number | undefined
 }): boolean {
-  const idx = token.tokenTypeIdx
-  return (
-    idx === lexer.command_play.tokenTypeIdx ||
-    idx === lexer.command_toast.tokenTypeIdx ||
-    idx === lexer.command_ticker.tokenTypeIdx
-  )
+  return token.tokenTypeIdx === lexer.command_play.tokenTypeIdx
 }
 
 function commandnamefromnametoken(token: {
@@ -350,8 +345,6 @@ function getautocompletefromtokens(
         activecategory = 'comment'
         break
       case lexer.command_play.tokenTypeIdx:
-      case lexer.command_toast.tokenTypeIdx:
-      case lexer.command_ticker.tokenTypeIdx:
         // Free-form remainder; EOL hint only (no keyword popup).
         activecategory = 'freeformcommand'
         break

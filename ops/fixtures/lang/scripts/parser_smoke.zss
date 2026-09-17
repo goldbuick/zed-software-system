@@ -69,12 +69,12 @@ plain text line
 #done
 ' else-if / else take / else forks share one do...#done
 #if not isdark do
- #ticker no dark
+ $ticker no dark
 #else if light do
- #ticker lit
+ $ticker lit
 ' #else take = else + take command fork (not bare else)
 #else take torches do
- #ticker no torches
+ $ticker no torches
 #else do
  #set light 9
 #done

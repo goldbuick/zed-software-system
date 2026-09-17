@@ -1,6 +1,5 @@
 import { CHIP } from 'zss/chip'
 import {
-  apitoast,
   registerstickyuser,
   registerstickyvoice,
   vmlogout,
@@ -56,7 +55,6 @@ import {
 } from 'zss/words/color'
 import { colorconsts } from 'zss/words/colorconsts'
 import { DIR_CONSTS, isstrdir } from 'zss/words/dir'
-import { mapdisplaystatname } from 'zss/words/displaystatname'
 import { STR_KIND } from 'zss/words/kind'
 import { READ_CONTEXT, readargs, readargsuntilend } from 'zss/words/reader'
 import {
@@ -408,13 +406,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
           return [true, maybevalue ?? 0]
         }
         if (STANDARD_STAT_NAMES.has(name)) {
-          const statname = mapdisplaystatname(
-            READ_CONTEXT.usedisplaystats,
-            name,
-          ) as keyof BOARD_ELEMENT
           const maybevalue = memoryreadelementstat(
             READ_CONTEXT.element,
-            statname,
+            name as keyof BOARD_ELEMENT,
           )
           return [true, maybevalue ?? 0] // fallback to zero as default value from a stat
         }
@@ -653,11 +647,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
         }
         if (STANDARD_STAT_NAMES.has(name)) {
           if (ispresent(READ_CONTEXT.element)) {
-            const statname = mapdisplaystatname(
-              READ_CONTEXT.usedisplaystats,
-              name,
-            )
-            switch (statname) {
+            switch (name) {
               case 'color':
                 if (isstrcolor(value)) {
                   const { color, bg } = mapstrcolortoattributes(value)
@@ -710,7 +700,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
                 break
               }
               default:
-                READ_CONTEXT.element[statname as keyof BOARD_ELEMENT] = value
+                READ_CONTEXT.element[name as keyof BOARD_ELEMENT] = value
                 break
             }
           }
@@ -1041,21 +1031,42 @@ export const ELEMENT_FIRMWARE = createfirmware({
   })
   .command(
     'walk',
-    [ARG_TYPE.DIR, 'cause element to move in direction each tick'],
-    (_, words) => {
+    [
+      ARG_TYPE.DIR,
+      ARG_TYPE.MAYBE_NAME,
+      ARG_TYPE.MAYBE_NAME,
+      'cause element to move in direction each tick',
+    ],
+    (chip, words) => {
       if (!ispresent(READ_CONTEXT.element)) {
         return 0
       }
 
-      // read walk direction
-      const [dest] = readargs(words, 0, [ARG_TYPE.DIR])
+      // read walk direction and optional capture names
+      const [dest, name1, name2] = readargs(words, 0, [
+        ARG_TYPE.DIR,
+        ARG_TYPE.MAYBE_NAME,
+        ARG_TYPE.MAYBE_NAME,
+      ])
       const x = READ_CONTEXT.element.x ?? 0
       const y = READ_CONTEXT.element.y ?? 0
+      const dx = dest.destpt.x - x
+      const dy = dest.destpt.y - y
 
-      // create delta from dir
-      READ_CONTEXT.element.stepx = dest.destpt.x - x
-      READ_CONTEXT.element.stepy = dest.destpt.y - y
+      // both names: capture deltas instead of starting a walk
+      if (ispresent(name1) && ispresent(name2)) {
+        chip.set(name1, dx)
+        chip.set(name2, dy)
+        return 0
+      }
+
+      READ_CONTEXT.element.stepx = dx
+      READ_CONTEXT.element.stepy = dy
       return 0
+    },
+    {
+      editor: [undefined, 'variables', 'variables'],
+      lists: [undefined, 'flags', 'flags'],
     },
   )
   .command('idle', ['execution until next tick'], (chip) => {
@@ -1200,18 +1211,3 @@ export const ELEMENT_FIRMWARE = createfirmware({
       lists: [undefined, undefined, 'flags'],
     },
   )
-  .command('toast', ['toast notification'], (_, words) => {
-    const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-    const text = textwords.join(' ')
-    apitoast(SOFTWARE, READ_CONTEXT.elementfocus, text)
-    return 0
-  })
-  .command('ticker', ['element ticker text'], (_, words) => {
-    const [textwords] = readargsuntilend(words, 0, ARG_TYPE.NUMBER_OR_NAME)
-    const text = textwords.join(' ')
-    if (ispresent(READ_CONTEXT.element)) {
-      READ_CONTEXT.element.tickertext = text
-      READ_CONTEXT.element.tickertime = READ_CONTEXT.timestamp
-    }
-    return 0
-  })

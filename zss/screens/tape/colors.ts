@@ -101,8 +101,6 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.rparen.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   // commands
   [lexer.command_play.tokenTypeIdx ?? 0]: ZSS_TYPE_MUSIC,
-  [lexer.command_ticker.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMAND,
-  [lexer.command_toast.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMAND,
   [lexer.command_if.tokenTypeIdx ?? 0]: ZSS_TYPE_COMMAND,
   [lexer.command_do.tokenTypeIdx ?? 0]: ZSS_TYPE_BLOCK,
   [lexer.command_done.tokenTypeIdx ?? 0]: ZSS_TYPE_BLOCK,
@@ -566,26 +564,6 @@ export function applycodetokencolors(
     const right = tocell((token.endColumn ?? 1) - 1)
     const maybecolor = ZSS_COLOR_MAP[token.tokenTypeIdx]
     if (!ispresent(maybecolor)) {
-      continue
-    }
-
-    // #ticker <content>: "ticker" = dkgreen, content = green
-    if (token.tokenTypeIdx === lexer.command_ticker.tokenTypeIdx) {
-      const namelen = 6 // "ticker"
-      paint(left, left + namelen - 1, ZSS_TYPE_COMMAND)
-      if (left + namelen <= right) {
-        paint(left + namelen, right, ZSS_TYPE_TEXT)
-      }
-      continue
-    }
-
-    // #toast <content>: "toast" = dkgreen, content = green
-    if (token.tokenTypeIdx === lexer.command_toast.tokenTypeIdx) {
-      const namelen = 5 // "toast"
-      paint(left, left + namelen - 1, ZSS_TYPE_COMMAND)
-      if (left + namelen <= right) {
-        paint(left + namelen, right, ZSS_TYPE_TEXT)
-      }
       continue
     }
 

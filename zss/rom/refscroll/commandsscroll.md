@@ -2,8 +2,9 @@
 
 #go <dir>  
 $whitemove element one step  
-#walk <dir>  
+#walk <dir> [name1 name2]  
 $whiteset step for continuous movement  
+$whiteor capture deltas into names (does not start walking)  
 #idle  
 $whitepause until next tick  
 #set <name> <value>  
@@ -52,12 +53,8 @@ $whiteset stat to array
 
 ## element - ui
 
-#toast text  
-$whiteshow toast notification  
-#ticker text  
-$whiteset floating ticker text (no terminal line)  
 $toast text  
-$whiteinline form on any text line  
+$whiteinline toast on any text line  
 $ticker text  
 $whiteinline floating ticker on any text line (no terminal line)  
 $bonk  

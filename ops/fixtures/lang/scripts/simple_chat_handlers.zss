@@ -1,19 +1,19 @@
 :shot
 #bgplay t--c+c---c+d#
 #take health 10 do
- #ticker You died!
+ $ticker You died!
  #endgame
 #else do
- #ticker Ouch!
+ $ticker Ouch!
  #think
 #done
 :lighttorch
 #if not isdark do
- #ticker Don't need torch - room is not dark!
+ $ticker Don't need torch - room is not dark!
 #else if light do
- #ticker Torch is already lit!
+ $ticker Torch is already lit!
 #else take torches do
- #ticker You don't have any torches!
+ $ticker You don't have any torches!
 #else do
  #set light 9
  #give wick wickticks

@@ -257,24 +257,3 @@ export function memoryboardlightingapplyobject(
     }
   }
 }
-
-/** Full-bright cell for the local player on dark boards when they carry no light. */
-export function memoryboardlightingmarkplayer(
-  board: BOARD,
-  alphas: number[],
-  sprite: SPRITE,
-) {
-  const sx = sprite.x
-  const sy = sprite.y
-  for (let y = sy - 1; y <= sy + 1; y++) {
-    for (let x = sx - 1; x <= sx + 1; x++) {
-      const index = memoryboardelementindex(board, { x, y })
-      if (index !== -1) {
-        const iscenter = x === sx && y === sy
-        const isaligned = x === sx || y === sy
-        const lit = iscenter ? 0 : isaligned ? 0.7 : 0.9
-        alphas[index] = Math.min(alphas[index], lit)
-      }
-    }
-  }
-}

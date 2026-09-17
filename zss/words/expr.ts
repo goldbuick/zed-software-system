@@ -32,19 +32,86 @@ import {
 } from './color'
 import { isstrdir, mapstrdir, readdir } from './dir'
 import { STR_GROUP, isstrgroup } from './group'
+import {
+  STR_KIND,
+  isstrkind,
+  readkind,
+  readstrkindbg,
+  readstrkindcolor,
+  readstrkindname,
+} from './kind'
 import { READ_CONTEXT, readargs } from './reader'
 import { readremoteattr, resolveremotedir } from './remoteattr'
 import { parsesend } from './send'
 import { ARG_TYPE, DIR, NAME, PT } from './types'
 
-/** Match color/group against the element at pt for a DIR layer (no reparse). */
+type ANY_COUNT_MATCH =
+  | { type: 'kind'; kind: STR_KIND }
+  | { type: 'color'; color: STR_COLOR }
+  | { type: 'group'; group: STR_GROUP }
+
+function elementmatcheskind(element: BOARD_ELEMENT, kind: STR_KIND): boolean {
+  const kindname = NAME(readstrkindname(kind) ?? '')
+  if (NAME(element.kind ?? '') !== kindname) {
+    return false
+  }
+  const color = readstrkindcolor(kind)
+  const bg = readstrkindbg(kind)
+  if (!ispresent(color) && !ispresent(bg)) {
+    return true
+  }
+  const display = memoryreadelementdisplay(element)
+  if (ispresent(color) && color !== display.color) {
+    return false
+  }
+  if (ispresent(bg) && bg !== display.bg) {
+    return false
+  }
+  return true
+}
+
+function readanycountmatch(index: number): [MAYBE<ANY_COUNT_MATCH>, number] {
+  const [kind, kindii] = readkind(index)
+  if (isstrkind(kind)) {
+    return [{ type: 'kind', kind }, kindii]
+  }
+  const [match, next] = readargs(READ_CONTEXT.words, index, [
+    ARG_TYPE.COLOR_OR_GROUP,
+  ])
+  if (isstrcolor(match)) {
+    return [{ type: 'color', color: match }, next]
+  }
+  if (isstrgroup(match)) {
+    return [{ type: 'group', group: match }, next]
+  }
+  return [undefined, next]
+}
+
+function listanycountmatch(
+  board: MAYBE<BOARD>,
+  match: ANY_COUNT_MATCH,
+  self: string,
+): BOARD_ELEMENT[] {
+  if (match.type === 'kind') {
+    return memorylistelement(board, { kind: match.kind })
+  }
+  if (match.type === 'color') {
+    return memorylistelement(board, { color: match.color })
+  }
+  return memorylistelement(board, { group: match.group, self })
+}
+
+/** Match kind/color/group against the element at pt for a DIR layer (no reparse). */
 function readdirelementmatch(
   board: MAYBE<BOARD>,
   pt: PT,
   layer: DIR,
-  match: STR_COLOR | STR_GROUP,
+  match: MAYBE<ANY_COUNT_MATCH>,
   self: string,
 ): MAYBE<BOARD_ELEMENT> {
+  if (!ispresent(match)) {
+    return undefined
+  }
   const maybelement =
     layer === DIR.GROUND
       ? memoryreadelement(board, pt, READ_LAYER.TERRAIN)
@@ -52,23 +119,24 @@ function readdirelementmatch(
   if (!ispresent(maybelement)) {
     return undefined
   }
-  if (isstrcolor(match)) {
+  if (match.type === 'kind') {
+    return elementmatcheskind(maybelement, match.kind) ? maybelement : undefined
+  }
+  if (match.type === 'color') {
     const display = memoryreadelementdisplay(maybelement)
     const didmatch =
-      readstrcolor(match) === display.color || readstrbg(match) === display.bg
+      readstrcolor(match.color) === display.color ||
+      readstrbg(match.color) === display.bg
     return didmatch ? maybelement : undefined
   }
-  if (isstrgroup(match)) {
-    const didmatch = memoryelementmatchesstrgrouponboard(
-      board,
-      maybelement,
-      self,
-      match,
-      layer === DIR.GROUND,
-    )
-    return didmatch ? maybelement : undefined
-  }
-  return undefined
+  const didmatch = memoryelementmatchesstrgrouponboard(
+    board,
+    maybelement,
+    self,
+    match.group,
+    layer === DIR.GROUND,
+  )
+  return didmatch ? maybelement : undefined
 }
 
 // consider signaling the end as a pipe | ??
@@ -252,16 +320,12 @@ export function readexpr(index: number): [any, number] {
         return [readremoteattr(target, attr), iii]
       }
       case 'any': {
-        // ANY <group>
-        // ANY <color>
-        // ANY <dir> <group>
-        // ANY <dir> <color>
+        // ANY <kind|group|color>
+        // ANY <dir> <kind|group|color>
         const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (isstrdir(value)) {
-          const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
-            ARG_TYPE.DIR,
-            ARG_TYPE.COLOR_OR_GROUP,
-          ])
+          const [dir, diri] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
+          const [match, iii] = readanycountmatch(diri)
 
           const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
           const self = READ_CONTEXT.elementid
@@ -292,40 +356,22 @@ export function readexpr(index: number): [any, number] {
           return [ispresent(found) ? [found] : [], iii]
         }
 
-        // without dir
-        const [match, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.COLOR_OR_GROUP,
-        ])
-
-        // color check
-        if (isstrcolor(match)) {
-          const matchedelements = memorylistelement(READ_CONTEXT.board, {
-            color: match,
-          })
-          return [matchedelements, iii]
+        const [match, iii] = readanycountmatch(ii)
+        if (!ispresent(match)) {
+          return [[], iii]
         }
-
-        // group check
-        if (isstrgroup(match)) {
-          const matchedelements = memorylistelement(READ_CONTEXT.board, {
-            group: match,
-            self: READ_CONTEXT.elementid,
-          })
-          return [matchedelements, iii]
-        }
-        return [[], iii]
+        return [
+          listanycountmatch(READ_CONTEXT.board, match, READ_CONTEXT.elementid),
+          iii,
+        ]
       }
       case 'countof': {
-        // COUNTOF <group>
-        // COUNTOF <color>
-        // COUNTOF <dir> <group>
-        // COUNTOF <dir> <color>
+        // COUNTOF <kind|group|color>
+        // COUNTOF <dir> <kind|group|color>
         const [value] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.ANY])
         if (isstrdir(value)) {
-          const [dir, match, iii] = readargs(READ_CONTEXT.words, ii, [
-            ARG_TYPE.DIR,
-            ARG_TYPE.COLOR_OR_GROUP,
-          ])
+          const [dir, diri] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.DIR])
+          const [match, iii] = readanycountmatch(diri)
 
           const board = memoryreadboardbyevaldir(dir, READ_CONTEXT.board)
           const self = READ_CONTEXT.elementid
@@ -359,28 +405,15 @@ export function readexpr(index: number): [any, number] {
           return [ispresent(found) ? 1 : 0, iii]
         }
 
-        // without dir
-        const [match, iii] = readargs(READ_CONTEXT.words, ii, [
-          ARG_TYPE.COLOR_OR_GROUP,
-        ])
-
-        // color check
-        if (isstrcolor(match)) {
-          const matchedelements = memorylistelement(READ_CONTEXT.board, {
-            color: match,
-          })
-          return [matchedelements.length, iii]
+        const [match, iii] = readanycountmatch(ii)
+        if (!ispresent(match)) {
+          return [0, iii]
         }
-
-        // group check
-        if (isstrgroup(match)) {
-          const matchedelements = memorylistelement(READ_CONTEXT.board, {
-            group: match,
-            self: READ_CONTEXT.elementid,
-          })
-          return [matchedelements.length, iii]
-        }
-        return [0, iii]
+        return [
+          listanycountmatch(READ_CONTEXT.board, match, READ_CONTEXT.elementid)
+            .length,
+          iii,
+        ]
       }
       // zss
       // numbers

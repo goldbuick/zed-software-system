@@ -20,10 +20,10 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from 'zss/memory/types'
-import { NAME } from 'zss/words/types'
+import { COLOR, NAME } from 'zss/words/types'
 
 import { ooptuzz } from './ooptuzz'
-import { zztcolorbyte } from './zztcolor'
+import { zztcolorbyte, zztdoorcafecolortokeyslot } from './zztcolor'
 import { ZZT_BOARD_TITLE_FIELD_LEN, zztencodeworld } from './zztencode'
 import type { ZZT_BOARD, ZZT_ELEMENT, ZZT_STAT } from './zztformattypes'
 
@@ -227,6 +227,18 @@ function kindtozzt(
   })
 
   if (memoryboardelementisobject(el)) {
+    if (kind === 'door') {
+      return {
+        ok: true,
+        tile: {
+          type: T_DOOR,
+          color: zztcolorbyte(
+            COLOR.WHITE,
+            zztdoorcafecolortokeyslot(el.color ?? 0),
+          ),
+        },
+      }
+    }
     const st = basestat()
     applystatunder(st, board, x, y, entries)
     st.p1 = el.char ?? st.p1
@@ -263,14 +275,17 @@ function kindtozzt(
       return { ok: true, tile: { type: T_GEM, color: z() } }
     case 'key':
       return { ok: true, tile: { type: T_KEY, color: z() } }
-    case 'door': {
-      const origFg = bg & 15
-      const origBg = ((fg & 15) + 16 - 8) % 16
+    case 'door':
       return {
         ok: true,
-        tile: { type: T_DOOR, color: zztcolorbyte(origFg, origBg) },
+        tile: {
+          type: T_DOOR,
+          color: zztcolorbyte(
+            COLOR.WHITE,
+            zztdoorcafecolortokeyslot(el.color ?? 0),
+          ),
+        },
       }
-    }
     case 'scroll':
       return {
         ok: true,

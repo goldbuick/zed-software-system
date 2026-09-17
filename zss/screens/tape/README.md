@@ -27,7 +27,7 @@ Each firmware command must land in exactly one of these states:
 
 1. **Keyword / lists / editor meta** — `COMMAND_ARG_AUTOCOMPLETE` when there is a closed vocab (`byposition` / `whenfirst`) or gadget pool (`lists` / `editor`)
 2. **ARG_TYPE covered** — signature already drives colors / dirs / kinds via `resolveargitems` (no extra argmeta required)
-3. **Explicitly free-form / no-arg** — no keyword popup expected (`#play` notation, `#toast` text, `#idle`, pure numbers, …). Do not invent fake keyword lists for open strings.
+3. **Explicitly free-form / no-arg** — no keyword popup expected (`#play` notation, `#idle`, pure numbers, …). Do not invent fake keyword lists for open strings.
 
 Detail text prefers **many** keyword ROMs under `editor/commandargmeta/` and **few** selective command ROMs under `editor/commands/` (not one Markdown file per command). Editor ROM is client-bundled (Vite); ZNS `ops:zns:docs:publish` only covers `refscroll`, not autocomplete hints.
 

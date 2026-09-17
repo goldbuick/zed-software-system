@@ -1,8 +1,6 @@
 @door
 @isitem
 @char 10
-@displaycolor white
-#set displaybg color % 8
 #end
 :touch
 #if "key$color" do
@@ -14,3 +12,6 @@
  The $color door is locked!
  #bgplay t--gc
 #done
+:drawdisplay
+#set displaycolor white
+#set displaybg color % 8

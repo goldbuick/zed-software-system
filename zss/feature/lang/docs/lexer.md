@@ -94,7 +94,7 @@ title: lexer.ts
 | `command_if`, `command_do`, `command_done` | If/block |
 | `command_while`, `command_repeat`, `command_foreach` | Loops |
 | `command_waitfor`, `command_break`, `command_continue` | Control |
-| `command_play`, `command_toast`, `command_ticker` | Media |
+| `command_play` | Media |
 
 ## Internal Helpers
 

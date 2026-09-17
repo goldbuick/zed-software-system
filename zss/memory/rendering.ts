@@ -28,10 +28,7 @@ import { COLLISION, COLOR, DIR, NAME, PT } from 'zss/words/types'
 import { READ_LAYER, memoryreadelement } from './boardaccess'
 import { memorycornerexitboardids } from './boardcornerexits'
 import { memorydepth2exitboardids } from './boarddepth2exits'
-import {
-  memoryboardlightingapplyobject,
-  memoryboardlightingmarkplayer,
-} from './boardlighting'
+import { memoryboardlightingapplyobject } from './boardlighting'
 import { memoryensureboardready } from './boardlookup'
 import {
   memoryreadboardbyaddress,
@@ -618,18 +615,14 @@ export function memoryconverttogadgetlayers(
     objects.sprites.push(sprite)
 
     // write lighting if needed
-    if (isdark) {
-      if (display.light > 0) {
-        memoryboardlightingapplyobject(
-          board,
-          lighting.alphas,
-          object,
-          sprite,
-          display.light,
-        )
-      } else if (ispid(id)) {
-        memoryboardlightingmarkplayer(board, lighting.alphas, sprite)
-      }
+    if (isdark && display.light > 0) {
+      memoryboardlightingapplyobject(
+        board,
+        lighting.alphas,
+        object,
+        sprite,
+        display.light,
+      )
     }
   }
 

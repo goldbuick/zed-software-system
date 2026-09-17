@@ -3,7 +3,7 @@
 Committed samples for the standalone `zss/feature/zztoop` parser/compiler, which
 targets **vanilla ZZT 3.2** OOP as defined by [RoZZT `OOP.PAS`](https://github.com/asiekierka/reconstruction-of-zzt/blob/master/SRC/OOP.PAS)
 and [`LANGREF.md`](../zzt-ref/LANGREF.md). No ZSS extensions (`#do`/`#while`,
-arithmetic expressions, `#toast`) are accepted here — those live in
+arithmetic expressions, `$toast`/`$ticker` text) are accepted here — those live in
 [`zss/feature/lang`](../../../../zss/feature/lang).
 
 | Path | Role |
