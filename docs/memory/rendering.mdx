@@ -13,7 +13,7 @@ title: rendering.ts
 - `zss/words/*` — types (COLOR, DIR, NAME, PT, COLLISION)
 - `./boardaccess` — memoryreadelement
 - `./boardcornerexits` — memorycornerexitboardids
-- `./boardlighting` — memoryboardlightingapplyobject, memoryboardlightingmarkplayer
+- `./boardlighting` — memoryboardlightingapplyobject
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementkind, memoryreadelementstat, memoryreadoverboard, memoryreadunderboard
 - `./boardvisuals` — memoryupdateboardvisuals
 - `./bookoperations` — memoryreadelementdisplay, memoryreadflags

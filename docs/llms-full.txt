@@ -1869,7 +1869,7 @@ Source: https://zed.cafe/docs/features/element-scripting
 | #lock / #unlock | Creator | Block or allow external messages during execution. | `#lock` |
 | #cycle | Creator | Set element tick rate divisor 1–255. | `#cycle` |
 | #char / #color | Creator | Set display char/color on self or at direction. | `#char` |
-| #toast / #ticker | Creator | UI toast notification or floating ticker text (no terminal line). | `#toast` |
+| `$toast` / `$ticker` | Creator | UI toast notification or floating ticker text (no terminal line). | `$toast` |
 
 ---
 
@@ -2357,7 +2357,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `char` | Character (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `color` | Color (self or at direction); cross-board dirs resolve against live MEMORY on the sim |
 | `go` | Element in direction |
-| `walk` | Cause element to move in direction each tick |
+| `walk` | Cause element to move in direction each tick, or capture deltas into names |
 | `idle` | Execution until next tick |
 | `end` | Program (optionally set 'arg' variable) |
 | `lock` | Against external messages |
@@ -2371,8 +2371,6 @@ All firmware commands and their descriptions. Commands are available depending o
 | `array` | Array variable |
 | `read` | Property from object into variable |
 | `pset` | Attr on dir (Weave-like; `step`/`shoot` set axes; `light <n> [dir]` sets radius/cone) |
-| `toast` | Toast notification |
-| `ticker` | Element ticker text |
 
 ---
 
@@ -2513,7 +2511,7 @@ Source: https://zed.cafe/docs/firmware/element
 
 ## Dependencies
 
-- `zss/device/api` — apitoast, registerstickyuser, registerstickyvoice, vmlogout
+- `zss/device/api` — registerstickyuser, registerstickyvoice, vmlogout
 - `zss/gadget/data/types` — INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT
 - `zss/memory/*` — element/board operations, movement, spatial queries
 - `zss/words/*` — category, collision, color, dir, kind, reader
@@ -2536,7 +2534,7 @@ Provides stat/variable access for the chip:
 Writes stats:
 
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
-- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only)
+- **Element** — color, bg, displaychar/color/bg, displayname, standard stats (`displayname` affects the name shown before `$ticker` text in the gadget ticker strip only). `:drawdisplay` must SET `displaychar` / `displaycolor` / `displaybg` by name; `char` / `color` / `bg` always write instance stats.
 - **senderid** — Writes to element.sender
 - **Fallback** — Player flags; `user` and `voice` persist on the local tab via `register:stickyuser` / `register:stickyvoice`
 
@@ -2561,7 +2559,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `go` | `dir` | Move element to dest; yield; return 0 if moved, 1 if blocked |
-| `walk` | `dir` | Set stepx/stepy for walking |
+| `walk` | `dir` `[name1 name2]` | Set stepx/stepy, or capture deltas into names |
 | `idle` | — | Yield |
 
 ### Transformation
@@ -2599,13 +2597,6 @@ Writes stats:
 |---------|------|-------------|
 | `array` | `name` val… | Set stat to array of values |
 | `read` | `from` `prop` `name` | Read from[prop] into stat |
-
-### UI
-
-| Command | Args | Description |
-|---------|------|-------------|
-| `toast` | text… | Show toast |
-| `ticker` | text… | Set floating ticker text (no chat/tape) |
 
 ## Input Handling
 
@@ -4549,7 +4540,7 @@ Source: https://zed.cafe/docs/lang/lexer
 | `command_if`, `command_do`, `command_done` | If/block |
 | `command_while`, `command_repeat`, `command_foreach` | Loops |
 | `command_waitfor`, `command_break`, `command_continue` | Control |
-| `command_play`, `command_toast`, `command_ticker` | Media |
+| `command_play` | Media |
 
 ## Internal Helpers
 
@@ -5616,7 +5607,7 @@ Source: https://zed.cafe/docs/memory/board-lighting
 Runtime lighting for `board.isdark` lives outside [`rendering.ts`](../rendering.ts):
 
 - [`lightinggeometry.ts`](../lightinggeometry.ts) — angular frusta (`lightingmixmaxrange`), tile Y scale, full-shadow sector merge (`memorylightingaddrangetoblocked`).
-- [`boardlighting.ts`](../boardlighting.ts) — Chebyshev ring pass, occlusion collection, shading (`memoryboardlightingapplyobject`, `memoryboardlightingmarkplayer`). Occlusion strengths along a ray **add** (see `LIGHTING_OBJECT_OCCLUSION` / `LIGHTING_FULL_SHADOW_OCCLUSION`); combined occlusion plus distance falloff is **capped at 1** per shading step.
+- [`boardlighting.ts`](../boardlighting.ts) — Chebyshev ring pass, occlusion collection, shading (`memoryboardlightingapplyobject`). Dark-cell visibility is opt-in via `@light` / `lightsteps`; there is no pid special-case glow. Occlusion strengths along a ray **add** (see `LIGHTING_OBJECT_OCCLUSION` / `LIGHTING_FULL_SHADOW_OCCLUSION`); combined occlusion plus distance falloff is **capped at 1** per shading step.
 
 Shading rays use **cell center to cell center** in aspect-corrected tile space (`LIGHTING_RAY_TILE_YSCALE`); `lightingmixmaxrange` uses the source cell **center** and the destination tile’s **full pixel rectangle** for angular sectors.
 
@@ -5625,7 +5616,7 @@ Shading rays use **cell center to cell center** in aspect-corrected tile space (
 ## Tests
 
 - [`__tests__/lightinggeometry.test.ts`](../../../ops/tests/unit/memory/lightinggeometry.test.ts) — geometry merge + `lightingmixmaxrange`.
-- [`__tests__/boardlighting.test.ts`](../../../ops/tests/unit/memory/boardlighting.test.ts) — `memoryboardlightingapplyobject` / `memoryboardlightingmarkplayer` with Jest mocks for the heavy memory graph (see file header).
+- [`__tests__/boardlighting.test.ts`](../../../ops/tests/unit/memory/boardlighting.test.ts) — `memoryboardlightingapplyobject` with Jest mocks for the heavy memory graph (see file header).
 
 Dark-board **rendering** is still easiest to validate visually in the gadget.
 
@@ -6211,7 +6202,7 @@ Source: https://zed.cafe/docs/memory/rendering
 - `zss/words/*` — types (COLOR, DIR, NAME, PT, COLLISION)
 - `./boardaccess` — memoryreadelement
 - `./boardcornerexits` — memorycornerexitboardids
-- `./boardlighting` — memoryboardlightingapplyobject, memoryboardlightingmarkplayer
+- `./boardlighting` — memoryboardlightingapplyobject
 - `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementkind, memoryreadelementstat, memoryreadoverboard, memoryreadunderboard
 - `./boardvisuals` — memoryupdateboardvisuals
 - `./bookoperations` — memoryreadelementdisplay, memoryreadflags
@@ -9727,7 +9718,8 @@ Source: https://zed.cafe/docs/words/expr
 - `zss/mapping/types` — MAYBE, isarray, isnumber, ispresent, isstring
 - `zss/memory` — memoryreadboardbyevaldir
 - `zss/memory/boardmovement` — memorycheckmoveboardobject
-- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain, memorylistelement (color / group)
+- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain, memorylistelement (color / group / kind)
+- `zss/words/kind` — readkind (any/countof prefer registered kind names before group)
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
 - `zss/memory/spatialqueries` — memoryfindplayerforelement
@@ -9767,10 +9759,12 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 
 | Expr | Description |
 |------|-------------|
-| `any` kind/color | Elements matching kind or color on board |
-| `any` dir kind/color | Element at dir dest matching kind/color |
-| `countof` kind/color | Count of matching elements |
-| `countof` dir kind/color | 1/0 if element at dir matches |
+| `any` kind/color/group | Registered kind name first (codepage / `empty`), else group or color |
+| `any` dir kind/color/group | Element at dir dest; kind matches `element.kind`, not `@isbreakable` |
+| `countof` kind/color/group | Count of matching elements |
+| `countof` dir kind/color/group | 1/0 if element at dir matches |
+
+When `breakable` is a loaded terrain kind, `any dir breakable` is ZZT `E_BREAKABLE` (kind name). A gem with `@isbreakable` does not match. If that kind is not loaded, `readkind` fails and group/stat matching still applies.
 
 ### Numeric
 

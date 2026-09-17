@@ -11,7 +11,8 @@ title: expr.ts
 - `zss/mapping/types` — MAYBE, isarray, isnumber, ispresent, isstring
 - `zss/memory` — memoryreadboardbyevaldir
 - `zss/memory/boardmovement` — memorycheckmoveboardobject
-- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain, memorylistelement (color / group)
+- `zss/memory/boardaccess` — memoryreadelement, memoryreadterrain, memorylistelement (color / group / kind)
+- `zss/words/kind` — readkind (any/countof prefer registered kind names before group)
 - `zss/memory/bookoperations` — memoryreadelementdisplay
 - `zss/memory/runtime` — memoryruncodepage
 - `zss/memory/spatialqueries` — memoryfindplayerforelement
@@ -51,10 +52,12 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 
 | Expr | Description |
 |------|-------------|
-| `any` kind/color | Elements matching kind or color on board |
-| `any` dir kind/color | Element at dir dest matching kind/color |
-| `countof` kind/color | Count of matching elements |
-| `countof` dir kind/color | 1/0 if element at dir matches |
+| `any` kind/color/group | Registered kind name first (codepage / `empty`), else group or color |
+| `any` dir kind/color/group | Element at dir dest; kind matches `element.kind`, not `@isbreakable` |
+| `countof` kind/color/group | Count of matching elements |
+| `countof` dir kind/color/group | 1/0 if element at dir matches |
+
+When `breakable` is a loaded terrain kind, `any dir breakable` is ZZT `E_BREAKABLE` (kind name). A gem with `@isbreakable` does not match. If that kind is not loaded, `readkind` fails and group/stat matching still applies.
 
 ### Numeric
 

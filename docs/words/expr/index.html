@@ -6,7 +6,8 @@
 <li><code>zss/mapping/types</code> — MAYBE, isarray, isnumber, ispresent, isstring</li>
 <li><code>zss/memory</code> — memoryreadboardbyevaldir</li>
 <li><code>zss/memory/boardmovement</code> — memorycheckmoveboardobject</li>
-<li><code>zss/memory/boardaccess</code> — memoryreadelement, memoryreadterrain, memorylistelement (color / group)</li>
+<li><code>zss/memory/boardaccess</code> — memoryreadelement, memoryreadterrain, memorylistelement (color / group / kind)</li>
+<li><code>zss/words/kind</code> — readkind (any/countof prefer registered kind names before group)</li>
 <li><code>zss/memory/bookoperations</code> — memoryreadelementdisplay</li>
 <li><code>zss/memory/runtime</code> — memoryruncodepage</li>
 <li><code>zss/memory/spatialqueries</code> — memoryfindplayerforelement</li>
@@ -76,23 +77,24 @@
 </thead>
 <tbody>
 <tr>
-<td><code>any</code> kind/color</td>
-<td>Elements matching kind or color on board</td>
+<td><code>any</code> kind/color/group</td>
+<td>Registered kind name first (codepage / <code>empty</code>), else group or color</td>
 </tr>
 <tr>
-<td><code>any</code> dir kind/color</td>
-<td>Element at dir dest matching kind/color</td>
+<td><code>any</code> dir kind/color/group</td>
+<td>Element at dir dest; kind matches <code>element.kind</code>, not <code>@isbreakable</code></td>
 </tr>
 <tr>
-<td><code>countof</code> kind/color</td>
+<td><code>countof</code> kind/color/group</td>
 <td>Count of matching elements</td>
 </tr>
 <tr>
-<td><code>countof</code> dir kind/color</td>
+<td><code>countof</code> dir kind/color/group</td>
 <td>1/0 if element at dir matches</td>
 </tr>
 </tbody>
 </table></div>
+<p>When <code>breakable</code> is a loaded terrain kind, <code>any dir breakable</code> is ZZT <code>E_BREAKABLE</code> (kind name). A gem with <code>@isbreakable</code> does not match. If that kind is not loaded, <code>readkind</code> fails and group/stat matching still applies.</p>
 <h3 id="numeric"><a class="blume-heading-anchor" href="#numeric">Numeric</a></h3>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>

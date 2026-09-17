@@ -6,7 +6,7 @@ title: element.ts
 
 ## Dependencies
 
-- `zss/device/api` — apitoast, registerstickyuser, registerstickyvoice, vmlogout
+- `zss/device/api` — registerstickyuser, registerstickyvoice, vmlogout
 - `zss/gadget/data/types` — INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT
 - `zss/memory/*` — element/board operations, movement, spatial queries
 - `zss/words/*` — category, collision, color, dir, kind, reader
@@ -29,7 +29,7 @@ Provides stat/variable access for the chip:
 Writes stats:
 
 - **Board** — isdark, startx/y, over, under, palette, charset, exits, timelimit, etc.
-- **Element** — color, bg, displaycolor/bg, displayname, standard stats (`displayname` affects the name shown before `#ticker` text in the gadget ticker strip only)
+- **Element** — color, bg, displaychar/color/bg, displayname, standard stats (`displayname` affects the name shown before `$ticker` text in the gadget ticker strip only). `:drawdisplay` must SET `displaychar` / `displaycolor` / `displaybg` by name; `char` / `color` / `bg` always write instance stats.
 - **senderid** — Writes to element.sender
 - **Fallback** — Player flags; `user` and `voice` persist on the local tab via `register:stickyuser` / `register:stickyvoice`
 
@@ -54,7 +54,7 @@ Writes stats:
 | Command | Args | Description |
 |---------|------|-------------|
 | `go` | `dir` | Move element to dest; yield; return 0 if moved, 1 if blocked |
-| `walk` | `dir` | Set stepx/stepy for walking |
+| `walk` | `dir` `[name1 name2]` | Set stepx/stepy, or capture deltas into names |
 | `idle` | — | Yield |
 
 ### Transformation
@@ -92,13 +92,6 @@ Writes stats:
 |---------|------|-------------|
 | `array` | `name` val… | Set stat to array of values |
 | `read` | `from` `prop` `name` | Read from[prop] into stat |
-
-### UI
-
-| Command | Args | Description |
-|---------|------|-------------|
-| `toast` | text… | Show toast |
-| `ticker` | text… | Set floating ticker text (no chat/tape) |
 
 ## Input Handling
 
