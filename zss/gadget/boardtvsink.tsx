@@ -51,7 +51,7 @@ function BoardTvPlane({
     >
       <mesh scale={[fit.width, fit.height, 1]}>
         <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial map={texture} side={DoubleSide} toneMapped={false} />
+        <meshBasicMaterial map={texture} side={DoubleSide} />
       </mesh>
     </group>
   )
@@ -102,7 +102,6 @@ function BoardTvFace({
 /**
  * Board-space MediaStream sink (#media). Must live inside liveboard so
  * syncliveboardworldoffset keeps it on the current board grid slot.
- * Slide intro is off while the invisible-TV bug is open.
  */
 export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
@@ -152,9 +151,7 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const texturegen = videosize.w > 0 && videosize.h > 0 ? 1 : 0
   const videotexture = useMemo(
     () =>
-      video && texturegen > 0
-        ? updateTexture(new VideoTexture(video))
-        : null,
+      video && texturegen > 0 ? updateTexture(new VideoTexture(video)) : null,
     [video, texturegen],
   )
   useEffect(() => {

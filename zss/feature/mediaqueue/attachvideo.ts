@@ -12,10 +12,7 @@ import {
   BOARD_TV_COMPOSITOR_WIDTH,
   MEDIAQUEUE_PEER_LABEL,
 } from 'zss/feature/mediaqueue/constants'
-import {
-  mediaqueuesetboardtvframesready,
-  mediaqueuesetboardtvhasvideo,
-} from 'zss/feature/mediaqueue/listenstate'
+import { mediaqueuesetboardtvhasvideo } from 'zss/feature/mediaqueue/listenstate'
 import { mediaqueueregistervideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import { useMedia } from 'zss/gadget/media'
 import { ispresent } from 'zss/mapping/types'
@@ -78,7 +75,6 @@ function clearremotevideo(peerkey: string) {
   clearstreamtracklistener()
   useMedia.getState().setscreen(peerkey, undefined)
   mediaqueuesetboardtvhasvideo(false)
-  mediaqueuesetboardtvframesready(false)
 }
 
 function attachremotestream(peerkey: string, stream: MediaStream) {

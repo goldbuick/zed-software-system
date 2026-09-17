@@ -5,12 +5,10 @@ import {
   mediaqueuehelperconnected,
   mediaqueueisboundboard,
   mediaqueueislistening,
-  mediaqueuereadboardtvframesready,
   mediaqueuereadboardsforhelper,
   mediaqueuereadboundboardids,
   mediaqueuereadhelperforboard,
   mediaqueuesetboardhelper,
-  mediaqueuesetboardtvframesready,
   mediaqueuesethelperconnected,
 } from 'zss/feature/mediaqueue/listenstate'
 
@@ -69,15 +67,5 @@ describe('mediaqueue listenstate board map', () => {
     expect(mediaqueuehelperconnected()).toBe(true)
     mediaqueuesethelperconnected('helper-1', false)
     expect(mediaqueuehelperconnected()).toBe(false)
-  })
-
-  it('flips board TV frames-ready only on change', () => {
-    expect(mediaqueuereadboardtvframesready()).toBe(false)
-    mediaqueuesetboardtvframesready(true)
-    expect(mediaqueuereadboardtvframesready()).toBe(true)
-    mediaqueuesetboardtvframesready(true)
-    expect(mediaqueuereadboardtvframesready()).toBe(true)
-    mediaqueuesetboardtvframesready(false)
-    expect(mediaqueuereadboardtvframesready()).toBe(false)
   })
 })
