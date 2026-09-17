@@ -120,9 +120,7 @@ function readdirelementmatch(
     return undefined
   }
   if (match.type === 'kind') {
-    return elementmatcheskind(maybelement, match.kind)
-      ? maybelement
-      : undefined
+    return elementmatcheskind(maybelement, match.kind) ? maybelement : undefined
   }
   if (match.type === 'color') {
     const display = memoryreadelementdisplay(maybelement)
@@ -363,11 +361,7 @@ export function readexpr(index: number): [any, number] {
           return [[], iii]
         }
         return [
-          listanycountmatch(
-            READ_CONTEXT.board,
-            match,
-            READ_CONTEXT.elementid,
-          ),
+          listanycountmatch(READ_CONTEXT.board, match, READ_CONTEXT.elementid),
           iii,
         ]
       }
@@ -416,11 +410,8 @@ export function readexpr(index: number): [any, number] {
           return [0, iii]
         }
         return [
-          listanycountmatch(
-            READ_CONTEXT.board,
-            match,
-            READ_CONTEXT.elementid,
-          ).length,
+          listanycountmatch(READ_CONTEXT.board, match, READ_CONTEXT.elementid)
+            .length,
           iii,
         ]
       }
