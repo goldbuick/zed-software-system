@@ -7,7 +7,11 @@ import {
   mediaqueueclearremotevideo,
   mediaqueuewireaudiogestureretry,
 } from 'zss/feature/mediaqueue/boardtvaudio'
-import { MEDIAQUEUE_PEER_LABEL } from 'zss/feature/mediaqueue/constants'
+import {
+  BOARD_TV_COMPOSITOR_HEIGHT,
+  BOARD_TV_COMPOSITOR_WIDTH,
+  MEDIAQUEUE_PEER_LABEL,
+} from 'zss/feature/mediaqueue/constants'
 import { mediaqueuesetboardtvhasvideo } from 'zss/feature/mediaqueue/listenstate'
 import { mediaqueueregistervideosink } from 'zss/feature/mediaqueue/sinkregistry'
 import { useMedia } from 'zss/gadget/media'
@@ -106,7 +110,16 @@ function attachremotestream(peerkey: string, stream: MediaStream) {
   video.playsInline = true
   video.muted = false
   video.setAttribute('playsinline', '')
-  video.style.display = 'none'
+  // Chromium skips decode for display:none; park off-screen at compositor
+  // size so videoWidth lands and VideoTexture has frames.
+  video.style.position = 'fixed'
+  video.style.left = '-10000px'
+  video.style.top = '0'
+  video.style.width = `${BOARD_TV_COMPOSITOR_WIDTH}px`
+  video.style.height = `${BOARD_TV_COMPOSITOR_HEIGHT}px`
+  video.style.opacity = '1'
+  video.style.pointerEvents = 'none'
+  video.style.zIndex = '-1'
   document.body.appendChild(video)
   video.srcObject = stream
   remotevideo = video

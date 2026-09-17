@@ -13,7 +13,6 @@ import {
   boardtvlayout,
 } from 'zss/feature/mediaqueue/constants'
 import { boardtvvideofit, boardtvvideorect } from 'zss/gadget/boardtvgrid'
-import { BoardTvSlide } from 'zss/gadget/boardtvslide'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { updateTexture } from 'zss/gadget/display/textures'
 import { useMedia } from 'zss/gadget/media'
@@ -72,7 +71,7 @@ function BoardTvFace({
   depth,
   tvdrawheight,
 }: {
-  texture: VideoTexture | null
+  texture: VideoTexture
   fit: BOARD_TV_VIDEO_FIT
   layout: BOARD_TV_LAYOUT
   upright: boolean
@@ -88,14 +87,12 @@ function BoardTvFace({
         rotation={upright ? BOARD_TV_UPRIGHT_ROTATION : BOARD_TV_FLAT_ROTATION}
       >
         <group position={[0, lifty, depth]}>
-          {texture ? (
-            <BoardTvPlane
-              texture={texture}
-              fit={fit}
-              z={layout.videoz}
-              flipvertical={layout.videoflipvertical}
-            />
-          ) : null}
+          <BoardTvPlane
+            texture={texture}
+            fit={fit}
+            z={layout.videoz}
+            flipvertical={layout.videoflipvertical}
+          />
         </group>
       </group>
     </group>
@@ -103,10 +100,8 @@ function BoardTvFace({
 }
 
 /**
- * Board-space MediaStream sink (#media). Parent should be the focus/corner
- * frame (sibling of liveboard), not liveboard itself -- edge-pan offsets the
- * live board. Slide-in on mount; hide is instant unmount. Visuals come from
- * the helper compositor stream (no cafe tile chrome).
+ * Board-space MediaStream sink (#media). Must live inside liveboard so
+ * syncliveboardworldoffset keeps it on the current board grid slot.
  */
 export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
@@ -122,7 +117,10 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     Object.values(screen).find((entry) => entry instanceof HTMLVideoElement) ??
     null
 
-  const [videosize, setvideosize] = useState({ w: 0, h: 0 })
+  const [videosize, setvideosize] = useState({
+    w: video?.videoWidth ?? 0,
+    h: video?.videoHeight ?? 0,
+  })
 
   useEffect(() => {
     if (!video) {
@@ -137,18 +135,24 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
     }
     syncsize()
     video.addEventListener('loadedmetadata', syncsize)
+    video.addEventListener('loadeddata', syncsize)
+    video.addEventListener('playing', syncsize)
     video.addEventListener('resize', syncsize)
     return () => {
       video.removeEventListener('loadedmetadata', syncsize)
+      video.removeEventListener('loadeddata', syncsize)
+      video.removeEventListener('playing', syncsize)
       video.removeEventListener('resize', syncsize)
     }
   }, [video])
 
-  // One texture shared by both faces; a second VideoTexture would upload the
-  // same frame twice each tick.
+  // Create only after frames exist. A VideoTexture built at videoWidth 0 stays
+  // dead in Chrome (dimensions locked after first GPU upload).
+  const texturegen = videosize.w > 0 && videosize.h > 0 ? 1 : 0
   const videotexture = useMemo(
-    () => (video ? updateTexture(new VideoTexture(video)) : null),
-    [video],
+    () =>
+      video && texturegen > 0 ? updateTexture(new VideoTexture(video)) : null,
+    [video, texturegen],
   )
   useEffect(() => {
     return () => {
@@ -164,20 +168,18 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const videorect = boardtvvideorect(drawwidth, drawheight, tvdrawheight)
 
   useFrame(() => {
-    if (!wantshow) {
-      return
-    }
-    if (videotexture) {
-      videotexture.needsUpdate = true
-    }
     const w = video?.videoWidth ?? 0
     const h = video?.videoHeight ?? 0
     if (w !== videosize.w || h !== videosize.h) {
       setvideosize({ w, h })
     }
+    if (!wantshow || !videotexture) {
+      return
+    }
+    videotexture.needsUpdate = true
   })
 
-  if (!wantshow) {
+  if (!wantshow || !videotexture) {
     return null
   }
 
@@ -185,36 +187,30 @@ export function BoardTvSink({ graphics }: BoardTvSinkProps) {
   const centery = BOARD_HEIGHT * drawheight * 0.5
   const z = boardtvlayerz(graphics, drawheight)
   const fit = boardtvvideofit(videosize.w, videosize.h, videorect)
-  // Each face pushes out along its own normal, so the pair reads as a slab
-  // instead of two coplanar surfaces fighting for depth.
   const depth = layout.backface ? layout.videoz : 0
-  // Rise from below the mount (negative local Y).
-  const edgeoff = -tvdrawheight
 
   return (
     <group position={[centerx, centery, z]}>
-      <BoardTvSlide edgeoff={edgeoff}>
+      <BoardTvFace
+        texture={videotexture}
+        fit={fit}
+        layout={layout}
+        upright={upright}
+        spin={0}
+        depth={depth}
+        tvdrawheight={tvdrawheight}
+      />
+      {layout.backface ? (
         <BoardTvFace
           texture={videotexture}
           fit={fit}
           layout={layout}
           upright={upright}
-          spin={0}
+          spin={Math.PI}
           depth={depth}
           tvdrawheight={tvdrawheight}
         />
-        {layout.backface ? (
-          <BoardTvFace
-            texture={videotexture}
-            fit={fit}
-            layout={layout}
-            upright={upright}
-            spin={Math.PI}
-            depth={depth}
-            tvdrawheight={tvdrawheight}
-          />
-        ) : null}
-      </BoardTvSlide>
+      ) : null}
     </group>
   )
 }
