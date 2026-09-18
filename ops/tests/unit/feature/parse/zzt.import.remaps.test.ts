@@ -113,6 +113,8 @@ describe('zzt import remaps + kind headers', () => {
     expect(shark).toMatch(/#walk seek p2 p3/)
     expect(shark).toMatch(/#send by p2 p3 shot/)
     expect(shark).not.toMatch(/\?seek/)
+    // ZZT sharks are not destructible; bullets must not kill them
+    expect(shark).not.toMatch(/:shot/)
   })
 
   it('ruffian dest-checks player before walk step', () => {
