@@ -2,7 +2,6 @@ import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { dirfrompts, ptapplydir } from 'zss/words/dir'
-import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 import {
@@ -11,16 +10,13 @@ import {
   memoryreadelement,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
-import {
-  memorydeleteboardobject,
-  memorysafedeleteelement,
-} from './boardlifecycle'
+import { memorydeleteboardobject } from './boardlifecycle'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import {
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
 } from './boardtransitions'
-import { memorybulletcollisionlabel, memorysendtoelement } from './gamesend'
+import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -220,32 +216,19 @@ export function memorymoveboardobject(
   return undefined
 }
 
-function memorysendcontact(mover: BOARD_ELEMENT, other: BOARD_ELEMENT) {
-  // Player movers use touch (gamesend remaps same-party to partytouch).
-  // Non-player object movers use literal partytouch.
-  const label = ispid(mover.id) ? 'touch' : 'partytouch'
-  memorysendtoelement(other, mover, label)
-  memorysendtoelement(mover, other, label)
-}
-
 export function memorymoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   element: MAYBE<BOARD_ELEMENT>,
   dest: PT,
   didpush: Record<string, boolean> = {},
-  movedchain?: BOARD_ELEMENT[],
 ) {
   if (!ispresent(element?.id)) {
     return false
   }
 
-  const isroot = movedchain === undefined
-  const chain = movedchain ?? []
-  let contacted = false
-  let firstcontactid = ''
-
   let blocked = memorymoveboardobject(board, element, dest)
+  const elementtouched = blocked
   const elementcollision = memoryreadelementstat(element, 'collision')
   const elementisplayer = ispid(element.id)
   const elementisbullet = elementcollision === COLLISION.ISBULLET
@@ -256,16 +239,6 @@ export function memorymoveobject(
     ispresent(blocked) &&
     memoryboardelementisobject(blocked)
   ) {
-    const blockedisbullet =
-      memoryreadelementstat(blocked, 'collision') === COLLISION.ISBULLET
-    // Intent to enter an object cell counts as contact whether push works.
-    // Bullets stay on the shot path in the still-blocked branch.
-    if (!blockedisbullet) {
-      memorysendcontact(element, blocked)
-      contacted = true
-      firstcontactid = blocked.id ?? ''
-    }
-
     // check terrain __under__ blocked
     const mayberterrain = memoryreadelement(
       board,
@@ -274,6 +247,8 @@ export function memorymoveobject(
     )
     const terraincollision = memoryreadelementstat(mayberterrain, 'collision')
     if (!memorycheckcollision(elementcollision, terraincollision)) {
+      const elementisplayer = ispid(element?.id)
+
       // is blocked pushable ?
       const isitem = !!memoryreadelementstat(blocked, 'item')
       const ispushable = memorycheckelementpushable(element, blocked)
@@ -281,6 +256,7 @@ export function memorymoveobject(
       // player cannot push items
       const blockedid = blocked.id ?? ''
       if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
+        // first lets push it !
         didpush[blockedid] = true
         const bumpdir = dirfrompts(
           { x: element.x ?? 0, y: element.y ?? 0 },
@@ -290,103 +266,39 @@ export function memorymoveobject(
           { x: blocked.x ?? 0, y: blocked.y ?? 0 },
           bumpdir,
         )
-        if (memorymoveobject(book, board, blocked, bump, didpush, chain)) {
-          chain.push(blocked)
-        }
-      }
+        // do the push !
+        memorymoveobject(book, board, blocked, bump)
 
-      // update blocked by element
-      blocked = memorymoveboardobject(board, element, dest)
+        // update blocked by element
+        blocked = memorymoveboardobject(board, element, dest)
+      }
     }
   }
 
-  if (ispresent(blocked)) {
-    const blockedbyplayer = ispid(blocked.id)
-    const blockedisbullet =
-      memoryreadelementstat(blocked, 'collision') === COLLISION.ISBULLET
-    const blockedisedge = blocked.kind === 'edge'
+  // handle touch
+  if (ispresent(elementtouched)) {
+    const elementtouchedisedge = elementtouched.kind === 'edge'
+    const elementtouchedisplayer = ispid(elementtouched?.id ?? '')
     if (elementisplayer) {
-      if (blockedisedge) {
+      if (elementtouchedisedge) {
         memoryplayerblockedbyedge(board, element, dest)
-      } else if (blockedisbullet) {
-        if (board?.restartonzap) {
-          memoryplayerwaszapped(book, board, element, element.id ?? '')
-        }
-        memorysendtoelement(blocked, element, 'shot')
-      } else if (!contacted) {
-        memorysendcontact(element, blocked)
       }
+      // we now send our message to the other element
+      memorysendtoelement(element, elementtouched, 'touch')
     } else if (elementisbullet) {
-      if (!blockedisbullet) {
-        if (blockedbyplayer && board?.restartonzap) {
-          memoryplayerwaszapped(book, board, blocked, blocked.id ?? '')
-        }
-        memorysendtoelement(
-          element,
-          blocked,
-          memorybulletcollisionlabel(element, blocked),
-        )
+      if (elementtouchedisplayer && board?.restartonzap) {
+        memoryplayerwaszapped(book, board, element, element.id ?? '')
       }
-      // @isbreakable projectiles leave the cell even when the chip skips :thud
-      // #die. @notbreakable projectiles (e.g. star) stay until the chip #dies.
-      const contextstamp = READ_CONTEXT.timestamp
-      const bookstamp = book?.timestamp ?? 0
-      const deletestamp =
-        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
-      if (memoryreadelementstat(element, 'breakable')) {
-        memorysafedeleteelement(board, element, deletestamp)
-      }
-      if (blockedisbullet && ispresent(blocked.id)) {
-        const blockedobject = memoryreadelement(
-          board,
-          blocked.id,
-          READ_LAYER.OBJECT,
-        )
-        if (
-          ispresent(blockedobject) &&
-          memoryreadelementstat(blockedobject, 'breakable')
-        ) {
-          memorysafedeleteelement(board, blockedobject, deletestamp)
-        }
-      }
-    } else if (blockedisbullet) {
-      // Walker hits a bullet: same shot/partyshot policy as bullet→target.
-      memorysendtoelement(
-        blocked,
-        element,
-        memorybulletcollisionlabel(blocked, element),
-      )
-      const contextstamp = READ_CONTEXT.timestamp
-      const bookstamp = book?.timestamp ?? 0
-      const deletestamp =
-        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
-      if (memoryreadelementstat(blocked, 'breakable')) {
-        memorysafedeleteelement(board, blocked, deletestamp)
-      }
-    } else if (
-      !contacted &&
-      !blockedisedge &&
-      memoryboardelementisobject(blocked)
-    ) {
-      memorysendcontact(element, blocked)
-    }
-
-    // blocked
-    return false
-  }
-
-  // Root mover also contacts every successfully moved deeper pushee.
-  if (isroot && firstcontactid) {
-    for (let i = 0; i < chain.length; ++i) {
-      const pushee = chain[i]
-      if (pushee.id && pushee.id !== firstcontactid) {
-        memorysendcontact(element, pushee)
-      }
+      // we now send our message to the other element
+      memorysendtoelement(element, elementtouched, 'shot')
+    } else {
+      // we now send our message to the other element
+      memorysendtoelement(element, elementtouched, 'touch')
     }
   }
 
   // we are allowed to move!
-  return true
+  return ispresent(blocked) === false
 }
 
 type BOOK_RUN_CODE_TARGETS = {
