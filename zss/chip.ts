@@ -32,7 +32,7 @@ import { memorycanruncommand } from './memory/permissions'
 import { memoryreadmainbook } from './memory/session'
 import { formatprintvalue } from './words/printvalue'
 import { READ_CONTEXT, readargs } from './words/reader'
-import { MaybeFlag, tokenize } from './words/textformat'
+import { flagnamefromtoken, tokenize } from './words/textformat'
 import { ARG_TYPE, NAME, WORD, WORD_RESULT } from './words/types'
 
 /**
@@ -874,8 +874,8 @@ export function createchip(
       const result = tokenize(words.join(' '), true)
       return result.tokens
         .map((token) => {
-          if (token.tokenType === MaybeFlag) {
-            const flagname = token.image.substring(1)
+          const flagname = flagnamefromtoken(token)
+          if (ispresent(flagname)) {
             const maybevalue = chip.get(flagname)
             if (ispresent(maybevalue)) {
               return formatprintvalue(maybevalue, flagname)

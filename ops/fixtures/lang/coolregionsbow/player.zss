@@ -19,14 +19,14 @@
 #clear score
 #clear reload
 #clear energized
-#clear keyblack
-#clear keyblue
-#clear keygreen
-#clear keycyan
-#clear keyred
-#clear keypurple
-#clear keyyellow
-#clear keywhite
+#clear blackkey
+#clear bluekey
+#clear greenkey
+#clear cyankey
+#clear redkey
+#clear purplekey
+#clear yellowkey
+#clear whitekey
 :think
 ' sidebar code
 "Simple $9 $9 $9 
@@ -86,14 +86,14 @@
 " $yellow    Score:$score
 ' make keys section of sidebar
 #set keylist " $white$12 $yellow   Keys:"
-#if keyblack set keylist keylist + "$black$12"
-#if keyblue set keylist keylist + "$blue$12"
-#if keygreen set keylist keylist + "$green$12"
-#if keycyan set keylist keylist + "$cyan$12"
-#if keyred set keylist keylist + "$red$12"
-#if keypurple set keylist keylist + "$purple$12"
-#if keyyellow set keylist keylist + "$yellow$12"
-#if keywhite set keylist keylist + "$white$12"
+#if blackkey set keylist keylist + "$black$12"
+#if bluekey set keylist keylist + "$blue$12"
+#if greenkey set keylist keylist + "$green$12"
+#if cyankey set keylist keylist + "$cyan$12"
+#if redkey set keylist keylist + "$red$12"
+#if purplekey set keylist keylist + "$purple$12"
+#if yellowkey set keylist keylist + "$yellow$12"
+#if whitekey set keylist keylist + "$white$12"
 "$keylist
 ' hotkeys and input info
 "
@@ -123,6 +123,7 @@
    $ticker You don't have any ammo!
   #else do
    #shoot inputmove
+   #bgplay t+c-c-c
   #done
  #done
  #idle

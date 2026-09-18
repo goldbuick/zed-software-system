@@ -37,7 +37,7 @@
 - **stripzap(text)** - Removes $ZAP from text and trims the result
 
 ### Token Constants
-- **Whitespace**, **WhitespaceSkipped**, **Newline**, **StringLiteral**, **StringLiteralDouble**, **EscapedDollar**, **MaybeFlag**, **Center**, **Ticker**, **Toast**, **Bonk**, **MetaKey**, **NumberLiteral**, **HyperLinkText** (tokens) - Lexer token definitions
+- **Whitespace**, **WhitespaceSkipped**, **Newline**, **StringLiteral**, **StringLiteralDouble**, **EscapedDollar**, **BraceFlag**, **MaybeFlag**, **flagnamefromtoken**, **Center**, **Ticker**, **Toast**, **Bonk**, **MetaKey**, **NumberLiteral**, **HyperLinkText** (tokens / helpers) - Lexer token definitions
 - **allTokens** (const) - Array of all token definitions for lexer
 
 ### Text Writing Context

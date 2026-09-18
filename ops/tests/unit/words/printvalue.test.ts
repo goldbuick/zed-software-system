@@ -5,6 +5,7 @@ describe('formatprintvalue', () => {
   it('formats color stat numbers as lowercase names', () => {
     expect(formatprintvalue(COLOR.BLUE, 'color')).toBe('blue')
     expect(formatprintvalue(9, 'color')).toBe('blue')
+    expect(`${formatprintvalue(9, 'color')}key`).toBe('bluekey')
     expect(`key${formatprintvalue(9, 'color')}`).toBe('keyblue')
   })
 

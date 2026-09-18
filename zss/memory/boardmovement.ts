@@ -342,6 +342,10 @@ export function memorymoveobject(
       if (memoryreadelementstat(blocked, 'breakable')) {
         memorysafedeleteelement(board, blocked, deletestamp)
       }
+    } else if (!blockedisedge && memoryboardelementisobject(blocked)) {
+      // Object <-> object contact: dual partytouch (mirrors player dual touch).
+      memorysendtoelement(blocked, element, 'partytouch')
+      memorysendtoelement(element, blocked, 'partytouch')
     }
 
     // blocked

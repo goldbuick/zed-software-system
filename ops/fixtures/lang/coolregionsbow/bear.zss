@@ -35,4 +35,5 @@
 #die
 :shot
 #give score 1
+#bgplay t+c---c++++c--c
 #die

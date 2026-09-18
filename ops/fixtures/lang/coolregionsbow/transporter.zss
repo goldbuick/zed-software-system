@@ -3,15 +3,8 @@
 @char 197
 @shoot dir;Facing
 :think
-#idle
-#think
-:bump
-:touch
-#transport senderid
-#think
-:drawdisplay
 #set p2 currenttick / cycle
-#set p2 intround p2 
+#set p2 intround p2
 #if shootx not eq 0 do
  #set p1 shootx * 2 + 3
  #give p1 p2 % 4
@@ -22,7 +15,7 @@
  #if p1 is 4 set displaychar 41
  #if p1 is 5 set displaychar 62
  #if p1 is 6 set displaychar 41
- #if p1 is 7 set displaychar 179 
+ #if p1 is 7 set displaychar 179
 #else if shooty not eq 0 do
  #set p1 shooty * 2 + 3
  #give p1 p2 % 4
@@ -33,8 +26,13 @@
  #if p1 is 4 set displaychar 118
  #if p1 is 5 set displaychar 95
  #if p1 is 6 set displaychar 118
- #if p1 is 7 set displaychar 45 
+ #if p1 is 7 set displaychar 45
 #else do
  #set displaychar 197
 #done
-#end
+#idle
+#think
+:partytouch
+:touch
+#transport senderid
+#think

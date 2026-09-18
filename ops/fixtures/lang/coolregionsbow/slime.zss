@@ -1,7 +1,7 @@
 @slime
 @cycle 3
 @char 42
-@p2 range;movement speed
+@p2 range F S;Movement speed?
 #clear p1
 :think
 #if p1 below p2 do
@@ -9,12 +9,25 @@
  #idle
 #else do
  #clear p1
- #if not blocked up put up "$color" slime 
- #if not blocked down put down "$color" slime 
- #if not blocked left put left "$color" slime 
- #if not blocked right put right "$color" slime 
+ #if not blocked up do
+  #put up "$color" slime
+  #pset up p2 p2
+ #done
+ #if not blocked down do
+  #put down "$color" slime
+  #pset down p2 p2
+ #done
+ #if not blocked left do
+  #put left "$color" slime
+  #pset left p2 p2
+ #done
+ #if not blocked right do
+  #put right "$color" slime
+  #pset right p2 p2
+ #done
  #become breakable
 #done
 #think
 :touch
+#bgplay t-cd#
 #become breakable
