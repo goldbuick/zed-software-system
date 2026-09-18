@@ -228,10 +228,10 @@
       },
       {
         "id": "sid_eNpw0_AFierq",
-        "code": "@door\n@isitem\n@char 10\n#end\n:touch\n#if \"${color}key\" do\n The $color door is now open.\n #clear \"${color}key\"\n #bgplay tcgbcgb+ic\n #die\n#else do\n The $color door is locked!\n #bgplay t--gc\n#done\n:drawdisplay\n#set displaycolor white\n#set displaybg color % 8",
+        "code": "@door\n@cycle 1\n@isitem\n@char 10\n#end\n:touch\n#if \"${color}key\" do\n The $color door is now open.\n #clear \"${color}key\"\n #bgplay tcgbcgb+ic\n #die\n#else do\n The $color door is locked!\n #bgplay t--gc\n#done\n:drawdisplay\n#set displaycolor white\n#set displaybg color % 8",
         "object": {
           "id": "sid_eNpw0_AFierq",
-          "code": "@door\n@isitem\n@char 10\n#end\n:touch\n#if \"${color}key\" do\n The $color door is now open.\n #clear \"${color}key\"\n #bgplay tcgbcgb+ic\n #die\n#else do\n The $color door is locked!\n #bgplay t--gc\n#done\n:drawdisplay\n#set displaycolor white\n#set displaybg color % 8\n",
+          "code": "@door\n@cycle 1\n@isitem\n@char 10\n#end\n:touch\n#if \"${color}key\" do\n The $color door is now open.\n #clear \"${color}key\"\n #bgplay tcgbcgb+ic\n #die\n#else do\n The $color door is locked!\n #bgplay t--gc\n#done\n:drawdisplay\n#set displaycolor white\n#set displaybg color % 8\n",
           "name": "door",
           "char": 10,
           "item": 1

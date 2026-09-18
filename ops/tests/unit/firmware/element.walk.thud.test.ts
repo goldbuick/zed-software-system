@@ -77,7 +77,7 @@ describe('element everytick walk thud', () => {
     expect(bear!.y).toBe(2)
   })
 
-  it('sends thud to walker blocked by player', () => {
+  it('sends partytouch then thud when walker blocked by player', () => {
     memoryresetbooks([
       memorycreatebook([
         memorycreatecodepage('@bear\n', {}),
@@ -112,7 +112,8 @@ describe('element everytick walk thud', () => {
 
     ELEMENT_FIRMWARE.everytick({} as CHIP)
 
-    expect(labelsfor('sid_bear')).toEqual(['thud'])
-    expect(labelsfor('pid_hero')).toEqual([])
+    // move dual-emits partytouch; everytick still sends thud to the walker
+    expect(labelsfor('sid_bear')).toEqual(['partytouch', 'thud'])
+    expect(labelsfor('pid_hero')).toEqual(['partytouch'])
   })
 })

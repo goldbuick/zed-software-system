@@ -4,7 +4,6 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { flagnamefromtoken, tokenize } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-
 import { COMPARE, type CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
 export type GenContext = {

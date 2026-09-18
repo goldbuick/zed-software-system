@@ -15,6 +15,8 @@ jest.mock('zss/config', () => ({
 
 jest.mock('zss/words/textformat', () => ({
   MaybeFlag: { name: 'MaybeFlag' },
+  BraceFlag: { name: 'BraceFlag' },
+  flagnamefromtoken: () => undefined,
   tokenize: () => ({ errors: [{ message: 'mock' }], tokens: [] }),
 }))
 

@@ -35,7 +35,7 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 | `:partyshot` | No auto-delete; multiplayer friendly fire **or** enemy-source vs creature |
 | `:partytouch` | Same-party player remap **or** object↔object contact; no damage / no softdelete |
 
-Player-initiated blocked walks send `:touch` (with same-party remap). Object↔object blocks dual-emit `:partytouch` from [`boardmovement.ts`](boardmovement.ts) so pushables can wake transporters (`#transport senderid`).
+Player-initiated blocked walks send `:touch` (with same-party remap). Object↔object blocks dual-emit `:partytouch` from [`boardmovement.ts`](../boardmovement.ts) so pushables can wake transporters (`#transport senderid`).
 
 **Dual-layer directional `:shot`:** when `#send` targets a cell with label `shot`, both the object (if any) and the terrain (if any) at that PT receive `:shot`. Other labels still use a single `memoryreadelement` (object preferred, else terrain).
 
