@@ -33,7 +33,7 @@ function makechip() {
   } as unknown as CHIP
 }
 
-describe('#transport pair scan + object partytouch', () => {
+describe('#transport pair scan + object touch', () => {
   afterEach(() => {
     memoryhaltallchips()
     READ_CONTEXT.board = undefined
@@ -152,7 +152,7 @@ describe('#transport pair scan + object partytouch', () => {
     expect(entrant.y).toBe(4)
   })
 
-  it('dual-emits partytouch when object is blocked by object', () => {
+  it('one-way touch when object is blocked by object', () => {
     const { board } = setup()
     const blocker = memorycreateboardobjectfromkind(
       board,
@@ -173,19 +173,15 @@ describe('#transport pair scan + object partytouch', () => {
       y: 2,
     })
     expect(moved).toBe(false)
-    expect(mockedmemorysendtoelement).toHaveBeenCalledWith(
-      blocker,
-      mover,
-      'partytouch',
-    )
+    expect(mockedmemorysendtoelement).toHaveBeenCalledTimes(1)
     expect(mockedmemorysendtoelement).toHaveBeenCalledWith(
       mover,
       blocker,
-      'partytouch',
+      'touch',
     )
   })
 
-  it('still dual-emits touch when player is blocked by object', () => {
+  it('one-way touch when player is blocked by object', () => {
     const { board } = setup()
     const blocker = memorycreateboardobjectfromkind(
       board,
@@ -206,11 +202,7 @@ describe('#transport pair scan + object partytouch', () => {
       y: 2,
     })
     expect(moved).toBe(false)
-    expect(mockedmemorysendtoelement).toHaveBeenCalledWith(
-      blocker,
-      player,
-      'touch',
-    )
+    expect(mockedmemorysendtoelement).toHaveBeenCalledTimes(1)
     expect(mockedmemorysendtoelement).toHaveBeenCalledWith(
       player,
       blocker,

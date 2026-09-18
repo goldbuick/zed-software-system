@@ -47,7 +47,7 @@ describe('memorymoveobject does not emit thud', () => {
       .map((call) => call[2] as string)
   }
 
-  it('dual-emits partytouch (not thud) when creature blocked by player', () => {
+  it('one-way touch (not thud) when creature blocked by player', () => {
     const board = setupboard('@bear\n', '@player\n')
     const player = memorycreateboardobjectfromkind(
       board,
@@ -67,8 +67,8 @@ describe('memorymoveobject does not emit thud', () => {
 
     const moved = memorymoveobject(undefined, board, bear!, { x: 3, y: 2 })
     expect(moved).toBe(false)
-    expect(labelsfor('sid_bear')).toEqual(['partytouch'])
-    expect(labelsfor('pid_hero')).toEqual(['partytouch'])
+    expect(labelsfor('sid_bear')).toEqual([])
+    expect(labelsfor('pid_hero')).toEqual(['touch'])
     expect(
       mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'thud'),
     ).toBe(false)
@@ -95,7 +95,9 @@ describe('memorymoveobject does not emit thud', () => {
     expect(moved).toBe(false)
     expect(labelsfor('sid_bear')).toEqual([])
     expect(
-      mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'partytouch'),
+      mockedmemorysendtoelement.mock.calls.some(
+        (call) => call[2] === 'partytouch',
+      ),
     ).toBe(false)
   })
 
@@ -123,7 +125,7 @@ describe('memorymoveobject does not emit thud', () => {
     expect(labelsfor('sid_bear')).not.toContain('thud')
   })
 
-  it('dual-emits touch once when player push succeeds', () => {
+  it('one-way touch when player push succeeds', () => {
     const board = setupboard(
       '@boulder\n@ispushable\n',
       '@player\n@ispushable\n',
@@ -147,13 +149,13 @@ describe('memorymoveobject does not emit thud', () => {
     const moved = memorymoveobject(undefined, board, player!, { x: 3, y: 2 })
     expect(moved).toBe(true)
     expect(labelsfor('sid_boulder')).toEqual(['touch'])
-    expect(labelsfor('pid_hero')).toEqual(['touch'])
+    expect(labelsfor('pid_hero')).toEqual([])
     expect(
       mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'thud'),
     ).toBe(false)
   })
 
-  it('dual-emits touch once when player push fails', () => {
+  it('one-way touch when player push fails', () => {
     const board = setupboard(
       '@boulder\n@ispushable\n',
       '@player\n@ispushable\n',
@@ -183,10 +185,10 @@ describe('memorymoveobject does not emit thud', () => {
     const moved = memorymoveobject(undefined, board, player!, { x: 3, y: 2 })
     expect(moved).toBe(false)
     expect(labelsfor('sid_boulder')).toEqual(['touch'])
-    expect(labelsfor('pid_hero')).toEqual(['touch'])
+    expect(labelsfor('pid_hero')).toEqual([])
   })
 
-  it('dual-emits partytouch when object push succeeds', () => {
+  it('one-way touch when object push succeeds', () => {
     const board = setupboard(
       '@pusher\n@ispushable\n',
       '@boulder\n@ispushable\n',
@@ -209,11 +211,11 @@ describe('memorymoveobject does not emit thud', () => {
 
     const moved = memorymoveobject(undefined, board, pusher!, { x: 3, y: 2 })
     expect(moved).toBe(true)
-    expect(labelsfor('sid_boulder')).toEqual(['partytouch'])
-    expect(labelsfor('sid_pusher')).toEqual(['partytouch'])
+    expect(labelsfor('sid_boulder')).toEqual(['touch'])
+    expect(labelsfor('sid_pusher')).toEqual([])
   })
 
-  it('dual-emits touch for every moved pushee in a push chain', () => {
+  it('one-way touch per hop in a push chain', () => {
     const board = setupboard(
       '@boulder\n@ispushable\n',
       '@player\n@ispushable\n',
@@ -243,9 +245,9 @@ describe('memorymoveobject does not emit thud', () => {
 
     const moved = memorymoveobject(undefined, board, player!, { x: 3, y: 2 })
     expect(moved).toBe(true)
-    // player <-> A (intent), A <-> B (hop), player <-> B (root fanout)
-    expect(labelsfor('sid_a')).toEqual(['touch', 'partytouch'])
-    expect(labelsfor('sid_b')).toEqual(['partytouch', 'touch'])
-    expect(labelsfor('pid_hero')).toEqual(['touch', 'touch'])
+    // player -> A (intent), A -> B (hop); no dual-emit / no root fanout
+    expect(labelsfor('sid_a')).toEqual(['touch'])
+    expect(labelsfor('sid_b')).toEqual(['touch'])
+    expect(labelsfor('pid_hero')).toEqual([])
   })
 })
