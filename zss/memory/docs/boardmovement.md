@@ -2,7 +2,9 @@
 title: boardmovement.ts
 ---
 
-**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/partytouch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here. Player blockers dual-emit `:touch`; non-player object blockers dual-emit `:partytouch`.
+**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/partytouch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here.
+
+**Contact**: Intent to enter a cell that holds a non-bullet object dual-emits contact **whether a push succeeds or fails**. Player movers pass `'touch'` (same-party remap in gamesend); non-player object movers pass literal `'partytouch'`. Still-blocked edge/bullet/shot handling does not re-emit touch/partytouch for a pair already contacted. Push chains dual-emit at each hop; the root mover also contacts every successfully moved deeper pushee.
 
 ## Dependencies
 

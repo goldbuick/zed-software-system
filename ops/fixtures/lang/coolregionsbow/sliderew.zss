@@ -1,3 +1,6 @@
 @sliderew
 @ispushable e w
 @char 29
+#end
+:touch
+#bgplay t--f

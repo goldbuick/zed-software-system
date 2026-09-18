@@ -98,10 +98,10 @@
       },
       {
         "id": "sid_z4qSbJhCGCsR",
-        "code": "@boulder\n@ispushable\n@char 254\n@bg onclear",
+        "code": "@boulder\n@ispushable\n@char 254\n@bg onclear\n#end\n:touch\n#bgplay t--f",
         "object": {
           "id": "sid_z4qSbJhCGCsR",
-          "code": "@boulder\n@ispushable\n@char 254\n@bg onclear\n",
+          "code": "@boulder\n@ispushable\n@char 254\n@bg onclear\n#end\n:touch\n#bgplay t--f\n",
           "name": "boulder",
           "char": 254,
           "bg": 32,
@@ -420,10 +420,10 @@
       },
       {
         "id": "sid_X_0NyqvcEqk3",
-        "code": "@sliderns\n@ispushable n s \n@char 18",
+        "code": "@sliderns\n@ispushable n s \n@char 18\n#end\n:touch\n#bgplay t--f",
         "object": {
           "id": "sid_X_0NyqvcEqk3",
-          "code": "@sliderns\n@ispushable n s \n@char 18",
+          "code": "@sliderns\n@ispushable n s \n@char 18\n#end\n:touch\n#bgplay t--f",
           "name": "sliderns",
           "char": 18,
           "pushable": "n s"
@@ -431,10 +431,10 @@
       },
       {
         "id": "sid_RmijVDmQ72ak",
-        "code": "@sliderew\n@ispushable e w\n@char 29",
+        "code": "@sliderew\n@ispushable e w\n@char 29\n#end\n:touch\n#bgplay t--f",
         "object": {
           "id": "sid_RmijVDmQ72ak",
-          "code": "@sliderew\n@ispushable e w\n@char 29",
+          "code": "@sliderew\n@ispushable e w\n@char 29\n#end\n:touch\n#bgplay t--f",
           "name": "sliderew",
           "char": 29,
           "pushable": "e w"

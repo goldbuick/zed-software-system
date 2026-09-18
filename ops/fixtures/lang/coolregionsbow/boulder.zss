@@ -2,3 +2,6 @@
 @ispushable
 @char 254
 @bg onclear
+#end
+:touch
+#bgplay t--f

@@ -122,4 +122,130 @@ describe('memorymoveobject does not emit thud', () => {
     expect(labelsfor('sid_bear')).toContain('touch')
     expect(labelsfor('sid_bear')).not.toContain('thud')
   })
+
+  it('dual-emits touch once when player push succeeds', () => {
+    const board = setupboard(
+      '@boulder\n@ispushable\n',
+      '@player\n@ispushable\n',
+    )
+    const boulder = memorycreateboardobjectfromkind(
+      board,
+      { x: 3, y: 2 },
+      'boulder',
+      'sid_boulder',
+    )
+    const player = memorycreateboardobjectfromkind(
+      board,
+      { x: 2, y: 2 },
+      'player',
+      'pid_hero',
+    )
+    expect(boulder).toBeDefined()
+    expect(player).toBeDefined()
+    memoryensureboardready(board)
+
+    const moved = memorymoveobject(undefined, board, player!, { x: 3, y: 2 })
+    expect(moved).toBe(true)
+    expect(labelsfor('sid_boulder')).toEqual(['touch'])
+    expect(labelsfor('pid_hero')).toEqual(['touch'])
+    expect(
+      mockedmemorysendtoelement.mock.calls.some((call) => call[2] === 'thud'),
+    ).toBe(false)
+  })
+
+  it('dual-emits touch once when player push fails', () => {
+    const board = setupboard(
+      '@boulder\n@ispushable\n',
+      '@player\n@ispushable\n',
+    )
+    const boulder = memorycreateboardobjectfromkind(
+      board,
+      { x: 3, y: 2 },
+      'boulder',
+      'sid_boulder',
+    )
+    const player = memorycreateboardobjectfromkind(
+      board,
+      { x: 2, y: 2 },
+      'player',
+      'pid_hero',
+    )
+    expect(boulder).toBeDefined()
+    expect(player).toBeDefined()
+    board.terrain[4 + 2 * 60] = {
+      kind: 'solid',
+      collision: COLLISION.ISSOLID,
+      x: 4,
+      y: 2,
+    }
+    memoryensureboardready(board)
+
+    const moved = memorymoveobject(undefined, board, player!, { x: 3, y: 2 })
+    expect(moved).toBe(false)
+    expect(labelsfor('sid_boulder')).toEqual(['touch'])
+    expect(labelsfor('pid_hero')).toEqual(['touch'])
+  })
+
+  it('dual-emits partytouch when object push succeeds', () => {
+    const board = setupboard(
+      '@pusher\n@ispushable\n',
+      '@boulder\n@ispushable\n',
+    )
+    const boulder = memorycreateboardobjectfromkind(
+      board,
+      { x: 3, y: 2 },
+      'boulder',
+      'sid_boulder',
+    )
+    const pusher = memorycreateboardobjectfromkind(
+      board,
+      { x: 2, y: 2 },
+      'pusher',
+      'sid_pusher',
+    )
+    expect(boulder).toBeDefined()
+    expect(pusher).toBeDefined()
+    memoryensureboardready(board)
+
+    const moved = memorymoveobject(undefined, board, pusher!, { x: 3, y: 2 })
+    expect(moved).toBe(true)
+    expect(labelsfor('sid_boulder')).toEqual(['partytouch'])
+    expect(labelsfor('sid_pusher')).toEqual(['partytouch'])
+  })
+
+  it('dual-emits touch for every moved pushee in a push chain', () => {
+    const board = setupboard(
+      '@boulder\n@ispushable\n',
+      '@player\n@ispushable\n',
+    )
+    const b = memorycreateboardobjectfromkind(
+      board,
+      { x: 4, y: 2 },
+      'boulder',
+      'sid_b',
+    )
+    const a = memorycreateboardobjectfromkind(
+      board,
+      { x: 3, y: 2 },
+      'boulder',
+      'sid_a',
+    )
+    const player = memorycreateboardobjectfromkind(
+      board,
+      { x: 2, y: 2 },
+      'player',
+      'pid_hero',
+    )
+    expect(a).toBeDefined()
+    expect(b).toBeDefined()
+    expect(player).toBeDefined()
+    memoryensureboardready(board)
+
+    const moved = memorymoveobject(undefined, board, player!, { x: 3, y: 2 })
+    expect(moved).toBe(true)
+    // player <-> A (intent), A <-> B (hop), player <-> B (root fanout)
+    expect(labelsfor('sid_a')).toEqual(['touch', 'partytouch'])
+    expect(labelsfor('sid_b')).toEqual(['partytouch', 'touch'])
+    expect(labelsfor('pid_hero')).toEqual(['touch', 'touch'])
+  })
 })

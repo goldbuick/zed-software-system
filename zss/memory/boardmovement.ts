@@ -220,16 +220,30 @@ export function memorymoveboardobject(
   return undefined
 }
 
+function memorysendcontact(mover: BOARD_ELEMENT, other: BOARD_ELEMENT) {
+  // Player movers use touch (gamesend remaps same-party to partytouch).
+  // Non-player object movers use literal partytouch.
+  const label = ispid(mover.id) ? 'touch' : 'partytouch'
+  memorysendtoelement(other, mover, label)
+  memorysendtoelement(mover, other, label)
+}
+
 export function memorymoveobject(
   book: MAYBE<BOOK>,
   board: MAYBE<BOARD>,
   element: MAYBE<BOARD_ELEMENT>,
   dest: PT,
   didpush: Record<string, boolean> = {},
+  movedchain?: BOARD_ELEMENT[],
 ) {
   if (!ispresent(element?.id)) {
     return false
   }
+
+  const isroot = movedchain === undefined
+  const chain = movedchain ?? []
+  let contacted = false
+  let firstcontactid = ''
 
   let blocked = memorymoveboardobject(board, element, dest)
   const elementcollision = memoryreadelementstat(element, 'collision')
@@ -242,6 +256,16 @@ export function memorymoveobject(
     ispresent(blocked) &&
     memoryboardelementisobject(blocked)
   ) {
+    const blockedisbullet =
+      memoryreadelementstat(blocked, 'collision') === COLLISION.ISBULLET
+    // Intent to enter an object cell counts as contact whether push works.
+    // Bullets stay on the shot path in the still-blocked branch.
+    if (!blockedisbullet) {
+      memorysendcontact(element, blocked)
+      contacted = true
+      firstcontactid = blocked.id ?? ''
+    }
+
     // check terrain __under__ blocked
     const mayberterrain = memoryreadelement(
       board,
@@ -250,8 +274,6 @@ export function memorymoveobject(
     )
     const terraincollision = memoryreadelementstat(mayberterrain, 'collision')
     if (!memorycheckcollision(elementcollision, terraincollision)) {
-      const elementisplayer = ispid(element?.id)
-
       // is blocked pushable ?
       const isitem = !!memoryreadelementstat(blocked, 'item')
       const ispushable = memorycheckelementpushable(element, blocked)
@@ -268,8 +290,8 @@ export function memorymoveobject(
           { x: blocked.x ?? 0, y: blocked.y ?? 0 },
           bumpdir,
         )
-        if (!memorymoveobject(book, board, blocked, bump) && elementisplayer) {
-          memorysendtoelement(element, blocked, 'touch')
+        if (memorymoveobject(book, board, blocked, bump, didpush, chain)) {
+          chain.push(blocked)
         }
       }
 
@@ -291,9 +313,8 @@ export function memorymoveobject(
           memoryplayerwaszapped(book, board, element, element.id ?? '')
         }
         memorysendtoelement(blocked, element, 'shot')
-      } else {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
+      } else if (!contacted) {
+        memorysendcontact(element, blocked)
       }
     } else if (elementisbullet) {
       if (!blockedisbullet) {
@@ -342,14 +363,26 @@ export function memorymoveobject(
       if (memoryreadelementstat(blocked, 'breakable')) {
         memorysafedeleteelement(board, blocked, deletestamp)
       }
-    } else if (!blockedisedge && memoryboardelementisobject(blocked)) {
-      // Object <-> object contact: dual partytouch (mirrors player dual touch).
-      memorysendtoelement(blocked, element, 'partytouch')
-      memorysendtoelement(element, blocked, 'partytouch')
+    } else if (
+      !contacted &&
+      !blockedisedge &&
+      memoryboardelementisobject(blocked)
+    ) {
+      memorysendcontact(element, blocked)
     }
 
     // blocked
     return false
+  }
+
+  // Root mover also contacts every successfully moved deeper pushee.
+  if (isroot && firstcontactid) {
+    for (let i = 0; i < chain.length; ++i) {
+      const pushee = chain[i]
+      if (pushee.id && pushee.id !== firstcontactid) {
+        memorysendcontact(element, pushee)
+      }
+    }
   }
 
   // we are allowed to move!
