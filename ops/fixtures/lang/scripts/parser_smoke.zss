@@ -78,10 +78,11 @@ plain text line
 #else do
  #set light 9
 #done
-' outer if do; nested duplicate block with its own else/done
+' outer if do; nested duplicate + didfail branch
 #if 1 do
- ' nested command_if-style: duplicate by dirs, then else fork
- #duplicate by 1 0 by 0 0 do
+ ' nested: normal #duplicate then #if didfail
+ #duplicate by 1 0 by 0 0
+ #if didfail do
   #bgplay a
  #else do
   #bgplay b

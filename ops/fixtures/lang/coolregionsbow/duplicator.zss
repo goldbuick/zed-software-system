@@ -12,7 +12,8 @@
   #set p4 (-shootx)
   #set p5 (-shooty)
   #shove by p4 p5 by p4 p5
-  #duplicate by shootx shooty by p4 p5 do
+  #duplicate by shootx shooty by p4 p5
+  #if didfail do
    #bgplay --g#f#
   #else do
    #bgplay scdefg

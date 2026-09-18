@@ -43,7 +43,7 @@ title: parser.ts
 
 | Rule | Description |
 |------|-------------|
-| `command_if` | if/try/take/give/duplicate + words + optional block |
+| `command_if` | if/try/take/give + words + optional block |
 | `command_if_block` | Inline or `do` … `#done` block |
 | `command_else_if` | `#else if` + words + fork |
 | `command_else` | `#else` + optional words + fork |

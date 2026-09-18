@@ -280,13 +280,6 @@ export type CHIP = {
   give: (...words: WORD[]) => WORD_RESULT
 
   /**
-   * Executes the duplicate command.
-   * @param words - Command arguments
-   * @returns The command result
-   */
-  duplicate: (...words: WORD[]) => WORD_RESULT
-
-  /**
    * Initializes a repeat loop with the given count and command words.
    * @param index - The unique index for this repeat loop
    * @param words - Repeat count followed by command words to repeat
@@ -981,9 +974,6 @@ export function createchip(
       // update flag
       chip.set(name, maptonumber(maybecurrent, 0) + value)
       return result
-    },
-    duplicate(...words) {
-      return chip.command('duplicate', ...words)
     },
     repeatstart(index, ...words) {
       const flags = chipflags()
