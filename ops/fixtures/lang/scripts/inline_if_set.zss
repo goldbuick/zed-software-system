@@ -1,2 +1,2 @@
-#if keyblack set keylist keylist + "$black$12"
-#if keyblue set keylist keylist + "$blue$12"
+#if blackkey set keylist keylist + "$black$12"
+#if bluekey set keylist keylist + "$blue$12"

@@ -4,7 +4,7 @@ title: textformat.ts
 
 **Purpose**: Tokenizes and renders formatted text with colors, `$name` flags, `$CENTER`, `$META`, and numeric char codes. Used for chat, ticker, hyperlinks, and any text display that supports inline formatting.
 
-`$name` placeholders in scroll text and double-quoted template strings are expanded at compile time to `api.print(api.get('name'), 'name')`. Display naming for COLOR / DIR / KIND / GROUP / COLLISION / CATEGORY lives in [`printvalue.ts`](../printvalue.ts) (`formatprintvalue`).
+`$name` and `${name}` placeholders in scroll text and double-quoted template strings are expanded at compile time to `api.print(api.get('name'), 'name')`. Use `${name}` when a literal suffix must follow with no space (`${color}key` → `bluekey`). Display naming for COLOR / DIR / KIND / GROUP / COLLISION / CATEGORY lives in [`printvalue.ts`](../printvalue.ts) (`formatprintvalue`).
 
 ## Dependencies
 
@@ -56,6 +56,7 @@ title: textformat.ts
 | StringLiteral | `[^ $;\r\n]+` | Plain text |
 | StringLiteralDouble | `"..."` | Quoted string |
 | MaybeFlag | `$name` | Variable interpolation |
+| BraceFlag | `${name}` | Brace-delimited flag (literal suffix OK: `${color}key`) |
 | Center | `$CENTER` | Centering marker |
 | Ticker | `$TICKER` | Ticker marker |
 | Toast | `$TOAST` | Toast marker |

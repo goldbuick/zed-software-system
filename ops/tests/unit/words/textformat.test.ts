@@ -1,4 +1,8 @@
 import {
+  BraceFlag,
+  MaybeFlag,
+  StringLiteral,
+  flagnamefromtoken,
   hasbonk,
   hascenter,
   hasfadein,
@@ -10,7 +14,40 @@ import {
   stripfadein,
   stripfadeout,
   stripzap,
+  tokenize,
 } from 'zss/words/textformat'
+
+describe('textformat brace / maybe flags', () => {
+  it('tokenizes ${color}key as BraceFlag then literal key', () => {
+    const result = tokenize('${color}key')
+    expect(result.errors).toEqual([])
+    expect(result.tokens.map((t) => t.tokenType)).toEqual([
+      BraceFlag,
+      StringLiteral,
+    ])
+    expect(flagnamefromtoken(result.tokens[0])).toBe('color')
+    expect(result.tokens[1].image).toBe('key')
+  })
+
+  it('keeps $colorkey as a single MaybeFlag name', () => {
+    const result = tokenize('$colorkey')
+    expect(result.errors).toEqual([])
+    expect(result.tokens).toHaveLength(1)
+    expect(result.tokens[0].tokenType).toBe(MaybeFlag)
+    expect(flagnamefromtoken(result.tokens[0])).toBe('colorkey')
+  })
+
+  it('tokenizes key$color as literal then MaybeFlag', () => {
+    const result = tokenize('key$color')
+    expect(result.errors).toEqual([])
+    expect(result.tokens.map((t) => t.tokenType)).toEqual([
+      StringLiteral,
+      MaybeFlag,
+    ])
+    expect(result.tokens[0].image).toBe('key')
+    expect(flagnamefromtoken(result.tokens[1])).toBe('color')
+  })
+})
 
 describe('textformat line attributes', () => {
   describe('hascenter', () => {

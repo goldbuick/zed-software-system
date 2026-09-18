@@ -1,8 +1,9 @@
 import { CodeWithSourceMap, SourceNode } from 'source-map'
 import { escapesinglequoted } from 'zss/mapping/string'
 import { MAYBE, ispresent } from 'zss/mapping/types'
-import { MaybeFlag, tokenize } from 'zss/words/textformat'
+import { flagnamefromtoken, tokenize } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
+
 
 import { COMPARE, type CodeNode, LITERAL, NODE, OPERATOR } from './visitor'
 
@@ -49,8 +50,9 @@ function writetemplatestring(value: string): string {
   }
 
   const template = result.tokens.map((token) => {
-    if (token.tokenType === MaybeFlag) {
-      const name = escapesinglequoted(token.image.substring(1))
+    const flagname = flagnamefromtoken(token)
+    if (ispresent(flagname)) {
+      const name = escapesinglequoted(flagname)
       if (NAME(name) === 'center') {
         return `$CENTER`
       }

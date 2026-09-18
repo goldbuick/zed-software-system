@@ -43,11 +43,29 @@ export const EscapedDollar = createToken({
   start_chars_hint: ['$'],
 })
 
+/** `${name}` — brace-delimited flag; `}` closes so a literal suffix can follow (`${color}key`). */
+export const BraceFlag = createToken({
+  name: 'BraceFlag',
+  pattern: /\$\{[^-0-9"!;@#/?\s]+[^-"!;@#/?\s{}]*\}/,
+  start_chars_hint: ['$'],
+})
+
 export const MaybeFlag = createToken({
   name: 'MaybeFlag',
   pattern: /\$[^-0-9"!;@#/?\s]+[^-"!;@#/?\s]*/,
   start_chars_hint: ['$'],
 })
+
+/** Flag name from a BraceFlag (`${color}`) or MaybeFlag (`$color`) token. */
+export function flagnamefromtoken(token: IToken): MAYBE<string> {
+  if (token.tokenType === BraceFlag) {
+    return token.image.slice(2, -1)
+  }
+  if (token.tokenType === MaybeFlag) {
+    return token.image.substring(1)
+  }
+  return undefined
+}
 
 export const Center = createToken({
   name: 'Center',
@@ -121,6 +139,7 @@ export const allTokens = [
   Bonk,
   Zap,
   MetaKey,
+  BraceFlag,
   MaybeFlag,
 ]
 
@@ -145,6 +164,7 @@ const scriptLexerNoWhitespace = new Lexer(
     Bonk,
     Zap,
     MetaKey,
+    BraceFlag,
     MaybeFlag,
   ],
   {
@@ -543,6 +563,7 @@ export function tokenizeandstriptextformat(text: string) {
         case NumberLiteral:
         case EscapedDollar:
         case HyperLinkText:
+        case BraceFlag:
         case MaybeFlag:
           return true
         default:

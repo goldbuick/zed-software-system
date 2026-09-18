@@ -2,7 +2,7 @@
 title: printvalue.ts
 ---
 
-**Purpose**: Display stringify for `$name` template expansion in scroll text and double-quoted strings (`#set "key$color"`, etc.).
+**Purpose**: Display stringify for `$name` / `${name}` template expansion in scroll text and double-quoted strings (`#set "${color}key"`, etc.).
 
 ## Export
 

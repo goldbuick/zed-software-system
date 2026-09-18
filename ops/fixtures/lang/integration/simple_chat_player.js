@@ -69,28 +69,28 @@ case 22:
   if (api.command('clear', 'energized')) { continue; };
   break;
 case 23:
-  if (api.command('clear', 'keyblack')) { continue; };
+  if (api.command('clear', 'blackkey')) { continue; };
   break;
 case 24:
-  if (api.command('clear', 'keyblue')) { continue; };
+  if (api.command('clear', 'bluekey')) { continue; };
   break;
 case 25:
-  if (api.command('clear', 'keygreen')) { continue; };
+  if (api.command('clear', 'greenkey')) { continue; };
   break;
 case 26:
-  if (api.command('clear', 'keycyan')) { continue; };
+  if (api.command('clear', 'cyankey')) { continue; };
   break;
 case 27:
-  if (api.command('clear', 'keyred')) { continue; };
+  if (api.command('clear', 'redkey')) { continue; };
   break;
 case 28:
-  if (api.command('clear', 'keypurple')) { continue; };
+  if (api.command('clear', 'purplekey')) { continue; };
   break;
 case 29:
-  if (api.command('clear', 'keyyellow')) { continue; };
+  if (api.command('clear', 'yellowkey')) { continue; };
   break;
 case 30:
-  if (api.command('clear', 'keywhite')) { continue; };
+  if (api.command('clear', 'whitekey')) { continue; };
   break;
 case 31:
   // 31 'think' label
@@ -315,28 +315,28 @@ case 104:
   if (api.command('set', 'keylist', ' $white$12 $yellow   Keys:')) { continue; };
   break;
 case 105:
-  api.if('keyblack', 'set', 'keylist', api.opPlus('keylist', '$black$12'));
+  api.if('blackkey', 'set', 'keylist', api.opPlus('keylist', '$black$12'));
   break;
 case 106:
-  api.if('keyblue', 'set', 'keylist', api.opPlus('keylist', '$blue$12'));
+  api.if('bluekey', 'set', 'keylist', api.opPlus('keylist', '$blue$12'));
   break;
 case 107:
-  api.if('keygreen', 'set', 'keylist', api.opPlus('keylist', '$green$12'));
+  api.if('greenkey', 'set', 'keylist', api.opPlus('keylist', '$green$12'));
   break;
 case 108:
-  api.if('keycyan', 'set', 'keylist', api.opPlus('keylist', '$cyan$12'));
+  api.if('cyankey', 'set', 'keylist', api.opPlus('keylist', '$cyan$12'));
   break;
 case 109:
-  api.if('keyred', 'set', 'keylist', api.opPlus('keylist', '$red$12'));
+  api.if('redkey', 'set', 'keylist', api.opPlus('keylist', '$red$12'));
   break;
 case 110:
-  api.if('keypurple', 'set', 'keylist', api.opPlus('keylist', '$purple$12'));
+  api.if('purplekey', 'set', 'keylist', api.opPlus('keylist', '$purple$12'));
   break;
 case 111:
-  api.if('keyyellow', 'set', 'keylist', api.opPlus('keylist', '$yellow$12'));
+  api.if('yellowkey', 'set', 'keylist', api.opPlus('keylist', '$yellow$12'));
   break;
 case 112:
-  api.if('keywhite', 'set', 'keylist', api.opPlus('keylist', '$white$12'));
+  api.if('whitekey', 'set', 'keylist', api.opPlus('keylist', '$white$12'));
   break;
 case 113:
   api.text('$keylist');

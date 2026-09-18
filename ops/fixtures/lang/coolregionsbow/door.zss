@@ -3,9 +3,9 @@
 @char 10
 #end
 :touch
-#if "key$color" do
+#if "${color}key" do
  The $color door is now open.
- #clear "key$color"
+ #clear "${color}key"
  #bgplay tcgbcgb+ic
  #die
 #else do

@@ -5,13 +5,13 @@
 @char 12
 #end
 :touch
-#if "key$color" do
+#if "${color}key" do
  You already have a $color key!
  #bgplay sc-c
  #end
 #else do
  You now have the $color key.
- #set "key$color"
+ #set "${color}key"
  #bgplay t+cegcegceg+sc
  #die 
 #done

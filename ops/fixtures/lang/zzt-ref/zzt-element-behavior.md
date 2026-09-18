@@ -61,7 +61,7 @@ In cafe these are **player flags by convention** (set/read with `#give`/`#take`/
 | `gems` | gem +1 | `World.Info.Gems` |
 | `torches` | torch +1; lighting -1 | `World.Info.Torches` |
 | `score` | gem +10, kills (`ScoreValue`) | `World.Info.Score` |
-| `key<color>` (cafe: `keyblack`, `keyblue`..`keywhite` via `$color` name) | key grants, door consumes | `World.Info.Keys[1..7]` |
+| `key<color>` (cafe: `blackkey`, `bluekey`..`whitekey` via `"${color}key"`) | key grants, door consumes | `World.Info.Keys[1..7]` |
 | `energized` / `wick` (cafe) | energizer / torch upkeep timers | `EnergizerTicks` / `TorchTicks` |
 
 ### Element stats (engine, per-element)
@@ -216,13 +216,13 @@ ZZT movement helpers: `CalcDirectionRnd` = random of 4 dirs (`?rnd`), `CalcDirec
 
 - **ZZT key:** `key := Color mod 8`; if already held -> "already have"; else set flag, remove tile, "you now have the KEY key".
 - **ZZT door:** `key := (Color div 16) mod 8` (the **background/high nibble** picks the color); if held -> open (clear flag, remove tile); else "locked".
-- **Import:** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) maps the ZZT bg nibble `(byte >> 4) & 7` to cafe instance `color` (nibbles 1-7 -> BLUE..WHITE / 9-15; nibble 0 -> BLACK) and sets `bg` to BLACK. A typical ZZT blue door (white on dkblue) becomes cafe `color=BLUE`, `bg=BLACK` so `$color` / `"key$color"` match imported keys.
+- **Import:** [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts) maps the ZZT bg nibble `(byte >> 4) & 7` to cafe instance `color` (nibbles 1-7 -> BLUE..WHITE / 9-15; nibble 0 -> BLACK) and sets `bg` to BLACK. A typical ZZT blue door (white on dkblue) becomes cafe `color=BLUE`, `bg=BLACK` so `$color` / `"${color}key"` match imported keys.
 - **Export:** [`zss/feature/parse/zztexport.ts`](../../../../zss/feature/parse/zztexport.ts) inverts that as `zztcolorbyte(WHITE, color % 8)` (normalized instance stats only).
-- **Cafe now:** `:drawdisplay` `#set displaycolor white` / `#set displaybg color % 8` (instance `color` stays the key color; GET of `color` / `char` / `bg` is always instance). `:touch` still uses `$color` / `"key$color"` for messages and flags. Blocking works because an unopened door is an object the player can't pass.
+- **Cafe now:** `:drawdisplay` `#set displaycolor white` / `#set displaybg color % 8` (instance `color` stays the key color; GET of `color` / `char` / `bg` is always instance). `:touch` still uses `$color` / `"${color}key"` for messages and flags (`bluekey`, etc.). Blocking works because an unopened door is an object the player can't pass.
 - **Notes:**
   1. `$color` prints the COLOR enum name for any fg index (not only 9-15).
-  2. Player sidebar clears/tests named flags (`keyblue` … `keywhite`, plus `keyblack`).
-  3. Existing saves with numeric `key9` flags need a re-pickup (breaking rename).
+  2. Player sidebar clears/tests named flags (`bluekey` … `whitekey`, plus `blackkey`).
+  3. Existing saves with `keyblue` / numeric `key9` flags need a re-pickup (breaking rename).
 
 ### Passage (11) -- `passage-...`
 
