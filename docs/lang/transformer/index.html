@@ -3,7 +3,7 @@
 <ul>
 <li><code>source-map</code> — SourceNode, CodeWithSourceMap</li>
 <li><code>zss/mapping/types</code> — MAYBE, ispresent</li>
-<li><code>zss/words/textformat</code> — tokenize, MaybeFlag (template strings)</li>
+<li><code>zss/words/textformat</code> — tokenize, MaybeFlag / BraceFlag (template strings)</li>
 <li><code>zss/words/types</code> — NAME</li>
 <li><code>./visitor</code> — COMPARE, CodeNode, LITERAL, NODE, OPERATOR</li>
 </ul>
@@ -140,7 +140,7 @@
 <li><strong><code>transformNode</code></strong> — Dispatches by NODE type; recursive</li>
 <li><strong><code>indexnode</code></strong> — Assigns lineindex; fills linelookup for MARK nodes</li>
 <li><strong><code>writelookup</code></strong> / <strong><code>writelookupline</code></strong> — Connect skip/done labels to case numbers</li>
-<li><strong><code>writeTemplateString</code></strong> — Interpolates <code>$name</code> via <code>api.print(api.get('name'), 'name')</code> (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)</li>
+<li><strong><code>writeTemplateString</code></strong> — Interpolates <code>$name</code> / <code>${name}</code> via <code>api.print(api.get('name'), 'name')</code> (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)</li>
 <li><strong><code>writeApi</code></strong> — <code>api.method(param1, param2, ...)</code></li>
 <li><strong><code>transformprogramlines</code></strong> — Fuses straight-line runs at program level and inside <code>#if</code> / <code>#else</code> / loop / <code>#waitfor</code> bodies (fallthrough cases + mid-block <code>sy</code> yield)</li>
 </ul>

@@ -2122,7 +2122,7 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 | `duplicatewith` / `dupewith` | `arg` `dir` `dupedir` | Duplicate with arg |
 | `shove` | `dir` `movedir` | Move object at dir by movedir delta |
 | `push` | `dir` `movedir` | Same as shove but only for pushable objects; a given object succeeds at most once per tick |
-| `transport` | `target` | Transport object along transporter line (finds opposite transporter, moves object) |
+| `transport` | `target` | Pair-first along shoot ray (land past/on first same-kind), else first open; requires approach delta match |
 | `change` | `target` `into` | Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind. |
 | `write` | `dir` `color` `text…` | Write colored text on board at direction (E/W/N/S) |
 
@@ -4712,7 +4712,7 @@ Source: https://zed.cafe/docs/lang/transformer
 
 - `source-map` — SourceNode, CodeWithSourceMap
 - `zss/mapping/types` — MAYBE, ispresent
-- `zss/words/textformat` — tokenize, MaybeFlag (template strings)
+- `zss/words/textformat` — tokenize, MaybeFlag / BraceFlag (template strings)
 - `zss/words/types` — NAME
 - `./visitor` — COMPARE, CodeNode, LITERAL, NODE, OPERATOR
 
@@ -4773,7 +4773,7 @@ try {
 - **`transformNode`** — Dispatches by NODE type; recursive
 - **`indexnode`** — Assigns lineindex; fills linelookup for MARK nodes
 - **`writelookup`** / **`writelookupline`** — Connect skip/done labels to case numbers
-- **`writeTemplateString`** — Interpolates `$name` via `api.print(api.get('name'), 'name')` (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)
+- **`writeTemplateString`** — Interpolates `$name` / `${name}` via `api.print(api.get('name'), 'name')` (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)
 - **`writeApi`** — `api.method(param1, param2, ...)`
 - **`transformprogramlines`** — Fuses straight-line runs at program level and inside `#if` / `#else` / loop / `#waitfor` bodies (fallthrough cases + mid-block `sy` yield)
 
@@ -5680,7 +5680,7 @@ Named-index **reads** go through `memorylistelement({ name })` in [`boardaccess.
 # boardmovement.ts
 Source: https://zed.cafe/docs/memory/boardmovement
 
-**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here.
+**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/partytouch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here. Player blockers dual-emit `:touch`; non-player object blockers dual-emit `:partytouch`.
 
 ## Dependencies
 
@@ -5708,7 +5708,7 @@ Source: https://zed.cafe/docs/memory/boardmovement
 | `memorycheckmoveboardobject` | True if dest is blocked |
 | `memorycleanupboard` | Remove objects marked removed > 5s |
 | `memorymoveboardobject` | Move object by x/y; return blocked or undefined |
-| `memorymoveobject` | Full move with push chain and send (touch/shot); soft-deletes `@isbreakable` ISBULLET on block |
+| `memorymoveobject` | Full move with push chain and send (touch/partytouch/shot); soft-deletes `@isbreakable` ISBULLET on block |
 | `BOOK_RUN_ARGS` | Tick/draw run arg type |
 
 ---
@@ -5852,13 +5852,23 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 | Object / creature | breakable (`@isbreakable`) | `:shot` (+ softdelete) |
 | Object / creature | built-in enemy without breakable | `:partyshot` (no kill; RoZZT no `BoardAttack`) |
 
+## Contact protocol (`:touch` / `:partytouch`)
+
+| Contact | Label |
+|---------|-------|
+| Player walks into object / different party | dual `:touch` |
+| Same-party contact (neither side `object` / `scroll` kind) | `:touch` remapped → `:partytouch` |
+| Non-player object blocked by another object | dual engine `:partytouch` (literal label; not a remap) |
+
 | Path | Behavior |
 |------|----------|
 | Bullet collision | Both directions (bullet→walker and walker→bullet) use `memorybulletcollisionlabel` via board movement; walk `:thud` via element everytick |
 | `#send at x y shot` / `#send within N i shot` | Chip directional send |
 | Breakable + real `:shot` | `memorysendtoelement` softdeletes the target (object or terrain) |
-| `:bombed` | Content/blast label only — **no** auto-delete |
 | `:partyshot` | No auto-delete; multiplayer friendly fire **or** enemy-source vs creature |
+| `:partytouch` | Same-party player remap **or** object↔object contact; no damage / no softdelete |
+
+Player-initiated blocked walks send `:touch` (with same-party remap). Object↔object blocks dual-emit `:partytouch` from [`boardmovement.ts`](../boardmovement.ts) so pushables can wake transporters (`#transport senderid`).
 
 **Dual-layer directional `:shot`:** when `#send` targets a cell with label `shot`, both the object (if any) and the terrain (if any) at that PT receive `:shot`. Other labels still use a single `memoryreadelement` (object preferred, else terrain).
 
@@ -5866,12 +5876,9 @@ Canonical forms:
 
 ```text
 #send at senderx sendery shot
-#send within 5 i bombed
 #send within 5 i shot
 #send at p5 p6 shot
 ```
-
-Bomb blasts send **`bombed` then `shot`** so `:bombed`-only handlers run before `:shot` may clear breakables.
 
 ## Dependencies
 
@@ -5890,7 +5897,7 @@ Bomb blasts send **`bombed` then `shot`** so `:bombed`-only handlers run before 
 | Export | Description |
 |--------|-------------|
 | `memorysendtoboards` | Send message to elements on boards (target or PT) |
-| `memorysendtoelement` | Send label from element to element (touch/shot/thud/partyshot); breakable+shot softdelete |
+| `memorysendtoelement` | Send label from element to element (touch/partytouch/shot/thud/partyshot); breakable+shot softdelete |
 | `memorysendtoelements` | Chip sends to targetname or targetdir (shot hits both layers) |
 | `memorybulletcollisionlabel` | RoZZT-style `shot` vs `partyshot` for ISBULLET hits |
 
@@ -9840,7 +9847,7 @@ Source: https://zed.cafe/docs/words/kind
 # printvalue.ts
 Source: https://zed.cafe/docs/words/printvalue
 
-**Purpose**: Display stringify for `$name` template expansion in scroll text and double-quoted strings (`#set "key$color"`, etc.).
+**Purpose**: Display stringify for `$name` / `${name}` template expansion in scroll text and double-quoted strings (`#set "${color}key"`, etc.).
 
 ## Export
 
@@ -10083,7 +10090,7 @@ Source: https://zed.cafe/docs/words/textformat
 
 **Purpose**: Tokenizes and renders formatted text with colors, `$name` flags, `$CENTER`, `$META`, and numeric char codes. Used for chat, ticker, hyperlinks, and any text display that supports inline formatting.
 
-`$name` placeholders in scroll text and double-quoted template strings are expanded at compile time to `api.print(api.get('name'), 'name')`. Display naming for COLOR / DIR / KIND / GROUP / COLLISION / CATEGORY lives in [`printvalue.ts`](../printvalue.ts) (`formatprintvalue`).
+`$name` and `${name}` placeholders in scroll text and double-quoted template strings are expanded at compile time to `api.print(api.get('name'), 'name')`. Use `${name}` when a literal suffix must follow with no space (`${color}key` → `bluekey`). Display naming for COLOR / DIR / KIND / GROUP / COLLISION / CATEGORY lives in [`printvalue.ts`](../printvalue.ts) (`formatprintvalue`).
 
 ## Dependencies
 
@@ -10135,6 +10142,7 @@ Source: https://zed.cafe/docs/words/textformat
 | StringLiteral | `[^ $;\r\n]+` | Plain text |
 | StringLiteralDouble | `"..."` | Quoted string |
 | MaybeFlag | `$name` | Variable interpolation |
+| BraceFlag | `${name}` | Brace-delimited flag (literal suffix OK: `${color}key`) |
 | Center | `$CENTER` | Centering marker |
 | Ticker | `$TICKER` | Ticker marker |
 | Toast | `$TOAST` | Toast marker |

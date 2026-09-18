@@ -8,7 +8,7 @@ title: transformer.ts
 
 - `source-map` — SourceNode, CodeWithSourceMap
 - `zss/mapping/types` — MAYBE, ispresent
-- `zss/words/textformat` — tokenize, MaybeFlag (template strings)
+- `zss/words/textformat` — tokenize, MaybeFlag / BraceFlag (template strings)
 - `zss/words/types` — NAME
 - `./visitor` — COMPARE, CodeNode, LITERAL, NODE, OPERATOR
 
@@ -69,7 +69,7 @@ try {
 - **`transformNode`** — Dispatches by NODE type; recursive
 - **`indexnode`** — Assigns lineindex; fills linelookup for MARK nodes
 - **`writelookup`** / **`writelookupline`** — Connect skip/done labels to case numbers
-- **`writeTemplateString`** — Interpolates `$name` via `api.print(api.get('name'), 'name')` (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)
+- **`writeTemplateString`** — Interpolates `$name` / `${name}` via `api.print(api.get('name'), 'name')` (second arg is the flag/stat name so COLOR/DIR/COLLISION/etc. can print as names)
 - **`writeApi`** — `api.method(param1, param2, ...)`
 - **`transformprogramlines`** — Fuses straight-line runs at program level and inside `#if` / `#else` / loop / `#waitfor` bodies (fallthrough cases + mid-block `sy` yield)
 

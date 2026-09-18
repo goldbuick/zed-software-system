@@ -44,7 +44,7 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 | `duplicatewith` / `dupewith` | `arg` `dir` `dupedir` | Duplicate with arg |
 | `shove` | `dir` `movedir` | Move object at dir by movedir delta |
 | `push` | `dir` `movedir` | Same as shove but only for pushable objects; a given object succeeds at most once per tick |
-| `transport` | `target` | Transport object along transporter line (finds opposite transporter, moves object) |
+| `transport` | `target` | Pair-first along shoot ray (land past/on first same-kind), else first open; requires approach delta match |
 | `change` | `target` `into` | Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind. |
 | `write` | `dir` `color` `text…` | Write colored text on board at direction (E/W/N/S) |
 
