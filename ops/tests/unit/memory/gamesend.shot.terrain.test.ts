@@ -47,6 +47,7 @@ describe('shot damage send to terrain', () => {
     mockedmemorymessagechip.mockClear()
     memoryresetbooks([
       memorycreatebook([
+        memorycreatecodepage('@player\n', {}),
         memorycreatecodepage('@object gem\n@isbreakable\n', {}),
         memorycreatecodepage('@terrain breakable\n@isbreakable\n', {}),
       ]),
@@ -55,13 +56,14 @@ describe('shot damage send to terrain', () => {
     memoryensureboardready(board)
     READ_CONTEXT.board = board
     READ_CONTEXT.timestamp = 42
+    // Player-affiliated sender keeps :shot (non-player affinity remaps to :partyshot).
     const from = memorycreateboardobjectfromkind(
       board,
       { x: 1, y: 1 },
-      'gem',
-      'sid_from',
+      'player',
+      'pid_from',
     )!
-    from.breakable = 0
+    from.kind = 'player'
     return { board, from }
   }
 

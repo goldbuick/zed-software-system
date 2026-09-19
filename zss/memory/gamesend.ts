@@ -24,55 +24,30 @@ function playerpartyinteraction(
   toelement: BOARD_ELEMENT,
 ) {
   const fromelementisplayer = ispid(fromelement.id)
-  const fromelementpartyisplayer = ispid(fromelement.party ?? fromelement.id)
-  const fromelementisobjecorscroll =
+  const fromelementisobjectorscroll =
     fromelement.kind === 'object' || fromelement.kind === 'scroll'
 
+  const toelementisplayer = ispid(toelement.id)
+  const toelementisobjectorscroll =
+    toelement.kind === 'object' || toelement.kind === 'scroll'
+
+  const frompartyisplayer = ispid(fromelement.party) || fromelementisplayer
+  const topartyisplayer = ispid(toelement.party) || toelementisplayer
+
   let fromelementplayer = ''
-  if (fromelement.party && fromelementpartyisplayer) {
+  if (fromelementisplayer && fromelement.party) {
     fromelementplayer = fromelement.party
   }
   if (fromelementisplayer) {
     fromelementplayer = fromelement.id ?? ''
   }
 
-  const fromparty = fromelement.party ?? fromelement.id ?? ''
-  const toparty = toelement.party ?? toelement.id ?? ''
-  const toelementisobjectorscroll =
-    toelement.kind === 'object' || toelement.kind === 'scroll'
   const sameparty =
-    fromparty !== '' &&
-    fromparty === toparty &&
+    frompartyisplayer === topartyisplayer &&
     !toelementisobjectorscroll &&
-    !fromelementisobjecorscroll
+    !fromelementisobjectorscroll
 
   return { sameparty, fromelementplayer }
-}
-
-/**
- * RoZZT-style bullet hit label for cafe.
- * Player-source (ispid party) and hits on player / object / scroll / @isbreakable
- * use `shot`. Enemy/OOP-source hits on non-breakable creatures use `partyshot`.
- */
-export function memorybulletcollisionlabel(
-  bullet: BOARD_ELEMENT,
-  target: BOARD_ELEMENT,
-): 'shot' | 'partyshot' {
-  if (ispid(target.id)) {
-    return 'shot'
-  }
-  if (ispid(bullet.party ?? bullet.id)) {
-    return 'shot'
-  }
-  const targetkind = NAME(target.kind ?? '')
-  if (targetkind === 'object' || targetkind === 'scroll') {
-    return 'shot'
-  }
-  // RoZZT E_BREAKABLE (and cafe @isbreakable) -- any bullet destroys
-  if (memoryreadelementstat(target, 'breakable')) {
-    return 'shot'
-  }
-  return 'partyshot'
 }
 
 export function memorysendtoboards(

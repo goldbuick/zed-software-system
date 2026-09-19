@@ -73,14 +73,14 @@ describe('player party touch remap', () => {
     )
   })
 
-  it('sends touch when players have different parties', () => {
+  it('sends partytouch when both sides are player-affiliated', () => {
     const { from, to } = setupplayers()
     from.party = 'pid_from'
     to.party = 'pid_to'
     memorysendtoelement(from, to, 'touch')
     expect(mockedmemorymessagechip).toHaveBeenCalledWith(
       expect.objectContaining({
-        target: 'pid_to:touch',
+        target: 'pid_to:partytouch',
       }),
     )
   })

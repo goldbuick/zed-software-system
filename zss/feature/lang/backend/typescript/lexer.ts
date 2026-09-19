@@ -489,7 +489,7 @@ export const command_play = createSimpleToken({
 
 export const command_if = createSimpleToken({
   name: 'if',
-  pattern: /if|try|take|give|duplicate/i,
+  pattern: /if|try|take|give/i,
   longer_alt: stringliteral,
 })
 export const command_do = createSimpleToken({

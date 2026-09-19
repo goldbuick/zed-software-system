@@ -23,9 +23,10 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 
 | Contact | Label |
 |---------|-------|
-| Player walks into object / different party | dual `:touch` |
+| Player intends to enter object / other-player cell (push success or fail) | dual `:touch` |
 | Same-party contact (neither side `object` / `scroll` kind) | `:touch` remapped → `:partytouch` |
-| Non-player object blocked by another object | dual engine `:partytouch` (literal label; not a remap) |
+| Non-player object intends to enter another object cell (push success or fail) | dual engine `:partytouch` (literal label; not a remap) |
+| Push chain | Each hop dual-emits; root also dual-emits vs every successfully moved deeper pushee |
 
 | Path | Behavior |
 |------|----------|
@@ -35,7 +36,7 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 | `:partyshot` | No auto-delete; multiplayer friendly fire **or** enemy-source vs creature |
 | `:partytouch` | Same-party player remap **or** object↔object contact; no damage / no softdelete |
 
-Player-initiated blocked walks send `:touch` (with same-party remap). Object↔object blocks dual-emit `:partytouch` from [`boardmovement.ts`](../boardmovement.ts) so pushables can wake transporters (`#transport senderid`).
+Intent to enter a non-bullet object cell dual-emits from [`boardmovement.ts`](../boardmovement.ts) whether the push clears the cell or not (still-blocked edge/bullet/shot paths do not re-send touch/partytouch for that pair). Player movers pass `'touch'` (same-party remap); object movers pass literal `'partytouch'` so pushables can wake transporters (`#transport senderid`).
 
 **Dual-layer directional `:shot`:** when `#send` targets a cell with label `shot`, both the object (if any) and the terrain (if any) at that PT receive `:shot`. Other labels still use a single `memoryreadelement` (object preferred, else terrain).
 

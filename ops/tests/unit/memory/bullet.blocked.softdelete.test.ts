@@ -13,7 +13,7 @@ import { COLLISION } from 'zss/words/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
 
-/** Chip never #dies. Engine must still soft-delete a breakable bullet on thud. */
+/** Chip never #dies. Engine leaves the bullet in place until the chip acts. */
 const BULLET_CODE_NO_DIE = `@bullet
 @cycle 1
 @char 248
@@ -22,13 +22,13 @@ const BULLET_CODE_NO_DIE = `@bullet
 #think
 `
 
-describe('bullet blocked breakable softdelete', () => {
+describe('bullet blocked without engine softdelete', () => {
   afterEach(() => {
     cleartickreadcontextall()
     memoryresetbooks([])
   })
 
-  it('removes a breakable bullet that walks into solid without chip #die', () => {
+  it('leaves a breakable bullet that walks into solid without chip #die', () => {
     const bulletpage = memorycreatecodepage(BULLET_CODE_NO_DIE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([bulletpage, boardpage])
@@ -58,10 +58,10 @@ describe('bullet blocked breakable softdelete', () => {
 
     memorytickobject(book, board, bullet, BULLET_CODE_NO_DIE)
 
-    expect(bullet!.removed).toBe(20)
+    expect(bullet!.removed).toBeUndefined()
     expect(
-      memoryreadelement(board, { x: 5, y: 5 }, READ_LAYER.OBJECT),
-    ).toBeUndefined()
+      memoryreadelement(board, { x: 5, y: 5 }, READ_LAYER.OBJECT)?.id,
+    ).toBe('sid_bullet_wall')
   })
 
   it('does not soft-delete a notbreakable bullet that walks into solid', () => {
@@ -100,7 +100,7 @@ describe('bullet blocked breakable softdelete', () => {
     ).toBe('sid_bullet_wall_nb')
   })
 
-  it('removes both breakable bullets when one walks into the other', () => {
+  it('leaves both breakable bullets when one walks into the other', () => {
     const bulletpage = memorycreatecodepage(BULLET_CODE_NO_DIE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([bulletpage, boardpage])
@@ -137,13 +137,13 @@ describe('bullet blocked breakable softdelete', () => {
 
     memorytickobject(book, board, follower, BULLET_CODE_NO_DIE)
 
-    expect(follower!.removed).toBe(30)
-    expect(lead!.removed).toBe(30)
+    expect(follower!.removed).toBeUndefined()
+    expect(lead!.removed).toBeUndefined()
     expect(
-      memoryreadelement(board, { x: 8, y: 15 }, READ_LAYER.OBJECT),
-    ).toBeUndefined()
+      memoryreadelement(board, { x: 8, y: 15 }, READ_LAYER.OBJECT)?.id,
+    ).toBe('sid_bullet_lead')
     expect(
-      memoryreadelement(board, { x: 9, y: 15 }, READ_LAYER.OBJECT),
-    ).toBeUndefined()
+      memoryreadelement(board, { x: 9, y: 15 }, READ_LAYER.OBJECT)?.id,
+    ).toBe('sid_bullet_follow')
   })
 })

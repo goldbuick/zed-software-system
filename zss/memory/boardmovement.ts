@@ -2,7 +2,6 @@ import { ispid } from 'zss/mapping/guid'
 import { TICK_FPS } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { dirfrompts, ptapplydir } from 'zss/words/dir'
-import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
 
 import {
@@ -11,16 +10,13 @@ import {
   memoryreadelement,
 } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
-import {
-  memorydeleteboardobject,
-  memorysafedeleteelement,
-} from './boardlifecycle'
+import { memorydeleteboardobject } from './boardlifecycle'
 import { memorycheckelementpushable, memoryreadelementstat } from './boards'
 import {
   memoryplayerblockedbyedge,
   memoryplayerwaszapped,
 } from './boardtransitions'
-import { memorybulletcollisionlabel, memorysendtoelement } from './gamesend'
+import { memorysendtoelement } from './gamesend'
 import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
@@ -232,6 +228,7 @@ export function memorymoveobject(
   }
 
   let blocked = memorymoveboardobject(board, element, dest)
+  const elementtouched = blocked
   const elementcollision = memoryreadelementstat(element, 'collision')
   const elementisplayer = ispid(element.id)
   const elementisbullet = elementcollision === COLLISION.ISBULLET
@@ -259,6 +256,7 @@ export function memorymoveobject(
       // player cannot push items
       const blockedid = blocked.id ?? ''
       if (ispushable && (!elementisplayer || !isitem) && !didpush[blockedid]) {
+        // first lets push it !
         didpush[blockedid] = true
         const bumpdir = dirfrompts(
           { x: element.x ?? 0, y: element.y ?? 0 },
@@ -268,92 +266,39 @@ export function memorymoveobject(
           { x: blocked.x ?? 0, y: blocked.y ?? 0 },
           bumpdir,
         )
-        if (!memorymoveobject(book, board, blocked, bump) && elementisplayer) {
-          memorysendtoelement(element, blocked, 'touch')
-        }
-      }
+        // do the push !
+        memorymoveobject(book, board, blocked, bump)
 
-      // update blocked by element
-      blocked = memorymoveboardobject(board, element, dest)
+        // update blocked by element
+        blocked = memorymoveboardobject(board, element, dest)
+      }
     }
   }
 
-  if (ispresent(blocked)) {
-    const blockedbyplayer = ispid(blocked.id)
-    const blockedisbullet =
-      memoryreadelementstat(blocked, 'collision') === COLLISION.ISBULLET
-    const blockedisedge = blocked.kind === 'edge'
+  // handle touch
+  if (ispresent(elementtouched)) {
+    const elementtouchedisedge = elementtouched.kind === 'edge'
+    const elementtouchedisplayer = ispid(elementtouched?.id ?? '')
     if (elementisplayer) {
-      if (blockedisedge) {
+      if (elementtouchedisedge) {
         memoryplayerblockedbyedge(board, element, dest)
-      } else if (blockedisbullet) {
-        if (board?.restartonzap) {
-          memoryplayerwaszapped(book, board, element, element.id ?? '')
-        }
-        memorysendtoelement(blocked, element, 'shot')
-      } else {
-        memorysendtoelement(blocked, element, 'touch')
-        memorysendtoelement(element, blocked, 'touch')
       }
+      // we now send our message to the other element
+      memorysendtoelement(element, elementtouched, 'touch')
     } else if (elementisbullet) {
-      if (!blockedisbullet) {
-        if (blockedbyplayer && board?.restartonzap) {
-          memoryplayerwaszapped(book, board, blocked, blocked.id ?? '')
-        }
-        memorysendtoelement(
-          element,
-          blocked,
-          memorybulletcollisionlabel(element, blocked),
-        )
+      if (elementtouchedisplayer && board?.restartonzap) {
+        memoryplayerwaszapped(book, board, element, element.id ?? '')
       }
-      // @isbreakable projectiles leave the cell even when the chip skips :thud
-      // #die. @notbreakable projectiles (e.g. star) stay until the chip #dies.
-      const contextstamp = READ_CONTEXT.timestamp
-      const bookstamp = book?.timestamp ?? 0
-      const deletestamp =
-        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
-      if (memoryreadelementstat(element, 'breakable')) {
-        memorysafedeleteelement(board, element, deletestamp)
-      }
-      if (blockedisbullet && ispresent(blocked.id)) {
-        const blockedobject = memoryreadelement(
-          board,
-          blocked.id,
-          READ_LAYER.OBJECT,
-        )
-        if (
-          ispresent(blockedobject) &&
-          memoryreadelementstat(blockedobject, 'breakable')
-        ) {
-          memorysafedeleteelement(board, blockedobject, deletestamp)
-        }
-      }
-    } else if (blockedisbullet) {
-      // Walker hits a bullet: same shot/partyshot policy as bullet→target.
-      memorysendtoelement(
-        blocked,
-        element,
-        memorybulletcollisionlabel(blocked, element),
-      )
-      const contextstamp = READ_CONTEXT.timestamp
-      const bookstamp = book?.timestamp ?? 0
-      const deletestamp =
-        contextstamp > 0 ? contextstamp : bookstamp > 0 ? bookstamp : 1
-      if (memoryreadelementstat(blocked, 'breakable')) {
-        memorysafedeleteelement(board, blocked, deletestamp)
-      }
-    } else if (!blockedisedge && memoryboardelementisobject(blocked)) {
-      // Object <-> object contact: dual partytouch (mirrors player dual touch).
-      memorysendtoelement(blocked, element, 'partytouch')
-      memorysendtoelement(element, blocked, 'partytouch')
+      // we now send our message to the other element
+      memorysendtoelement(element, elementtouched, 'shot')
+    } else {
+      // we now send our message to the other element
+      memorysendtoelement(element, elementtouched, 'touch')
     }
-
-    // blocked
-    return false
   }
 
   // we are allowed to move!
-  return true
+  return ispresent(blocked) === false
 }
 
 type BOOK_RUN_CODE_TARGETS = {
