@@ -291,6 +291,8 @@ export function memorymoveobject(
       }
       // we now send our message to the other element
       memorysendtoelement(element, elementtouched, 'shot')
+      // bullets thud on contact
+      memorysendtoelement(elementtouched, element, 'thud')
     } else {
       // we now send our message to the other element
       memorysendtoelement(element, elementtouched, 'touch')
