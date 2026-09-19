@@ -4599,7 +4599,7 @@ Source: https://zed.cafe/docs/lang/parser
 
 | Rule | Description |
 |------|-------------|
-| `command_if` | if/try/take/give/duplicate + words + optional block |
+| `command_if` | if/try/take/give + words + optional block |
 | `command_if_block` | Inline or `do` … `#done` block |
 | `command_else_if` | `#else if` + words + fork |
 | `command_else` | `#else` + optional words + fork |
@@ -5680,7 +5680,9 @@ Named-index **reads** go through `memorylistelement({ name })` in [`boardaccess.
 # boardmovement.ts
 Source: https://zed.cafe/docs/memory/boardmovement
 
-**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/partytouch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here. Player blockers dual-emit `:touch`; non-player object blockers dual-emit `:partytouch`.
+**Purpose**: Movement and collision — check blocked, move object, push chain, send messages on touch/partytouch/shot. Orchestrates movement with gamesend and player exits. Blocked-walk `:thud` is emitted by element firmware everytick, not here.
+
+**Contact**: Intent to enter a cell that holds a non-bullet object dual-emits contact **whether a push succeeds or fails**. Player movers pass `'touch'` (same-party remap in gamesend); non-player object movers pass literal `'partytouch'`. Still-blocked edge/bullet/shot handling does not re-emit touch/partytouch for a pair already contacted. Push chains dual-emit at each hop; the root mover also contacts every successfully moved deeper pushee.
 
 ## Dependencies
 
@@ -5856,9 +5858,10 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 
 | Contact | Label |
 |---------|-------|
-| Player walks into object / different party | dual `:touch` |
+| Player intends to enter object / other-player cell (push success or fail) | dual `:touch` |
 | Same-party contact (neither side `object` / `scroll` kind) | `:touch` remapped → `:partytouch` |
-| Non-player object blocked by another object | dual engine `:partytouch` (literal label; not a remap) |
+| Non-player object intends to enter another object cell (push success or fail) | dual engine `:partytouch` (literal label; not a remap) |
+| Push chain | Each hop dual-emits; root also dual-emits vs every successfully moved deeper pushee |
 
 | Path | Behavior |
 |------|----------|
@@ -5868,7 +5871,7 @@ Bullet collision labels come from `memorybulletcollisionlabel` (RoZZT `P1` owner
 | `:partyshot` | No auto-delete; multiplayer friendly fire **or** enemy-source vs creature |
 | `:partytouch` | Same-party player remap **or** object↔object contact; no damage / no softdelete |
 
-Player-initiated blocked walks send `:touch` (with same-party remap). Object↔object blocks dual-emit `:partytouch` from [`boardmovement.ts`](../boardmovement.ts) so pushables can wake transporters (`#transport senderid`).
+Intent to enter a non-bullet object cell dual-emits from [`boardmovement.ts`](../boardmovement.ts) whether the push clears the cell or not (still-blocked edge/bullet/shot paths do not re-send touch/partytouch for that pair). Player movers pass `'touch'` (same-party remap); object movers pass literal `'partytouch'` so pushables can wake transporters (`#transport senderid`).
 
 **Dual-layer directional `:shot`:** when `#send` targets a cell with label `shot`, both the object (if any) and the terrain (if any) at that PT receive `:shot`. Other labels still use a single `memoryreadelement` (object preferred, else terrain).
 

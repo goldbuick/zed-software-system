@@ -53,7 +53,7 @@
 </thead>
 <tbody>
 <tr>
-<td>Player walks into object / different party</td>
+<td>Player intends to enter object / other-player cell (push success or fail)</td>
 <td>dual <code>:touch</code></td>
 </tr>
 <tr>
@@ -61,8 +61,12 @@
 <td><code>:touch</code> remapped → <code>:partytouch</code></td>
 </tr>
 <tr>
-<td>Non-player object blocked by another object</td>
+<td>Non-player object intends to enter another object cell (push success or fail)</td>
 <td>dual engine <code>:partytouch</code> (literal label; not a remap)</td>
+</tr>
+<tr>
+<td>Push chain</td>
+<td>Each hop dual-emits; root also dual-emits vs every successfully moved deeper pushee</td>
 </tr>
 </tbody>
 </table></div>
@@ -96,7 +100,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>Player-initiated blocked walks send <code>:touch</code> (with same-party remap). Object↔object blocks dual-emit <code>:partytouch</code> from <a href="../boardmovement.ts"><code>boardmovement.ts</code></a> so pushables can wake transporters (<code>#transport senderid</code>).</p>
+<p>Intent to enter a non-bullet object cell dual-emits from <a href="../boardmovement.ts"><code>boardmovement.ts</code></a> whether the push clears the cell or not (still-blocked edge/bullet/shot paths do not re-send touch/partytouch for that pair). Player movers pass <code>'touch'</code> (same-party remap); object movers pass literal <code>'partytouch'</code> so pushables can wake transporters (<code>#transport senderid</code>).</p>
 <p><strong>Dual-layer directional <code>:shot</code>:</strong> when <code>#send</code> targets a cell with label <code>shot</code>, both the object (if any) and the terrain (if any) at that PT receive <code>:shot</code>. Other labels still use a single <code>memoryreadelement</code> (object preferred, else terrain).</p>
 <p>Canonical forms:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>#send at senderx sendery shot</span></span>
