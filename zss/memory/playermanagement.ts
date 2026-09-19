@@ -67,7 +67,10 @@ export function memorydebugcountplayerboards(player: string): {
   const flagvalue = memoryreadflag(mainbook, player, 'board')
   const flagsboard = isstring(flagvalue) ? flagvalue : ''
   const boardids: string[] = []
-  const pages = memorylistcodepage(mainbook, { type: CODE_PAGE_TYPE.BOARD })
+  // Match memoryreadboardbyaddress: walk every loaded book, not only main.
+  const pages = memorylistcodepage(memoryreadbooklist(), {
+    type: CODE_PAGE_TYPE.BOARD,
+  })
   for (let i = 0; i < pages.length; ++i) {
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(pages[i])
     if (ispresent(board?.objects[player])) {
@@ -82,8 +85,10 @@ export function memorypurgeplayerboardcopies(
   player: string,
   keepboardid?: string,
 ) {
-  const mainbook = memoryreadmainbook()
-  const pages = memorylistcodepage(mainbook, { type: CODE_PAGE_TYPE.BOARD })
+  // Match memoryreadboardbyaddress: walk every loaded book, not only main.
+  const pages = memorylistcodepage(memoryreadbooklist(), {
+    type: CODE_PAGE_TYPE.BOARD,
+  })
   for (let i = 0; i < pages.length; ++i) {
     const board = memoryreadcodepagedata<CODE_PAGE_TYPE.BOARD>(pages[i])
     if (!ispresent(board) || board.id === keepboardid) {
