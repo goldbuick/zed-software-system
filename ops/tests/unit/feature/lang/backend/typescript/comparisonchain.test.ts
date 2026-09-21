@@ -41,7 +41,7 @@ describe('chained comparison lowering', () => {
   it('folds a single literal compare', () => {
     const code = emit('#if 1 < 2\n')
     expect(code).toContain('api.if(1)')
-    expect(code).not.toContain('api.isLessThan')
+    expect(code).not.toContain('api.islessthan')
   })
 
   it('allows mixed operators in the chain', () => {

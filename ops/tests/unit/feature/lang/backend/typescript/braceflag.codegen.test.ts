@@ -23,18 +23,18 @@ function emit(source: string) {
 }
 
 describe('brace flag template codegen', () => {
-  it('emits print(get(color)) join with literal key, no opPlus', () => {
+  it('emits print(get(color)) join with literal key, no opplus', () => {
     const code = emit('#set "${color}key"\n')
     expect(code).toContain("api.print(api.get('color'), 'color')")
     expect(code).toContain("'key'")
-    expect(code).not.toContain('opPlus')
+    expect(code).not.toContain('opplus')
     expect(code).toContain("api.command('set'")
   })
 
   it('still emits key$color as prefix join', () => {
     const code = emit('#set "key$color"\n')
     expect(code).toContain("api.print(api.get('color'), 'color')")
-    expect(code).not.toContain('opPlus')
+    expect(code).not.toContain('opplus')
     expect(code).toContain("'key'")
   })
 })

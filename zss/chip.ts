@@ -25,6 +25,7 @@ import {
   isequal,
   isnumber,
   ispresent,
+  isstring,
 } from './mapping/types'
 import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory/bookoperations'
@@ -350,7 +351,7 @@ export type CHIP = {
    * @param rhs - Right-hand side value
    * @returns 1 if equal, 0 otherwise
    */
-  isEq: (lhs: WORD, rhs: WORD) => WORD
+  iseq: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Inequality comparison.
@@ -358,7 +359,7 @@ export type CHIP = {
    * @param rhs - Right-hand side value
    * @returns 1 if not equal, 0 otherwise
    */
-  isNotEq: (lhs: WORD, rhs: WORD) => WORD
+  isnoteq: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Less-than comparison for numbers.
@@ -366,7 +367,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns 1 if lhs < rhs, 0 otherwise
    */
-  isLessThan: (lhs: WORD, rhs: WORD) => WORD
+  islessthan: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Greater-than comparison for numbers.
@@ -374,7 +375,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns 1 if lhs > rhs, 0 otherwise
    */
-  isGreaterThan: (lhs: WORD, rhs: WORD) => WORD
+  isgreaterthan: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Less-than-or-equal comparison for numbers.
@@ -382,7 +383,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns 1 if lhs <= rhs, 0 otherwise
    */
-  isLessThanOrEq: (lhs: WORD, rhs: WORD) => WORD
+  islessthanoreq: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Greater-than-or-equal comparison for numbers.
@@ -390,7 +391,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns 1 if lhs >= rhs, 0 otherwise
    */
-  isGreaterThanOrEq: (lhs: WORD, rhs: WORD) => WORD
+  isgreaterthanoreq: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Addition operator. Supports both numbers and string concatenation.
@@ -398,7 +399,7 @@ export type CHIP = {
    * @param rhs - Right-hand side value
    * @returns The sum or concatenation result
    */
-  opPlus: (lhs: WORD, rhs: WORD) => WORD
+  opplus: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Subtraction operator for numbers.
@@ -406,7 +407,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns The difference
    */
-  opMinus: (lhs: WORD, rhs: WORD) => WORD
+  opminus: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Exponentiation operator (power).
@@ -414,7 +415,7 @@ export type CHIP = {
    * @param rhs - Exponent number
    * @returns lhs raised to the power of rhs
    */
-  opPower: (lhs: WORD, rhs: WORD) => WORD
+  oppower: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Multiplication operator for numbers.
@@ -422,7 +423,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns The product
    */
-  opMultiply: (lhs: WORD, rhs: WORD) => WORD
+  opmultiply: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Division operator for numbers.
@@ -430,7 +431,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns The quotient
    */
-  opDivide: (lhs: WORD, rhs: WORD) => WORD
+  opdivide: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Modulo (remainder) operator for numbers.
@@ -438,7 +439,7 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns The remainder of lhs / rhs
    */
-  opModDivide: (lhs: WORD, rhs: WORD) => WORD
+  opmoddivide: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Floor division operator for numbers.
@@ -446,21 +447,21 @@ export type CHIP = {
    * @param rhs - Right-hand side number
    * @returns The floor of lhs / rhs
    */
-  opFloorDivide: (lhs: WORD, rhs: WORD) => WORD
+  opfloordivide: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Unary plus operator (converts to number).
    * @param rhs - The value to convert
    * @returns The numeric value
    */
-  opUniPlus: (rhs: WORD) => WORD
+  opuniplus: (rhs: WORD) => WORD
 
   /**
    * Unary minus operator (negates the number).
    * @param rhs - The number to negate
    * @returns The negated value
    */
-  opUniMinus: (rhs: WORD) => WORD
+  opuniminus: (rhs: WORD) => WORD
 }
 
 /**
@@ -474,6 +475,45 @@ function maptoresult(value: WORD): WORD {
     return value.length > 0 ? 1 : 0
   }
   return value ?? 0
+}
+
+/**
+ * Bare word that readexpr would pass through as its own name because get misses.
+ * Use the raw operand (not the resolved value) so set flags holding other strings
+ * are not treated as unset.
+ */
+function isunsetflagword(
+  raw: WORD,
+  getflag: (name: string) => unknown,
+): boolean {
+  return isstring(raw) && getflag(raw) === undefined
+}
+
+/** Unset bare flag word -> 0; else resolve via readargs NUMBER. */
+function resolvenumericoperand(
+  raw: WORD,
+  getflag: (name: string) => unknown,
+): number {
+  if (isunsetflagword(raw, getflag)) {
+    return 0
+  }
+  if (typeof raw === 'number') {
+    return raw
+  }
+  const [value] = readargs([raw], 0, [ARG_TYPE.NUMBER])
+  return value
+}
+
+/** Unset bare flag word -> 0; else resolve via readargs ANY (opplus concat). */
+function resolveanyoperand(
+  raw: WORD,
+  getflag: (name: string) => unknown,
+): WORD {
+  if (isunsetflagword(raw, getflag)) {
+    return 0
+  }
+  const [value] = readargs([raw], 0, [ARG_TYPE.ANY])
+  return value
 }
 
 /**
@@ -890,8 +930,11 @@ export function createchip(
       return invokecommand(NAME(maptostring(name)), args)
     },
     if(...words) {
+      const raw = words[0]
       const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = maptoresult(value)
+      const result = isunsetflagword(raw, (name) => chip.get(name))
+        ? 0
+        : maptoresult(value)
 
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))
@@ -1091,8 +1134,11 @@ export function createchip(
       return result
     },
     waitfor(...words) {
+      const raw = words[0]
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = maptoresult(value)
+      const result = isunsetflagword(raw, (name) => chip.get(name))
+        ? 0
+        : maptoresult(value)
 
       if (!result) {
         // conditional failed, yield until next tick
@@ -1102,12 +1148,14 @@ export function createchip(
       return result ? 1 : 0
     },
     or(...words) {
-      let lastvalue = 0
+      let lastvalue: WORD = 0
       for (let i = 0; i < words.length; ) {
+        const raw = words[i]
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
-        lastvalue = value
+        const unset = isunsetflagword(raw, (name) => chip.get(name))
+        lastvalue = unset ? 0 : value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
-        if (maptoresult(lastvalue)) {
+        if (!unset && maptoresult(lastvalue)) {
           break // or returns the first truthy value
         }
         i = next
@@ -1115,12 +1163,14 @@ export function createchip(
       return lastvalue
     },
     and(...words) {
-      let lastvalue = 0
+      let lastvalue: WORD = 0
       for (let i = 0; i < words.length; ) {
+        const raw = words[i]
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
-        lastvalue = value
+        const unset = isunsetflagword(raw, (name) => chip.get(name))
+        lastvalue = unset ? 0 : value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
-        if (!maptoresult(lastvalue)) {
+        if (unset || !maptoresult(lastvalue)) {
           break // and returns the first falsy value, or the last value
         }
         i = next
@@ -1129,8 +1179,11 @@ export function createchip(
     },
     not(...words) {
       // invert outcome
+      const raw = words[0]
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = maptoresult(value)
+      const result = isunsetflagword(raw, (name) => chip.get(name))
+        ? 0
+        : maptoresult(value)
       return result ? 0 : 1
     },
     expr(...words) {
@@ -1138,7 +1191,8 @@ export function createchip(
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
       return value
     },
-    isEq(lhs, rhs) {
+    iseq(lhs, rhs) {
+      // Keep unset name == unset name (dual-use string pass-through).
       const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
       const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       if (typeof left === 'object' || typeof right === 'object') {
@@ -1146,110 +1200,72 @@ export function createchip(
       }
       return left === right ? 1 : 0
     },
-    isNotEq(lhs, rhs) {
-      return this.isEq(lhs, rhs) ? 0 : 1
+    isnoteq(lhs, rhs) {
+      return this.iseq(lhs, rhs) ? 0 : 1
     },
-    isLessThan(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs < rhs ? 1 : 0
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    islessthan(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left < right ? 1 : 0
     },
-    isGreaterThan(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs > rhs ? 1 : 0
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    isgreaterthan(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left > right ? 1 : 0
     },
-    isLessThanOrEq(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs <= rhs ? 1 : 0
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    islessthanoreq(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left <= right ? 1 : 0
     },
-    isGreaterThanOrEq(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs >= rhs ? 1 : 0
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    isgreaterthanoreq(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left >= right ? 1 : 0
     },
-    opPlus(lhs, rhs) {
+    opplus(lhs, rhs) {
       if (typeof lhs === 'number' && typeof rhs === 'number') {
         return lhs + rhs
       }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
-      return left + right
+      const left = resolveanyoperand(lhs, (name) => chip.get(name))
+      const right = resolveanyoperand(rhs, (name) => chip.get(name))
+      return (left as any) + (right as any)
     },
-    opMinus(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs - rhs
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
+    opminus(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left - right
     },
-    opPower(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return Math.pow(lhs, rhs)
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    oppower(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return Math.pow(left, right)
     },
-    opMultiply(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs * rhs
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    opmultiply(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left * right
     },
-    opDivide(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs / rhs
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    opdivide(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left / right
     },
-    opModDivide(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs % rhs
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    opmoddivide(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return left % right
     },
-    opFloorDivide(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return Math.floor(lhs / rhs)
-      }
-      const [left] = readargs([lhs], 0, [ARG_TYPE.NUMBER])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
+    opfloordivide(lhs, rhs) {
+      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
+      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
       return Math.floor(left / right)
     },
-    opUniPlus(rhs) {
-      if (typeof rhs === 'number') {
-        return +rhs
-      }
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
-      return +right
+    opuniplus(rhs) {
+      return +resolvenumericoperand(rhs, (name) => chip.get(name))
     },
-    opUniMinus(rhs) {
-      if (typeof rhs === 'number') {
-        return -rhs
-      }
-      const [right] = readargs([rhs], 0, [ARG_TYPE.NUMBER])
-      return -right
+    opuniminus(rhs) {
+      return -resolvenumericoperand(rhs, (name) => chip.get(name))
     },
   }
 

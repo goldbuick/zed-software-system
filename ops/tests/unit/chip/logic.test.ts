@@ -42,9 +42,26 @@ jest.mock('zss/firmware/runner', () => ({
   DRIVER_TYPE: { RUNTIME: 0, CLI: 1 },
   firmwareaftertick: jest.fn(),
   firmwareeverytick: jest.fn(),
-  firmwareget: () => [false, undefined],
+  firmwareget: (_driver: unknown, chip: { id: () => string }, name: string) => {
+    const bag = chipflagstore[chip.id()]
+    if (bag && name in bag) {
+      return [true, bag[name]]
+    }
+    return [false, undefined]
+  },
   firmwaregetcommand: () => undefined,
-  firmwareset: () => [false, undefined],
+  firmwareset: (
+    _driver: unknown,
+    chip: { id: () => string },
+    name: string,
+    value: unknown,
+  ) => {
+    if (!chipflagstore[chip.id()]) {
+      chipflagstore[chip.id()] = {}
+    }
+    chipflagstore[chip.id()][name] = value
+    return [true, value]
+  },
 }))
 
 jest.mock('zss/memory/permissions', () => ({
@@ -56,6 +73,7 @@ import type { CHIP } from 'zss/chip'
 import type { GeneratorBuild } from 'zss/feature/lang/backend/typescript/generator'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { createchipid } from 'zss/mapping/guid'
+import { READ_CONTEXT } from 'zss/words/reader'
 
 function idlebuild(): GeneratorBuild {
   return {
@@ -72,7 +90,10 @@ function idlebuild(): GeneratorBuild {
 
 function makechip(id: string) {
   delete chipflagstore[createchipid(id)]
-  return createchip(id, DRIVER_TYPE.RUNTIME, idlebuild())
+  delete chipflagstore[id]
+  const chip = createchip(id, DRIVER_TYPE.RUNTIME, idlebuild())
+  READ_CONTEXT.get = (name: string) => chip.get(name)
+  return chip
 }
 
 describe('chip and / or empty-array truthiness', () => {
@@ -80,6 +101,11 @@ describe('chip and / or empty-array truthiness', () => {
     for (const key of Object.keys(chipflagstore)) {
       delete chipflagstore[key]
     }
+    READ_CONTEXT.get = undefined
+  })
+
+  afterEach(() => {
+    READ_CONTEXT.get = undefined
   })
 
   it('and treats empty array as falsy (inputmove [] and inputshift)', () => {
@@ -100,5 +126,68 @@ describe('chip and / or empty-array truthiness', () => {
     const chip = makechip('or_empty')
     expect(chip.or([], 1)).toBe(1)
     expect(chip.or([], 0)).toBe(0)
+  })
+})
+
+describe('chip unset flag truthiness (dual-use pass-through)', () => {
+  beforeEach(() => {
+    for (const key of Object.keys(chipflagstore)) {
+      delete chipflagstore[key]
+    }
+    READ_CONTEXT.get = undefined
+  })
+
+  afterEach(() => {
+    READ_CONTEXT.get = undefined
+  })
+
+  it('if treats unset bare flag as falsy', () => {
+    const chip = makechip('if_unset')
+    expect(chip.if('follower')).toBe(0)
+  })
+
+  it('not treats unset bare flag as falsy input (returns 1)', () => {
+    const chip = makechip('not_unset')
+    expect(chip.not('follower')).toBe(1)
+  })
+
+  it('or skips unset and returns next truthy', () => {
+    const chip = makechip('or_unset')
+    expect(chip.or('follower', 1)).toBe(1)
+    expect(chip.or('follower', 0)).toBe(0)
+  })
+
+  it('and stops on unset as falsy', () => {
+    const chip = makechip('and_unset')
+    expect(chip.and('follower', 1)).toBe(0)
+  })
+
+  it('if treats set flag as truthy including other-string values', () => {
+    const chip = makechip('if_set')
+    chip.set('follower', 'oid_seg')
+    expect(chip.if('follower')).toBe(1)
+    chip.set('doot', 'fart')
+    expect(chip.if('doot')).toBe(1)
+  })
+
+  it('iseq: unset name equals unset name; set doot fart matches fart', () => {
+    const chip = makechip('iseq_unset')
+    expect(chip.iseq('follower', 'follower')).toBe(1)
+    expect(chip.iseq('follower', 'other')).toBe(0)
+    chip.set('doot', 'fart')
+    expect(chip.iseq('doot', 'fart')).toBe(1)
+  })
+
+  it('opplus / opminus coerce unset bare flags to 0', () => {
+    const chip = makechip('arith_unset')
+    expect(chip.opplus('follower', 1)).toBe(1)
+    expect(chip.opminus(5, 'follower')).toBe(5)
+    chip.set('score', 3)
+    expect(chip.opplus('score', 2)).toBe(5)
+  })
+
+  it('expr still returns unset name string (dual-use)', () => {
+    const chip = makechip('expr_unset')
+    expect(chip.expr('follower')).toBe('follower')
   })
 })
