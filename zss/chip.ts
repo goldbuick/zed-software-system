@@ -464,55 +464,40 @@ export type CHIP = {
   opuniminus: (rhs: WORD) => WORD
 }
 
+type CHIP_GET = (name: string) => any
+
 /**
  * Converts a value to a result (truthy/falsy representation).
  * Arrays are truthy if they have length > 0, otherwise uses the value or 0.
  * @param value - The value to convert
  * @returns 1 if truthy, 0 if falsy
  */
-function maptoresult(value: WORD): WORD {
+function maptoresult(value: WORD, get: CHIP_GET): 0 | 1 {
   if (isarray(value)) {
     return value.length > 0 ? 1 : 0
   }
-  return value ?? 0
+  if (isstring(value)) {
+    return (get(value) ?? 0) ? 1 : 0
+  }
+  return (value ?? 0) ? 1 : 0
 }
 
 /**
- * Bare word that readexpr would pass through as its own name because get misses.
- * Use the raw operand (not the resolved value) so set flags holding other strings
- * are not treated as unset.
+ * Converts a value when a string is passed in.
+ * @param value - The value to convert
+ * @param get - The function to get the value from the chip
+ * @returns The converted value or pass through
  */
-function isunsetflagword(
-  raw: WORD,
-  getflag: (name: string) => unknown,
-): boolean {
-  return isstring(raw) && getflag(raw) === undefined
-}
-
-/** Unset bare flag word -> 0; else resolve via readargs NUMBER. */
-function resolvenumericoperand(
-  raw: WORD,
-  getflag: (name: string) => unknown,
-): number {
-  if (isunsetflagword(raw, getflag)) {
-    return 0
+function maptovalue(value: WORD, get: CHIP_GET): any {
+  // already a number
+  if (isnumber(value)) {
+    return value
   }
-  if (typeof raw === 'number') {
-    return raw
+  // assume string is a flag name
+  if (isstring(value)) {
+    return get(value) ?? 0
   }
-  const [value] = readargs([raw], 0, [ARG_TYPE.NUMBER])
-  return value
-}
-
-/** Unset bare flag word -> 0; else resolve via readargs ANY (opplus concat). */
-function resolveanyoperand(
-  raw: WORD,
-  getflag: (name: string) => unknown,
-): WORD {
-  if (isunsetflagword(raw, getflag)) {
-    return 0
-  }
-  const [value] = readargs([raw], 0, [ARG_TYPE.ANY])
+  // pass through
   return value
 }
 
@@ -930,12 +915,9 @@ export function createchip(
       return invokecommand(NAME(maptostring(name)), args)
     },
     if(...words) {
-      const raw = words[0]
       const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = isunsetflagword(raw, (name) => chip.get(name))
-        ? 0
-        : maptoresult(value)
 
+      const result = maptoresult(value, chip.get)
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))
       }
@@ -1134,11 +1116,8 @@ export function createchip(
       return result
     },
     waitfor(...words) {
-      const raw = words[0]
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = isunsetflagword(raw, (name) => chip.get(name))
-        ? 0
-        : maptoresult(value)
+      const result = maptoresult(value, chip.get)
 
       if (!result) {
         // conditional failed, yield until next tick
@@ -1150,12 +1129,10 @@ export function createchip(
     or(...words) {
       let lastvalue: WORD = 0
       for (let i = 0; i < words.length; ) {
-        const raw = words[i]
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
-        const unset = isunsetflagword(raw, (name) => chip.get(name))
-        lastvalue = unset ? 0 : value
+        lastvalue = value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
-        if (!unset && maptoresult(lastvalue)) {
+        if (!maptoresult(lastvalue, chip.get)) {
           break // or returns the first truthy value
         }
         i = next
@@ -1165,12 +1142,10 @@ export function createchip(
     and(...words) {
       let lastvalue: WORD = 0
       for (let i = 0; i < words.length; ) {
-        const raw = words[i]
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
-        const unset = isunsetflagword(raw, (name) => chip.get(name))
-        lastvalue = unset ? 0 : value
+        lastvalue = value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
-        if (unset || !maptoresult(lastvalue)) {
+        if (!maptoresult(lastvalue, chip.get)) {
           break // and returns the first falsy value, or the last value
         }
         i = next
@@ -1179,11 +1154,8 @@ export function createchip(
     },
     not(...words) {
       // invert outcome
-      const raw = words[0]
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = isunsetflagword(raw, (name) => chip.get(name))
-        ? 0
-        : maptoresult(value)
+      const result = maptoresult(value, chip.get)
       return result ? 0 : 1
     },
     expr(...words) {
@@ -1195,77 +1167,75 @@ export function createchip(
       // Keep unset name == unset name (dual-use string pass-through).
       const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
       const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
-      if (typeof left === 'object' || typeof right === 'object') {
-        return isequal(left, right) ? 1 : 0
+      const leftvalue = maptovalue(left, chip.get)
+      if (typeof leftvalue === 'object' || typeof right === 'object') {
+        return isequal(leftvalue, right) ? 1 : 0
       }
-      return left === right ? 1 : 0
+      return leftvalue === right ? 1 : 0
     },
     isnoteq(lhs, rhs) {
-      return this.iseq(lhs, rhs) ? 0 : 1
+      return chip.iseq(lhs, rhs) ? 0 : 1
     },
     islessthan(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left < right ? 1 : 0
     },
     isgreaterthan(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left > right ? 1 : 0
     },
     islessthanoreq(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left <= right ? 1 : 0
     },
     isgreaterthanoreq(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left >= right ? 1 : 0
     },
     opplus(lhs, rhs) {
-      if (typeof lhs === 'number' && typeof rhs === 'number') {
-        return lhs + rhs
-      }
-      const left = resolveanyoperand(lhs, (name) => chip.get(name))
-      const right = resolveanyoperand(rhs, (name) => chip.get(name))
-      return (left as any) + (right as any)
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
+      return left + right
     },
     opminus(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left - right
     },
     oppower(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return Math.pow(left, right)
     },
     opmultiply(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left * right
     },
     opdivide(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left / right
     },
     opmoddivide(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return left % right
     },
     opfloordivide(lhs, rhs) {
-      const left = resolvenumericoperand(lhs, (name) => chip.get(name))
-      const right = resolvenumericoperand(rhs, (name) => chip.get(name))
+      const left = maptovalue(lhs, chip.get)
+      const right = maptovalue(rhs, chip.get)
       return Math.floor(left / right)
     },
     opuniplus(rhs) {
-      return +resolvenumericoperand(rhs, (name) => chip.get(name))
+      return +maptovalue(rhs, chip.get)
     },
     opuniminus(rhs) {
-      return -resolvenumericoperand(rhs, (name) => chip.get(name))
+      return -maptovalue(rhs, chip.get)
     },
   }
 
