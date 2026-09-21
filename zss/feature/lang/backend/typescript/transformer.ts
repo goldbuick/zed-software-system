@@ -108,32 +108,32 @@ function transformcompare(ast: CodeNode) {
     }
     switch (ast.compare.method) {
       case COMPARE.IS_EQ:
-        return writeApi(ast, 'isEq', [
+        return writeApi(ast, 'iseq', [
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
       case COMPARE.IS_NOT_EQ:
-        return writeApi(ast, 'isNotEq', [
+        return writeApi(ast, 'isnoteq', [
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
       case COMPARE.IS_LESS_THAN:
-        return writeApi(ast, 'isLessThan', [
+        return writeApi(ast, 'islessthan', [
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
       case COMPARE.IS_GREATER_THAN:
-        return writeApi(ast, 'isGreaterThan', [
+        return writeApi(ast, 'isgreaterthan', [
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
       case COMPARE.IS_LESS_THAN_OR_EQ:
-        return writeApi(ast, 'isLessThanOrEq', [
+        return writeApi(ast, 'islessthanoreq', [
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
       case COMPARE.IS_GREATER_THAN_OR_EQ:
-        return writeApi(ast, 'isGreaterThanOrEq', [
+        return writeApi(ast, 'isgreaterthanoreq', [
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
@@ -156,23 +156,23 @@ function transformoperatoritem(ast: CodeNode, operation: SourceNode) {
   if (ast.type === NODE.OPERATOR_ITEM) {
     switch (ast.operator) {
       case OPERATOR.PLUS:
-        return prefixapi(operation, 'opPlus', ast.rhs)
+        return prefixapi(operation, 'opplus', ast.rhs)
       case OPERATOR.MINUS:
-        return prefixapi(operation, 'opMinus', ast.rhs)
+        return prefixapi(operation, 'opminus', ast.rhs)
       case OPERATOR.POWER:
-        return prefixapi(operation, 'opPower', ast.rhs)
+        return prefixapi(operation, 'oppower', ast.rhs)
       case OPERATOR.MULTIPLY:
-        return prefixapi(operation, 'opMultiply', ast.rhs)
+        return prefixapi(operation, 'opmultiply', ast.rhs)
       case OPERATOR.DIVIDE:
-        return prefixapi(operation, 'opDivide', ast.rhs)
+        return prefixapi(operation, 'opdivide', ast.rhs)
       case OPERATOR.MOD_DIVIDE:
-        return prefixapi(operation, 'opModDivide', ast.rhs)
+        return prefixapi(operation, 'opmoddivide', ast.rhs)
       case OPERATOR.FLOOR_DIVIDE:
-        return prefixapi(operation, 'opFloorDivide', ast.rhs)
+        return prefixapi(operation, 'opfloordivide', ast.rhs)
       case OPERATOR.UNI_PLUS:
-        return prefixuniapi(operation, 'opUniPlus', ast.rhs)
+        return prefixuniapi(operation, 'opuniplus', ast.rhs)
       case OPERATOR.UNI_MINUS:
-        return prefixuniapi(operation, 'opUniMinus', ast.rhs)
+        return prefixuniapi(operation, 'opuniminus', ast.rhs)
     }
   }
   return write(ast, '')

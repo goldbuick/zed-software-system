@@ -36,7 +36,7 @@ describe('simple chat player compile', () => {
     expect(build.errors ?? []).toEqual([])
     expect(build.code).toBeDefined()
     expect(build.source).toContain("api.if('inputmenu')")
-    expect(build.source).toContain("api.opMinus(1, 'hint')")
+    expect(build.source).toContain("api.opminus(1, 'hint')")
     expect(build.source).toContain("api.command('think')")
   })
 })

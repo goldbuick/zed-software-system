@@ -308,17 +308,6 @@ export function readexpr(index: number): [any, number] {
         )
         return [isblocked ? 1 : 0, iii]
       }
-      case 'pget': {
-        // PGET <dir> <attribute>
-        const [target, attrii] = resolveremotedir(READ_CONTEXT.words, ii)
-        const [attr, iii] = readargs(READ_CONTEXT.words, attrii, [
-          ARG_TYPE.NAME,
-        ])
-        if (!ispresent(target)) {
-          return [0, iii]
-        }
-        return [readremoteattr(target, attr), iii]
-      }
       case 'any': {
         // ANY <kind|group|color>
         // ANY <dir> <kind|group|color>
@@ -494,6 +483,17 @@ export function readexpr(index: number): [any, number] {
         return [randomintegerwith(`${seed}`, a, b ?? 0), iiii]
       }
       // advanced
+      case 'pget': {
+        // PGET <dir> <attribute>
+        const [target, attrii] = resolveremotedir(READ_CONTEXT.words, ii)
+        const [attr, iii] = readargs(READ_CONTEXT.words, attrii, [
+          ARG_TYPE.NAME,
+        ])
+        if (!ispresent(target)) {
+          return [0, iii]
+        }
+        return [readremoteattr(target, attr), iii]
+      }
       case 'run': {
         // run logic
         const withwords = READ_CONTEXT.words.slice(ii)

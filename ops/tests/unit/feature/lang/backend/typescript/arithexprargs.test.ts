@@ -47,7 +47,7 @@ describe('arith expr args for abs/int*/clamp/min/max', () => {
   it('parses intsign / abs with full additive math', () => {
     const code = emit('#set p8 intsign playery * 20 - thisy\n')
     expect(code).toContain('intsign')
-    expect(code).toMatch(/opMultiply|opMinus/)
+    expect(code).toMatch(/opmultiply|opminus/)
 
     assertcompile('#set p8 abs playerx - thisx\n')
     assertcompile('#set p8 intfloor currenttick / cycle\n')

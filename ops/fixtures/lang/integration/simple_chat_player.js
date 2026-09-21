@@ -189,10 +189,10 @@ case 62:
   if (api.command('set', 'torchmeter', ' $brown$157 $yellowTorches:$torches')) { continue; };
   break;
 case 63:
-  if (!api.if(api.isLessThan('torches', 10))) { api.jump(66); continue; }
+  if (!api.if(api.islessthan('torches', 10))) { api.jump(66); continue; }
   break;
 case 64:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '  '))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '  '))) { continue; };
   break;
 case 65:
   api.jump(71); continue;
@@ -201,10 +201,10 @@ case 66:
   // alt logic
   break;
 case 67:
-  if (!api.if(api.isLessThan('torches', 100))) { api.jump(70); continue; }
+  if (!api.if(api.islessthan('torches', 100))) { api.jump(70); continue; }
   break;
 case 68:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', ' '))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', ' '))) { continue; };
   break;
 case 69:
   api.jump(71); continue;
@@ -216,13 +216,13 @@ case 71:
   // end of if
   break;
 case 72:
-  if (!api.if(api.isGreaterThan('wick', 0))) { api.jump(98); continue; }
+  if (!api.if(api.isgreaterthan('wick', 0))) { api.jump(98); continue; }
   break;
 case 73:
-  if (!api.if(api.isGreaterThan('wick', 50))) { api.jump(76); continue; }
+  if (!api.if(api.isgreaterthan('wick', 50))) { api.jump(76); continue; }
   break;
 case 74:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$177'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$177'))) { continue; };
   break;
 case 75:
   api.jump(78); continue;
@@ -231,16 +231,16 @@ case 76:
   // alt logic
   break;
 case 77:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$176'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$176'))) { continue; };
   break;
 case 78:
   // end of if
   break;
 case 79:
-  if (!api.if(api.isGreaterThan('wick', 100))) { api.jump(82); continue; }
+  if (!api.if(api.isgreaterthan('wick', 100))) { api.jump(82); continue; }
   break;
 case 80:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$177'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$177'))) { continue; };
   break;
 case 81:
   api.jump(84); continue;
@@ -249,16 +249,16 @@ case 82:
   // alt logic
   break;
 case 83:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$176'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$176'))) { continue; };
   break;
 case 84:
   // end of if
   break;
 case 85:
-  if (!api.if(api.isGreaterThan('wick', 150))) { api.jump(88); continue; }
+  if (!api.if(api.isgreaterthan('wick', 150))) { api.jump(88); continue; }
   break;
 case 86:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$177'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$177'))) { continue; };
   break;
 case 87:
   api.jump(90); continue;
@@ -267,16 +267,16 @@ case 88:
   // alt logic
   break;
 case 89:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$176'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$176'))) { continue; };
   break;
 case 90:
   // end of if
   break;
 case 91:
-  if (!api.if(api.isGreaterThan('wick', 200))) { api.jump(94); continue; }
+  if (!api.if(api.isgreaterthan('wick', 200))) { api.jump(94); continue; }
   break;
 case 92:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$177'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$177'))) { continue; };
   break;
 case 93:
   api.jump(96); continue;
@@ -285,7 +285,7 @@ case 94:
   // alt logic
   break;
 case 95:
-  if (api.command('set', 'torchmeter', api.opPlus('torchmeter', '$176'))) { continue; };
+  if (api.command('set', 'torchmeter', api.opplus('torchmeter', '$176'))) { continue; };
   break;
 case 96:
   // end of if
@@ -315,28 +315,28 @@ case 104:
   if (api.command('set', 'keylist', ' $white$12 $yellow   Keys:')) { continue; };
   break;
 case 105:
-  api.if('blackkey', 'set', 'keylist', api.opPlus('keylist', '$black$12'));
+  api.if('blackkey', 'set', 'keylist', api.opplus('keylist', '$black$12'));
   break;
 case 106:
-  api.if('bluekey', 'set', 'keylist', api.opPlus('keylist', '$blue$12'));
+  api.if('bluekey', 'set', 'keylist', api.opplus('keylist', '$blue$12'));
   break;
 case 107:
-  api.if('greenkey', 'set', 'keylist', api.opPlus('keylist', '$green$12'));
+  api.if('greenkey', 'set', 'keylist', api.opplus('keylist', '$green$12'));
   break;
 case 108:
-  api.if('cyankey', 'set', 'keylist', api.opPlus('keylist', '$cyan$12'));
+  api.if('cyankey', 'set', 'keylist', api.opplus('keylist', '$cyan$12'));
   break;
 case 109:
-  api.if('redkey', 'set', 'keylist', api.opPlus('keylist', '$red$12'));
+  api.if('redkey', 'set', 'keylist', api.opplus('keylist', '$red$12'));
   break;
 case 110:
-  api.if('purplekey', 'set', 'keylist', api.opPlus('keylist', '$purple$12'));
+  api.if('purplekey', 'set', 'keylist', api.opplus('keylist', '$purple$12'));
   break;
 case 111:
-  api.if('yellowkey', 'set', 'keylist', api.opPlus('keylist', '$yellow$12'));
+  api.if('yellowkey', 'set', 'keylist', api.opplus('keylist', '$yellow$12'));
   break;
 case 112:
-  api.if('whitekey', 'set', 'keylist', api.opPlus('keylist', '$white$12'));
+  api.if('whitekey', 'set', 'keylist', api.opplus('keylist', '$white$12'));
   break;
 case 113:
   api.text('$keylist');
@@ -381,7 +381,7 @@ case 126:
   api.text('');
   break;
 case 127:
-  if (!api.if(api.isEq('graphics', 'fpv'))) { api.jump(131); continue; }
+  if (!api.if(api.iseq('graphics', 'fpv'))) { api.jump(131); continue; }
   break;
 case 128:
   api.hyperlink('Turn Left', 'turnleft', 'hk', 'q');
@@ -408,7 +408,7 @@ case 135:
   if (!api.if('inputmenu')) { api.jump(139); continue; }
   break;
 case 136:
-  if (api.command('set', 'hint', api.opMinus(1, 'hint'))) { continue; };
+  if (api.command('set', 'hint', api.opminus(1, 'hint'))) { continue; };
   break;
 case 137:
   if (api.command('idle')) { continue; };
@@ -486,10 +486,10 @@ case 161:
   // -161 'display code' comment
   break;
 case 162:
-  if (!api.if(api.isGreaterThan('energized', 0))) { api.jump(183); continue; }
+  if (!api.if(api.isgreaterthan('energized', 0))) { api.jump(183); continue; }
   break;
 case 163:
-  if (!api.if(api.isEq('char', 2))) { api.jump(166); continue; }
+  if (!api.if(api.iseq('char', 2))) { api.jump(166); continue; }
   break;
 case 164:
   if (api.command('char', 1)) { continue; };
@@ -507,7 +507,7 @@ case 168:
   // end of if
   break;
 case 169:
-  if (!api.if(api.isEq(api.opModDivide('currenttick', 2), 1))) { api.jump(172); continue; }
+  if (!api.if(api.iseq(api.opmoddivide('currenttick', 2), 1))) { api.jump(172); continue; }
   break;
 case 170:
   if (api.command('color', 'white')) { continue; };
@@ -519,7 +519,7 @@ case 172:
   // alt logic
   break;
 case 173:
-  if (api.command('color', api.opPlus(api.opModDivide('currenttick', 7), 8))) { continue; };
+  if (api.command('color', api.opplus(api.opmoddivide('currenttick', 7), 8))) { continue; };
   break;
 case 174:
   // end of if
