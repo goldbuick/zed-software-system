@@ -2,7 +2,7 @@
 title: transformer.ts
 ---
 
-**Purpose**: Transforms AST (`CodeNode`) into JavaScript with source maps. Emits code that calls `api.*` methods (command, text, hyperlink, isEq, opPlus, etc.) and uses `switch`/`case` + `jump` for line-based control flow.
+**Purpose**: Transforms AST (`CodeNode`) into JavaScript with source maps. Emits code that calls `api.*` methods (command, text, hyperlink, iseq, opplus, etc.) and uses `switch`/`case` + `jump` for line-based control flow.
 
 ## Dependencies
 
@@ -60,8 +60,8 @@ try {
 | `WHILE` / `REPEAT` / `FOREACH` | Loop with loop/done labels |
 | `BREAK` / `CONTINUE` | `api.jump(...); continue` |
 | `OR` / `AND` / `NOT` | `api.or(...)`, etc. |
-| `COMPARE` | `api.isEq`, `api.isNotEq`, etc. |
-| `OPERATOR` | `api.opPlus`, `api.opMinus`, etc. |
+| `COMPARE` | `api.iseq`, `api.isnoteq`, etc. |
+| `OPERATOR` | `api.opplus`, `api.opminus`, etc. |
 
 ## Internal Helpers
 
