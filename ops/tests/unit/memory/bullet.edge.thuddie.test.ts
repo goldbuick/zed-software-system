@@ -29,7 +29,7 @@ describe('bullet edge thud die', () => {
     memoryresetbooks([])
   })
 
-  it('does not remove a non-breakable bullet that walks into board edge', () => {
+  it('dies via :thud when a bullet walks into board edge', () => {
     const bulletpage = memorycreatecodepage(BULLET_CODE, {})
     const boardpage = memorycreatecodepage('@board arena\n', {})
     const book = memorycreatebook([bulletpage, boardpage])
@@ -53,18 +53,15 @@ describe('bullet edge thud die', () => {
     bullet!.stepy = -1
     book.timestamp = 10
 
-    // Edge block sends shot/partyshot to the edge; soft-delete only runs for
-    // @isbreakable projectiles. This instance is not breakable.
+    // Edge contact sends thud to the bullet; :thud/:shot #die removes it.
     for (let t = 0; t < 5; t++) {
       book.timestamp = 10 + t
       memorytickobject(book, board, bullet, BULLET_CODE)
     }
 
-    expect(bullet!.removed).toBeUndefined()
-    expect(bullet!.x).toBe(5)
-    expect(bullet!.y).toBe(0)
+    expect(bullet!.removed).toBeTruthy()
     expect(
       memoryreadelement(board, { x: 5, y: 0 }, READ_LAYER.OBJECT)?.id,
-    ).toBe('sid_bullet_edge')
+    ).not.toBe('sid_bullet_edge')
   })
 })

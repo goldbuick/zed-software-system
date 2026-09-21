@@ -157,25 +157,36 @@ describe('chip unset flag truthiness (dual-use pass-through)', () => {
     expect(chip.or('follower', 0)).toBe(0)
   })
 
-  it('and stops on unset as falsy', () => {
+  it('and stops on unset as falsy (returns the unset name pass-through)', () => {
     const chip = makechip('and_unset')
-    expect(chip.and('follower', 1)).toBe(0)
+    // and returns the first falsy operand; unset names stay dual-use strings
+    expect(chip.and('follower', 1)).toBe('follower')
+    expect(chip.if(chip.and('follower', 1))).toBe(0)
   })
 
-  it('if treats set flag as truthy including other-string values', () => {
+  it('if treats set numeric flags as truthy; string values are flag names', () => {
     const chip = makechip('if_set')
-    chip.set('follower', 'oid_seg')
+    chip.set('follower', 1)
     expect(chip.if('follower')).toBe(1)
-    chip.set('doot', 'fart')
-    expect(chip.if('doot')).toBe(1)
+    // resolved string is looked up again as a flag name (maptoresult)
+    chip.set('follower', 'oid_seg')
+    expect(chip.if('follower')).toBe(0)
+    chip.set('oid_seg', 1)
+    expect(chip.if('follower')).toBe(1)
   })
 
-  it('iseq: unset name equals unset name; set doot fart matches fart', () => {
+  it('iseq: unset name maps to 0; string flag values remapped via maptovalue', () => {
     const chip = makechip('iseq_unset')
-    expect(chip.iseq('follower', 'follower')).toBe(1)
+    // maptovalue(unset) -> 0, so unset name == unset name is 0 === name
+    expect(chip.iseq('follower', 'follower')).toBe(0)
+    expect(chip.iseq('follower', 0)).toBe(1)
     expect(chip.iseq('follower', 'other')).toBe(0)
+    // doot resolves to 'fart', then maptovalue('fart') -> 0 (unset name)
     chip.set('doot', 'fart')
-    expect(chip.iseq('doot', 'fart')).toBe(1)
+    expect(chip.iseq('doot', 'fart')).toBe(0)
+    expect(chip.iseq('doot', 0)).toBe(1)
+    chip.set('score', 3)
+    expect(chip.iseq('score', 3)).toBe(1)
   })
 
   it('opplus / opminus coerce unset bare flags to 0', () => {
