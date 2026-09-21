@@ -16,4 +16,4 @@ $dkblue$onblack$219$219$219$219$219$219$219$219$219$219$219$ondkblue$219$219$219
 !openit inline https://bytes.zed.cafe/FaUkmz2p;TTS Nicely Queue'd
 !openit inline https://bytes.zed.cafe/IpWRvfwy;ZTK - ZZT Tool Kit
 !openit inline https://bytes.zed.cafe/weyMl04a;QK - Quick Kit
-!openit inline https://bytes.zed.cafe/IxYjb4jm;Simple Chat
+!openit inline https://bytes.zed.cafe/DQffpxba;Simple Chat

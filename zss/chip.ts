@@ -1132,7 +1132,7 @@ export function createchip(
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
-        if (!maptoresult(lastvalue, chip.get)) {
+        if (maptoresult(lastvalue, chip.get)) {
           break // or returns the first truthy value
         }
         i = next
