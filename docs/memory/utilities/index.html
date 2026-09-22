@@ -12,8 +12,8 @@
 <li><code>zss/feature/url</code> — isjoin</li>
 <li><code>zss/feature/zsstextui</code> — DIVIDER, zsstexttape, zsszedlinklinechip</li>
 <li><code>zss/feature/zstdwasm</code> — ensurezstdwasm</li>
-<li><code>zss/memory/bookzstd</code> — shared zstd level + base64url (sim fallback + compress worker)</li>
-<li><code>zss/compressworkerclient</code> — off-thread zstd of packed book bytes (browser)</li>
+<li><code>zss/memory/packbookwires</code> — remap/trim/msgpack/zstd of exported wires (worker + Jest)</li>
+<li><code>zss/compressworkerclient</code> — off-thread pack of exported wires (browser)</li>
 <li><code>zss/gadget/data/api</code> — registerhyperlinksharedbridge</li>
 <li><code>zss/gadget/data/scrollwritelines</code> — scrollwritelines, scrolllinkescapefrag</li>
 <li><code>zss/mapping/encode</code> — arraybuffertobase64, base64url helpers</li>
@@ -62,7 +62,7 @@
 </tr>
 <tr>
 <td><code>memorycompressbooks(books)</code> (async)</td>
-<td>sim: export + cross-book id protect + msgpack <code>{ main?, books }</code>; browser: zstd on compress worker (Jest/fallback in-process); climode: JSON envelope</td>
+<td>sim: export + cross-book id protect; remap/trim/msgpack/zstd on compress worker (Jest/fallback in-process); climode: JSON envelope</td>
 </tr>
 <tr>
 <td><code>memorydecompressbooks(base64bytes)</code> (async)</td>
