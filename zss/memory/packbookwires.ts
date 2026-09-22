@@ -19,9 +19,7 @@ export async function packbookwirestourl(
   protectedids: ReadonlySet<string> | readonly string[],
 ): Promise<string> {
   const protect =
-    protectedids instanceof Set
-      ? protectedids
-      : new Set<string>(protectedids)
+    protectedids instanceof Set ? protectedids : new Set<string>(protectedids)
   const exported: FORMAT_OBJECT[] = []
   for (let i = 0; i < wires.length; ++i) {
     applyexportidremap(wires[i], buildexportidremap(wires[i], protect))
