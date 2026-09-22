@@ -1,12 +1,15 @@
 /**
- * Single-purpose book URL compress worker: packed msgpack bytes → zstd+base64url.
- * No hub, no device. Export + id remap stay on the sim thread.
+ * Book URL compress worker: exported FORMAT_OBJECT wires → remap/trim/msgpack/zstd.
+ * No hub, no device. memoryexportbook stays on the sim thread.
  */
-import { bookzstdcompressbase64url } from 'zss/memory/bookzstd'
+import { FORMAT_OBJECT } from 'zss/feature/format'
+import { packbookwirestourl } from 'zss/memory/packbookwires'
 
 type CompressRequest = {
   id: string
-  bytes: ArrayBuffer
+  main?: string
+  wires: FORMAT_OBJECT[]
+  protectedids: string[]
 }
 
 type CompressResponse =
@@ -18,7 +21,11 @@ function iscompressrequest(data: unknown): data is CompressRequest {
     return false
   }
   const msg = data as CompressRequest
-  return typeof msg.id === 'string' && msg.bytes instanceof ArrayBuffer
+  return (
+    typeof msg.id === 'string' &&
+    Array.isArray(msg.wires) &&
+    Array.isArray(msg.protectedids)
+  )
 }
 
 self.onmessage = (event: MessageEvent<unknown>) => {
@@ -26,8 +33,8 @@ self.onmessage = (event: MessageEvent<unknown>) => {
   if (!iscompressrequest(data)) {
     return
   }
-  const { id, bytes } = data
-  void bookzstdcompressbase64url(new Uint8Array(bytes))
+  const { id, main, wires, protectedids } = data
+  void packbookwirestourl(main, wires, protectedids)
     .then((result) => {
       const response: CompressResponse = { id, result }
       self.postMessage(response)

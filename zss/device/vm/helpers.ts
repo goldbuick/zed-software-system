@@ -5,6 +5,7 @@ import {
   workstatus,
 } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
+import { getclimode } from 'zss/feature/detect'
 import { MOSTLY_ZZT_META, museumofzztscreenshoturl } from 'zss/feature/url'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -34,7 +35,14 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
     workstatus(vm, operator, 'compress url')
     const compressed = await memorycompressbooks(books)
     const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${compressed.length} chars`
-    registersavemem(vm, operator, historylabel, compressed, books)
+    // Climode node storage may need books; browser hash save only needs the string.
+    registersavemem(
+      vm,
+      operator,
+      historylabel,
+      compressed,
+      getclimode() ? books : undefined,
+    )
   }
 }
 

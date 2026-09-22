@@ -538,13 +538,19 @@ export function registersavemem(
   player: string,
   historylabel: string,
   compressedbooks: string,
-  books: BOOK[],
+  books?: BOOK[],
 ) {
-  device.emit(player, 'register:savemem', [
-    historylabel,
-    compressedbooks,
-    books,
-  ])
+  // Browser hash save only needs the string; omit BOOK[] to avoid hub clone.
+  // Climode / node storage still passes books when required.
+  if (books) {
+    device.emit(player, 'register:savemem', [
+      historylabel,
+      compressedbooks,
+      books,
+    ])
+    return
+  }
+  device.emit(player, 'register:savemem', [historylabel, compressedbooks])
 }
 
 export function registerscreenshot(device: DEVICELIKE, player: string) {

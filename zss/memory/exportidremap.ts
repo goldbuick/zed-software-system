@@ -49,9 +49,8 @@ function formatsetvalue(
 }
 
 /**
- * Count non-overlapping substring hits of `id` in one JSON snapshot of the
- * wire tree. Same semantics as `JSON.stringify(payload).split(id).length - 1`,
- * without re-serializing the payload per id.
+ * Count non-overlapping substring hits of `needle` in `haystack`.
+ * Same per-string semantics as `haystack.split(needle).length - 1`.
  */
 function countoccurrencesintext(haystack: string, needle: string): number {
   if (!needle) {
@@ -70,23 +69,78 @@ function countoccurrencesintext(haystack: string, needle: string): number {
   return count
 }
 
-/** One stringify, then per-id occurrence counts (export remap eligibility). */
+/**
+ * Count how often each candidate id appears in the wire tree.
+ *
+ * Equivalent to scanning `JSON.stringify(payload)` for sid-shaped ids: every
+ * occurrence lives inside a string value or object key (format keys are
+ * numeric; sid chars are JSON-safe), so a structured walk matches stringify
+ * substring counts without allocating one giant JSON string -- the dominant
+ * cost when compressing large books.
+ */
 function countidsinpayload(
   payload: unknown,
   ids: readonly string[],
 ): Map<string, number> {
   const counts = new Map<string, number>()
-  if (ids.length === 0) {
-    return counts
-  }
-  const text = JSON.stringify(payload)
+  const idset = new Set<string>()
+  const uniquelist: string[] = []
   for (let i = 0; i < ids.length; ++i) {
     const id = ids[i]
-    if (!id || counts.has(id)) {
+    if (!id || idset.has(id)) {
       continue
     }
-    counts.set(id, countoccurrencesintext(text, id))
+    idset.add(id)
+    uniquelist.push(id)
+    counts.set(id, 0)
   }
+  if (uniquelist.length === 0) {
+    return counts
+  }
+
+  function bump(id: string, n: number) {
+    if (n <= 0) {
+      return
+    }
+    counts.set(id, (counts.get(id) ?? 0) + n)
+  }
+
+  function visitstring(text: string) {
+    if (!text) {
+      return
+    }
+    // Match stringify substring semantics, including shorter remapped numeric
+    // ids nested inside longer ones (e.g. "1" inside "10").
+    for (let i = 0; i < uniquelist.length; ++i) {
+      const id = uniquelist[i]
+      bump(id, countoccurrencesintext(text, id))
+    }
+  }
+
+  function visit(value: unknown) {
+    if (typeof value === 'string') {
+      visitstring(value)
+      return
+    }
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; ++i) {
+        visit(value[i])
+      }
+      return
+    }
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>
+      const keys = Object.keys(record)
+      for (let i = 0; i < keys.length; ++i) {
+        const key = keys[i]
+        // Plain-object keys (e.g. flag owners) appear in JSON.stringify output.
+        visitstring(key)
+        visit(record[key])
+      }
+    }
+  }
+
+  visit(payload)
   return counts
 }
 
