@@ -8678,8 +8678,6 @@
         "id": "obj_home",
         "x": 54,
         "y": 17,
-        "lx": 54,
-        "ly": 17,
         "p3": "title",
         "char": 240,
         "color": 11
@@ -8688,17 +8686,13 @@
         "kind": "lamp",
         "id": "obj_lamp",
         "x": 20,
-        "y": 12,
-        "lx": 20,
-        "ly": 12
+        "y": 12
       },
       "obj_maker": {
         "kind": "maker",
         "id": "obj_maker",
         "x": 12,
-        "y": 12,
-        "lx": 12,
-        "ly": 12
+        "y": 12
       }
     },
     "startx": 8,

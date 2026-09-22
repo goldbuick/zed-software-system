@@ -8512,8 +8512,6 @@
         "id": "obj_entry",
         "x": 30,
         "y": 12,
-        "lx": 30,
-        "ly": 12,
         "p3": "tutorial slice",
         "char": 240,
         "color": 14

@@ -54,8 +54,6 @@ export function memoryexportboardelement(
         id: boardelement.id,
         x: boardelement.x,
         y: boardelement.y,
-        lx: boardelement.lx,
-        ly: boardelement.ly,
         code: boardelement.code,
         name: boardelement.name,
         char: boardelement.char,
@@ -128,6 +126,8 @@ export function memoryexportboardelement(
   if (ispresent(boardelement?.id)) {
     return formatobject(boardelement, BOARD_ELEMENT_KEYS, {
       ...BOARD_ELEMENT_RUNTIME_SKIP,
+      lx: FORMAT_SKIP,
+      ly: FORMAT_SKIP,
       stopped: FORMAT_SKIP,
       bucket: FORMAT_SKIP,
     })
@@ -156,12 +156,20 @@ export function memoryimportboardelement(
     if (!ispresent(boardelemententry)) {
       return undefined
     }
-    return boardelemententry as BOARD_ELEMENT
+    const element = { ...(boardelemententry as Record<string, unknown>) }
+    delete element.lx
+    delete element.ly
+    return element as BOARD_ELEMENT
   }
-  return unformatobject<BOARD_ELEMENT>(
+  const element = unformatobject<BOARD_ELEMENT>(
     boardelemententry as MAYBE<FORMAT_OBJECT>,
     BOARD_ELEMENT_KEYS,
   )
+  if (ispresent(element)) {
+    delete (element as Record<string, unknown>).lx
+    delete (element as Record<string, unknown>).ly
+  }
+  return element
 }
 
 export function memoryboardelementisobject(

@@ -26,7 +26,9 @@ export enum BOARD_ELEMENT_KEYS {
   id,
   x,
   y,
+  /** Reserved wire slot 4; never emit; stripped on import. */
   lx,
+  /** Reserved wire slot 5; never emit; stripped on import. */
   ly,
   code,
   name,
@@ -216,8 +218,6 @@ export type BOARD_ELEMENT = {
   id?: string
   x?: number
   y?: number
-  lx?: number
-  ly?: number
   code?: string
   // this is a unique name for this instance
   name?: string

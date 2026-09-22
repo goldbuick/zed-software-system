@@ -6559,8 +6559,6 @@
               "id": "pid_7170_a2vd3bdyu2njnuqi",
               "x": 13,
               "y": 4,
-              "lx": 13,
-              "ly": 4,
               "light": 0,
               "player": "pid_7170_a2vd3bdyu2njnuqi",
               "sender": "pid_7170_a2vd3bdyu2njnuqi"
@@ -6569,49 +6567,37 @@
               "kind": "ammo",
               "id": "sid_gxBsjsfMiFB6",
               "x": 17,
-              "y": 20,
-              "lx": 17,
-              "ly": 20
+              "y": 20
             },
             "sid_rq7vTscWpvbI": {
               "kind": "ammo",
               "id": "sid_rq7vTscWpvbI",
               "x": 28,
-              "y": 17,
-              "lx": 28,
-              "ly": 17
+              "y": 17
             },
             "sid_bITFpfGbu6lr": {
               "kind": "ammo",
               "id": "sid_bITFpfGbu6lr",
               "x": 40,
-              "y": 12,
-              "lx": 40,
-              "ly": 12
+              "y": 12
             },
             "sid_ccn3o6IrNc6H": {
               "kind": "ammo",
               "id": "sid_ccn3o6IrNc6H",
               "x": 43,
-              "y": 12,
-              "lx": 43,
-              "ly": 12
+              "y": 12
             },
             "sid_egwyILAGq98W": {
               "kind": "torch",
               "id": "sid_egwyILAGq98W",
               "x": 45,
-              "y": 14,
-              "lx": 45,
-              "ly": 14
+              "y": 14
             },
             "sid_WIvtiIH9KuCP": {
               "kind": "torch",
               "id": "sid_WIvtiIH9KuCP",
               "x": 15,
-              "y": 3,
-              "lx": 15,
-              "ly": 3
+              "y": 3
             }
           },
           "startx": 30,
@@ -12415,8 +12401,6 @@
               "id": "sid_ltyvHY_Nd_9Q",
               "x": 42,
               "y": 0,
-              "lx": 42,
-              "ly": 0,
               "color": 7,
               "bg": 0,
               "player": "pid_0386_icxg6ja9dz29l1oz",
@@ -12427,41 +12411,31 @@
               "kind": "ammo",
               "id": "sid_rSTh4fObdNPP",
               "x": 25,
-              "y": 9,
-              "lx": 25,
-              "ly": 9
+              "y": 9
             },
             "sid_jZs_Xuev8ywM": {
               "kind": "ammo",
               "id": "sid_jZs_Xuev8ywM",
               "x": 41,
-              "y": 18,
-              "lx": 41,
-              "ly": 18
+              "y": 18
             },
             "sid_MMo2lvXizkVx": {
               "kind": "ammo",
               "id": "sid_MMo2lvXizkVx",
               "x": 48,
-              "y": 8,
-              "lx": 48,
-              "ly": 8
+              "y": 8
             },
             "sid_rEH3PUzQfF05": {
               "kind": "torch",
               "id": "sid_rEH3PUzQfF05",
               "x": 43,
-              "y": 18,
-              "lx": 43,
-              "ly": 18
+              "y": 18
             },
             "sid_dPc0IdQAoR7c": {
               "kind": "torch",
               "id": "sid_dPc0IdQAoR7c",
               "x": 38,
-              "y": 20,
-              "lx": 38,
-              "ly": 20
+              "y": 20
             }
           },
           "exitnorth": "marsh",
@@ -18401,57 +18375,43 @@
               "kind": "ammo",
               "id": "sid_xY0q_Xr2p1WM",
               "x": 29,
-              "y": 4,
-              "lx": 29,
-              "ly": 4
+              "y": 4
             },
             "sid_UCSaH1WNH1ih": {
               "kind": "ammo",
               "id": "sid_UCSaH1WNH1ih",
               "x": 41,
-              "y": 4,
-              "lx": 41,
-              "ly": 4
+              "y": 4
             },
             "sid_x3MhPLyBbZlL": {
               "kind": "ammo",
               "id": "sid_x3MhPLyBbZlL",
               "x": 22,
-              "y": 3,
-              "lx": 22,
-              "ly": 3
+              "y": 3
             },
             "sid_nQoe7kuZ3ASS": {
               "kind": "ammo",
               "id": "sid_nQoe7kuZ3ASS",
               "x": 24,
-              "y": 17,
-              "lx": 24,
-              "ly": 17
+              "y": 17
             },
             "sid__r3m3vtyxtMy": {
               "kind": "torch",
               "id": "sid__r3m3vtyxtMy",
               "x": 17,
-              "y": 12,
-              "lx": 17,
-              "ly": 12
+              "y": 12
             },
             "sid_mDt0ahNGbPHY": {
               "kind": "torch",
               "id": "sid_mDt0ahNGbPHY",
               "x": 32,
-              "y": 18,
-              "lx": 32,
-              "ly": 18
+              "y": 18
             },
             "sid_0bE5CP0FzCJl": {
               "kind": "torch",
               "id": "sid_0bE5CP0FzCJl",
               "x": 39,
-              "y": 6,
-              "lx": 39,
-              "ly": 6
+              "y": 6
             }
           },
           "exitnorth": "title",
@@ -24370,41 +24330,31 @@
               "kind": "ammo",
               "id": "sid_2reJEgDPDQwe",
               "x": 36,
-              "y": 11,
-              "lx": 36,
-              "ly": 11
+              "y": 11
             },
             "sid_tGzEAVcnvFGO": {
               "kind": "ammo",
               "id": "sid_tGzEAVcnvFGO",
               "x": 15,
-              "y": 19,
-              "lx": 15,
-              "ly": 19
+              "y": 19
             },
             "sid_yxy5hepMZncu": {
               "kind": "ammo",
               "id": "sid_yxy5hepMZncu",
               "x": 34,
-              "y": 16,
-              "lx": 34,
-              "ly": 16
+              "y": 16
             },
             "sid_5DVSeREeV0kR": {
               "kind": "torch",
               "id": "sid_5DVSeREeV0kR",
               "x": 16,
-              "y": 8,
-              "lx": 16,
-              "ly": 8
+              "y": 8
             },
             "sid_lrM31cT2AxZU": {
               "kind": "torch",
               "id": "sid_lrM31cT2AxZU",
               "x": 23,
-              "y": 18,
-              "lx": 23,
-              "ly": 18
+              "y": 18
             }
           },
           "exitnorth": "room0x0",
@@ -30480,57 +30430,43 @@
               "kind": "ammo",
               "id": "sid_YMPZmLKhe8Nv",
               "x": 47,
-              "y": 3,
-              "lx": 47,
-              "ly": 3
+              "y": 3
             },
             "sid_2kApLYsVXBmq": {
               "kind": "ammo",
               "id": "sid_2kApLYsVXBmq",
               "x": 29,
-              "y": 16,
-              "lx": 29,
-              "ly": 16
+              "y": 16
             },
             "sid_jdNLHSDOsQmw": {
               "kind": "ammo",
               "id": "sid_jdNLHSDOsQmw",
               "x": 44,
-              "y": 17,
-              "lx": 44,
-              "ly": 17
+              "y": 17
             },
             "sid_AHgsitYMUsEy": {
               "kind": "ammo",
               "id": "sid_AHgsitYMUsEy",
               "x": 28,
-              "y": 5,
-              "lx": 28,
-              "ly": 5
+              "y": 5
             },
             "sid_Ycis2IiGHqZs": {
               "kind": "torch",
               "id": "sid_Ycis2IiGHqZs",
               "x": 10,
-              "y": 14,
-              "lx": 10,
-              "ly": 14
+              "y": 14
             },
             "sid_sGXk05tWPYlR": {
               "kind": "torch",
               "id": "sid_sGXk05tWPYlR",
               "x": 26,
-              "y": 15,
-              "lx": 26,
-              "ly": 15
+              "y": 15
             },
             "sid_GNgxuSOdWWDg": {
               "kind": "torch",
               "id": "sid_GNgxuSOdWWDg",
               "x": 12,
-              "y": 18,
-              "lx": 12,
-              "ly": 18
+              "y": 18
             }
           },
           "exitsouth": "room2x2",
@@ -36400,8 +36336,6 @@
               "id": "sid_RgJAV8CzKUW9",
               "x": 37,
               "y": 15,
-              "lx": 37,
-              "ly": 15,
               "code": "@flickerlantern\n@cycle 1\n@char 168\n@color white\n:think\n#set light pick 5 7 11 12\n#idle\n#think",
               "name": "flickerlantern",
               "char": 168,
@@ -36415,105 +36349,79 @@
               "kind": "lantern",
               "id": "sid_D13V0_4E_hZa",
               "x": 12,
-              "y": 12,
-              "lx": 12,
-              "ly": 12
+              "y": 12
             },
             "sid_NCWTj57dBpJw": {
               "kind": "lantern",
               "id": "sid_NCWTj57dBpJw",
               "x": 22,
-              "y": 15,
-              "lx": 22,
-              "ly": 15
+              "y": 15
             },
             "sid_zW77t4lEDu9B": {
               "kind": "ammo",
               "id": "sid_zW77t4lEDu9B",
               "x": 31,
-              "y": 21,
-              "lx": 31,
-              "ly": 21
+              "y": 21
             },
             "sid_wUsZxSWgjHCn": {
               "kind": "ammo",
               "id": "sid_wUsZxSWgjHCn",
               "x": 14,
-              "y": 19,
-              "lx": 14,
-              "ly": 19
+              "y": 19
             },
             "sid_eOgIFkcgtLWy": {
               "kind": "ammo",
               "id": "sid_eOgIFkcgtLWy",
               "x": 11,
-              "y": 12,
-              "lx": 11,
-              "ly": 12
+              "y": 12
             },
             "sid_6LtAaz8KTlqM": {
               "kind": "ammo",
               "id": "sid_6LtAaz8KTlqM",
               "x": 30,
-              "y": 14,
-              "lx": 30,
-              "ly": 14
+              "y": 14
             },
             "sid_Gy47spgrWRhR": {
               "kind": "ammo",
               "id": "sid_Gy47spgrWRhR",
               "x": 31,
-              "y": 4,
-              "lx": 31,
-              "ly": 4
+              "y": 4
             },
             "sid_bYBnblg2gdx3": {
               "kind": "torch",
               "id": "sid_bYBnblg2gdx3",
               "x": 15,
-              "y": 10,
-              "lx": 15,
-              "ly": 10
+              "y": 10
             },
             "sid_E2Q0RqfK0Dso": {
               "kind": "torch",
               "id": "sid_E2Q0RqfK0Dso",
               "x": 31,
-              "y": 19,
-              "lx": 31,
-              "ly": 19
+              "y": 19
             },
             "sid_anV06AFcIfz8": {
               "kind": "torch",
               "id": "sid_anV06AFcIfz8",
               "x": 29,
-              "y": 10,
-              "lx": 29,
-              "ly": 10
+              "y": 10
             },
             "sid_1MLIuRKWpR6n": {
               "kind": "torch",
               "id": "sid_1MLIuRKWpR6n",
               "x": 29,
-              "y": 17,
-              "lx": 29,
-              "ly": 17
+              "y": 17
             },
             "sid_fqJYNT4buiNw": {
               "kind": "torch",
               "id": "sid_fqJYNT4buiNw",
               "x": 26,
-              "y": 13,
-              "lx": 26,
-              "ly": 13
+              "y": 13
             },
             "sid_rhE4Pqfrp_1Z": {
               "kind": "torch",
               "id": "sid_rhE4Pqfrp_1Z",
               "x": 34,
-              "y": 12,
-              "lx": 34,
-              "ly": 12
+              "y": 12
             }
           },
           "isdark": 1,
@@ -42245,65 +42153,49 @@
               "kind": "ammo",
               "id": "sid_mSnLd5veaty3",
               "x": 46,
-              "y": 3,
-              "lx": 46,
-              "ly": 3
+              "y": 3
             },
             "sid_o5c6_Y604VT9": {
               "kind": "ammo",
               "id": "sid_o5c6_Y604VT9",
               "x": 48,
-              "y": 21,
-              "lx": 48,
-              "ly": 21
+              "y": 21
             },
             "sid_u3bB57QqP6Lt": {
               "kind": "ammo",
               "id": "sid_u3bB57QqP6Lt",
               "x": 24,
-              "y": 3,
-              "lx": 24,
-              "ly": 3
+              "y": 3
             },
             "sid_wTS9dAhQEdJm": {
               "kind": "ammo",
               "id": "sid_wTS9dAhQEdJm",
               "x": 12,
-              "y": 17,
-              "lx": 12,
-              "ly": 17
+              "y": 17
             },
             "sid_gz1lkwmwS7sP": {
               "kind": "ammo",
               "id": "sid_gz1lkwmwS7sP",
               "x": 48,
-              "y": 20,
-              "lx": 48,
-              "ly": 20
+              "y": 20
             },
             "sid_PFGWM5ZXx6Iu": {
               "kind": "torch",
               "id": "sid_PFGWM5ZXx6Iu",
               "x": 29,
-              "y": 7,
-              "lx": 29,
-              "ly": 7
+              "y": 7
             },
             "sid_sGwdm9yQxTB9": {
               "kind": "torch",
               "id": "sid_sGwdm9yQxTB9",
               "x": 16,
-              "y": 20,
-              "lx": 16,
-              "ly": 20
+              "y": 20
             },
             "sid_Txokgiyqvgiq": {
               "kind": "torch",
               "id": "sid_Txokgiyqvgiq",
               "x": 32,
-              "y": 19,
-              "lx": 32,
-              "ly": 19
+              "y": 19
             }
           },
           "startx": 30,
@@ -47542,65 +47434,49 @@
               "kind": "ammo",
               "id": "sid_UH1JqvGxevDz",
               "x": 48,
-              "y": 8,
-              "lx": 48,
-              "ly": 8
+              "y": 8
             },
             "sid_D7Pjr2eqnY1y": {
               "kind": "ammo",
               "id": "sid_D7Pjr2eqnY1y",
               "x": 48,
-              "y": 11,
-              "lx": 48,
-              "ly": 11
+              "y": 11
             },
             "sid_ALYOkhNVeYbM": {
               "kind": "ammo",
               "id": "sid_ALYOkhNVeYbM",
               "x": 31,
-              "y": 20,
-              "lx": 31,
-              "ly": 20
+              "y": 20
             },
             "sid__43HYT9A9SXZ": {
               "kind": "ammo",
               "id": "sid__43HYT9A9SXZ",
               "x": 30,
-              "y": 20,
-              "lx": 30,
-              "ly": 20
+              "y": 20
             },
             "sid_GSQ8pSzJ18ZM": {
               "kind": "ammo",
               "id": "sid_GSQ8pSzJ18ZM",
               "x": 40,
-              "y": 21,
-              "lx": 40,
-              "ly": 21
+              "y": 21
             },
             "sid__7bZxKfDvj3c": {
               "kind": "ammo",
               "id": "sid__7bZxKfDvj3c",
               "x": 48,
-              "y": 21,
-              "lx": 48,
-              "ly": 21
+              "y": 21
             },
             "sid_gMvp1X4nXlUn": {
               "kind": "torch",
               "id": "sid_gMvp1X4nXlUn",
               "x": 49,
-              "y": 21,
-              "lx": 49,
-              "ly": 21
+              "y": 21
             },
             "sid_Hi6Jfk86u_Ml": {
               "kind": "torch",
               "id": "sid_Hi6Jfk86u_Ml",
               "x": 49,
-              "y": 12,
-              "lx": 49,
-              "ly": 12
+              "y": 12
             }
           },
           "startx": 30,
@@ -53438,97 +53314,73 @@
               "kind": "ammo",
               "id": "sid_iQzMuenjzYaH",
               "x": 49,
-              "y": 5,
-              "lx": 49,
-              "ly": 5
+              "y": 5
             },
             "sid_zhR446syQ7vf": {
               "kind": "ammo",
               "id": "sid_zhR446syQ7vf",
               "x": 46,
-              "y": 20,
-              "lx": 46,
-              "ly": 20
+              "y": 20
             },
             "sid_6ZLrSGS94GNf": {
               "kind": "ammo",
               "id": "sid_6ZLrSGS94GNf",
               "x": 20,
-              "y": 11,
-              "lx": 20,
-              "ly": 11
+              "y": 11
             },
             "sid_Bk7i2QJuGpv3": {
               "kind": "ammo",
               "id": "sid_Bk7i2QJuGpv3",
               "x": 46,
-              "y": 17,
-              "lx": 46,
-              "ly": 17
+              "y": 17
             },
             "sid_ycCpv3i4mkbq": {
               "kind": "torch",
               "id": "sid_ycCpv3i4mkbq",
               "x": 48,
-              "y": 11,
-              "lx": 48,
-              "ly": 11
+              "y": 11
             },
             "sid_ffILhJmg8lBZ": {
               "kind": "torch",
               "id": "sid_ffILhJmg8lBZ",
               "x": 22,
-              "y": 15,
-              "lx": 22,
-              "ly": 15
+              "y": 15
             },
             "sid_sQXJB8CA_es4": {
               "kind": "torch",
               "id": "sid_sQXJB8CA_es4",
               "x": 23,
-              "y": 19,
-              "lx": 23,
-              "ly": 19
+              "y": 19
             },
             "sid_pIydGdAFcUon": {
               "kind": "torch",
               "id": "sid_pIydGdAFcUon",
               "x": 30,
-              "y": 11,
-              "lx": 30,
-              "ly": 11
+              "y": 11
             },
             "sid_2tzioQrNvIcF": {
               "kind": "torch",
               "id": "sid_2tzioQrNvIcF",
               "x": 19,
-              "y": 20,
-              "lx": 19,
-              "ly": 20
+              "y": 20
             },
             "sid_4MoWWl7t2NW5": {
               "kind": "torch",
               "id": "sid_4MoWWl7t2NW5",
               "x": 46,
-              "y": 19,
-              "lx": 46,
-              "ly": 19
+              "y": 19
             },
             "sid_xzbeDJOevTkH": {
               "kind": "torch",
               "id": "sid_xzbeDJOevTkH",
               "x": 34,
-              "y": 18,
-              "lx": 34,
-              "ly": 18
+              "y": 18
             },
             "sid_raWumVaayqgn": {
               "kind": "torch",
               "id": "sid_raWumVaayqgn",
               "x": 44,
-              "y": 10,
-              "lx": 44,
-              "ly": 10
+              "y": 10
             }
           },
           "isdark": 1,
@@ -59396,121 +59248,91 @@
               "kind": "ammo",
               "id": "sid_MPqBg8v6r4kn",
               "x": 29,
-              "y": 20,
-              "lx": 29,
-              "ly": 20
+              "y": 20
             },
             "sid_VHx2_QFcSmeZ": {
               "kind": "ammo",
               "id": "sid_VHx2_QFcSmeZ",
               "x": 11,
-              "y": 20,
-              "lx": 11,
-              "ly": 20
+              "y": 20
             },
             "sid_Im_MahJWgQPu": {
               "kind": "ammo",
               "id": "sid_Im_MahJWgQPu",
               "x": 12,
-              "y": 12,
-              "lx": 12,
-              "ly": 12
+              "y": 12
             },
             "sid_BlDvXgKjd2nw": {
               "kind": "ammo",
               "id": "sid_BlDvXgKjd2nw",
               "x": 41,
-              "y": 20,
-              "lx": 41,
-              "ly": 20
+              "y": 20
             },
             "sid_w4P2sSU1o9vu": {
               "kind": "ammo",
               "id": "sid_w4P2sSU1o9vu",
               "x": 43,
-              "y": 9,
-              "lx": 43,
-              "ly": 9
+              "y": 9
             },
             "sid_d32uJRaip3Z4": {
               "kind": "ammo",
               "id": "sid_d32uJRaip3Z4",
               "x": 11,
-              "y": 4,
-              "lx": 11,
-              "ly": 4
+              "y": 4
             },
             "sid_YkHgLQYTATSm": {
               "kind": "ammo",
               "id": "sid_YkHgLQYTATSm",
               "x": 32,
-              "y": 3,
-              "lx": 32,
-              "ly": 3
+              "y": 3
             },
             "sid_1vJ_iY9M5su8": {
               "kind": "ammo",
               "id": "sid_1vJ_iY9M5su8",
               "x": 19,
-              "y": 20,
-              "lx": 19,
-              "ly": 20
+              "y": 20
             },
             "sid_zyDQVq86nUJc": {
               "kind": "torch",
               "id": "sid_zyDQVq86nUJc",
               "x": 20,
-              "y": 20,
-              "lx": 20,
-              "ly": 20
+              "y": 20
             },
             "sid_NJqmZY7aZQUh": {
               "kind": "torch",
               "id": "sid_NJqmZY7aZQUh",
               "x": 14,
-              "y": 20,
-              "lx": 14,
-              "ly": 20
+              "y": 20
             },
             "sid_Usy8KXS2qRvW": {
               "kind": "torch",
               "id": "sid_Usy8KXS2qRvW",
               "x": 20,
-              "y": 19,
-              "lx": 20,
-              "ly": 19
+              "y": 19
             },
             "sid_tRUOnQwzNIpT": {
               "kind": "torch",
               "id": "sid_tRUOnQwzNIpT",
               "x": 39,
-              "y": 10,
-              "lx": 39,
-              "ly": 10
+              "y": 10
             },
             "sid_tWXonEZLJIMq": {
               "kind": "torch",
               "id": "sid_tWXonEZLJIMq",
               "x": 26,
-              "y": 16,
-              "lx": 26,
-              "ly": 16
+              "y": 16
             },
             "sid_t8HK5cdbp4nY": {
               "kind": "torch",
               "id": "sid_t8HK5cdbp4nY",
               "x": 27,
-              "y": 12,
-              "lx": 27,
-              "ly": 12
+              "y": 12
             },
             "sid_2dtRBN_wriLG": {
               "kind": "torch",
               "id": "sid_2dtRBN_wriLG",
               "x": 27,
-              "y": 18,
-              "lx": 27,
-              "ly": 18
+              "y": 18
             }
           },
           "isdark": 1,
@@ -65326,113 +65148,85 @@
               "kind": "ammo",
               "id": "sid_2xBcT3RumqGZ",
               "x": 17,
-              "y": 12,
-              "lx": 17,
-              "ly": 12
+              "y": 12
             },
             "sid_9q6HHL3QnSZI": {
               "kind": "ammo",
               "id": "sid_9q6HHL3QnSZI",
               "x": 10,
-              "y": 16,
-              "lx": 10,
-              "ly": 16
+              "y": 16
             },
             "sid_pHy49ZYDD6Yf": {
               "kind": "ammo",
               "id": "sid_pHy49ZYDD6Yf",
               "x": 34,
-              "y": 4,
-              "lx": 34,
-              "ly": 4
+              "y": 4
             },
             "sid_Y1Y709dlEvCM": {
               "kind": "ammo",
               "id": "sid_Y1Y709dlEvCM",
               "x": 15,
-              "y": 13,
-              "lx": 15,
-              "ly": 13
+              "y": 13
             },
             "sid_2nQiK7MNsVjs": {
               "kind": "ammo",
               "id": "sid_2nQiK7MNsVjs",
               "x": 31,
-              "y": 5,
-              "lx": 31,
-              "ly": 5
+              "y": 5
             },
             "sid_ZY1QpLN4PMv5": {
               "kind": "torch",
               "id": "sid_ZY1QpLN4PMv5",
               "x": 16,
-              "y": 13,
-              "lx": 16,
-              "ly": 13
+              "y": 13
             },
             "sid_1bp44LOsCUyf": {
               "kind": "torch",
               "id": "sid_1bp44LOsCUyf",
               "x": 30,
-              "y": 6,
-              "lx": 30,
-              "ly": 6
+              "y": 6
             },
             "sid_NdVkGZWBcFBZ": {
               "kind": "torch",
               "id": "sid_NdVkGZWBcFBZ",
               "x": 28,
-              "y": 4,
-              "lx": 28,
-              "ly": 4
+              "y": 4
             },
             "sid_6NXmEtNrDZm0": {
               "kind": "torch",
               "id": "sid_6NXmEtNrDZm0",
               "x": 43,
-              "y": 3,
-              "lx": 43,
-              "ly": 3
+              "y": 3
             },
             "sid_QEjJZrB1peVP": {
               "kind": "torch",
               "id": "sid_QEjJZrB1peVP",
               "x": 10,
-              "y": 5,
-              "lx": 10,
-              "ly": 5
+              "y": 5
             },
             "sid_FsoSohFh5XLU": {
               "kind": "torch",
               "id": "sid_FsoSohFh5XLU",
               "x": 33,
-              "y": 5,
-              "lx": 33,
-              "ly": 5
+              "y": 5
             },
             "sid_Za4AiDqgYvzu": {
               "kind": "torch",
               "id": "sid_Za4AiDqgYvzu",
               "x": 36,
-              "y": 16,
-              "lx": 36,
-              "ly": 16
+              "y": 16
             },
             "sid_12evn2K4Y47c": {
               "kind": "torch",
               "id": "sid_12evn2K4Y47c",
               "x": 26,
-              "y": 8,
-              "lx": 26,
-              "ly": 8
+              "y": 8
             },
             "sid_rPLGutscquOM": {
               "kind": "torch",
               "id": "sid_rPLGutscquOM",
               "x": 45,
-              "y": 10,
-              "lx": 45,
-              "ly": 10
+              "y": 10
             }
           },
           "isdark": 1,
