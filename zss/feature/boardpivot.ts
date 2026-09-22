@@ -158,8 +158,6 @@ function boardpivotapplyregion(
       const dest = pivotcellmishin(x, y, w, h, theta, cx, cy, disc)
       el.x = dest.x
       el.y = dest.y
-      el.lx = dest.x
-      el.ly = dest.y
     }
   }
 
@@ -203,7 +201,6 @@ function boardpivotfullboardapply(
           if (ispresent(x) && ispresent(y)) {
             const skew = edge[y]
             targetboard.objects[id].x = pivotposmodi(x + skew, BOARD_WIDTH)
-            targetboard.objects[id].lx = targetboard.objects[id].x
           }
         }
       }
@@ -227,7 +224,6 @@ function boardpivotfullboardapply(
           if (ispresent(x) && ispresent(y)) {
             const skew = edge[x]
             targetboard.objects[id].y = pivotposmodi(y + skew, BOARD_HEIGHT)
-            targetboard.objects[id].ly = targetboard.objects[id].y
           }
         }
       }
@@ -399,10 +395,7 @@ export function boardpivotgroup(
     return false
   }
 
-  const objectpivotorig = new Map<
-    string,
-    { x: number; y: number; lx: number; ly: number }
-  >()
+  const objectpivotorig = new Map<string, { x: number; y: number }>()
   for (let i = 0; i < objectelements.length; ++i) {
     const el = objectelements[i]
     const id = el.id ?? ''
@@ -410,8 +403,6 @@ export function boardpivotgroup(
       objectpivotorig.set(id, {
         x: el.x ?? 0,
         y: el.y ?? 0,
-        lx: el.lx ?? 0,
-        ly: el.ly ?? 0,
       })
     }
   }
@@ -491,8 +482,6 @@ export function boardpivotgroup(
     const snap = objectpivotorig.get(id)
     const ox = snap?.x ?? fromelement.x ?? 0
     const oy = snap?.y ?? fromelement.y ?? 0
-    const olx = snap?.lx ?? fromelement.lx ?? 0
-    const oly = snap?.ly ?? fromelement.ly ?? 0
     const dest = pivotcellmishin(ox, oy, w, h, theta, cx, cy, disc)
     if (!boardmovement.memorymoveobject(book, targetboard, fromelement, dest)) {
       const restored = memoryimportboard(rollback)
@@ -503,8 +492,6 @@ export function boardpivotgroup(
       }
       return false
     }
-    fromelement.lx = olx + (dest.x - ox)
-    fromelement.ly = oly + (dest.y - oy)
   }
 
   memoryinitboard(targetboard)

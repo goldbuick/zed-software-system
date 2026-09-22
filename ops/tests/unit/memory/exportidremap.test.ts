@@ -144,7 +144,7 @@ describe('buildexportidremap', () => {
     expect(obj).toBeDefined()
   })
 
-  it('one stringify multi-count matches legacy per-id split semantics', () => {
+  it('structured walk counts match JSON.stringify substring semantics', () => {
     const board = memorycreateboard()
     const a = createsid()
     const b = createsid()
@@ -159,17 +159,19 @@ describe('buildexportidremap', () => {
     const book = memorycreatebook([
       memorycreatecodepage('@board room\n', { board }),
     ])
+    // Flag owner key must be counted the same as in stringify output.
+    memorywriteflag(book, a, 'score', 1 as any)
+
     const wire = memoryexportbook(book, { noremap: true })!
     const text = JSON.stringify(wire)
-    const legacy = (id: string) => text.split(id).length - 1
+    const stringifycount = (id: string) => text.split(id).length - 1
 
-    // Rebuild map path: unique candidates counted once against same text.
     const map = buildexportidremap(wire)
-    // a appears as object id + as b.p1 → not remapped
-    expect(legacy(a)).toBeGreaterThan(1)
+    // a appears as object id + as b.p1 + as flag owner → not remapped
+    expect(stringifycount(a)).toBeGreaterThan(1)
     expect(map.has(a)).toBe(false)
     // b appears once as its own id only → remapped
-    expect(legacy(b)).toBe(1)
+    expect(stringifycount(b)).toBe(1)
     expect(map.has(b)).toBe(true)
   })
 })

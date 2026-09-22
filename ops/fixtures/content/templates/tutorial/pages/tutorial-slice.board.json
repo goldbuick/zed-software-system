@@ -7323,25 +7323,19 @@
         "kind": "checkpoint",
         "id": "obj_checkpoint",
         "x": 28,
-        "y": 12,
-        "lx": 28,
-        "ly": 12
+        "y": 12
       },
       "obj_gate": {
         "kind": "gate",
         "id": "obj_gate",
         "x": 25,
-        "y": 12,
-        "lx": 25,
-        "ly": 12
+        "y": 12
       },
       "obj_return": {
         "kind": "passage",
         "id": "obj_return",
         "x": 54,
         "y": 17,
-        "lx": 54,
-        "ly": 17,
         "p3": "tutorial make",
         "char": 240,
         "color": 14
@@ -7351,8 +7345,6 @@
         "id": "obj_tutor",
         "x": 12,
         "y": 12,
-        "lx": 12,
-        "ly": 12,
         "player": "pid_0537_w9a3c7k44x900svj",
         "tickertext": "",
         "tickertime": 0,

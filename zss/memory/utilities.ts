@@ -1,6 +1,6 @@
 import { decompress } from '@bokuweb/zstd-wasm'
 import JSZip, { JSZipObject } from 'jszip'
-import { pack, unpack } from 'msgpackr'
+import { unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
@@ -25,12 +25,8 @@ import {
   memoryreadelementdisplay,
   memoryreadflags,
 } from './bookoperations'
-import { bookzstdcompressbase64url } from './bookzstd'
-import {
-  applyexportidremap,
-  buildexportidremap,
-  collectflagprotectedids,
-} from './exportidremap'
+import { collectflagprotectedids } from './exportidremap'
+import { packbookwirestourl } from './packbookwires'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
@@ -39,7 +35,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
-import { trimformatobject, trimmemoryexport } from './trimexport'
+import { trimmemoryexport } from './trimexport'
 import { BOOK } from './types'
 
 function base64tobytes(base64: string): Uint8Array {
@@ -269,7 +265,7 @@ function memoryimportbooklistfromjson(list: unknown): BOOK[] {
 
 /**
  * Compress books for URL save / fork / share.
- * Sim owns export + cross-book id protect + msgpack; browser zstd runs on the
+ * Sim owns export + cross-book id protect; remap/trim/msgpack/zstd run on the
  * compress worker (in-process fallback / Jest). Climode uses JSON envelope.
  */
 export async function memorycompressbooks(books: BOOK[]) {
@@ -303,31 +299,22 @@ export async function memorycompressbooks(books: BOOK[]) {
       protectedids.add(id)
     }
   }
-  const exported: FORMAT_OBJECT[] = []
-  for (let i = 0; i < wires.length; ++i) {
-    applyexportidremap(wires[i], buildexportidremap(wires[i], protectedids))
-    const trimmed = trimformatobject(wires[i])
-    if (trimmed) {
-      exported.push(trimmed)
-    }
-  }
-  const bin = pack({ main, books: exported })
-  const bytes = bin instanceof Uint8Array ? bin : new Uint8Array(bin)
+  const protectedlist = Array.from(protectedids)
 
   // Jest has no Vite ??worker transform for compressspace.
   if (
     typeof process !== 'undefined' &&
     typeof process.env?.JEST_WORKER_ID === 'string'
   ) {
-    return bookzstdcompressbase64url(bytes)
+    return packbookwirestourl(main, wires, protectedlist)
   }
 
   try {
-    const { compressbookbytesoffthread } =
+    const { compressbookwiresoffthread } =
       await import('zss/compressworkerclient')
-    return await compressbookbytesoffthread(bytes)
+    return await compressbookwiresoffthread(main, wires, protectedlist)
   } catch {
-    return bookzstdcompressbase64url(bytes)
+    return packbookwirestourl(main, wires, protectedlist)
   }
 }
 

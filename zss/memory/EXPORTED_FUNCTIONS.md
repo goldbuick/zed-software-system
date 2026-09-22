@@ -93,6 +93,10 @@ Generated from `export function` / `export const` under `zss/memory/`.
 
 - **bookzstdcompressbase64url**, **BOOK_ZSTD_LEVEL**
 
+## packbookwires.ts
+
+- **packbookwirestourl**
+
 ## codelabels.ts
 
 - **memorycollectcodelabels**

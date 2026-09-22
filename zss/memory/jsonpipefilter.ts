@@ -3,7 +3,7 @@ const EMIT_SKIP_SEGMENT = /(?:^|\/)(?:stats|loaders|timestamp)(?:\/|$)/
 
 /** Terrain element props omitted from wire (see `memoryexportboardelement` terrain branch). */
 const TERRAIN_EMIT_SKIP_PROP =
-  /(?:^|\/)terrain(?:\/\d+)?\/(?:id|x|y|lx|ly|code)(?:\/|$)/
+  /(?:^|\/)terrain(?:\/\d+)?\/(?:id|x|y|code)(?:\/|$)/
 
 /** Board / element runtime-only fields (not persisted over jsonpipe). */
 const RUNTIME_EMIT_SKIP_SEGMENT =

@@ -36,23 +36,22 @@ export function handlenuke(device: DEVICE, message: MESSAGE): void {
 
 export function handlesavemem(device: DEVICE, message: MESSAGE): void {
   doasync(device, message.player, async function () {
-    if (isarray(message.data)) {
-      const [maybelabel, maybecontent, maybebooks] = message.data
-      if (
-        isstring(maybelabel) &&
-        isstring(maybecontent) &&
-        isarray(maybebooks) &&
-        maybebooks.every(isbook)
-      ) {
-        await storagewritecontent(
-          message.player,
-          maybelabel,
-          maybecontent,
-          maybecontent,
-          maybebooks,
-        )
-      }
+    if (!isarray(message.data)) {
+      return
     }
+    const [maybelabel, maybecontent, maybebooks] = message.data
+    if (!isstring(maybelabel) || !isstring(maybecontent)) {
+      return
+    }
+    const books =
+      isarray(maybebooks) && maybebooks.every(isbook) ? maybebooks : []
+    await storagewritecontent(
+      message.player,
+      maybelabel,
+      maybecontent,
+      maybecontent,
+      books,
+    )
   })
 }
 

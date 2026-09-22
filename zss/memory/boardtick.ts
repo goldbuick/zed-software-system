@@ -77,8 +77,6 @@ export function memorytickboard(
       if (!isactiveobject(object)) {
         continue
       }
-      object.lx = object.x
-      object.ly = object.y
       addelementrun(object, CODE_PAGE_TYPE.OBJECT, 'tick')
     }
   }

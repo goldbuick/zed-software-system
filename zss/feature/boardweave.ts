@@ -165,9 +165,7 @@ export function boardweave(
     const obj = targetboard.objects[id]
     if (ispresent(obj)) {
       obj.x = dest.x
-      obj.lx = dest.x
       obj.y = dest.y
-      obj.ly = dest.y
     }
   }
 
