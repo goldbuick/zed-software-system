@@ -31,8 +31,6 @@ export const STATS_BOARD = [
   'starty',
   'over',
   'under',
-  'camera',
-  'graphics',
   'charset',
   'palette',
   'facing',

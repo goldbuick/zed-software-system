@@ -6,7 +6,11 @@ import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   BG_ACTIVE,
+  BG_FIND_CURRENT,
+  BG_FIND_MATCH,
   BG_SELECTED,
+  FG_FIND_CURRENT,
+  FG_FIND_MATCH,
   FG_SELECTED,
   ZSS_TYPE_ERROR,
   ZSS_TYPE_ERROR_LINE,
@@ -24,6 +28,8 @@ import {
 } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
+
+import { editorfindmatches } from './editorfind'
 
 export type EditorRowsProps = {
   xcursor: number
@@ -49,6 +55,10 @@ export function EditorRows({
       xscroll: state.xscroll,
       yscroll: state.yscroll,
       startline: state.startline,
+      findquery: state.findquery,
+      findcasesensitive: state.findcasesensitive,
+      findmatchindex: state.findmatchindex,
+      findopen: state.findopen,
     })),
   )
   const terminalmode = useTape((state) => state.terminalmode)
@@ -61,6 +71,23 @@ export function EditorRows({
     }
     return []
   }, [rows])
+
+  const strvalue = ispresent(codepage) ? codepage.toJSON() : ''
+  const findmatches = useMemo(() => {
+    if (!tapeeditor.findopen || tapeeditor.findquery.length === 0) {
+      return []
+    }
+    return editorfindmatches(
+      strvalue,
+      tapeeditor.findquery,
+      tapeeditor.findcasesensitive,
+    )
+  }, [
+    strvalue,
+    tapeeditor.findopen,
+    tapeeditor.findquery,
+    tapeeditor.findcasesensitive,
+  ])
 
   useEffect(() => {
     const mayberow = withrows[tapeeditor.startline]
@@ -87,23 +114,21 @@ export function EditorRows({
   const rightedge = context.width - 2
   const edge = textformatreadedges(context)
   edge.right = rightedge - 1
+  const rowbottom = tapeeditor.findopen ? edge.bottom - 1 : edge.bottom
 
   let ii1 = tapeeditor.cursor
   let ii2 = tapeeditor.cursor
   let hasselection = false
 
-  // adjust input edges selection
   if (ispresent(tapeeditor.select)) {
     hasselection = true
     ii1 = Math.min(tapeeditor.cursor, tapeeditor.select)
     ii2 = Math.max(tapeeditor.cursor, tapeeditor.select)
     if (tapeeditor.cursor !== tapeeditor.select) {
-      // tuck in right side
       --ii2
     }
   }
 
-  // render lines
   const baseleft = edge.left + 1 - 4
   context.active.leftedge = edge.left + 1
   context.x = context.active.leftedge - xoffset
@@ -114,14 +139,12 @@ export function EditorRows({
       continue
     }
 
-    // setup
     const row = withrows[i]
     const prow = withrows[i - 1]
     const active = i === cursor
     const pactive = i - 1 === cursor
     const text = row.code.replaceAll('\n', '')
 
-    // render
     const leftedge = baseleft - xoffset
     context.x = leftedge
     context.iseven = context.y % 2 === 0
@@ -135,7 +158,6 @@ export function EditorRows({
     const prefixcells = codeunitoffsettocellindex(prefix, prefix.length)
     writeplaintext(`${prefix}${text} `, context, false)
 
-    // Row base + line start X (start may be < 0 when panned); clip to visible cols.
     const rowindex = context.y * context.width
     const leftclip = context.active.leftedge
     const rightclip = edge.right
@@ -151,7 +173,6 @@ export function EditorRows({
       context,
     )
 
-    // apply token colors (line = code part; prefix = line number + space)
     if (!istxtpage) {
       applycodetokencolors(
         rowindex,
@@ -165,7 +186,6 @@ export function EditorRows({
       )
     }
 
-    // selection: offsets within code, relative to line start (prefix + code col)
     if (hasselection && row.start <= ii2 && row.end >= ii1) {
       const maybestart = Math.max(row.start, ii1) - row.start
       const maybeend = Math.min(row.end, ii2) - row.start
@@ -182,7 +202,36 @@ export function EditorRows({
       )
     }
 
-    // apply error and info meta
+    if (
+      tapeeditor.findopen &&
+      tapeeditor.findquery.length > 0 &&
+      findmatches.length > 0
+    ) {
+      for (let m = 0; m < findmatches.length; ++m) {
+        const match = findmatches[m]
+        if (row.start > match.end - 1 || row.end < match.start) {
+          continue
+        }
+        const maybestart = Math.max(row.start, match.start) - row.start
+        const maybeend = Math.min(row.end, match.end - 1) - row.start
+        if (maybeend < maybestart) {
+          continue
+        }
+        const iscurrent = m === tapeeditor.findmatchindex
+        clippedapplycolortoindexes(
+          rowindex,
+          leftedge,
+          leftclip,
+          rightclip,
+          prefixcells + maybestart,
+          prefixcells + maybeend,
+          iscurrent ? FG_FIND_CURRENT : FG_FIND_MATCH,
+          iscurrent ? BG_FIND_CURRENT : BG_FIND_MATCH,
+          context,
+        )
+      }
+    }
+
     const [maybeerror] = row.errors ?? []
     if (pactive && ispresent(prow.errors)) {
       context.x = leftedge
@@ -225,14 +274,12 @@ export function EditorRows({
       )
     }
 
-    // next line
     ++context.y
-    if (context.y >= edge.bottom) {
+    if (context.y >= rowbottom) {
       break
     }
   }
 
-  // reset edge
   context.disablewrap = false
   context.active.rightedge = context.width
 

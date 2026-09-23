@@ -359,7 +359,7 @@ export function memoryconverttogadgetcontrollayer(
   control.focusx = maybeobject.x ?? 0
   control.focusy = maybeobject.y ?? 0
 
-  // player flags, then board flags
+  // player flags only for camera / graphics; facing still board-fallback
   const { graphics, camera, facing } = memoryreadgraphics(player, board)
   if (isstring(graphics)) {
     control.graphics = normalizelayerzvariant(graphics)
@@ -756,13 +756,13 @@ export type MEMORY_GADGET_LAYERS = {
 }
 
 export function memoryreadgraphics(player: string, board: BOARD) {
-  // player flags, then board flags
+  // camera / graphics are player flags only; facing still board-fallback
   const { graphics, camera, facing } = memoryreadflags(
     memoryreadmainbook(),
     player,
   )
-  const withgraphics = graphics ?? board.graphics ?? ''
-  const withcamera = camera ?? board.camera ?? ''
+  const withgraphics = graphics ?? ''
+  const withcamera = camera ?? ''
   const withfacing = facing ?? board.facing ?? ''
   return {
     graphics: withgraphics,

@@ -303,9 +303,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
 
     // read stat
     switch (name) {
-      // board stats
+      // player-flag display prefs (no board fallback)
       case 'camera':
-      case 'graphics':
+      case 'graphics': {
+        const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
+        return [true, ispresent(value) ? value : '']
+      }
       case 'facing': {
         // read player flag
         const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
@@ -315,7 +318,7 @@ export const ELEMENT_FIRMWARE = createfirmware({
             ? // player flags checked first
               value
             : // fallback to board
-              (READ_CONTEXT.board?.[name] ?? 0),
+              (READ_CONTEXT.board?.facing ?? 0),
         ]
       }
       // writable

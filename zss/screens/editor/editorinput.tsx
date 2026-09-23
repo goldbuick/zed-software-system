@@ -47,6 +47,18 @@ import { NAME } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
 import {
+  editorfindbackspace,
+  editorfindclosebar,
+  editorfinddelete,
+  editorfindinsertchar,
+  editorfindjump,
+  editorfindmovefieldcursor,
+  editorfindopenbar,
+  editorfindreplacealltext,
+  editorfindreplacecurrent,
+  editorfindtogglefield,
+} from './editorfindactions'
+import {
   changeindent,
   computeselection,
   drawlocalcursor,
@@ -83,7 +95,12 @@ export function EditorInput({
 }: EditorInputProps) {
   const context = useWriteText()
   const tapeeditor = useEditor(
-    useShallow((state) => ({ cursor: state.cursor, select: state.select })),
+    useShallow((state) => ({
+      cursor: state.cursor,
+      select: state.select,
+      findopen: state.findopen,
+      findquery: state.findquery,
+    })),
   )
   const zsswords = useGadgetClient(useEqual((state) => state.zsswords))
   const autocompleteindex = useTape((state) => state.autocompleteindex)
@@ -211,16 +228,18 @@ export function EditorInput({
     )
   }
   if (autocomplete.endoflinehint && autocomplete.endoflineargs.length > 0) {
-    drawcommandarghint(
-      autocomplete.endoflineargs,
-      status.x,
-      status.y,
-      statusedge,
-      context,
-      {
-        romhint: commandromhint(autocomplete.hintcommandname),
-      },
-    )
+    if (!tapeeditor.findopen) {
+      drawcommandarghint(
+        autocomplete.endoflineargs,
+        status.x,
+        status.y,
+        statusedge,
+        context,
+        {
+          romhint: commandromhint(autocomplete.hintcommandname),
+        },
+      )
+    }
   }
 
   // --- selection state ---
@@ -307,6 +326,10 @@ export function EditorInput({
       />
       <UserInput
         MOVE_LEFT={(mods) => {
+          if (tapeeditor.findopen) {
+            editorfindmovefieldcursor(mods.alt ? -10 : -1)
+            return
+          }
           trackselection(mods.shift)
           if (mods.ctrl) {
             movexcursor(coderow.start)
@@ -316,6 +339,10 @@ export function EditorInput({
           useTape.setState({ autocompleteindex: -1 })
         }}
         MOVE_RIGHT={(mods) => {
+          if (tapeeditor.findopen) {
+            editorfindmovefieldcursor(mods.alt ? 10 : 1)
+            return
+          }
           trackselection(mods.shift)
           if (mods.ctrl) {
             movexcursor(coderow.end)
@@ -325,6 +352,9 @@ export function EditorInput({
           useTape.setState({ autocompleteindex: -1 })
         }}
         MOVE_UP={(mods) => {
+          if (tapeeditor.findopen) {
+            return
+          }
           if (autocompleteactive) {
             const maxIdx = autocomplete.suggestions.length - 1
             useTape.setState({
@@ -346,6 +376,9 @@ export function EditorInput({
           useTape.setState({ autocompleteindex: -1 })
         }}
         MOVE_DOWN={(mods) => {
+          if (tapeeditor.findopen) {
+            return
+          }
           if (autocompleteactive) {
             const maxIdx = autocomplete.suggestions.length - 1
             useTape.setState({
@@ -366,7 +399,28 @@ export function EditorInput({
           }
           useTape.setState({ autocompleteindex: -1 })
         }}
-        OK_BUTTON={() => {
+        OK_BUTTON={(mods) => {
+          if (tapeeditor.findopen) {
+            if (mods.ctrl && mods.alt) {
+              editorfindreplacealltext(strvalue, strvaluesplice)
+              return
+            }
+            if (mods.ctrl) {
+              editorfindreplacecurrent(
+                strvalue,
+                strvaluesplice,
+                updatescrolling,
+              )
+              return
+            }
+            editorfindjump(
+              strvalue,
+              mods.shift ? 'prev' : 'next',
+              tapeeditor.cursor + (mods.shift ? 0 : 1),
+              updatescrolling,
+            )
+            return
+          }
           if (autocompleteactive) {
             acceptsuggestion()
             return
@@ -381,6 +435,10 @@ export function EditorInput({
             useTape.setState({ autocompleteindex: -1 })
             return
           }
+          if (tapeeditor.findopen) {
+            editorfindclosebar()
+            return
+          }
           if (mods.shift || mods.alt || mods.ctrl) {
             registerterminalclose(SOFTWARE, player)
           } else {
@@ -388,6 +446,10 @@ export function EditorInput({
           }
         }}
         MENU_BUTTON={(mods) => {
+          if (tapeeditor.findopen) {
+            editorfindtogglefield()
+            return
+          }
           if (autocompleteactive) {
             acceptsuggestion()
             return
@@ -402,6 +464,54 @@ export function EditorInput({
           const { key } = event
           const lkey = NAME(key)
           const mods = modsfromevent(event)
+
+          if (tapeeditor.findopen) {
+            // Mac Option+C emits "c"/"ç" -- use physical KeyC for case toggle
+            if (event.code === 'KeyC' && mods.alt && !mods.ctrl) {
+              event.preventDefault()
+              useEditor.setState((state) => ({
+                findcasesensitive: !state.findcasesensitive,
+                findmatchindex: -1,
+              }))
+              return
+            }
+            switch (lkey) {
+              case 'delete':
+                editorfinddelete()
+                break
+              case 'backspace':
+                editorfindbackspace()
+                break
+              case 'g':
+                if (mods.ctrl && tapeeditor.findquery.length > 0) {
+                  editorfindjump(
+                    strvalue,
+                    mods.shift ? 'prev' : 'next',
+                    tapeeditor.cursor + (mods.shift ? 0 : 1),
+                    updatescrolling,
+                  )
+                } else if (!mods.ctrl && !mods.alt && event.key.length === 1) {
+                  editorfindinsertchar(event.key)
+                }
+                break
+              case 'f':
+                if (mods.ctrl) {
+                  editorfindopenbar(
+                    mods.alt ? 'replace' : 'find',
+                    hasselection ? strvalueselected : undefined,
+                  )
+                } else if (!mods.ctrl && !mods.alt && event.key.length === 1) {
+                  editorfindinsertchar(event.key)
+                }
+                break
+              default:
+                if (!mods.ctrl && !mods.alt && event.key.length === 1) {
+                  editorfindinsertchar(event.key)
+                }
+                break
+            }
+            return
+          }
 
           switch (lkey) {
             case 'delete':
@@ -511,6 +621,30 @@ export function EditorInput({
                     registereditorbookmarkscroll(SOFTWARE, player, title, path)
                     break
                   }
+                  case 'f': {
+                    const seed = hasselection ? strvalueselected : undefined
+                    editorfindopenbar(mods.alt ? 'replace' : 'find', seed)
+                    const query = seed ?? useEditor.getState().findquery
+                    if (query.length > 0) {
+                      editorfindjump(
+                        strvalue,
+                        'next',
+                        tapeeditor.cursor,
+                        updatescrolling,
+                      )
+                    }
+                    break
+                  }
+                  case 'g':
+                    if (tapeeditor.findquery.length > 0) {
+                      editorfindjump(
+                        strvalue,
+                        mods.shift ? 'prev' : 'next',
+                        tapeeditor.cursor + (mods.shift ? 0 : 1),
+                        updatescrolling,
+                      )
+                    }
+                    break
                   case `'`:
                     if (hasselection) {
                       togglecomments(strvalueselected, ii1, iic, strvaluesplice)

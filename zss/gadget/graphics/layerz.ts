@@ -5,7 +5,7 @@ import { NAME } from 'zss/words/types'
 
 export type GRAPHICS_MODES = 'flat' | 'iso' | 'mode7' | 'fpv'
 
-/** Fold arbitrary `@graphics` / board graphics strings onto the canonical layer-stack variants. */
+/** Fold player-flag / CONTROL graphics strings onto the canonical layer-stack variants. */
 export function normalizelayerzvariant(value: unknown): GRAPHICS_MODES {
   const key = NAME(value)
   switch (key) {

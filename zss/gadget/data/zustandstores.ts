@@ -253,12 +253,21 @@ export const useTerminal = create<{
   },
 }))
 
+export type EDITOR_FIND_FIELD = 'find' | 'replace'
+
 export const useEditor = create<{
   startline: number
   xscroll: number
   yscroll: number
   cursor: number
   select: MAYBE<number>
+  findopen: boolean
+  findquery: string
+  replacequery: string
+  findfield: EDITOR_FIND_FIELD
+  findcasesensitive: boolean
+  findmatchindex: number
+  findfieldcursor: number
   reset: () => void
 }>((set) => ({
   startline: 0,
@@ -266,6 +275,13 @@ export const useEditor = create<{
   yscroll: 0,
   cursor: 0,
   select: undefined,
+  findopen: false,
+  findquery: '',
+  replacequery: '',
+  findfield: 'find',
+  findcasesensitive: false,
+  findmatchindex: -1,
+  findfieldcursor: 0,
   reset() {
     set({
       startline: 0,
@@ -273,6 +289,13 @@ export const useEditor = create<{
       yscroll: 0,
       cursor: 0,
       select: undefined,
+      findopen: false,
+      findquery: '',
+      replacequery: '',
+      findfield: 'find',
+      findcasesensitive: false,
+      findmatchindex: -1,
+      findfieldcursor: 0,
     })
   },
 }))

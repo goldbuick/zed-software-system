@@ -113,8 +113,6 @@ export function memoryexportboard(
       starty: board.starty,
       over: board.over,
       under: board.under,
-      camera: board.camera,
-      graphics: board.graphics,
       facing: board.facing,
       charset: board.charset,
       palette: board.palette,

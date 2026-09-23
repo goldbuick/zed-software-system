@@ -30,6 +30,8 @@ import { textformatreadedges } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 import { useShallow } from 'zustand/react/shallow'
 
+import { editorfindmatches } from './editorfind'
+import { EditorFindBar } from './editorfindbar'
 import { EditorFrame } from './editorframe'
 import { EditorInput } from './editorinput'
 import { EditorRows, EditorRowsProps } from './editorrows'
@@ -47,6 +49,10 @@ export function EditorComponent() {
       cursor: state.cursor,
       xscroll: state.xscroll,
       yscroll: state.yscroll,
+      findopen: state.findopen,
+      findquery: state.findquery,
+      findcasesensitive: state.findcasesensitive,
+      findmatchindex: state.findmatchindex,
     })),
   )
   const codepage = useWaitForValueString(
@@ -219,6 +225,11 @@ export function EditorComponent() {
 
   const metaundo = ismac ? `shift+${metakey}+z` : `${metakey}+y`
   const edge = textformatreadedges(context)
+  const findmatches = editorfindmatches(
+    strvalue,
+    tapeeditor.findquery,
+    tapeeditor.findcasesensitive,
+  )
 
   return (
     <>
@@ -244,6 +255,12 @@ $white$meta+x$green.CUT
 $white$meta+v$green.PASTE 
 $white$meta+z$green.UNDO 
 $white${metaundo}$green.REDO 
+$white$meta+f$green.FIND 
+$white$meta+alt+f$green.REPLACE 
+$white$meta+g$green.FIND NEXT 
+$white$shift+$meta+g$green.FIND PREV 
+$white$meta+enter$green.REPLACE ONE 
+$white$meta+alt+enter$green.REPLACE ALL 
 $white$meta+p$green.RUN SELECTED CODE 
 $white$meta+h$green.OPEN HELPSCROLL $blue
     `}
@@ -253,6 +270,10 @@ $white$meta+h$green.OPEN HELPSCROLL $blue
         {...props}
         autocomplete={autocomplete}
         autocompleteactive={autocompleteactive}
+      />
+      <EditorFindBar
+        matchcount={findmatches.length}
+        matchindex={tapeeditor.findmatchindex}
       />
     </>
   )

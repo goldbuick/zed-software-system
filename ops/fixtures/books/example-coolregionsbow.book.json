@@ -72799,7 +72799,6 @@
               "focusy": 23,
               "focusid": "pid_0386_icxg6ja9dz29l1oz",
               "viewscale": 1,
-              "graphics": "flat",
               "facing": 1.5707963267948966
             }
           ],
@@ -80408,7 +80407,6 @@
               "focusy": 4,
               "focusid": "pid_7170_a2vd3bdyu2njnuqi",
               "viewscale": 1,
-              "graphics": "flat",
               "facing": 1.5707963267948966
             }
           ],
@@ -80582,7 +80580,6 @@
         "highscore": 0,
         "board": "sid__HhnwpAAMwgO",
         "hint": 1,
-        "camera": "far",
         "health": 100,
         "wickticks": 250,
         "facing": 90,

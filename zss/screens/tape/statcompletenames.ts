@@ -43,8 +43,6 @@ export function builtingstatnamesforcodepagetype(
         'starty',
         'over',
         'under',
-        'camera',
-        'graphics',
         'facing',
         'charset',
         'palette',

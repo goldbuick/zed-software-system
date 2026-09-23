@@ -47,6 +47,10 @@ export const FG = COLOR.BLUE
 export const FG_SELECTED = COLOR.WHITE
 export const BG_SELECTED = COLOR.DKGRAY
 export const BG_ACTIVE = COLOR.BLACK
+export const FG_FIND_MATCH = COLOR.WHITE
+export const BG_FIND_MATCH = COLOR.DKPURPLE
+export const FG_FIND_CURRENT = COLOR.WHITE
+export const BG_FIND_CURRENT = COLOR.PURPLE
 
 export function bgcolorformode(mode: TERMINAL_MODE) {
   return mode === 'quick' ? COLOR.ONCLEAR : COLOR.DKBLUE
