@@ -80,6 +80,7 @@ import {
   BOARD,
   BOARD_ELEMENT,
   BOARD_WIDTH,
+  BOOK,
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
@@ -586,13 +587,46 @@ export function memoryinspectcommand(path: string, player: string) {
       memorysafedeleteelement(board, element, mainbook.timestamp)
       break
     case 'code': {
+      const booklist = memoryreadbooklist()
+      let codepagebook: MAYBE<BOOK> = undefined
+      for (let i = 0; i < booklist.length; ++i) {
+        const maybebook = booklist[i]
+        const codepage = memoryreadcodepage(
+          maybebook,
+          board.id,
+          CODE_PAGE_TYPE.BOARD,
+        )
+        if (ispresent(codepage)) {
+          codepagebook = maybebook
+          break
+        }
+      }
+      if (!ispresent(codepagebook)) {
+        apierror(
+          SOFTWARE,
+          memoryreadoperator(),
+          'inspect',
+          `board ${board.id} not found in loaded books`,
+        )
+        break
+      }
       const pagetype = 'object'
       const path = [board.id, element.id]
-      modemwriteinitstring(vmcodeaddress(mainbook.id, path), element.code ?? '')
+      modemwriteinitstring(
+        vmcodeaddress(codepagebook.id, path),
+        element.code ?? '',
+      )
       vmclearscroll(SOFTWARE, player)
       const prefix = memoryelementtodisplayprefix(element)
-      const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${mainbook.name}`
-      registereditoropen(SOFTWARE, player, mainbook.id, path, pagetype, title)
+      const title = `${prefix}$ONCLEAR$GREEN ${element.name ?? element.kind ?? '??'} - ${codepagebook.name}`
+      registereditoropen(
+        SOFTWARE,
+        player,
+        codepagebook.id,
+        path,
+        pagetype,
+        title,
+      )
       break
     }
     default:

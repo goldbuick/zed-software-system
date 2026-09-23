@@ -66,6 +66,27 @@ function findnodetype(root: CodeNode, type: NODE): CodeNode | undefined {
   return undefined
 }
 
+function collectnodetype(root: CodeNode, type: NODE): CodeNode[] {
+  const out: CodeNode[] = []
+  if (root.type === type) {
+    out.push(root)
+  }
+  const keys = Object.keys(root).filter((k) => k !== 'parent' && k !== 'range')
+  for (const k of keys) {
+    const v = (root as unknown as Record<string, unknown>)[k]
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        if (item && typeof item === 'object' && 'type' in (item as object)) {
+          out.push(...collectnodetype(item as CodeNode, type))
+        }
+      }
+    } else if (v && typeof v === 'object' && 'type' in v) {
+      out.push(...collectnodetype(v as CodeNode, type))
+    }
+  }
+  return out
+}
+
 describe('compileast pipeline', () => {
   it('parses inline #if … break and yields NODE.IF', () => {
     const ast = assertcompile('#if 1 break\n')
@@ -138,5 +159,22 @@ describe('compileast pipeline', () => {
     const message = result.errors?.[0]?.message ?? ''
     expect(message).not.toContain('token_')
     expect(message.length).toBeGreaterThan(0)
+  })
+
+  it('preserves leading spaces on unquoted and quoted text lines', () => {
+    const ast = assertcompile(
+      [
+        'This is a scroll',
+        '     Scrolls can contain text,',
+        '"      $black$ondkcyan quoted',
+        '',
+      ].join('\n'),
+    )
+    const texts = collectnodetype(ast, NODE.TEXT)
+      .map((n) => ('value' in n ? String(n.value) : ''))
+      .filter((v) => v.length > 0)
+    expect(texts).toContain('This is a scroll')
+    expect(texts).toContain('     Scrolls can contain text,')
+    expect(texts).toContain('      $black$ondkcyan quoted')
   })
 })

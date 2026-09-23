@@ -32,6 +32,7 @@ import {
   userfocuspush,
 } from 'zss/gadget/userinputcontext'
 import type { UserInputMods } from 'zss/gadget/userinputtypes'
+import { TICK_RATE } from 'zss/mapping/tick'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import { perfmeasure } from 'zss/perf/ui'
 import { ismac } from 'zss/words/system'
@@ -55,7 +56,7 @@ const acc: Record<number, number> = {}
 let localtick = 0
 let previous = performance.now()
 
-export const INPUT_RATE = 100
+export const INPUT_RATE = TICK_RATE
 
 const INPUT_OPS = [
   INPUT.MOVE_UP,

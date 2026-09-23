@@ -60,3 +60,8 @@ export function linkafterinvoke(surface: LinkSurface): void {
     surface.sendclose()
   }
 }
+
+/** Whether letter UserHotkeys may mount for this surface (default true). */
+export function linkallowhotkeys(surface: LinkSurface): boolean {
+  return surface.allowhotkeys !== false
+}
