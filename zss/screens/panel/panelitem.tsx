@@ -7,6 +7,7 @@ import { maptostring } from 'zss/mapping/value'
 import { resolvelinktypeandwords } from 'zss/screens/linkui/linktypes'
 import { LinkRouter } from 'zss/screens/linkui/router'
 import type { LinkSurface } from 'zss/screens/linkui/types'
+import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 
 import { ScrollContext, setuppanelitem } from './common'
 import { PanelContent } from './content'
@@ -29,6 +30,7 @@ export function PanelItem({
   const player = registerreadplayer()
   const context = useWriteText()
   const scroll = useContext(ScrollContext)
+  const overlayownsinput = useGadgetInputBlocked()
 
   setuppanelitem(sidebar, row, context)
 
@@ -69,6 +71,7 @@ export function PanelItem({
     row: drawrow,
     striperow: striperow ?? drawrow,
     sidebar,
+    allowhotkeys: !(sidebar && overlayownsinput),
     context,
     sendmessage: scroll.sendmessage,
     sendclose: scroll.sendclose,

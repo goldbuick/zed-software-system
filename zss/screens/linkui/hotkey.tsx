@@ -9,7 +9,7 @@ import { maptovalue } from 'zss/mapping/value'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { linkbegin } from './surface'
+import { linkallowhotkeys, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
 export function LinkHotkey({ surface }: LinkWidgetProps) {
@@ -28,6 +28,7 @@ export function LinkHotkey({ surface }: LinkWidgetProps) {
   const maybetext = rawwords[2] ?? ''
   const maybenoclose = rawwords[3] ?? ''
   const data = rawwords.slice(4)
+  const allowhotkeys = linkallowhotkeys(surface)
 
   const routetarget =
     surface.layout === 'terminal' && surface.modemprefix.trim().length > 0
@@ -97,11 +98,11 @@ export function LinkHotkey({ surface }: LinkWidgetProps) {
           onClick={invoke}
         />
         {surface.active && <UserInput OK_BUTTON={invoke} />}
-        {shortcut && (
+        {allowhotkeys && shortcut ? (
           <UserHotkey hotkey={shortcut} althotkey={altshortcut}>
             {invoke}
           </UserHotkey>
-        )}
+        ) : null}
       </group>
     )
   }
@@ -109,7 +110,9 @@ export function LinkHotkey({ surface }: LinkWidgetProps) {
   return (
     <>
       {surface.active && <UserInput OK_BUTTON={invoke} />}
-      {shortcut && <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>}
+      {allowhotkeys && shortcut ? (
+        <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>
+      ) : null}
     </>
   )
 }

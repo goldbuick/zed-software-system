@@ -27,7 +27,7 @@ import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
-import { linkbegin, linkmodemaddress } from './surface'
+import { linkallowhotkeys, linkbegin, linkmodemaddress } from './surface'
 import type { LinkWidgetProps } from './types'
 
 const EDIT_WIDTH = 8
@@ -53,6 +53,7 @@ type LinkColorEditProps = LinkWidgetProps & { isbg?: boolean }
 
 export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   linkbegin(surface)
+  const allowhotkeys = linkallowhotkeys(surface)
 
   const shortcut = isbg ? 'b' : 'c'
   const target = maptovalue(surface.words[0], '')
@@ -111,7 +112,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
   if (editing) {
-    const colors: string[] = [`${summary}\n$white`]
+    const colors: string[] = [`${summary}$white`]
     for (let i = 0; i < withlist.length; ++i) {
       if (i % EDIT_WIDTH === 0) {
         colors.push(`\n`)
@@ -141,7 +142,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
     colors.push(`\n\n`)
     colors.push(`$greenpress C to copy ${tvalue}`)
     colors.push(`\n\n`)
-    colors.push(`$greenpress B to copy bits of ${tvalue}`)
+    colors.push(`$greenpress X to copy bits of ${tvalue}`)
     tokenizeandwritetextformat(colors.join(''), surface.context, true)
   } else {
     tokenizeandwritetextformat(summary, surface.context, false)
@@ -194,7 +195,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
         case 'c':
           registercopy(SOFTWARE, registerreadplayer(), `${state}`)
           break
-        case 'b':
+        case 'x':
           copybits()
           break
       }
@@ -266,7 +267,9 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
           onClick={invokeediting}
         />
         {surface.active && <UserInput OK_BUTTON={enterediting} />}
-        <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
+        {allowhotkeys ? (
+          <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
+        ) : null}
       </group>
     )
   }
@@ -274,7 +277,9 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   return (
     <>
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
-      <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
+      {allowhotkeys ? (
+        <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
+      ) : null}
     </>
   )
 }
