@@ -116,8 +116,6 @@ function copyboardstats(created: BOARD, source: BOARD) {
   created.starty = source.starty
   created.over = source.over
   created.under = source.under
-  created.camera = source.camera
-  created.graphics = source.graphics
   created.facing = source.facing
   created.charset = source.charset
   created.palette = source.palette

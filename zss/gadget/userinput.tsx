@@ -227,6 +227,7 @@ function handlekeydown(event: KeyboardEvent) {
     case 'j':
     case 'o':
     case 'f':
+    case 'g':
     case 'z':
     case 'y':
     case 'a':

@@ -15,7 +15,6 @@ const BOARD_ADDRESS_STATS = [
   'exiteast',
   'over',
   'under',
-  'camera',
   'charset',
   'palette',
 ] as const

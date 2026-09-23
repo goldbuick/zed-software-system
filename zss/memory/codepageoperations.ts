@@ -480,8 +480,6 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
             break
           case 'over':
           case 'under':
-          case 'camera':
-          case 'graphics':
           case 'charset':
           case 'palette':
           case 'exitnorth':
@@ -495,6 +493,10 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
                 codepage.board[key] = value
               }
             }
+            break
+          // @camera / @graphics on boards are ignored -- player flags only
+          case 'camera':
+          case 'graphics':
             break
           case 'b1':
           case 'b2':

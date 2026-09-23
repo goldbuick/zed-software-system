@@ -97,8 +97,6 @@ export enum BOARD_KEYS {
   timelimit,
   restartonzap,
   maxplayershots,
-  camera,
-  graphics,
   b1,
   b2,
   b3,
@@ -163,11 +161,9 @@ export type BOARD = {
   // board displayed over/under this one (resolved by name across loaded books)
   over?: string
   under?: string
-  // control camera zoom
-  camera?: string
-  // control graphics mode
-  graphics?: string
   facing?: number
+  // camera / graphics are player flags only (not board stats)
+
   // control visuals
   charset?: string
   palette?: string
