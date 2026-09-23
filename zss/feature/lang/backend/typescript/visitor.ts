@@ -4,7 +4,7 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
-import { tokenstring } from './visitor/helpers'
+import { tokenstring, tokenstringtext } from './visitor/helpers'
 import {
   Additive_exprCstChildren,
   And_testCstChildren,
@@ -625,7 +625,7 @@ class ScriptVisitor
   }
 
   stmt_text(ctx: Stmt_textCstChildren, location: CstNodeLocation) {
-    const content = tokenstring(ctx.token_text, '')
+    const content = tokenstringtext(ctx.token_text, '')
     return this.createlinenode(
       location,
       this.createcodenode(location, {

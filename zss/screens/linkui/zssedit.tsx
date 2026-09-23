@@ -10,13 +10,14 @@ import { maptovalue } from 'zss/mapping/value'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { linkbegin } from './surface'
+import { linkallowhotkeys, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
 const SHORTCUT = 'z'
 
 export function LinkZSSEdit({ surface }: LinkWidgetProps) {
   linkbegin(surface)
+  const allowhotkeys = linkallowhotkeys(surface)
 
   const target = maptovalue(surface.words[0], '')
 
@@ -75,7 +76,9 @@ export function LinkZSSEdit({ surface }: LinkWidgetProps) {
           onClick={invoke}
         />
         {surface.active && <UserInput OK_BUTTON={invoke} />}
-        <UserHotkey hotkey={SHORTCUT}>{invoke}</UserHotkey>
+        {allowhotkeys ? (
+          <UserHotkey hotkey={SHORTCUT}>{invoke}</UserHotkey>
+        ) : null}
       </group>
     )
   }
@@ -83,7 +86,9 @@ export function LinkZSSEdit({ surface }: LinkWidgetProps) {
   return (
     <>
       {surface.active && <UserInput OK_BUTTON={invoke} />}
-      {surface.active && <UserHotkey hotkey={SHORTCUT}>{invoke}</UserHotkey>}
+      {allowhotkeys && surface.active ? (
+        <UserHotkey hotkey={SHORTCUT}>{invoke}</UserHotkey>
+      ) : null}
     </>
   )
 }

@@ -25,7 +25,7 @@ import {
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { linkbegin, linkmodemaddress } from './surface'
+import { linkallowhotkeys, linkbegin, linkmodemaddress } from './surface'
 import type { LinkWidgetProps } from './types'
 
 const SHORTCUT = 'a'
@@ -47,6 +47,7 @@ function coords() {
 
 export function LinkCharEdit({ surface }: LinkWidgetProps) {
   linkbegin(surface)
+  const allowhotkeys = linkallowhotkeys(surface)
 
   const target = maptovalue(surface.words[0], '')
 
@@ -97,7 +98,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
   if (editing) {
-    const chars: string[] = [`${summary}\n$white`]
+    const chars: string[] = [`${summary}$white`]
     for (let i = 0; i < 256; ++i) {
       if (i % EDIT_WIDTH === 0) {
         chars.push(`\n`)
@@ -111,7 +112,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     chars.push(`\n\n`)
     chars.push(`$greenpress C to copy ${tvalue}`)
     chars.push(`\n\n`)
-    chars.push(`$greenpress B to copy bits of ${tvalue}`)
+    chars.push(`$greenpress X to copy bits of ${tvalue}`)
     tokenizeandwritetextformat(chars.join(''), surface.context, true)
   } else {
     tokenizeandwritetextformat(summary, surface.context, false)
@@ -164,7 +165,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
         case 'c':
           registercopy(SOFTWARE, registerreadplayer(), `${state}`)
           break
-        case 'b':
+        case 'x':
           copybits()
           break
       }
@@ -235,7 +236,9 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
           onClick={invokeediting}
         />
         {surface.active && <UserInput OK_BUTTON={enterediting} />}
-        <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
+        {allowhotkeys ? (
+          <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
+        ) : null}
       </group>
     )
   }
@@ -243,7 +246,9 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
   return (
     <>
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
-      <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
+      {allowhotkeys ? (
+        <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
+      ) : null}
     </>
   )
 }

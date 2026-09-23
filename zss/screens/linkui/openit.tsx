@@ -11,7 +11,7 @@ import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
-import { linkactionprefix, linkbegin } from './surface'
+import { linkactionprefix, linkallowhotkeys, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
 function wordasstring(word: unknown): string {
@@ -85,10 +85,14 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
     )
   }
 
+  const allowhotkeys = linkallowhotkeys(surface)
+
   return (
     <>
       {surface.active ? <UserInput OK_BUTTON={invoke} /> : null}
-      {shortcut ? <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey> : null}
+      {allowhotkeys && shortcut ? (
+        <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>
+      ) : null}
     </>
   )
 }
