@@ -177,4 +177,18 @@ describe('compileast pipeline', () => {
     expect(texts).toContain('     Scrolls can contain text,')
     expect(texts).toContain('      $black$ondkcyan quoted')
   })
+
+  it('strips authoring indent and opening quote on indented text lines', () => {
+    const ast = assertcompile(
+      ['#if b1 do', ' " $white Spirit:$spirit', ' " $white Curse:$curse', '#done', ''].join(
+        '\n',
+      ),
+    )
+    const texts = collectnodetype(ast, NODE.TEXT)
+      .map((n) => ('value' in n ? String(n.value) : ''))
+      .filter((v) => v.length > 0)
+    expect(texts).toContain(' $white Spirit:$spirit')
+    expect(texts).toContain(' $white Curse:$curse')
+    expect(texts.some((v) => v.includes('"'))).toBe(false)
+  })
 })
