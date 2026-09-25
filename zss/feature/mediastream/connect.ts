@@ -11,10 +11,10 @@ import {
   setmediastreamstreaming,
 } from 'zss/feature/mediastream/active'
 import {
+  type MEDIASTREAM_MESSAGE,
   MEDIASTREAM_PROTOCOL,
   ismediastreammessage,
   withmsprefix,
-  type MEDIASTREAM_MESSAGE,
 } from 'zss/feature/mediastream/protocol'
 import {
   netterminaldataconnect,
@@ -132,7 +132,7 @@ function buildcapturestream(): MAYBE<MediaStream> {
   if (typeof document === 'undefined') {
     return undefined
   }
-  const canvas = document.querySelector('canvas') as HTMLCanvasElement | null
+  const canvas = document.querySelector('canvas')
   if (!ispresent(canvas)) {
     return undefined
   }
@@ -199,7 +199,12 @@ export function mediastreambind(player: string, peerid: string): void {
     }
   })
   conn.on('error', () => {
-    apierror(SOFTWARE, player, 'broadcast', 'media-stream data connection error')
+    apierror(
+      SOFTWARE,
+      player,
+      'broadcast',
+      'media-stream data connection error',
+    )
   })
 }
 

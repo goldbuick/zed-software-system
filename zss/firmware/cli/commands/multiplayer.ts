@@ -3,6 +3,7 @@ import {
   apilog,
   bridgechatstart,
   bridgechatstop,
+  bridgemediastreambind,
   bridgestart,
   bridgestatus,
   bridgestreamstart,
@@ -28,13 +29,7 @@ import {
   resolvewhipendpoint,
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
-import {
-  mediastreambind,
-  mediastreamstopfromcafe,
-  mediastreamstreamingactive,
-} from 'zss/feature/mediastream/connect'
 import { ismediastreampeerid } from 'zss/feature/mediastream/protocol'
-import { netterminalensurehostready } from 'zss/feature/netterminal'
 import { FIRMWARE } from 'zss/firmware'
 import {
   BRIDGE_SUBCOMMANDS,
@@ -285,18 +280,12 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
         }
         const head = NAME(String(first))
         if (head === 'stop') {
-          if (mediastreamstopfromcafe(player)) {
-            return 0
-          }
           bridgestreamstop(SOFTWARE, player)
           return 0
         }
         if (head === 'stream') {
           if (endpoint) {
-            doasync(SOFTWARE, player, async () => {
-              await netterminalensurehostready()
-              mediastreambind(player, String(endpoint))
-            })
+            bridgemediastreambind(SOFTWARE, player, String(endpoint))
           } else {
             apierror(
               SOFTWARE,
@@ -308,19 +297,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         if (ismediastreampeerid(String(first))) {
-          doasync(SOFTWARE, player, async () => {
-            await netterminalensurehostready()
-            mediastreambind(player, String(first))
-          })
-          return 0
-        }
-        if (mediastreamstreamingactive()) {
-          apierror(
-            SOFTWARE,
-            player,
-            'broadcast',
-            'media-stream companion is live; use broadcast stop first',
-          )
+          bridgemediastreambind(SOFTWARE, player, String(first))
           return 0
         }
         if (head === 'ivs-ll') {

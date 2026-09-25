@@ -23,10 +23,6 @@ import { doasync } from 'zss/device/doasync'
 import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
-  mediastreamstreamingactive,
-  mediastreamstopfromcafe,
-} from 'zss/feature/mediastream/connect'
-import {
   createwebbroadcastclient,
   parsebroadcaststartpayload,
 } from 'zss/feature/broadcast/webbroadcastclient'
@@ -49,6 +45,12 @@ import {
 } from 'zss/feature/mediaqueue/panel'
 import { mediaqueuereadaudiostream } from 'zss/feature/mediaqueue/playerconnect'
 import {
+  mediastreambind,
+  mediastreamstopfromcafe,
+  mediastreamstreamingactive,
+} from 'zss/feature/mediastream/connect'
+import {
+  netterminalensurehostready,
   netterminalhost,
   netterminaljoin,
   readsubscribetopic,
@@ -654,6 +656,21 @@ const bridge = createdevice('bridge', [], (message) => {
       } else {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')
       }
+      break
+    case 'mediastreambind':
+      doasync(bridge, message.player, async () => {
+        if (!isstring(message.data) || !message.data.trim()) {
+          apierror(
+            bridge,
+            message.player,
+            'broadcast',
+            'usage: broadcast stream <peerid>',
+          )
+          return
+        }
+        await netterminalensurehostready()
+        mediastreambind(message.player, message.data)
+      })
       break
     case 'mediapanel': {
       const payload = message.data as
