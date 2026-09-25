@@ -918,7 +918,27 @@ Source: https://zed.cafe/docs/feature/bytes
 # charset.ts
 Source: https://zed.cafe/docs/feature/charset
 
-**Purpose**: Exports `CHARSET` — default 8×8 character set bitmap as hex array. Used by gadget display, parse (CHR), and memory codepage operations.
+**Purpose**: Exports `CHARSET` — default 8×14 character set bitmap as hex array. Used by gadget display, parse (CHR / Font Mania COM), and memory codepage operations.
+
+## Book `world` charset
+
+When rendering a board:
+
+1. If the board has a `charset` stat → that charset codepage
+2. Else if the board's book has `@charset world` → use that page
+3. Else → engine default `CHARSET`
+
+Board `charset` always wins over book `world`. Do not set `board.charset = world` for the fallback — leave the stat empty.
+
+## Import
+
+| Source | Codepage name | Book |
+|--------|---------------|------|
+| `.chr` | stem (`pokemon.chr` → `pokemon`) | first content book |
+| Font Mania `.com` (e.g. Museum `Pokemon.com`) | `world` | last imported ZZT/SZT book, or staged until ZZT arrives |
+| Raw `N×14` bytes named `.com` | `world` | same as Font Mania |
+
+Font Mania 2.x layout: offset LE u16 @2, height @5 (must be 14), then 256×height glyph bytes. See [`fontmania.ts`](../parse/fontmania.ts).
 
 ## Exports
 
@@ -928,8 +948,8 @@ Source: https://zed.cafe/docs/feature/charset
 
 ## Consumed By
 
-- `zss/feature/parse/chr.ts`
-- `zss/memory/codepageoperations.ts`
+- `zss/feature/parse/chr.ts`, `fontmania.ts`
+- `zss/memory/codepageoperations.ts`, `boardvisuals.ts`
 - `zss/gadget/hooks.ts`, `display/*`, `graphics/*`
 - `zss/screens/panel/charedit.tsx`
 
@@ -5989,7 +6009,7 @@ Source: https://zed.cafe/docs/memory/inspectionfind
 # inspectionmakeit.ts
 Source: https://zed.cafe/docs/memory/inspectionmakeit
 
-**Purpose**: Make codepage UI — create object/terrain/board/loader. Guides user through codepage creation with type-specific UI.
+**Purpose**: Make codepage UI — create object/terrain/board/loader/charset/palette/txt. Guides user through codepage creation with type-specific UI. When multiple books are loaded, a book SELECT picks the create target (last choice persisted in durable `makeitconfig`).
 
 ## Dependencies
 
@@ -5997,23 +6017,25 @@ Source: https://zed.cafe/docs/memory/inspectionmakeit
 - `zss/device/session` — SOFTWARE
 - `zss/feature/writeui` — write
 - `zss/feature/zsstextui` — zsstexttape, zsszedlinkline
+- `zss/gadget/data/api` — registerhyperlinksharedbridge
 - `zss/gadget/data/scrollwritelines` — scrollwritelines
-- `zss/device/doasync` — doasync
-- `zss/mapping/tick` — waitfor
-- `zss/mapping/types` — MAYBE, ispresent
+- `zss/mapping/types` — MAYBE, ispresent, isnumber, isstring
 - `zss/words/stats` — statformat, stattypestring
-- `zss/words/types` — STAT_TYPE
-- `./bookoperations` — memorylistcodepage, memoryreadcodepage
-- `./books` — memoryensuremaincodepage
+- `zss/words/types` — NAME, STAT_TYPE
+- `./bookoperations` — memoryensurecodepage, memorylistcodepage, memoryreadcodepage
 - `./codepageoperations` — memoryreadcodepagename, memoryreadcodepagetype, memoryreadcodepagetypeasstring
-- `./session` — memoryreadbooklist
+- `./inspectionconfig` — memorycreateinspectionconfig
+- `./session` — memoryreadbookbyaddress, memoryreadbooklist, memoryreadfirstbook, memoryreadmainbook
 
 ## Key Exports
 
 | Export | Description |
 |--------|-------------|
 | `memorymakeitcommand(path, data, player)` | Handle a `makeit:*` action invoked from the makeit scroll |
-| `memorymakeitscroll(makeit, player)` | Build the makeit scroll for the given keyword (object / terrain / board / loader / charset / palette) |
+| `memorymakeitscroll(makeit, player)` | Build the makeit scroll (async; loads durable book pick when multi-book) |
+| `makeitresolvecreatebook()` | Book used for create (selected id, else main / first) |
+| `makeitbookselectindex()` | Index into book list for the SELECT control |
+| `makeitsetselectedbookid(bookid)` | Persist create-target book id |
 
 ---
 
