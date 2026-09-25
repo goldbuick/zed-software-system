@@ -76,10 +76,7 @@ function matchBasicText(text: string, startOffset: number) {
   }
 
   let peek = startOffset
-  while (
-    peek < text.length &&
-    (text[peek] === ' ' || text[peek] === '\t')
-  ) {
+  while (peek < text.length && (text[peek] === ' ' || text[peek] === '\t')) {
     peek += 1
   }
   if (peek >= text.length || text[peek] === '\n' || text[peek] === '\r') {

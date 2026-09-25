@@ -1,10 +1,6 @@
 import { apitoast } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { loadcharsetfrombytes } from 'zss/feature/bytes'
-import {
-  isfontmaniacom,
-  resolvecharsetbytes,
-} from './fontmania'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
@@ -14,6 +10,8 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memoryreadfirstcontentbook } from 'zss/memory/session'
 import { BOOK, CODE_PAGE_TYPE } from 'zss/memory/types'
+
+import { isfontmaniacom, resolvecharsetbytes } from './fontmania'
 
 const WORLD_CHARSET_CODE = '@charset world'
 
@@ -175,10 +173,6 @@ export function charsetimportattachworldtobook(
     filename,
   })
   if (ispresent(name)) {
-    apitoast(
-      SOFTWARE,
-      player,
-      `attached world charset to ${book.name} book`,
-    )
+    apitoast(SOFTWARE, player, `attached world charset to ${book.name} book`)
   }
 }

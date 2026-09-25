@@ -10,7 +10,7 @@ const GLYPH_COUNT = 256
 const REQUIRED_HEIGHT = FILE_BYTES_PER_CHAR
 
 function readu16le(bytes: Uint8Array, offset: number): number {
-  return bytes[offset]! | (bytes[offset + 1]! << 8)
+  return bytes[offset] | (bytes[offset + 1] << 8)
 }
 
 export function isfontmaniacom(bytes: Uint8Array): boolean {

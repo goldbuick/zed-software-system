@@ -31,7 +31,7 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
   }
   switch (format) {
     case 'file':
-      parsewebfile(message.player, content)
+      void parsewebfile(message.player, content)
       break
     case 'json':
       if (/file:.*\.book.json/.test(eventname)) {
