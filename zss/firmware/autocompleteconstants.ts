@@ -111,6 +111,7 @@ export const TTS_FISH_MODEL_KEYWORDS = [
 
 export const BROADCAST_HEAD_KEYWORDS = [
   'stop',
+  'stream',
   'whip',
   'ivs-ll',
   'ivs-rt',

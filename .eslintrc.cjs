@@ -186,10 +186,15 @@ module.exports = {
   },
   overrides: [
     {
-      // Standalone Electron helper: own tsconfig + node_modules (electron types
+      // Standalone Electron helpers: own tsconfig + node_modules (electron types
       // are not installed at the repo root), so lint style here and leave types
-      // to `yarn typecheck` inside ops/media-queue.
-      files: ['ops/media-queue/**/*.ts', 'ops/media-queue/**/*.d.ts'],
+      // to `yarn typecheck` inside ops/media-queue / ops/media-stream.
+      files: [
+        'ops/media-queue/**/*.ts',
+        'ops/media-queue/**/*.d.ts',
+        'ops/media-stream/**/*.ts',
+        'ops/media-stream/**/*.d.ts',
+      ],
       extends: ['plugin:@typescript-eslint/disable-type-checked'],
       env: {
         browser: true,

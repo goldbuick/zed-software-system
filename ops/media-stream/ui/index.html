@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; script-src 'self' 'unsafe-eval'; img-src 'self' blob:; connect-src 'self' https://terminal.zed.cafe wss://terminal.zed.cafe https://ingest.twitch.tv https://a.rtmp.youtube.com; media-src 'self' blob: mediastream:"
+    />
+    <title>zed.cafe Media Stream</title>
+    <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="stylesheet" href="./theme.css" />
+    <link rel="stylesheet" href="./ms.css" />
+  </head>
+  <body>
+    <div class="frame ms">
+      <h1>zed.cafe <span>Media Stream</span></h1>
+      <div class="sub">Multi-destination companion (Twitch / YouTube / TikTok)</div>
+
+      <div class="ms-columns">
+        <div class="ms-col-main">
+          <div class="row toggles">
+            <label
+              ><input id="enhanced" type="checkbox" checked /> Enhanced
+              Broadcasting</label
+            >
+            <label
+              ><input id="dualformat" type="checkbox" /> Dual Format</label
+            >
+          </div>
+
+          <label>destinations</label>
+          <div id="destlist" class="destlist"></div>
+        </div>
+
+        <div class="ms-col-session">
+          <label for="localpeer">Your peer id</label>
+          <div class="peerbox">
+            <input
+              id="localpeer"
+              type="text"
+              readonly
+              spellcheck="false"
+              autocomplete="off"
+              value="starting..."
+            />
+            <button id="copypeer" type="button" class="action" disabled>
+              Copy
+            </button>
+          </div>
+          <div id="cafestatus" class="players">cafe: unbound</div>
+
+          <div class="row go-live">
+            <button id="gostart" type="button" class="action">Start</button>
+            <button id="gostop" type="button" class="action" disabled>
+              Stop
+            </button>
+          </div>
+          <div id="status" class="status">idle</div>
+
+          <label>horizontal + vertical crop</label>
+          <div class="previewrow">
+            <div class="previewwrap">
+              <canvas id="hpreview" width="320" height="180"></canvas>
+              <div id="cropframe" class="cropframe"></div>
+            </div>
+            <canvas id="vpreview" width="90" height="160"></canvas>
+          </div>
+
+          <div class="help">
+            Cafe: <code>#broadcast stream &lt;peerid&gt;</code> or
+            <code>#broadcast ms_...</code> to bind. Configure keys here, then
+            Start. <code>#broadcast stop</code> ends companion streaming.
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>

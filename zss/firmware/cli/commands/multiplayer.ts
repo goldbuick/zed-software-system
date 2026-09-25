@@ -3,6 +3,7 @@ import {
   apilog,
   bridgechatstart,
   bridgechatstop,
+  bridgemediastreambind,
   bridgestart,
   bridgestatus,
   bridgestreamstart,
@@ -28,6 +29,7 @@ import {
   resolvewhipendpoint,
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
+import { ismediastreampeerid } from 'zss/feature/mediastream/protocol'
 import { FIRMWARE } from 'zss/firmware'
 import {
   BRIDGE_SUBCOMMANDS,
@@ -263,7 +265,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
       'broadcast',
       [
         ARG_TYPE.MAYBE_NAME,
-        'stream broadcast menu, stop, or start (operator only)',
+        'stream broadcast menu, stop, whip, or media-stream bind (operator only)',
       ],
       (_, words) => {
         const [first, endpoint, bearer] = readargs(words, 0, [
@@ -276,11 +278,29 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           showbroadcastmenu(player)
           return 0
         }
-        if (NAME(String(first)) === 'stop') {
+        const head = NAME(String(first))
+        if (head === 'stop') {
           bridgestreamstop(SOFTWARE, player)
           return 0
         }
-        if (NAME(String(first)) === 'ivs-ll') {
+        if (head === 'stream') {
+          if (endpoint) {
+            bridgemediastreambind(SOFTWARE, player, String(endpoint))
+          } else {
+            apierror(
+              SOFTWARE,
+              player,
+              'broadcast',
+              'usage: broadcast stream <peerid>',
+            )
+          }
+          return 0
+        }
+        if (ismediastreampeerid(String(first))) {
+          bridgemediastreambind(SOFTWARE, player, String(first))
+          return 0
+        }
+        if (head === 'ivs-ll') {
           if (endpoint) {
             bridgestreamstart(SOFTWARE, player, {
               kind: 'ivs-low-latency',
@@ -296,7 +316,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           }
           return 0
         }
-        if (NAME(String(first)) === 'ivs-rt') {
+        if (head === 'ivs-rt') {
           if (endpoint) {
             bridgestreamstart(SOFTWARE, player, {
               kind: 'ivs-whip',
@@ -312,7 +332,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           }
           return 0
         }
-        if (NAME(String(first)) === 'whip') {
+        if (head === 'whip') {
           if (endpoint && bearer) {
             const resolved = resolvewhipendpoint(String(endpoint))
             if (!resolved) {

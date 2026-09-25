@@ -45,6 +45,12 @@ import {
 } from 'zss/feature/mediaqueue/panel'
 import { mediaqueuereadaudiostream } from 'zss/feature/mediaqueue/playerconnect'
 import {
+  mediastreambind,
+  mediastreamstopfromcafe,
+  mediastreamstreamingactive,
+} from 'zss/feature/mediastream/connect'
+import {
+  netterminalensurehostready,
   netterminalhost,
   netterminaljoin,
   readsubscribetopic,
@@ -519,11 +525,20 @@ const bridge = createdevice('bridge', [], (message) => {
       apilog(
         bridge,
         message.player,
-        `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive}`,
+        `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive} mediastream=${mediastreamstreamingactive() ? 'live' : 'idle'}`,
       )
       break
     case 'streamstart':
       doasync(bridge, message.player, async () => {
+        if (mediastreamstreamingactive()) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'media-stream companion is live; use broadcast stop first',
+          )
+          return
+        }
         const startpayload = parsebroadcaststartpayload(message.data)
         if (ispresent(broadcastclient)) {
           apierror(bridge, message.player, 'bridge', 'stream is already open')
@@ -627,6 +642,9 @@ const bridge = createdevice('bridge', [], (message) => {
       })
       break
     case 'streamstop':
+      if (mediastreamstopfromcafe(message.player)) {
+        break
+      }
       if (ispresent(broadcastclient)) {
         broadcastclient.stop()
         broadcastclient.delete()
@@ -638,6 +656,21 @@ const bridge = createdevice('bridge', [], (message) => {
       } else {
         apierror(bridge, message.player, 'bridge', 'stream already stopped')
       }
+      break
+    case 'mediastreambind':
+      doasync(bridge, message.player, async () => {
+        if (!isstring(message.data) || !message.data.trim()) {
+          apierror(
+            bridge,
+            message.player,
+            'broadcast',
+            'usage: broadcast stream <peerid>',
+          )
+          return
+        }
+        await netterminalensurehostready()
+        mediastreambind(message.player, message.data)
+      })
       break
     case 'mediapanel': {
       const payload = message.data as

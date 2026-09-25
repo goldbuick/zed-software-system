@@ -176,6 +176,15 @@ export function bridgestreamstop(device: DEVICELIKE, player: string) {
   device.emit(player, 'bridge:streamstop', undefined)
 }
 
+/** Bind media-stream Electron companion (main-thread PeerJS). */
+export function bridgemediastreambind(
+  device: DEVICELIKE,
+  player: string,
+  peerid: string,
+) {
+  device.emit(player, 'bridge:mediastreambind', peerid)
+}
+
 export function bridgetab(device: DEVICELIKE, player: string, hidden: boolean) {
   device.emit(player, 'bridge:tab', hidden)
 }

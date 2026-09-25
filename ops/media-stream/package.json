@@ -1,0 +1,73 @@
+{
+  "name": "zed-cafe-media-stream",
+  "productName": "Zed Cafe Media Stream",
+  "private": true,
+  "version": "1.0.0",
+  "main": "out/main/index.js",
+  "description": "Electron multi-destination stream companion for zed.cafe",
+  "author": "zed.cafe",
+  "license": "MIT",
+  "scripts": {
+    "fetch-binaries": "tsx scripts/fetch-binaries.ts",
+    "test": "tsx scripts/test-sanitize.ts",
+    "stage-electron-resources": "tsx scripts/stage-electron-resources.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "lint": "cd ../.. && ./node_modules/.bin/eslint 'ops/media-stream/**/*.ts' 'ops/media-stream/**/*.d.ts' --report-unused-disable-directives --max-warnings 0",
+    "build": "electron-vite build",
+    "prestart": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-icon.ts && tsx scripts/stage-dev-app.ts",
+    "start": "tsx scripts/run-electron.ts",
+    "prepare:dist": "tsx scripts/fetch-binaries.ts && tsx scripts/stage-electron-resources.ts && tsx scripts/stage-icon.ts && electron-vite build",
+    "dist": "yarn prepare:dist && tsx scripts/run-builder.ts",
+    "dist:mac": "yarn prepare:dist && tsx scripts/run-builder.ts --mac",
+    "dist:win": "yarn prepare:dist && tsx scripts/run-builder.ts --win"
+  },
+  "build": {
+    "appId": "cafe.zed.media-stream",
+    "productName": "Zed Cafe Media Stream",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "resources/icons/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "resources/icons/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^5.0.0",
+    "peerjs": "1.5.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.2.2"
+  },
+  "dependencies": {}
+}
