@@ -2295,7 +2295,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `jointab` | New tab with the join url (operator only) |
 | `chat` | Bridge chat: legacy `#chat <channel>` starts Twitch; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
-| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only) |
+| `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast stream <peerid>` / `#broadcast ms_…` (media-stream companion bind), `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only; WHIP XOR media-stream) |
 | `media` | Board TV media queue: `#media` (queue list), `#media <url>` (submit), `#media playlist` (copy played + queue URLs) |
 | `queue` | Media helper admin: `#queue` (menu), `#queue <peerid>` (bind), `#queue skip` / `clear` / `stop` / `limit <N>` / `approve <N>` / `reject <N>` |
 | `permissions` | Read-only: base preset, group legend, player→role, per-role effective commands (overrides vs preset), banned tokens |
@@ -6663,7 +6663,7 @@ Source: https://zed.cafe/docs/ops/desktop-signing
 
 # Desktop helper signing
 
-Windows installers for the Electron media-queue helper ship on GitHub Releases (`v*` tags). Tag CI builds Windows only. macOS `.dmg` is local (`yarn task run mediaqueue:build:desktop:mac`) until an Apple Developer ID and notarization exist.
+Windows installers for the Electron media-queue and media-stream helpers ship on GitHub Releases (`v*` tags). Tag CI builds Windows only. macOS `.dmg` is local (`yarn task run mediaqueue:build:desktop:mac` / `mediastream:build:desktop:mac`) until an Apple Developer ID and notarization exist.
 
 ## Windows (SignPath OSS)
 
@@ -6736,6 +6736,7 @@ signtool verify /pa /v "Zed Cafe Media Queue_*_x64-setup.exe"
 | Job | Build task | SignPath artifact slug |
 |-----|------------|------------------------|
 | `mediaqueue-windows` | `mediaqueue:build:desktop:win` | `media-queue-nsis` |
+| `mediastream-windows` | `mediastream:build:desktop:win` | `media-stream-nsis` |
 
 The job builds the Electron NSIS installer, uploads the unsigned `.exe` as a named workflow artifact, and when secrets are set submits to SignPath (`signpath/github-action-submit-signing-request@v2`). The signed `.exe` is attached to the GitHub Release.
 
@@ -6878,33 +6879,39 @@ Consult current docs for the request shape:
 # Local media helpers on Electron
 Source: https://zed.cafe/docs/ops/local-media-helpers
 
-**Purpose:** Ship cafe's **media-queue helper** as a local **Electron** (Chromium) desktop app. The helper PeerJS-calls cafe for board TV playback. Cafe stays a website; the helper ships as a local binary on GitHub Releases.
+**Purpose:** Ship cafe's **media-queue** and **media-stream** helpers as local **Electron** desktop apps. Cafe stays a website; helpers ship as local binaries on GitHub Releases.
 
-**Status:** Electron is the desktop stack for the media-queue helper. Media-queue + cafe `#media` queue list / `#queue` admin menu / board TV receive path live under [`ops/media-queue/`](../media-queue/README.md) and [`zss/feature/mediaqueue/`](../../zss/feature/mediaqueue/docs/README.md). Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
+**Status:** Electron is the desktop stack for both helpers. Media-queue + cafe `#media` / `#queue` / board TV live under [`ops/media-queue/`](../media-queue/README.md). Media-stream multi-destination broadcast lives under [`ops/media-stream/`](../media-stream/README.md) and [`zss/feature/mediastream/`](../../zss/feature/mediastream/docs/README.md).
 
 ## Product shape
 
 | Helper | Job | Cafe side |
 |--------|-----|-----------|
-| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` queue list; `#queue` admin menu; **board TV** sink via direct helper connect -- **no tape overlay** |
+| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` queue list; `#queue` admin menu; **board TV** sink |
+| **Media stream** (Electron) | Twitch eRTMP + YouTube/TikTok RTMP; Dual Format crop; live/VOD buses | `#broadcast stream <peerid>`; `#broadcast stop`; capture push on Start |
 
-The helper ships as an Electron app on GitHub Releases (`v*` tags).
+The helpers ship as Electron apps on GitHub Releases (`v*` tags).
 
 ```mermaid
 flowchart TB
   subgraph cafe [zed.cafe browser]
-    CLI["#media / #queue …"]
+    CLI["#media / #queue / #broadcast stream"]
     Peer["PeerJS peer on terminal.zed.cafe"]
     TV["Board TV MediaStream sink"]
+    Cap["Broadcast capture push"]
   end
 
-  subgraph helpers [Electron local app]
+  subgraph helpers [Electron local apps]
     MQ["Media queue: yt-dlp + video.captureStream"]
+    MS["Media stream: compositors + FFmpeg RTMP/eRTMP"]
   end
 
   CLI -->|queue RPCs DataConnection| MQ
   MQ -->|MediaConnection per player on board| Peer
   Peer --> TV
+  CLI -->|bind DataConnection| MS
+  Cap -->|MediaConnection A/V| MS
+  MS -->|RTMP / eRTMP| Platforms["Twitch / YouTube / TikTok"]
 ```
 
 ## Why Electron
@@ -6924,9 +6931,11 @@ flowchart TB
 ```bash
 yarn task run mediaqueue:build:desktop
 yarn task run mediaqueue:dev
+yarn task run mediastream:build:desktop
+yarn task run mediastream:dev
 ```
 
-Installers land under `ops/media-queue/dist/` (electron-builder).
+Installers land under `ops/media-queue/dist/` and `ops/media-stream/dist/` (electron-builder).
 
 ## Explicitly out
 
@@ -6940,6 +6949,7 @@ Installers land under `ops/media-queue/dist/` (electron-builder).
 ## Related
 
 - Media queue: [`ops/media-queue/`](../media-queue/README.md)
+- Media stream: [`ops/media-stream/`](../media-stream/README.md)
 - PeerJS baseline: [`zss/feature/docs/netterminal.md`](../../zss/feature/docs/netterminal.md)
 - Windows signing: [`desktop-signing.md`](desktop-signing.md)
 

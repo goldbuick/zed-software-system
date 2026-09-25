@@ -2,33 +2,39 @@
 title: Local media helpers on Electron
 ---
 
-**Purpose:** Ship cafe's **media-queue helper** as a local **Electron** (Chromium) desktop app. The helper PeerJS-calls cafe for board TV playback. Cafe stays a website; the helper ships as a local binary on GitHub Releases.
+**Purpose:** Ship cafe's **media-queue** and **media-stream** helpers as local **Electron** desktop apps. Cafe stays a website; helpers ship as local binaries on GitHub Releases.
 
-**Status:** Electron is the desktop stack for the media-queue helper. Media-queue + cafe `#media` queue list / `#queue` admin menu / board TV receive path live under [`ops/media-queue/`](../media-queue/README.md) and [`zss/feature/mediaqueue/`](../../zss/feature/mediaqueue/docs/README.md). Inbound media uses **PeerJS `MediaConnection`**, not WHEP.
+**Status:** Electron is the desktop stack for both helpers. Media-queue + cafe `#media` / `#queue` / board TV live under [`ops/media-queue/`](../media-queue/README.md). Media-stream multi-destination broadcast lives under [`ops/media-stream/`](../media-stream/README.md) and [`zss/feature/mediastream/`](../../zss/feature/mediastream/docs/README.md).
 
 ## Product shape
 
 | Helper | Job | Cafe side |
 |--------|-----|-----------|
-| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` queue list; `#queue` admin menu; **board TV** sink via direct helper connect -- **no tape overlay** |
+| **Media queue** (Electron) | yt-dlp download + local playback; answers player `MediaConnection`s | `#media` queue list; `#queue` admin menu; **board TV** sink |
+| **Media stream** (Electron) | Twitch eRTMP + YouTube/TikTok RTMP; Dual Format crop; live/VOD buses | `#broadcast stream <peerid>`; `#broadcast stop`; capture push on Start |
 
-The helper ships as an Electron app on GitHub Releases (`v*` tags).
+The helpers ship as Electron apps on GitHub Releases (`v*` tags).
 
 ```mermaid
 flowchart TB
   subgraph cafe [zed.cafe browser]
-    CLI["#media / #queue …"]
+    CLI["#media / #queue / #broadcast stream"]
     Peer["PeerJS peer on terminal.zed.cafe"]
     TV["Board TV MediaStream sink"]
+    Cap["Broadcast capture push"]
   end
 
-  subgraph helpers [Electron local app]
+  subgraph helpers [Electron local apps]
     MQ["Media queue: yt-dlp + video.captureStream"]
+    MS["Media stream: compositors + FFmpeg RTMP/eRTMP"]
   end
 
   CLI -->|queue RPCs DataConnection| MQ
   MQ -->|MediaConnection per player on board| Peer
   Peer --> TV
+  CLI -->|bind DataConnection| MS
+  Cap -->|MediaConnection A/V| MS
+  MS -->|RTMP / eRTMP| Platforms["Twitch / YouTube / TikTok"]
 ```
 
 ## Why Electron
@@ -48,9 +54,11 @@ flowchart TB
 ```bash
 yarn task run mediaqueue:build:desktop
 yarn task run mediaqueue:dev
+yarn task run mediastream:build:desktop
+yarn task run mediastream:dev
 ```
 
-Installers land under `ops/media-queue/dist/` (electron-builder).
+Installers land under `ops/media-queue/dist/` and `ops/media-stream/dist/` (electron-builder).
 
 ## Explicitly out
 
@@ -64,5 +72,6 @@ Installers land under `ops/media-queue/dist/` (electron-builder).
 ## Related
 
 - Media queue: [`ops/media-queue/`](../media-queue/README.md)
+- Media stream: [`ops/media-stream/`](../media-stream/README.md)
 - PeerJS baseline: [`zss/feature/docs/netterminal.md`](../../zss/feature/docs/netterminal.md)
 - Windows signing: [`desktop-signing.md`](desktop-signing.md)
