@@ -16,8 +16,8 @@ import { resolvemspeerid } from './lib/peerid'
 import { type MS_RTMP_JOB, startrtmpjob, stoprtmpjob } from './lib/rtmpegress'
 
 const APP_NAME = 'Zed Cafe Media Stream'
-const MAIN_WINDOW_WIDTH = 520
-const MAIN_WINDOW_HEIGHT = 780
+const MAIN_WINDOW_WIDTH = 880
+const MAIN_WINDOW_HEIGHT = 620
 const STREAM_FPS = 30
 const H_WIDTH = 1920
 const H_HEIGHT = 1080
@@ -216,6 +216,7 @@ function createmainwindow(): void {
     height: MAIN_WINDOW_HEIGHT,
     title: APP_NAME,
     backgroundColor: '#0000aa',
+    resizable: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,

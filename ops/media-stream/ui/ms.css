@@ -1,5 +1,75 @@
-.ms {
-  min-height: 100vh;
+/* media-stream extras on top of shared EGA theme */
+html,
+body {
+  width: 880px;
+  overflow: auto;
+}
+
+.frame.ms {
+  width: 880px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.frame.ms h1,
+.frame.ms .sub {
+  margin-bottom: 4px;
+}
+
+.frame.ms > label,
+.frame.ms .ms-col-main > label,
+.frame.ms .ms-col-session > label {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.ms-columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+
+.ms-col-main {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.ms-col-session {
+  flex: 0 0 auto;
+  width: 432px;
+  position: sticky;
+  top: 8px;
+}
+
+.peerbox {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+}
+
+.peerbox input[type='text'] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-right: none;
+  color: var(--hint);
+}
+
+.peerbox button {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.players {
+  margin: 0;
+  padding: 0;
+  color: var(--hint);
+  line-height: var(--row);
 }
 
 .ms .destlist {
@@ -30,6 +100,15 @@
 .ms .toggles {
   gap: 16px;
   margin-bottom: 12px;
+}
+
+.ms .go-live {
+  margin-top: 8px;
+}
+
+.ms .go-live button {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .ms .previewrow {
@@ -79,6 +158,7 @@
 
 .ms .status {
   margin-top: 8px;
+  margin-bottom: 8px;
   color: var(--brand);
   min-height: 1.2em;
   word-break: break-word;
@@ -86,8 +166,8 @@
 
 .ms .help {
   margin-top: 16px;
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 16px;
+  line-height: var(--row);
   opacity: 0.9;
 }
 
