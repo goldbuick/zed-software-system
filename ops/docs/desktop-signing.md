@@ -1,6 +1,6 @@
 # Desktop helper signing
 
-Windows installers for the Electron media-queue helper ship on GitHub Releases (`v*` tags). Tag CI builds Windows only. macOS `.dmg` is local (`yarn task run mediaqueue:build:desktop:mac`) until an Apple Developer ID and notarization exist.
+Windows installers for the Electron media-queue and media-stream helpers ship on GitHub Releases (`v*` tags). Tag CI builds Windows only. macOS `.dmg` is local (`yarn task run mediaqueue:build:desktop:mac` / `mediastream:build:desktop:mac`) until an Apple Developer ID and notarization exist.
 
 ## Windows (SignPath OSS)
 
@@ -73,6 +73,7 @@ signtool verify /pa /v "Zed Cafe Media Queue_*_x64-setup.exe"
 | Job | Build task | SignPath artifact slug |
 |-----|------------|------------------------|
 | `mediaqueue-windows` | `mediaqueue:build:desktop:win` | `media-queue-nsis` |
+| `mediastream-windows` | `mediastream:build:desktop:win` | `media-stream-nsis` |
 
 The job builds the Electron NSIS installer, uploads the unsigned `.exe` as a named workflow artifact, and when secrets are set submits to SignPath (`signpath/github-action-submit-signing-request@v2`). The signed `.exe` is attached to the GitHub Release.
 

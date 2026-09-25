@@ -1,0 +1,96 @@
+.ms {
+  min-height: 100vh;
+}
+
+.ms .destlist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ms .destrow {
+  border: 1px solid var(--brand);
+  padding: 8px;
+  background: var(--panel);
+}
+
+.ms .destrow label {
+  display: block;
+  margin: 4px 0 2px;
+  font-size: 12px;
+}
+
+.ms .destrow input[type='text'],
+.ms .destrow input[type='password'] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ms .toggles {
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.ms .previewrow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.ms .previewwrap {
+  position: relative;
+  width: 320px;
+  height: 180px;
+  border: 1px solid var(--brand);
+  overflow: hidden;
+  cursor: grab;
+}
+
+.ms .previewwrap:active {
+  cursor: grabbing;
+}
+
+.ms #hpreview {
+  width: 320px;
+  height: 180px;
+  display: block;
+  background: #000;
+}
+
+.ms #vpreview {
+  width: 90px;
+  height: 160px;
+  border: 1px solid var(--action);
+  background: #000;
+}
+
+.ms .cropframe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  border: 2px solid var(--action);
+  box-sizing: border-box;
+  pointer-events: none;
+  background: rgba(85, 255, 85, 0.12);
+}
+
+.ms .status {
+  margin-top: 8px;
+  color: var(--brand);
+  min-height: 1.2em;
+  word-break: break-word;
+}
+
+.ms .help {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.ms .help code {
+  color: var(--action);
+}

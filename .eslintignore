@@ -5,3 +5,7 @@ ops/media-queue/out
 ops/media-queue/dist
 ops/media-queue/vendor
 ops/media-queue/resources
+ops/media-stream/out
+ops/media-stream/dist
+ops/media-stream/vendor
+ops/media-stream/resources

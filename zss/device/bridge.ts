@@ -23,6 +23,10 @@ import { doasync } from 'zss/device/doasync'
 import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
 import {
+  mediastreamstreamingactive,
+  mediastreamstopfromcafe,
+} from 'zss/feature/mediastream/connect'
+import {
   createwebbroadcastclient,
   parsebroadcaststartpayload,
 } from 'zss/feature/broadcast/webbroadcastclient'
@@ -519,11 +523,20 @@ const bridge = createdevice('bridge', [], (message) => {
       apilog(
         bridge,
         message.player,
-        `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive}`,
+        `broadcast: client=${ispresent(broadcastclient) ? 'present' : 'absent'} ivs=${broadcastivsconnection} live=${broadcastlive} mediastream=${mediastreamstreamingactive() ? 'live' : 'idle'}`,
       )
       break
     case 'streamstart':
       doasync(bridge, message.player, async () => {
+        if (mediastreamstreamingactive()) {
+          apierror(
+            bridge,
+            message.player,
+            'bridge',
+            'media-stream companion is live; use broadcast stop first',
+          )
+          return
+        }
         const startpayload = parsebroadcaststartpayload(message.data)
         if (ispresent(broadcastclient)) {
           apierror(bridge, message.player, 'bridge', 'stream is already open')
@@ -627,6 +640,9 @@ const bridge = createdevice('bridge', [], (message) => {
       })
       break
     case 'streamstop':
+      if (mediastreamstopfromcafe(message.player)) {
+        break
+      }
       if (ispresent(broadcastclient)) {
         broadcastclient.stop()
         broadcastclient.delete()

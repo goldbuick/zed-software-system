@@ -18,6 +18,8 @@ jobs:
           - ops:native:lint
           - mediaqueue:lint
           - mediaqueue:test
+          - mediastream:lint
+          - mediastream:test
     steps:
       - name: checkout
         uses: actions/checkout@v5

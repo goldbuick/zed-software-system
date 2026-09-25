@@ -265,3 +265,16 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run mediaqueue:dev` | Run media-queue Electron helper in dev mode | `dev` | `mediaqueue:build` | — |
 | `yarn task run mediaqueue:lint` | ESLint + typecheck media-queue Electron helper | `ci` | `mediaqueue:build` | — |
 | `yarn task run mediaqueue:test` | Run media-queue prep-cache unit checks | `ci` | `mediaqueue:build` | — |
+
+
+## mediastream
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run mediastream:build` | Install media-stream Electron companion deps | `deploy` | — | — |
+| `yarn task run mediastream:build:desktop` | Build media-stream desktop installers (Electron) for current host OS | `deploy` | `mediastream:build` | — |
+| `yarn task run mediastream:build:desktop:mac` | Build media-stream macOS dmg (Electron) | `deploy` | `mediastream:build` | — |
+| `yarn task run mediastream:build:desktop:win` | Build media-stream Windows nsis installer (Electron) | `deploy` | `mediastream:build` | — |
+| `yarn task run mediastream:dev` | Run media-stream Electron companion in dev mode | `dev` | `mediastream:build` | — |
+| `yarn task run mediastream:lint` | ESLint + typecheck media-stream Electron companion | `ci` | `mediastream:build` | — |
+| `yarn task run mediastream:test` | Run media-stream sanitize / bus unit checks | `ci` | `mediastream:build` | — |
