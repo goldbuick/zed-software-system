@@ -1,5 +1,6 @@
 import type { DEVICE } from 'zss/device'
 import { apitoast } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { gadgetclearscroll } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -24,9 +25,12 @@ export function handleclearscroll(_vm: DEVICE, message: MESSAGE): void {
   }
 }
 
-export function handlemakeitscroll(_vm: DEVICE, message: MESSAGE): void {
+export function handlemakeitscroll(vm: DEVICE, message: MESSAGE): void {
   if (typeof message.data === 'string') {
-    memorymakeitscroll(message.data, message.player)
+    const makeit = message.data
+    doasync(vm, message.player, async () => {
+      await memorymakeitscroll(makeit, message.player)
+    })
   }
 }
 

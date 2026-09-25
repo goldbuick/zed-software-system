@@ -15,6 +15,7 @@
 import { objectKeys } from 'ts-extras'
 import { apitoast, vmflush, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { charsetimportattachworldtobook } from 'zss/feature/parse/chr'
 import {
   assertzztelementlibrary,
   requirezztelementlibrary,
@@ -751,6 +752,7 @@ export function parsezzt(player: string, content: Uint8Array) {
     croppedfromszzt: false,
   })
   memorywritebook(book)
+  charsetimportattachworldtobook(player, book)
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
   vmflush(SOFTWARE, player)
 }
@@ -791,6 +793,7 @@ export function parseszt(player: string, content: Uint8Array) {
     croppedfromszzt: true,
   })
   memorywritebook(book)
+  charsetimportattachworldtobook(player, book)
   apitoast(SOFTWARE, player, `imported Super ZZT into ${book.name} book`)
   vmflush(SOFTWARE, player)
 }

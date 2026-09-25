@@ -2,26 +2,148 @@ import { vmcli, vmplayermovetoboard } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { write } from 'zss/feature/writeui'
 import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
+import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { escapedoublequoted } from 'zss/mapping/string'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { statformat, stattypestring } from 'zss/words/stats'
-import { STAT_TYPE } from 'zss/words/types'
+import { NAME, STAT_TYPE } from 'zss/words/types'
 
-import { memorylistcodepage, memoryreadcodepage } from './bookoperations'
-import { memoryensuremaincodepage } from './books'
+import {
+  memoryensurecodepage,
+  memorylistcodepage,
+  memoryreadcodepage,
+} from './bookoperations'
 import {
   memoryreadcodepagename,
   memoryreadcodepagetype,
   memoryreadcodepagetypeasstring,
 } from './codepageoperations'
-import { memoryreadbooklist } from './session'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE, CODE_PAGE_TYPE } from './types'
+import { memorycreateinspectionconfig } from './inspectionconfig'
+import {
+  memoryreadbookbyaddress,
+  memoryreadbooklist,
+  memoryreadfirstbook,
+  memoryreadmainbook,
+} from './session'
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOOK,
+  CODE_PAGE,
+  CODE_PAGE_TYPE,
+} from './types'
+
+type MAKEIT_CONFIG = {
+  bookid: string
+}
+
+const makeitconfig = memorycreateinspectionconfig<MAKEIT_CONFIG>(
+  'makeitconfig',
+  {
+    bookid: '',
+  },
+)
+
+/** Index into memoryreadbooklist for the makeit book SELECT (last pick, else main). */
+export function makeitbookselectindex(): number {
+  const books = memoryreadbooklist()
+  if (books.length === 0) {
+    return 0
+  }
+  const bookid = makeitconfig.memoryread().bookid
+  if (bookid) {
+    const idx = books.findIndex((b) => b.id === bookid)
+    if (idx >= 0) {
+      return idx
+    }
+  }
+  const main = memoryreadmainbook()
+  if (ispresent(main)) {
+    const idx = books.findIndex((b) => b.id === main.id)
+    if (idx >= 0) {
+      return idx
+    }
+  }
+  return 0
+}
+
+/** Book used when makeit creates a codepage. Single-book sessions always use that book. */
+export function makeitresolvecreatebook(): MAYBE<BOOK> {
+  const books = memoryreadbooklist()
+  if (books.length === 0) {
+    return undefined
+  }
+  if (books.length === 1) {
+    return books[0]
+  }
+  const bookid = makeitconfig.memoryread().bookid
+  if (bookid) {
+    const selected = memoryreadbookbyaddress(bookid)
+    if (ispresent(selected)) {
+      return selected
+    }
+  }
+  return memoryreadmainbook() ?? memoryreadfirstbook()
+}
+
+/** Persist makeit create-target book id (tests + select bridge). */
+export function makeitsetselectedbookid(bookid: string): void {
+  makeitconfig.memorywrite({
+    ...makeitconfig.memoryread(),
+    bookid,
+  })
+}
+
+registerhyperlinksharedbridge(
+  'makeit',
+  'select',
+  (_typ, target) => {
+    if (NAME(target) !== 'book') {
+      return 0
+    }
+    return makeitbookselectindex()
+  },
+  (_typ, name, value) => {
+    if (NAME(name) !== 'book') {
+      return
+    }
+    if (!isnumber(value) && !isstring(value)) {
+      return
+    }
+    const idx = Number(value)
+    const books = memoryreadbooklist()
+    if (!Number.isInteger(idx) || idx < 0 || idx >= books.length) {
+      return
+    }
+    makeitsetselectedbookid(books[idx].id)
+    void makeitconfig.save()
+  },
+)
+
 function makeitlinktoken(s: string): string {
   if (/\s/.test(s) || s.length === 0) {
     return `"${escapedoublequoted(s)}"`
   }
   return s
+}
+
+function makeitbookselectline(): string {
+  const books = memoryreadbooklist()
+  const parts: string[] = ['book', 'select']
+  for (let i = 0; i < books.length; ++i) {
+    const label = books[i].name || books[i].id
+    parts.push(makeitlinktoken(label))
+    parts.push(`${i}`)
+  }
+  return zsszedlinkline(parts.join(' '), 'book')
+}
+
+function memoryensuremakeitcodepage<T extends CODE_PAGE_TYPE>(
+  address: string,
+  createtype: T,
+) {
+  return memoryensurecodepage(makeitresolvecreatebook(), createtype, address)
 }
 
 function makecodepagedesc(type: CODE_PAGE_TYPE, out: string[]) {
@@ -111,7 +233,7 @@ export function memorymakeitcommand(
       // attempt to check first word as codepage type to create
       switch (type) {
         case stattypestring(STAT_TYPE.LOADER): {
-          const [codepage, didcreate] = memoryensuremaincodepage(
+          const [codepage, didcreate] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.LOADER,
           )
@@ -119,24 +241,22 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.BOARD): {
-          const [codepage] = memoryensuremaincodepage(
+          const [codepage] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.BOARD,
           )
           if (ispresent(codepage)) {
             writeopenpage(codepage)
-            // const mainbook = memoryreadmainbook()
             const dest = {
               x: Math.round(BOARD_WIDTH * 0.5),
               y: Math.round(BOARD_HEIGHT * 0.5),
             }
             vmplayermovetoboard(SOFTWARE, player, player, codepage.id, dest)
-            // memorymoveplayertoboard(mainbook, player, codepage.id, dest)
           }
           break
         }
         case stattypestring(STAT_TYPE.OBJECT): {
-          const [codepage, didcreate] = memoryensuremaincodepage(
+          const [codepage, didcreate] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.OBJECT,
           )
@@ -144,7 +264,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.TERRAIN): {
-          const [codepage, didcreate] = memoryensuremaincodepage(
+          const [codepage, didcreate] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.TERRAIN,
           )
@@ -152,7 +272,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.CHARSET): {
-          const [codepage, didcreate] = memoryensuremaincodepage(
+          const [codepage, didcreate] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.CHARSET,
           )
@@ -160,7 +280,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.PALETTE): {
-          const [codepage, didcreate] = memoryensuremaincodepage(
+          const [codepage, didcreate] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.PALETTE,
           )
@@ -168,7 +288,7 @@ export function memorymakeitcommand(
           break
         }
         case stattypestring(STAT_TYPE.TXT): {
-          const [codepage, didcreate] = memoryensuremaincodepage(
+          const [codepage, didcreate] = memoryensuremakeitcodepage(
             name,
             CODE_PAGE_TYPE.TXT,
           )
@@ -181,7 +301,7 @@ export function memorymakeitcommand(
   }
 }
 
-export function memorymakeitscroll(makeit: string, player: string) {
+export async function memorymakeitscroll(makeit: string, player: string) {
   const [maybestat, maybelabel] = makeit.split(';')
   const words = maybestat.split(' ')
   const statname = statformat(maybelabel, words, true)
@@ -278,6 +398,12 @@ export function memorymakeitscroll(makeit: string, player: string) {
   const scrolllines: string[] = []
   const nomatch = checkforcodepage(maybestat, scrolllines)
   if (nomatch) {
+    const books = memoryreadbooklist()
+    if (books.length > 1) {
+      await makeitconfig.load()
+      scrolllines.push(makeitbookselectline())
+      scrolllines.push('')
+    }
     switch (statname.type) {
       case STAT_TYPE.LOADER:
       case STAT_TYPE.BOARD:

@@ -1,9 +1,50 @@
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 import { memoryreadboardbyaddress } from './boards'
+import { memoryreadcodepage } from './bookoperations'
 import { memorypickcodepage } from './codepages'
 import { memoryreadbooklist } from './session'
-import { BOARD, CODE_PAGE_TYPE } from './types'
+import { BOARD, BOOK, CODE_PAGE_TYPE } from './types'
+
+const WORLD_CHARSET_NAME = 'world'
+
+function memoryreadbookforboard(board: BOARD): MAYBE<BOOK> {
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const book = books[i]
+    if (!ispresent(book)) {
+      continue
+    }
+    const page = memoryreadcodepage(book, board.id, CODE_PAGE_TYPE.BOARD)
+    if (ispresent(page)) {
+      return book
+    }
+  }
+  return undefined
+}
+
+function memorybindboardcharsetpage(board: BOARD, charsetname: string) {
+  if (isstring(board.charsetpage)) {
+    const charset = memorypickcodepage(
+      memoryreadbooklist(),
+      CODE_PAGE_TYPE.CHARSET,
+      charsetname,
+    )
+    if (!ispresent(charset)) {
+      delete board.charsetpage
+    }
+  } else {
+    const maybecharset = memorypickcodepage(
+      memoryreadbooklist(),
+      CODE_PAGE_TYPE.CHARSET,
+      charsetname,
+    )
+    if (ispresent(maybecharset)) {
+      board.charsetpage = maybecharset.id
+    }
+  }
+}
+
 export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   if (!ispresent(board)) {
     return
@@ -42,27 +83,17 @@ export function memoryupdateboardvisuals(board: MAYBE<BOARD>) {
   }
 
   if (isstring(board.charset)) {
-    if (isstring(board.charsetpage)) {
-      const charset = memorypickcodepage(
-        memoryreadbooklist(),
-        CODE_PAGE_TYPE.CHARSET,
-        board.charset,
-      )
-      if (!ispresent(charset)) {
-        delete board.charsetpage
-      }
-    } else {
-      const maybecharset = memorypickcodepage(
-        memoryreadbooklist(),
-        CODE_PAGE_TYPE.CHARSET,
-        board.charset,
-      )
-      if (ispresent(maybecharset)) {
-        board.charsetpage = maybecharset.id
-      }
+    memorybindboardcharsetpage(board, board.charset)
+  } else {
+    const book = memoryreadbookforboard(board)
+    const worldpage = ispresent(book)
+      ? memoryreadcodepage(book, WORLD_CHARSET_NAME, CODE_PAGE_TYPE.CHARSET)
+      : undefined
+    if (ispresent(worldpage)) {
+      board.charsetpage = worldpage.id
+    } else if (isstring(board.charsetpage)) {
+      delete board.charsetpage
     }
-  } else if (isstring(board.charsetpage)) {
-    delete board.charsetpage
   }
 
   if (isstring(board.palette)) {
