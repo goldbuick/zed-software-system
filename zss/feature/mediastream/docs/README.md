@@ -5,7 +5,7 @@ description: Multi-destination Electron streaming companion (Twitch eRTMP, YouTu
 
 # Media Stream
 
-Cafe binds the companion with `#broadcast stream <peerid>` (or `#broadcast ms_…`). Destinations, Dual Format crop drag, and Start live in the Electron app under [`ops/media-stream/`](../../../ops/media-stream/README.md).
+Cafe binds the companion with `#broadcast stream <peerid>` (or `#broadcast ms_…`). Destinations, Dual Format crop drag, and Start live in the Electron app under [`ops/media-stream/`](../../../../ops/media-stream/README.md).
 
 | Concern | Owner |
 |---------|--------|
