@@ -8,11 +8,13 @@ export function ooptuzz(content: string): string {
   const lines = content.replaceAll(/\r?\n|\r/g, '\n').split('\n')
   return lines
     .map((line) => {
-      const trimmed = line.trimStart()
+      // drop import / authoring force-quote after leading whitespace
+      let mapped = line.replace(/^(\s*)"/, '$1')
+      const trimmed = mapped.trimStart()
       if (trimmed.startsWith('#play')) {
-        return line.replace(/^(\s*)#play\b/, '$1#fgplay')
+        mapped = mapped.replace(/^(\s*)#play\b/, '$1#fgplay')
       }
-      return line
+      return mapped
     })
     .join('\n')
 }

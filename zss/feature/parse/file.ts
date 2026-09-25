@@ -8,11 +8,10 @@ import {
   workstatus,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
-import { waitfor } from 'zss/mapping/tick'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 
 import { parseansi } from './ansi'
-import { parsechr } from './chr'
+import { parsechr, parsefontcom } from './chr'
 import { stageimageimport } from './image'
 import { parsemidi } from './midi'
 import { parsetxt } from './parsetxt'
@@ -83,6 +82,8 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
         return 'brd'
       } else if (/.chr$/i.test(file.name)) {
         return 'chr'
+      } else if (/.com$/i.test(file.name)) {
+        return 'fontcom'
       } else if (/.zzm$/i.test(file.name)) {
         return 'zzm'
       } else if (/.ans$/i.test(file.name)) {
@@ -141,6 +142,9 @@ export function mapmimetype(mimetype: string, file: File | undefined) {
     case 'audio/x-mid':
       return 'mid'
   }
+  if (/.com$/i.test(file.name)) {
+    return 'fontcom'
+  }
   return ''
 }
 
@@ -194,14 +198,43 @@ export function readzipfilelistitem(filename: string): MAYBE<boolean> {
   return zipfilemarks[filename.toLowerCase()]
 }
 
+/** Zip import order: worlds first, then charset formats, then everything else. */
+export function zipfileimportpriority(filetype: string): number {
+  switch (filetype) {
+    case 'zzt':
+    case 'szt':
+    case 'brd':
+      return 0
+    case 'fontcom':
+    case 'chr':
+      return 1
+    default:
+      return 2
+  }
+}
+
+export function sortzipfilesforimport(files: File[]): File[] {
+  return files.slice().sort((a, b) => {
+    const pa = zipfileimportpriority(mapmimetype(a.type, a))
+    const pb = zipfileimportpriority(mapmimetype(b.type, b))
+    if (pa !== pb) {
+      return pa - pb
+    }
+    return a.name.localeCompare(b.name)
+  })
+}
+
 export async function parsezipfilelist(player: string) {
+  const marked: File[] = []
   for (let i = 0; i < zipfilelist.length; ++i) {
     const item = zipfilelist[i]
-    const marked = zipfilemarks[item.name.toLowerCase()]
-    if (marked) {
-      parsewebfile(player, item)
-      await waitfor(2000)
+    if (zipfilemarks[item.name.toLowerCase()]) {
+      marked.push(item)
     }
+  }
+  const ordered = sortzipfilesforimport(marked)
+  for (let i = 0; i < ordered.length; ++i) {
+    await parsewebfile(player, ordered[i])
   }
 }
 
@@ -223,177 +256,160 @@ function imagemimetype(kind: string, file: File): string {
   }
 }
 
-function stageimagefile(player: string, kind: string, file: File) {
-  void file
-    .arrayBuffer()
-    .then((arraybuffer) => {
-      void stageimageimport(
-        player,
-        file.name,
-        imagemimetype(kind, file),
-        new Uint8Array(arraybuffer),
-      ).catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-    })
-    .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
+async function stageimagefile(
+  player: string,
+  kind: string,
+  file: File,
+): Promise<void> {
+  try {
+    const arraybuffer = await file.arrayBuffer()
+    await stageimageimport(
+      player,
+      file.name,
+      imagemimetype(kind, file),
+      new Uint8Array(arraybuffer),
+    )
+  } catch (err: any) {
+    apierror(SOFTWARE, player, 'crash', err.message)
+  }
 }
 
-function handlefiletype(player: string, type: string, file: File | undefined) {
+async function handlefiletype(
+  player: string,
+  type: string,
+  file: File | undefined,
+): Promise<void> {
   if (!ispresent(file)) {
     return
   }
   const filetype = mapmimetype(type, file)
-  switch (filetype) {
-    case 'obj':
-      file
-        .text()
-        .then((content) => parsezztobj(player, file.name, content))
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'txt':
-    case 'ini':
-      file
-        .text()
-        .then((content) => parsetxt(player, file.name, content))
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'json':
-      file
-        .text()
-        .then((content) =>
-          vmloader(
-            SOFTWARE,
-            player,
-            undefined,
-            'json',
-            `file:${file.name}`,
-            content,
-          ),
-        )
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'zip':
-      parsezipfile(player, file).catch((err) =>
-        apierror(SOFTWARE, player, 'crash', err.message),
-      )
-      break
-    case 'zzt':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parsezzt(player, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'szt':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parseszt(player, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'brd':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parsebrd(player, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'chr':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parsechr(player, file.name, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'zzm':
-      file
-        .text()
-        .then((content) => {
-          parsezzm(player, content)
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'mid':
-      parsemidi(player, file).catch((err) =>
-        apierror(SOFTWARE, player, 'crash', err.message),
-      )
-      break
-    case 'pet':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parsepetscii(player, file.name, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'nfotext':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parseansi(player, file.name, 'txt', new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'ans':
-    case 'adf':
-    case 'bin':
-    case 'idf':
-    case 'pcb':
-    case 'tnd':
-    case 'xb':
-    case 'diz':
-      file
-        .arrayBuffer()
-        .then((arraybuffer) => {
-          parseansi(player, file.name, filetype, new Uint8Array(arraybuffer))
-        })
-        .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      break
-    case 'png':
-    case 'jpeg':
-    case 'gif':
-    case 'webp':
-      stageimagefile(player, filetype, file)
-      break
-    default:
-      if (!type) {
-        file
-          .arrayBuffer()
-          .then((arraybuffer) => {
-            const type = mimetypeofbytesread(
-              file.name,
-              new Uint8Array(arraybuffer),
-            )
-            if (type) {
-              handlefiletype(player, type, file)
-            } else {
-              return apierror(
-                SOFTWARE,
-                player,
-                'parsewebfile',
-                `unsupported file ${file.name}`,
-              )
-            }
-          })
-          .catch((err) => apierror(SOFTWARE, player, 'crash', err.message))
-      } else if (!filetype) {
-        apierror(
+  try {
+    switch (filetype) {
+      case 'obj': {
+        const content = await file.text()
+        parsezztobj(player, file.name, content)
+        break
+      }
+      case 'txt':
+      case 'ini': {
+        const content = await file.text()
+        parsetxt(player, file.name, content)
+        break
+      }
+      case 'json': {
+        const content = await file.text()
+        vmloader(
           SOFTWARE,
           player,
-          'parsewebfile',
-          `unsupported mime type ${type} for ${file.name}`,
+          undefined,
+          'json',
+          `file:${file.name}`,
+          content,
         )
+        break
       }
-      return
+      case 'zip':
+        await parsezipfile(player, file)
+        break
+      case 'zzt': {
+        const arraybuffer = await file.arrayBuffer()
+        parsezzt(player, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'szt': {
+        const arraybuffer = await file.arrayBuffer()
+        parseszt(player, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'brd': {
+        const arraybuffer = await file.arrayBuffer()
+        parsebrd(player, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'chr': {
+        const arraybuffer = await file.arrayBuffer()
+        parsechr(player, file.name, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'fontcom': {
+        const arraybuffer = await file.arrayBuffer()
+        parsefontcom(player, file.name, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'zzm': {
+        const content = await file.text()
+        parsezzm(player, content)
+        break
+      }
+      case 'mid':
+        await parsemidi(player, file)
+        break
+      case 'pet': {
+        const arraybuffer = await file.arrayBuffer()
+        parsepetscii(player, file.name, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'nfotext': {
+        const arraybuffer = await file.arrayBuffer()
+        parseansi(player, file.name, 'txt', new Uint8Array(arraybuffer))
+        break
+      }
+      case 'ans':
+      case 'adf':
+      case 'bin':
+      case 'idf':
+      case 'pcb':
+      case 'tnd':
+      case 'xb':
+      case 'diz': {
+        const arraybuffer = await file.arrayBuffer()
+        parseansi(player, file.name, filetype, new Uint8Array(arraybuffer))
+        break
+      }
+      case 'png':
+      case 'jpeg':
+      case 'gif':
+      case 'webp':
+        await stageimagefile(player, filetype, file)
+        break
+      default:
+        if (!type) {
+          const arraybuffer = await file.arrayBuffer()
+          const detected = mimetypeofbytesread(
+            file.name,
+            new Uint8Array(arraybuffer),
+          )
+          if (detected) {
+            await handlefiletype(player, detected, file)
+          } else {
+            apierror(
+              SOFTWARE,
+              player,
+              'parsewebfile',
+              `unsupported file ${file.name}`,
+            )
+          }
+        } else if (!filetype) {
+          apierror(
+            SOFTWARE,
+            player,
+            'parsewebfile',
+            `unsupported mime type ${type} for ${file.name}`,
+          )
+        }
+        break
+    }
+  } catch (err: any) {
+    apierror(SOFTWARE, player, 'crash', err.message)
   }
 }
 
-export function parsewebfile(player: string, file: File | undefined) {
+export async function parsewebfile(
+  player: string,
+  file: File | undefined,
+): Promise<void> {
   if (!ispresent(file)) {
     return
   }
-  handlefiletype(player, file.type ?? '', file)
+  await handlefiletype(player, file.type ?? '', file)
 }

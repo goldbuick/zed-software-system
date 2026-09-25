@@ -14,6 +14,18 @@
 | `!btn;msg` | Hyperlink button | Unchanged |
 | plain text | Scroll / message display | Whole line to EOL, including embedded `#` and `@` |
 
+## ZSS text matching (simplified)
+
+Lang `matchBasicText` peeks the first non-space on the line:
+
+| Peek | Result |
+|------|--------|
+| `"` | TEXT (authoring / import force; indent + `"` stripped when emitting `api.text`) |
+| `@` `#` `/` `?` `:` `'` `!` | Not text — other tokens own the line (indented `#go` / `?up` stay commands) |
+| else | TEXT (prose, `$CENTER`, `$130`, …) |
+
+RoZZT `OopExecute` classifies on the **first character with no space skip** (leading space ⇒ text). ZSS keeps indented commands by using first-non-space peek instead; museum art that would collide is fixed on **import** (below).
+
 ## ZSS-only syntax (additive)
 
 - **Structured control flow:** `#if` … `#do` … `#done`, `#else`, `#while`, `#repeat`, `#waitfor`, `#foreach`, `#break`, `#continue`
@@ -35,7 +47,7 @@ ZSS `expr_*` words (`min`, `max`, `random`, …) do not match as expression toke
 
 ## Import pipeline (`zztoop`)
 
-Museum corpus extraction may run `zztoop` for `$` → `$CENTER`, label lowercasing, and optional `_` escaping. That is **not** the compatibility contract — fixes belong in `lang/`.
+Museum corpus extraction may run `zztoop` for `$` → `$CENTER`, label lowercasing, optional `_` escaping, and **force-quoting** indented RoZZT text lines whose first non-space looks structural (`/\/\/\/\/\`, `######`, `::::::::`, rare indented `#go`) by prefixing `"` at column 0 so leading spaces remain in the text body after compile. That is an import transform — not the lang compatibility contract. Hand-paste of such art without import still needs a manual `"`. Export (`ooptuzz`) strips a leading authoring `"`.
 
 ## WASM lexer
 

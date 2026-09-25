@@ -62,95 +62,41 @@ export const command = createSimpleToken({
 
 /** >0 while inside `tokenize` (supports nested tokenize on same thread). */
 let textmatchdepth = 0
-const probablynottext = `@#/?':!`
-const matchcomplexdir = /^(by|at|away|toward|find|flee|to|cw|ccw|opp|rndp)/i
+/** First non-space markers owned by other line tokens (not scroll text). */
+const STRUCTURAL_LINE_PEEK = `@#/?':!`
+
 function matchBasicText(text: string, startOffset: number) {
   if (textmatchdepth <= 0) {
     return null
   }
 
-  // scan for possible text start
-  let cursor = startOffset
-
-  // text can only start at 0, or after a newline or space
-  const previous = text[cursor - 1] ?? ''
-  if (cursor > 0 && previous !== ' ' && previous !== '\n') {
+  // whole-line text only (offset 0 or after newline)
+  if (startOffset > 0 && text[startOffset - 1] !== '\n') {
     return null
   }
 
-  // scan forwards to determine if this is just whitespace
-  if (text[cursor] === ' ') {
-    while (text[cursor] === ' ') {
-      cursor++
-    }
-    if (probablynottext.includes(text[cursor])) {
-      return null
-    }
+  let peek = startOffset
+  while (peek < text.length && (text[peek] === ' ' || text[peek] === '\t')) {
+    peek += 1
+  }
+  if (peek >= text.length || text[peek] === '\n' || text[peek] === '\r') {
+    return null
   }
 
-  // scan backwards to check what kind of spot we're in
-  while (cursor > 0 && `$"@#':!/?\n`.includes(text[cursor]) === false) {
-    cursor--
+  const ch = text[peek]
+  if (ch !== '"' && STRUCTURAL_LINE_PEEK.includes(ch)) {
+    return null
   }
 
-  switch (text[cursor]) {
-    case '?':
-    case '/': {
-      const prefix = text.substring(cursor + 1, startOffset + 1).toLowerCase()
-      const spaceatchar = prefix.indexOf(' ')
-      if (spaceatchar < 1 || matchcomplexdir.test(prefix)) {
-        // not-okay
-        return null
-      }
-      // okay
-      break
-    }
-    case '#': {
-      // not-okay
-      return null
-    }
-    case '"': {
-      cursor--
-      while (cursor > 0 && text[cursor] === ' ') {
-        cursor--
-      }
-      if (cursor < 1 || text[cursor] === '\n') {
-        // is text
-      } else {
-        // not text
-        return null
-      }
-      break
-    }
-    case '@':
-    case `'`:
-    case ':':
-    case '!':
-      // not-okay
-      return null
-    case '\n':
-      // okay
-      break
-  }
-
-  // scan until EOL
   let i = startOffset
-  if (text[i] === '"') {
-    ++i
-  }
   while (i < text.length && text[i] !== '\n') {
-    i++
+    i += 1
   }
 
-  // return match
   const match = text.substring(startOffset, i)
-
-  // do not match empty strings
   if (match.trim().length === 0) {
     return null
   }
-
-  // do not match do
   if (match.toLowerCase() === 'do') {
     return null
   }

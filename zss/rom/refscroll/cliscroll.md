@@ -14,6 +14,6 @@ $dkblue$onblack$219$219$219$219$219$219$219$219$219$219$219$ondkblue$219$219$219
 !openit inline https://bytes.zed.cafe/CPvUq6xq;FUN facts
 !openit inline https://bytes.zed.cafe/gPyVmz5u;TTS All at Once
 !openit inline https://bytes.zed.cafe/FaUkmz2p;TTS Nicely Queue'd
-!openit inline https://bytes.zed.cafe/IpWRvfwy;ZTK - ZZT Tool Kit
+!openit inline https://bytes.zed.cafe/WwWhs3iy;ZTK - ZZT Tool Kit
 !openit inline https://bytes.zed.cafe/weyMl04a;QK - Quick Kit
 !openit inline https://bytes.zed.cafe/DQffpxba;Simple Chat

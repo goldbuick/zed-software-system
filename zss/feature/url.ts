@@ -86,7 +86,7 @@ export async function museumofzztdownload(
   const response = await fetch(brickproxiedurl(target))
   const zipdata = await response.arrayBuffer()
   const file = new File([zipdata], content)
-  parsewebfile(player, file)
+  await parsewebfile(player, file)
 }
 
 // zns api (https://at.zed.cafe)
