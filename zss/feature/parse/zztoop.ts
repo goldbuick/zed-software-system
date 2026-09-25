@@ -13,6 +13,62 @@ const ZSS_RESERVED = [
   'continue',
 ]
 
+/** RoZZT column-0 instruction markers (OopExecute first-char dispatch). */
+const STRUCTURAL_FIRST = new Set([':', "'", '@', '/', '?', '#'])
+
+/**
+ * Force ZSS text for RoZZT text lines that ZSS would misread as structural.
+ * Prefixes `"` at column 0 so leading spaces stay in the text body after
+ * `tokenstringtext` strips the force-quote (spaces before `"` are authoring
+ * indent and would be dropped).
+ */
+export function forcetextquote(line: string): string {
+  if (line.length === 0 || line.startsWith('"')) {
+    return line
+  }
+  const first = line[0]
+
+  if (STRUCTURAL_FIRST.has(first)) {
+    if (first === '#') {
+      const afterhash = line.slice(1).trimStart()
+      const commandstart = afterhash[0]
+      if (commandstart && !/[A-Za-z]/.test(commandstart)) {
+        return `"${line}`
+      }
+    }
+    return line
+  }
+
+  if (first !== ' ' && first !== '\t') {
+    return line
+  }
+
+  let i = 0
+  while (i < line.length && (line[i] === ' ' || line[i] === '\t')) {
+    i += 1
+  }
+  if (i >= line.length) {
+    return line
+  }
+  if (line[i] === '"') {
+    return line
+  }
+
+  const marker = line[i]
+  const needsquote =
+    marker === '/' ||
+    marker === '?' ||
+    marker === '#' ||
+    marker === ':' ||
+    marker === "'" ||
+    marker === '@' ||
+    (marker === '!' && !line.slice(i).includes(';'))
+  if (!needsquote) {
+    return line
+  }
+  return `"${line}`
+}
+
 function mapkeyword(line: string, keyword: string) {
   let scrubbed = line
   const lower = scrubbed.toLowerCase()
@@ -150,8 +206,10 @@ export function zztoop(content: string) {
 
   return lines
     .map((line) => {
+      // RoZZT text that looks structural under ZSS first-non-space rules
+      let mapped = forcetextquote(line)
+
       // handle center lines
-      let mapped = line
       if (mapped.trimStart().startsWith('$')) {
         mapped = mapped.replace('$', '$CENTER')
       }
