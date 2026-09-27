@@ -16,7 +16,7 @@ import { memoryelementmatchesstrgrouponboard } from 'zss/memory/boardlifecycle'
 import { memorycheckmoveboardobject } from 'zss/memory/boardmovement'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memoryreadelementdisplay } from 'zss/memory/bookoperations'
-import { memoryruncodepage } from 'zss/memory/runtime'
+import { memoryruncodepage } from 'zss/memory/runcodepagehook'
 import { memoryfindplayerforelement } from 'zss/memory/spatialqueries'
 import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 

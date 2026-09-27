@@ -10,7 +10,7 @@ import {
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from 'zss/memory/boards'
-import { memoryptwithinboard } from 'zss/memory/boardtransitions'
+import { memoryptwithinboard } from 'zss/memory/ptwithinboard'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { type BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'

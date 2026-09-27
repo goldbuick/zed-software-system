@@ -11,7 +11,7 @@ import {
   memoryreadelement,
 } from './boardaccess'
 import { memoryreadelementstat } from './boards'
-import { memoryptwithinboard } from './boardtransitions'
+import { memoryptwithinboard } from './ptwithinboard'
 import {
   BOARD,
   BOARD_ELEMENT,

@@ -17,11 +17,11 @@ import {
   memoryresetbooks,
   memorywritemainbook,
 } from 'zss/memory/session'
-import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 import {
-  memorycompressbooks,
-  memorydecompressbooks,
-} from 'zss/memory/utilities'
+  memorydeserializesnapshot,
+  memoryserializesnapshot,
+} from 'zss/memory/memorysnapshotio'
+import { CODE_PAGE_TYPE, MEMORY_LABEL } from 'zss/memory/types'
 
 /**
  * Opened book A holds flags.board + activelist; player object lives on book B.
@@ -73,8 +73,11 @@ describe('compress cross-book resume', () => {
 
     expect(memoryreadflag(booka, player, 'board')).toBe(roompage.id)
 
-    const compressed = await memorycompressbooks([booka, bookb])
-    const bundle = await memorydecompressbooks(compressed)
+    const compressed = await memoryserializesnapshot({
+      main: memoryreadmainbook()?.id,
+      books: [booka, bookb],
+    })
+    const bundle = await memorydeserializesnapshot(compressed)
     memoryresetbooks(bundle.books, bundle.main)
 
     const main = memoryreadmainbook()!

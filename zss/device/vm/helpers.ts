@@ -11,14 +11,27 @@ import { zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { randominteger } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
+import { memoryserializesnapshot } from 'zss/memory/memorysnapshotio'
 import {
   memoryreadbooklist,
   memoryreadmainbook,
   memoryreadoperator,
 } from 'zss/memory/session'
+import type { BOOK } from 'zss/memory/types'
 import { memorycompressbooks } from 'zss/memory/utilities'
 
 export const ZZT_BRIDGE = `$176$176$177$177$178 ZZT BRIDGE $178$177$177$176$176`
+
+/** Climode serializes in-process. The browser sim posts the snapshot to the worker. */
+async function compressurlbooks(books: BOOK[]): Promise<string> {
+  if (getclimode()) {
+    return memoryserializesnapshot(
+      { main: memoryreadmainbook()?.id, books },
+      true,
+    )
+  }
+  return memorycompressbooks(books)
+}
 
 function localcalendardate(d = new Date()): string {
   const y = d.getFullYear()
@@ -33,7 +46,7 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
   if (books.length && ispresent(mainbook)) {
     const operator = memoryreadoperator()
     workstatus(vm, operator, 'compress url')
-    const compressed = await memorycompressbooks(books)
+    const compressed = await compressurlbooks(books)
     const historylabel = `${autosave ? 'autosave ' : ''}${new Date().toISOString()} ${mainbook.name} ${compressed.length} chars`
     // Climode node storage may need books; browser hash save only needs the string.
     registersavemem(
@@ -52,7 +65,7 @@ export async function savebookmarkstate(vm: DEVICELIKE, player: string) {
   const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
     workstatus(vm, player, 'compress url')
-    const compressed = await memorycompressbooks(books)
+    const compressed = await compressurlbooks(books)
     const bookmarkname = `save of ${mainbook.name} on ${localcalendardate()}`
     registerbookmarkcontentsave(vm, player, bookmarkname, compressed)
   }
@@ -68,7 +81,7 @@ export async function forkstate(
   if (books.length && ispresent(mainbook)) {
     const target = player ?? memoryreadoperator()
     workstatus(vm, target, 'compress url')
-    const content = await memorycompressbooks(books)
+    const content = await compressurlbooks(books)
     registerforkmem(vm, target, content, transfer)
   }
 }
@@ -77,7 +90,7 @@ export async function compressedbookstate(): Promise<string> {
   const books = memoryreadbooklist()
   const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
-    return await memorycompressbooks(books)
+    return await compressurlbooks(books)
   }
   return ''
 }

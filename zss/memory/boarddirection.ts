@@ -23,8 +23,8 @@ import {
   memoryreadidorindex,
 } from './boardaccess'
 import { memoryreadboardbyevaldir, memoryreadelementstat } from './boards'
-import { memoryptwithinboard } from './boardtransitions'
 import { memoryreadflags } from './bookoperations'
+import { memoryptwithinboard } from './ptwithinboard'
 import { memoryreadmainbook } from './session'
 import { memoryreadboardpath } from './spatialqueries'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
