@@ -1,4 +1,5 @@
 import type { DEVICE } from 'zss/device'
+import { vmflush } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import {
   IMAGE_IMPORT_MAX_COLS,
@@ -61,7 +62,7 @@ export function handlereadimageimport(_vm: DEVICE, message: MESSAGE): void {
 }
 
 export async function handleimageimport(
-  _vm: DEVICE,
+  vm: DEVICE,
   message: MESSAGE,
   path: string,
 ) {
@@ -86,4 +87,5 @@ export async function handleimageimport(
   }
 
   await parseimagefromstage(message.player, scale)
+  vmflush(vm, message.player)
 }

@@ -120,10 +120,12 @@ function buildsortedboardentries(
   return out
 }
 
+const ZZT_BOARD_INDEX_RE = /^(?:.+_)?zztboard(\d+)$/
+
 function findzztboardorigindex(codepage: CODE_PAGE): number | undefined {
   const stats = memoryreadcodepagestats(codepage)
   for (const key of Object.keys(stats)) {
-    const m = /^zztboard(\d+)$/.exec(key)
+    const m = ZZT_BOARD_INDEX_RE.exec(key)
     if (m && stats[key] !== undefined) {
       return parseInt(m[1], 10)
     }
@@ -139,7 +141,7 @@ function resolveboardtouint8(
   if (!t) {
     return { ok: true, value: 0 }
   }
-  const zm = /^zztboard(\d+)$/.exec(t)
+  const zm = ZZT_BOARD_INDEX_RE.exec(t)
   if (zm) {
     const orig = parseInt(zm[1], 10)
     for (let i = 0; i < entries.length; ++i) {

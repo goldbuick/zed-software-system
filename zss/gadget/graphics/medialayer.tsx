@@ -44,7 +44,7 @@ function readlayermedia(
   let found: string | number[] | undefined
   for (let i = 0; i < layers.length; ++i) {
     const layer = layers[i]
-    if (layer.type === LAYER_TYPE.MEDIA && layer.mime === mime) {
+    if (layer.type === (LAYER_TYPE.MEDIA as number) && layer.mime === mime) {
       found = layer.media
     }
   }

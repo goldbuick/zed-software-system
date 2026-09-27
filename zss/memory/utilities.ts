@@ -13,10 +13,7 @@ import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { READ_LAYER, memoryreadelement } from './boardaccess'
-import {
-  memoryreadelementdisplay,
-  memoryreadflags,
-} from './bookoperations'
+import { memoryreadelementdisplay, memoryreadflags } from './bookoperations'
 import type { MEMORY_BOOKS_BUNDLE } from './memorysnapshotio'
 import { memoryreadplayerboard } from './playermanagement'
 import {
@@ -217,7 +214,8 @@ export async function memorycompressbooks(books: BOOK[]): Promise<string> {
     books,
   }
   // Keep off the utilities import graph: Jest cannot transform compressspace??worker.
-  const { serializesnapshotoffthread } = await import('zss/compressworkerclient')
+  const { serializesnapshotoffthread } =
+    await import('zss/compressworkerclient')
   return serializesnapshotoffthread(snapshot)
 }
 

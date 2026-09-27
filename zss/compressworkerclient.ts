@@ -95,16 +95,18 @@ export function haltcompressworker() {
 }
 
 function postcompressworker(
-  message: {
-    id: string
-    op: 'serialize'
-    snapshot: MEMORY_BOOKS_BUNDLE
-    json?: boolean
-  } | {
-    id: string
-    op: 'deserialize'
-    data: string
-  },
+  message:
+    | {
+        id: string
+        op: 'serialize'
+        snapshot: MEMORY_BOOKS_BUNDLE
+        json?: boolean
+      }
+    | {
+        id: string
+        op: 'deserialize'
+        data: string
+      },
 ): Promise<WorkerResult> {
   const w = ensurecompressworker()
   return new Promise<WorkerResult>((resolve, reject) => {

@@ -3,12 +3,12 @@ import { SOFTWARE } from 'zss/device/session'
 import { createnameid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { memorywriteterrain } from 'zss/memory/boardlifecycle'
-import { memoryptwithinboard } from 'zss/memory/ptwithinboard'
 import { memorywritecodepage } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
+import { memoryptwithinboard } from 'zss/memory/ptwithinboard'
 import { memoryreadfirstcontentbook } from 'zss/memory/session'
 import {
   BOARD,
