@@ -6392,32 +6392,27 @@ First-line `@` rule: `@{type}` alone names an object; `@{type} <name>` declares 
 # utilities.ts
 Source: https://zed.cafe/docs/memory/utilities
 
-**Purpose**: Admin scroll, in-memory `CONFIG` (crt / lowrez / scanlines / voice2text / loaderlogging / promptlogging / dev / gadget) and book serialization for URL saves.
+**Purpose**: Admin scroll, in-memory `CONFIG` (crt / lowrez / scanlines / voice2text / loaderlogging / promptlogging / dev / gadget) and the browser-sim entry points that post book snapshots to the compress worker.
+
+Serialize and deserialize bytes live in [`memorysnapshotio.ts`](zss/memory/memorysnapshotio.ts). The worker runs those functions. Headless/climode and Jest call them directly. The browser sim only posts a snapshot or a base64 string.
 
 ## Dependencies
 
-- `@bokuweb/zstd-wasm` — compress, decompress
-- `jszip` — legacy JSZip reader only
-- `msgpackr` — pack / unpack book arrays
 - `zss/device/api` — registerinspector
 - `zss/feature/storage` — storagewriteconfig
 - `zss/device/session` — SOFTWARE
 - `zss/feature/detect` — getclimode
-- `zss/feature/format` — FORMAT_OBJECT, unpackformat
 - `zss/feature/url` — isjoin
 - `zss/feature/zsstextui` — DIVIDER, zsstexttape, zsszedlinklinechip
-- `zss/feature/zstdwasm` — ensurezstdwasm
-- `zss/memory/packbookwires` — remap/trim/msgpack/zstd of exported wires (worker + Jest)
-- `zss/compressworkerclient` — off-thread pack of exported wires (browser)
+- `zss/compressworkerclient` — off-thread snapshot serialize / deserialize (browser sim)
+- `zss/memory/memorysnapshotio` — `MEMORY_BOOKS_BUNDLE` type
 - `zss/gadget/data/api` — registerhyperlinksharedbridge
 - `zss/gadget/data/scrollwritelines` — scrollwritelines, scrolllinkescapefrag
-- `zss/mapping/encode` — arraybuffertobase64, base64url helpers
 - `zss/mapping/qr` — qrlines
 - `zss/mapping/types` — ispresent, isstring
 - `zss/words/types` — COLOR
 - `./boardaccess` — memoryreadelement
-- `./bookoperations` — memoryexportbook, memoryimportbook (`format` / `strip` options), memoryreadelementdisplay
-- `./exportidremap` — dense id remap used by compress/export (prefer `memoryexportbook` / `memorycompressbooks`)
+- `./bookoperations` — memoryreadelementdisplay, memoryreadflags
 - `./playermanagement` — memoryreadplayerboard
 - `./session` — memoryisoperator, memoryreadmainbook, memoryreadoperator, memoryreadtopic, memorywritehalt
 - `./types` — BOOK, MEMORY_LABEL
@@ -6432,8 +6427,8 @@ Source: https://zed.cafe/docs/memory/utilities
 | `memoryreadconfigall()` | Snapshot every config flag |
 | `memorywriteconfig(name, value)` | Write a single config flag |
 | `memoryadminmenu(player)` | Admin scroll: player list, util, config, multiplayer QR |
-| `memorycompressbooks(books)` (async) | sim: export + cross-book id protect; remap/trim/msgpack/zstd on compress worker (Jest/fallback in-process); climode: JSON envelope |
-| `memorydecompressbooks(base64bytes)` (async) | base64url → `{ books, main? }`; also loads legacy JSZip / bare book-array payloads |
+| `memorycompressbooks(books)` (async) | browser sim posts `{ books, main? }` to the compress worker and returns base64url; throws if the worker cannot run |
+| `memorydecompressbooks(base64bytes)` (async) | browser sim posts the base64 string to the compress worker and returns `{ books, main? }`; throws if the worker cannot run |
 
 ---
 
