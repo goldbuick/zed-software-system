@@ -69,7 +69,12 @@ export function ScreenUITickerText({ width, height }: ScreenUITickerTextProps) {
 
   return (
     <TilesData store={store}>
-      <TilesRender label="tickertext" width={width} height={height} />
+      <TilesRender
+        label="tickertext"
+        width={width}
+        height={height}
+        mediasource="board"
+      />
     </TilesData>
   )
 }

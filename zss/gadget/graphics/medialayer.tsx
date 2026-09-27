@@ -31,10 +31,36 @@ import { isarray, isstring } from 'zss/mapping/types'
 const defaultpalette = loadpalettefrombytes(PALETTE)
 const defaultcharset = loadcharsetfrombytes(CHARSET)
 
+/**
+ * Last matching media payload. Charset and palette bytes are number arrays, so
+ * they are not part of gadget.id (that id only appends string media). Board,
+ * scroll, and sidebar tiles all read useMedia, so this selector is what makes
+ * a custom font show up.
+ */
+function readlayermedia(
+  layers: { type: number; mime?: string; media?: string | number[] }[],
+  mime: string,
+): string | number[] | undefined {
+  let found: string | number[] | undefined
+  for (let i = 0; i < layers.length; ++i) {
+    const layer = layers[i]
+    if (layer.type === LAYER_TYPE.MEDIA && layer.mime === mime) {
+      found = layer.media
+    }
+  }
+  return found
+}
+
 /** Applies board MEDIA layers into useMedia (board/game only — not useGadgetMedia). */
 export function MediaLayers() {
   const id = useGadgetClient((state) => state.gadget.id)
   const gadgetboard = useGadgetClient((state) => state.gadget.board ?? '')
+  const charsetmedia = useGadgetClient((state) =>
+    readlayermedia(state.gadget.layers ?? [], 'image/charset'),
+  )
+  const palettemedia = useGadgetClient((state) =>
+    readlayermedia(state.gadget.layers ?? [], 'image/palette'),
+  )
   const helperpeerid = useGadgetClient((state) => {
     const layers = state.gadget.layers ?? []
     for (let i = 0; i < layers.length; ++i) {
@@ -118,7 +144,7 @@ export function MediaLayers() {
       default:
         break
     }
-  }, [id, gadgetboard, helperpeerid])
+  }, [id, gadgetboard, helperpeerid, charsetmedia, palettemedia])
 
   return null
 }

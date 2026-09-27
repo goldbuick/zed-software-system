@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { type TILES_MEDIA_SOURCE } from 'zss/gadget/gadgetmedia'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
 import { TilesData, TilesRender } from 'zss/gadget/usetiles'
 import { WriteTextContext } from 'zss/gadget/writetext'
@@ -26,6 +27,8 @@ type PanelProps = {
   color: number
   bg: number
   text: PANEL_ITEM[]
+  /** board = playfield charset/palette; ui = chrome. Default ui. */
+  mediasource?: TILES_MEDIA_SOURCE
 }
 
 export function PanelComponent({
@@ -40,6 +43,7 @@ export function PanelComponent({
   color,
   bg,
   text,
+  mediasource = 'ui',
 }: PanelProps) {
   const textref = useRef(text)
   const store = useTiles(width, height, 0, color, bg)
@@ -75,7 +79,12 @@ export function PanelComponent({
 
   return (
     <TilesData store={store}>
-      <TilesRender label="panel" width={width} height={height} />
+      <TilesRender
+        label="panel"
+        width={width}
+        height={height}
+        mediasource={mediasource}
+      />
       <WriteTextContext.Provider value={context}>
         {perfmeasure('panel:items', () =>
           text.map((item, index) => (
