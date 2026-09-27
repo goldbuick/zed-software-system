@@ -13,7 +13,7 @@
  */
 
 import { objectKeys } from 'ts-extras'
-import { apitoast, vmflush, workstatus } from 'zss/device/api'
+import { apitoast, workstatus } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { charsetimportattachworldtobook } from 'zss/feature/parse/chr'
 import {
@@ -31,7 +31,11 @@ import {
   memorycreatecodepage,
   memoryreadcodepagedata,
 } from 'zss/memory/codepageoperations'
-import { memoryreadfirstcontentbook, memorywritebook } from 'zss/memory/session'
+import {
+  memoryimportnameprefix,
+  memoryreadfirstcontentbook,
+  memorywritebook,
+} from 'zss/memory/session'
 import {
   BOARD,
   BOARD_ELEMENT,
@@ -211,6 +215,7 @@ type PROCESS_LAYOUT = {
   tilewidth: number
   tileheight: number
   croppedfromszzt: boolean
+  prefix?: string
 }
 
 function processboards(
@@ -220,6 +225,7 @@ function processboards(
   layout: PROCESS_LAYOUT,
 ) {
   const { tilewidth, tileheight, croppedfromszzt } = layout
+  const prefix = layout.prefix ?? ''
 
   function writefromkind(
     board: MAYBE<BOARD>,
@@ -568,7 +574,7 @@ function processboards(
 
   function formatexitstat(exitstat: number | undefined): MAYBE<string> {
     if (isnumber(exitstat) && exitstat > 0) {
-      return `zztboard${exitstat}`
+      return `${prefix}zztboard${exitstat}`
     }
     return undefined
   }
@@ -578,7 +584,7 @@ function processboards(
     const statmap = buildstatmap(zztboard.stats, tilewidth, tileheight)
     const bystatindex = new Map<number, BOARD_ELEMENT>()
 
-    const codepagestats: string[] = [`@zztboard${i}`]
+    const codepagestats: string[] = [`@${prefix}zztboard${i}`]
     if (croppedfromszzt) {
       codepagestats.push(
         `@note Super ZZT board cropped to ${BOARD_WIDTH}x${BOARD_HEIGHT}`,
@@ -631,7 +637,8 @@ function processboards(
       codepagestats.push(`@exiteast ${exiteast}`)
     }
 
-    const code = `@board ${String(i).padStart(3, '0')}. ${zztboard.boardname}\n${codepagestats.join('\n')}`
+    const indexlabel = String(i).padStart(3, '0')
+    const code = `@board ${prefix}${indexlabel}. ${zztboard.boardname}\n${codepagestats.join('\n')}`
     const codepage = memorycreatecodepage(code, {})
     memorywritecodepage(book, codepage)
 
@@ -673,17 +680,20 @@ export function importzztboardstobook(
     tilewidth: number
     tileheight: number
     croppedfromszzt: boolean
+    prefix?: string
   },
 ): { book: BOOK; boardaddresses: string[] } {
   assertzztelementlibrary()
   const book = memorycreatebook([])
   const startboard = opts.startboard ?? -1
+  const prefix = opts.prefix ?? ''
   processboards(book, startboard, zztboards, {
     tilewidth: opts.tilewidth,
     tileheight: opts.tileheight,
     croppedfromszzt: opts.croppedfromszzt,
+    prefix,
   })
-  const boardaddresses = zztboards.map((_, i) => `zztboard${i}`)
+  const boardaddresses = zztboards.map((_, i) => `${prefix}zztboard${i}`)
   return { book, boardaddresses }
 }
 
@@ -716,7 +726,7 @@ export function parsebrd(player: string, content: Uint8Array) {
   )
 }
 
-export function parsezzt(player: string, content: Uint8Array) {
+export function parsezzt(player: string, content: Uint8Array, filename = '') {
   workstatus(SOFTWARE, player, 'parse zzt')
   if (!requirezztelementlibrary(player)) {
     return
@@ -750,14 +760,14 @@ export function parsezzt(player: string, content: Uint8Array) {
     tilewidth: ZZT_BOARD_WIDTH,
     tileheight: ZZT_BOARD_HEIGHT,
     croppedfromszzt: false,
+    prefix: memoryimportnameprefix(filename, book.id),
   })
   memorywritebook(book)
   charsetimportattachworldtobook(player, book)
   apitoast(SOFTWARE, player, `imported zzt file into ${book.name} book`)
-  vmflush(SOFTWARE, player)
 }
 
-export function parseszt(player: string, content: Uint8Array) {
+export function parseszt(player: string, content: Uint8Array, filename = '') {
   workstatus(SOFTWARE, player, 'parse szt')
   if (!requirezztelementlibrary(player)) {
     return
@@ -791,9 +801,9 @@ export function parseszt(player: string, content: Uint8Array) {
     tilewidth: SZZT_BOARD_WIDTH,
     tileheight: SZZT_BOARD_HEIGHT,
     croppedfromszzt: true,
+    prefix: memoryimportnameprefix(filename, book.id),
   })
   memorywritebook(book)
   charsetimportattachworldtobook(player, book)
   apitoast(SOFTWARE, player, `imported Super ZZT into ${book.name} book`)
-  vmflush(SOFTWARE, player)
 }

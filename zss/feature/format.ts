@@ -1,7 +1,10 @@
 import { pack, unpack } from 'msgpackr'
-import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+
+function logformaterror(message: string) {
+  SOFTWARE.emit('', 'log', ['$redformat$blue>>', message])
+}
 
 export type FORMAT_OBJECT = [string?, any?, ...FORMAT_OBJECT[]]
 
@@ -80,7 +83,7 @@ export function unformatobject<T>(
 
     return obj as T
   } catch (err: any) {
-    apierror(SOFTWARE, '', 'format', err.message)
+    logformaterror(err.message)
   }
 }
 
@@ -91,7 +94,7 @@ export function packformat(entry: FORMAT_OBJECT): MAYBE<Uint8Array> {
     const data = pack(entry)
     return data
   } catch (err: any) {
-    apierror(SOFTWARE, '', 'format', err.message)
+    logformaterror(err.message)
   }
 }
 
@@ -103,7 +106,7 @@ export function unpackformat(
       const data = JSON.parse(content)
       return data
     } catch (err: any) {
-      apierror(SOFTWARE, '', 'format', err.message)
+      logformaterror(err.message)
     }
     return undefined
   }
@@ -111,7 +114,7 @@ export function unpackformat(
     const data = unpack(content)
     return data
   } catch (err: any) {
-    apierror(SOFTWARE, '', 'format', err.message)
+    logformaterror(err.message)
   }
   return undefined
 }

@@ -1,6 +1,5 @@
 import { memorytrycontentdestination } from 'zss/feature/contenturlflow'
 import { memorytryjoindestination } from 'zss/feature/joinurlflow'
-import { ptwithin } from 'zss/mapping/2d'
 import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import { PT } from 'zss/words/types'
 
@@ -78,8 +77,4 @@ export function memoryplayerwaszapped(
   if (isnumber(enterx) && isnumber(entery) && ispresent(element)) {
     memorymoveboardobject(board, element, { x: enterx, y: entery })
   }
-}
-
-export function memoryptwithinboard(pt: PT) {
-  return ptwithin(pt.x, pt.y, 0, BOARD_WIDTH - 1, BOARD_HEIGHT - 1, 0)
 }

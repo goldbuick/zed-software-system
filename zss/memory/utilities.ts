@@ -1,32 +1,20 @@
-import { decompress } from '@bokuweb/zstd-wasm'
-import JSZip, { JSZipObject } from 'jszip'
-import { unpack } from 'msgpackr'
 import { registerinspector } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { getclimode } from 'zss/feature/detect'
-import { FORMAT_OBJECT, unpackformat } from 'zss/feature/format'
 import { storagewriteconfig } from 'zss/feature/storage'
 import { CONFIG_KEYS } from 'zss/feature/storagekeys'
 import { isjoin } from 'zss/feature/url'
 import { DIVIDER, zsstexttape, zsszedlinklinechip } from 'zss/feature/zsstextui'
-import { ensurezstdwasm } from 'zss/feature/zstdwasm'
 import { registerhyperlinksharedbridge } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { base64urltobase64 } from 'zss/mapping/encode'
 import { qrlines } from 'zss/mapping/qr'
 import { escapedoublequoted, scrolllinkescapefrag } from 'zss/mapping/string'
-import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
+import { ispresent, isstring } from 'zss/mapping/types'
 import { COLOR } from 'zss/words/types'
 
 import { READ_LAYER, memoryreadelement } from './boardaccess'
-import {
-  memoryexportbook,
-  memoryimportbook,
-  memoryreadelementdisplay,
-  memoryreadflags,
-} from './bookoperations'
-import { collectflagprotectedids } from './exportidremap'
-import { packbookwirestourl } from './packbookwires'
+import { memoryreadelementdisplay, memoryreadflags } from './bookoperations'
+import type { MEMORY_BOOKS_BUNDLE } from './memorysnapshotio'
 import { memoryreadplayerboard } from './playermanagement'
 import {
   memoryisoperator,
@@ -35,21 +23,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
-import { trimmemoryexport } from './trimexport'
 import { BOOK } from './types'
-
-function base64tobytes(base64: string): Uint8Array {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; ++i) {
-    bytes[i] = binary.charCodeAt(i)
-  }
-  return bytes
-}
-
-function iszipbytes(bytes: Uint8Array): boolean {
-  return bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4b
-}
 
 const CONFIG_DEFAULTS: Record<string, string> = {
   crt: 'on',
@@ -230,178 +204,30 @@ export function memoryadminmenu(
   scrollwritelines(player, 'cpu #admin', zsstexttape(...rows), 'refscroll')
 }
 
-/** Save/load payload: books plus optional opened-book id (`MEMORY.main`). */
-export type MEMORY_BOOKS_BUNDLE = {
-  books: BOOK[]
-  main?: string
-}
-
-function memoryimportbooklist(list: unknown): BOOK[] {
-  if (!Array.isArray(list)) {
-    return []
+/**
+ * Browser sim: post a book snapshot to the compress worker.
+ * Headless/climode and Jest call `memoryserializesnapshot` directly.
+ */
+export async function memorycompressbooks(books: BOOK[]): Promise<string> {
+  const snapshot: MEMORY_BOOKS_BUNDLE = {
+    main: memoryreadmainbook()?.id,
+    books,
   }
-  const books: BOOK[] = []
-  for (let i = 0; i < list.length; ++i) {
-    const book = memoryimportbook(list[i] as FORMAT_OBJECT)
-    if (ispresent(book)) {
-      books.push(book)
-    }
-  }
-  return books
-}
-
-function memoryimportbooklistfromjson(list: unknown): BOOK[] {
-  if (!Array.isArray(list)) {
-    return []
-  }
-  return list
-    .map((entry) =>
-      memoryimportbook(entry as Record<string, unknown>, {
-        format: 'json',
-      }),
-    )
-    .filter(ispresent)
+  // Keep off the utilities import graph: Jest cannot transform compressspace??worker.
+  const { serializesnapshotoffthread } =
+    await import('zss/compressworkerclient')
+  return serializesnapshotoffthread(snapshot)
 }
 
 /**
- * Compress books for URL save / fork / share.
- * Sim owns export + cross-book id protect; remap/trim/msgpack/zstd run on the
- * compress worker (in-process fallback / Jest). Climode uses JSON envelope.
+ * Browser sim: post a base64 save string to the compress worker.
+ * Headless/climode and Jest call `memorydeserializesnapshot` directly.
  */
-export async function memorycompressbooks(books: BOOK[]) {
-  const main = memoryreadmainbook()?.id
-  if (getclimode()) {
-    const jsonbooks: unknown[] = []
-    for (let i = 0; i < books.length; ++i) {
-      const exported = trimmemoryexport(
-        memoryexportbook(books[i], { format: 'json' }),
-      )
-      if (exported) {
-        jsonbooks.push(exported)
-      }
-    }
-    return JSON.stringify({ main, books: jsonbooks })
-  }
-
-  const wires: FORMAT_OBJECT[] = []
-  for (let i = 0; i < books.length; ++i) {
-    const wire = memoryexportbook(books[i], {
-      noremap: true,
-    }) as MAYBE<FORMAT_OBJECT>
-    if (wire) {
-      wires.push(wire)
-    }
-  }
-  const protectedids = new Set<string>()
-  for (let i = 0; i < wires.length; ++i) {
-    const ids = collectflagprotectedids(wires[i])
-    for (const id of ids) {
-      protectedids.add(id)
-    }
-  }
-  const protectedlist = Array.from(protectedids)
-
-  // Jest has no Vite ??worker transform for compressspace.
-  if (
-    typeof process !== 'undefined' &&
-    typeof process.env?.JEST_WORKER_ID === 'string'
-  ) {
-    return packbookwirestourl(main, wires, protectedlist)
-  }
-
-  try {
-    const { compressbookwiresoffthread } =
-      await import('zss/compressworkerclient')
-    return await compressbookwiresoffthread(main, wires, protectedlist)
-  } catch {
-    return packbookwirestourl(main, wires, protectedlist)
-  }
-}
-
-async function memorydecompressbookszip(content: string): Promise<BOOK[]> {
-  const books: BOOK[] = []
-  const zip = await JSZip.loadAsync(content, { base64: true })
-
-  const files: JSZipObject[] = []
-  zip.forEach((_path, file) => files.push(file))
-
-  for (let i = 0; i < files.length; ++i) {
-    const file = files[i]
-
-    const str = await file.async('string')
-    const maybebookfromstr = unpackformat(str)
-    if (ispresent(maybebookfromstr)) {
-      const book = memoryimportbook(maybebookfromstr)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    const bin = await file.async('uint8array')
-    const maybebookfrombin = unpackformat(bin)
-    if (ispresent(maybebookfrombin)) {
-      const book = memoryimportbook(maybebookfrombin)
-      if (ispresent(book)) {
-        books.push(book)
-        continue
-      }
-    }
-
-    const ubin = decompress(bin)
-    const maybebookfromubin = unpackformat(ubin)
-    if (ispresent(maybebookfromubin)) {
-      const book = memoryimportbook(maybebookfromubin)
-      if (ispresent(book)) {
-        books.push(book)
-      }
-    }
-  }
-
-  return books
-}
-
 export async function memorydecompressbooks(
   base64bytes: string,
 ): Promise<MEMORY_BOOKS_BUNDLE> {
-  const trimmed = base64bytes.trim()
-  if (trimmed.startsWith('[')) {
-    const json = JSON.parse(base64bytes) as unknown
-    return { books: memoryimportbooklistfromjson(json) }
-  }
-  if (trimmed.startsWith('{')) {
-    const json = JSON.parse(base64bytes) as {
-      main?: string
-      books?: unknown
-    }
-    return {
-      books: memoryimportbooklistfromjson(json.books),
-      main: isstring(json.main) ? json.main : undefined,
-    }
-  }
-
-  await ensurezstdwasm()
-
-  const content = base64urltobase64(base64bytes)
-  const raw = base64tobytes(content)
-
-  // Legacy: JSZip envelope (PK..) with per-book zstd|msgpack|json entries.
-  if (iszipbytes(raw)) {
-    return { books: await memorydecompressbookszip(content) }
-  }
-
-  // Current: zstd(msgpack({ main?, books })) — legacy: zstd(msgpack(FORMAT_OBJECT[]))
-  const ubin = decompress(raw)
-  const payload = unpack(ubin) as unknown
-  if (Array.isArray(payload)) {
-    return { books: memoryimportbooklist(payload) }
-  }
-  if (payload && typeof payload === 'object') {
-    const envelope = payload as { main?: unknown; books?: unknown }
-    return {
-      books: memoryimportbooklist(envelope.books),
-      main: isstring(envelope.main) ? envelope.main : undefined,
-    }
-  }
-  return { books: [] }
+  // Keep off the utilities import graph: Jest cannot transform compressspace??worker.
+  const { deserializesnapshotoffthread } =
+    await import('zss/compressworkerclient')
+  return deserializesnapshotoffthread(base64bytes)
 }

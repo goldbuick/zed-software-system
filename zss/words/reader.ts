@@ -1,4 +1,3 @@
-import { apierror } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
 import { coercenumberorstringtoken } from 'zss/mapping/value'
@@ -66,17 +65,15 @@ type ARG_TYPE_VALUES<T extends ARG_TYPES> = {
 }
 
 function didexpect(msg: string, value: any, words: WORD[]) {
-  apierror(
-    SOFTWARE,
-    memoryreadoperator(),
-    'reader',
+  SOFTWARE.emit(memoryreadoperator(), 'log', [
+    '$redreader$blue>>',
     msg,
     JSON.stringify(value),
     words,
     READ_CONTEXT.element,
     READ_CONTEXT.elementid,
     READ_CONTEXT.elementfocus,
-  )
+  ])
   throw new Error(
     `Invalid arg, expected: ${msg} but got ${JSON.stringify(value)}`,
   )

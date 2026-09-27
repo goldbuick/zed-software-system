@@ -1,15 +1,23 @@
 import type { DEVICE } from 'zss/device'
-import { apilog } from 'zss/device/api'
+import { apilog, vmflush } from 'zss/device/api'
+import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
-import { parsewebfile } from 'zss/feature/parse/file'
+import { mapmimetype, parsewebfile } from 'zss/feature/parse/file'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 import {
   memoryimportbook,
   memorywritecodepage,
 } from 'zss/memory/bookoperations'
-import { memoryimportcodepage } from 'zss/memory/codepageoperations'
+import {
+  memoryimportcodepage,
+  prefixcodepagename,
+} from 'zss/memory/codepageoperations'
 import { memoryloader } from 'zss/memory/loader'
-import { memoryreadmainbook, memorywritebook } from 'zss/memory/session'
+import {
+  memoryimportnameprefix,
+  memoryreadmainbook,
+  memorywritebook,
+} from 'zss/memory/session'
 import { memoryreadconfig } from 'zss/memory/utilities'
 
 function iscodepagejsonfile(eventname: string) {
@@ -30,9 +38,16 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
     apilog(vm, message.player, `loader event ${eventname} ${format}`)
   }
   switch (format) {
-    case 'file':
-      void parsewebfile(message.player, content)
+    case 'file': {
+      const file = content as File | undefined
+      doasync(vm, message.player, async () => {
+        await parsewebfile(message.player, file)
+        if (ispresent(file) && mapmimetype(file.type ?? '', file) !== 'zip') {
+          vmflush(vm, message.player)
+        }
+      })
       break
+    }
     case 'json':
       if (/file:.*\.book.json/.test(eventname)) {
         apilog(vm, message.player, `loading ${eventname}`)
@@ -40,8 +55,19 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
         if (ispresent(json.data) && isstring(json.exported)) {
           const book = memoryimportbook(json.data, { format: 'json' })
           if (ispresent(book)) {
+            const stem = String(eventname)
+              .replace(/^file:/i, '')
+              .replace(/^.*[/\\]/, '')
+              .replace(/\.book\.json$/i, '')
+            const prefix = memoryimportnameprefix(stem, book.id)
+            if (prefix) {
+              for (let i = 0; i < book.pages.length; ++i) {
+                prefixcodepagename(book.pages[i], prefix)
+              }
+            }
             memorywritebook(book)
             apilog(vm, message.player, `loaded ${json.exported}`)
+            vmflush(vm, message.player)
           }
         }
       } else if (iscodepagejsonfile(eventname)) {
@@ -57,6 +83,7 @@ export function handleloader(vm: DEVICE, message: MESSAGE): void {
           if (ispresent(codepage)) {
             memorywritecodepage(mainbook, codepage)
             apilog(vm, message.player, `loaded ${json.exported}`)
+            vmflush(vm, message.player)
           }
         }
       } else {

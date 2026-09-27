@@ -20,7 +20,7 @@ import {
   memoryreadboardbyaddress,
   memoryreadelementstat,
 } from 'zss/memory/boards'
-import { memoryptwithinboard } from 'zss/memory/boardtransitions'
+import { memoryptwithinboard } from 'zss/memory/ptwithinboard'
 import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import {
   type BOARD,

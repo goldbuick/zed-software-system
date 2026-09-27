@@ -1,6 +1,5 @@
 import { compress } from '@bokuweb/zstd-wasm'
 import JSZip from 'jszip'
-import { setclimode } from 'zss/feature/detect'
 import {
   FORMAT_OBJECT,
   formatobject,
@@ -24,6 +23,11 @@ import {
 } from 'zss/memory/codepageoperations'
 import { memoryexportshouldskipflagowner } from 'zss/memory/exportflagcache'
 import {
+  type MEMORY_BOOKS_BUNDLE,
+  memorydeserializesnapshot,
+  memoryserializesnapshot,
+} from 'zss/memory/memorysnapshotio'
+import {
   memoryreadmainbook,
   memoryresetbooks,
   memorywritemainbook,
@@ -36,10 +40,10 @@ import {
   CODE_PAGE_TYPE,
   FIXED_DATE,
 } from 'zss/memory/types'
-import {
-  memorycompressbooks,
-  memorydecompressbooks,
-} from 'zss/memory/utilities'
+
+function snapshotof(books: BOOK[]): MEMORY_BOOKS_BUNDLE {
+  return { main: memoryreadmainbook()?.id, books }
+}
 
 function readboard(book: BOOK, pagename: string): BOARD {
   const page = book.pages.find((p) => p.code.includes(`@board ${pagename}`))
@@ -85,7 +89,7 @@ function makebookwithrefs(): {
   return { book, pageid: page.id, objecta, objectb }
 }
 
-describe('memorycompressbooks', () => {
+describe('memoryserializesnapshot', () => {
   afterEach(() => {
     memoryresetbooks([])
   })
@@ -107,15 +111,15 @@ describe('memorycompressbooks', () => {
     ])
     memorywriteflag(book, 'player1', 'score', 42 as any)
 
-    const compressed = await memorycompressbooks([book])
+    const compressed = await memoryserializesnapshot(snapshotof([book]))
     expect(compressed.startsWith('[')).toBe(false)
     expect(compressed.startsWith('UEs')).toBe(false)
     // eslint-disable-next-line no-console
     console.log(
-      `memorycompressbooks size: ${compressed.length} base64url chars`,
+      `memoryserializesnapshot size: ${compressed.length} base64url chars`,
     )
 
-    const { books } = await memorydecompressbooks(compressed)
+    const { books } = await memorydeserializesnapshot(compressed)
     expect(books.length).toBe(1)
     expect(books[0].name).toBe(book.name)
     expect(books[0].id).toBe(book.id)
@@ -141,8 +145,8 @@ describe('memorycompressbooks', () => {
     memorywritemainbook(second.id)
     expect(memoryreadmainbook()?.id).toBe(second.id)
 
-    const compressed = await memorycompressbooks([first, second])
-    const bundle = await memorydecompressbooks(compressed)
+    const compressed = await memoryserializesnapshot(snapshotof([first, second]))
+    const bundle = await memorydeserializesnapshot(compressed)
     expect(bundle.main).toBe(second.id)
     expect(bundle.books.map((b) => b.id)).toEqual([first.id, second.id])
 
@@ -157,8 +161,8 @@ describe('memorycompressbooks', () => {
     ])
     memoryresetbooks([book])
     memorywritemainbook(book.id)
-    const compressed = await memorycompressbooks([book])
-    const { books, main } = await memorydecompressbooks(compressed)
+    const compressed = await memoryserializesnapshot(snapshotof([book]))
+    const { books, main } = await memorydeserializesnapshot(compressed)
     expect(main).toBe(book.id)
     expect(books[0].id).toBe(book.id)
   })
@@ -169,23 +173,18 @@ describe('memorycompressbooks', () => {
     ])
     memoryresetbooks([book])
     memorywritemainbook(book.id)
-    setclimode(true)
-    try {
-      const compressed = await memorycompressbooks([book])
-      expect(compressed.startsWith('{')).toBe(true)
-      const parsed = JSON.parse(compressed) as {
-        main?: string
-        books: unknown[]
-      }
-      expect(parsed.main).toBe(book.id)
-      expect(Array.isArray(parsed.books)).toBe(true)
-      expect((parsed.books[0] as { id: string }).id).toBe(book.id)
-      const { books, main } = await memorydecompressbooks(compressed)
-      expect(main).toBe(book.id)
-      expect(books[0].id).toBe(book.id)
-    } finally {
-      setclimode(false)
+    const compressed = await memoryserializesnapshot(snapshotof([book]), true)
+    expect(compressed.startsWith('{')).toBe(true)
+    const parsed = JSON.parse(compressed) as {
+      main?: string
+      books: unknown[]
     }
+    expect(parsed.main).toBe(book.id)
+    expect(Array.isArray(parsed.books)).toBe(true)
+    expect((parsed.books[0] as { id: string }).id).toBe(book.id)
+    const { books, main } = await memorydeserializesnapshot(compressed)
+    expect(main).toBe(book.id)
+    expect(books[0].id).toBe(book.id)
   })
 
   it('zstd wire imports via FORMAT_OBJECT path not JSON fields', async () => {
@@ -193,9 +192,9 @@ describe('memorycompressbooks', () => {
       memorycreatecodepage('@board room\n', { board: memorycreateboard() }),
     ])
     memorywriteflag(book, 'player1', 'score', 7 as any)
-    const compressed = await memorycompressbooks([book])
+    const compressed = await memoryserializesnapshot(snapshotof([book]))
     expect(compressed.startsWith('{')).toBe(false)
-    const { books } = await memorydecompressbooks(compressed)
+    const { books } = await memorydeserializesnapshot(compressed)
     expect(books.length).toBe(1)
     expect(memoryreadflags(books[0], 'player1')).toEqual({ score: 7 })
   })
@@ -219,10 +218,10 @@ describe('memorycompressbooks', () => {
     } as any)
     memorywriteflag(book, 'gadgetstore', 'legacy', { layers: [] } as any)
 
-    const compressed = await memorycompressbooks([book])
+    const compressed = await memoryserializesnapshot(snapshotof([book]))
     const {
       books: [again],
-    } = await memorydecompressbooks(compressed)
+    } = await memorydeserializesnapshot(compressed)
     expect(memoryreadflags(again, durable)).toEqual({ health: 100 })
     expect(again.flags[creategadgetid(durable)]).toBeUndefined()
     expect(again.flags[`${book.pages[0].id}_layers`]).toBeUndefined()
@@ -257,10 +256,10 @@ describe('memorycompressbooks', () => {
     memorywriteflag(book, 'sid_tmp_loader_chip', 'ec', 1 as any)
     memorywriteflag(book, `draw_2_${oid}_chip`, 'ec', 1 as any)
 
-    const compressed = await memorycompressbooks([book])
+    const compressed = await memoryserializesnapshot(snapshotof([book]))
     const {
       books: [again],
-    } = await memorydecompressbooks(compressed)
+    } = await memorydeserializesnapshot(compressed)
     expect(memoryreadflags(again, durablechip)).toEqual({ ec: 3 })
     expect(again.flags.pid_player_cli_chip).toBeUndefined()
     expect(again.flags[`${oid}_draw_chip`]).toBeUndefined()
@@ -272,10 +271,10 @@ describe('memorycompressbooks', () => {
   it('preserves sids referenced from board and element stats', async () => {
     const { book, pageid, objecta } = makebookwithrefs()
 
-    const compressed = await memorycompressbooks([book])
+    const compressed = await memoryserializesnapshot(snapshotof([book]))
     const {
       books: [again],
-    } = await memorydecompressbooks(compressed)
+    } = await memorydeserializesnapshot(compressed)
     const board = readboard(again, 'room')
 
     // page id is referenced from board.b1, so it must survive unchanged
@@ -330,7 +329,7 @@ describe('memorycompressbooks', () => {
     )
     expect(legacy.startsWith('UEs')).toBe(true)
 
-    const { books } = await memorydecompressbooks(legacy)
+    const { books } = await memorydeserializesnapshot(legacy)
     expect(books.length).toBe(1)
     expect(books[0].id).toBe(book.id)
     expect(readboard(books[0], 'legacy')).toBeDefined()
