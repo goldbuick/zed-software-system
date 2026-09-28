@@ -13,6 +13,7 @@ import {
   isstring,
 } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
+import { registermemoryruncodepage } from 'zss/memory/runcodepagehook'
 import { createos } from 'zss/os'
 import { measurestage } from 'zss/perf/ticktimingstats'
 import { perfmeasure } from 'zss/perf/ui'
@@ -432,6 +433,10 @@ export function memoryruncli(player: string, cli: string, tracking = true) {
 }
 
 export function memoryruncodepage(address: string, label: string) {
+  runmemorycodepage(address, label)
+}
+
+function runmemorycodepage(address: string, label: string) {
   // we assume READ_CONTEXT is setup correctly when this is run
   const mainbook = memoryensuremainbook()
   const codepage = memoryreadcodepage(mainbook, address)
@@ -456,6 +461,8 @@ export function memoryruncodepage(address: string, label: string) {
     READ_CONTEXT[key] = OLD_CONTEXT[key]
   })
 }
+
+registermemoryruncodepage(runmemorycodepage)
 
 export function memoryunlockscroll(id: string, player: string) {
   os.scrollunlock(id, player)

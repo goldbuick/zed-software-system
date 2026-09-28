@@ -1,6 +1,6 @@
 /**
  * Remap + trim + msgpack + zstd for already-exported book wires.
- * Shared by compressspace worker and Jest / in-process fallback.
+ * Called from memorysnapshotio on the compress worker, headless, and Jest.
  */
 import { pack } from 'msgpackr'
 import { FORMAT_OBJECT } from 'zss/feature/format'

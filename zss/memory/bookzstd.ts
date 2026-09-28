@@ -1,6 +1,6 @@
 /**
  * Shared zstd level + in-process pack payload → base64url for book URL saves.
- * Used by sim (fallback) and compressspace worker (off-thread).
+ * Used by memorysnapshotio (compress worker, headless, and Jest).
  */
 import { compress } from '@bokuweb/zstd-wasm'
 import { ensurezstdwasm } from 'zss/feature/zstdwasm'

@@ -793,6 +793,40 @@ export function memoryreadcodepagetypeasstring(codepage: MAYBE<CODE_PAGE>) {
   return memorycodepagetypetostring(memoryreadcodepagetype(codepage))
 }
 
+/** Prefix the name on the defining `@type name` line and reparse stats. */
+export function prefixcodepagename(codepage: CODE_PAGE, prefix: string): void {
+  if (!prefix) {
+    return
+  }
+  const name = memoryreadcodepagename(codepage)
+  if (!name || NAME(name).startsWith(NAME(prefix))) {
+    return
+  }
+  const lines = codepage.code.split('\n')
+  for (let i = 0; i < lines.length; ++i) {
+    const line = lines[i]
+    const trimmed = line.trimStart()
+    if (!trimmed.startsWith('@')) {
+      continue
+    }
+    const indent = line.slice(0, line.length - trimmed.length)
+    const body = trimmed.slice(1)
+    const semi = body.indexOf(';')
+    const head = semi === -1 ? body : body.slice(0, semi)
+    const label = semi === -1 ? '' : body.slice(semi)
+    const words = head.trim().split(/\s+/)
+    if (words.length < 2) {
+      return
+    }
+    const typeword = words[0]
+    const pagename = words.slice(1).join(' ')
+    lines[i] = `${indent}@${typeword} ${prefix}${pagename}${label}`
+    codepage.code = lines.join('\n')
+    memoryresetcodepagestats(codepage)
+    return
+  }
+}
+
 export function memoryresetcodepagestats(
   codepage: MAYBE<CODE_PAGE>,
 ): CODE_PAGE_STATS {

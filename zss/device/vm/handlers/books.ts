@@ -3,7 +3,9 @@ import { registerloginready, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { tracking } from 'zss/device/vm/state'
+import { getclimode } from 'zss/feature/detect'
 import { isarray, isstring } from 'zss/mapping/types'
+import { memorydeserializesnapshot } from 'zss/memory/memorysnapshotio'
 import {
   memoryreadoperator,
   memoryresetbooks,
@@ -30,7 +32,9 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
       if (isarray(message.data)) {
         books = message.data
       } else if (isstring(message.data)) {
-        const decompressed = await memorydecompressbooks(message.data)
+        const decompressed = getclimode()
+          ? await memorydeserializesnapshot(message.data)
+          : await memorydecompressbooks(message.data)
         books = decompressed.books
         maybemain = decompressed.main
       }

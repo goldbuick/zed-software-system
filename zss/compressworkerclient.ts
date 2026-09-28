@@ -1,14 +1,17 @@
 /**
  * Sim-owned client for the compressspace worker.
- * Lazy spawn; structured-clone of exported wires in; base64url string out.
+ * Serialize posts a book snapshot and returns a base64url string.
+ * Deserialize posts a base64 string and returns a book snapshot.
+ * If the worker cannot start or postMessage fails, the call throws.
  */
-import { FORMAT_OBJECT } from 'zss/feature/format'
-import { packbookwirestourl } from 'zss/memory/packbookwires'
+import type { MEMORY_BOOKS_BUNDLE } from 'zss/memory/memorysnapshotio'
 
 import CompressWorker from './compressspace??worker'
 
+type WorkerResult = string | MEMORY_BOOKS_BUNDLE
+
 type Pending = {
-  resolve: (value: string) => void
+  resolve: (value: WorkerResult) => void
   reject: (reason: Error) => void
 }
 
@@ -22,6 +25,7 @@ function attachcompressworkerhandlers(w: Worker) {
     const data = event.data as {
       id?: string
       result?: string
+      snapshot?: MEMORY_BOOKS_BUNDLE
       error?: string
     }
     if (typeof data?.id !== 'string') {
@@ -40,6 +44,10 @@ function attachcompressworkerhandlers(w: Worker) {
       wait.resolve(data.result)
       return
     }
+    if (data.snapshot && Array.isArray(data.snapshot.books)) {
+      wait.resolve(data.snapshot)
+      return
+    }
     wait.reject(new Error('compress worker response missing result'))
   }
   w.onerror = (event: ErrorEvent) => {
@@ -53,21 +61,24 @@ function attachcompressworkerhandlers(w: Worker) {
   }
 }
 
-function ensurecompressworker(): Worker | undefined {
+function ensurecompressworker(): Worker {
   if (worker) {
     return worker
   }
   if (workerfailed || typeof Worker === 'undefined') {
-    return undefined
+    throw new Error('compress worker unavailable')
   }
   try {
     worker = new CompressWorker({ name: 'compress' })
     attachcompressworkerhandlers(worker)
     return worker
-  } catch {
+  } catch (err) {
     workerfailed = true
     worker = undefined
-    return undefined
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('compress worker unavailable')
   }
 }
 
@@ -83,32 +94,60 @@ export function haltcompressworker() {
   pending.clear()
 }
 
-/**
- * Off-thread remap/trim/msgpack/zstd of exported book wires. Falls back
- * in-process if Worker cannot start.
- */
-export async function compressbookwiresoffthread(
-  main: string | undefined,
-  wires: FORMAT_OBJECT[],
-  protectedids: readonly string[],
-): Promise<string> {
+function postcompressworker(
+  message:
+    | {
+        id: string
+        op: 'serialize'
+        snapshot: MEMORY_BOOKS_BUNDLE
+        json?: boolean
+      }
+    | {
+        id: string
+        op: 'deserialize'
+        data: string
+      },
+): Promise<WorkerResult> {
   const w = ensurecompressworker()
-  if (!w) {
-    return packbookwirestourl(main, wires, protectedids)
-  }
-  const id = `c${++nextid}`
-  return new Promise<string>((resolve, reject) => {
-    pending.set(id, { resolve, reject })
+  return new Promise<WorkerResult>((resolve, reject) => {
+    pending.set(message.id, { resolve, reject })
     try {
-      w.postMessage({
-        id,
-        main,
-        wires,
-        protectedids: Array.from(protectedids),
-      })
-    } catch {
-      pending.delete(id)
-      void packbookwirestourl(main, wires, protectedids).then(resolve, reject)
+      w.postMessage(message)
+    } catch (err) {
+      pending.delete(message.id)
+      reject(
+        err instanceof Error ? err : new Error('compress worker post failed'),
+      )
     }
   })
+}
+
+/** Off-thread serialize of a book snapshot. Throws if the worker cannot run. */
+export async function serializesnapshotoffthread(
+  snapshot: MEMORY_BOOKS_BUNDLE,
+  json = false,
+): Promise<string> {
+  const id = `c${++nextid}`
+  const result = await postcompressworker({
+    id,
+    op: 'serialize',
+    snapshot,
+    json,
+  })
+  if (typeof result !== 'string') {
+    throw new Error('compress worker serialize missing result')
+  }
+  return result
+}
+
+/** Off-thread deserialize of a base64 save string. Throws if the worker cannot run. */
+export async function deserializesnapshotoffthread(
+  data: string,
+): Promise<MEMORY_BOOKS_BUNDLE> {
+  const id = `c${++nextid}`
+  const result = await postcompressworker({ id, op: 'deserialize', data })
+  if (typeof result === 'string' || !result || !Array.isArray(result.books)) {
+    throw new Error('compress worker deserialize missing snapshot')
+  }
+  return result
 }

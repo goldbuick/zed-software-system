@@ -3,6 +3,8 @@ import mime from 'mime/lite'
 import {
   apierror,
   apilog,
+  apitoast,
+  vmflush,
   vmloader,
   vmreadzipfilelist,
   workstatus,
@@ -162,6 +164,7 @@ export async function parsezipfile(player: string, file: File) {
     zipfilemarks = {}
     const templist: [string, JSZipObject][] = []
     zip.forEach((filename, fileitem) => templist.push([filename, fileitem]))
+    let skippedzips = 0
     for (let i = 0; i < templist.length; ++i) {
       const [filename, fileitem] = templist[i]
       const bytes = await fileitem.async('uint8array')
@@ -169,7 +172,15 @@ export async function parsezipfile(player: string, file: File) {
       const zipfile = new File([bytes as BlobPart], fileitem.name, {
         type: mimetype,
       })
+      if (mapmimetype(mimetype, zipfile) === 'zip') {
+        skippedzips += 1
+        continue
+      }
       zipfilelist.push(zipfile)
+    }
+    if (skippedzips > 0) {
+      const noun = skippedzips === 1 ? 'zip file' : 'zip files'
+      apitoast(SOFTWARE, player, `skipped ${skippedzips} ${noun} inside zip`)
     }
     // signal scroll to open
     apilog(SOFTWARE, player, 'unzip done')
@@ -236,6 +247,7 @@ export async function parsezipfilelist(player: string) {
   for (let i = 0; i < ordered.length; ++i) {
     await parsewebfile(player, ordered[i])
   }
+  vmflush(SOFTWARE, player)
 }
 
 function imagemimetype(kind: string, file: File): string {
@@ -313,12 +325,12 @@ async function handlefiletype(
         break
       case 'zzt': {
         const arraybuffer = await file.arrayBuffer()
-        parsezzt(player, new Uint8Array(arraybuffer))
+        parsezzt(player, new Uint8Array(arraybuffer), file.name)
         break
       }
       case 'szt': {
         const arraybuffer = await file.arrayBuffer()
-        parseszt(player, new Uint8Array(arraybuffer))
+        parseszt(player, new Uint8Array(arraybuffer), file.name)
         break
       }
       case 'brd': {

@@ -37,6 +37,7 @@ function PortraitSidebarPanel({ rect }: { rect: RECT }) {
           bg={1}
           text={rect.text}
           ymargin={0}
+          mediasource="board"
         />
       </PanelSlide>
     </group>
@@ -67,6 +68,7 @@ function LayoutRect({ rect }: LayoutRectProps) {
             bg={1}
             text={rect.text}
             ymargin={0}
+            mediasource="board"
           />
         </group>
       )

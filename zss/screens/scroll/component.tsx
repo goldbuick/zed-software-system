@@ -217,6 +217,7 @@ export function ScrollComponent({
                   selected={selectedInView}
                   striperowbase={scrollwindow.striperowbase}
                   rowys={scrollwindow.rowys}
+                  mediasource="board"
                 />
               </ScrollControls>
             </WriteTextContext.Provider>

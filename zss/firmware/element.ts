@@ -24,7 +24,10 @@ import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
 import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
-import { memorymoveobject } from 'zss/memory/boardmovement'
+import {
+  memorymoveboardobject,
+  memorymoveobject,
+} from 'zss/memory/boardmovement'
 import {
   memorymorphboardobject,
   memoryreadboardbyevaldir,
@@ -760,10 +763,10 @@ export const ELEMENT_FIRMWARE = createfirmware({
           dest,
         )
       ) {
-        const blocked = memoryreadelement(
+        const blocked = memorymoveboardobject(
           READ_CONTEXT.board,
+          READ_CONTEXT.element,
           dest,
-          READ_LAYER.ANY,
         )
         memorysendtoelement(blocked, READ_CONTEXT.element, 'thud')
       }

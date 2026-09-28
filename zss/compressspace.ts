@@ -1,47 +1,86 @@
 /**
- * Book URL compress worker: exported FORMAT_OBJECT wires → remap/trim/msgpack/zstd.
- * No hub, no device. memoryexportbook stays on the sim thread.
+ * Book snapshot worker.
+ * Serialize: MEMORY_BOOKS_BUNDLE in, base64url (or climode JSON) out.
+ * Deserialize: base64 string in, MEMORY_BOOKS_BUNDLE out.
  */
-import { FORMAT_OBJECT } from 'zss/feature/format'
-import { packbookwirestourl } from 'zss/memory/packbookwires'
+import {
+  type MEMORY_BOOKS_BUNDLE,
+  memorydeserializesnapshot,
+  memoryserializesnapshot,
+} from 'zss/memory/memorysnapshotio'
 
-type CompressRequest = {
+type SerializeRequest = {
   id: string
-  main?: string
-  wires: FORMAT_OBJECT[]
-  protectedids: string[]
+  op: 'serialize'
+  snapshot: MEMORY_BOOKS_BUNDLE
+  json?: boolean
 }
 
-type CompressResponse =
+type DeserializeRequest = {
+  id: string
+  op: 'deserialize'
+  data: string
+}
+
+type SnapshotRequest = SerializeRequest | DeserializeRequest
+
+type SnapshotResponse =
   | { id: string; result: string }
+  | { id: string; snapshot: MEMORY_BOOKS_BUNDLE }
   | { id: string; error: string }
 
-function iscompressrequest(data: unknown): data is CompressRequest {
+function isserializerequest(data: unknown): data is SerializeRequest {
   if (!data || typeof data !== 'object') {
     return false
   }
-  const msg = data as CompressRequest
+  const msg = data as SerializeRequest
   return (
+    msg.op === 'serialize' &&
     typeof msg.id === 'string' &&
-    Array.isArray(msg.wires) &&
-    Array.isArray(msg.protectedids)
+    !!msg.snapshot &&
+    Array.isArray(msg.snapshot.books)
   )
+}
+
+function isdeserializerequest(data: unknown): data is DeserializeRequest {
+  if (!data || typeof data !== 'object') {
+    return false
+  }
+  const msg = data as DeserializeRequest
+  return (
+    msg.op === 'deserialize' &&
+    typeof msg.id === 'string' &&
+    typeof msg.data === 'string'
+  )
+}
+
+function issnapshotrequest(data: unknown): data is SnapshotRequest {
+  return isserializerequest(data) || isdeserializerequest(data)
 }
 
 self.onmessage = (event: MessageEvent<unknown>) => {
   const data = event.data
-  if (!iscompressrequest(data)) {
+  if (!issnapshotrequest(data)) {
     return
   }
-  const { id, main, wires, protectedids } = data
-  void packbookwirestourl(main, wires, protectedids)
-    .then((result) => {
-      const response: CompressResponse = { id, result }
+  const pending = isserializerequest(data)
+    ? memoryserializesnapshot(data.snapshot, data.json === true).then(
+        (result) => {
+          const response: SnapshotResponse = { id: data.id, result }
+          return response
+        },
+      )
+    : memorydeserializesnapshot(data.data).then((snapshot) => {
+        const response: SnapshotResponse = { id: data.id, snapshot }
+        return response
+      })
+  void pending
+    .then((response) => {
       self.postMessage(response)
     })
     .catch((err: unknown) => {
-      const response: CompressResponse = {
-        id,
+      const response: SnapshotResponse = {
+        id: data.id,
         error: err instanceof Error ? err.message : String(err),
       }
       self.postMessage(response)

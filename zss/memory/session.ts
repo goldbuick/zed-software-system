@@ -6,7 +6,10 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { memoryfreecodepage } from './codepageoperations'
+import {
+  memoryfreecodepage,
+  memoryreadcodepagename,
+} from './codepageoperations'
 import { memoryinvalidatecodepagepickcache } from './codepagepickcache'
 import { BOOK } from './types'
 
@@ -173,6 +176,56 @@ export function memoryreadfirstcontentbook(): MAYBE<BOOK> {
   const mainbook = memoryreadmainbook()
   const [first] = books.filter((book) => book.id !== mainbook?.id)
   return first ?? mainbook
+}
+
+/** A book other than the opened main book is already in the session. */
+export function memoryhascontentbook(): boolean {
+  const mainid = MEMORY.main
+  const ids = Object.keys(MEMORY.books)
+  for (let i = 0; i < ids.length; ++i) {
+    if (ids[i] !== mainid) {
+      return true
+    }
+  }
+  return false
+}
+
+function memorycodepageprefixinuse(prefix: string): boolean {
+  const needle = NAME(prefix)
+  if (!needle) {
+    return false
+  }
+  const books = memoryreadbooklist()
+  for (let i = 0; i < books.length; ++i) {
+    const pages = books[i].pages
+    for (let p = 0; p < pages.length; ++p) {
+      const name = NAME(memoryreadcodepagename(pages[p]))
+      if (name.startsWith(needle)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * Prefix for a book created while a content book already exists.
+ * `Castle.zzt` -> `castle_`. If that prefix is already a codepage name, append the new book id.
+ */
+export function memoryimportnameprefix(
+  filename: string,
+  bookid: string,
+): string {
+  if (!memoryhascontentbook()) {
+    return ''
+  }
+  const base = filename.replace(/^.*[/\\]/, '').replace(/\.[^.]+$/, '')
+  const stem = NAME(base) || 'book'
+  let prefix = `${stem}_`
+  if (memorycodepageprefixinuse(prefix)) {
+    prefix = `${stem}_${NAME(bookid)}_`
+  }
+  return prefix
 }
 
 export type MEMORY_ROOT = typeof MEMORY
