@@ -17,7 +17,7 @@ import { type MS_RTMP_JOB, startrtmpjob, stoprtmpjob } from './lib/rtmpegress'
 
 const APP_NAME = 'Zed Cafe Media Stream'
 const MAIN_WINDOW_WIDTH = 880
-const MAIN_WINDOW_HEIGHT = 620
+const MAIN_WINDOW_HEIGHT = 760
 const STREAM_FPS = 30
 const H_WIDTH = 1920
 const H_HEIGHT = 1080
