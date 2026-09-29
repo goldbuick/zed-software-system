@@ -93,13 +93,19 @@ describe('ruffian BoardAttack on dest and contact', () => {
   }
 
   it('sends shot at dest player while rushing and dies without shoving', () => {
-    // one empty tile: everytick steps closer, then dest-check fires before the next shove
+    // one empty tile: code checks the dest before the step, so the arrival tick does not attack
     const { book, board, ruffian, player } = setupboard(4, 6)
     ruffian.stepx = 1
     ruffian.stepy = 0
     // skip rest/re-aim/stop-roll random branches
     ruffian.p1 = 0
     ruffian.p2 = 9
+
+    memorytickobject(book, board, ruffian, RUFFIAN_CODE)
+
+    expect(ruffian.removed).toBeFalsy()
+    expect(ruffian.x).toBe(5)
+    expect(player.x).toBe(6)
 
     memorytickobject(book, board, ruffian, RUFFIAN_CODE)
 

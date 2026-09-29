@@ -741,8 +741,8 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // notfound
     return [false, value]
   },
-  everytick() {
-    // handle walk movement
+  aftertick(chip) {
+    // walk after the program
     if (
       !READ_CONTEXT.element?.removed &&
       ispresent(READ_CONTEXT.element?.x) &&
@@ -771,8 +771,6 @@ export const ELEMENT_FIRMWARE = createfirmware({
         memorysendtoelement(blocked, READ_CONTEXT.element, 'thud')
       }
     }
-  },
-  aftertick(chip) {
     // are we player? and is our health number zero or below
     if (READ_CONTEXT.elementisplayer) {
       const health = chip.get('health')
