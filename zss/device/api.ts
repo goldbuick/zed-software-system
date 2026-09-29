@@ -3,7 +3,6 @@ what is api? a set of common helper functions to send messages to devices
 without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
-import { modemreadtextsync } from 'zss/device/modem'
 import type { DEVICELIKE } from 'zss/device/types'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
@@ -861,9 +860,8 @@ export function vmcoderelease(
   player: string,
   book: string,
   path: string[],
+  code: string,
 ) {
-  // Main-thread modem is authoritative for typing; worker Y.Doc can lag modem:sync.
-  const code = modemreadtextsync(vmcodeaddress(book, path))
   device.emit(player, 'vm:coderelease', [book, path, code])
 }
 
