@@ -7,10 +7,6 @@ jest.mock('zss/device/api', () => ({
   vmpublish: jest.fn(),
 }))
 
-jest.mock('zss/device/modem', () => ({
-  modemreadtextsync: jest.fn(() => ''),
-}))
-
 jest.mock('zss/feature/terminalwritelines', () => ({
   terminalwritelines: jest.fn(),
 }))
