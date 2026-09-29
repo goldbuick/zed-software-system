@@ -24,7 +24,7 @@ import { memoryresetbooks } from 'zss/memory/session'
 import { COLLISION } from 'zss/words/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 
-describe('element everytick walk thud', () => {
+describe('element aftertick walk thud', () => {
   afterEach(() => {
     memoryresetbooks([])
     READ_CONTEXT.board = undefined
@@ -70,7 +70,7 @@ describe('element everytick walk thud', () => {
     READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.timestamp = 1
 
-    ELEMENT_FIRMWARE.everytick({} as CHIP)
+    ELEMENT_FIRMWARE.aftertick({} as CHIP)
 
     expect(labelsfor('sid_bear')).toEqual(['thud'])
     expect(bear!.x).toBe(2)
@@ -110,9 +110,9 @@ describe('element everytick walk thud', () => {
     READ_CONTEXT.elementisplayer = false
     READ_CONTEXT.timestamp = 1
 
-    ELEMENT_FIRMWARE.everytick({} as CHIP)
+    ELEMENT_FIRMWARE.aftertick({} as CHIP)
 
-    // move one-way touch to blocker; everytick still sends thud to the walker
+    // move one-way touch to blocker; aftertick still sends thud to the walker
     expect(labelsfor('sid_bear')).toEqual(['thud'])
     expect(labelsfor('pid_hero')).toEqual(['touch'])
   })

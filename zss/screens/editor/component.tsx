@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { objectKeys } from 'ts-extras'
 import { vmcodeaddress, vmcoderelease, vmcodewatch } from 'zss/device/api'
+import { modemreadtextsync } from 'zss/device/modem'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
@@ -62,7 +63,8 @@ export function EditorComponent() {
   useEffect(() => {
     vmcodewatch(SOFTWARE, player, editor.book, editor.path)
     return () => {
-      vmcoderelease(SOFTWARE, player, editor.book, editor.path)
+      const code = modemreadtextsync(vmcodeaddress(editor.book, editor.path))
+      vmcoderelease(SOFTWARE, player, editor.book, editor.path, code)
     }
   }, [editor.book, editor.path, player])
 
