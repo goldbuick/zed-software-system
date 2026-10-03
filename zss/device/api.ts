@@ -602,10 +602,6 @@ export function registerterminalclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:terminal:close')
 }
 
-export function registerterminalfull(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:terminal:full')
-}
-
 export function registerterminalinclayout(
   device: DEVICELIKE,
   player: string,
