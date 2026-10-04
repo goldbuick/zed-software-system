@@ -21,6 +21,7 @@ jest.mock('zss/device/api', () => ({
 
 const mockedmemorychipispresent = jest.fn()
 const mockedmemorymessagechip = jest.fn()
+const mockedmemorybootobjectchip = jest.fn()
 jest.mock('zss/memory/runtime', () => {
   const actual = jest.requireActual('zss/memory/runtime') as Record<
     string,
@@ -32,10 +33,11 @@ jest.mock('zss/memory/runtime', () => {
       mockedmemorychipispresent(...args),
     memorymessagechip: (...args: unknown[]) =>
       mockedmemorymessagechip(...args),
+    memorybootobjectchip: (...args: unknown[]) =>
+      mockedmemorybootobjectchip(...args),
   }
 })
 
-import { SOFTWARE } from 'zss/device/session'
 import { memorysendtoelement } from 'zss/memory/gamesend'
 import type { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
@@ -66,6 +68,7 @@ describe('memorysendtoelement chip delivery', () => {
   beforeEach(() => {
     mockedchipmessage.mockClear()
     mockedmemorymessagechip.mockClear()
+    mockedmemorybootobjectchip.mockClear()
     mockedmemorychipispresent.mockReset()
     READ_CONTEXT.board = board
     READ_CONTEXT.element = player
@@ -74,23 +77,25 @@ describe('memorysendtoelement chip delivery', () => {
     READ_CONTEXT.timestamp = 1
   })
 
-  it('emits chip: when local chip is absent (CLI / sim path)', () => {
+  it('boots then memorymessagechip when local chip is absent', () => {
     mockedmemorychipispresent.mockReturnValue(false)
     memorysendtoelement(player, gate, 'open')
-    expect(mockedchipmessage).toHaveBeenCalledWith(
-      SOFTWARE,
-      player.id,
-      'obj_gate',
-      'open',
-      [],
+    expect(mockedchipmessage).not.toHaveBeenCalled()
+    expect(mockedmemorybootobjectchip).toHaveBeenCalledWith(gate)
+    expect(mockedmemorymessagechip).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: 'obj_gate:open',
+        sender: player.id,
+        player: player.id,
+      }),
     )
-    expect(mockedmemorymessagechip).not.toHaveBeenCalled()
   })
 
   it('uses local memorymessagechip when chip is present', () => {
     mockedmemorychipispresent.mockReturnValue(true)
     memorysendtoelement(player, gate, 'open')
     expect(mockedchipmessage).not.toHaveBeenCalled()
+    expect(mockedmemorybootobjectchip).not.toHaveBeenCalled()
     expect(mockedmemorymessagechip).toHaveBeenCalledWith(
       expect.objectContaining({
         target: 'obj_gate:open',

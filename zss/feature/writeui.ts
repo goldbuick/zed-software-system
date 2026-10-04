@@ -1,4 +1,4 @@
-import { apilog, registerterminalfull } from 'zss/device/api'
+import { apilog } from 'zss/device/api'
 import type { DEVICELIKE } from 'zss/device/types'
 import { zsszedlinkline } from 'zss/feature/zsstextui'
 import { qrlines } from 'zss/mapping/qr'
@@ -37,7 +37,6 @@ export function writecopyit(
 ) {
   if (showqr) {
     writeqr(device, player, content)
-    setTimeout(() => registerterminalfull(device, player), 200)
   }
   write(device, player, zsszedlinkline(`copyit ${content}`, label))
 }
