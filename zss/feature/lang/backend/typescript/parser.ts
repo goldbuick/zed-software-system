@@ -311,6 +311,7 @@ class ScriptParser extends CstParser {
   comp_op = this.RULED('comp_op', () => {
     this.OR([
       { ALT: () => this.CONSUME(lexer.iseq) },
+      { ALT: () => this.CONSUME(lexer.ishas) },
       { ALT: () => this.CONSUME(lexer.isnoteq) },
       { ALT: () => this.CONSUME(lexer.islessthan) },
       { ALT: () => this.CONSUME(lexer.isgreaterthan) },

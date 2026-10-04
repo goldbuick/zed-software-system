@@ -31,6 +31,7 @@ import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory/bookoperations'
 import { memorycanruncommand } from './memory/permissions'
 import { memoryreadmainbook } from './memory/session'
+import { mapstrdir } from './words/dir'
 import { formatprintvalue } from './words/printvalue'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { flagnamefromtoken, tokenize } from './words/textformat'
@@ -352,6 +353,14 @@ export type CHIP = {
    * @returns 1 if equal, 0 otherwise
    */
   iseq: (lhs: WORD, rhs: WORD) => WORD
+
+  /**
+   * Array membership. True when any entry is equal to the right-hand side.
+   * @param lhs - Array to search
+   * @param rhs - Value to find
+   * @returns 1 if any entry matches, 0 otherwise
+   */
+  ishas: (lhs: WORD, rhs: WORD) => WORD
 
   /**
    * Inequality comparison.
@@ -1035,11 +1044,8 @@ export function createchip(
       ])
       if (isarray(maybevalues)) {
         const namevalues = `${name}_values`
-        const allvalues = deepcopy(maybevalues)
-
-        // set init state
-        chip.set(name, allvalues.shift())
-        chip.set(namevalues, allvalues)
+        // first foreach call owns the first item
+        chip.set(namevalues, deepcopy(maybevalues))
       } else {
         const [, maybemin, maybemax, maybestep] = readargs(words, 0, [
           ARG_TYPE.NAME,
@@ -1072,9 +1078,11 @@ export function createchip(
       if (isarray(maybevalues)) {
         const namevalues = `${name}_values`
         const allvalues = chip.get(namevalues)
-        const nextvalue = allvalues.shift()
-        chip.set(name, nextvalue)
-        return allvalues.length > 0 ? 1 : 0
+        if (allvalues.length === 0) {
+          return 0
+        }
+        chip.set(name, allvalues.shift())
+        return 1
       }
 
       const [, maybemin, maybemax, maybestep, ii] = readargs(words, 0, [
@@ -1172,6 +1180,22 @@ export function createchip(
         return isequal(leftvalue, right) ? 1 : 0
       }
       return leftvalue === right ? 1 : 0
+    },
+    ishas(lhs, rhs) {
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
+      if (!isarray(left)) {
+        return 0
+      }
+      for (let i = 0; i < left.length; ++i) {
+        const entry = left[i]
+        const mapped = mapstrdir(entry)
+        const arg = ispresent(mapped) ? [mapped] : entry
+        if (chip.iseq(arg, right)) {
+          return 1
+        }
+      }
+      return 0
     },
     isnoteq(lhs, rhs) {
       return chip.iseq(lhs, rhs) ? 0 : 1

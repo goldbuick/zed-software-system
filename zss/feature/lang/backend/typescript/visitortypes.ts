@@ -203,6 +203,7 @@ export type ComparisonCstChildren = {
 
 export type Comp_opCstChildren = {
   token_iseq?: IToken[]
+  token_ishas?: IToken[]
   token_isnoteq?: IToken[]
   token_islessthan?: IToken[]
   token_isgreaterthan?: IToken[]

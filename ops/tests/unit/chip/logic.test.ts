@@ -202,3 +202,106 @@ describe('chip unset flag truthiness (dual-use pass-through)', () => {
     expect(chip.expr('follower')).toBe('follower')
   })
 })
+
+function foreachvalues(chip: CHIP, name: string, values: unknown[]) {
+  const seen: unknown[] = []
+  chip.foreachstart(0, name, values)
+  while (chip.foreach(0, name, values)) {
+    seen.push(chip.get(name))
+  }
+  return seen
+}
+
+describe('chip foreach array', () => {
+  beforeEach(() => {
+    for (const key of Object.keys(chipflagstore)) {
+      delete chipflagstore[key]
+    }
+    READ_CONTEXT.get = undefined
+  })
+
+  afterEach(() => {
+    READ_CONTEXT.get = undefined
+  })
+
+  it('yields both items of a two-item array, then stops', () => {
+    const chip = makechip('foreach_two')
+    const seen: unknown[] = []
+    const values = ['NORTH', 'EAST']
+    chip.foreachstart(0, 'step', values)
+    expect(chip.foreach(0, 'step', values)).toBe(1)
+    seen.push(chip.get('step'))
+    expect(chip.foreach(0, 'step', values)).toBe(1)
+    seen.push(chip.get('step'))
+    expect(chip.foreach(0, 'step', values)).toBe(0)
+    expect(seen).toEqual(['NORTH', 'EAST'])
+    expect(values).toEqual(['NORTH', 'EAST'])
+  })
+
+  it('yields a one-item array once, then stops', () => {
+    const chip = makechip('foreach_one')
+    expect(foreachvalues(chip, 'step', ['NORTH'])).toEqual(['NORTH'])
+  })
+
+  it('does not enter the body for an empty array', () => {
+    const chip = makechip('foreach_empty')
+    chip.foreachstart(0, 'step', [])
+    expect(chip.foreach(0, 'step', [])).toBe(0)
+  })
+
+  it('yields every item of a three-item array', () => {
+    const chip = makechip('foreach_three')
+    expect(foreachvalues(chip, 'step', ['NORTH', 'EAST', 'SOUTH'])).toEqual([
+      'NORTH',
+      'EAST',
+      'SOUTH',
+    ])
+  })
+
+  it('numeric range still yields 1, 2, 3', () => {
+    const chip = makechip('foreach_range')
+    const seen: unknown[] = []
+    chip.foreachstart(0, 'n', 1, 3)
+    while (chip.foreach(0, 'n', 1, 3)) {
+      seen.push(chip.get('n'))
+    }
+    expect(seen).toEqual([1, 2, 3])
+  })
+})
+
+describe('chip has comparison', () => {
+  beforeEach(() => {
+    for (const key of Object.keys(chipflagstore)) {
+      delete chipflagstore[key]
+    }
+    READ_CONTEXT.get = undefined
+  })
+
+  afterEach(() => {
+    READ_CONTEXT.get = undefined
+  })
+
+  it('matches up and right inside a diagonal inputmove', () => {
+    const chip = makechip('has_diag')
+    const dirs = ['NORTH', 'EAST']
+    chip.set('inputmove', dirs)
+    expect(chip.ishas('inputmove', 'up')).toBe(1)
+    expect(chip.ishas('inputmove', 'right')).toBe(1)
+    expect(chip.ishas('inputmove', 'down')).toBe(0)
+    expect(chip.get('inputmove')).toEqual(['NORTH', 'EAST'])
+    expect(dirs).toEqual(['NORTH', 'EAST'])
+  })
+
+  it('is false for an empty array', () => {
+    const chip = makechip('has_empty')
+    chip.set('inputmove', [])
+    expect(chip.ishas('inputmove', 'up')).toBe(0)
+  })
+
+  it('is false when the left side is not an array', () => {
+    const chip = makechip('has_scalar')
+    chip.set('inputmove', 1)
+    expect(chip.ishas('inputmove', 'up')).toBe(0)
+    expect(chip.ishas(1, 'up')).toBe(0)
+  })
+})
