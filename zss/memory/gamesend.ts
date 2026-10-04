@@ -1,5 +1,4 @@
 import { CHIP } from 'zss/chip'
-import { chipmessage } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
 import { pttoindex } from 'zss/mapping/2d'
 import { createsid, ispid } from 'zss/mapping/guid'
@@ -13,7 +12,11 @@ import { READ_LAYER, memorylistelement, memoryreadelement } from './boardaccess'
 import { memoryboardelementisobject } from './boardelement'
 import { memorysafedeleteelement } from './boardlifecycle'
 import { memoryreadelementstat } from './boards'
-import { memorychipispresent, memorymessagechip } from './runtime'
+import {
+  memorybootobjectchip,
+  memorychipispresent,
+  memorymessagechip,
+} from './runtime'
 import { memoryreadmainbook } from './session'
 import { BOARD, BOARD_ELEMENT, BOARD_WIDTH } from './types'
 
@@ -177,15 +180,8 @@ export function memorysendtoelement(
         BOARD_WIDTH,
       )}`
     }
-    // Local os.message is a no-op on the sim VM (CLI), so forward via chip:
-    // when the chip is not booted yet.
     if (!memorychipispresent(toelement.id)) {
-      const routeplayer =
-        withplayer !== ''
-          ? withplayer
-          : (READ_CONTEXT.elementfocus ?? fromelement.id ?? '')
-      chipmessage(SOFTWARE, routeplayer, toelement.id, withlabel, [])
-      return
+      memorybootobjectchip(toelement)
     }
     memorymessagechip({
       id: createsid(),

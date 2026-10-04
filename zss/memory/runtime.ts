@@ -92,6 +92,18 @@ export function memorymessagechip(message: MESSAGE) {
   os.message(message)
 }
 
+/** Compile and register an object chip without running it. */
+export function memorybootobjectchip(element: BOARD_ELEMENT) {
+  const id = element.id ?? ''
+  if (!id || memorychipispresent(id)) {
+    return
+  }
+  const kind = memoryreadelementkind(element)
+  const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
+  const itemname = NAME(element.name ?? kind?.name ?? '')
+  os.boot(id, DRIVER_TYPE.RUNTIME, itemname, code)
+}
+
 // CLI Operations
 
 export function memoryrepeatclilast(player: string) {
