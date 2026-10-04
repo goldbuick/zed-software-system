@@ -112,6 +112,11 @@ function transformcompare(ast: CodeNode) {
           transformnode(ast.lhs),
           transformnode(ast.rhs),
         ])
+      case COMPARE.IS_HAS:
+        return writeApi(ast, 'ishas', [
+          transformnode(ast.lhs),
+          transformnode(ast.rhs),
+        ])
       case COMPARE.IS_NOT_EQ:
         return writeApi(ast, 'isnoteq', [
           transformnode(ast.lhs),
@@ -354,6 +359,8 @@ function foldcomparepair(method: COMPARE, lhs: number, rhs: number): 0 | 1 {
   switch (method) {
     case COMPARE.IS_EQ:
       return lhs === rhs ? 1 : 0
+    case COMPARE.IS_HAS:
+      return 0
     case COMPARE.IS_NOT_EQ:
       return lhs !== rhs ? 1 : 0
     case COMPARE.IS_LESS_THAN:

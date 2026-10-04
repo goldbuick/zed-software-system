@@ -139,6 +139,7 @@ export enum NODE {
 
 export enum COMPARE {
   IS_EQ,
+  IS_HAS,
   IS_NOT_EQ,
   IS_LESS_THAN,
   IS_GREATER_THAN,
@@ -980,6 +981,12 @@ class ScriptVisitor
       return this.createcodenode(location, {
         type: NODE.COMPARE_ITEM,
         method: COMPARE.IS_EQ,
+      })
+    }
+    if (ctx.token_ishas) {
+      return this.createcodenode(location, {
+        type: NODE.COMPARE_ITEM,
+        method: COMPARE.IS_HAS,
       })
     }
     if (ctx.token_isnoteq) {

@@ -83,6 +83,7 @@ export const ZSS_COLOR_MAP: Record<number, COLOR> = {
   [lexer.numberliteral.tokenTypeIdx ?? 0]: ZSS_TYPE_NUMBER,
   // comparisons
   [lexer.iseq.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
+  [lexer.ishas.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.isnoteq.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.islessthan.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,
   [lexer.isgreaterthan.tokenTypeIdx ?? 0]: ZSS_TYPE_SYMBOL,

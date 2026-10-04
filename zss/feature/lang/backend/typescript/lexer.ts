@@ -350,6 +350,11 @@ export const iseq = createSimpleToken({
   pattern: /=|is|eq|equal/i,
   longer_alt: stringliteral,
 })
+export const ishas = createSimpleToken({
+  name: 'ishas',
+  pattern: /has/i,
+  longer_alt: stringliteral,
+})
 export const isnoteq = createSimpleToken({
   name: 'isnoteq',
   pattern: /!=|not ?eq|not ?equal/i,
@@ -614,6 +619,7 @@ function createTokenSet(primary: TokenType[], secondary: TokenType[]) {
     expr_stop,
     // comparisons
     iseq,
+    ishas,
     isnoteq,
     islessthanorequal,
     islessthan,
