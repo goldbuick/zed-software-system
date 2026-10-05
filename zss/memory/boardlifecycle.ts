@@ -133,6 +133,7 @@ export function memoryexportboard(
       b8: board.b8,
       b9: board.b9,
       b10: board.b10,
+      currenttick: board.currenttick,
     }
   }
   return formatobject(board, BOARD_KEYS, {

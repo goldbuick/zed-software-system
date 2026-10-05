@@ -15,6 +15,30 @@ export const DEFAULT_BPM = 136
 
 export const CYCLE_DEFAULT = 3
 
+/** RoZZT CurrentTick wraps from 420 back to 1. */
+export const CURRENT_TICK_WRAP = 420
+
+/**
+ * RoZZT cycle gate: (CurrentTick mod Cycle) = (stat index mod Cycle).
+ * Cycle <= 0 never runs.
+ */
+export function rozzttickactive(
+  currenttick: number,
+  cycle: number,
+  statindex: number,
+): boolean {
+  if (cycle <= 0) {
+    return false
+  }
+  return currenttick % cycle === statindex % cycle
+}
+
+/** Advance RoZZT CurrentTick. Values above 420 become 1. */
+export function rozztadvancecurrenttick(currenttick: number): number {
+  const next = currenttick + 1
+  return next > CURRENT_TICK_WRAP ? 1 : next
+}
+
 export function waitfor(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }

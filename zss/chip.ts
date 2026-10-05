@@ -18,6 +18,7 @@ import {
   firmwareset,
 } from './firmware/runner'
 import { createchipid } from './mapping/guid'
+import { rozzttickactive } from './mapping/tick'
 import {
   MAYBE,
   deepcopy,
@@ -651,10 +652,20 @@ export function createchip(
     },
     tick(cycle) {
       const flags = chipflags()
-      // update execution frequency
-      const pulse = isnumber(flags.ps) ? flags.ps : 0
-      const activecycle = pulse % cycle === 0
-      flags.ps = (pulse + 1) % cycle
+      // Board objects use RoZZT CurrentTick and tick-list index from READ_CONTEXT.
+      // statindex < 0 (loaders) keeps a private pulse.
+      let activecycle = false
+      if (READ_CONTEXT.statindex >= 0) {
+        activecycle = rozzttickactive(
+          READ_CONTEXT.currenttick,
+          cycle,
+          READ_CONTEXT.statindex,
+        )
+      } else {
+        const pulse = isnumber(flags.ps) ? flags.ps : 0
+        activecycle = pulse % cycle === 0
+        flags.ps = (pulse + 1) % cycle
+      }
 
       // execution frequency
       if (activecycle === false) {

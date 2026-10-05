@@ -14,7 +14,7 @@ Everything that used to live under that name is now in:
 | Direction evaluation (BY / AT / FLOW / SEEK / RND / AWAY / TOWARD / WITHIN / AWAYBY / ELEMENTS) | [`boarddirection.ts`](../boarddirection.ts) — `memoryevaldir` |
 | Board / object create, delete, import / export | [`boardlifecycle.ts`](../boardlifecycle.ts) — `memorycreateboard`, `memorycreateboardobject`, `memorycreateboardobjectfromkind`, `memorydeleteboardobject`, `memorysafedeleteelement`, `memorywriteterrain`, `memorywriteterrainfromkind`, `memoryreadgroup`, `memoryelementisingroup`, `memoryelementmatchesstrgroup`, `memoryelementmatchesstrgrouponboard`, `memoryexportboard`, `memoryimportboard` |
 | Terrain kind-default strip on export | [`boardterrainmap.ts`](../boardterrainmap.ts) — see [boardterrainmap.md](boardterrainmap.md); book / memoryfs / `#pageexport` strip; rollback snapshots stay verbatim |
-| Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering) |
+| Board run list (tick) | [`boardtick.ts`](../boardtick.ts) — `memorytickboard(board, timestamp, rundraw, drawallowforqueue?)` (bullet → player → other → ghost ordering). Object cycle phase is `currenttick % cycle === index % cycle`, where index is that tick-list position. `currenttick` is saved with the board; a board with no saved counter still starts at a random value from 0 to 99. |
 | Visuals (over/under/charset/palette caches) | [`boardvisuals.ts`](../boardvisuals.ts) — `memoryupdateboardvisuals` |
 | Element kinddata field copy | [`boardelement.ts`](../boardelement.ts) — `memorycopyelementkinddata` |
 | Board lookup tables (named indices) | [`boardlookup.ts`](../boardlookup.ts) |
