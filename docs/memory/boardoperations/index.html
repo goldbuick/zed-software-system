@@ -36,7 +36,7 @@
 </tr>
 <tr>
 <td>Board run list (tick)</td>
-<td><a href="../boardtick.ts"><code>boardtick.ts</code></a> — <code>memorytickboard(board, timestamp, rundraw, drawallowforqueue?)</code> (bullet → player → other → ghost ordering)</td>
+<td><a href="../boardtick.ts"><code>boardtick.ts</code></a> — <code>memorytickboard(board, timestamp, rundraw, drawallowforqueue?)</code> (bullet → player → other → ghost ordering). Object cycle phase is <code>currenttick % cycle === index % cycle</code>, where index is that tick-list position. <code>currenttick</code> is saved with the board; a board with no saved counter still starts at a random value from 0 to 99.</td>
 </tr>
 <tr>
 <td>Visuals (over/under/charset/palette caches)</td>
