@@ -1,5 +1,7 @@
 import { loadcoolregionsbowelementlibrary } from 'ops/lib/coolregionsbowbook'
 import { importzztboardstobook } from 'zss/feature/parse/zzt'
+import { zztparseworld } from 'zss/feature/parse/zztbinparse'
+import { exportbooktozzt } from 'zss/feature/parse/zztexport'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
 import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
@@ -98,7 +100,7 @@ describe('zzt centipede Leader/Follower import', () => {
     memoryclearbook(book.id)
   })
 
-  it('maps Leader < -1 onto segment p5 past the linkgrace threshold', () => {
+  it('maps Leader < -1 onto segment p7 so the next tick promotes', () => {
     const elements = blankelements()
     const sx = 5
     const sy = 5
@@ -140,8 +142,22 @@ describe('zzt centipede Leader/Follower import', () => {
     const memboard = memoryreadboardbyaddress(boardaddresses[0])
     const seg = memoryreadelement(memboard, { x: sx, y: sy }, READ_LAYER.ANY)
     expect(NAME(seg?.kind ?? '')).toBe('segment')
-    expect(seg?.p5).toBe(17)
+    expect(seg?.p7).toBe(1)
+    expect(seg?.p5).toBeUndefined()
     expect(seg?.p4).toBeUndefined()
+
+    const exported = exportbooktozzt(book)
+    expect(exported.ok).toBe(true)
+    if (!exported.ok) {
+      return
+    }
+    const parsed = zztparseworld(exported.bytes)
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) {
+      return
+    }
+    const segstat = parsed.boards[0]?.stats.find((s) => s.x === sx && s.y === sy)
+    expect(segstat?.leader).toBe(-2)
 
     memoryclearbook(book.id)
   })

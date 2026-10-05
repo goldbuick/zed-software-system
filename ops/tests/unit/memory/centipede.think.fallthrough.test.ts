@@ -18,20 +18,21 @@ const SEGMENT_CODE = fs
   .replace(/\r\n/g, '\n')
   .replace(/\n$/, '')
 
-describe('centipede plank stub compile', () => {
-  it('compiles head stub without :think chain logic', () => {
+describe('centipede kind compile', () => {
+  it('compiles head think', () => {
     const build = compilescript('head', HEAD_CODE)
     expect(build.errors ?? []).toEqual([])
-    expect(HEAD_CODE).not.toMatch(/:think/)
-    expect(HEAD_CODE).not.toMatch(/:thud/)
+    expect(HEAD_CODE).toMatch(/:think/)
     expect(HEAD_CODE).toMatch(/:bombed/)
+    expect(HEAD_CODE).toMatch(/#give score 1/)
   })
 
-  it('compiles segment stub without :think chain logic', () => {
+  it('compiles segment think', () => {
     const build = compilescript('segment', SEGMENT_CODE)
     expect(build.errors ?? []).toEqual([])
-    expect(SEGMENT_CODE).not.toMatch(/:think/)
-    expect(SEGMENT_CODE).not.toMatch(/:thud/)
+    expect(SEGMENT_CODE).toMatch(/:think/)
+    expect(SEGMENT_CODE).toMatch(/:promote/)
     expect(SEGMENT_CODE).toMatch(/:bombed/)
+    expect(SEGMENT_CODE).toMatch(/#give score 3/)
   })
 })

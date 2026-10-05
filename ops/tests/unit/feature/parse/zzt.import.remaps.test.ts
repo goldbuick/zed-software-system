@@ -48,15 +48,17 @@ describe('zzt import remaps + kind headers', () => {
     expect(readkindzss('blinkwall')).not.toMatch(/@shootx |@shooty /)
   })
 
-  it('head/segment are plank stubs with bombed scores', () => {
+  it('head/segment follow RoZZT and keep bombed scores', () => {
     const head = readkindzss('head')
     const segment = readkindzss('segment')
     expect(head).toMatch(/:bombed/)
     expect(head).toMatch(/#give score 1/)
-    expect(head).not.toMatch(/#pset |#walk |#go /)
+    expect(head).toMatch(/random 0 9/)
+    expect(head).toMatch(/#pset idle/)
     expect(segment).toMatch(/:bombed/)
     expect(segment).toMatch(/#give score 3/)
-    expect(segment).not.toMatch(/#morph |#pset /)
+    expect(segment).toMatch(/:promote/)
+    expect(segment).toMatch(/#morph head/)
   })
 
   it('star uses #walk seek capture and ?by p3 p4', () => {
@@ -128,7 +130,7 @@ describe('zzt import remaps + kind headers', () => {
     expect(ruffian).not.toMatch(/\?seek/)
   })
 
-  it('clears step on head/segment import', () => {
+  it('stores ZZT step in p5/p6 and clears element step on head/segment import', () => {
     const elements = blankelements()
     const hx = 8
     const hy = 8
@@ -188,8 +190,32 @@ describe('zzt import remaps + kind headers', () => {
     expect(NAME(seg?.kind ?? '')).toBe('segment')
     expect(head?.stepx ?? 0).toBe(0)
     expect(head?.stepy ?? 0).toBe(0)
+    expect(head?.p5).toBe(1)
+    expect(head?.p6).toBe(0)
     expect(seg?.stepx ?? 0).toBe(0)
     expect(seg?.stepy ?? 0).toBe(0)
+    expect(seg?.p5).toBe(0)
+    expect(seg?.p6).toBe(-1)
+
+    const exported = exportbooktozzt(book)
+    expect(exported.ok).toBe(true)
+    if (!exported.ok) {
+      return
+    }
+    const parsed = zztparseworld(exported.bytes)
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) {
+      return
+    }
+    const out = parsed.boards[0]
+    const headstat = out?.stats.find((s) => s.x === hx && s.y === hy)
+    const segstat = out?.stats.find((s) => s.x === sx && s.y === sy)
+    expect(headstat?.stepx).toBe(1)
+    expect(headstat?.stepy).toBe(0)
+    expect(segstat?.stepx).toBe(0)
+    expect(segstat?.stepy).toBe(-1)
+    expect(headstat?.follower).toBe(segstat ? out?.stats.indexOf(segstat) : -1)
+    expect(segstat?.leader).toBe(headstat ? out?.stats.indexOf(headstat) : -1)
 
     memoryclearbook(book.id)
   })

@@ -3,7 +3,294 @@
 @cycle 2
 @p1 range;Intelligence?
 @p2 range;Deviance?
-#end
+' p1 intel  p2 deviance  p3 follower id  p4 leader id
+' p5 stepx  p6 stepy  (not element step -- aftertick would walk those)
+' p7 p8 cursor cell during drag  p9 p10 scratch
+' p4 is scratch during this tick; a finished move clears it
+:think
+#if thisx is playerx and (random 0 9) below p1 do
+ #set p5 0
+ #set p6 intsign (playery - thisy)
+#else if thisy is playery and (random 0 9) below p1 do
+ #set p6 0
+ #set p5 intsign (playerx - thisx)
+#else if (random 0 9) * 4 below p2 or p5 is 0 and p6 is 0 do
+ #set p5 random -1 1
+ #if p5 is 0 do
+  #set p6 (random 0 1) * 2 - 1
+ #else do
+  #set p6 0
+ #done
+#done
+#if blocked by p5 p6 and not any by p5 p6 player do
+ #set p9 p5
+ #set p10 p6
+ #set p7 ((random 0 1) * 2 - 1) * p10
+ #set p6 ((random 0 1) * 2 - 1) * p9
+ #set p5 p7
+ #if blocked by p5 p6 and not any by p5 p6 player do
+  #set p5 0 - p5
+  #set p6 0 - p6
+  #if blocked by p5 p6 and not any by p5 p6 player do
+   #set p7 0 - p9
+   #set p8 0 - p10
+   #if not blocked by p7 p8 or any by p7 p8 player do
+    #set p5 p7
+    #set p6 p8
+   #else do
+    #set p5 0
+    #set p6 0
+   #done
+  #done
+ #done
+#done
+#if p5 is 0 and p6 is 0 do
+ #if p3 do
+  #set p4 0
+  #set p9 thisx
+  #set p10 thisy
+  #repeat 255 do
+   #set p5 pget at p9 p10 p3
+   #if not p5 break
+   #pset at p9 p10 p3 pget at p9 p10 p4
+   #pset at p9 p10 p4 p5
+   #set p7 p9 - 1
+   #set p8 p10
+   #if pget at p7 p8 id is p5 do
+   #else do
+    #set p7 p9 + 1
+    #if pget at p7 p8 id is p5 do
+    #else do
+     #set p7 p9
+     #set p8 p10 - 1
+     #if pget at p7 p8 id is p5 do
+     #else do
+      #set p8 p10 + 1
+     #done
+    #done
+   #done
+   #set p9 p7
+   #set p10 p8
+  #done
+  #pset at p9 p10 p3 pget at p9 p10 p4
+  #send at p9 p10 promote
+  #set p5 0
+  #set p6 0
+  #set p7 0
+  #morph segment
+ #done
+#else if any by p5 p6 player do
+ #if p3 do
+  #if pget n id is p3 do
+   #pset n p5 p5
+   #pset n p6 p6
+   #send n promote
+  #else if pget s id is p3 do
+   #pset s p5 p5
+   #pset s p6 p6
+   #send s promote
+  #else if pget e id is p3 do
+   #pset e p5 p5
+   #pset e p6 p6
+   #send e promote
+  #else if pget w id is p3 do
+   #pset w p5 p5
+   #pset w p6 p6
+   #send w promote
+  #done
+ #done
+ #send by p5 p6 shot
+ #die
+#else do
+ #set p9 thisx
+ #set p10 thisy
+ #pset idle x p9 + p5
+ #pset idle y p10 + p6
+ #set p7 thisx
+ #set p8 thisy
+ #repeat 255 do
+  #if not pget at p7 p8 p3 do
+   #set p9 pget at p7 p8 p5
+   #set p10 pget at p7 p8 p6
+   #set p9 p7 - p9 - p9
+   #set p10 p8 - p10 - p10
+   #if any at p9 p10 segment do
+    #if not pget at p9 p10 p4 do
+     #set p4 0
+    #else do
+     #set p10 p10 - 1
+     #set p4 pget at p9 p10 id
+     #set p10 p10 + 1
+     #if p4 is pget at p9 p10 p4 do
+      #set p4 1
+     #else do
+      #set p10 p10 + 1
+      #set p4 pget at p9 p10 id
+      #set p10 p10 - 1
+      #if p4 is pget at p9 p10 p4 do
+       #set p4 1
+      #else do
+       #set p9 p9 - 1
+       #set p4 pget at p9 p10 id
+       #set p9 p9 + 1
+       #if p4 is pget at p9 p10 p4 do
+        #set p4 1
+       #else do
+        #set p9 p9 + 1
+        #set p4 pget at p9 p10 id
+        #set p9 p9 - 1
+        #if p4 is pget at p9 p10 p4 do
+         #set p4 1
+        #else do
+         #set p4 0
+        #done
+       #done
+      #done
+     #done
+    #done
+    #if not p4 do
+     #pset at p7 p8 p3 pget at p9 p10 id
+    #done
+   #done
+   #if not pget at p7 p8 p3 do
+    #set p9 pget at p7 p8 p5
+    #set p10 pget at p7 p8 p6
+    #set p4 p9
+    #set p9 p7 - p9 - p10
+    #set p10 p8 - p10 - p4
+    #if any at p9 p10 segment do
+     #if not pget at p9 p10 p4 do
+      #set p4 0
+     #else do
+      #set p10 p10 - 1
+      #set p4 pget at p9 p10 id
+      #set p10 p10 + 1
+      #if p4 is pget at p9 p10 p4 do
+       #set p4 1
+      #else do
+       #set p10 p10 + 1
+       #set p4 pget at p9 p10 id
+       #set p10 p10 - 1
+       #if p4 is pget at p9 p10 p4 do
+        #set p4 1
+       #else do
+        #set p9 p9 - 1
+        #set p4 pget at p9 p10 id
+        #set p9 p9 + 1
+        #if p4 is pget at p9 p10 p4 do
+         #set p4 1
+        #else do
+         #set p9 p9 + 1
+         #set p4 pget at p9 p10 id
+         #set p9 p9 - 1
+         #if p4 is pget at p9 p10 p4 do
+          #set p4 1
+         #else do
+          #set p4 0
+         #done
+        #done
+       #done
+      #done
+     #done
+     #if not p4 do
+      #pset at p7 p8 p3 pget at p9 p10 id
+     #done
+    #done
+   #done
+   #if not pget at p7 p8 p3 do
+    #set p9 pget at p7 p8 p5
+    #set p10 pget at p7 p8 p6
+    #set p4 p7 - p9 + p10
+    #set p10 p8 - p10 + p9
+    #set p9 p4
+    #if any at p9 p10 segment do
+     #if not pget at p9 p10 p4 do
+      #set p4 0
+     #else do
+      #set p10 p10 - 1
+      #set p4 pget at p9 p10 id
+      #set p10 p10 + 1
+      #if p4 is pget at p9 p10 p4 do
+       #set p4 1
+      #else do
+       #set p10 p10 + 1
+       #set p4 pget at p9 p10 id
+       #set p10 p10 - 1
+       #if p4 is pget at p9 p10 p4 do
+        #set p4 1
+       #else do
+        #set p9 p9 - 1
+        #set p4 pget at p9 p10 id
+        #set p9 p9 + 1
+        #if p4 is pget at p9 p10 p4 do
+         #set p4 1
+        #else do
+         #set p9 p9 + 1
+         #set p4 pget at p9 p10 id
+         #set p9 p9 - 1
+         #if p4 is pget at p9 p10 p4 do
+          #set p4 1
+         #else do
+          #set p4 0
+         #done
+        #done
+       #done
+      #done
+     #done
+     #if not p4 do
+      #pset at p7 p8 p3 pget at p9 p10 id
+     #done
+    #done
+   #done
+  #done
+  #if not pget at p7 p8 p3 break
+  #set p4 pget at p7 p8 p5
+  #set p9 p7 - p4
+  #set p4 pget at p7 p8 p6
+  #set p10 p8 - p4
+  #set p4 pget at p7 p8 p3
+  #set p9 p9 - 1
+  #if pget at p9 p10 id is p4 do
+  #else do
+   #set p9 p9 + 2
+   #if pget at p9 p10 id is p4 do
+   #else do
+    #set p9 p9 - 1
+    #set p10 p10 - 1
+    #if pget at p9 p10 id is p4 do
+    #else do
+     #set p10 p10 + 2
+     #if pget at p9 p10 id is p4 do
+     #else do
+      #pset at p7 p8 p3 0
+      #set p4 0
+     #done
+    #done
+   #done
+  #done
+  #if not p4 break
+  #set p4 pget at p7 p8 p5
+  #pset at p9 p10 p5 p7 - p4 - p9
+  #set p4 pget at p7 p8 p6
+  #pset at p9 p10 p6 p8 - p4 - p10
+  #pset at p9 p10 p4 pget at p7 p8 id
+  #pset at p9 p10 p1 p1
+  #pset at p9 p10 p2 p2
+  #pset at p9 p10 p7 0
+  #set p4 pget at p7 p8 p6
+  #set p4 p8 - p4
+  #pset at p9 p10 y p4
+  #set p10 p4
+  #set p4 pget at p7 p8 p5
+  #set p4 p7 - p4
+  #pset at p9 p10 x p4
+  #set p7 p4
+  #set p8 p10
+ #done
+ #set p4 0
+#done
+#idle
+#think
 :shot
 :bombed
 #give score 1
