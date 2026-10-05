@@ -22,6 +22,10 @@ import { ARG_TYPE, PT, WORD } from './types'
 export const READ_CONTEXT = {
   // useful state
   timestamp: 0,
+  /** Board RoZZT CurrentTick for this object tick. */
+  currenttick: 0,
+  /** Tick-list slot. -1 means this tick is not a board object (pulse path). */
+  statindex: -1,
   // targets & lookups
   book: undefined as MAYBE<BOOK>,
   board: undefined as MAYBE<BOARD>,

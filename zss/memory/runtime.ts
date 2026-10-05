@@ -4,7 +4,8 @@ import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { createchipid, ispid } from 'zss/mapping/guid'
-import { TICK_FPS } from 'zss/mapping/tick'
+import { randominteger } from 'zss/mapping/number'
+import { TICK_FPS, rozztadvancecurrenttick } from 'zss/mapping/tick'
 import {
   MAYBE,
   isarray,
@@ -143,6 +144,7 @@ export function memorytickloaders() {
         // write context: tick-owned fields + restored loader targeting
         READ_CONTEXT.timestamp = mainbook.timestamp
         READ_CONTEXT.book = mainbook
+        READ_CONTEXT.statindex = -1
         memoryloaderreadcontextapply(id)
 
         // set chip
@@ -230,6 +232,11 @@ export function memorytickmain(
         }
 
         // update pass
+        if (!isnumber(board.currenttick)) {
+          board.currenttick = randominteger(0, 99)
+        }
+        const currenttick = board.currenttick
+        let statindex = 0
         for (let i = 0; i < run.length; ++i) {
           const { id, type, code, object, pass } = run[i]
           if (pass === 'draw') {
@@ -239,11 +246,15 @@ export function memorytickmain(
             // handle dead code
             memoryhaltchip(id)
             // in dev, we only run player objects
-          } else if (!playeronly || ispid(object?.id ?? '')) {
-            // handle active code
-            memorytickobject(mainbook, board, object, code)
+          } else {
+            const index = statindex
+            statindex += 1
+            if (!playeronly || ispid(object?.id ?? '')) {
+              memorytickobject(mainbook, board, object, code, index)
+            }
           }
         }
+        board.currenttick = rozztadvancecurrenttick(currenttick)
 
         // process synth play queue
         const queue = memoryreadsynthplay(board.id)
@@ -315,6 +326,7 @@ export function memorytickobject(
   board: MAYBE<BOARD>,
   object: MAYBE<BOARD_ELEMENT>,
   code: string,
+  statindex = 0,
 ) {
   if (!ispresent(book) || !ispresent(board) || !ispresent(object)) {
     return
@@ -331,6 +343,8 @@ export function memorytickobject(
 
   READ_CONTEXT.elementid = object.id ?? ''
   READ_CONTEXT.elementisplayer = ispid(READ_CONTEXT.elementid)
+  READ_CONTEXT.currenttick = isnumber(board.currenttick) ? board.currenttick : 0
+  READ_CONTEXT.statindex = statindex
 
   const playerfromelement = READ_CONTEXT.element.player ?? memoryreadoperator()
   READ_CONTEXT.elementfocus = READ_CONTEXT.elementisplayer

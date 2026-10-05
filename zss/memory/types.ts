@@ -109,6 +109,7 @@ export enum BOARD_KEYS {
   b10,
   charset,
   palette,
+  currenttick,
 }
 
 export enum BOOK_KEYS {
@@ -205,6 +206,8 @@ export type BOARD = {
   mediaqueuehelperpeerid?: string
   /** Now-playing marquee label for board TV (synced from helper status). */
   mediaqueuenowplayingtitle?: string
+  /** RoZZT CurrentTick for this board. Saved so cycle phase resumes. */
+  currenttick?: number
 }
 
 export type BOARD_ELEMENT = {
