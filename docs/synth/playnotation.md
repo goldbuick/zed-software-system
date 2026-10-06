@@ -40,6 +40,7 @@ Parses text-based notation and converts it to scheduled note events.
 
 - Multiple voices separated by `;`
 - Example: `"#play qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
+- Voices 5-8 bleed onto `#bgplay` channels 4-7 (the fifth semicolon part is always channel 4). Those slots keep the bgplay patch, volume, FX, and humanize. A ninth voice is dropped.
 - **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `qcde` (duration `q`, notes `cde` at default octave 4).
 
 ## invokeplay()

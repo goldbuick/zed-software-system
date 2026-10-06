@@ -202,7 +202,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `bgvol` | Bgplay volume |
 | `ttsvol` | TTS volume |
 | `mediavol` | Board TV volume |
-| `play` | Music notes |
+| `play` | Music notes; voices 5-8 bleed onto the four #bgplay channels |
 | `bgplay` | #play but for sound effects |
 | `bgplayon64n` | Bgplay on 64n |
 | `bgplayon32n` | Bgplay on 32n |

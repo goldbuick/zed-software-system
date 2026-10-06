@@ -122,6 +122,7 @@
 <ul>
 <li>Multiple voices separated by <code>;</code></li>
 <li>Example: <code>"#play qcdef;wx"</code> — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern</li>
+<li>Voices 5-8 bleed onto <code>#bgplay</code> channels 4-7 (the fifth semicolon part is always channel 4). Those slots keep the bgplay patch, volume, FX, and humanize. A ninth voice is dropped.</li>
 <li><strong>Do not</strong> embed Tone pitch literals (<code>C4</code>) in play strings; digit <code>4</code> is hi snare. Use <code>qcde</code> (duration <code>q</code>, notes <code>cde</code> at default octave 4).</li>
 </ul>
 <h2 id="invokeplay"><a class="blume-heading-anchor" href="#invokeplay">invokeplay()</a></h2>
