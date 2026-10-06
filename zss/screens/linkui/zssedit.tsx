@@ -10,7 +10,7 @@ import { maptovalue } from 'zss/mapping/value'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { linkallowhotkeys, linkbegin } from './surface'
+import { linkafterinvoke, linkallowhotkeys, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
 const SHORTCUT = 'z'
@@ -54,6 +54,7 @@ export function LinkZSSEdit({ surface }: LinkWidgetProps) {
       }, 100)
     } else {
       surface.sendmessage(surface.chip, target, [])
+      linkafterinvoke(surface)
     }
   }, [surface, parsed, target])
 

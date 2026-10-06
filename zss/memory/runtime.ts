@@ -351,6 +351,17 @@ export function memorytickobject(
     ? READ_CONTEXT.elementid
     : playerfromelement
 
+  const objectidstamp: Record<string, string> = {}
+  const boardobjects = board.objects
+  const boardobjectids = Object.keys(boardobjects)
+  for (let i = 0; i < boardobjectids.length; ++i) {
+    const objectid = boardobjectids[i]
+    if (objectid) {
+      objectidstamp[objectid] = objectid
+    }
+  }
+  READ_CONTEXT.objectidstamp = objectidstamp
+
   // read cycle
   const cycle = memoryreadelementstat(object, 'cycle')
 

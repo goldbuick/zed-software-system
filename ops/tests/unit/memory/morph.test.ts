@@ -28,6 +28,7 @@ function makechip() {
       flags[name] = value
     }),
     get: jest.fn((name: string) => flags[name]),
+    yield: jest.fn(),
     flags,
   } as unknown as CHIP & { flags: Record<string, unknown> }
 }

@@ -102,6 +102,19 @@ describe('straight-line fusion', () => {
     expect(code).toMatch(/case 3:[\s\S]*case 4:[\s\S]*if \(api\.sy\(\)\)/)
   })
 
+  it('jumps #break inside #if to the end of #repeat', () => {
+    const code = emit('#repeat 4 do\n#if not p5 break\n#done\n#clear a\n')
+    expect(code).not.toContain('api.jump(0)')
+    expect(code).toContain("api.command('clear', 'a')")
+    const check = code ?? ''
+    const ifat = check.indexOf("api.if(api.not('p5'))")
+    const jump = check.indexOf('api.jump(', ifat)
+    const swbreak = check.indexOf('break;', ifat)
+    expect(ifat).toBeGreaterThan(-1)
+    expect(jump).toBeGreaterThan(ifat)
+    expect(swbreak).toBeGreaterThan(jump)
+  })
+
   it('fuses #clear lines inside #repeat do bodies', () => {
     const code = emit('#repeat 2 do\n#clear a\n#clear b\n#done\n')
     expect(code).toContain("api.command('clear', 'a')")

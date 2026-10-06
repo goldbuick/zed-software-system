@@ -149,8 +149,9 @@ function buildstatmap(
 
 /**
  * ZZT Leader/Follower are status-element indices. Cafe centipede scripts store
- * those links on element stats: p3=follower id, p4=leader id,
- * p5=linkgrace (seeded above the segment grace threshold when Leader < -1).
+ * those links on element stats: p3=follower id, p4=leader id.
+ * Leader < -1 (already one leaderless tick) maps to p7=1 so the next
+ * segment tick promotes. StepX/StepY are copied into p5/p6 before this runs.
  */
 function applyzztcentipedelinks(
   allstats: ZZT_STAT[],
@@ -179,11 +180,24 @@ function applyzztcentipedelinks(
         el.p4 = prev.id
       }
     } else if (isnumber(leader) && leader < -1) {
-      // ZZT: Leader < -1 promotes segment to head on the next segment tick.
-      // Segment grace is 16 thinks, so seed past it.
-      el.p5 = 17
+      // ZZT: Leader < -1 promotes on the next segment tick.
+      el.p7 = 1
     }
   }
+}
+
+/** ZZT StepX/StepY live in p5/p6. Element step stays 0 so aftertick does not walk. */
+function mapzztcentipedestep(addstats: BOARD_ELEMENT) {
+  if (isnumber(addstats.stepx)) {
+    addstats.p5 = addstats.stepx
+  }
+  if (isnumber(addstats.stepy)) {
+    addstats.p6 = addstats.stepy
+  }
+  // p3 is the follower object id, not ZZT P3
+  delete addstats.p3
+  addstats.stepx = 0
+  addstats.stepy = 0
 }
 
 const ZZT_P2_STAR_BIT = 0x80
@@ -498,19 +512,11 @@ function processboards(
         writefromkind(board, ['blinkns', strcolor], { x, y }, addstats)
         break
       case ZZT_TILE_HEAD:
-        // p3 reserved for follower object id (ZZT Follower index)
-        delete addstats.p3
-        // plank stub: no movement from ZZT Step
-        addstats.stepx = 0
-        addstats.stepy = 0
+        mapzztcentipedestep(addstats)
         remember(writefromkind(board, ['head', strcolor], { x, y }, addstats))
         break
       case ZZT_TILE_SEGMENT:
-        // p3 reserved for follower object id (ZZT Follower index)
-        delete addstats.p3
-        // plank stub: no movement from ZZT Step
-        addstats.stepx = 0
-        addstats.stepy = 0
+        mapzztcentipedestep(addstats)
         remember(
           writefromkind(board, ['segment', strcolor], { x, y }, addstats),
         )

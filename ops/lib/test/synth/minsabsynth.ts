@@ -43,10 +43,7 @@ import {
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
-import {
-  SYNTH_PLAY_VOICE_COUNT,
-  SYNTH_VOICE_COUNT,
-} from 'zss/feature/synth/synthdefaults'
+import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 import { voiceindexfxgroup } from 'zss/feature/synth/voicefxgroup'
 import { randominteger } from 'zss/mapping/number'
 import { isnumber, isstring } from 'zss/mapping/types'
@@ -182,7 +179,7 @@ export function createminsabsynth(engine: SabEngine) {
         pacertime = now
       }
       const starttime = pacertime
-      for (let i = 0; i < invokes.length && i < SYNTH_PLAY_VOICE_COUNT; ++i) {
+      for (let i = 0; i < invokes.length && i < SYNTH_VOICE_COUNT; ++i) {
         pacertime = Math.max(
           pacertime,
           synthplaystart(i, starttime, invokes[i]),

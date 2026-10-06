@@ -13,6 +13,7 @@ export type GenContext = {
   linelookup: Record<string, number>
   isfirststat: boolean
   infusedcase: boolean
+  holdlinebreak: boolean
 }
 
 export const context: GenContext = {
@@ -22,6 +23,7 @@ export const context: GenContext = {
   linelookup: {},
   isfirststat: false,
   infusedcase: false,
+  holdlinebreak: false,
 }
 
 export const GENERATED_FILENAME = 'zss.js'
@@ -273,19 +275,58 @@ function writeliteral(
   }
 }
 
+function patchloopjump(node: CodeNode, done: number, loop: number) {
+  switch (node.type) {
+    case NODE.BREAK:
+      node.goto = done
+      return
+    case NODE.CONTINUE:
+      node.goto = loop
+      return
+    case NODE.LINE:
+      node.stmts.forEach((stmt) => patchloopjump(stmt, done, loop))
+      return
+    case NODE.IF:
+      if (ispresent(node.block)) {
+        patchloopjump(node.block, done, loop)
+      }
+      return
+    case NODE.IF_BLOCK:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      node.altlines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    case NODE.ELSE_IF:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    case NODE.ELSE:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    case NODE.REPEAT:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    case NODE.WHILE:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    case NODE.FOREACH:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    case NODE.WAITFOR:
+      node.lines.forEach((item) => patchloopjump(item, done, loop))
+      return
+    default:
+      return
+  }
+}
+
 function applyloopbreakcontinue(
   lines: CodeNode[],
   done: number,
   loop: number,
   source: SourceNode,
 ) {
-  lines.forEach((item) => {
-    if (item.type === NODE.BREAK) {
-      item.goto = done
-    } else if (item.type === NODE.CONTINUE) {
-      item.goto = loop
-    }
-  })
+  // #break / #continue inside #if still belong to this loop.
+  // Nested loops patch again when they transform and overwrite these targets.
+  lines.forEach((item) => patchloopjump(item, done, loop))
   appendprogramlines(lines, source)
 }
 
@@ -432,7 +473,8 @@ function appendinlineblocklines(
       case NODE.MARK:
         break
       case NODE.BREAK:
-        source.add(writegoto(item, done))
+        // A loop patches goto onto the break. Prefer that over the #if end.
+        source.add(writegoto(item, item.goto > 0 ? item.goto : done))
         source.add(`\n`)
         break
       case NODE.ELSE_IF: {
@@ -660,7 +702,7 @@ function transformnode(ast: CodeNode): SourceNode {
       return write(ast, [
         `case ${ast.lineindex}:\n`,
         ...ast.stmts.map(transformnode).flat(),
-        `  break;\n`,
+        context.holdlinebreak ? '' : `  break;\n`,
       ])
     case NODE.MARK:
       return write(ast, `  // ${ast.comment}\n`)
@@ -731,8 +773,32 @@ function transformnode(ast: CodeNode): SourceNode {
       }
       if (ispresent(block)) {
         writelookup([ast.check], NODE.IF_CHECK, block.skip)
-        const source = write(ast, transformnode(ast.check))
-        appendprogramlines(block.lines, source)
+        // #if cond break  -- the break node is in this case, but the check
+        // line's switch break was emitted first, so the jump never ran.
+        const leading: CodeNode[] = []
+        let reststart = 0
+        for (; reststart < block.lines.length; ++reststart) {
+          const item = block.lines[reststart]
+          if (item.type === NODE.MARK) {
+            continue
+          }
+          if (item.type === NODE.BREAK || item.type === NODE.CONTINUE) {
+            leading.push(item)
+            continue
+          }
+          break
+        }
+        const source = write(ast, ``)
+        if (leading.length > 0) {
+          context.holdlinebreak = true
+        }
+        source.add(transformnode(ast.check))
+        context.holdlinebreak = false
+        leading.forEach((item) => source.add(transformnode(item)))
+        if (leading.length > 0) {
+          source.add(`  break;\n`)
+        }
+        appendprogramlines(block.lines.slice(reststart), source)
         writelookupline(block.altlines, NODE.ELSE_IF, readlookup(block.done))
         block.altlines.forEach((item) => source.add(transformnode(item)))
         return source
@@ -874,6 +940,7 @@ export function createlineindexes(ast: CodeNode) {
   context.lineindex = 0
   context.isfirststat = true
   context.infusedcase = false
+  context.holdlinebreak = false
 
   // index nodes
   indexnode(ast)

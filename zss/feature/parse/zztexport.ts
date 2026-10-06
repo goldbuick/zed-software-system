@@ -490,8 +490,11 @@ function memoryboardtozzt(
       if (r.stat && zzttypewantsstat(r.tile.type)) {
         const kind = NAME(el?.kind ?? '')
         if (kind === 'head' || kind === 'segment') {
-          // p3/p4 are cafe object ids; ZZT uses Follower/Leader indices
+          // p3/p4 are cafe object ids; ZZT uses Follower/Leader indices.
+          // RoZZT StepX/StepY live in p5/p6, not element step.
           r.stat.p3 = 0
+          r.stat.stepx = numberorzero(el?.p5)
+          r.stat.stepy = numberorzero(el?.p6)
           r.stat.follower = -1
           r.stat.leader = -1
         }
@@ -521,8 +524,8 @@ function memoryboardtozzt(
       if (isnumber(li)) {
         st.leader = li
       }
-    } else if (el.p5) {
-      // orphan ready to promote (ZZT Leader < -1)
+    } else if (isnumber(el.p7) && el.p7 >= 1) {
+      // orphan already counting leaderless ticks (ZZT Leader < -1)
       st.leader = -2
     }
   }

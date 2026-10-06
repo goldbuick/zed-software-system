@@ -27,6 +27,9 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { TapeLayout } from './layout'
 
+/** Above the scroll (900) and board fade (950). Toasts stay at 999. */
+const EDITOR_LAYER_Z = 960
+
 const tapeprofileronrender: ProfilerOnRenderCallback = (
   id,
   phase,
@@ -249,7 +252,7 @@ export function TapeComponent() {
         focused={editorfocused}
         marginx={screensize.marginx}
         marginy={screensize.marginy}
-        z={1}
+        z={EDITOR_LAYER_Z}
         onclosed={() => {
           if (useTape.getState().editor.closing) {
             finisheditorclose(SOFTWARE, player)

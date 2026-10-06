@@ -1,7 +1,57 @@
 @segment
 @char 79
 @cycle 2
-#end
+' p3 follower id  p4 leader id  p5 stepx  p6 stepy  p7 leaderless ticks
+' a link is live only when that id is on a cardinal neighbor
+' p8 p9 are scratch for the neighbor probe
+:think
+#set p8 0
+#set p9 pget n id
+#if p9 do
+ #if p9 is p4 do
+  #set p8 1
+ #done
+#done
+#if not p8 do
+ #set p9 pget s id
+ #if p9 do
+  #if p9 is p4 do
+   #set p8 1
+  #done
+ #done
+#done
+#if not p8 do
+ #set p9 pget e id
+ #if p9 do
+  #if p9 is p4 do
+   #set p8 1
+  #done
+ #done
+#done
+#if not p8 do
+ #set p9 pget w id
+ #if p9 do
+  #if p9 is p4 do
+   #set p8 1
+  #done
+ #done
+#done
+#if p8 do
+ #set p7 0
+#else do
+ #set p4 0
+ #if p7 do
+  #morph head
+ #else do
+  #set p7 1
+ #done
+#done
+#set p8 0
+#set p9 0
+#idle
+#think
+:promote
+#morph head
 :shot
 :bombed
 #give score 3

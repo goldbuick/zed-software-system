@@ -422,6 +422,13 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
     }
 
+    // An object id stored in a stat is only equal to itself when get(id)
+    // returns that id. The tick stamps living ids here, not into player flags.
+    const stamped = READ_CONTEXT.objectidstamp[name]
+    if (isstring(stamped)) {
+      return [true, stamped]
+    }
+
     // fallback to player flags
     // read value
     const value = memoryreadflags(READ_CONTEXT.book, playerid)[name]
@@ -887,11 +894,14 @@ export const ELEMENT_FIRMWARE = createfirmware({
         kind,
       )
       if (ok) {
+        // halt replaces chip flags. yield on the fresh flags and return 1
+        // so this script stops; the next boot re-inits the new kind.
         memoryhaltchip(READ_CONTEXT.elementid)
+        chip.yield()
         chip.set('didfail', 0)
-      } else {
-        chip.set('didfail', 1)
+        return 1
       }
+      chip.set('didfail', 1)
       return 0
     },
     { lists: ['kinds'] },
