@@ -13,6 +13,7 @@ import {
   WASM_DRUMS_SAB,
   WASM_SAB_SEQ_IDX,
   WASM_VOICES_SAB,
+  WASM_VOICE_STRIDE,
 } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
 
 function createmockenginewithmessages() {
@@ -171,6 +172,33 @@ describe('sabpush zero-copy', () => {
         (msg) => (msg as { channelID?: string }).channelID === 'zss_sab_seq',
       ),
     ).toBe(true)
+  })
+
+  it('bleeds the fifth play voice onto bgplay channel 4', () => {
+    const { engine, snapshot } = createmocksabengine()
+    const synth = createminsabsynth(engine)
+    synth.addplay('c;d;e;f;g')
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[1]).toBe(1)
+    expect(voices[WASM_VOICE_STRIDE * 4 + 1]).toBe(1)
+    synth.destroy()
+  })
+
+  it('drops a ninth play voice instead of retriggering channel 0', () => {
+    const { engine, snapshot } = createmocksabengine()
+    const synth = createminsabsynth(engine)
+    const voicewrites: string[] = []
+    setwasmsabwritehook((channelid) => {
+      if (channelid === WASM_VOICES_SAB) {
+        voicewrites.push(channelid)
+      }
+    })
+    synth.addplay('c;d;e;f;g;a;b;c;d')
+    expect(voicewrites.length).toBe(8)
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[1]).toBe(1)
+    expect(voices[WASM_VOICE_STRIDE * 4 + 1]).toBe(1)
+    synth.destroy()
   })
 
   it('isolates SAB buffer writes between engines', () => {

@@ -82,10 +82,7 @@ import {
 import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
 import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
-import {
-  SYNTH_PLAY_VOICE_COUNT,
-  SYNTH_VOICE_COUNT,
-} from 'zss/feature/synth/synthdefaults'
+import { SYNTH_VOICE_COUNT } from 'zss/feature/synth/synthdefaults'
 import {
   canonicalvoicefxgroupindex,
   voiceindexfxgroup,
@@ -491,18 +488,23 @@ export function createdaisysynth(
     const invokes = parseplay(buffer)
     const now = maxi.audioContext.currentTime
     pacertime = resolveplaystarttime(pacertime, now)
-    pacercount += Math.min(invokes.length, SYNTH_PLAY_VOICE_COUNT)
-    if (invokes.length > SYNTH_PLAY_VOICE_COUNT) {
+    const voicecount = Math.min(invokes.length, SYNTH_VOICE_COUNT)
+    pacercount += voicecount
+    if (invokes.length > SYNTH_VOICE_COUNT) {
       apierror(
         SOFTWARE,
         registerreadplayer(),
         'play',
-        `dropped ${invokes.length - SYNTH_PLAY_VOICE_COUNT} play voice(s) (max ${SYNTH_PLAY_VOICE_COUNT})`,
+        `dropped ${invokes.length - SYNTH_VOICE_COUNT} play voice(s) (max ${SYNTH_VOICE_COUNT})`,
       )
     }
     const starttime = pacertime
-    for (let i = 0; i < invokes.length && i < SYNTH_PLAY_VOICE_COUNT; ++i) {
-      pacertime = Math.max(pacertime, synthplaystart(i, starttime, invokes[i]))
+    for (let i = 0; i < voicecount; ++i) {
+      const endtime = synthplaystart(i, starttime, invokes[i])
+      pacertime = Math.max(pacertime, endtime)
+      if (i >= SYNTH_SFX_RESET) {
+        bgplaybusyuntil[i] = endtime
+      }
     }
   }
 
