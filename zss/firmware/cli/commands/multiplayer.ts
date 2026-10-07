@@ -47,7 +47,7 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function chatusagebridge() {
   return (
-    'usage: chat <twitch-channel> [twitchtoken=] | chat say <text> | chat start <kind> … | chat stop <kind> | chat profile … ' +
+    'usage: chat <twitch-channel> [twitchtoken=] | chat say <text> | chat start <kind> … | chat stop [kind] | chat profile … ' +
     '(kinds: twitch, rss, mastodon, bluesky). ' +
     'Start with @profilename to load a saved profile; add key=value to override. ' +
     'RSS/feeds use browser fetch—URLs must allow CORS.'
@@ -220,13 +220,15 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           return 0
         }
         if (head === 'stop') {
-          const kind = normalizechatkind(w[1] ?? '')
+          const kind = w[1]?.trim()
+            ? normalizechatkind(w[1] ?? '')
+            : CHAT_KIND.TWITCH
           if (!kind) {
             apierror(
               SOFTWARE,
               player,
               'bridge',
-              'chat stop needs kind: twitch, rss, mastodon, bluesky',
+              'chat stop kind must be twitch, rss, mastodon, or bluesky',
             )
             return 0
           }

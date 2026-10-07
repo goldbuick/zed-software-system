@@ -218,7 +218,13 @@ function makechathandlers(
 ): TWITCH_CHAT_HANDLERS {
   return {
     onconnect: (routekey) => {
-      apilog(bridge, player, 'chat connected')
+      apilog(
+        bridge,
+        player,
+        kind === CHAT_KIND.TWITCH
+          ? 'twitch chat socket open'
+          : 'chat connected',
+      )
       vmloader(
         bridge,
         player,
@@ -229,7 +235,13 @@ function makechathandlers(
       )
     },
     ondisconnect: (routekey) => {
-      apilog(bridge, player, 'chat disconnected')
+      apilog(
+        bridge,
+        player,
+        kind === CHAT_KIND.TWITCH
+          ? 'twitch chat socket closed'
+          : 'chat disconnected',
+      )
       chatpresenceclear(routekey)
       vmloader(
         bridge,
@@ -243,6 +255,7 @@ function makechathandlers(
     },
     onmessage: (routekey, mode, user, text) =>
       pushchatline(player, kind, routekey, mode, user, text),
+    onnotice: (msg) => apilog(bridge, player, msg),
     onerror: (msg) => apierror(bridge, player, 'bridge', msg),
   }
 }
