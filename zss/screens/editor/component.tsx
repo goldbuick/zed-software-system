@@ -8,10 +8,7 @@ import { SOFTWARE } from 'zss/device/session'
 import { compileastforeditor } from 'zss/feature/lang/ast'
 import * as lexer from 'zss/feature/lang/lexer'
 import { createlineindexes } from 'zss/feature/lang/transformer'
-import {
-  type CodeNode,
-  NODE,
-} from 'zss/feature/lang/visitor'
+import { type CodeNode, NODE } from 'zss/feature/lang/visitor'
 import { useEqual } from 'zss/gadget/data/useequal'
 import {
   useEditor,

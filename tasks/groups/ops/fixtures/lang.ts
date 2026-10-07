@@ -97,11 +97,7 @@ function runlangbookoracleextract(ctx: TaskContext): number {
 
 function runlangregression(ctx: TaskContext): number {
   console.log('▶ typescript-compiler')
-  const status = runjest(
-    ctx,
-    'ops/tests/unit/feature/lang/',
-    ['--no-coverage'],
-  )
+  const status = runjest(ctx, 'ops/tests/unit/feature/lang/', ['--no-coverage'])
   if (status === 0) {
     console.log('✓ lang regression complete')
   }
