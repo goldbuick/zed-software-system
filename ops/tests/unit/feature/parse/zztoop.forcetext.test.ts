@@ -1,8 +1,8 @@
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { compileast } from 'zss/feature/lang/ast'
 import {
   type CodeNode,
   NODE,
-} from 'zss/feature/lang/backend/typescript/visitor'
+} from 'zss/feature/lang/visitor'
 import { ooptuzz } from 'zss/feature/parse/ooptuzz'
 import { forcetextquote, zztoop } from 'zss/feature/parse/zztoop'
 

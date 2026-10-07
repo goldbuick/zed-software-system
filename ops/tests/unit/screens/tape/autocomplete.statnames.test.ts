@@ -20,7 +20,7 @@ jest.mock('zss/rom', () => {
   }
 })
 
-import { tokenize } from 'zss/feature/lang/backend/typescript/lexer'
+import { tokenize } from 'zss/feature/lang/lexer'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { getautocomplete } from 'zss/screens/tape/autocomplete'
 import { applyautocompletesuggestion } from 'zss/screens/tape/autocompleteui'

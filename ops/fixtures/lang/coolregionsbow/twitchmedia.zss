@@ -1,11 +1,26 @@
 @loader twitchmedia
 @format text
-@event ^chat:message:myroute
-
-' one loader line: name|voice:text -- regex #readline does not advance
+@event chat:message
+' chat line is name|voice:text
+' any chatter: an http(s) url in the text goes on the board tv
+' goldbuick only: !queue, !queue skip|clear|stop, !queue limit N, !queue approve N, !queue reject N
 #readline "(.*?)\|(.*?):(.*)" chatuser chatvoice chattext
-#readline "(.*?)\|(.*?):(https?://\S+)$" chatuser chatvoice url
+#readline "(.*?)\|(.*?):.*?(https?://\S+)" _user _voice url
 #if url do
  #withplayerboard
  #media "$chatuser" "$url"
+#done
+#readline "(.*?)\|(.*?):!(queue)\s*(\S*)\s*(\S*)" _user _voice queuehit queuecmd queuearg
+#if chatuser is goldbuick do
+ #if queuehit is queue do
+  #if queuecmd do
+   #if queuearg do
+    #queue "$queuecmd" "$queuearg"
+   #else do
+    #queue "$queuecmd"
+   #done
+  #else do
+   #queue
+  #done
+ #done
 #done

@@ -1,23 +1,23 @@
 # Lang Module
 
-ZSS scripting language compiler — **TypeScript backend** (Chevrotain lexer → parser → AST → JS).
+ZSS scripting language compiler (Chevrotain lexer, parser, AST, JavaScript).
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| [`backend/typescript/`](backend/typescript/) | Lexer, parser, visitor, generator, source maps |
+| [`lexer.ts`](lexer.ts), [`parser.ts`](parser.ts), [`visitor.ts`](visitor.ts), [`transformer.ts`](transformer.ts), [`generator.ts`](generator.ts) | Compile pipeline and source maps |
 | [`langcompileclient.ts`](langcompileclient.ts) | Runtime `compilescript()` wrapper used by chip boot |
 | [`zztlineclass.ts`](zztlineclass.ts) | ZZT line classification helpers (zztoop tooling) |
 | [`docs/`](docs/) | Compiler pipeline documentation |
 | [`zss/feature/zztoop/`](../zztoop/) | Separate ZZT-OOP parser pipeline |
 
-Legacy path `zss/lang/` was removed; import from `zss/feature/lang/backend/typescript/generator` or `zss/feature/lang/langcompileclient`.
+Legacy path `zss/lang/` was removed; import from `zss/feature/lang/generator` or `zss/feature/lang/langcompileclient`.
 
 ## Quick Start
 
 ```typescript
-import { compile } from 'zss/feature/lang/backend/typescript/generator'
+import { compile } from 'zss/feature/lang/generator'
 
 const result = compile('mychip', '#if 1\n#die\n')
 if (result.code) {
@@ -29,7 +29,7 @@ if (result.code) {
 
 ```bash
 yarn task run ops:fixtures:lang:regression:test
-yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/backend/typescript/ --no-coverage
+yarn jest --config ops/jest.config.ts ops/tests/unit/feature/lang/ --no-coverage
 ```
 
 ZZT-OOP corpus and smoke tests live under `ops/tests/unit/feature/zztoop/`.

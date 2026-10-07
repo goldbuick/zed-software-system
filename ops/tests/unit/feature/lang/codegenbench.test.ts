@@ -25,8 +25,8 @@ import path from 'node:path'
 import { performance } from 'node:perf_hooks'
 
 import type { CHIP } from 'zss/chip'
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
-import { compile } from 'zss/feature/lang/backend/typescript/generator'
+import { compileast } from 'zss/feature/lang/ast'
+import { compile } from 'zss/feature/lang/generator'
 import { readexpr } from 'zss/words/expr'
 import { READ_CONTEXT } from 'zss/words/reader'
 

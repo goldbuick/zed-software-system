@@ -4,7 +4,7 @@ import { createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, ispresent } from 'zss/mapping/types'
 
 import { parser } from './parser'
-import { tokenstring, tokenstringtext } from './visitor/helpers'
+import { tokenstring, tokenstringtext } from './visitorhelpers'
 import {
   Additive_exprCstChildren,
   And_testCstChildren,

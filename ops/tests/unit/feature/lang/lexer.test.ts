@@ -16,7 +16,7 @@ import {
   newline,
   stringliteral,
   tokenize,
-} from 'zss/feature/lang/backend/typescript/lexer'
+} from 'zss/feature/lang/lexer'
 
 function trailnewlines(tokens: { tokenType: unknown }[]) {
   let n = 0

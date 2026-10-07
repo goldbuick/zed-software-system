@@ -1,5 +1,5 @@
-import { resolveargslot, resolvedirphase } from 'zss/feature/lang/backend/typescript/completioncontext'
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import { resolveargslot, resolvedirphase } from 'zss/feature/lang/completioncontext'
+import * as lexer from 'zss/feature/lang/lexer'
 import { ARG_TYPE } from 'zss/words/types'
 
 function mocktoken(image: string, idx: number) {

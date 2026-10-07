@@ -1,5 +1,8 @@
-import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
-import { CHAT_KIND } from 'zss/device/bridge/chattypes'
+import {
+  type BRIDGE_CHAT_START_OBJECT,
+  CHAT_KIND,
+  striptwitchoauthprefix,
+} from 'zss/device/bridge/chattypes'
 
 export type KEYVAL_PARTITION = {
   positional: string[]
@@ -57,7 +60,17 @@ export function mergetostartobject(
   assign('mastodoninstance', 'mastodoninstance', 'instance', 'md_instance')
   assign('mastodonaccount', 'mastodonaccount', 'account', 'acct', 'md_account')
   assign('mastodonhashtag', 'mastodonhashtag', 'hashtag', 'tag')
-  assign('mastodontoken', 'mastodontoken', 'token', 'md_token')
+  if (o.kind === CHAT_KIND.TWITCH) {
+    const raw = kvget(kv, 'twitchtoken', 'token')
+    if (raw !== '') {
+      const stripped = striptwitchoauthprefix(raw)
+      if (stripped !== '') {
+        o.twitchtoken = stripped
+      }
+    }
+  } else {
+    assign('mastodontoken', 'mastodontoken', 'token', 'md_token')
+  }
   assign('blueskyhandle', 'blueskyhandle', 'handle', 'bsky_handle')
   assign('blueskyfeeduri', 'blueskyfeeduri', 'feeduri', 'bsky_feed')
   assign(

@@ -1,4 +1,4 @@
-import { label, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
+import { label, tokenize } from 'zss/feature/lang/lexer'
 import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { NAME } from 'zss/words/types'
 

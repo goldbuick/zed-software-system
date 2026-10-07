@@ -1,4 +1,4 @@
-import type { DIR_COMPLETION_PHASE } from 'zss/feature/lang/backend/typescript/completioncontext'
+import type { DIR_COMPLETION_PHASE } from 'zss/feature/lang/completioncontext'
 import type {
   AUTOCOMPLETE_EDITOR_SOURCE,
   AUTOCOMPLETE_WORDLIST,

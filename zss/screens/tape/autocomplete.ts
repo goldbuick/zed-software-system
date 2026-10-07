@@ -1,5 +1,5 @@
-import { resolvecompletionargcontext } from 'zss/feature/lang/backend/typescript/completioncontext'
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import { resolvecompletionargcontext } from 'zss/feature/lang/completioncontext'
+import * as lexer from 'zss/feature/lang/lexer'
 import type { COMMAND_ARGS_SIGNATURE } from 'zss/firmware'
 import { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'

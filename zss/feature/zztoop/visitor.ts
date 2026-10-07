@@ -10,11 +10,7 @@
  * conditions at runtime, exactly as ZZT defers them to its handlers.
  */
 import { CstNode, CstNodeLocation, IToken } from 'chevrotain'
-import {
-  type CodeNode,
-  LITERAL,
-  NODE,
-} from 'zss/feature/lang/backend/typescript/visitor'
+import { type CodeNode, LITERAL, NODE } from 'zss/feature/lang/visitor'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, ispresent } from 'zss/mapping/types'
 

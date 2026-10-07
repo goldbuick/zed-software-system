@@ -1,5 +1,5 @@
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
-import { formatlangerror } from 'zss/feature/lang/backend/typescript/formatlangerror'
+import { compileast } from 'zss/feature/lang/ast'
+import { formatlangerror } from 'zss/feature/lang/formatlangerror'
 
 describe('formatlangerror', () => {
   it('formats lexer unexpected character', () => {

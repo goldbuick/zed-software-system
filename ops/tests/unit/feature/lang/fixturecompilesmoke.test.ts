@@ -22,7 +22,7 @@ jest.mock('zss/words/textformat', () => ({
 import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { compileast } from 'zss/feature/lang/ast'
 import { readcoolregionsbowbookexport } from 'ops/lib/coolregionsbowbook'
 import { LANG_COOLREGIONSBOW_DIR } from 'ops/lib/fixturepaths'
 

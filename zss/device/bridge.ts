@@ -17,8 +17,11 @@ import {
 } from 'zss/device/bridge/chattypes'
 import { createmastodonfeedconnector } from 'zss/device/bridge/mastodonfeedconnector'
 import { createrssfeedconnector } from 'zss/device/bridge/rssfeedconnector'
-import { createtwitchchatconnector } from 'zss/device/bridge/twitchchatconnector'
-import type { TWITCH_CHAT_HANDLERS } from 'zss/device/bridge/twitchchatconnector'
+import {
+  type TWITCH_CHAT_HANDLERS,
+  createtwitchchatconnector,
+} from 'zss/device/bridge/twitchchatconnector'
+import { settwitchchatlive } from 'zss/device/bridge/twitchchatstate'
 import { doasync } from 'zss/device/doasync'
 import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { setbroadcastactive } from 'zss/feature/broadcast/broadcastactive'
@@ -250,6 +253,48 @@ function feedpollintervalms(sec: number | undefined) {
   return Math.max(30_000, Math.min(3_600_000, Math.floor(s * 1000)))
 }
 
+const TWITCH_SAY_MAX = 500
+
+function twitchsayrejectreason(text: string): string {
+  if (!text) {
+    return 'chat say needs text'
+  }
+  if (text.length > TWITCH_SAY_MAX) {
+    return 'chat say text is longer than 500 characters'
+  }
+  for (let i = 0; i < text.length; ++i) {
+    const c = text.charCodeAt(i)
+    if (c < 32 || c > 126) {
+      return 'chat say text must be printable ascii'
+    }
+  }
+  return ''
+}
+
+/** Post one message on the twitch slot. Fails loud when it cannot speak. */
+export function twitchchatsay(player: string, text: string) {
+  const trimmed = text.trim()
+  const reason = twitchsayrejectreason(trimmed)
+  if (reason) {
+    apierror(bridge, player, 'bridge', reason)
+    return
+  }
+  const conn = chatslots.get(CHAT_KIND.TWITCH)
+  if (!ispresent(conn) || !conn.canspeak?.() || !conn.say) {
+    apierror(
+      bridge,
+      player,
+      'bridge',
+      'twitch chat cannot speak without a token',
+    )
+    return
+  }
+  void conn.say(trimmed).catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err)
+    apierror(bridge, player, 'bridge', `twitch chat say failed: ${message}`)
+  })
+}
+
 const bridge = createdevice('bridge', [], (message) => {
   if (!bridge.session(message)) {
     return
@@ -348,6 +393,9 @@ const bridge = createdevice('bridge', [], (message) => {
         )
         prev.disconnect()
         chatslots.delete(parsed.kind)
+        if (parsed.kind === CHAT_KIND.TWITCH) {
+          settwitchchatlive(undefined)
+        }
       }
       if (parsed.kind === CHAT_KIND.TWITCH) {
         const channel = parsed.channel?.trim() ?? parsed.routekey
@@ -356,14 +404,14 @@ const bridge = createdevice('bridge', [], (message) => {
           message.player,
           `twitch chat starting routekey=${parsed.routekey} channel=${channel}`,
         )
-        chatslots.set(
-          CHAT_KIND.TWITCH,
-          createtwitchchatconnector(
-            parsed.routekey,
-            channel,
-            makechathandlers(message.player, CHAT_KIND.TWITCH),
-          ),
+        const conn = createtwitchchatconnector(
+          parsed.routekey,
+          channel,
+          makechathandlers(message.player, CHAT_KIND.TWITCH),
+          parsed.twitchtoken,
         )
+        chatslots.set(CHAT_KIND.TWITCH, conn)
+        settwitchchatlive(conn)
         break
       }
       if (parsed.kind === CHAT_KIND.RSS) {
@@ -502,9 +550,15 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       conn.disconnect()
       chatslots.delete(kind)
+      if (kind === CHAT_KIND.TWITCH) {
+        settwitchchatlive(undefined)
+      }
       apilog(bridge, message.player, `${kind} chat stopped`)
       break
     }
+    case 'chatsay':
+      twitchchatsay(message.player, isstring(message.data) ? message.data : '')
+      break
     case 'status':
       for (let i = 0; i < ALL_CHAT_KINDS.length; ++i) {
         const k = ALL_CHAT_KINDS[i]

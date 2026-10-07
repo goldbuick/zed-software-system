@@ -1,5 +1,5 @@
 import { CstNode, IToken } from 'chevrotain'
-import type { CodeNode } from 'zss/feature/lang/backend/typescript/visitor'
+import type { CodeNode } from 'zss/feature/lang/visitor'
 
 import { compileparse } from './compileparse'
 import type { LANG_ERROR } from './lexer'

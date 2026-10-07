@@ -29,7 +29,7 @@ export const PERMISSION_CONFIG_KEYWORDS = [
 
 export const PERMISSION_ROLE_KEYWORDS = ['admin', 'mod', 'player'] as const
 
-export const CHAT_HEAD_KEYWORDS = ['start', 'stop', 'profile'] as const
+export const CHAT_HEAD_KEYWORDS = ['start', 'stop', 'profile', 'say'] as const
 
 export const CHAT_FEED_KINDS = ['twitch', 'rss', 'mastodon', 'bluesky'] as const
 

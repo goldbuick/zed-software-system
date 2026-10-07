@@ -373,7 +373,7 @@ Firmware context for codepage chip execution on boards.
 
 ZSS script compiler pipeline producing JS for CHIP execution.
 
-Source: [`zss/feature/lang/backend/typescript/generator.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/feature/lang/backend/typescript/generator.ts)
+Source: [`zss/feature/lang/generator.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/feature/lang/generator.ts)
 
 ### words
 

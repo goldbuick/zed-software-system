@@ -1,5 +1,5 @@
 import type { IToken } from 'chevrotain'
-import { tokenize } from 'zss/feature/lang/backend/typescript/lexer'
+import { tokenize } from 'zss/feature/lang/lexer'
 
 export function tokenizeline(line: string): IToken[] {
   try {
