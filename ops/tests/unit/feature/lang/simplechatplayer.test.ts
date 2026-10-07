@@ -22,7 +22,7 @@ jest.mock('zss/words/textformat', () => ({
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { compile } from 'zss/feature/lang/backend/typescript/generator'
+import { compile } from 'zss/feature/lang/generator'
 
 const FIXTURE = path.join(
   process.cwd(),

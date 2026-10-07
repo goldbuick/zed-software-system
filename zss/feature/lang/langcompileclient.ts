@@ -1,4 +1,4 @@
-import { type GeneratorBuild, compile } from './backend/typescript/generator'
+import { type GeneratorBuild, compile } from './generator'
 
 export function compilescript(name: string, text: string): GeneratorBuild {
   const label = `compile-${name}`

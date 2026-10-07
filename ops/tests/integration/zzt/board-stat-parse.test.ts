@@ -1,4 +1,4 @@
-import { stat, tokenize } from 'zss/feature/lang/backend/typescript/lexer'
+import { stat, tokenize } from 'zss/feature/lang/lexer'
 
 it('parses @board stat line', () => {
   const code = '@board 000. Title\n@zztboard0\n@exitnorth zztboard1\n'

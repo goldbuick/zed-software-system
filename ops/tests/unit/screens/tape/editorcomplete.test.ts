@@ -1,4 +1,4 @@
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import * as lexer from 'zss/feature/lang/lexer'
 import type { EDITOR_CODE_ROW } from 'zss/screens/tape/common'
 import { buildeditorcompletecontext } from 'zss/screens/tape/editorcomplete'
 

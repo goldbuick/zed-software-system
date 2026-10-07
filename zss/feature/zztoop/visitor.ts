@@ -14,7 +14,7 @@ import {
   type CodeNode,
   LITERAL,
   NODE,
-} from 'zss/feature/lang/backend/typescript/visitor'
+} from 'zss/feature/lang/visitor'
 import { createsid } from 'zss/mapping/guid'
 import { isarray, ispresent } from 'zss/mapping/types'
 

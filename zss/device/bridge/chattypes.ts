@@ -22,6 +22,8 @@ export type BRIDGE_CHAT_START_OBJECT = {
   routekey: string
   /** Twitch: channel name (optional; defaults to routekey) */
   channel?: string
+  /** Twitch: user access token with chat:edit (no oauth: prefix) */
+  twitchtoken?: string
   /** RSS / Atom feed (browser fetch; URL must allow CORS or be same-origin) */
   feedurl?: string
   /** Poll interval seconds (default 120) */
@@ -43,6 +45,15 @@ export type BRIDGE_CHAT_START_OBJECT = {
 }
 
 export type BRIDGE_CHAT_START_PAYLOAD = string | BRIDGE_CHAT_START_OBJECT
+
+/** Drop a leading `oauth:` so Twurple can add that prefix itself. */
+export function striptwitchoauthprefix(value: string): string {
+  const trimmed = value.trim()
+  if (trimmed.length >= 6 && trimmed.slice(0, 6).toLowerCase() === 'oauth:') {
+    return trimmed.slice(6)
+  }
+  return trimmed
+}
 
 export function normalizechatkind(value: string): MAYBE<CHAT_KIND> {
   const n = NAME(value)
@@ -83,6 +94,8 @@ export function parsechatstartpayload(
   if (!kind || !routekey) {
     return undefined
   }
+  const twitchraw = typeof o.twitchtoken === 'string' ? o.twitchtoken : ''
+  const twitchtoken = striptwitchoauthprefix(twitchraw)
   const pollraw = o.pollintervalsec
   let pollintervalsec: number | undefined
   if (typeof pollraw === 'number' && Number.isFinite(pollraw)) {
@@ -97,6 +110,7 @@ export function parsechatstartpayload(
     kind,
     routekey,
     channel: typeof o.channel === 'string' ? o.channel.trim() : undefined,
+    ...(twitchtoken ? { twitchtoken } : {}),
     feedurl: typeof o.feedurl === 'string' ? o.feedurl.trim() : undefined,
     pollintervalsec,
     mastodoninstance:

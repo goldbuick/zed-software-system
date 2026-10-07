@@ -1,4 +1,4 @@
-import { CHAT_KIND } from 'zss/device/bridge/chattypes'
+import { CHAT_KIND, parsechatstartpayload } from 'zss/device/bridge/chattypes'
 import {
   buildchatstartforkind,
   partitionkeyvalwords,
@@ -40,6 +40,53 @@ describe('bridgechatcli', () => {
   it('profilenamefromtoken strips leading @', () => {
     expect(profilenamefromtoken('@myprofile')).toBe('myprofile')
     expect(profilenamefromtoken('plain')).toBeUndefined()
+  })
+
+  it('keeps twitchtoken on the shorthand and the start form', () => {
+    const shorthand = buildchatstartforkind(CHAT_KIND.TWITCH, [
+      'goldbuick',
+      'twitchtoken=oauth:abc',
+    ])
+    const started = buildchatstartforkind(CHAT_KIND.TWITCH, [
+      'goldbuick',
+      'twitchtoken=abc',
+    ])
+    expect(shorthand).toEqual({
+      kind: CHAT_KIND.TWITCH,
+      routekey: 'goldbuick',
+      channel: 'goldbuick',
+      twitchtoken: 'abc',
+    })
+    expect(started).toEqual(shorthand)
+    expect(shorthand).not.toHaveProperty('clientid')
+    expect(shorthand).not.toHaveProperty('mastodontoken')
+  })
+
+  it('maps token= to twitchtoken only for a twitch start', () => {
+    const twitch = buildchatstartforkind(CHAT_KIND.TWITCH, [
+      'goldbuick',
+      'token=oauth:abc',
+    ])
+    expect(twitch?.twitchtoken).toBe('abc')
+    expect(twitch?.mastodontoken).toBeUndefined()
+    const mastodon = buildchatstartforkind(CHAT_KIND.MASTODON, [
+      'feed',
+      'https://mastodon.social',
+      'someone',
+      'token=sekret',
+    ])
+    expect(mastodon?.mastodontoken).toBe('sekret')
+    expect(mastodon?.twitchtoken).toBeUndefined()
+  })
+
+  it('parsechatstartpayload keeps a stripped twitchtoken', () => {
+    const parsed = parsechatstartpayload({
+      kind: 'twitch',
+      routekey: 'goldbuick',
+      channel: 'goldbuick',
+      twitchtoken: 'oauth:abc',
+    })
+    expect(parsed?.twitchtoken).toBe('abc')
   })
 
   it('resolvechatstartwords uses saved profile when token is @name', () => {

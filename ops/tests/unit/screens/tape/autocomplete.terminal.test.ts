@@ -12,7 +12,7 @@ jest.mock('zss/config', () => ({
   DEBUG_LOG: false,
 }))
 
-import { tokenize } from 'zss/feature/lang/backend/typescript/lexer'
+import { tokenize } from 'zss/feature/lang/lexer'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import {
   drawautocomplete,

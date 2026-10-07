@@ -3,8 +3,8 @@ import type { MESSAGE } from 'zss/device/types'
 import {
   type GeneratorBuild,
   type GeneratorFunc,
-} from 'zss/feature/lang/backend/typescript/generator'
-import { GENERATED_FILENAME } from 'zss/feature/lang/backend/typescript/transformer'
+} from 'zss/feature/lang/generator'
+import { GENERATED_FILENAME } from 'zss/feature/lang/transformer'
 
 import { RUNTIME } from './config'
 import { apierror, chipmessage } from './device/api'

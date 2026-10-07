@@ -1,5 +1,5 @@
 import type { IToken } from 'chevrotain'
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import * as lexer from 'zss/feature/lang/lexer'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import type { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
 import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'

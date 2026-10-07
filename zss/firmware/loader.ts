@@ -10,7 +10,9 @@ import {
   gadgetclientzap,
   registerinput,
 } from 'zss/device/api'
+import { twitchchatstatus } from 'zss/device/bridge/twitchchatstate'
 import { SOFTWARE } from 'zss/device/session'
+import { mediaqueuereadstate } from 'zss/feature/mediaqueue/queue'
 import { createfirmware } from 'zss/firmware'
 import { USERINPUT_ACTIONS } from 'zss/firmware/autocompleteconstants'
 import { INPUT } from 'zss/gadget/data/types'
@@ -22,7 +24,10 @@ import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryreadboardbyaddress } from 'zss/memory/boards'
 import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memoryloadercontent, memoryloaderformat } from 'zss/memory/loader'
-import { memorypicknextactiveplayerboard } from 'zss/memory/playermanagement'
+import {
+  memorypicknextactiveplayerboard,
+  memoryreadplayerboard,
+} from 'zss/memory/playermanagement'
 import { memoryreadoperator } from 'zss/memory/session'
 import { BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
@@ -40,14 +45,39 @@ import {
   stripzap,
 } from 'zss/words/textformat'
 import { ARG_TYPE, NAME } from 'zss/words/types'
+// After words/types: queue.ts re-enters this module while ARG_TYPE is still initializing.
+// eslint-disable-next-line import/order
+import { registerqueuecommands } from 'zss/firmware/cli/commands/queue'
 
 import { loaderbinary } from './loader/binary'
 import { loaderjson } from './loader/json'
 import { loadermedia } from './loader/media'
+import {
+  medialistflaglines,
+  mediaqueueflaglines,
+} from './loader/mediaqueueflags'
 import { loadertext } from './loader/text'
 
-export const LOADER_FIRMWARE = createfirmware({
+const LOADER_BASE = createfirmware({
   get(chip, name) {
+    if (name === 'chatconnected') {
+      return [true, twitchchatstatus().connected]
+    }
+    if (name === 'chatchannel') {
+      return [true, twitchchatstatus().channel]
+    }
+    if (name === 'chatusername') {
+      return [true, twitchchatstatus().username]
+    }
+    if (name === 'mediaqueue' || name === 'medialist') {
+      const board = memoryreadplayerboard(memoryreadoperator())
+      const peer = board?.mediaqueuehelperpeerid ?? ''
+      const state = mediaqueuereadstate(peer)
+      if (name === 'mediaqueue') {
+        return [true, mediaqueueflaglines(state)]
+      }
+      return [true, medialistflaglines(state)]
+    }
     const type = memoryloaderformat(chip.id())
     if (name === 'format') {
       return [true, type]
@@ -310,3 +340,6 @@ export const LOADER_FIRMWARE = createfirmware({
     },
     { byposition: [[...USERINPUT_ACTIONS]] },
   )
+
+/** Same `#queue` admin as the CLI. Loader focus is the operator, so ZSS must gate who may call it. */
+export const LOADER_FIRMWARE = registerqueuecommands(LOADER_BASE)

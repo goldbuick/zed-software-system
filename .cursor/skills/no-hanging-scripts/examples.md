@@ -24,7 +24,7 @@ while (!ready) {
 
 ```bash
 # 1. One file, no coverage
-yarn jest ops/tests/unit/feature/lang/backend/typescript/ --no-coverage
+yarn jest ops/tests/unit/feature/lang/ --no-coverage
 
 # 2. After pass, broader
 yarn jest ops/tests/unit/feature/lang/ --no-coverage

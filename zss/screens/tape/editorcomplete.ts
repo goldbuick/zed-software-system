@@ -1,4 +1,4 @@
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
+import * as lexer from 'zss/feature/lang/lexer'
 import { ispresent } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 

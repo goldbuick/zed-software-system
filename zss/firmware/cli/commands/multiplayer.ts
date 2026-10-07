@@ -1,6 +1,7 @@
 import {
   apierror,
   apilog,
+  bridgechatsay,
   bridgechatstart,
   bridgechatstop,
   bridgemediastreambind,
@@ -11,7 +12,7 @@ import {
   bridgetab,
   vmadmin,
 } from 'zss/device/api'
-import { normalizechatkind } from 'zss/device/bridge/chattypes'
+import { CHAT_KIND, normalizechatkind } from 'zss/device/bridge/chattypes'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -46,7 +47,7 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 function chatusagebridge() {
   return (
-    'usage: chat <twitch-channel> | chat start <kind> … | chat stop <kind> | chat profile … ' +
+    'usage: chat <twitch-channel> [twitchtoken=] | chat say <text> | chat start <kind> … | chat stop <kind> | chat profile … ' +
     '(kinds: twitch, rss, mastodon, bluesky). ' +
     'Start with @profilename to load a saved profile; add key=value to override. ' +
     'RSS/feeds use browser fetch—URLs must allow CORS.'
@@ -137,6 +138,9 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
               const redacted = { ...p }
               if (redacted.mastodontoken) {
                 redacted.mastodontoken = '***'
+              }
+              if (redacted.twitchtoken) {
+                redacted.twitchtoken = '***'
               }
               if (redacted.blueskyapppassword) {
                 redacted.blueskyapppassword = '***'
@@ -229,7 +233,16 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           bridgechatstop(SOFTWARE, player, kind)
           return 0
         }
-        bridgechatstart(SOFTWARE, player, w[0])
+        if (head === 'say') {
+          bridgechatsay(SOFTWARE, player, w.slice(1).join(' '))
+          return 0
+        }
+        const built = buildchatstartforkind(CHAT_KIND.TWITCH, w)
+        if (!built) {
+          apierror(SOFTWARE, player, 'bridge', chatusagebridge())
+          return 0
+        }
+        bridgechatstart(SOFTWARE, player, built)
         return 0
       },
       {

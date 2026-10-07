@@ -162,7 +162,7 @@ flowchart TB
 | Node | Definition | Path |
 |------|------------|------|
 | **Codepage source** | Board, object, terrain, or loader script text in a book page. | `zss/memory/types.ts` |
-| **Lang compile** | Lexer → parser → visitor → transformer → new Function(api, code). | `zss/feature/lang/backend/typescript/generator.ts` |
+| **Lang compile** | Lexer → parser → visitor → transformer → new Function(api, code). | `zss/feature/lang/generator.ts` |
 | **CHIP tick** | Element VM runs compiled generator; get/set, messaging, wait. | `zss/chip.ts` |
 | **Firmware #commands** | Runtime driver dispatches #go, #put, #play, etc. to memory/gadget APIs. | `zss/firmware/runner.ts` |
 | **MEMORY mutation** | Board elements, flags, player state updated authoritatively in sim. | `zss/memory/` |

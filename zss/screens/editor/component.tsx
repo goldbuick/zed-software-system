@@ -5,13 +5,13 @@ import { modemreadtextsync } from 'zss/device/modem'
 import { useWaitForValueString } from 'zss/device/modemhooks'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
-import { compileastforeditor } from 'zss/feature/lang/backend/typescript/ast'
-import * as lexer from 'zss/feature/lang/backend/typescript/lexer'
-import { createlineindexes } from 'zss/feature/lang/backend/typescript/transformer'
+import { compileastforeditor } from 'zss/feature/lang/ast'
+import * as lexer from 'zss/feature/lang/lexer'
+import { createlineindexes } from 'zss/feature/lang/transformer'
 import {
   type CodeNode,
   NODE,
-} from 'zss/feature/lang/backend/typescript/visitor'
+} from 'zss/feature/lang/visitor'
 import { useEqual } from 'zss/gadget/data/useequal'
 import {
   useEditor,

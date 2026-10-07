@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { LOADER_FIRMWARE } from 'zss/firmware/loader'
 
 describe('loader media.ts', () => {
   it('registers loader-only #media <name> <url> via mediasubmiturl', () => {
@@ -22,5 +23,9 @@ describe('loader media.ts', () => {
     expect(src).toContain("from './loader/media'")
     expect(src).toContain("'media'")
     expect(src).toContain('loadermedia')
+  })
+
+  it('wires queue command into LOADER_FIRMWARE', () => {
+    expect(LOADER_FIRMWARE.getcommand('queue')).toBeTruthy()
   })
 })

@@ -13,8 +13,8 @@ jest.mock('zss/config', () => ({
   DEBUG_LOG: false,
 }))
 
-import { compileast as langcompileast } from 'zss/feature/lang/backend/typescript/ast'
-import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
+import { compileast as langcompileast } from 'zss/feature/lang/ast'
+import { transformast } from 'zss/feature/lang/transformer'
 import { compilezztoop } from 'zss/feature/zztoop/compile'
 
 // Up to this point every zztoop test asserts on the emitted *source string*. That

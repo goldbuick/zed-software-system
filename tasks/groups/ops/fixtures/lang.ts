@@ -99,7 +99,7 @@ function runlangregression(ctx: TaskContext): number {
   console.log('▶ typescript-compiler')
   const status = runjest(
     ctx,
-    'ops/tests/unit/feature/lang/backend/typescript/',
+    'ops/tests/unit/feature/lang/',
     ['--no-coverage'],
   )
   if (status === 0) {

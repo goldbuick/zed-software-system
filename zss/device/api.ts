@@ -84,6 +84,10 @@ export function bridgechatstop(
   device.emit(player, 'bridge:chatstop', kind)
 }
 
+export function bridgechatsay(device: DEVICELIKE, player: string, text: string) {
+  device.emit(player, 'bridge:chatsay', text)
+}
+
 export function bridgefetch(
   device: DEVICELIKE,
   player: string,

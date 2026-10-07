@@ -22,8 +22,8 @@ jest.mock('zss/words/textformat', () => ({
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
-import { compile } from 'zss/feature/lang/backend/typescript/generator'
+import { compileast } from 'zss/feature/lang/ast'
+import { compile } from 'zss/feature/lang/generator'
 import { LANG_SCRIPTS_DIR } from 'ops/lib/fixturepaths'
 
 const FIXTURE = path.join(LANG_SCRIPTS_DIR, 'parser_smoke.zss')

@@ -1,4 +1,4 @@
-import { GeneratorBuild } from 'zss/feature/lang/backend/typescript/generator'
+import { GeneratorBuild } from 'zss/feature/lang/generator'
 import { compilescript } from 'zss/feature/lang/langcompileclient'
 
 import { CHIP, createchip } from './chip'

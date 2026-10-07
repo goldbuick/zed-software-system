@@ -1,4 +1,4 @@
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
+import { compileast } from 'zss/feature/lang/ast'
 import {
   boardcodedelements,
   elementtozss,

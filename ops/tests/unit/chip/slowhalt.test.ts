@@ -54,7 +54,7 @@ jest.mock('zss/memory/permissions', () => ({
 
 import { createchip } from 'zss/chip'
 import type { CHIP } from 'zss/chip'
-import type { GeneratorBuild } from 'zss/feature/lang/backend/typescript/generator'
+import type { GeneratorBuild } from 'zss/feature/lang/generator'
 import { DRIVER_TYPE } from 'zss/firmware/runner'
 import { createchipid } from 'zss/mapping/guid'
 

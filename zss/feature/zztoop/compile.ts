@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-implied-eval */
 import type { CHIP } from 'zss/chip'
-import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
+import { transformast } from 'zss/feature/lang/transformer'
 
 import { compileast } from './ast'
 import type { LANG_ERROR } from './lexer'

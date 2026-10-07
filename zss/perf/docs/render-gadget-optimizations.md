@@ -252,7 +252,7 @@ Avoid unnecessary work on common shapes — **no change to semantics**.
 
 ### Tests
 
-- [`codegenbench.test.ts`](../../../ops/tests/unit/feature/lang/backend/typescript/codegenbench.test.ts) — compile/runtime/readexpr microbench baselines
+- [`codegenbench.test.ts`](../../../ops/tests/unit/feature/lang/codegenbench.test.ts) — compile/runtime/readexpr microbench baselines
 - `yarn task run ops:fixtures:lang:regression:test`
 
 ---
@@ -286,7 +286,7 @@ yarn task run ops:fixtures:lang:regression:test
 
 yarn jest ops/tests/unit/gadget/data/types.test.ts --config ops/jest.config.ts --no-coverage
 yarn jest ops/tests/unit/memory/incrementallayerscache --config ops/jest.config.ts --no-coverage
-yarn jest ops/tests/unit/feature/lang/backend/typescript/codegenbench.test.ts --config ops/jest.config.ts --no-coverage
+yarn jest ops/tests/unit/feature/lang/codegenbench.test.ts --config ops/jest.config.ts --no-coverage
 ```
 
 ### Manual (render profile)

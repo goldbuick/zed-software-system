@@ -12,8 +12,8 @@ jest.mock('zss/config', () => ({
   DEBUG_LOG: false,
 }))
 
-import { compileast } from 'zss/feature/lang/backend/typescript/ast'
-import { transformast } from 'zss/feature/lang/backend/typescript/transformer'
+import { compileast } from 'zss/feature/lang/ast'
+import { transformast } from 'zss/feature/lang/transformer'
 
 function emit(source: string) {
   const r = compileast(source)
