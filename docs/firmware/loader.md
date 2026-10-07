@@ -13,6 +13,18 @@ title: loader.ts
 
 ## get(chip, name) Hook
 
+These names work for every loader, including a chat loader with no file:
+
+| Name | Value |
+|------|--------|
+| `chatconnected` | `1` when the twitch chat slot is connected, else `0` |
+| `chatchannel` | Channel name. Copy with `#set` before an `is` check |
+| `chatusername` | Logged-in nick (token user, or the anonymous `justinfan` nick). Copy with `#set` before an `is` check |
+| `mediaqueue` | Array of approval rows, `index duration name title` (`3m` or `unknown`; title falls back to the url). Walk with `#foreach` |
+| `medialist` | Array of play-queue rows, `index name title`. Walk with `#foreach` |
+
+`mediaqueue` and `medialist` read the operator board's media helper. An unbound helper is an empty array.
+
 Returns loader metadata based on format:
 
 | Format | Available names |
@@ -36,6 +48,7 @@ Returns loader metadata based on format:
 | Command | Args | Description |
 |---------|------|-------------|
 | `media` | `<name> <url>` | Submit URL to the board TV helper with explicit queue display name (operator + `speaker` / `media` permission). Prefer `#withplayerboard` or `#withboard` first so the helper resolves from loader targeting. Empty name sanitizes to `player`. |
+| `queue` | (same as CLI `#queue`) | Media queue admin. Runs as the operator (`elementfocus`), so the loader script has to decide who may call it. |
 
 ### Context
 

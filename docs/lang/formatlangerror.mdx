@@ -3,13 +3,13 @@ title: formatlangerror.ts
 description: Rewrites Chevrotain lexer and parser errors into short, ASCII messages for the editor and compile tape.
 ---
 
-**Purpose**: Converts raw Chevrotain `message` strings into human-readable copy before they are stored on [`LANG_ERROR`](../backend/typescript/lexer.ts). Called from [`ast.ts`](../backend/typescript/ast.ts) (`maplexererrors`, `mapparsererrors`) for both strict compile and editor paths.
+**Purpose**: Converts raw Chevrotain `message` strings into human-readable copy before they are stored on [`LANG_ERROR`](../lexer.ts). Called from [`ast.ts`](../ast.ts) (`maplexererrors`, `mapparsererrors`) for both strict compile and editor paths.
 
 ## Dependencies
 
 - `chevrotain` — `IToken`
-- [`completioncontext.ts`](../backend/typescript/completioncontext.ts) — `DIR_MOD_CONTINUES`, `DIR_NEED_PAIR`, `DIR_NEED_KIND`, `DIR_NEED_SUBDIR`
-- [`lexer.ts`](../backend/typescript/lexer.ts) — `newline` token type
+- [`completioncontext.ts`](../completioncontext.ts) — `DIR_MOD_CONTINUES`, `DIR_NEED_PAIR`, `DIR_NEED_KIND`, `DIR_NEED_SUBDIR`
+- [`lexer.ts`](../lexer.ts) — `newline` token type
 
 ## Exports
 
@@ -39,14 +39,14 @@ Lexer-only: `unexpected character: ->X<-` → `invalid character 'X'`.
 |---------|--------------------------------|
 | Tape editor | [`editorrows.tsx`](../../../screens/editor/editorrows.tsx) shows `LANG_ERROR.message` on the line below the cursor |
 | Compile / run | [`os.ts`](../../../os.ts) prints the first error preamble via `apierror` when `compile` fails |
-| Strict compile | [`compileast`](../backend/typescript/ast.ts) and [`compile`](../backend/typescript/generator.ts) return formatted `errors` |
+| Strict compile | [`compileast`](../ast.ts) and [`compile`](../generator.ts) return formatted `errors` |
 
-[`compileastforeditor`](../backend/typescript/ast.ts) uses the same formatter but keeps a partial CST when `recoveryEnabled` reports parser errors (for highlighting and autocomplete).
+[`compileastforeditor`](../ast.ts) uses the same formatter but keeps a partial CST when `recoveryEnabled` reports parser errors (for highlighting and autocomplete).
 
 ## Tests
 
-- [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/formatlangerror.test.ts) — pattern handlers, `#put opp` regression, failure-report bucket samples
-- [`pipeline.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/pipeline.test.ts) — compile errors must not contain `token_`
+- [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/formatlangerror.test.ts) — pattern handlers, `#put opp` regression, failure-report bucket samples
+- [`pipeline.test.ts`](../../../../ops/tests/unit/feature/lang/pipeline.test.ts) — compile errors must not contain `token_`
 
 ## See also
 

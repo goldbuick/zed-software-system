@@ -33,14 +33,14 @@ flowchart LR
   fn --> runtime
 ```
 
-1. **`tokenize`** ([lexer.ts](../backend/typescript/lexer.ts)) — Chevrotain tokens + lexer errors.
-2. **`parser.program()`** ([parser.ts](../backend/typescript/parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../backend/typescript/lexer.ts) in [ast.ts](../backend/typescript/ast.ts) via [`formatlangerror`](../backend/typescript/formatlangerror.ts).
-3. **`visitor.go(cst)`** ([visitor.ts](../backend/typescript/visitor.ts)) — Abstract tree of [`CodeNode`](../backend/typescript/visitor.ts) with [`NODE`](../backend/typescript/visitor.ts) discriminants.
-4. **`addRange(ast)`** ([ast.ts](../backend/typescript/ast.ts)) — Fills `range` on nodes for editor / completion (full AST walk; runs on every [`compileast`](../backend/typescript/ast.ts), including editor tooling).
-5. **`transformast(ast)`** ([transformer.ts](../backend/typescript/transformer.ts)) — JS source + `source-map` output; mutates shared [`context`](../backend/typescript/transformer.ts) (labels, line indexes). The shared `context` is fine for today’s single-threaded compile path; parallel compilation would need isolation or a per-run context.
-6. **`new Function('api', code)`** ([generator.ts](../backend/typescript/generator.ts)) — Produces `GeneratorFunc`: `(api: CHIP) => 0 | 1`.
+1. **`tokenize`** ([lexer.ts](../lexer.ts)) — Chevrotain tokens + lexer errors.
+2. **`parser.program()`** ([parser.ts](../parser.ts)) — Concrete syntax tree (`CstNode`). Parser errors map to [`LANG_ERROR`](../lexer.ts) in [ast.ts](../ast.ts) via [`formatlangerror`](../formatlangerror.ts).
+3. **`visitor.go(cst)`** ([visitor.ts](../visitor.ts)) — Abstract tree of [`CodeNode`](../visitor.ts) with [`NODE`](../visitor.ts) discriminants.
+4. **`addRange(ast)`** ([ast.ts](../ast.ts)) — Fills `range` on nodes for editor / completion (full AST walk; runs on every [`compileast`](../ast.ts), including editor tooling).
+5. **`transformast(ast)`** ([transformer.ts](../transformer.ts)) — JS source + `source-map` output; mutates shared [`context`](../transformer.ts) (labels, line indexes). The shared `context` is fine for today’s single-threaded compile path; parallel compilation would need isolation or a per-run context.
+6. **`new Function('api', code)`** ([generator.ts](../generator.ts)) — Produces `GeneratorFunc`: `(api: CHIP) => 0 | 1`.
 
-[`compile`](../backend/typescript/generator.ts) runs the full pipeline (steps 1–6): it calls [`compileast`](../backend/typescript/ast.ts) for steps 1–4, then runs **`transformast`** and **`new Function`** (steps 5–6). [`compileast`](../backend/typescript/ast.ts) alone stops after the AST (no JS). For debugging, `compile` wraps the `compileast` call in `console.time` / `console.timeEnd` using the `name` argument ([generator.ts](../backend/typescript/generator.ts)).
+[`compile`](../generator.ts) runs the full pipeline (steps 1–6): it calls [`compileast`](../ast.ts) for steps 1–4, then runs **`transformast`** and **`new Function`** (steps 5–6). [`compileast`](../ast.ts) alone stops after the AST (no JS). For debugging, `compile` wraps the `compileast` call in `console.time` / `console.timeEnd` using the `name` argument ([generator.ts](../generator.ts)).
 
 ## Data shapes
 
@@ -48,16 +48,16 @@ flowchart LR
 | ----- | ---- | ---- |
 | Lexer | `IToken[]`, `LANG_ERROR[]` | Stream + lexical errors |
 | Parser | `CstNode` (Chevrotain) | Grammar-shaped tree; rule names match parser methods |
-| Types | [`visitortypes.ts`](../backend/typescript/visitortypes.ts) | `*CstNode` / `*CstChildren` for CST |
+| Types | [`visitortypes.ts`](../visitortypes.ts) | `*CstNode` / `*CstChildren` for CST |
 | Visitor | `CodeNode`, `NODE` | Stable AST for codegen and tooling |
-| Transformer | `SourceNode`, `CodeWithSourceMap` | Emitted JS mapped to [`GENERATED_FILENAME`](../backend/typescript/transformer.ts) (`zss.js`) |
+| Transformer | `SourceNode`, `CodeWithSourceMap` | Emitted JS mapped to [`GENERATED_FILENAME`](../transformer.ts) (`zss.js`) |
 | Generator | `GeneratorBuild` | Optional `errors`, `tokens`, `cst`, `ast`, `labels`, `map`, `code`, `source` |
 
 The **parser does not produce the AST**. The **visitor** is the CST → AST bridge.
 
 ## Parser structure
 
-Chevrotain [`ScriptParser`](../backend/typescript/parser.ts) extends `CstParser`. Top-level structure and where `#` command words attach:
+Chevrotain [`ScriptParser`](../parser.ts) extends `CstParser`. Top-level structure and where `#` command words attach:
 
 ```mermaid
 flowchart TB
@@ -106,7 +106,7 @@ See [visitor.md](visitor.md) for `NODE` variants and [visitortypes.md](visitorty
 
 ## Transformer structure
 
-[`transformast`](../backend/typescript/transformer.ts) runs [`createlineindexes`](../backend/typescript/transformer.ts) first (label maps and line context), then recursive [`transformnode`](../backend/typescript/transformer.ts) on `ast.type`. Emission uses [`write`](../backend/typescript/transformer.ts) to attach locations to `SourceNode` chunks, then `toStringWithSourceMap`. Generated code calls **CHIP** helpers as `api.*` (for example `api.isEq`, `api.opPlus`).
+[`transformast`](../transformer.ts) runs [`createlineindexes`](../transformer.ts) first (label maps and line context), then recursive [`transformnode`](../transformer.ts) on `ast.type`. Emission uses [`write`](../transformer.ts) to attach locations to `SourceNode` chunks, then `toStringWithSourceMap`. Generated code calls **CHIP** helpers as `api.*` (for example `api.isEq`, `api.opPlus`).
 
 ```mermaid
 flowchart TB
@@ -121,13 +121,13 @@ flowchart TB
   astRoot --> gen --> emit --> out --> jsOut
 ```
 
-The diagram separates indexing from emission for readability; **execution order is sequential**: [`createlineindexes`](../backend/typescript/transformer.ts) finishes (and mutates [`context`](../backend/typescript/transformer.ts)) before recursive [`transformnode`](../backend/typescript/transformer.ts) runs on the AST.
+The diagram separates indexing from emission for readability; **execution order is sequential**: [`createlineindexes`](../transformer.ts) finishes (and mutates [`context`](../transformer.ts)) before recursive [`transformnode`](../transformer.ts) runs on the AST.
 
 See [transformer.md](transformer.md).
 
 ## Operator precedence
 
-Derived from rule nesting in [parser.ts](../backend/typescript/parser.ts) (`expr` through `power`). **Top = loosest binding; bottom = tightest.** `arith_expr` is an **`OR`**: the **`token_expr`** branch is tried **before** the `term` / `+` `-` chain, so DSL-shaped input can win over arithmetic when both could match.
+Derived from rule nesting in [parser.ts](../parser.ts) (`expr` through `power`). **Top = loosest binding; bottom = tightest.** `arith_expr` is an **`OR`**: the **`token_expr`** branch is tried **before** the `term` / `+` `-` chain, so DSL-shaped input can win over arithmetic when both could match.
 
 ```mermaid
 flowchart TB
@@ -162,25 +162,25 @@ flowchart TB
 
 ### `expr` vs `expr_value`
 
-[`expr_value`](../backend/typescript/parser.ts) parallels `expr` but uses `and_test_value` / `not_test_value`, and `not_test_value` goes to **`arith_expr` only** (no `comparison`). So relational operators are not part of that subtree. The visitor implements [`expr_value`](../backend/typescript/visitor.ts) for `NODE.OR` / `NODE.AND` / `NODE.NOT` on value-shaped CST. **Note:** in the current grammar file, no other rule `SUBRULE`s `expr_value`; it exists for symmetry and generated CST types. If you add call sites later, comparisons still stay excluded by grammar.
+[`expr_value`](../parser.ts) parallels `expr` but uses `and_test_value` / `not_test_value`, and `not_test_value` goes to **`arith_expr` only** (no `comparison`). So relational operators are not part of that subtree. The visitor implements [`expr_value`](../visitor.ts) for `NODE.OR` / `NODE.AND` / `NODE.NOT` on value-shaped CST. **Note:** in the current grammar file, no other rule `SUBRULE`s `expr_value`; it exists for symmetry and generated CST types. If you add call sites later, comparisons still stay excluded by grammar.
 
 ### Chained comparisons
 
-The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor’s [`comparison`](../backend/typescript/visitor.ts) lowers chains to **Python-style** semantics: `a < b < c` becomes `and(compare(a,b), compare(b,c))` (each compare uses its own operator). Single-operator comparisons still emit one `NODE.COMPARE`. Behavior is covered by [`comparisonchain.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/comparisonchain.test.ts).
+The parser’s `comparison` rule repeats `comp_op` + `arith_expr`. The visitor’s [`comparison`](../visitor.ts) lowers chains to **Python-style** semantics: `a < b < c` becomes `and(compare(a,b), compare(b,c))` (each compare uses its own operator). Single-operator comparisons still emit one `NODE.COMPARE`. Behavior is covered by [`comparisonchain.test.ts`](../../../../ops/tests/unit/feature/lang/comparisonchain.test.ts).
 
 ## Error propagation
 
 | Failure | Where | What happens |
 | ------- | ----- | ------------ |
-| Lexical | `tokenize` | [ast.ts](../backend/typescript/ast.ts) `maplexererrors` → formatted `errors`; no parse |
-| Grammar | `parser.program()` | [ast.ts](../backend/typescript/ast.ts) `mapparsererrors` → formatted offset/line/column; no AST (partial CST in editor path) |
-| Visitor | `visitor.go` | Missing AST yields `"no ast output"` in [ast.ts](../backend/typescript/ast.ts) |
-| Transform | `transformast` / empty code | [generator.ts](../backend/typescript/generator.ts) still returns a no-op `GeneratorFunc` in some paths |
+| Lexical | `tokenize` | [ast.ts](../ast.ts) `maplexererrors` → formatted `errors`; no parse |
+| Grammar | `parser.program()` | [ast.ts](../ast.ts) `mapparsererrors` → formatted offset/line/column; no AST (partial CST in editor path) |
+| Visitor | `visitor.go` | Missing AST yields `"no ast output"` in [ast.ts](../ast.ts) |
+| Transform | `transformast` / empty code | [generator.ts](../generator.ts) still returns a no-op `GeneratorFunc` in some paths |
 | `new Function` | Runtime compile | Caught; error string in `errors`; no-op function |
 
-After a successful `compileast`, [`compile`](../backend/typescript/generator.ts) spreads `astResult` into the return value; if **`transformast`** or **`new Function`** then fails, `tokens` / `cst` / `ast` may still be present alongside `errors` (see early returns in [generator.ts](../backend/typescript/generator.ts)).
+After a successful `compileast`, [`compile`](../generator.ts) spreads `astResult` into the return value; if **`transformast`** or **`new Function`** then fails, `tokens` / `cst` / `ast` may still be present alongside `errors` (see early returns in [generator.ts](../generator.ts)).
 
-With **`recoveryEnabled: true`** on the parser, treat **`parser.errors.length === 0`** as the gate for a trustworthy CST ([parser.ts](../backend/typescript/parser.ts) constructor)—recovery can produce partial trees.
+With **`recoveryEnabled: true`** on the parser, treat **`parser.errors.length === 0`** as the gate for a trustworthy CST ([parser.ts](../parser.ts) constructor)—recovery can produce partial trees.
 
 ## Runtime integration
 
@@ -204,7 +204,7 @@ sequenceDiagram
 
 ## Editor tooling
 
-[editor component.tsx](../../../screens/editor/component.tsx) uses [`compileastforeditor`](../backend/typescript/ast.ts), lexer, [`createlineindexes`](../backend/typescript/transformer.ts), and `CodeNode` / `NODE` for parsing and structure without always running full `compile` / `new Function` on every edit. Parse diagnostics use the same formatted [`LANG_ERROR.message`](../backend/typescript/lexer.ts) as strict compile.
+[editor component.tsx](../../../screens/editor/component.tsx) uses [`compileastforeditor`](../ast.ts), lexer, [`createlineindexes`](../transformer.ts), and `CodeNode` / `NODE` for parsing and structure without always running full `compile` / `new Function` on every edit. Parse diagnostics use the same formatted [`LANG_ERROR.message`](../lexer.ts) as strict compile.
 
 ```mermaid
 flowchart LR
@@ -221,16 +221,16 @@ flowchart LR
 
 ## Parsing footguns
 
-- **`new Function` / CSP** — The generator uses dynamic `Function` construction ([generator.ts](../backend/typescript/generator.ts)); treat untrusted source like any eval-capable path (CSP, validation, supply chain).
-- **`maxLookahead: 3`** — LL(3)-style limits in [parser.ts](../backend/typescript/parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
+- **`new Function` / CSP** — The generator uses dynamic `Function` construction ([generator.ts](../generator.ts)); treat untrusted source like any eval-capable path (CSP, validation, supply chain).
+- **`maxLookahead: 3`** — LL(3)-style limits in [parser.ts](../parser.ts); some inputs may fail or parse differently than with unbounded lookahead.
 - **Recovery** — Partial CST possible after errors; always check parser errors before using the tree.
-- **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../backend/typescript/parser.ts); inside `term_item` it is division. Context disambiguates.
+- **Statement `/`** — Token `divide` (`/`) at **statement** level is [`short_go`](../parser.ts); inside `term_item` it is division. Context disambiguates.
 - **`token_expr` vs arithmetic** — First branch of `arith_expr` favors built-in token DSL over `+`/`-` term chains when both apply.
-- **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../backend/typescript/parser.ts), etc.) expect specific newline/`#` structure; see [human-readable parse errors](#human-readable-parse-errors) for editor hints when structure is wrong.
+- **Newlines and `#do` / `#done`** — Block forms ([`command_if_block`](../parser.ts), etc.) expect specific newline/`#` structure; see [human-readable parse errors](#human-readable-parse-errors) for editor hints when structure is wrong.
 
 ## Human-readable parse errors
 
-Chevrotain lexer/parser messages are rewritten in [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) (see [formatlangerror.md](formatlangerror.md)) before they reach the editor or compile tape. [`ast.ts`](../backend/typescript/ast.ts) calls the formatter from `maplexererrors` and `mapparsererrors` for both `compileast` and `compileastforeditor`.
+Chevrotain lexer/parser messages are rewritten in [`formatlangerror.ts`](../formatlangerror.ts) (see [formatlangerror.md](formatlangerror.md)) before they reach the editor or compile tape. [`ast.ts`](../ast.ts) calls the formatter from `maplexererrors` and `mapparsererrors` for both `compileast` and `compileastforeditor`.
 
 Context-aware rules (checked before generic token-set collapsing):
 
@@ -259,5 +259,5 @@ Editor display ([`editorrows.tsx`](../../../screens/editor/editorrows.tsx)) and 
 
 ## See also
 
-- Grep tests: `compile(` / `compileast` under `zss/` for behavioral specs; [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/backend/typescript/formatlangerror.test.ts) for error copy.
+- Grep tests: `compile(` / `compileast` under `zss/` for behavioral specs; [`formatlangerror.test.ts`](../../../../ops/tests/unit/feature/lang/formatlangerror.test.ts) for error copy.
 - [README.md](README.md) — short pipeline summary and dependencies.

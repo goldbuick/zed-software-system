@@ -7,6 +7,38 @@
 <li><code>./loaderbinary</code>, <code>./loaderjson</code>, <code>./loadertext</code> — loader implementations</li>
 </ul>
 <h2 id="getchip-name-hook"><a class="blume-heading-anchor" href="#getchip-name-hook">get(chip, name) Hook</a></h2>
+<p>These names work for every loader, including a chat loader with no file:</p>
+<div class="blume-table-scroll" tabindex="0"><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chatconnected</code></td>
+<td><code>1</code> when the twitch chat slot is connected, else <code>0</code></td>
+</tr>
+<tr>
+<td><code>chatchannel</code></td>
+<td>Channel name. Copy with <code>#set</code> before an <code>is</code> check</td>
+</tr>
+<tr>
+<td><code>chatusername</code></td>
+<td>Logged-in nick (token user, or the anonymous <code>justinfan</code> nick). Copy with <code>#set</code> before an <code>is</code> check</td>
+</tr>
+<tr>
+<td><code>mediaqueue</code></td>
+<td>Array of approval rows, <code>index duration name title</code> (<code>3m</code> or <code>unknown</code>; title falls back to the url). Walk with <code>#foreach</code></td>
+</tr>
+<tr>
+<td><code>medialist</code></td>
+<td>Array of play-queue rows, <code>index name title</code>. Walk with <code>#foreach</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><code>mediaqueue</code> and <code>medialist</code> read the operator board’s media helper. An unbound helper is an empty array.</p>
 <p>Returns loader metadata based on format:</p>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>
@@ -72,6 +104,11 @@
 <td><code>media</code></td>
 <td><code>&lt;name&gt; &lt;url&gt;</code></td>
 <td>Submit URL to the board TV helper with explicit queue display name (operator + <code>speaker</code> / <code>media</code> permission). Prefer <code>#withplayerboard</code> or <code>#withboard</code> first so the helper resolves from loader targeting. Empty name sanitizes to <code>player</code>.</td>
+</tr>
+<tr>
+<td><code>queue</code></td>
+<td>(same as CLI <code>#queue</code>)</td>
+<td>Media queue admin. Runs as the operator (<code>elementfocus</code>), so the loader script has to decide who may call it.</td>
 </tr>
 </tbody>
 </table></div>

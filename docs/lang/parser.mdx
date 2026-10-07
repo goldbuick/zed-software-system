@@ -89,4 +89,4 @@ title: parser.ts
 
 ## CST types
 
-`parser.ts` does not generate CST types at runtime. [`visitortypes.ts`](../backend/typescript/visitortypes.ts) is maintained by hand; regenerate it out-of-band with `generateCstDts(parser.getGAstProductions())` if the grammar changes shape.
+`parser.ts` does not generate CST types at runtime. [`visitortypes.ts`](../visitortypes.ts) is maintained by hand; regenerate it out-of-band with `generateCstDts(parser.getGAstProductions())` if the grammar changes shape.

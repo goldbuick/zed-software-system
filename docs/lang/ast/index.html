@@ -3,7 +3,7 @@
 <ul>
 <li><code>chevrotain</code> — CstNode, IToken, ILexingResult</li>
 <li><code>zss/mapping/types</code> — isarray</li>
-<li><a href="../backend/typescript/formatlangerror.ts"><code>formatlangerror.ts</code></a> — human-readable error messages</li>
+<li><a href="../formatlangerror.ts"><code>formatlangerror.ts</code></a> — human-readable error messages</li>
 <li><code>./lexer</code> — LANG_ERROR, tokenize</li>
 <li><code>./parser</code> — parser</li>
 <li><code>./visitor</code> — CodeNode, visitor</li>
@@ -46,7 +46,7 @@
 <li>Returns first AST node or errors</li>
 </ol>
 <h2 id="error-formatting"><a class="blume-heading-anchor" href="#error-formatting">Error formatting</a></h2>
-<p>Raw Chevrotain messages are <strong>not</strong> copied verbatim. Internal helpers call <a href="../backend/typescript/formatlangerror.ts"><code>formatlangerror</code></a>:</p>
+<p>Raw Chevrotain messages are <strong>not</strong> copied verbatim. Internal helpers call <a href="../formatlangerror.ts"><code>formatlangerror</code></a>:</p>
 <ul>
 <li><strong><code>maplexererrors(lexresult)</code></strong> — lexer <code>ILexingError[]</code> → <code>LANG_ERROR[]</code></li>
 <li><strong><code>mapparsererrors(input)</code></strong> — passes fault token plus same-line tokens before the fault for context rules</li>

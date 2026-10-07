@@ -8,7 +8,7 @@ title: ast.ts
 
 - `chevrotain` — CstNode, IToken, ILexingResult
 - `zss/mapping/types` — isarray
-- [`formatlangerror.ts`](../backend/typescript/formatlangerror.ts) — human-readable error messages
+- [`formatlangerror.ts`](../formatlangerror.ts) — human-readable error messages
 - `./lexer` — LANG_ERROR, tokenize
 - `./parser` — parser
 - `./visitor` — CodeNode, visitor
@@ -44,7 +44,7 @@ title: ast.ts
 
 ## Error formatting
 
-Raw Chevrotain messages are **not** copied verbatim. Internal helpers call [`formatlangerror`](../backend/typescript/formatlangerror.ts):
+Raw Chevrotain messages are **not** copied verbatim. Internal helpers call [`formatlangerror`](../formatlangerror.ts):
 
 - **`maplexererrors(lexresult)`** — lexer `ILexingError[]` → `LANG_ERROR[]`
 - **`mapparsererrors(input)`** — passes fault token plus same-line tokens before the fault for context rules
