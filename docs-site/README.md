@@ -1,6 +1,6 @@
 # docs-site
 
-Blume static docs for **https://zed.cafe/docs/** (ZSS System Reference).
+Blume static docs for **https://zed.cafe/docs/** (Zed Cafe Docs: creator guides plus the ZSS system reference).
 
 ## Layout
 
@@ -10,7 +10,9 @@ Blume static docs for **https://zed.cafe/docs/** (ZSS System Reference).
 | `theme.css` | Zed Cafe / ZNS tokens — terminal blue, cyan accent, IBM EGA, dot backplate |
 | `public/fonts/IBMEGA8x14.woff` | Bitmap font from `ops/infra/zns-public/fonts/` |
 | `public/zns-dot-tile.svg` | Checkerboard blue-on-blue dots (tape / ZNS backplate) |
-| `content/` | Spine pages (intro, map, glossary, features, architecture) — real files |
+| `content/` | Intro page and `features/` — real files |
+| `content/(reference)/` | Spine pages (map, glossary, architecture) — a parenthesized group folder, so URLs stay `/map`, `/glossary`, `/architecture` |
+| `content/guides/` | Creator tutorials (real files, `.mdx` for Steps / callouts) — first in the sidebar after the intro |
 | `content/<prefix>/` | Symlinks into colocated `zss/**/docs` (and `ops` → `ops/docs`) |
 
 Examples: `content/lang` → `zss/feature/lang/docs`, `content/device` → `zss/device/docs`.
@@ -23,7 +25,7 @@ Module manuals stay next to code. Do not mass-move them here — see [`.cursor/r
 
 ## Markdown vs MDX
 
-Plain `.md` is fine for headings, tables, and normal code fences. Blume only renders **Mermaid**, callout directives (`:::note`), math, and `package-install` fences in **`.mdx`**. If a page needs a diagram, name it `*.mdx` (see `content/map.mdx`).
+Plain `.md` is fine for headings, tables, and normal code fences. Blume only renders **Mermaid**, callout directives (`:::note`), math, and `package-install` fences in **`.mdx`**. If a page needs a diagram, name it `*.mdx` (see `content/(reference)/map.mdx`).
 
 Mermaid diagrams keep their intrinsic width (horizontal scroll in the article) and support **Expand** / click-to-open a fullscreen lightbox via [`components/MermaidZoom.astro`](components/MermaidZoom.astro) (`layout.PageFooter` in [`components.ts`](components.ts)).
 

@@ -1,9 +1,9 @@
 import { defineConfig } from 'blume'
 
 export default defineConfig({
-  title: 'ZSS System Reference',
+  title: 'Zed Cafe Docs',
   description:
-    'Architecture, glossary, and developer docs for Zed Cafe / Zed Software System.',
+    'Guides for making worlds in Zed Cafe, plus architecture and developer reference for the Zed Software System.',
   github: {
     owner: 'goldbuick',
     repo: 'zed-software-system',

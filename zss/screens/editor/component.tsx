@@ -257,7 +257,7 @@ $white${metaundo}$green.REDO
 $white$meta+f$green.FIND 
 $white$meta+alt+f$green.REPLACE 
 $white$meta+g$green.FIND NEXT 
-$white$shift+$meta+g$green.FIND PREV 
+$whiteshift+$meta+g$green.FIND PREV 
 $white$meta+enter$green.REPLACE ONE 
 $white$meta+alt+enter$green.REPLACE ALL 
 $white$meta+p$green.RUN SELECTED CODE 
