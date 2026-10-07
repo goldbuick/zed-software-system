@@ -46,6 +46,13 @@ function twitchchatauth(token: string): AuthProvider {
     async getAccessTokenForUser() {
       return this.getAccessTokenForIntent!('chat')
     },
+    async getAnyAccessToken() {
+      const tokeninfo = await this.getAccessTokenForIntent!('chat')
+      if (!tokeninfo) {
+        throw tokenerror('token has no twitch user')
+      }
+      return tokeninfo
+    },
     async getAccessTokenForIntent() {
       let info
       try {
