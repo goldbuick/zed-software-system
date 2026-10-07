@@ -175,7 +175,7 @@ function readvargs(index: number, maxcount = 0): [any[], number] {
   return [values, i]
 }
 
-export function readexpr(index: number): [any, number] {
+export function readexpr(index: number, shouldresolve = false): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
   const ii = index + 1
 
@@ -221,6 +221,7 @@ export function readexpr(index: number): [any, number] {
     return [randominteger(0, 1), ii]
   }
 
+  // map dir consts
   if (mapstrdir(maybevalue)) {
     const [maybedir, iii] = readdir(index)
     if (ispresent(maybedir)) {
@@ -240,9 +241,11 @@ export function readexpr(index: number): [any, number] {
     const maybeexpr = NAME(maybevalue)
 
     // check for flag
-    const maybeflagfromvalue = READ_CONTEXT.get?.(maybevalue)
-    if (ispresent(maybeflagfromvalue)) {
-      return [maybeflagfromvalue, ii]
+    if (shouldresolve) {
+      const maybeflagfromvalue = READ_CONTEXT.get?.(maybevalue)
+      if (ispresent(maybeflagfromvalue)) {
+        return [maybeflagfromvalue, ii]
+      }
     }
 
     // check for expressions

@@ -164,15 +164,14 @@ describe('chip unset flag truthiness (dual-use pass-through)', () => {
     expect(chip.if(chip.and('follower', 1))).toBe(0)
   })
 
-  it('if treats set numeric flags as truthy; string values are flag names', () => {
+  it('if treats set numeric flags and non-empty string values as truthy', () => {
     const chip = makechip('if_set')
     chip.set('follower', 1)
     expect(chip.if('follower')).toBe(1)
-    // resolved string is looked up again as a flag name (maptoresult)
     chip.set('follower', 'oid_seg')
-    expect(chip.if('follower')).toBe(0)
-    chip.set('oid_seg', 1)
     expect(chip.if('follower')).toBe(1)
+    chip.set('follower', '')
+    expect(chip.if('follower')).toBe(0)
   })
 
   it('iseq: unset name maps to 0; string flag values remapped via maptovalue', () => {
