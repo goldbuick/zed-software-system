@@ -477,29 +477,19 @@ export type CHIP = {
 type CHIP_GET = (name: string) => any
 
 /**
- * Truthiness of a resolved value. A string is judged on its own length.
+ * Converts a value to a result (truthy/falsy representation).
+ * Arrays are truthy if they have length > 0, otherwise uses the value or 0.
  * @param value - The value to convert
  * @returns 1 if truthy, 0 if falsy
  */
-function maptoresult(value: WORD): 0 | 1 {
+function maptoresult(value: WORD, get: CHIP_GET): 0 | 1 {
   if (isarray(value)) {
     return value.length > 0 ? 1 : 0
   }
   if (isstring(value)) {
-    return value.length > 0 ? 1 : 0
+    return (get(value) ?? 0) ? 1 : 0
   }
   return (value ?? 0) ? 1 : 0
-}
-
-/**
- * readexpr returns a set flag's value, or the same word when that flag is unset.
- * An unset name stays falsy. A string value is not looked up as another flag.
- */
-function conditionresult(raw: WORD, resolved: WORD, get: CHIP_GET): 0 | 1 {
-  if (isstring(raw) && raw === resolved && !ispresent(get(raw))) {
-    return 0
-  }
-  return maptoresult(resolved)
 }
 
 /**
@@ -947,7 +937,7 @@ export function createchip(
     if(...words) {
       const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])
 
-      const result = conditionresult(words[0], value, chip.get)
+      const result = maptoresult(value, chip.get)
       if (result && ii < words.length) {
         chip.command(...words.slice(ii))
       }
@@ -1146,7 +1136,7 @@ export function createchip(
     },
     waitfor(...words) {
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = conditionresult(words[0], value, chip.get)
+      const result = maptoresult(value, chip.get)
 
       if (!result) {
         // conditional failed, yield until next tick
@@ -1160,8 +1150,8 @@ export function createchip(
       for (let i = 0; i < words.length; ) {
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
-        // use conditionresult so empty arrays are falsy (same as if / not / waitfor)
-        if (conditionresult(words[i], lastvalue, chip.get)) {
+        // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
+        if (maptoresult(lastvalue, chip.get)) {
           break // or returns the first truthy value
         }
         i = next
@@ -1173,8 +1163,8 @@ export function createchip(
       for (let i = 0; i < words.length; ) {
         const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
         lastvalue = value
-        // use conditionresult so empty arrays are falsy (same as if / not / waitfor)
-        if (!conditionresult(words[i], lastvalue, chip.get)) {
+        // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
+        if (!maptoresult(lastvalue, chip.get)) {
           break // and returns the first falsy value, or the last value
         }
         i = next
@@ -1184,7 +1174,7 @@ export function createchip(
     not(...words) {
       // invert outcome
       const [value] = readargs(words, 0, [ARG_TYPE.ANY])
-      const result = conditionresult(words[0], value, chip.get)
+      const result = maptoresult(value, chip.get)
       return result ? 0 : 1
     },
     expr(...words) {

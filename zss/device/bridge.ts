@@ -287,19 +287,13 @@ function twitchsayrejectreason(text: string): string {
 /** Post one message on the twitch slot. Fails loud when it cannot speak. */
 export function twitchchatsay(player: string, text: string) {
   const trimmed = text.trim()
-  // eslint-disable-next-line no-console -- trace twitch say
-  console.log('[chat say] bridge', trimmed)
   const reason = twitchsayrejectreason(trimmed)
   if (reason) {
-    // eslint-disable-next-line no-console -- trace twitch say
-    console.log('[chat say] rejected', reason)
     apierror(bridge, player, 'bridge', reason)
     return
   }
   const conn = chatslots.get(CHAT_KIND.TWITCH)
   if (!ispresent(conn) || !conn.canspeak?.() || !conn.say) {
-    // eslint-disable-next-line no-console -- trace twitch say
-    console.log('[chat say] rejected, no tokened twitch slot')
     apierror(
       bridge,
       player,
@@ -308,8 +302,6 @@ export function twitchchatsay(player: string, text: string) {
     )
     return
   }
-  // eslint-disable-next-line no-console -- trace twitch say
-  console.log('[chat say] sending', trimmed)
   void conn.say(trimmed).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err)
     apierror(bridge, player, 'bridge', `twitch chat say failed: ${message}`)
@@ -318,10 +310,6 @@ export function twitchchatsay(player: string, text: string) {
 
 const bridge = createdevice('bridge', [], (message) => {
   if (!bridge.session(message)) {
-    if (message.target === 'chatsay') {
-      // eslint-disable-next-line no-console -- trace twitch say
-      console.log('[chat say] dropped, session')
-    }
     return
   }
 
@@ -334,13 +322,6 @@ const bridge = createdevice('bridge', [], (message) => {
       break
     default:
       if (message.player !== player) {
-        if (message.target === 'chatsay') {
-          // eslint-disable-next-line no-console -- trace twitch say
-          console.log('[chat say] dropped, player mismatch', {
-            message: message.player,
-            tab: player,
-          })
-        }
         return
       }
       break

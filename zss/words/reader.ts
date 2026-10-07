@@ -363,7 +363,8 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.ANY: {
-        const [value, iii] = readexpr(ii)
+        // I think this is the only spot where we don't try and resolve bare words
+        const [value, iii] = readexpr(ii, false)
         ii = iii
         values.push(value)
         break
