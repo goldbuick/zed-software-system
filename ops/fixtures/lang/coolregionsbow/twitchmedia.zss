@@ -1,5 +1,4 @@
 @loader twitchmedia
-@format text
 @event chat:message
 ' chat line is name|voice:text
 ' any chatter: an http(s) url in the text goes on the board tv
