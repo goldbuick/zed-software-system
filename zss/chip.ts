@@ -483,13 +483,12 @@ type CHIP_GET = (name: string) => any
  * @returns 1 if truthy, 0 if falsy
  */
 function maptoresult(value: WORD, get: CHIP_GET): 0 | 1 {
-  if (isarray(value)) {
-    return value.length > 0 ? 1 : 0
+  // if string, we try and resolve it as a flag
+  const maybevalue = isstring(value) ? (get(value) ?? 0) : value
+  if (isarray(maybevalue)) {
+    return maybevalue.length > 0 ? 1 : 0
   }
-  if (isstring(value)) {
-    return (get(value) ?? 0) ? 1 : 0
-  }
-  return (value ?? 0) ? 1 : 0
+  return (maybevalue ?? 0) ? 1 : 0
 }
 
 /**
@@ -935,7 +934,7 @@ export function createchip(
       return invokecommand(NAME(maptostring(name)), args)
     },
     if(...words) {
-      const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY])
+      const [value, ii] = readargs(words, 0, [ARG_TYPE.ANY_VALUE])
 
       const result = maptoresult(value, chip.get)
       if (result && ii < words.length) {
@@ -1135,7 +1134,7 @@ export function createchip(
       return result
     },
     waitfor(...words) {
-      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY_VALUE])
       const result = maptoresult(value, chip.get)
 
       if (!result) {
@@ -1148,7 +1147,7 @@ export function createchip(
     or(...words) {
       let lastvalue: WORD = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
+        const [value, next] = readargs(words, i, [ARG_TYPE.ANY_VALUE])
         lastvalue = value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
         if (maptoresult(lastvalue, chip.get)) {
@@ -1161,7 +1160,7 @@ export function createchip(
     and(...words) {
       let lastvalue: WORD = 0
       for (let i = 0; i < words.length; ) {
-        const [value, next] = readargs(words, i, [ARG_TYPE.ANY])
+        const [value, next] = readargs(words, i, [ARG_TYPE.ANY_VALUE])
         lastvalue = value
         // use maptoresult so empty arrays are falsy (same as if / not / waitfor)
         if (!maptoresult(lastvalue, chip.get)) {
@@ -1173,19 +1172,19 @@ export function createchip(
     },
     not(...words) {
       // invert outcome
-      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY_VALUE])
       const result = maptoresult(value, chip.get)
       return result ? 0 : 1
     },
     expr(...words) {
-      // parse expressions
-      const [value] = readargs(words, 0, [ARG_TYPE.ANY])
+      // parse expressions - I think this should be passthrough
+      const [value] = readargs(words, 0, [ARG_TYPE.ANY_VALUE])
       return value
     },
     iseq(lhs, rhs) {
       // Keep unset name == unset name (dual-use string pass-through).
-      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY_VALUE])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY_VALUE])
       const leftvalue = maptovalue(left, chip.get)
       if (typeof leftvalue === 'object' || typeof right === 'object') {
         return isequal(leftvalue, right) ? 1 : 0
@@ -1193,8 +1192,8 @@ export function createchip(
       return leftvalue === right ? 1 : 0
     },
     ishas(lhs, rhs) {
-      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY_VALUE])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY_VALUE])
       if (!isarray(left)) {
         return 0
       }

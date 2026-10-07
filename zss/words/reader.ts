@@ -65,6 +65,7 @@ export type ARG_TYPE_MAP = {
   [ARG_TYPE.MAYBE_NUMBER_OR_NAME]: MAYBE<number | string>
   [ARG_TYPE.MAYBE_NUMBER_OR_STRING]: MAYBE<number | string>
   [ARG_TYPE.ANY]: any
+  [ARG_TYPE.ANY_VALUE]: any
 }
 
 type ARG_TYPES = [ARG_TYPE, ...ARG_TYPE[]]
@@ -80,7 +81,6 @@ function didexpect(msg: string, value: any, words: WORD[]) {
     msg,
     JSON.stringify(value),
     words,
-    READ_CONTEXT.element,
     READ_CONTEXT.elementid,
     READ_CONTEXT.elementfocus,
   )
@@ -363,6 +363,12 @@ export function readargs<T extends ARG_TYPES>(
         break
       }
       case ARG_TYPE.ANY: {
+        const [value, iii] = readexpr(ii)
+        ii = iii
+        values.push(value)
+        break
+      }
+      case ARG_TYPE.ANY_VALUE: {
         // I think this is the only spot where we don't try and resolve bare words
         const [value, iii] = readexpr(ii, false)
         ii = iii

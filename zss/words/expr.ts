@@ -175,7 +175,7 @@ function readvargs(index: number, maxcount = 0): [any[], number] {
   return [values, i]
 }
 
-export function readexpr(index: number, shouldresolve = false): [any, number] {
+export function readexpr(index: number, shouldresolve = true): [any, number] {
   const maybevalue = READ_CONTEXT.words[index]
   const ii = index + 1
 
