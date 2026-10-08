@@ -3,7 +3,9 @@ import {
   JSON_READER,
   TEXT_READER,
   apichat,
+  apierror,
   apitoast,
+  bridgechatsay,
   gadgetclientbonk,
   gadgetclientfadein,
   gadgetclientfadeout,
@@ -203,6 +205,20 @@ const LOADER_BASE = createfirmware({
     )
     return 0
   })
+  .command(
+    'chat',
+    ['say <text> to the connected twitch channel'],
+    (_, words) => {
+      const [head, ...rest] = words.map(maptostring)
+      const operator = memoryreadoperator()
+      if (NAME(head ?? '') !== 'say') {
+        apierror(SOFTWARE, operator, 'chat', 'usage: chat say <text>')
+        return 0
+      }
+      bridgechatsay(SOFTWARE, operator, rest.join(' '))
+      return 0
+    },
+  )
   .command('readline', ['text data'], loadertext)
   .command('readjson', ['JSON data'], loaderjson)
   .command('readbin', ['binary data'], loaderbinary)

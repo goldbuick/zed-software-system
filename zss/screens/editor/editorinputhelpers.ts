@@ -34,6 +34,11 @@ export function computeselection(
   return { ...r, strvalueselected: r.selected }
 }
 
+/** Editor rows split on LF. Map CR, CRLF, and unicode line separators to `\n`. */
+export function normalizelineendings(text: string): string {
+  return text.replace(/\r\n|\r|\u2028|\u2029|\u0085/g, '\n')
+}
+
 export function drawlocalcursor(
   codepage: MAYBE<SharedTextHandle>,
   xblink: number,

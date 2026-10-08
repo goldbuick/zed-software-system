@@ -160,6 +160,7 @@ export enum ARG_TYPE {
   MAYBE_NUMBER_OR_NAME,
   MAYBE_NUMBER_OR_STRING,
   ANY,
+  ANY_VALUE,
 }
 
 export type PT = { x: number; y: number }

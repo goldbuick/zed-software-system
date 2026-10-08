@@ -1,26 +1,42 @@
-@loader twitchmedia
-@format text
+@loader chatmedia
 @event chat:message
 ' chat line is name|voice:text
 ' any chatter: an http(s) url in the text goes on the board tv
-' goldbuick only: !queue, !queue skip|clear|stop, !queue limit N, !queue approve N, !queue reject N
-#readline "(.*?)\|(.*?):(.*)" chatuser chatvoice chattext
-#readline "(.*?)\|(.*?):.*?(https?://\S+)" _user _voice url
+' any chatter: !media lists the play queue in chat
+' admin only: !queue lists media needing approval in chat
+' admin only: !queue skip|clear|stop, !queue limit N, !queue approve N, !queue reject N
+#clear mediahit queuehit
+#readline "(.*?)\|.*?:.*" chatuser
+#readline ".*?\|.*?:.*?(https?:\/\/\S+)" url
+#readline ".*?\|.*?:!(media)\b" mediahit
+#readline ".*?\|.*?:!(queue)\s*(\S*)\s*(\S*)" queuehit queuecmd queuearg
 #if url do
  #withplayerboard
- #media "$chatuser" "$url"
-#done
-#readline "(.*?)\|(.*?):!(queue)\s*(\S*)\s*(\S*)" _user _voice queuehit queuecmd queuearg
-#if chatuser is goldbuick do
- #if queuehit is queue do
-  #if queuecmd do
-   #if queuearg do
-    #queue "$queuecmd" "$queuearg"
-   #else do
-    #queue "$queuecmd"
-   #done
+ #media chatuser url
+#else if mediahit do
+ #read medialist length rowcount
+ #if not rowcount do
+  #chat say "media queue is empty"
+ #done
+ #foreach row medialist do
+  #chat say row
+  #idle
+ #done
+#else if queuehit and chatuser is goldbuick do
+ #if queuecmd do
+  #if queuearg do
+   #queue queuecmd queuearg
   #else do
-   #queue
+   #queue queuecmd
+  #done
+ #else do
+  #read mediaqueue length rowcount
+  #if not rowcount do
+   #chat say "no media waiting for approval"
+  #done
+  #foreach row mediaqueue do
+   #chat say row
+   #idle
   #done
  #done
 #done

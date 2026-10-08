@@ -63,6 +63,7 @@ import {
   computeselection,
   drawlocalcursor,
   drawremotecursors,
+  normalizelineendings,
   togglecomments,
 } from './editorinputhelpers'
 import {
@@ -152,11 +153,12 @@ export function EditorInput({
     }
     return onmobiletextinput((newString, selectionStart) => {
       const prev = codepage.toJSON()
-      if (newString === prev) {
+      const next = normalizelineendings(newString)
+      if (next === prev) {
         return
       }
-      strvaluesplice(0, prev.length, newString)
-      const pos = clamp(selectionStart, 0, newString.length)
+      strvaluesplice(0, prev.length, next)
+      const pos = clamp(selectionStart, 0, next.length)
       updatescrolling(pos)
       useEditor.setState({ cursor: pos, select: undefined })
     })
@@ -570,7 +572,7 @@ export function EditorInput({
                       clipboard
                         .readText()
                         .then((text) => {
-                          const cleantext = text.replaceAll('\r', '')
+                          const cleantext = normalizelineendings(text)
                           if (hasselection) {
                             strvaluesplice(ii1, iic, cleantext)
                           } else {

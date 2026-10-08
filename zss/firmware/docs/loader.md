@@ -25,6 +25,8 @@ These names work for every loader, including a chat loader with no file:
 
 `mediaqueue` and `medialist` read the operator board's media helper. An unbound helper is an empty array.
 
+Loaders can post to twitch with `#chat say <text>`. It always speaks as the operator (the tab that owns the twitch connection), and needs a tokened `#chat <channel> twitchtoken=` session. Other `#chat` forms are CLI only. See `ops/fixtures/lang/coolregionsbow/twitchmedia.zss` (`!media`, `!queue`) for `#foreach` over `medialist` / `mediaqueue` with `#chat say`.
+
 Returns loader metadata based on format:
 
 | Format | Available names |
