@@ -273,12 +273,12 @@ export function readargs<T extends ARG_TYPES>(
             didexpect('color or group', value, words)
           }
         } else {
-          const [value, kkk] = readexpr(ii)
+          const [value, mmm] = readexpr(ii)
           if (isstrcolor(value)) {
-            ii = kkk
+            ii = mmm
             values.push(value)
           } else if (isstrgroup(value)) {
-            ii = kkk
+            ii = mmm
             values.push(value)
           } else {
             didexpect('color or group', value, words)

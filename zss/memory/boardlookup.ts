@@ -121,10 +121,8 @@ export function memoryinitboardnamed(board: MAYBE<BOARD>) {
 
       // read code to get name
       if (isstring(object.code) && !ispresent(object.name)) {
-        memoryapplyelementstats(
-          memoryreadcodepagestatsfromtext(object.code),
-          object,
-        )
+        const instancestats = memoryreadcodepagestatsfromtext(object.code)
+        memoryapplyelementstats(instancestats, object)
       }
 
       // update named lookup
