@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { def, handler } from '../../helpers'
@@ -13,17 +13,42 @@ function withinrepo(root: string, target: string): boolean {
   return target === root || target.startsWith(`${root}/`)
 }
 
-/** Resolve Blume site paths (/docs/...) against docs-site/content. */
+/**
+ * Parenthesized content folders are Blume route groups. They do not appear
+ * in the public URL, so /glossary also lives at content/(reference)/glossary.
+ */
+function routegroupbases(root: string, rel: string): string[] {
+  const contentdir = join(root, CONTENTROOT)
+  const bases = [join(contentdir, rel)]
+  if (!existsSync(contentdir)) {
+    return bases
+  }
+  for (const entry of readdirSync(contentdir, { withFileTypes: true })) {
+    if (
+      entry.isDirectory() &&
+      entry.name.startsWith('(') &&
+      entry.name.endsWith(')')
+    ) {
+      bases.push(join(contentdir, entry.name, rel))
+    }
+  }
+  return bases
+}
+
+/** Resolve Blume site paths (/glossary, /map, ...) against docs-site/content. */
 function contentcandidates(root: string, sitopath: string): string[] {
   const rel = sitopath.replace(/^\//, '')
-  const base = join(root, CONTENTROOT, rel)
-  return [
-    base,
-    `${base}.md`,
-    `${base}.mdx`,
-    join(base, 'index.md'),
-    join(base, 'index.mdx'),
-  ]
+  const candidates: string[] = []
+  for (const base of routegroupbases(root, rel)) {
+    candidates.push(
+      base,
+      `${base}.md`,
+      `${base}.mdx`,
+      join(base, 'index.md'),
+      join(base, 'index.mdx'),
+    )
+  }
+  return candidates
 }
 
 function checkrelative(
