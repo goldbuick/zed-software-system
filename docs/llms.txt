@@ -1,10 +1,20 @@
-# ZSS System Reference
+# Zed Cafe Docs
 
-> Architecture, glossary, and developer docs for Zed Cafe / Zed Software System.
+> Guides for making worlds in Zed Cafe, plus architecture and developer reference for the Zed Software System.
 
 ## Docs
 
-- [Introduction](https://zed.cafe/docs): Zed Cafe developer documentation — system reference for ZSS.
+- [Introduction](https://zed.cafe/docs): Zed Cafe docs -- guides for making worlds, plus the system reference for ZSS.
+
+## Guides
+
+- [Guides](https://zed.cafe/docs/guides): Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
+- [Your first ten minutes](https://zed.cafe/docs/guides/first-ten-minutes): Open zed.cafe, find your way around the terminal, load a starter kit, and look inside a book.
+- [Your first board](https://zed.cafe/docs/guides/first-board): Create two connected boards, build walls with commands and the inspector, then save and share the result.
+- [Your first object](https://zed.cafe/docs/guides/first-object): Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, scroll text, and links.
+
+## Reference
+
 - [System map](https://zed.cafe/docs/map): Product stack, realms and workers, tick loop, and script pipeline.
 - [Glossary](https://zed.cafe/docs/glossary): Terms used across Zed Cafe / ZSS — product, world model, devices, and more.
 - [Architecture](https://zed.cafe/docs/architecture): Pointer to the ZSS architecture deep dive and runtime overview.

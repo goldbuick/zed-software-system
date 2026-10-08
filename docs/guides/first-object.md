@@ -1,0 +1,184 @@
+---
+title: Your first object
+description: Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, scroll text, and links.
+---
+
+Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have a board from [Your first board](/guides/first-board) and the **ZTK** kit loaded.
+
+## Make the lamp
+
+1. **Create the page**
+
+    Press `@`, type `object lamp`, and select **create object @lamp**. The code editor opens with one line: `@lamp`.
+
+2. **Write the code**
+
+    Replace the contents with:
+
+    ```text
+    @lamp
+    @char 15
+    @color brown
+    #end
+    :touch
+    #if lit do
+     The lamp is already lit.
+    #else do
+     #set lit 1
+     #color yellow
+     $toast the lamp is lit
+    #done
+    ```
+
+3. **Close the editor and place the lamp**
+
+    Press `esc`. Then put a lamp next to you:
+
+    ```text
+    #put east lamp
+    ```
+
+4. **Try it**
+
+    Walk into the lamp. It turns yellow and a toast pops up. Walk into it again and a scroll says it is already lit.
+
+Here is what each part does:
+
+| Line | Meaning |
+|------|---------|
+| `@lamp` | The first line names the object. `#put east lamp` uses this name. |
+| `@char 15` / `@color brown` | **Stats**: how the object looks. `15` is a character code (a sun shape). |
+| `#end` | Stop. The object waits here until something happens. |
+| `:touch` | A **label**. Code here runs when a player walks into the object. |
+| `#if lit do` ... `#else do` ... `#done` | Branch on a **flag**. A flag nobody has set counts as false. |
+| `#set lit 1` | Set the flag so the next touch takes the other branch. |
+| `#color yellow` | Change the object's own color. |
+| `$toast ...` | Show a short pop-up message. `$ticker ...` shows a line at the bottom instead. |
+| `The lamp is already lit.` | A plain text line. Text lines are collected into a **scroll** that the player reads. |
+
+:::note
+Indenting the lines inside `do` ... `#done` with a space is optional. It just makes the branches easier to read.
+:::
+
+## Send it a message
+
+Labels are not only for touch. Any label is a message the object can receive. Open the lamp again with `#pageopen lamp` and add an `#end` and a `:light` label at the bottom:
+
+```text
+@lamp
+@char 15
+@color brown
+#end
+:touch
+#if lit do
+ The lamp is already lit.
+#else do
+ #set lit 1
+ #color yellow
+ $toast the lamp is lit
+#done
+#end
+:light
+#set lit 1
+#color yellow
+$toast the lamp is lit
+```
+
+:::warning
+Code runs straight down past labels. Without the `#end` after `#done`, every touch would also run the `:light` code below it. End each label's code with `#end` (or `#die`).
+:::
+
+Close the editor, open the CLI with `#`, and run:
+
+```text
+lamp:light
+```
+
+`lamp:light` means "send the `light` message to every element named `lamp`." The lamp lights up without you touching it. This is the same message format objects use to talk to each other.
+
+## Make a switch
+
+Now make an object that lights the lamp from somewhere else on the board.
+
+1. **Create it**
+
+    Press `@`, type `object switch`, and select **create object @switch**.
+
+2. **Write the code**
+
+    ```text
+    @switch
+    @char 254
+    @color ltgray
+    #end
+    :touch
+    #send lamp:light
+    #color green
+    #bgplay tceg
+    ```
+
+3. **Place it away from the lamp**
+
+    Walk a few cells away from the lamp, then run `#put north switch`. Walk into the switch.
+
+`#send lamp:light` does from code what you typed into the CLI. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
+
+## Make a character that talks
+
+Scroll text can include **links**. A link line starts with `!`. It names a label to run, then a `;`, then the text the player sees.
+
+```text
+@oracle
+@char 2
+@color cyan
+#end
+:touch
+Welcome, traveler.
+Shall I light the lamp for you?
+!yes;Yes, please
+!no;No, thanks
+#end
+:yes
+#send lamp:light
+#end
+:no
+Suit yourself.
+#end
+```
+
+Create it with `@object oracle`, paste the code, then `#put west oracle`. Touch the oracle and pick a choice. **Yes** runs `:yes`, which sends the lamp a message. **No** runs `:no`, which opens a second scroll.
+
+## Remove things with #die
+
+`#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up:
+
+```text
+@gem
+@char 4
+@color purple
+#end
+:touch
+#set gems 1
+$toast you found a gem
+#bgplay t+c+e+g
+#die
+```
+
+The ZTK `key` and `door` pages use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Run `#pageopen key` and `#pageopen door` to read them.
+
+## Fix mistakes
+
+- If the code has a syntax error, the error is reported as you type. Fix it before testing.
+- If nothing happens on touch, check that the first line (`@lamp`) matches the name you used in `#put` and `#send`.
+- `#pages` lists every page. Select one to open it. Run `#trash` to delete a page you no longer want.
+
+## What you learned
+
+- `@object name` creates an object page and opens the editor. `#put <direction> <name>` places it.
+- `@` stats set how an object looks. `:labels` are where code starts. `#end` waits.
+- `:touch` runs when a player walks into the object. Any other label is a message, sent with `name:label` from the CLI or with `#send` from code.
+- `#set`, `#if ... do`, `#else do`, `#done`, and `#clear` manage flags.
+- Plain text lines open a scroll. `!label;text` lines are choices in that scroll.
+- `#die` removes the object.
+
+For the full command list, see [Firmware commands](/firmware/commands).

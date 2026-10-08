@@ -1,32 +1,44 @@
-# ZSS System Reference
+# Zed Cafe Docs
 
-> Architecture, glossary, and developer docs for Zed Cafe / Zed Software System.
+> Guides for making worlds in Zed Cafe, plus architecture and developer reference for the Zed Software System.
 
 # Introduction
 Source: https://zed.cafe/docs
 
-Welcome to the **ZSS System Reference** — architecture, glossary, feature overview, and colocated module manuals for [zed.cafe](https://zed.cafe/).
+[Zed Cafe](https://zed.cafe/) is a browser workshop for making small text-mode worlds. You build boards out of terrain and objects, script them in ZSS (a language in the spirit of ZZT-OOP), add music and speech, and share a link so others can play, alone or together.
+
+## Start creating
+
+New here? Work through the guides in order. Each takes 10-20 minutes in the browser.
+
+1. [Your first ten minutes](/guides/first-ten-minutes) -- the terminal, help, starter kits, books, and pages
+2. [Your first board](/guides/first-board) -- build two rooms, connect them, save, and share
+3. [Your first object](/guides/first-object) -- write ZSS: stats, labels, flags, messages, and scroll links
+
+See [Guides](/guides) for the vocabulary the guides use.
+
+## Look things up
+
+- [Firmware commands](/firmware/commands) -- every `#command` in one list
+- [Features](/features) -- what the engine can do, grouped by area
+- [Glossary](/glossary) -- shared vocabulary
+- [Synth](/synth) -- music, sound effects, and the voice and effect chain
 
 ## Two "docs" surfaces
 
 | Surface | URL | Audience |
 |---------|-----|----------|
-| This site | [https://zed.cafe/docs/](https://zed.cafe/docs/) | Developers and creators reading architecture / API narrative |
-| In-game / ZNS help | [https://docs.at.zed.cafe](https://docs.at.zed.cafe) | Players and authors via ROM refscrolls |
+| This site | [https://zed.cafe/docs/](https://zed.cafe/docs/) | Creators learning to build, and developers reading architecture / API narrative |
+| In-game / ZNS help | [https://docs.at.zed.cafe](https://docs.at.zed.cafe) | Players and authors via ROM refscrolls (`#help` in the terminal) |
 
 ROM help under `zss/rom/` stays in the product runtime. It is not a Blume source.
 
-## Start here
+## How it works (developers)
 
-- [System map](/map) — product stack, workers, tick, script pipeline
-- [Glossary](/glossary) — shared vocabulary
-- [Features](/features) — capability tables by domain
-- [Architecture deep dive](/architecture) — points at `zss/ARCHITECTURE.md`
-- [Firmware commands](/firmware/commands) — canonical `#command` list for the web
+- [System map](/map) -- product stack, workers, tick, script pipeline
+- [Architecture deep dive](/architecture) -- points at `zss/ARCHITECTURE.md`
 
-## Module manuals
-
-Colocated under `zss/**/docs/` and mounted into this site:
+Module manuals are colocated under `zss/**/docs/` and mounted into this site:
 
 | Prefix | Source |
 |--------|--------|
@@ -50,7 +62,7 @@ From the repo root:
 yarn task blume dev
 ```
 
-Opens Blume with `docs-site/` as cwd (repo-root `yarn blume` looks for the wrong folder). Production pages ship via `yarn task run cafe:build` into `cafe/dist/docs/`.
+Opens Blume with `docs-site/` as cwd (repo-root `yarn blume` looks for the wrong folder). Production pages ship via `yarn task run cafe:build` into `cafe/dist/docs/`. Guides live in `docs-site/content/guides/`.
 
 ---
 
@@ -2313,7 +2325,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `admin` | Admin scroll (active players, gadget/dev links for operator, multiplayer); config toggles crt, lowrez, scanlines, voice2text, loaderlogging, promptlogging |
 | `joincode` | Multiplayer session (operator only) |
 | `jointab` | New tab with the join url (operator only) |
-| `chat` | Bridge chat: `#chat <channel> [twitchtoken=]` starts Twitch; `#chat say <text>` posts to that channel; `#chat start …` / `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
+| `chat` | Bridge chat: `#chat <channel> [twitchtoken=]` starts Twitch; `#chat say <text>` posts to that channel; `#chat start …` / `#chat stop` (Twitch) or `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast stream <peerid>` / `#broadcast ms_…` (media-stream companion bind), `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only; WHIP XOR media-stream) |
 | `media` | Board TV media queue: `#media` (queue list), `#media <url>` (submit), `#media playlist` (copy played + queue URLs) |
@@ -2713,6 +2725,8 @@ These names work for every loader, including a chat loader with no file:
 | `medialist` | Array of play-queue rows, `index name title`. Walk with `#foreach` |
 
 `mediaqueue` and `medialist` read the operator board's media helper. An unbound helper is an empty array.
+
+Loaders can post to twitch with `#chat say <text>`. It always speaks as the operator (the tab that owns the twitch connection), and needs a tokened `#chat <channel> twitchtoken=` session. Other `#chat` forms are CLI only. See `ops/fixtures/lang/coolregionsbow/twitchmedia.zss` (`!media`, `!queue`) for `#foreach` over `medialist` / `mediaqueue` with `#chat say`.
 
 Returns loader metadata based on format:
 
@@ -4039,6 +4053,496 @@ Source: [`zss/memory/bookoperations.ts`](https://github.com/goldbuick/zed-softwa
 Software slot ids: MAIN, TEMP, TITLE, PLAYER for session state routing.
 
 Source: [`zss/memory/types.ts`](https://github.com/goldbuick/zed-software-system/blob/main/zss/memory/types.ts)
+
+---
+
+# Guides
+Source: https://zed.cafe/docs/guides
+
+These guides teach Zed Cafe by doing. Each one takes 10-20 minutes, runs entirely in the browser at [zed.cafe](https://zed.cafe/), and builds on the one before it.
+
+| Guide | You will learn |
+|-------|----------------|
+| [Your first ten minutes](/guides/first-ten-minutes) | The terminal, help, starter kits, books, and pages |
+| [Your first board](/guides/first-board) | Creating a board, placing walls, the inspector, exits, saving, sharing |
+| [Your first object](/guides/first-object) | Writing ZSS: stats, labels, flags, messages, scroll text, and links |
+
+:::tip
+Keep a zed.cafe tab open next to this one. Every step is meant to be typed, not just read.
+:::
+
+## How Zed Cafe is put together
+
+A few words show up in every guide:
+
+- **Book**: a project. It holds everything your world needs.
+- **Page** (or codepage): one item inside a book. Pages have a type: `board`, `object`, `terrain`, `loader`, `palette`, `charset`, or `txt`.
+- **Board**: a 60x25 grid of cells. This is a room in your world.
+- **Element**: something placed on a board. Terrain fills the floor and walls. Objects sit on top and can run code.
+- **ZSS**: the scripting language for objects, loaders, and the command line. It is close to ZZT-OOP: `@` lines declare stats, `:` lines are labels, and `#` lines are commands.
+
+## After the guides
+
+- [Firmware commands](/firmware/commands) lists every `#command`.
+- [Features](/features) shows what the engine can do, grouped by area.
+- [Glossary](/glossary) defines the shared vocabulary.
+- The in-game help (`#help`) and [docs.at.zed.cafe](https://docs.at.zed.cafe) cover controls and command hints while you play.
+
+---
+
+# Your first board
+Source: https://zed.cafe/docs/guides/first-board
+
+In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and have the **ZTK** kit loaded.
+
+## Create a board
+
+1. **Make the page**
+
+    Press `@`, type `board hallway`, and press Enter.
+
+    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board hallway**. If you loaded more than one book, it also shows a book picker. Pick the book you want the board in.
+
+2. **Select create**
+
+    Select **create @board hallway**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
+
+:::tip
+Use one-word names for boards and objects while you learn, such as `hallway` instead of `the hallway`. Names with spaces work, but they need quotes in some commands.
+:::
+
+The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the scroll offers one create link for each page type.
+
+## Place some walls
+
+Use the CLI to put terrain next to you. Each command places one cell in a direction from where you stand:
+
+```text
+#put north white solid
+#put west white solid
+#put south white solid
+```
+
+Walk with the arrow keys and repeat to sketch the outline of a room. You can also try other ZTK terrain:
+
+```text
+#put east normal
+#put east breakable
+#put east water
+```
+
+Placing walls one at a time is slow. The inspector makes it faster.
+
+## Copy and tile with the inspector
+
+The **inspector** (also called the gadget) lets you select cells on the board and edit them with the mouse.
+
+1. **Turn it on**
+
+    Run `#gadget`. Moving the mouse over the board now shows a cursor on each cell.
+
+2. **Inspect one cell**
+
+    Click a wall you placed. A scroll lists that element's details: its kind, collision, and links to change its **char**, **color**, and **bg** (background). Change the color and watch the wall update live.
+
+3. **Copy a pattern**
+
+    Put two walls next to each other. Then press on one, drag across both, and let go. The area scroll that opens has **copy elements**. Select it.
+
+4. **Tile it across a region**
+
+    Drag across a long empty strip where you want a wall. In the area scroll, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
+
+5. **Turn it off**
+
+    Run `#gadget` again to leave the inspector.
+
+The area scroll also has **cut**, **make empty**, **set chars**, **set colors**, **set bgs**, a **style** brush, and **remix**. Try them on a copy of your room. Remix fills a region with new patterns based on what is already there.
+
+:::note
+The inspector and the CLI are two ways to do the same job. Anything you do in the inspector, a command can also do (`#put`, `#write`, `#copy`, `#remix`). That means you can script your edits later.
+:::
+
+## Edit the board's stats
+
+A board is a page too, and its page holds stats that control the room. Open it:
+
+```text
+#pageopen hallway
+```
+
+The editor opens with one line, `@board hallway`. Add a start position below it:
+
+```text
+@board hallway
+@startx 5
+@starty 12
+```
+
+`@startx` and `@starty` set where a player appears when they arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
+
+## Add a second room and connect them
+
+1. **Create the second board**
+
+    Press `@`, type `board cellar`, and select **create @board cellar**. You are now in the empty cellar.
+
+2. **Add an exit from the hallway**
+
+    Run `#pageopen hallway` and add an exit line:
+
+    ```text
+    @board hallway
+    @startx 5
+    @starty 12
+    @exiteast cellar
+    ```
+
+3. **Add the way back**
+
+    Run `#pageopen cellar` and add:
+
+    ```text
+    @board cellar
+    @exitwest hallway
+    ```
+
+4. **Walk through**
+
+    Run `#boards` and select **hallway** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
+
+There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book. It can also be a join URL or a `https://bytes.zed.cafe/...` content link, which takes the player to a different world.
+
+To jump to any board while you build, use `#boardopen <name>` or select it from `#boards`.
+
+## Save and share
+
+```text
+#save
+#share
+```
+
+- `#save` writes your current state to the browser, so a reload keeps it.
+- `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
+
+For more export options, such as downloading a book as JSON, run `#export`.
+
+## What you learned
+
+- `@board name` creates a board and takes you there. `@` works for every page type.
+- `#put <direction> <kind>` places one element. Color words like `red` or `white` go in front of the kind.
+- `#gadget` toggles the inspector. Use it to select, recolor, copy, tile-paste, and remix.
+- Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Edit them with `#pageopen`.
+- `#save` keeps your work. `#share` hands it to someone else.
+
+Next: [Your first object](/guides/first-object).
+
+---
+
+# Your first object
+Source: https://zed.cafe/docs/guides/first-object
+
+Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have a board from [Your first board](/guides/first-board) and the **ZTK** kit loaded.
+
+## Make the lamp
+
+1. **Create the page**
+
+    Press `@`, type `object lamp`, and select **create object @lamp**. The code editor opens with one line: `@lamp`.
+
+2. **Write the code**
+
+    Replace the contents with:
+
+    ```text
+    @lamp
+    @char 15
+    @color brown
+    #end
+    :touch
+    #if lit do
+     The lamp is already lit.
+    #else do
+     #set lit 1
+     #color yellow
+     $toast the lamp is lit
+    #done
+    ```
+
+3. **Close the editor and place the lamp**
+
+    Press `esc`. Then put a lamp next to you:
+
+    ```text
+    #put east lamp
+    ```
+
+4. **Try it**
+
+    Walk into the lamp. It turns yellow and a toast pops up. Walk into it again and a scroll says it is already lit.
+
+Here is what each part does:
+
+| Line | Meaning |
+|------|---------|
+| `@lamp` | The first line names the object. `#put east lamp` uses this name. |
+| `@char 15` / `@color brown` | **Stats**: how the object looks. `15` is a character code (a sun shape). |
+| `#end` | Stop. The object waits here until something happens. |
+| `:touch` | A **label**. Code here runs when a player walks into the object. |
+| `#if lit do` ... `#else do` ... `#done` | Branch on a **flag**. A flag nobody has set counts as false. |
+| `#set lit 1` | Set the flag so the next touch takes the other branch. |
+| `#color yellow` | Change the object's own color. |
+| `$toast ...` | Show a short pop-up message. `$ticker ...` shows a line at the bottom instead. |
+| `The lamp is already lit.` | A plain text line. Text lines are collected into a **scroll** that the player reads. |
+
+:::note
+Indenting the lines inside `do` ... `#done` with a space is optional. It just makes the branches easier to read.
+:::
+
+## Send it a message
+
+Labels are not only for touch. Any label is a message the object can receive. Open the lamp again with `#pageopen lamp` and add an `#end` and a `:light` label at the bottom:
+
+```text
+@lamp
+@char 15
+@color brown
+#end
+:touch
+#if lit do
+ The lamp is already lit.
+#else do
+ #set lit 1
+ #color yellow
+ $toast the lamp is lit
+#done
+#end
+:light
+#set lit 1
+#color yellow
+$toast the lamp is lit
+```
+
+:::warning
+Code runs straight down past labels. Without the `#end` after `#done`, every touch would also run the `:light` code below it. End each label's code with `#end` (or `#die`).
+:::
+
+Close the editor, open the CLI with `#`, and run:
+
+```text
+lamp:light
+```
+
+`lamp:light` means "send the `light` message to every element named `lamp`." The lamp lights up without you touching it. This is the same message format objects use to talk to each other.
+
+## Make a switch
+
+Now make an object that lights the lamp from somewhere else on the board.
+
+1. **Create it**
+
+    Press `@`, type `object switch`, and select **create object @switch**.
+
+2. **Write the code**
+
+    ```text
+    @switch
+    @char 254
+    @color ltgray
+    #end
+    :touch
+    #send lamp:light
+    #color green
+    #bgplay tceg
+    ```
+
+3. **Place it away from the lamp**
+
+    Walk a few cells away from the lamp, then run `#put north switch`. Walk into the switch.
+
+`#send lamp:light` does from code what you typed into the CLI. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
+
+## Make a character that talks
+
+Scroll text can include **links**. A link line starts with `!`. It names a label to run, then a `;`, then the text the player sees.
+
+```text
+@oracle
+@char 2
+@color cyan
+#end
+:touch
+Welcome, traveler.
+Shall I light the lamp for you?
+!yes;Yes, please
+!no;No, thanks
+#end
+:yes
+#send lamp:light
+#end
+:no
+Suit yourself.
+#end
+```
+
+Create it with `@object oracle`, paste the code, then `#put west oracle`. Touch the oracle and pick a choice. **Yes** runs `:yes`, which sends the lamp a message. **No** runs `:no`, which opens a second scroll.
+
+## Remove things with #die
+
+`#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up:
+
+```text
+@gem
+@char 4
+@color purple
+#end
+:touch
+#set gems 1
+$toast you found a gem
+#bgplay t+c+e+g
+#die
+```
+
+The ZTK `key` and `door` pages use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Run `#pageopen key` and `#pageopen door` to read them.
+
+## Fix mistakes
+
+- If the code has a syntax error, the error is reported as you type. Fix it before testing.
+- If nothing happens on touch, check that the first line (`@lamp`) matches the name you used in `#put` and `#send`.
+- `#pages` lists every page. Select one to open it. Run `#trash` to delete a page you no longer want.
+
+## What you learned
+
+- `@object name` creates an object page and opens the editor. `#put <direction> <name>` places it.
+- `@` stats set how an object looks. `:labels` are where code starts. `#end` waits.
+- `:touch` runs when a player walks into the object. Any other label is a message, sent with `name:label` from the CLI or with `#send` from code.
+- `#set`, `#if ... do`, `#else do`, `#done`, and `#clear` manage flags.
+- Plain text lines open a scroll. `!label;text` lines are choices in that scroll.
+- `#die` removes the object.
+
+For the full command list, see [Firmware commands](/firmware/commands).
+
+---
+
+# Your first ten minutes
+Source: https://zed.cafe/docs/guides/first-ten-minutes
+
+By the end of this guide you will know how to open the command line, read the built-in help, load a starter kit, and see the pages inside a book.
+
+## Open the terminal
+
+Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the terminal opens on its own and prints three things:
+
+- a `no content found` notice (this is expected on a first visit)
+- a list of **starter kits** (the `stk list`)
+- the hint `try typing #help and pressing enter!`
+
+The terminal is the command line, or CLI. Almost everything in Zed Cafe starts here.
+
+| Key | What it does |
+|-----|--------------|
+| `?` or `/` | Open the CLI |
+| `#` | Open the CLI with `#` already typed, ready for a command |
+| `@` | Open the CLI with `@` already typed, ready to make a page |
+| `C` | Open quick chat (it closes after Enter) |
+| `esc` | Close the CLI, a scroll, or the editor |
+| `tab` | Change the layout |
+| up / down arrows | Move between CLI lines |
+| enter | Run the selected line, or follow a link |
+
+:::note
+Lines in the terminal can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
+:::
+
+## Read the help
+
+1. **Run #help**
+
+    Press `#`, type `help`, and press Enter. A help scroll opens.
+
+2. **Look at the controls**
+
+    Select **read help on controls** (hotkey `C`). Arrow keys move you. Shift plus an arrow key, or `w a s d`, shoots. `z x c v` are the A / B / X / Y buttons. Game controllers work too.
+
+3. **Look at books and pages**
+
+    Go back, then select **Developer - books & pages** (hotkey `3`). This short list is the map for the rest of these guides: `#books`, `#pages`, `#boards`, `@page name`, `#save`, and `#share`.
+
+4. **Close the scroll**
+
+    Press `esc`.
+
+## Load a starter kit
+
+A starter kit is a book that comes with useful pages already made. The guides use **ZTK - ZZT Tool Kit**. It brings a player, terrain like `solid`, `normal`, `breakable`, and `water`, and items like `key`, `door`, `scroll`, and `passage`. Every piece works like its ZZT counterpart.
+
+1. **Pick ZTK from the starter kit list**
+
+    In the terminal's `stk list`, select **ZTK - ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/geNHhyjf](https://bytes.zed.cafe/geNHhyjf) directly.
+
+2. **Wait for it to load**
+
+    The page reloads with the kit's book in memory.
+
+:::tip
+The other kits in the list are worth a look later. **QK - Quick Kit** is a smaller toolkit. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
+:::
+
+## Look inside the book
+
+Run these one at a time. Each one prints its results into the terminal.
+
+```text
+#books
+#pages
+#boards
+```
+
+- `#books` lists every book in memory. One book is the **opened** book. New pages go there.
+- `#pages` lists every page, with its type. Select one to open it.
+- `#boards` lists only boards. Select one to go there.
+
+Now open the player's code:
+
+```text
+#pageopen player
+```
+
+The code editor opens. This page decides how the player moves, shoots, and draws its sidebar. You do not need to understand it yet. Notice its shape:
+
+- lines that start with `@` are **stats** (`@char 2`, `@color white`)
+- lines that start with `:` are **labels**, places where code starts running (`:think`, `:shot`)
+- lines that start with `#` are **commands** (`#set health 100`, `#shoot inputmove`)
+- lines that start with `'` are comments
+
+Press `esc` to close the editor without changing anything.
+
+## Try a command on the world
+
+If you are standing on a board, the CLI can change it while the game runs. Try:
+
+```text
+#put north red solid
+```
+
+A red wall appears just north of you. `#put` takes a direction and a kind. The kind here is `solid`, with a color word in front. The direction can be `north`, `south`, `east`, or `west`. Kinds come from the book's pages, which is why loading a kit first matters.
+
+## Save your session
+
+```text
+#save
+```
+
+`#save` writes the current state to your browser's storage, so a reload keeps your work.
+
+## What you learned
+
+- The terminal is the CLI. Open it with `?`, `#`, or `@`. Close it with `esc`.
+- `#help` gives you controls and developer basics.
+- A starter kit is a book of ready-made pages. ZTK gives you ZZT-style building blocks.
+- `#books`, `#pages`, `#boards`, and `#pageopen` let you explore a book.
+
+Next: [Your first board](/guides/first-board).
 
 ---
 
