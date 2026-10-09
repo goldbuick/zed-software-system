@@ -10,7 +10,7 @@ import { createfirmware } from 'zss/firmware'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
   READ_LAYER,
   memorylistelement,
