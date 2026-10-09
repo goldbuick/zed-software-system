@@ -34,9 +34,6 @@ export const READ_CONTEXT = {
   elementid: '',
   elementisplayer: false,
   elementfocus: '',
-  // Living board-object ids, so a stat that holds an id compares as that id.
-  // Rebuilt for each object tick. Not a saved flag.
-  objectidstamp: {} as Record<string, string>,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,
