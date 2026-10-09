@@ -430,11 +430,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
     }
 
-    // An object id stored in a stat is only equal to itself when get(id)
-    // returns that id. The tick stamps living ids here, not into player flags.
-    const stamped = READ_CONTEXT.objectidstamp[name]
-    if (isstring(stamped)) {
-      return [true, stamped]
+    // A stat holding an object id compares as that id while the object
+    // remains on the board. Keys of board.objects are those ids.
+    const boardobjects = READ_CONTEXT.board?.objects
+    if (name && ispresent(boardobjects?.[name])) {
+      return [true, name]
     }
 
     // fallback to player flags

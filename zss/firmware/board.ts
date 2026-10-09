@@ -10,7 +10,7 @@ import { createfirmware } from 'zss/firmware'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
   READ_LAYER,
   memorylistelement,
@@ -522,78 +522,50 @@ export const BOARD_FIRMWARE = createfirmware()
           return 0
         }
 
+        if (deltax === 0 && deltay === 0) {
+          return 0
+        }
+
         const transportinbounds = (pt: PT) =>
           pt.x >= 0 && pt.x < BOARD_WIDTH && pt.y >= 0 && pt.y < BOARD_HEIGHT
 
-        const transporttrymove = (pt: PT) =>
-          memorymoveobject(
-            READ_CONTEXT.book,
-            READ_CONTEXT.board,
-            maybeobject,
-            pt,
-          )
-
-        // Pass 1: first same-kind transporter on the ray; land past, then on pair.
-        const pairscan: PT = { x: source.x, y: source.y }
-        let pairpt: MAYBE<PT>
-        let pairscanning = true
-        while (pairscanning) {
-          pairscan.x += deltax
-          pairscan.y += deltay
-          if (!transportinbounds(pairscan)) {
-            pairscanning = false
+        // RoZZT ElementTransporterMove: the cell in front starts armed.
+        // An opposite-facing same-kind transporter arms the cell after it.
+        const scan: PT = { x: source.x, y: source.y }
+        let armed = true
+        let scanning = true
+        while (scanning) {
+          scan.x += deltax
+          scan.y += deltay
+          if (!transportinbounds(scan)) {
+            scanning = false
             break
           }
           const maybetile = memoryreadelement(
             READ_CONTEXT.board,
-            pairscan,
+            scan,
             READ_LAYER.ANY,
           )
-          if (maybetile?.kind === READ_CONTEXT.element.kind) {
-            pairpt = { x: pairscan.x, y: pairscan.y }
-            pairscanning = false
+          if (armed) {
+            armed = false
+            const landed = memorymoveobject(
+              READ_CONTEXT.book,
+              READ_CONTEXT.board,
+              maybeobject,
+              { x: scan.x, y: scan.y },
+            )
+            if (landed) {
+              scanning = false
+              break
+            }
           }
-        }
-
-        if (ispresent(pairpt)) {
-          const pastpair: PT = {
-            x: pairpt.x + deltax,
-            y: pairpt.y + deltay,
+          if (
+            maybetile?.kind === READ_CONTEXT.element.kind &&
+            memoryreadelementstat(maybetile, 'shootx') === -deltax &&
+            memoryreadelementstat(maybetile, 'shooty') === -deltay
+          ) {
+            armed = true
           }
-          if (transportinbounds(pastpair) && transporttrymove(pastpair)) {
-            return 0
-          }
-          if (transporttrymove(pairpt)) {
-            return 0
-          }
-        }
-
-        // Pass 2: first open cell, skipping same-kind transporters.
-        const openscan: PT = { x: source.x, y: source.y }
-        let placing = true
-        while (placing) {
-          openscan.x += deltax
-          openscan.y += deltay
-          if (!transportinbounds(openscan)) {
-            break
-          }
-          const maybetile = memoryreadelement(
-            READ_CONTEXT.board,
-            openscan,
-            READ_LAYER.ANY,
-          )
-          if (maybetile?.kind === READ_CONTEXT.element.kind) {
-            continue
-          }
-          if (transporttrymove({ x: openscan.x, y: openscan.y })) {
-            placing = false
-          }
-        }
-        if (placing) {
-          transporttrymove({
-            x: source.x + deltax,
-            y: source.y + deltay,
-          })
         }
       }
 
