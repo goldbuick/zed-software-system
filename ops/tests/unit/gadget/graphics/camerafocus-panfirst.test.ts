@@ -1,6 +1,7 @@
 import {
   type FocusUserData,
   FOCUS_ANIM_RATE,
+  FOCUS_SNAP_DISTANCE,
   isfocuspanphase,
   liveboardworldoffset,
   readboardgrid,
@@ -54,6 +55,85 @@ describe('global board space camerafocus', () => {
     expect(userdata.focusx).toBeLessThan(BOARD_WIDTH)
     expect(userdata.pantargetx).toBe(BOARD_WIDTH)
     expect(userdata.focussmooth).toBeGreaterThan(1)
+  })
+
+  it('snapfocus east exit stays a one-cell glide', () => {
+    const userdata: FocusUserData = {
+      focusx: BOARD_WIDTH - 1,
+      focusy: 10,
+      lfocusx: BOARD_WIDTH - 1,
+      lfocusy: 10,
+      focussmooth: FOCUS_ANIM_RATE,
+      currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
+    }
+    stepfocuswithboardtransition(
+      userdata,
+      { focusx: 0, focusy: 10 },
+      'board-b',
+      0,
+      10,
+      0.016,
+      true,
+    )
+    expect(isfocuspanphase(userdata)).toBe(true)
+    expect(readboardgrid(userdata)).toEqual({ x: 1, y: 0 })
+    expect(readgridbias(userdata)).toEqual({ dx: 1, dy: 0 })
+    expect(userdata.focusx).toBeGreaterThan(BOARD_WIDTH - 2)
+    expect(userdata.focusx).toBeLessThan(BOARD_WIDTH)
+    expect(userdata.pantargetx).toBe(BOARD_WIDTH)
+  })
+
+  it('snapfocus glides a world jump of FOCUS_SNAP_DISTANCE', () => {
+    const userdata: FocusUserData = {
+      focusx: 0,
+      focusy: 10,
+      lfocusx: 0,
+      lfocusy: 10,
+      focussmooth: FOCUS_ANIM_RATE,
+      currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
+    }
+    stepfocuswithboardtransition(
+      userdata,
+      { focusx: FOCUS_SNAP_DISTANCE, focusy: 10 },
+      'board-a',
+      FOCUS_SNAP_DISTANCE,
+      10,
+      0.016,
+      true,
+    )
+    expect(isfocuspanphase(userdata)).toBe(false)
+    expect(userdata.focusx).toBeGreaterThan(0)
+    expect(userdata.focusx).toBeLessThan(FOCUS_SNAP_DISTANCE)
+  })
+
+  it('snapfocus snaps a world jump farther than FOCUS_SNAP_DISTANCE', () => {
+    const target = FOCUS_SNAP_DISTANCE + 1
+    const userdata: FocusUserData = {
+      focusx: 0,
+      focusy: 10,
+      lfocusx: 0,
+      lfocusy: 10,
+      focussmooth: FOCUS_ANIM_RATE,
+      currentboard: 'board-a',
+      boardgridx: 0,
+      boardgridy: 0,
+    }
+    stepfocuswithboardtransition(
+      userdata,
+      { focusx: target, focusy: 10 },
+      'board-a',
+      target,
+      10,
+      0.016,
+      true,
+    )
+    expect(isfocuspanphase(userdata)).toBe(false)
+    expect(userdata.focusx).toBe(target)
+    expect(userdata.focusy).toBe(10)
   })
 
   it('settle clears panphase only -- focus stays in world space', () => {
