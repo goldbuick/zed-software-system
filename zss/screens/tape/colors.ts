@@ -2,7 +2,10 @@ import type { IToken } from 'chevrotain'
 import * as lexer from 'zss/feature/lang/lexer'
 import type { GADGET_ZSS_WORDS } from 'zss/gadget/data/types'
 import type { TERMINAL_MODE } from 'zss/gadget/data/zustandstores'
-import { codeunitoffsettocellindex } from 'zss/mapping/grapheme'
+import {
+  codeunitoffsettocellindex,
+  graphemecellindex,
+} from 'zss/mapping/grapheme'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { statformat } from 'zss/words/stats'
 import {
@@ -544,10 +547,9 @@ export function applycodetokencolors(
   line?: string,
   prefixcells = 0,
 ) {
+  const cellindex = ispresent(line) ? graphemecellindex(line) : undefined
   const tocell = (codeunit: number) =>
-    ispresent(line)
-      ? prefixcells + codeunitoffsettocellindex(line, codeunit)
-      : codeunit
+    ispresent(cellindex) ? prefixcells + cellindex(codeunit) : codeunit
 
   const paint = (p1: number, p2: number, color: number) => {
     clippedapplycolortoindexes(

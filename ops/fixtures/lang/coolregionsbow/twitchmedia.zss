@@ -12,7 +12,7 @@
 #readline ".*?\|.*?:!(queue)\s*(\S*)\s*(\S*)" queuehit queuecmd queuearg
 #if url do
  #withplayerboard
- #media chatuser url
+ #media "$chatuser" url
 #else if mediahit do
  #read medialist length rowcount
  #if not rowcount do
