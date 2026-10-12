@@ -1,6 +1,15 @@
-import { ThreeEvent } from '@react-three/fiber'
-import { useEffect, useMemo, useState } from 'react'
-import { DoubleSide, FrontSide, SphereGeometry, Vector3 } from 'three'
+import { ThreeEvent, useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  DoubleSide,
+  FrontSide,
+  Group,
+  Mesh,
+  Ray,
+  Raycaster,
+  SphereGeometry,
+  Vector3,
+} from 'three'
 import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
 import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
@@ -35,6 +44,14 @@ const selectionmeshdebug = RAYCAST_DEBUG_PICKSHEET
 const HOVER_CURSOR_CHAR = 197
 const SELECTION_DITHER_OUTER_ALPHA = 0.25
 const SELECTION_DITHER_INNER_ALPHA = 0.3
+/**
+ * After the board corner damp (useFrame priority 0) and before the portal
+ * EffectComposer draws the FBO (priority 1). A still mouse does not emit
+ * pointermove while that corner slides, so the hover cell is recomputed here.
+ */
+const HOVER_REFRESH_PRIORITY = 0.5
+
+const hoverraycaster = new Raycaster()
 
 /** Pick → VM tile indices (board local space; +Y down like tile geometry). */
 function coordstileorigin(pickw: number, pickh: number) {
@@ -83,6 +100,11 @@ export function InspectorSelect() {
     }
   }, [pickgeo])
 
+  const pickmeshref = useRef<Mesh>(null)
+  const hovergroupref = useRef<Group>(null)
+  const hoverrayref = useRef<Ray | null>(null)
+  const metricsref = useRef({ pickw, pickh, cw: 0, ch: 0 })
+
   const [cursor, select] = useInspector(
     useShallow((state) => [state.cursor, state.select]),
   )
@@ -109,6 +131,7 @@ export function InspectorSelect() {
 
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
   const ch = RUNTIME.DRAW_CHAR_HEIGHT()
+  metricsref.current = { pickw, pickh, cw, ch }
   const debugdotradius = useMemo(() => Math.min(cw, ch) * 0.25, [cw, ch])
   const debugdotgeo = useMemo(
     () => new SphereGeometry(debugdotradius, 12, 12),
@@ -155,6 +178,7 @@ export function InspectorSelect() {
   }
 
   function pointerleave() {
+    hoverrayref.current = null
     if (RAYCAST_DEBUG_DOT) {
       setdebughit(null)
     }
@@ -162,10 +186,69 @@ export function InspectorSelect() {
     completeselection()
   }
 
+  function storehoverray(ray: Ray) {
+    hoverrayref.current = ray.clone()
+  }
+
+  function commithovercell(trackselect: boolean) {
+    const metrics = metricsref.current
+    const pt = coordstileorigin(metrics.pickw, metrics.pickh)
+    const group = hovergroupref.current
+    if (group) {
+      group.visible = true
+      group.position.set(pt.x * metrics.cw, pt.y * metrics.ch, 2)
+    }
+    sethovertile((prev) =>
+      prev?.x === pt.x && prev?.y === pt.y ? prev : { x: pt.x, y: pt.y },
+    )
+    if (trackselect && ispresent(useInspector.getState().cursor)) {
+      const next = pttoindex(pt, metrics.pickw)
+      if (useInspector.getState().select !== next) {
+        useInspector.setState({ select: next })
+      }
+    }
+  }
+
+  function clearhovertile() {
+    const group = hovergroupref.current
+    if (group) {
+      group.visible = false
+    }
+    sethovertile((prev) => (prev === null ? prev : null))
+  }
+
+  useFrame(() => {
+    const mesh = pickmeshref.current
+    const ray = hoverrayref.current
+    if (!mesh || !ray) {
+      return
+    }
+    mesh.updateWorldMatrix(true, false)
+    hoverraycaster.ray.copy(ray)
+    const hit = hoverraycaster
+      .intersectObject(mesh, false)
+      .find((item) => item.object.userData?.inspectpick === true)
+    if (!hit) {
+      if (RAYCAST_DEBUG_DOT) {
+        setdebughit(null)
+      }
+      clearhovertile()
+      return
+    }
+    hit.object.worldToLocal(point.copy(hit.point))
+    if (RAYCAST_DEBUG_DOT) {
+      const x = point.x
+      const y = point.y
+      setdebughit((prev) => (prev?.x === x && prev?.y === y ? prev : { x, y }))
+    }
+    commithovercell(true)
+  }, HOVER_REFRESH_PRIORITY)
+
   return (
     <>
       {inspector && (
         <mesh
+          ref={pickmeshref}
           position={[0, 0, 0]}
           geometry={pickgeo}
           renderOrder={selectionmeshdebug ? 50 : 0}
@@ -179,6 +262,7 @@ export function InspectorSelect() {
             if (!hit) {
               return
             }
+            storehoverray(e.ray)
             hit.object.worldToLocal(point.copy(hit.point))
             if (RAYCAST_DEBUG_DOT) {
               setdebughit({ x: point.x, y: point.y })
@@ -192,22 +276,18 @@ export function InspectorSelect() {
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
             const hit = inspectorhit(e)
             if (hit) {
+              storehoverray(e.ray)
               hit.object.worldToLocal(point.copy(hit.point))
               if (RAYCAST_DEBUG_DOT) {
                 setdebughit({ x: point.x, y: point.y })
               }
-              const pt = coordstileorigin(pickw, pickh)
-              sethovertile({ x: pt.x, y: pt.y })
-              if (ispresent(useInspector.getState().cursor)) {
-                useInspector.setState(() => ({
-                  select: pttoindex(pt, pickw),
-                }))
-              }
+              commithovercell(true)
             } else {
+              hoverrayref.current = null
               if (RAYCAST_DEBUG_DOT) {
                 setdebughit(null)
               }
-              sethovertile(null)
+              clearhovertile()
             }
           }}
           onPointerUp={completeselection}
@@ -245,7 +325,10 @@ export function InspectorSelect() {
         </mesh>
       )}
       {inspector && hovertile && (
-        <group position={[hovertile.x * cw, hovertile.y * ch, 2]}>
+        <group
+          ref={hovergroupref}
+          position={[hovertile.x * cw, hovertile.y * ch, 2]}
+        >
           <Tiles
             width={1}
             height={1}

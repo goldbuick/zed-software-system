@@ -225,6 +225,7 @@ export const FPVGraphics = memo(function FPVGraphics({
       control.focusx,
       control.focusy,
       delta,
+      true,
     )
     // Live board world offset: useLayoutEffect only (useFrame ahead of React remount = void).
     stashfocusexitsnap(userdata, gadgettoexitsnap(gadget))
@@ -247,15 +248,13 @@ export const FPVGraphics = memo(function FPVGraphics({
     const fy = ((userdata.focusy ?? control.focusy) + 0.5) * drawheight
     const srange = 1.2
 
-    // Goto / non-edge: snap camera. Edge pan: damp in world space (no teleport).
+    positionref.current.position.set(fx, -fy, cameraz)
+    // Board change: drop leftover head bob. Focus is already on the cell.
     if (boardchanged && !panphase) {
-      positionref.current.position.set(fx, -fy, cameraz)
       const rsx = Math.sin(userdata.sway ?? 0) * srange
       const rsy = Math.abs(Math.sin(userdata.sway ?? 0) * srange)
       cameraref.current.position.set(rsx, 0, rsy)
       cameraref.current.rotation.set(Math.PI * -0.49, 0, userdata.lean ?? 0)
-    } else {
-      damp3(positionref.current.position, [fx, -fy, cameraz], animrate, delta)
     }
 
     dampE(

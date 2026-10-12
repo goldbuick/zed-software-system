@@ -57,6 +57,8 @@ export const FOCUS_GLIDE_RATE = 1.5
 export const FOCUS_GLIDE_DECAY = 0.17
 /** Settle when focus is within this many cells of the pan target. */
 export const FOCUS_PAN_SETTLE_CELLS = 0.35
+/** World-cell jump farther than this snaps. Shorter moves glide. */
+export const FOCUS_SNAP_DISTANCE = 2
 
 const ANIMRATE = FOCUS_ANIM_RATE
 
@@ -160,6 +162,10 @@ function focusneartarget(
  * Settle clears panphase/depth-2 only -- no focus remap. Non-edge (#goto)
  * keeps the current grid slot and hard-teleports focus to that world cell.
  *
+ * snapfocus snaps onto the world cell only when the jump is farther than
+ * FOCUS_SNAP_DISTANCE. Shorter moves and edge exits glide. Flat, iso, and
+ * mode7 leave it false.
+ *
  * tfocusx/y are local (single-board) clamped targets; world conversion is
  * owned here via boardgridx/y.
  */
@@ -170,6 +176,7 @@ export function stepfocuswithboardtransition(
   localtfocusx: number,
   localtfocusy: number,
   delta: number,
+  snapfocus = false,
 ): boolean {
   if (!ispresent(userdata.lfocusx) || !ispresent(userdata.lfocusy)) {
     userdata.lfocusx = control.focusx
@@ -237,11 +244,14 @@ export function stepfocuswithboardtransition(
         localtfocusx,
         localtfocusy,
       )
-      userdata.focusx = world.x
-      userdata.focusy = world.y
-      userdata.tfocusx = world.x
-      userdata.tfocusy = world.y
-      userdata.focussmooth = FOCUS_ANIM_RATE
+      // snapfocus measures this jump below. Writing focus here would hide it.
+      if (!snapfocus) {
+        userdata.focusx = world.x
+        userdata.focusy = world.y
+        userdata.tfocusx = world.x
+        userdata.tfocusy = world.y
+        userdata.focussmooth = FOCUS_ANIM_RATE
+      }
     }
     userdata.lfocusx = control.focusx
     userdata.lfocusy = control.focusy
@@ -255,7 +265,22 @@ export function stepfocuswithboardtransition(
     localtfocusy,
   )
 
-  if (userdata.panphase === true) {
+  const fromx = userdata.focusx ?? worldsteady.x
+  const fromy = userdata.focusy ?? worldsteady.y
+  const jump = Math.hypot(worldsteady.x - fromx, worldsteady.y - fromy)
+  if (snapfocus && jump > FOCUS_SNAP_DISTANCE) {
+    userdata.focusx = worldsteady.x
+    userdata.focusy = worldsteady.y
+    userdata.tfocusx = worldsteady.x
+    userdata.tfocusy = worldsteady.y
+    userdata.focussmooth = FOCUS_ANIM_RATE
+    userdata.gridbiasdx = 0
+    userdata.gridbiasdy = 0
+    userdata.panphase = false
+    userdata.departureboard = ''
+    userdata.pantargetx = undefined
+    userdata.pantargety = undefined
+  } else if (userdata.panphase === true) {
     const bias = readgridbias(userdata)
     const pantx = userdata.pantargetx ?? worldsteady.x
     const panty = userdata.pantargety ?? worldsteady.y
