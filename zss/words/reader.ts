@@ -34,9 +34,6 @@ export const READ_CONTEXT = {
   elementid: '',
   elementisplayer: false,
   elementfocus: '',
-  // Living board-object ids, so a stat that holds an id compares as that id.
-  // Rebuilt for each object tick. Not a saved flag.
-  objectidstamp: {} as Record<string, string>,
   // for commands to use readargs
   words: [] as WORD[],
   get: undefined as MAYBE<(name: string) => any>,
@@ -273,12 +270,12 @@ export function readargs<T extends ARG_TYPES>(
             didexpect('color or group', value, words)
           }
         } else {
-          const [value, kkk] = readexpr(ii)
+          const [value, mmm] = readexpr(ii)
           if (isstrcolor(value)) {
-            ii = kkk
+            ii = mmm
             values.push(value)
           } else if (isstrgroup(value)) {
-            ii = kkk
+            ii = mmm
             values.push(value)
           } else {
             didexpect('color or group', value, words)

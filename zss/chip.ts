@@ -32,7 +32,6 @@ import { maptonumber, maptostring } from './mapping/value'
 import { memoryclearflags, memoryreadflags } from './memory/bookoperations'
 import { memorycanruncommand } from './memory/permissions'
 import { memoryreadmainbook } from './memory/session'
-import { mapstrdir } from './words/dir'
 import { formatprintvalue } from './words/printvalue'
 import { READ_CONTEXT, readargs } from './words/reader'
 import { flagnamefromtoken, tokenize } from './words/textformat'
@@ -1183,25 +1182,22 @@ export function createchip(
     },
     iseq(lhs, rhs) {
       // Keep unset name == unset name (dual-use string pass-through).
-      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY_VALUE])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY_VALUE])
-      const leftvalue = maptovalue(left, chip.get)
-      if (typeof leftvalue === 'object' || typeof right === 'object') {
-        return isequal(leftvalue, right) ? 1 : 0
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
+      if (typeof left === 'object' || typeof right === 'object') {
+        return isequal(left, right) ? 1 : 0
       }
-      return leftvalue === right ? 1 : 0
+      return left === right ? 1 : 0
     },
     ishas(lhs, rhs) {
-      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY_VALUE])
-      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY_VALUE])
+      const [left] = readargs([lhs], 0, [ARG_TYPE.ANY])
+      const [right] = readargs([rhs], 0, [ARG_TYPE.ANY])
       if (!isarray(left)) {
         return 0
       }
       for (let i = 0; i < left.length; ++i) {
-        const entry = left[i]
-        const mapped = mapstrdir(entry)
-        const arg = ispresent(mapped) ? [mapped] : entry
-        if (chip.iseq(arg, right)) {
+        console.info('ishas', left[i], right)
+        if (chip.iseq(left[i], right)) {
           return 1
         }
       }

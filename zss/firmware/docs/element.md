@@ -63,7 +63,7 @@ Writes stats:
 |---------|------|-------------|
 | `become` | `kind` | Transform into kind (preserve color), delete self, create new, endofprogram |
 | `morph` | `kind` | Drop code/kinddata, set kind (object source; object or terrain target); halt chip |
-| `bind` | `name` | Copy code from first named element; halt chip |
+| `bind` | `name` | Copy kind and instance code from named element; halt chip |
 | `char` | [dir] `value` | Set char at dir or self |
 | `color` | [dir] `color` | Set color at dir or self |
 

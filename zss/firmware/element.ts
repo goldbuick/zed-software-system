@@ -23,12 +23,16 @@ import {
 import { memoryevaldir } from 'zss/memory/boarddirection'
 import { memoryapplyboardelementcolor } from 'zss/memory/boardelement'
 import { memorysafedeleteelement } from 'zss/memory/boardlifecycle'
-import { memorydeleteboardobjectnamedlookup } from 'zss/memory/boardlookup'
+import {
+  memorydeleteboardobjectnamedlookup,
+  memorywriteboardnamed,
+} from 'zss/memory/boardlookup'
 import {
   memorymoveboardobject,
   memorymoveobject,
 } from 'zss/memory/boardmovement'
 import {
+  memoryclearelementkinddata,
   memorymorphboardobject,
   memoryreadboardbyevaldir,
   memoryreadelementstat,
@@ -38,6 +42,10 @@ import {
   memoryreadelementdisplay,
   memoryreadflags,
 } from 'zss/memory/bookoperations'
+import {
+  memoryapplyelementstats,
+  memoryreadcodepagestatsfromtext,
+} from 'zss/memory/codepageoperations'
 import { memorysendtoelement } from 'zss/memory/gamesend'
 import {
   memoryclearlightstat,
@@ -422,11 +430,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
       }
     }
 
-    // An object id stored in a stat is only equal to itself when get(id)
-    // returns that id. The tick stamps living ids here, not into player flags.
-    const stamped = READ_CONTEXT.objectidstamp[name]
-    if (isstring(stamped)) {
-      return [true, stamped]
+    // A stat holding an object id compares as that id while the object
+    // remains on the board. Keys of board.objects are those ids.
+    const boardobjects = READ_CONTEXT.board?.objects
+    if (name && ispresent(boardobjects?.[name])) {
+      return [true, name]
     }
 
     // fallback to player flags
@@ -908,13 +916,26 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'bind',
-    [ARG_TYPE.NAME, 'code from named element'],
+    [ARG_TYPE.NAME, 'kind and instance code from named element'],
     (_, words) => {
-      // zed cafe simply copies the code from the given named element
+      const self = READ_CONTEXT.element
       const [name] = readargs(words, 0, [ARG_TYPE.NAME])
       const elements = memorylistelement(READ_CONTEXT.board, { name })
-      if (ispresent(READ_CONTEXT.element) && elements.length > 0) {
-        READ_CONTEXT.element.code = pick(...elements).code ?? ''
+      if (ispresent(self) && elements.length > 0) {
+        // pick a random element to bind to
+        const target = pick(...elements)
+        // drop lookups
+        memorydeleteboardobjectnamedlookup(READ_CONTEXT.board, self)
+        memoryclearelementkinddata(self)
+        // copy stats from target
+        self.kind = target.kind
+        self.code = target.code ?? ''
+        // apply stats from code
+        const instancestats = memoryreadcodepagestatsfromtext(self.code)
+        memoryapplyelementstats(instancestats, self)
+        // write new element
+        memorywriteboardnamed(READ_CONTEXT.board, self)
+        // halt execution
         memoryhaltchip(READ_CONTEXT.elementid)
       }
       return 0

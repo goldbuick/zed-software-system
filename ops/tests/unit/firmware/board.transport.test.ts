@@ -3,6 +3,7 @@ import { BOARD_FIRMWARE } from 'zss/firmware/board'
 import {
   memorycreateboard,
   memorycreateboardobjectfromkind,
+  memorywriteterrainfromkind,
 } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
 import { memorymoveobject } from 'zss/memory/boardmovement'
@@ -51,6 +52,7 @@ describe('#transport pair scan + object touch', () => {
   function setup() {
     const book = memorycreatebook([
       memorycreatecodepage('@transporter\n@cycle 1\n#end\n', {}),
+      memorycreatecodepage('@solid\n@issolid\n', {}),
       memorycreatecodepage('@boulder\n@ispushable\n@cycle 1\n#end\n', {}),
       memorycreatecodepage('@player\n@cycle 1\n#end\n', {}),
       memorycreatecodepage('@board arena\n', {}),
@@ -66,7 +68,7 @@ describe('#transport pair scan + object touch', () => {
     return { book, board }
   }
 
-  it('lands past the first pair transporter, not the first empty cell', () => {
+  it('lands on the first empty cell in front, not a later same-facing transporter', () => {
     const { board } = setup()
     const near = memorycreateboardobjectfromkind(
       board,
@@ -83,6 +85,41 @@ describe('#transport pair scan + object touch', () => {
       'sid_far',
     )!
     far.shootx = 1
+    far.shooty = 0
+    const entrant = memorycreateboardobjectfromkind(
+      board,
+      { x: 1, y: 5 },
+      'boulder',
+      'sid_boulder',
+    )!
+
+    READ_CONTEXT.element = near
+    READ_CONTEXT.elementid = near.id ?? ''
+    const transport = BOARD_FIRMWARE.getcommand('transport')!
+    transport(makechip(), ['sid_boulder'])
+
+    expect(entrant.x).toBe(3)
+    expect(entrant.y).toBe(5)
+  })
+
+  it('lands past an opposite-facing pair when the cell in front is blocked', () => {
+    const { board } = setup()
+    const near = memorycreateboardobjectfromkind(
+      board,
+      { x: 2, y: 5 },
+      'transporter',
+      'sid_near',
+    )!
+    near.shootx = 1
+    near.shooty = 0
+    memorywriteterrainfromkind(board, { x: 3, y: 5 }, 'solid')
+    const far = memorycreateboardobjectfromkind(
+      board,
+      { x: 5, y: 5 },
+      'transporter',
+      'sid_far',
+    )!
+    far.shootx = -1
     far.shooty = 0
     const entrant = memorycreateboardobjectfromkind(
       board,
