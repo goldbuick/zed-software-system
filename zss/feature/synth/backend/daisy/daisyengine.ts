@@ -35,7 +35,7 @@ let daisyloadinflight: MAYBE<Promise<DaisyEngine>>
 let daisyready = false
 let daisybroadcastdestination: MAYBE<MediaStreamAudioDestinationNode>
 let daisybroadcasttap: MAYBE<GainNode>
-let daisyttssource: MAYBE<AudioBufferSourceNode>
+const daisyttssources = new Set<AudioBufferSourceNode>()
 let daisykeepalive: MAYBE<ConstantSourceNode>
 
 let daisyvol = WASM_DEFAULT_MAIN_VOLUME
@@ -43,6 +43,17 @@ let daisyplayvolume = WASM_DEFAULT_PLAY_VOLUME
 let daisybgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME
 let daisyttsvolume = WASM_DEFAULT_TTS_VOLUME
 let daisybootedbuildid = ''
+
+function stopdaisyttssources() {
+  for (const source of daisyttssources) {
+    try {
+      source.stop()
+    } catch {
+      // source may have ended
+    }
+  }
+  daisyttssources.clear()
+}
 
 function teardowndaisyengine() {
   try {
@@ -52,12 +63,7 @@ function teardowndaisyengine() {
     //
   }
   daisykeepalive = undefined
-  try {
-    daisyttssource?.stop()
-  } catch {
-    //
-  }
-  daisyttssource = undefined
+  stopdaisyttssources()
   if (daisyengine) {
     try {
       daisyengine.audioWorkletNode.disconnect()
@@ -408,12 +414,6 @@ export function playdaisyaudiobuffer(audiobuffer: AudioBuffer) {
   if (!engine) {
     return
   }
-  try {
-    daisyttssource?.stop()
-  } catch {
-    // prior TTS may have ended
-  }
-  daisyttssource = undefined
 
   const ctx = engine.audioContext
   const worklet = engine.audioWorkletNode
@@ -426,8 +426,11 @@ export function playdaisyaudiobuffer(audiobuffer: AudioBuffer) {
   gain.channelInterpretation = 'speakers'
   source.connect(gain)
   gain.connect(worklet, 0, 0)
+  source.onended = () => {
+    daisyttssources.delete(source)
+  }
   source.start(0)
-  daisyttssource = source
+  daisyttssources.add(source)
 }
 
 export function getdaisybroadcastdestination(): MAYBE<MediaStreamAudioDestinationNode> {
