@@ -646,6 +646,16 @@ export function memoryconverttogadgetlayers(
     sprite.bg = display.bg
     sprite.stat = collision
     objects.sprites.push(sprite)
+
+    if (isdark && display.light > 0) {
+      memoryboardlightingapplyobject(
+        board,
+        lighting.alphas,
+        object,
+        sprite,
+        display.light,
+      )
+    }
   }
 
   // layers for display media
