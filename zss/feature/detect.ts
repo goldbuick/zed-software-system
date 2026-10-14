@@ -18,3 +18,22 @@ export function setclimode(value: boolean) {
 export function getclimode(): boolean {
   return climode
 }
+
+/** Phone and tablet Safari, Firefox, and Chrome. Desktop UAs and missing navigator are false. */
+export function ismobilewebbrowser(): boolean {
+  const nav = globalThis.navigator
+  if (!nav) {
+    return false
+  }
+  const ua = nav.userAgent ?? ''
+  if (/iPhone|iPad|iPod|CriOS|FxiOS/i.test(ua)) {
+    return true
+  }
+  if (/Macintosh/i.test(ua) && nav.maxTouchPoints > 1) {
+    return true
+  }
+  if (/Android|Mobile/i.test(ua) && /Chrome|Safari|Firefox/i.test(ua)) {
+    return true
+  }
+  return false
+}
