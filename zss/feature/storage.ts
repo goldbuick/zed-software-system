@@ -2,7 +2,7 @@ import humanid from 'human-id'
 import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
-import { isclimode } from 'zss/feature/detect'
+import { isclimode, ismobilewebbrowser } from 'zss/feature/detect'
 import {
   durabledel,
   durableget,
@@ -105,11 +105,11 @@ async function readlocalurl(shorturl: string) {
   return await durableget<string>(shorturl)
 }
 
-/** Hash fragment for a content URL; short-id in local IDB when over 2048 chars. */
+/** Hash fragment for a content URL. Desktop browsers store a short-id in local IDB when over 2048 chars. */
 export async function contenttohashfragment(
   compressed: string,
 ): Promise<string> {
-  if (compressed.length > 2048) {
+  if (compressed.length > 2048 && !ismobilewebbrowser()) {
     return await writelocalurl(compressed)
   }
   return compressed
