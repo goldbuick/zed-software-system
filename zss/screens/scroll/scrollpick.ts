@@ -10,3 +10,11 @@ export function scrollpickstarthyperlinkrow(text: PANEL_ITEM[]): number {
   }
   return 0
 }
+
+/** Enter on a plain text line in the scroll panel closes the scroll. */
+export function scrolltextlineclosesonenter(
+  item: PANEL_ITEM,
+  sidebar: boolean,
+): boolean {
+  return !sidebar && typeof item === 'string'
+}
