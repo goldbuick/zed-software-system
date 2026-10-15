@@ -1,6 +1,7 @@
 import { useContext } from 'react'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
+import { UserInput } from 'zss/gadget/userinput.bridge'
 import { useWriteText } from 'zss/gadget/writetext'
 import { isarray } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -8,6 +9,7 @@ import { resolvelinktypeandwords } from 'zss/screens/linkui/linktypes'
 import { LinkRouter } from 'zss/screens/linkui/router'
 import type { LinkSurface } from 'zss/screens/linkui/types'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
+import { scrolltextlineclosesonenter } from 'zss/screens/scroll/scrollpick'
 
 import { ScrollContext, setuppanelitem } from './common'
 import { PanelContent } from './content'
@@ -36,13 +38,18 @@ export function PanelItem({
 
   if (typeof item === 'string') {
     return (
-      <PanelContent
-        sidebar={sidebar}
-        player={player}
-        item={item}
-        row={row}
-        context={context}
-      />
+      <>
+        {active && scrolltextlineclosesonenter(item, sidebar) && (
+          <UserInput OK_BUTTON={scroll.sendclose} />
+        )}
+        <PanelContent
+          sidebar={sidebar}
+          player={player}
+          item={item}
+          row={row}
+          context={context}
+        />
+      </>
     )
   }
 
