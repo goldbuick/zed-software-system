@@ -9,11 +9,11 @@ $dkblue$onblack$219$white$ondkblue$223$220$ltgray$onblack$219$white$219$onblue$2
 $dkblue$onblack$219$219$219$ltgray$ondkblue$223$white$onblack$219$219$219$219$219$219$ondkblue$223$dkblue$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$white$220$dkblue$219$219$white$219$dkblue$219$219$219$219$219$219$219$219$219
 $ltgray$ondkblue$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$white$223$223$ltgray$205$205$205$205$205$205$205$205$205$205
 $dkblue$onblack$219$219$219$219$219$219$219$219$219$219$219$ondkblue$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$white$108$111$103$111$32$98$121$32$68$97$118$101$50
-# stk list
+# standard library
 !openit inline https://bytes.zed.cafe/CPvUq6xq;APP - FUN facts
 !openit inline https://bytes.zed.cafe/gPyVmz5u;APP - TTS All at Once
 !openit inline https://bytes.zed.cafe/FaUkmz2p;APP - TTS Nicely Queue'd
 !openit inline https://bytes.zed.cafe/DQffpxba;APP - Simple Chat
-!openit inline https://bytes.zed.cafe/geNHhyjf;ZTK - ZZT Tool Kit
-!openit inline https://bytes.zed.cafe/weyMl04a;QTK - Quick Tool Kit
-!openit inline https://bytes.zed.cafe/Vahlxe5y;QTK - Quick Platformer Kit
+!openit inline https://bytes.zed.cafe/geNHhyjf;STK - ZZT Tool Kit
+!openit inline https://bytes.zed.cafe/weyMl04a;STK - Quick Start Kit
+!openit inline https://bytes.zed.cafe/Vahlxe5y;STK - Platformer Kit
