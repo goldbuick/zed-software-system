@@ -350,12 +350,42 @@ export function boardweavegroup(
 
   for (let i = 0; i < objectelements.length; ++i) {
     const fromelement = objectelements[i]
+    const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
+    const fromindex = pttoindex(from, BOARD_WIDTH)
     const fromollision: COLLISION = memoryreadelementstat(
       fromelement,
       'collision',
     )
-    const from: PT = { x: fromelement.x ?? 0, y: fromelement.y ?? 0 }
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
+    // Terrain under this object is moving. That pass already accepted the cell.
+    // A destination object can still block the rider.
+    if (groupindexes.includes(fromindex)) {
+      if (!memoryptwithinboard(dest)) {
+        continue
+      }
+      const destobject = memoryreadelement(targetboard, dest, READ_LAYER.OBJECT)
+      const destobjectid = destobject?.id ?? ''
+      if (!ispresent(destobject) || carriedids.includes(destobjectid)) {
+        continue
+      }
+      if (isforeigngroupelement(destobject, targetgroup)) {
+        didcollide = true
+      } else if (memorycheckelementpushable(fromelement, destobject)) {
+        didcollide =
+          boardmovement.memorymoveobject(book, targetboard, destobject, {
+            x: (destobject.x ?? 0) + delta.x,
+            y: (destobject.y ?? 0) + delta.y,
+          }) !== true
+      } else if (
+        memorycheckcollision(
+          fromollision,
+          memoryreadelementstat(destobject, 'collision'),
+        )
+      ) {
+        didcollide = true
+      }
+      continue
+    }
     if (memoryptwithinboard(dest)) {
       const destelement = memoryreadelement(targetboard, dest, READ_LAYER.ANY)
       const destid = destelement?.id ?? ''

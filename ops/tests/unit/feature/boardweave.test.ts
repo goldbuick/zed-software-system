@@ -139,6 +139,60 @@ describe('boardweavegroup foreign group', () => {
     )
   })
 
+  it('aborts when a solid rider hits a solid destination object', () => {
+    const tile = maketerrain(1, 0, {
+      group: 'a',
+      collision: COLLISION.ISWALK,
+    })
+    const rider = makeobject('oid_rider', 1, 0, {
+      collision: COLLISION.ISSOLID,
+    })
+    const blocker = makeobject('oid_block', 2, 0, {
+      collision: COLLISION.ISSOLID,
+    })
+    const board = setupboard(makeboard('weaveboard', [tile], [rider, blocker]))
+
+    expect(boardweavegroup('weaveboard', { x: 1, y: 0 }, '', 'a')).toBe(false)
+    expect(board.terrain[pttoindex({ x: 1, y: 0 }, BOARD_WIDTH)]?.group).toBe(
+      'a',
+    )
+    expect(board.objects.oid_rider.x).toBe(1)
+    expect(board.objects.oid_block.x).toBe(2)
+  })
+
+  it('moves a solid rider on walkable group terrain into an empty cell', () => {
+    const tile = maketerrain(1, 0, {
+      group: 'a',
+      collision: COLLISION.ISWALK,
+    })
+    const rider = makeobject('oid_rider', 1, 0, {
+      collision: COLLISION.ISSOLID,
+    })
+    const board = setupboard(makeboard('weaveboard', [tile], [rider]))
+
+    expect(boardweavegroup('weaveboard', { x: 1, y: 0 }, '', 'a')).toBe(true)
+    expect(board.terrain[pttoindex({ x: 1, y: 0 }, BOARD_WIDTH)]).toBeUndefined()
+    expect(board.terrain[pttoindex({ x: 2, y: 0 }, BOARD_WIDTH)]?.group).toBe(
+      'a',
+    )
+    expect(board.objects.oid_rider.x).toBe(2)
+  })
+
+  it('aborts when a solid group object not on group terrain hits a solid object', () => {
+    const mover = makeobject('oid_mover', 1, 0, {
+      group: 'a',
+      collision: COLLISION.ISSOLID,
+    })
+    const blocker = makeobject('oid_block', 2, 0, {
+      collision: COLLISION.ISSOLID,
+    })
+    const board = setupboard(makeboard('weaveboard', [], [mover, blocker]))
+
+    expect(boardweavegroup('weaveboard', { x: 1, y: 0 }, '', 'a')).toBe(false)
+    expect(board.objects.oid_mover.x).toBe(1)
+    expect(board.objects.oid_block.x).toBe(2)
+  })
+
   it('aborts when weaving an object onto another group object', () => {
     const a = makeobject('oid_a', 1, 0, {
       group: 'a',
