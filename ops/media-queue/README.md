@@ -77,6 +77,6 @@ YouTube downloads pass `--js-runtimes deno:<bundled>` and `--remote-components e
 
 **Audio-only URLs** (SoundCloud, YouTube Music `music.youtube.com`, and video-try fallbacks): YouTube Music skips the 720p video try. Other hosts try 720p h264+aac video first, then AAC audio, then mp3, then opus+mp3. Later SoundCloud tries omit `hls_aac` so a 404 on that ladder cannot abort extract. Success tags the file `audioOnly` and plays it through a **random visualizer** picked from one pool: classic spectrum bars, classic scope, and each curated MilkDrop preset via [Butterchurn](https://github.com/jberg/butterchurn). The compositor canvas (`608×364`, see `ui/tvcanvas.ts`) is captured for the board TV video track; audio goes to speakers. Presets draw a dimmed JPEG thumbnail sidecar under the viz when artwork is present. Track title scrolls on the board TV marquee as for video items -- not drawn on the visualizer.
 
-Credits: [Ryan Geiss / Geisswerks](https://www.geisswerks.com/geiss/) (MilkDrop), [Butterchurn](https://github.com/jberg/butterchurn) (WebGL MilkDrop), and MilkDrop preset authors (Flexi, Martin, Geiss, and others).
+Credits: [Ryan Geiss / MilkDrop](https://en.wikipedia.org/wiki/MilkDrop), [Butterchurn](https://github.com/jberg/butterchurn) (WebGL MilkDrop), and MilkDrop preset authors (Flexi, Martin, Geiss, and others).
 
 Unsupported URLs fail loud (`download-failed`). No Screen Recording permission is required.
