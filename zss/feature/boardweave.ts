@@ -244,11 +244,7 @@ export function boardweavegroup(
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
       const destindex = pttoindex(dest, BOARD_WIDTH)
-      const destobject = memoryreadelement(
-        targetboard,
-        dest,
-        READ_LAYER.OBJECT,
-      )
+      const destobject = memoryreadelement(targetboard, dest, READ_LAYER.OBJECT)
       const destterrain = memoryreadelement(
         targetboard,
         dest,
