@@ -14,6 +14,7 @@ $dkblue$onblack$219$219$219$219$219$219$219$219$219$219$219$ondkblue$219$219$219
 !openit inline https://bytes.zed.cafe/gPyVmz5u;APP - TTS All at Once
 !openit inline https://bytes.zed.cafe/FaUkmz2p;APP - TTS Nicely Queue'd
 !openit inline https://bytes.zed.cafe/DQffpxba;APP - Simple Chat
+!openit inline https://bytes.zed.cafe/xJbE82rz;APP - Zed Boat
 !openit inline https://bytes.zed.cafe/geNHhyjf;ZTK - ZZT Tool Kit
 !openit inline https://bytes.zed.cafe/weyMl04a;ZTK - Quick Start Kit
 !openit inline https://bytes.zed.cafe/Vahlxe5y;ZTK - Platformer Kit
