@@ -1,5 +1,5 @@
 import { indextopt, pttoindex } from 'zss/mapping/2d'
-import { deepcopy, ispresent } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
 import { memoryboardelementisobject } from 'zss/memory/boardelement'
 import { memorycreateboard, memoryreadgroup } from 'zss/memory/boardlifecycle'
@@ -15,6 +15,18 @@ import { memorycheckcollision } from 'zss/memory/spatialqueries'
 import { type BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { COLLISION, PT } from 'zss/words/types'
+
+/** Non-empty @group that is not the weave target. Empty group keeps solid/push rules. */
+function isforeigngroupelement(
+  dest: MAYBE<BOARD_ELEMENT>,
+  targetgroup: string,
+): boolean {
+  if (!ispresent(dest)) {
+    return false
+  }
+  const destgroup = memoryreadelementstat(dest, 'group')
+  return isstring(destgroup) && destgroup !== '' && destgroup !== targetgroup
+}
 
 /** Sweep order for collision / apply: primary axis = larger |delta|; tie-break uses x then y. */
 function compareptsforsweep(
@@ -231,10 +243,27 @@ export function boardweavegroup(
     const fromindex = pttoindex(from, BOARD_WIDTH)
     const dest: PT = { x: from.x + delta.x, y: from.y + delta.y }
     if (memoryptwithinboard(dest)) {
+      const destindex = pttoindex(dest, BOARD_WIDTH)
+      const destobject = memoryreadelement(targetboard, dest, READ_LAYER.OBJECT)
+      const destterrain = memoryreadelement(
+        targetboard,
+        dest,
+        READ_LAYER.TERRAIN,
+      )
+      const destobjectid = destobject?.id ?? ''
+      if (
+        (ispresent(destobject) &&
+          carriedids.includes(destobjectid) !== true &&
+          isforeigngroupelement(destobject, targetgroup)) ||
+        (groupindexes.includes(destindex) !== true &&
+          isforeigngroupelement(destterrain, targetgroup))
+      ) {
+        didcollide = true
+        continue
+      }
+
       const destelement = memoryreadelement(targetboard, dest, READ_LAYER.ANY)
       const destid = destelement?.id ?? ''
-      const destpt = { x: destelement?.x ?? 0, y: destelement?.y ?? 0 }
-      const destindex = pttoindex(destpt, BOARD_WIDTH)
       const destcollision: COLLISION = memoryreadelementstat(
         destelement,
         'collision',
@@ -334,17 +363,18 @@ export function boardweavegroup(
         destelement,
         'collision',
       )
-      const destgroup: string = memoryreadelementstat(destelement, 'group')
       if (
         ispresent(destelement) &&
         memoryboardelementisobject(destelement) &&
         carriedids.includes(destid) !== true
       ) {
-        const pushdest: PT = {
-          x: (destelement.x ?? 0) + delta.x,
-          y: (destelement.y ?? 0) + delta.y,
-        }
-        if (memorycheckelementpushable(fromelement, destelement)) {
+        if (isforeigngroupelement(destelement, targetgroup)) {
+          didcollide = true
+        } else if (memorycheckelementpushable(fromelement, destelement)) {
+          const pushdest: PT = {
+            x: (destelement.x ?? 0) + delta.x,
+            y: (destelement.y ?? 0) + delta.y,
+          }
           didcollide =
             boardmovement.memorymoveobject(
               book,
@@ -352,18 +382,12 @@ export function boardweavegroup(
               destelement,
               pushdest,
             ) !== true
-        } else if (carriedids.includes(destid)) {
-          didcollide = true
-        } else if (
-          memorycheckcollision(fromollision, destcollision) &&
-          targetgroup !== destgroup
-        ) {
+        } else if (memorycheckcollision(fromollision, destcollision)) {
           didcollide = true
         }
-      } else if (
-        memorycheckcollision(fromollision, destcollision) &&
-        targetgroup !== destgroup
-      ) {
+      } else if (isforeigngroupelement(destelement, targetgroup)) {
+        didcollide = true
+      } else if (memorycheckcollision(fromollision, destcollision)) {
         didcollide = true
       }
     } else {
