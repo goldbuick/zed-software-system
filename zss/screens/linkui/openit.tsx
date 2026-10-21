@@ -79,7 +79,7 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
     )
   } else {
     tokenizeandwritetextformat(
-      `${linkactionprefix(surface)}$purple$16 $yellowOPENIT ${tcolor}${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
+      `${linkactionprefix(surface)}$purple$16 ${tcolor}${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
       surface.context,
       true,
     )
