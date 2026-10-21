@@ -377,7 +377,10 @@ async function runznsemailpreview(ctx: TaskContext): Promise<number> {
     !svglc.includes('╔'),
     'email card must use single-line CP437 frame like at.zed.cafe',
   )
-  assertok(svglc.includes('open zed.cafe'), 'email card must include the open label')
+  assertok(
+    svglc.includes('open zed.cafe'),
+    'email card must include the open label',
+  )
   assertok(
     svg.includes('\u25ba') || svg.includes('&#9658;'),
     'email card arrow must be U+25BA',
@@ -631,7 +634,10 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
     txthtml.toLowerCase().includes('color:#') && !txthtml.includes('$RED'),
     'txt $RED should render as colored span',
   )
-  assertok(clhtml.includes('FUN facts'), 'cliscroll should render openit labels')
+  assertok(
+    clhtml.includes('FUN facts'),
+    'cliscroll should render openit labels',
+  )
   assertok(
     clhtml.includes('\u25ba') ||
       clhtml.includes('&#9658;') ||
@@ -684,8 +690,14 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
     !indexhtml.includes('$dkpurple'),
     'section bar should render not leak tokens',
   )
-  assertok(!/>\s*\|/.exec(indexhtml), 'pointer rows should not have pipe prefix')
-  assertok(indexhtml.includes('coolregionsbow'), 'index-style pointer row present')
+  assertok(
+    !/>\s*\|/.exec(indexhtml),
+    'pointer rows should not have pipe prefix',
+  )
+  assertok(
+    indexhtml.includes('coolregionsbow'),
+    'index-style pointer row present',
+  )
   assertok(
     !indexhtml.includes('\u0010'),
     'pointer marker must not be Unicode control U+0010',
