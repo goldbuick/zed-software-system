@@ -133,7 +133,7 @@ describe('zns-zedhtml hyperlinks', () => {
     expect(html).toContain('class="zns-copy"')
     expect(html).toContain('data-copy="#play cdefgab+c"')
     expect(html).toContain('C major')
-    expect(html).toContain('COPYIT')
+    expect(html).not.toContain('COPYIT')
     expect(html).not.toContain('!copyit')
     expect(html).not.toContain('href=')
   })
@@ -156,7 +156,7 @@ describe('zns-zedhtml hyperlinks', () => {
     expect(html).toContain('class="zns-copy"')
     expect(html).toContain('data-copy="#play d!e!fg!a!b!c+d!"')
     expect(html).toContain('Db major')
-    expect(html).toContain('COPYIT')
+    expect(html).not.toContain('COPYIT')
   })
 })
 

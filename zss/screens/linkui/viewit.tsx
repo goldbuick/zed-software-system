@@ -24,7 +24,7 @@ export function LinkViewIt({ surface }: LinkWidgetProps) {
 
   const tcolor = inputcolor(!!surface.active)
   tokenizeandwritetextformat(
-    `${linkactionprefix(surface)}$purple$16 $cyanVIEWIT ${tcolor}${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
+    `${linkactionprefix(surface)}$purple$16 ${tcolor}${surface.label}${surface.layout === 'panel' ? '\n' : ''}`,
     surface.context,
     true,
   )

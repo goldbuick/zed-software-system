@@ -377,14 +377,17 @@ async function runznsemailpreview(ctx: TaskContext): Promise<number> {
     !svglc.includes('╔'),
     'email card must use single-line CP437 frame like at.zed.cafe',
   )
-  assertok(svglc.includes('openit'), 'email card must include OPENIT row')
   assertok(
-    svglc.includes('fill="#ff55ff"'),
-    'OPENIT arrow must use purple #FF55FF',
+    svglc.includes('open zed.cafe'),
+    'email card must include the open label',
   )
   assertok(
-    svglc.includes('fill="#ffff55"'),
-    'OPENIT label must use yellow #FFFF55',
+    svg.includes('\u25ba') || svg.includes('&#9658;'),
+    'email card arrow must be U+25BA',
+  )
+  assertok(
+    svglc.includes('fill="#ff55ff"'),
+    'email card arrow must use purple #FF55FF',
   )
   for (const bad of LEGACY_BAD) {
     assertok(!svglc.includes(bad), `SVG must not contain legacy token ${bad}`)
@@ -631,7 +634,17 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
     txthtml.toLowerCase().includes('color:#') && !txthtml.includes('$RED'),
     'txt $RED should render as colored span',
   )
-  assertok(clhtml.includes('OPENIT'), 'cliscroll should render OPENIT rows')
+  assertok(
+    clhtml.includes('FUN facts'),
+    'cliscroll should render openit labels',
+  )
+  assertok(
+    clhtml.includes('\u25ba') ||
+      clhtml.includes('&#9658;') ||
+      clhtml.includes('\u25b6') ||
+      clhtml.includes('&#9654;'),
+    'cliscroll openit row should render $16 as U+25BA',
+  )
   assertok(
     !clhtml.includes('[ZTK'),
     'cliscroll should not contain raw markdown links',
@@ -670,33 +683,39 @@ async function runznsscrollpreview(ctx: TaskContext): Promise<number> {
   )
   const indexrows = [
     ...zsssectionlines('bytes'),
-    '$purple$16 $yellowOPENIT $whitecoolregionsbow ',
+    '$purple$16 $whitecoolregionsbow ',
   ].join('\n')
   const indexhtml = `<div class="zns-tape">${zedtaperowshtml(indexrows)}</div>`
   assertok(
     !indexhtml.includes('$dkpurple'),
     'section bar should render not leak tokens',
   )
-  assertok(!/>\s*\|/.exec(indexhtml), 'OPENIT rows should not have pipe prefix')
-  assertok(indexhtml.includes('OPENIT'), 'index-style OPENIT row present')
+  assertok(
+    !/>\s*\|/.exec(indexhtml),
+    'pointer rows should not have pipe prefix',
+  )
+  assertok(
+    indexhtml.includes('coolregionsbow'),
+    'index-style pointer row present',
+  )
   assertok(
     !indexhtml.includes('\u0010'),
-    'OPENIT marker must not be Unicode control U+0010',
+    'pointer marker must not be Unicode control U+0010',
   )
   assertok(
     indexhtml.includes('\u25ba') ||
       indexhtml.includes('&#9658;') ||
       indexhtml.includes('\u25b6') ||
       indexhtml.includes('&#9654;'),
-    'OPENIT row should render $16 as U+25BA in IBM font',
+    'pointer row should render $16 as U+25BA in IBM font',
   )
   assertok(
     !indexhtml.includes('\uF010') && !indexhtml.includes('&#61456;'),
-    'OPENIT marker must not use PUA U+F010',
+    'pointer marker must not use PUA U+F010',
   )
   assertok(
     clhtml.includes('color:#ffffff') || clhtml.includes('color:#FFFFFF'),
-    'cliscroll OPENIT label should use white',
+    'cliscroll openit label should use white',
   )
   assertok(
     algohtml.includes('--&gt; = signal flow') ||

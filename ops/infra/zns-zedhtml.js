@@ -422,12 +422,12 @@ export function zedzedlinkrowhtml(line, opts = {}) {
     }
     case 'copyit': {
       const content = words.filter((w) => w !== 'istargetless').join(' ')
-      const row = `$purple$16 $yellowCOPYIT $cyan${label}`
+      const row = `$purple$16 $cyan${label}`
       return `<div class="zns-line">${znscopyrowinner(row, content)}</div>`
     }
     case 'viewit': {
       const content = words.filter((w) => w !== 'istargetless').join(' ')
-      const row = `$purple$16 $cyanVIEWIT $white${label}`
+      const row = `$purple$16 $white${label}`
       const href = zedpathhref(content, opts)
       return znsrowfromtape(row, href, {
         ...opts,
@@ -435,7 +435,7 @@ export function zedzedlinkrowhtml(line, opts = {}) {
       })
     }
     case 'runit': {
-      const row = `$purple$16 $yellowRUNIT $cyan${label}`
+      const row = `$purple$16 $cyan${label}`
       return znsrowfromtape(row, '', opts)
     }
     case 'hyperlink':
@@ -536,7 +536,7 @@ export function zedopenitznslinkrowhtml(label, path, opts = {}) {
     const row = `${badgebg}${badge}$cyan$onclear ${text}`
     return znsrowfromtape(row, url, linkopts)
   }
-  const row = `$purple$16 $yellowOPENIT $white${text} `
+  const row = `$purple$16 $white${text}`
   return `<div class="zns-line">${znslinkrowinner(row, url, linkopts)}</div>`
 }
 

@@ -140,18 +140,16 @@ function znsemailheaderrow(decorinner, p) {
 function znsemailopenitrow(label, p) {
   return [
     { text: `${OPENIT_ARROW} `, fill: p.purple },
-    { text: 'OPENIT ', fill: p.yellow },
     { text: label, fill: p.white },
   ]
 }
 
 function znsemailopenitdeeplink(deeplink, width, p) {
-  const prefixlen = OPENIT_ARROW.length + 1 + 'OPENIT '.length
+  const prefixlen = OPENIT_ARROW.length + 1
   const lines = wrapterminallines(deeplink, Math.max(8, width - prefixlen))
   const rows = [
     [
       { text: `${OPENIT_ARROW} `, fill: p.purple },
-      { text: 'OPENIT ', fill: p.yellow },
       { text: lines[0].trimEnd(), fill: p.white },
     ],
   ]
@@ -215,9 +213,9 @@ export function buildznsterminalframe({ namespace, command, deeplink }) {
     cmdbox.mid,
     cmdbox.bottom,
     '',
-    `${OPENIT_ARROW} OPENIT > Open zed.cafe`,
+    `${OPENIT_ARROW} > Open zed.cafe`,
     '',
-    `${OPENIT_ARROW} OPENIT ${deeplink}`,
+    `${OPENIT_ARROW} ${deeplink}`,
     '',
   ].join('\n')
   return frame
