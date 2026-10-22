@@ -31,6 +31,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
+| [sessionlist.md](sessionlist.md) | Book-token lister for active multiplayer sessions |
 | [media-transport-layer.mdx](media-transport-layer.mdx) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
 | [tts.md](tts.md) | Text-to-speech (Piper, Supertonic, Fish) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |

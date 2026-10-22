@@ -23,6 +23,7 @@ import {
   memoryreadtopic,
   memorywritehalt,
 } from './session'
+import { memorysessionlistlines } from './sessionlist'
 import { BOOK } from './types'
 
 const CONFIG_DEFAULTS: Record<string, string> = {
@@ -199,6 +200,13 @@ export function memoryadminmenu(
       )
     }
     rows.push('')
+  }
+
+  if (!isjoin()) {
+    rows.push('')
+    rows.push('active sessions')
+    rows.push(DIVIDER)
+    rows.push(...memorysessionlistlines())
   }
 
   scrollwritelines(player, 'cpu #admin', zsstexttape(...rows), 'refscroll')

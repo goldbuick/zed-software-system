@@ -4,6 +4,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import type { MESSAGE } from 'zss/device/types'
 import { setcrossloginflags } from 'zss/feature/crosslogin'
 import { netterminalhalt } from 'zss/feature/netterminal'
+import { sessionlisthalt } from 'zss/feature/sessionlist/service'
 import { ispresent, isstring } from 'zss/mapping/types'
 
 export function handlejoincrosslogin(device: DEVICE, message: MESSAGE): void {
@@ -20,6 +21,7 @@ export function handlejoincrosslogin(device: DEVICE, message: MESSAGE): void {
 
   setcrossloginflags(flags)
   netterminalhalt()
+  sessionlisthalt()
 
   const joinpath = `${location.origin}/join/#${peerid}`
   history.pushState({}, '', joinpath)

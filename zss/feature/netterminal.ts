@@ -74,12 +74,18 @@ type ROSTER_CHANGE_HANDLER = () => void
 type PEER_OPEN_HANDLER = () => void
 
 let mediacallhandler: MAYBE<MEDIACALL_HANDLER>
-let rosterchangehandler: MAYBE<ROSTER_CHANGE_HANDLER>
+const rosterchangehandlers: ROSTER_CHANGE_HANDLER[] = []
 const peeropenhandlers: PEER_OPEN_HANDLER[] = []
 
 function runpeeropenhandlers() {
   for (let i = 0; i < peeropenhandlers.length; ++i) {
     peeropenhandlers[i]()
+  }
+}
+
+function runrosterchangehandlers() {
+  for (let i = 0; i < rosterchangehandlers.length; ++i) {
+    rosterchangehandlers[i]()
   }
 }
 
@@ -93,7 +99,7 @@ export function netterminalregistermediacallhandler(
 export function netterminalregisterrosterchangehandler(
   handler: ROSTER_CHANGE_HANDLER,
 ) {
-  rosterchangehandler = handler
+  rosterchangehandlers.push(handler)
 }
 
 /** Run when the clique Peer opens (host or join) so media can answer room calls. */
@@ -572,6 +578,7 @@ function handledataconnection(dataconnection: DataConnection) {
         delete peerbyplayer[leftplayer]
         delete playerbypeer[remotepeer]
         broadcastpeerroster()
+        runrosterchangehandlers()
       }
     }
     if (ispresent(networkpeer)) {
@@ -614,7 +621,7 @@ function handledataconnection(dataconnection: DataConnection) {
             playerbypeer[hellopeer] = helloplayer
             ensurehostselfonroster()
             broadcastpeerroster()
-            rosterchangehandler?.()
+            runrosterchangehandlers()
           }
           return
         }
@@ -660,7 +667,7 @@ createdevice('netterminal', [], (message) => {
         `peer roster ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`,
       )
       ensurejoinclique()
-      rosterchangehandler?.()
+      runrosterchangehandlers()
       break
     }
     case 'peerhello':

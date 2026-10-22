@@ -32,3 +32,4 @@ title: netterminal.ts
 - Host creates Peer, subscribes to topic; joins create DataConnection to host
 - `createforward` bridges messages between device and peer; filters by `shouldforwardservertoclient`, `shouldnotforwardonpeerserver`
 - On `peer` `open`, if ZNS session is in IDB, [`znsautopublishpeer`](../url.ts) updates `https://{namespace}.at.zed.cafe/peer`
+- The [session list](sessionlist.md) uses its own Peer (id = book token), separate from this multiplayer peer. `netterminalregisterrosterchangehandler` accepts multiple handlers; the session list uses it to refresh its player count.

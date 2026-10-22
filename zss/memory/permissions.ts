@@ -27,6 +27,7 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   joincode: 'bridge',
   jointab: 'bridge',
   mediamanage: 'bridge',
+  sessions: 'bridge',
 
   build: 'build',
   change: 'build',

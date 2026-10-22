@@ -1,6 +1,6 @@
 import { FORMAT_OBJECT, formatobject, unformatobject } from 'zss/feature/format'
-import { createnameid, createshortnameid, createsid } from 'zss/mapping/guid'
-import { randominteger } from 'zss/mapping/number'
+import { createsessionlisttoken } from 'zss/feature/sessionlist/protocol'
+import { createnameid, createsid } from 'zss/mapping/guid'
 import { MAYBE, isarray, isplainobject, ispresent } from 'zss/mapping/types'
 import { COLOR, NAME, WORD } from 'zss/words/types'
 
@@ -423,7 +423,7 @@ export function memoryupdatebookname(book: MAYBE<BOOK>) {
 
 export function memoryupdatebooktoken(book: MAYBE<BOOK>) {
   if (ispresent(book)) {
-    book.token = `${createshortnameid()}${randominteger(1111, 9999)}`
+    book.token = createsessionlisttoken()
   }
 }
 
@@ -503,6 +503,7 @@ export function memorycreatebook(pages: CODE_PAGE[]): BOOK {
   return {
     id: createsid(),
     name: createnameid(),
+    token: createsessionlisttoken(),
     timestamp: 0,
     activelist: [],
     pages,

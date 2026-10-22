@@ -19,6 +19,15 @@ export function incflushtick(): number {
   return ++flushtick
 }
 
+let sentsessionlisttoken = ''
+export function readsentsessionlisttoken(): string {
+  return sentsessionlisttoken
+}
+
+export function setsentsessionlisttoken(value: string): void {
+  sentsessionlisttoken = value
+}
+
 export const watching: Record<string, Set<string>> = {}
 export const observers: Record<string, (() => void) | undefined> = {}
 
