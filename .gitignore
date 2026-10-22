@@ -16,6 +16,7 @@ dist-bin
 dist-server
 oclif.manifest.json
 *.local
+.slurterms.local
 *.tsbuildinfo
 
 # tsc emit of vite.config.ts (Vite prefers .js over .ts — do not commit)

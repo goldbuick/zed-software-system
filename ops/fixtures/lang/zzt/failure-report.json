@@ -12004,13 +12004,13 @@
       "sample_error": "Redundant input, expecting EOF but found: nutes"
     },
     {
-      "signature": "Redundant input, expecting EOF but found: coon",
+      "signature": "Redundant input, expecting EOF but found: [removed]",
       "triage": "ambiguous",
       "count": 1,
       "sample_ids": [
         "24hozzt-2000-summer-metamorphosis__MOLE__b3__s1__object"
       ],
-      "sample_error": "Redundant input, expecting EOF but found: coon"
+      "sample_error": "Redundant input, expecting EOF but found: [removed]"
     },
     {
       "signature": "Redundant input, expecting EOF but found: redwin",

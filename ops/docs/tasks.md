@@ -239,6 +239,13 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run ops:sloc` | Source lines of code count for zss/ | — | — | — |
 
 
+### slurfilter
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:slurfilter:build` | Hash the local word list (.slurterms.local, gitignored; --input <path> to override) into zss/feature/slurfilterdigests.ts. Never prints words. | — | — | — |
+
+
 ### test
 
 | Task | Description | Tags | Deps | Env |

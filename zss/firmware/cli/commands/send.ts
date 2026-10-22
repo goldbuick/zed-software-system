@@ -12,6 +12,7 @@ import {
 import { SOFTWARE } from 'zss/device/session'
 import { formatchatmessagebody } from 'zss/device/vm/chatmessageformat'
 import { mediaischatqueueurl } from 'zss/feature/mediaqueue/urlnormalize'
+import { chattextcontainsslur } from 'zss/feature/slurfilter'
 import { FIRMWARE } from 'zss/firmware'
 import { ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
@@ -80,6 +81,9 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
     })
     .command('text', ['text on element or in sidebar'], (chip, words) => {
       let ticker = readscrolltextfromwords(words)
+      if (READ_CONTEXT.elementisplayer && chattextcontainsslur(ticker)) {
+        return 0
+      }
 
       if (hasbonk(ticker)) {
         gadgetclientbonk(SOFTWARE, READ_CONTEXT.elementfocus)
@@ -156,6 +160,14 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
     })
     .command('hyperlink', ['clickable link in scroll or log'], (chip, args) => {
       const [label, ...words] = args
+      const labelstr = chip.template(maptostring(label).split(' '))
+      const linkstr = chip.template(words)
+      if (
+        READ_CONTEXT.elementisplayer &&
+        chattextcontainsslur(`${labelstr} ${linkstr}`)
+      ) {
+        return 0
+      }
       const { user } = memoryreadflags(
         READ_CONTEXT.book,
         READ_CONTEXT.elementid,
@@ -163,11 +175,10 @@ export function registersendcommands(fw: FIRMWARE): FIRMWARE {
       const withuser = isstring(user) ? user : 'player'
       const icon = memoryreadelementdisplay(READ_CONTEXT.element)
       const player = `$${COLOR[icon.color]}$ON${COLOR[icon.bg]}$${icon.char}$ONCLEAR $WHITE${withuser}$BLUE `
-      const labelstr = chip.template(maptostring(label).split(' '))
       apilog(
         SOFTWARE,
         READ_CONTEXT.elementid,
-        `!${chip.template(words)};${player}${labelstr}`,
+        `!${linkstr};${player}${labelstr}`,
       )
       return 0
     })

@@ -58,6 +58,7 @@ import {
   netterminaljoin,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
+import { chattextcontainsslur } from 'zss/feature/slurfilter'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
 import { waitfor } from 'zss/mapping/tick'
@@ -198,6 +199,9 @@ function pushchatline(
   user: string,
   text: string,
 ) {
+  if (chattextcontainsslur(text)) {
+    return
+  }
   recordChatMessage(kind)
   const prefix = mode === 'action' ? 'chat:action' : 'chat:message'
   vmloader(
