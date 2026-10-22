@@ -9,6 +9,9 @@ import {
 
 const ROOT = path.resolve(__dirname, '../../../..')
 
+// letter runs inside base64 / hash blobs are random and collide with short words
+const BLOB_RE = /[A-Za-z0-9+/=_-]{40,}/g
+
 function trackedfiles(): string[] {
   return execFileSync('git', ['ls-files', '-z'], {
     cwd: ROOT,
@@ -36,7 +39,9 @@ describe('slurfilter repo scan', () => {
       }
       const lines = bytes.toString('utf8').split('\n')
       for (let l = 0; l < lines.length; ++l) {
-        if (textmatchesdigests(lines[l], SLUR_FILTER_TABLE)) {
+        if (
+          textmatchesdigests(lines[l].replace(BLOB_RE, ' '), SLUR_FILTER_TABLE)
+        ) {
           hits.push(`${files[i]}:${l + 1}`)
         }
       }

@@ -7,6 +7,7 @@ import {
   slurfilterstripformat,
   slurfiltertokentier,
   textmatchesdigests,
+  textmatchesvariants,
 } from 'zss/feature/slurfilter'
 
 function maketable(
@@ -27,13 +28,17 @@ const TABLE = maketable(
     ['banana', 'slur'],
     ['box', 'slur'],
     ['gecko', 'ambiguous'],
-    ['durian', 'mild'],
+    ['durian', 'ambiguous'],
   ],
   ['moby banana'],
 )
 
 function chatdrops(text: string) {
   return textmatchesdigests(text, TABLE, ['slur'])
+}
+
+function variantdrops(text: string) {
+  return textmatchesvariants(text, TABLE, ['slur'])
 }
 
 describe('slurfilter', () => {
@@ -78,6 +83,35 @@ describe('slurfilter', () => {
   it('only drops chat on the requested tiers', () => {
     expect(chatdrops('a gecko and a durian')).toBe(false)
     expect(textmatchesdigests('a gecko', TABLE)).toBe(true)
+  })
+
+  it('catches digit and symbol swaps in chat', () => {
+    expect(variantdrops('b4n4n4')).toBe(true)
+    expect(variantdrops('b@nan@')).toBe(true)
+    expect(variantdrops('b0x')).toBe(true)
+    expect(variantdrops('banana123')).toBe(true)
+    expect(variantdrops('!banana!')).toBe(true)
+    expect(variantdrops('room 101')).toBe(false)
+  })
+
+  it('catches stretched letters in chat', () => {
+    expect(variantdrops('baaaanaaanaaa')).toBe(true)
+    expect(variantdrops('bbbooox')).toBe(true)
+  })
+
+  it('catches spaced-out letters in chat', () => {
+    expect(variantdrops('b a n a n a')).toBe(true)
+    expect(variantdrops('b.a.n.a.n.a')).toBe(true)
+    expect(variantdrops('b-0-x')).toBe(true)
+    expect(variantdrops('a b c d')).toBe(false)
+    expect(variantdrops('b ox')).toBe(false)
+  })
+
+  it('keeps tier and allowlist rules for variants', () => {
+    expect(variantdrops('g3ck0')).toBe(false)
+    expect(textmatchesvariants('g3ck0', TABLE)).toBe(true)
+    expect(variantdrops('Moby B4nana poster')).toBe(false)
+    expect(variantdrops('hello there')).toBe(false)
   })
 
   it('honors allowlisted bigrams', () => {

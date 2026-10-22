@@ -1020,7 +1020,7 @@ function scancorpus(): ScanHit[] {
 function writescanreport(hits: ScanHit[], elapsedms: number) {
   const byarchive = new Map<string, number>()
   const byfile = new Map<string, number>()
-  const bytier = { slur: 0, ambiguous: 0, strong: 0, mild: 0 }
+  const bytier = { slur: 0, ambiguous: 0 }
 
   for (let i = 0; i < hits.length; ++i) {
     const hit = hits[i]
@@ -1037,8 +1037,6 @@ function writescanreport(hits: ScanHit[], elapsedms: number) {
       files_with_hits: byfile.size,
       slur_hits: bytier.slur,
       ambiguous_hits: bytier.ambiguous,
-      strong_hits: bytier.strong,
-      mild_hits: bytier.mild,
       elapsed_ms: elapsedms,
     },
     by_archive: Object.fromEntries(
@@ -1063,7 +1061,7 @@ export function scanzztcorpusprofanity(argv: string[]): number {
 
   console.log(`report: ${SCAN_REPORT_PATH}`)
   console.log(
-    `hits=${report.stats.line_hits} files=${report.stats.files_with_hits} slur=${report.stats.slur_hits} ambiguous=${report.stats.ambiguous_hits} strong=${report.stats.strong_hits} mild=${report.stats.mild_hits}`,
+    `hits=${report.stats.line_hits} files=${report.stats.files_with_hits} slur=${report.stats.slur_hits} ambiguous=${report.stats.ambiguous_hits}`,
   )
 
   if (opts.verify && report.stats.line_hits > 0) {
@@ -1544,7 +1542,7 @@ export const OPS_FIXTURES_ZZT_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:zzt:corpus:build', {
     description:
-      'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs',
+      'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize slurs',
     tags: ['slow'],
     deps: [
       'ops:fixtures:zzt:corpus:extract',
@@ -1555,15 +1553,14 @@ export const OPS_FIXTURES_ZZT_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:zzt:corpus:profanity:scan', {
     description:
-      'Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json',
+      'Scan ops/fixtures/zzt/corpus/zss for slurs; write profanity-report.json',
     tags: ['slow'],
     run: handler((ctx) =>
       runzztcorpusprofanity({ ...ctx, args: ['scan', ...ctx.args] }),
     ),
   }),
   def('ops:fixtures:zzt:corpus:profanity:verify', {
-    description:
-      'Fail if corpus zss still contains profanity or slurs (CI gate)',
+    description: 'Fail if corpus zss still contains slurs (CI gate)',
     tags: ['ci', 'slow'],
     run: handler((ctx) =>
       runzztcorpusprofanity({ ...ctx, args: ['scan', 'verify', ...ctx.args] }),
@@ -1571,7 +1568,7 @@ export const OPS_FIXTURES_ZZT_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:zzt:corpus:sanitize', {
     description:
-      'Redact profanity and slurs in ops/fixtures/zzt/corpus/zss/*.zss (hashed table from ops:slurfilter:build)',
+      'Redact slurs in ops/fixtures/zzt/corpus/zss/*.zss (hashed table from ops:slurfilter:build)',
     tags: ['slow'],
     run: handler((ctx) =>
       runzztcorpusprofanity({ ...ctx, args: ['sanitize', ...ctx.args] }),

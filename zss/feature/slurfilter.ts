@@ -5,14 +5,9 @@ import {
 } from 'zss/feature/slurfilterdigests'
 import { colorconsts } from 'zss/words/colorconsts'
 
-export type SLUR_FILTER_TIER = 'slur' | 'ambiguous' | 'strong' | 'mild'
+export type SLUR_FILTER_TIER = 'slur' | 'ambiguous'
 
-export const SLUR_FILTER_TIER_LIST: SLUR_FILTER_TIER[] = [
-  'slur',
-  'ambiguous',
-  'strong',
-  'mild',
-]
+export const SLUR_FILTER_TIER_LIST: SLUR_FILTER_TIER[] = ['slur', 'ambiguous']
 
 export type SLUR_FILTER_TABLE = {
   tiers: Record<string, SLUR_FILTER_TIER>
@@ -177,8 +172,108 @@ export function textmatchesdigests(
   return false
 }
 
+const CHAT_TOKEN_RE = /[\p{L}0-9@$!|+]+/gu
+
+const LEET_MAPS: Record<string, string>[] = [
+  {
+    '0': 'o',
+    '1': 'i',
+    '3': 'e',
+    '4': 'a',
+    '5': 's',
+    '7': 't',
+    '8': 'b',
+    '9': 'g',
+    '@': 'a',
+    $: 's',
+    '!': 'i',
+    '|': 'l',
+    '+': 't',
+  },
+  { '1': 'l', '|': 'i' },
+]
+
+const SPACED_LETTERS_MIN = 3
+
+/** Disguised spellings of one chat token: symbol/digit swaps, stretched letters. */
+export function slurfiltervariants(token: string): string[] {
+  const out = new Set<string>()
+  const trimmed = token.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '')
+  const bases = [trimmed, token]
+  for (let b = 0; b < bases.length; ++b) {
+    for (let m = 0; m < LEET_MAPS.length; ++m) {
+      const map = { ...LEET_MAPS[0], ...LEET_MAPS[m] }
+      const mapped = [...bases[b]].map((ch) => map[ch] ?? ch).join('')
+      if (!/^\p{L}+$/u.test(mapped)) {
+        continue
+      }
+      out.add(mapped)
+      out.add(mapped.replace(/(\p{L})\1{2,}/gu, '$1$1'))
+      out.add(mapped.replace(/(\p{L})\1+/gu, '$1'))
+    }
+  }
+  return [...out]
+}
+
+function variantstier(
+  variants: string[],
+  table: SLUR_FILTER_TABLE,
+  tiers: SLUR_FILTER_TIER[],
+): boolean {
+  for (let v = 0; v < variants.length; ++v) {
+    const tier = lookuptier(variants[v], table)
+    if (tier && tiers.includes(tier)) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Like textmatchesdigests, but also catches disguised and spaced-out spellings. */
+export function textmatchesvariants(
+  text: string,
+  table: SLUR_FILTER_TABLE,
+  tiers: SLUR_FILTER_TIER[] = SLUR_FILTER_TIER_LIST,
+): boolean {
+  const tokens =
+    slurfilterfold(slurfilterstripformat(text)).match(CHAT_TOKEN_RE) ?? []
+  const variants = tokens.map((token) => slurfiltervariants(token))
+  const words = variants.map((list) => list[0] ?? '')
+  for (let i = 0; i < tokens.length; ++i) {
+    if (!variantstier(variants[i], table, tiers)) {
+      continue
+    }
+    const allowed =
+      (i > 0 && slurfilterbigramallowed(words[i - 1], words[i], table)) ||
+      (i + 1 < words.length &&
+        slurfilterbigramallowed(words[i], words[i + 1], table))
+    if (!allowed) {
+      return true
+    }
+  }
+  let run = ''
+  let count = 0
+  for (let i = 0; i <= words.length; ++i) {
+    const word = words[i] ?? ''
+    if (word.length === 1) {
+      run += word
+      ++count
+      continue
+    }
+    if (
+      count >= SPACED_LETTERS_MIN &&
+      variantstier(slurfiltervariants(run), table, tiers)
+    ) {
+      return true
+    }
+    run = ''
+    count = 0
+  }
+  return false
+}
+
 export function chattextcontainsslur(text: string): boolean {
-  return textmatchesdigests(text, SLUR_FILTER_TABLE, CHAT_DROP_TIERS)
+  return textmatchesvariants(text, SLUR_FILTER_TABLE, CHAT_DROP_TIERS)
 }
 
 export function corpustokentier(token: string): SLUR_FILTER_TIER | undefined {

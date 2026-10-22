@@ -1,5 +1,5 @@
 /**
- * Profanity and slur detection/redaction for Museum ZZT .zss corpus scripts.
+ * Slur detection/redaction for Museum ZZT .zss corpus scripts.
  * Words come from the hashed table in zss/feature/slurfilterdigests.ts
  * (built by `yarn task run ops:slurfilter:build`); no word list lives here.
  */

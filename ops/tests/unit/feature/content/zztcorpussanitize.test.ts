@@ -11,8 +11,8 @@ import { slurfilterhash } from 'zss/feature/slurfilter'
 jest.mock('zss/feature/slurfilterdigests', () => ({
   SLUR_FILTER_ENTRIES: [
     ['26zxyryqhbr', 'slur'],
-    ['25lzsg2dx1g', 'strong'],
-    ['1l18sa834v4', 'mild'],
+    ['25lzsg2dx1g', 'slur'],
+    ['1l18sa834v4', 'ambiguous'],
     ['gbq4ytytea', 'ambiguous'],
   ],
   SLUR_FILTER_ALLOW_BIGRAMS: ['8ozcrnsgp7'],
@@ -66,7 +66,7 @@ describe('zztcorpussanitize', () => {
   })
 
   it('reports one tier per matching word', () => {
-    expect(corpuslinetiers('banana and cherry')).toEqual(['slur', 'strong'])
+    expect(corpuslinetiers('banana and cherry')).toEqual(['slur', 'slur'])
     expect(corpuslinetiers('hello world')).toEqual([])
   })
 })
