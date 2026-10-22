@@ -66,6 +66,7 @@
 - [palette.ts](https://zed.cafe/docs/feature/palette)
 - [parse/](https://zed.cafe/docs/feature/parse)
 - [rom/](https://zed.cafe/docs/feature/rom)
+- [Session list](https://zed.cafe/docs/feature/sessionlist): Book-token PeerJS lister for active multiplayer sessions
 - [storage.ts](https://zed.cafe/docs/feature/storage)
 - [stt/speechtotext.ts](https://zed.cafe/docs/feature/speechtotext)
 - [tts/](https://zed.cafe/docs/feature/tts)

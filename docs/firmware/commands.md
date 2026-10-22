@@ -46,6 +46,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `admin` | Admin scroll (active players, gadget/dev links for operator, multiplayer); config toggles crt, lowrez, scanlines, voice2text, loaderlogging, promptlogging |
 | `joincode` | Multiplayer session (operator only) |
 | `jointab` | New tab with the join url (operator only) |
+| `sessions` | List active multiplayer sessions for this book |
 | `chat` | Bridge chat: `#chat <channel> [twitchtoken=]` starts Twitch; `#chat say <text>` posts to that channel; `#chat start …` / `#chat stop` (Twitch) or `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast stream <peerid>` / `#broadcast ms_…` (media-stream companion bind), `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only; WHIP XOR media-stream) |

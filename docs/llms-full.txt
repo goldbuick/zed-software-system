@@ -1369,6 +1369,7 @@ Source: https://zed.cafe/docs/feature/netterminal
 - Host creates Peer, subscribes to topic; joins create DataConnection to host
 - `createforward` bridges messages between device and peer; filters by `shouldforwardservertoclient`, `shouldnotforwardonpeerserver`
 - On `peer` `open`, if ZNS session is in IDB, [`znsautopublishpeer`](../url.ts) updates `https://{namespace}.at.zed.cafe/peer`
+- The [session list](sessionlist.md) uses its own Peer (id = book token), separate from this multiplayer peer. `netterminalregisterrosterchangehandler` accepts multiple handlers; the session list uses it to refresh its player count.
 
 ---
 
@@ -1469,6 +1470,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
+| [sessionlist.md](sessionlist.md) | Book-token lister for active multiplayer sessions |
 | [media-transport-layer.mdx](media-transport-layer.mdx) | PeerJS media transport design (canvas + synth capture, dual-plane fan-out) |
 | [tts.md](tts.md) | Text-to-speech (Piper, Supertonic, Fish) |
 | [parse.md](parse.md) | File parsing (ZIP, ZZT, ANSI, CHR, ZZM, markdown) |
@@ -1534,6 +1536,51 @@ Older docs referred to `editor:command:*` with `desc;` / `args;` rows. Command-a
 ## Dynamic Context
 
 `romread` uses `parsetarget` for addresses like `editor:command:xyz` to return dynamic descriptions (e.g. "sends the message xyz").
+
+---
+
+# Session list
+Source: https://zed.cafe/docs/feature/sessionlist
+
+# Session list
+
+Lists active multiplayer sessions for the same book version, so players can soft-join each other from `#admin` or `#sessions`.
+
+## Token
+
+The book token (`BOOK.token`) is a PeerJS id: `sl_` plus a 20-character `createinfohash`. It is minted by `createsessionlisttoken()` in [`protocol.ts`](zss/feature/sessionlist/protocol.ts), when a book is created and on every code page add or delete. Each book version therefore has its own list. Legacy tokens (word plus digits) do not pass `issessionlistpeerid` and are ignored until the next page add or delete.
+
+## Flow
+
+1. The sim sends `bridge:sessionlisttoken` with the main book token (checked once per second in `handlesecond`, sent only when it changes).
+2. The main-thread service ([`service.ts`](zss/feature/sessionlist/service.ts)) tries `new Peer(token)`.
+   - `open`: this tab is the **lister**. It keeps the registry in memory and accepts up to 64 client DataConnections.
+   - `unavailable-id`: someone else is the lister. This tab opens an anonymous Peer and connects to the token as a **client**.
+3. Tabs hosting a non-hidden session (`#joincode` without the hidden flag, `#jointab`) register `{ topic, players }`. Clients repeat `register` every 30s; entries expire after 90s or when the connection closes.
+4. The lister pushes `sessionlist:list` to every client on each change. Each tab forwards the list (minus its own topic) to the sim with `vm:sessionlist`, stored by [`zss/memory/sessionlist.ts`](zss/memory/sessionlist.ts).
+5. `#admin` (last section, "active sessions") and `#sessions` render one `!@adminjoin <topic>` link per session. The `adminjoin` chip runs the existing soft join (`runjoinurldestination`).
+
+## Failover and bounds
+
+- When the lister goes away, every client re-claims after 0-3s of jitter. The first to get the id becomes the new lister; the rest connect to it.
+- Retries back off up to 60s and stop after 8 attempts, logging an error each time.
+- Claim and client connect each have a 20s timeout.
+- Joined thin tabs (`/join/`) never run the service. A soft join calls `sessionlisthalt()`.
+
+## Protocol
+
+| Message | Sender | Payload |
+|---|---|---|
+| `sessionlist:register` | client | `topic`, `players` |
+| `sessionlist:unregister` | client | none |
+| `sessionlist:query` | client | none |
+| `sessionlist:list` | lister | `sessions: { topic, players, updated }[]` |
+
+## Limits
+
+- The lister is whichever tab claimed first; it could hide or invent entries.
+- PeerServer can hold a dead id for a few seconds after the lister closes; the jittered re-claim covers that.
+- The admin scroll shows the list as of when it opened; reopen to refresh.
 
 ---
 
@@ -2326,6 +2373,7 @@ All firmware commands and their descriptions. Commands are available depending o
 | `admin` | Admin scroll (active players, gadget/dev links for operator, multiplayer); config toggles crt, lowrez, scanlines, voice2text, loaderlogging, promptlogging |
 | `joincode` | Multiplayer session (operator only) |
 | `jointab` | New tab with the join url (operator only) |
+| `sessions` | List active multiplayer sessions for this book |
 | `chat` | Bridge chat: `#chat <channel> [twitchtoken=]` starts Twitch; `#chat say <text>` posts to that channel; `#chat start …` / `#chat stop` (Twitch) or `#chat stop <kind>`; `#chat profile` or `#chat profile list` lists saved bridge profiles; `#chat profile show|save|delete …` |
 | `bridge` | Bridge integrations snapshot: `#bridge` or `#bridge status` (chat slots + broadcast; no secrets) (operator only) |
 | `broadcast` | Stream broadcast: `#broadcast` (platform menu), `#broadcast stop`, `#broadcast stream <peerid>` / `#broadcast ms_…` (media-stream companion bind), `#broadcast <stream-key>` (Twitch WHIP v2), `#broadcast ivs-ll <key>`, `#broadcast ivs-rt <token>`, or `#broadcast whip <url|alias> <bearer>` (operator only; WHIP XOR media-stream) |
