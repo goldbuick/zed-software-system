@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'node:child_process'
+import { execSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
   createWriteStream,
@@ -22,7 +22,7 @@ import {
   resolvestatcode,
 } from 'ops/lib/content/zztcorpus'
 import {
-  corpusmatchpattern,
+  corpusredacttext,
   corpusscanline,
   sanitizesource,
 } from 'ops/lib/content/zztcorpussanitize'
@@ -36,6 +36,7 @@ import { readforce, readlimit } from 'tasks/lib/cliargv'
 import { runjest } from 'tasks/shellutil'
 import { zztparseboard, zztparseworld } from 'zss/feature/parse/zztbinparse'
 import type { ZZT_BOARD } from 'zss/feature/parse/zztformattypes'
+import { SLUR_FILTER_TABLE, textmatchesdigests } from 'zss/feature/slurfilter'
 
 import { def, handler, jestexec } from '../../../helpers'
 import type { TaskContext, TaskDef } from '../../../types'
@@ -104,6 +105,16 @@ export type MuseumFilterStats = {
   excluded_weave: number
   excluded_super: number
   excluded_no_zzt_world: number
+  excluded_content: number
+}
+
+export function museumfilenamehascontent(
+  entry: Pick<MuseumFile, 'filename' | 'archive_name'>,
+): boolean {
+  return (
+    textmatchesdigests(entry.filename, SLUR_FILTER_TABLE) ||
+    textmatchesdigests(entry.archive_name, SLUR_FILTER_TABLE)
+  )
 }
 
 export function classifymuseumfile(entry: MuseumFile): keyof MuseumFilterStats {
@@ -124,6 +135,9 @@ export function classifymuseumfile(entry: MuseumFile): keyof MuseumFilterStats {
   if (!tags.includes('ZZT World')) {
     return 'excluded_no_zzt_world'
   }
+  if (museumfilenamehascontent(entry)) {
+    return 'excluded_content'
+  }
   return 'included'
 }
 
@@ -137,6 +151,7 @@ export function filtervanillazztworlds(entries: MuseumFile[]): {
     excluded_weave: 0,
     excluded_super: 0,
     excluded_no_zzt_world: 0,
+    excluded_content: 0,
   }
   const included: MuseumFile[] = []
   for (const entry of entries) {
@@ -194,6 +209,7 @@ type Manifest = {
     excluded_weave: number
     excluded_super: number
     excluded_no_zzt_world: number
+    excluded_content: number
     downloaded: number
     failed: number
     skipped_existing: number
@@ -300,13 +316,13 @@ function md5file(filepath: string): string {
   return createHash('md5').update(bytes).digest('hex')
 }
 
-function buildmanifestentries(included: MuseumFile[]): ManifestEntry[] {
+export function buildmanifestentries(included: MuseumFile[]): ManifestEntry[] {
   return included.map((entry) => ({
     letter: entry.letter,
     filename: entry.filename,
-    title: entry.title,
-    author: entry.author,
-    genres: entry.genres,
+    title: corpusredacttext(entry.title),
+    author: entry.author.map((name) => corpusredacttext(name)),
+    genres: entry.genres.map((genre) => corpusredacttext(genre)),
     archive_name: entry.archive_name,
     checksum: entry.checksum,
     local_path: localpathfor(entry),
@@ -351,6 +367,7 @@ async function downloadentries(
     excluded_weave: 0,
     excluded_super: 0,
     excluded_no_zzt_world: 0,
+    excluded_content: 0,
     downloaded: 0,
     failed: 0,
     skipped_existing: 0,
@@ -439,6 +456,7 @@ export async function syncmuseumzztcorpus(opts: SyncOptions): Promise<number> {
       excluded_weave: existing.stats.excluded_weave,
       excluded_super: existing.stats.excluded_super,
       excluded_no_zzt_world: existing.stats.excluded_no_zzt_world,
+      excluded_content: existing.stats.excluded_content,
     }
     entries = existing.entries
     console.log(`using manifest: ${entries.length} vanilla ZZT worlds`)
@@ -471,7 +489,7 @@ export async function syncmuseumzztcorpus(opts: SyncOptions): Promise<number> {
       `manifest: ${path.join(CORPUS_DIR, 'manifest.json')} (${entries.length} vanilla ZZT worlds)`,
     )
     console.log(
-      `catalog=${filterstats.catalog_total} included=${filterstats.included} weave=${filterstats.excluded_weave} super=${filterstats.excluded_super} other=${filterstats.excluded_no_zzt_world}`,
+      `catalog=${filterstats.catalog_total} included=${filterstats.included} weave=${filterstats.excluded_weave} super=${filterstats.excluded_super} other=${filterstats.excluded_no_zzt_world} content=${filterstats.excluded_content}`,
     )
     return 0
   }
@@ -983,52 +1001,29 @@ function collectzztfiles(root: string): string[] {
 }
 
 function scancorpus(): ScanHit[] {
-  const pattern = corpusmatchpattern()
-  const result = spawnSync(
-    'rg',
-    [
-      '-i',
-      '-w',
-      '--no-heading',
-      '-n',
-      pattern,
-      ZZT_CORPUS_ZSS_DIR,
-      '--glob',
-      '*.zss',
-    ],
-    { encoding: 'utf8', maxBuffer: 1024 * 1024 * 512 },
-  )
-  if (result.error) {
-    throw result.error
-  }
-
   const hits: ScanHit[] = []
-  const rows = (result.stdout ?? '').split('\n').filter(Boolean)
-  for (let i = 0; i < rows.length; ++i) {
-    const row = rows[i]
-    const sep = row.indexOf(':')
-    const sep2 = row.indexOf(':', sep + 1)
-    if (sep < 0 || sep2 < 0) {
-      continue
-    }
-    const filepath = row.slice(0, sep)
-    const linenumber = Number.parseInt(row.slice(sep + 1, sep2), 10)
-    const text = row.slice(sep2 + 1)
+  if (!existsSync(ZZT_CORPUS_ZSS_DIR)) {
+    return hits
+  }
+  const files = collectzztfiles(ZZT_CORPUS_ZSS_DIR)
+  for (let i = 0; i < files.length; ++i) {
+    const filepath = files[i]
     const rel = path.relative(ZZT_CORPUS_ZSS_DIR, filepath).replace(/\\/g, '/')
-    hits.push(...corpusscanline(rel, linenumber, text))
+    const rows = readFileSync(filepath, 'utf8').split('\n')
+    for (let r = 0; r < rows.length; ++r) {
+      hits.push(...corpusscanline(rel, r + 1, rows[r]))
+    }
   }
   return hits
 }
 
 function writescanreport(hits: ScanHit[], elapsedms: number) {
-  const byterm = new Map<string, number>()
   const byarchive = new Map<string, number>()
   const byfile = new Map<string, number>()
-  const bytier = { strong: 0, mild: 0, racial: 0 }
+  const bytier = { slur: 0, ambiguous: 0 }
 
   for (let i = 0; i < hits.length; ++i) {
     const hit = hits[i]
-    byterm.set(hit.term, (byterm.get(hit.term) ?? 0) + 1)
     byarchive.set(hit.archive, (byarchive.get(hit.archive) ?? 0) + 1)
     byfile.set(hit.file, (byfile.get(hit.file) ?? 0) + 1)
     bytier[hit.tier] += 1
@@ -1040,14 +1035,10 @@ function writescanreport(hits: ScanHit[], elapsedms: number) {
     stats: {
       line_hits: hits.length,
       files_with_hits: byfile.size,
-      strong_hits: bytier.strong,
-      mild_hits: bytier.mild,
-      racial_hits: bytier.racial,
+      slur_hits: bytier.slur,
+      ambiguous_hits: bytier.ambiguous,
       elapsed_ms: elapsedms,
     },
-    by_term: Object.fromEntries(
-      [...byterm.entries()].sort((a, b) => b[1] - a[1]),
-    ),
     by_archive: Object.fromEntries(
       [...byarchive.entries()].sort((a, b) => b[1] - a[1]),
     ),
@@ -1070,7 +1061,7 @@ export function scanzztcorpusprofanity(argv: string[]): number {
 
   console.log(`report: ${SCAN_REPORT_PATH}`)
   console.log(
-    `hits=${report.stats.line_hits} files=${report.stats.files_with_hits} strong=${report.stats.strong_hits} mild=${report.stats.mild_hits} racial=${report.stats.racial_hits}`,
+    `hits=${report.stats.line_hits} files=${report.stats.files_with_hits} slur=${report.stats.slur_hits} ambiguous=${report.stats.ambiguous_hits}`,
   )
 
   if (opts.verify && report.stats.line_hits > 0) {
@@ -1551,7 +1542,7 @@ export const OPS_FIXTURES_ZZT_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:zzt:corpus:build', {
     description:
-      'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs',
+      'Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize slurs',
     tags: ['slow'],
     deps: [
       'ops:fixtures:zzt:corpus:extract',
@@ -1562,15 +1553,14 @@ export const OPS_FIXTURES_ZZT_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:zzt:corpus:profanity:scan', {
     description:
-      'Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json',
+      'Scan ops/fixtures/zzt/corpus/zss for slurs; write profanity-report.json',
     tags: ['slow'],
     run: handler((ctx) =>
       runzztcorpusprofanity({ ...ctx, args: ['scan', ...ctx.args] }),
     ),
   }),
   def('ops:fixtures:zzt:corpus:profanity:verify', {
-    description:
-      'Fail if corpus zss still contains profanity or slurs (CI gate)',
+    description: 'Fail if corpus zss still contains slurs (CI gate)',
     tags: ['ci', 'slow'],
     run: handler((ctx) =>
       runzztcorpusprofanity({ ...ctx, args: ['scan', 'verify', ...ctx.args] }),
@@ -1578,7 +1568,7 @@ export const OPS_FIXTURES_ZZT_TASKS: TaskDef[] = [
   }),
   def('ops:fixtures:zzt:corpus:sanitize', {
     description:
-      'Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss',
+      'Redact slurs in ops/fixtures/zzt/corpus/zss/*.zss (hashed table from ops:slurfilter:build)',
     tags: ['slow'],
     run: handler((ctx) =>
       runzztcorpusprofanity({ ...ctx, args: ['sanitize', ...ctx.args] }),

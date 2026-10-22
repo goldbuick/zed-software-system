@@ -5,6 +5,7 @@ import {
   vmlogout,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { chattextcontainsslur } from 'zss/feature/slurfilter'
 import { createfirmware } from 'zss/firmware'
 import {
   INPUT_FLAG_NAMES,
@@ -759,6 +760,9 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // fallback to player flags
     const flags = memoryreadflags(READ_CONTEXT.book, player)
     if (ispresent(flags)) {
+      if (name === 'user' && isstring(value) && chattextcontainsslur(value)) {
+        return [true, flags.user]
+      }
       flags[name] = value
       // sticky flags persist on the local register tab, not the host sim
       switch (name) {

@@ -34,7 +34,7 @@ describe('string', () => {
     it('should remove characters at index', () => {
       expect(stringsplice('hello', 1, 2)).toBe('hlo')
       expect(stringsplice('hello', 0, 1)).toBe('ello')
-      expect(stringsplice('hello', 4, 1)).toBe('hell')
+      expect(stringsplice('world', 4, 1)).toBe('worl')
     })
 
     it('should insert characters at index', () => {

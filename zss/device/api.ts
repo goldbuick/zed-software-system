@@ -4,6 +4,7 @@ without having to include device code
 */
 import type { BRIDGE_CHAT_START_OBJECT } from 'zss/device/bridge/chattypes'
 import type { DEVICELIKE } from 'zss/device/types'
+import type { SESSIONLIST_ROW } from 'zss/feature/sessionlist/protocol'
 import type { INPUT, SYNTH_STATE } from 'zss/gadget/data/types'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import type { BOOK } from 'zss/memory/types'
@@ -156,6 +157,14 @@ export function bridgestart(
   hidden: boolean,
 ) {
   device.emit(player, 'bridge:start', hidden)
+}
+
+export function bridgesessionlisttoken(
+  device: DEVICELIKE,
+  player: string,
+  token: string,
+) {
+  device.emit(player, 'bridge:sessionlisttoken', token)
 }
 
 export function bridgestatus(device: DEVICELIKE, player: string) {
@@ -1071,6 +1080,14 @@ export function vmsearch(device: DEVICELIKE, player: string) {
 
 export function vmtapeeditorclose(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:tapeeditorclose')
+}
+
+export function vmsessionlist(
+  device: DEVICELIKE,
+  player: string,
+  sessions: SESSIONLIST_ROW[],
+) {
+  device.emit(player, 'vm:sessionlist', sessions)
 }
 
 export function vmtopic(device: DEVICELIKE, player: string, topic: string) {

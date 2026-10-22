@@ -8848,14 +8848,14 @@
       "sample_error": "Redundant input, expecting EOF but found: cs"
     },
     {
-      "signature": "Redundant input, expecting EOF but found: gimp",
+      "signature": "Redundant input, expecting EOF but found: [removed]",
       "triage": "ambiguous",
       "count": 2,
       "sample_ids": [
         "CastleV__CASTLE__b5__s29__object",
         "Worlds__W__b12__s29__object"
       ],
-      "sample_error": "Redundant input, expecting EOF but found: gimp"
+      "sample_error": "Redundant input, expecting EOF but found: [removed]"
     },
     {
       "signature": "Redundant input, expecting EOF but found: mmm",
@@ -12004,13 +12004,13 @@
       "sample_error": "Redundant input, expecting EOF but found: nutes"
     },
     {
-      "signature": "Redundant input, expecting EOF but found: coon",
+      "signature": "Redundant input, expecting EOF but found: [removed]",
       "triage": "ambiguous",
       "count": 1,
       "sample_ids": [
         "24hozzt-2000-summer-metamorphosis__MOLE__b3__s1__object"
       ],
-      "sample_error": "Redundant input, expecting EOF but found: coon"
+      "sample_error": "Redundant input, expecting EOF but found: [removed]"
     },
     {
       "signature": "Redundant input, expecting EOF but found: redwin",

@@ -1,76 +1,16 @@
 /**
- * Profanity and slur detection/redaction for Museum ZZT .zss corpus scripts.
+ * Slur detection/redaction for Museum ZZT .zss corpus scripts.
+ * Words come from the hashed table in zss/feature/slurfilterdigests.ts
+ * (built by `yarn task run ops:slurfilter:build`); no word list lives here.
  */
-
-export type CORPUS_SANITIZE_TIER = 'strong' | 'mild' | 'racial'
-
-export type CORPUS_SANITIZE_TERM = {
-  term: string
-  tier: CORPUS_SANITIZE_TIER
-}
+import {
+  type SLUR_FILTER_TIER,
+  corpustokentier,
+  slurfilterbigramallowed,
+  slurfilterlabelallowed,
+} from 'zss/feature/slurfilter'
 
 export const CORPUS_REDACTED = '[removed]'
-
-const PROFANITY_TERMS: CORPUS_SANITIZE_TERM[] = [
-  { term: 'fuck', tier: 'strong' },
-  { term: 'shit', tier: 'strong' },
-  { term: 'bitch', tier: 'strong' },
-  { term: 'bastard', tier: 'strong' },
-  { term: 'asshole', tier: 'strong' },
-  { term: 'whore', tier: 'strong' },
-  { term: 'slut', tier: 'strong' },
-  { term: 'retard', tier: 'strong' },
-  { term: 'fag', tier: 'strong' },
-  { term: 'faggot', tier: 'strong' },
-  { term: 'damn', tier: 'mild' },
-  { term: 'hell', tier: 'mild' },
-  { term: 'crap', tier: 'mild' },
-  { term: 'piss', tier: 'mild' },
-  { term: 'dick', tier: 'mild' },
-  { term: 'cock', tier: 'mild' },
-]
-
-const RACIAL_TERMS: CORPUS_SANITIZE_TERM[] = [
-  { term: 'nigger', tier: 'racial' },
-  { term: 'nigga', tier: 'racial' },
-  { term: 'negro', tier: 'racial' },
-  { term: 'chink', tier: 'racial' },
-  { term: 'gook', tier: 'racial' },
-  { term: 'spic', tier: 'racial' },
-  { term: 'spick', tier: 'racial' },
-  { term: 'kike', tier: 'racial' },
-  { term: 'wetback', tier: 'racial' },
-  { term: 'beaner', tier: 'racial' },
-  { term: 'raghead', tier: 'racial' },
-  { term: 'towelhead', tier: 'racial' },
-  { term: 'paki', tier: 'racial' },
-  { term: 'gypsy', tier: 'racial' },
-  { term: 'redskin', tier: 'racial' },
-  { term: 'injun', tier: 'racial' },
-  { term: 'squaw', tier: 'racial' },
-  { term: 'jigaboo', tier: 'racial' },
-  { term: 'sambo', tier: 'racial' },
-  { term: 'pickaninny', tier: 'racial' },
-  { term: 'darkie', tier: 'racial' },
-  { term: 'slanteye', tier: 'racial' },
-  { term: 'zipperhead', tier: 'racial' },
-  { term: 'yid', tier: 'racial' },
-  { term: 'heeb', tier: 'racial' },
-  { term: 'mick', tier: 'racial' },
-  { term: 'kraut', tier: 'racial' },
-  { term: 'dago', tier: 'racial' },
-  { term: 'coon', tier: 'racial' },
-  { term: 'wop', tier: 'racial' },
-]
-
-export const CORPUS_SANITIZE_TERMS: CORPUS_SANITIZE_TERM[] = [
-  ...PROFANITY_TERMS,
-  ...RACIAL_TERMS,
-]
-
-const SLUR_WORDS = new Set(
-  CORPUS_SANITIZE_TERMS.map((entry) => entry.term.toLowerCase()),
-)
 
 /** Lines that may contain substring matches but are not offensive in context. */
 const LINE_ALLOWLIST: RegExp[] = [
@@ -90,24 +30,15 @@ const LINE_ALLOWLIST: RegExp[] = [
   /colored (background|switch|floor|door|water|lines|objects|glass|plastic|crucifix|wall|room|crystals|key|laser|undersurface|smoke|numbers|edges|squares|blocks|ASCII)/i,
   /colored player clones/i,
   /colored over something/i,
-  /Moby Dick/i,
-  /^:wop\b/i,
-  /#if stop wop/i,
-  /\bstop wop\b/i,
 ]
 
-function escaperegexp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const WORD_RUN = /[\p{L}\p{N}_]+/gu
+
+const LABEL_LINE = /^:([\p{L}\p{N}_]+)/u
+
+function linewords(line: string): string[] {
+  return line.match(WORD_RUN) ?? []
 }
-
-const TERMS_BY_LENGTH = [...CORPUS_SANITIZE_TERMS]
-  .map((entry) => entry.term)
-  .sort((a, b) => b.length - a.length)
-
-const TERM_REGEXPS = TERMS_BY_LENGTH.map((term) => ({
-  term,
-  re: new RegExp(`\\b${escaperegexp(term)}\\b`, 'gi'),
-}))
 
 export function corpuslineisallowlisted(line: string): boolean {
   for (let i = 0; i < LINE_ALLOWLIST.length; ++i) {
@@ -115,47 +46,62 @@ export function corpuslineisallowlisted(line: string): boolean {
       return true
     }
   }
+  const label = LABEL_LINE.exec(line)
+  if (label && slurfilterlabelallowed(label[1])) {
+    return true
+  }
+  const words = linewords(line)
+  for (let i = 1; i < words.length; ++i) {
+    if (slurfilterbigramallowed(words[i - 1], words[i])) {
+      return true
+    }
+  }
   return false
 }
 
-export function corpustermmatchesline(line: string): string[] {
+/** One tier per matching word in the line (empty when allowlisted). */
+export function corpuslinetiers(line: string): SLUR_FILTER_TIER[] {
   if (corpuslineisallowlisted(line)) {
     return []
   }
-  const found: string[] = []
-  for (let i = 0; i < TERM_REGEXPS.length; ++i) {
-    const entry = TERM_REGEXPS[i]
-    entry.re.lastIndex = 0
-    if (entry.re.test(line)) {
-      found.push(entry.term)
+  const found: SLUR_FILTER_TIER[] = []
+  const words = linewords(line)
+  for (let i = 0; i < words.length; ++i) {
+    const tier = corpustokentier(words[i])
+    if (tier) {
+      found.push(tier)
     }
   }
   return found
 }
 
-export function corpusslurword(word: string): boolean {
-  return SLUR_WORDS.has(word.toLowerCase())
+function redactwords(text: string): string {
+  return text.replace(WORD_RUN, (word) =>
+    corpustokentier(word) ? CORPUS_REDACTED : word,
+  )
 }
 
-function redactwords(text: string): string {
-  let out = text
-  for (let i = 0; i < TERM_REGEXPS.length; ++i) {
-    const entry = TERM_REGEXPS[i]
-    entry.re.lastIndex = 0
-    out = out.replace(entry.re, CORPUS_REDACTED)
+/**
+ * Redact listed words in free text (titles, report strings). Splits on any
+ * non-letter, unlike script lines, since there are no identifiers to keep intact.
+ */
+export function corpusredacttext(text: string): string {
+  if (corpuslineisallowlisted(text)) {
+    return text
   }
-  return out
+  return text.replace(/\p{L}+/gu, (word) =>
+    corpustokentier(word) ? CORPUS_REDACTED : word,
+  )
 }
 
 function sanitizenamedtoken(line: string, prefix: string): string {
-  const pattern = new RegExp(`^(${escaperegexp(prefix)})([A-Za-z0-9_]+)(.*)$`)
-  const match = line.match(pattern)
+  const match = /^([A-Za-z0-9_]+)(.*)$/s.exec(line.slice(prefix.length))
   if (!match) {
     return redactwords(line)
   }
-  const [, lead, name, rest] = match
-  if (corpusslurword(name)) {
-    return `${lead}redacted${rest}`
+  const [, name, rest] = match
+  if (corpustokentier(name)) {
+    return `${prefix}redacted${rest}`
   }
   return redactwords(line)
 }
@@ -172,7 +118,7 @@ export function sanitizeline(line: string): string {
   }
   if (line.startsWith('#bind ')) {
     const rest = line.slice('#bind '.length).trim()
-    if (corpusslurword(rest.split(/\s+/)[0] ?? '')) {
+    if (corpustokentier(rest.split(/\s+/)[0] ?? '')) {
       return '#bind redacted'
     }
   }
@@ -187,10 +133,6 @@ export function sanitizesource(source: string): string {
   return `${lines.join('\n').replace(/\n?$/, '')}\n`
 }
 
-export function corpusmatchpattern(): string {
-  return TERMS_BY_LENGTH.join('|')
-}
-
 export function corpusscanline(
   relpath: string,
   linenumber: number,
@@ -198,28 +140,15 @@ export function corpusscanline(
 ): {
   file: string
   line: number
-  term: string
-  tier: CORPUS_SANITIZE_TIER
-  text: string
+  tier: SLUR_FILTER_TIER
   archive: string
 }[] {
   const parts = relpath.split(/[/\\]/)
   const archive = parts.length >= 2 ? parts[1] : relpath
-  const matched = corpustermmatchesline(text)
-  const out = []
-  for (let i = 0; i < matched.length; ++i) {
-    const term = matched[i]
-    const tier =
-      CORPUS_SANITIZE_TERMS.find((entry) => entry.term === term)?.tier ??
-      'strong'
-    out.push({
-      file: relpath,
-      line: linenumber,
-      term,
-      tier,
-      text: text.trim().slice(0, 160),
-      archive,
-    })
-  }
-  return out
+  return corpuslinetiers(text).map((tier) => ({
+    file: relpath,
+    line: linenumber,
+    tier,
+    archive,
+  }))
 }

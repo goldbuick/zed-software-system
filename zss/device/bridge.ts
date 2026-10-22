@@ -58,6 +58,12 @@ import {
   netterminaljoin,
   readsubscribetopic,
 } from 'zss/feature/netterminal'
+import {
+  sessionlistsethosting,
+  sessionlistsettoken,
+} from 'zss/feature/sessionlist/service'
+import { chattextcontainsslur } from 'zss/feature/slurfilter'
+import { isjoin } from 'zss/feature/url'
 import { write, writecopyit } from 'zss/feature/writeui'
 import { zssheaderlines, zssoptionline } from 'zss/feature/zsstextui'
 import { waitfor } from 'zss/mapping/tick'
@@ -198,6 +204,9 @@ function pushchatline(
   user: string,
   text: string,
 ) {
+  if (chattextcontainsslur(text)) {
+    return
+  }
   recordChatMessage(kind)
   const prefix = mode === 'action' ? 'chat:action' : 'chat:message'
   vmloader(
@@ -354,6 +363,9 @@ const bridge = createdevice('bridge', [], (message) => {
       doasync(bridge, message.player, async () => {
         await netterminalhost()
         mediaqueuebootstrap()
+        if (!message.data) {
+          sessionlistsethosting(readsubscribetopic())
+        }
         // show join code
         bridgeshowjoincode(SOFTWARE, message.player, !!message.data)
       })
@@ -362,6 +374,7 @@ const bridge = createdevice('bridge', [], (message) => {
       doasync(bridge, message.player, async () => {
         await netterminalhost()
         mediaqueuebootstrap()
+        sessionlistsethosting(readsubscribetopic())
         // open a join tab
         bridgetabopen(SOFTWARE, message.player)
       })
@@ -371,6 +384,11 @@ const bridge = createdevice('bridge', [], (message) => {
       window.open(joinurl, '_blank', 'noopener,noreferrer')
       break
     }
+    case 'sessionlisttoken':
+      if (isstring(message.data) && !isjoin()) {
+        sessionlistsettoken(message.data)
+      }
+      break
     case 'join':
       if (isstring(message.data)) {
         mediaqueuebootstrap()

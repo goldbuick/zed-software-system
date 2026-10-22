@@ -198,12 +198,12 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:fixtures:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize profanity/slurs | `slow` | `ops:fixtures:zzt:corpus:extract`, `ops:fixtures:zzt:corpus:zss`, `ops:fixtures:zzt:corpus:sanitize` | — |
+| `yarn task run ops:fixtures:zzt:corpus:build` | Extract Museum archives, build ZZT OOP → .zss corpus, and sanitize slurs | `slow` | `ops:fixtures:zzt:corpus:extract`, `ops:fixtures:zzt:corpus:zss`, `ops:fixtures:zzt:corpus:sanitize` | — |
 | `yarn task run ops:fixtures:zzt:corpus:extract` | Unzip vanilla ZZT archives into ops/fixtures/zzt/corpus/extracted (.zzt/.brd only) | `slow` | — | — |
 | `yarn task run ops:fixtures:zzt:corpus:manifest` | Crawl Museum of ZZT and write vanilla ZZT manifest only (no downloads) | — | — | — |
-| `yarn task run ops:fixtures:zzt:corpus:profanity:scan` | Scan ops/fixtures/zzt/corpus/zss for profanity and slurs; write profanity-report.json | `slow` | — | — |
-| `yarn task run ops:fixtures:zzt:corpus:profanity:verify` | Fail if corpus zss still contains profanity or slurs (CI gate) | `ci`, `slow` | — | — |
-| `yarn task run ops:fixtures:zzt:corpus:sanitize` | Redact profanity and racial slurs in ops/fixtures/zzt/corpus/zss/*.zss | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:profanity:scan` | Scan ops/fixtures/zzt/corpus/zss for slurs; write profanity-report.json | `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:profanity:verify` | Fail if corpus zss still contains slurs (CI gate) | `ci`, `slow` | — | — |
+| `yarn task run ops:fixtures:zzt:corpus:sanitize` | Redact slurs in ops/fixtures/zzt/corpus/zss/*.zss (hashed table from ops:slurfilter:build) | `slow` | — | — |
 | `yarn task run ops:fixtures:zzt:corpus:screenshots` | Render board PNGs from extracted ZZT/BRD into ops/fixtures/zzt/corpus/screenshots (gitignored) | `slow` | — | — |
 | `yarn task run ops:fixtures:zzt:corpus:sync` | Crawl Museum of ZZT and download vanilla ZZT world ZIPs into ops/fixtures/zzt/corpus/archives (gitignored) | `slow` | — | — |
 | `yarn task run ops:fixtures:zzt:corpus:zss` | Convert extracted ZZT/BRD OOP into ops/fixtures/zzt/corpus/zss/*.zss + manifest | `slow` | — | — |
@@ -237,6 +237,13 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:sloc` | Source lines of code count for zss/ | — | — | — |
+
+
+### slurfilter
+
+| Task | Description | Tags | Deps | Env |
+|------|-------------|------|------|-----|
+| `yarn task run ops:slurfilter:build` | Hash the local word list (.slurterms.local, gitignored; --input <path> to override) into zss/feature/slurfilterdigests.ts. Never prints words. | — | — | — |
 
 
 ### test

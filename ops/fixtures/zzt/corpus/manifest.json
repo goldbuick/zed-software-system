@@ -4,11 +4,12 @@
   "museum_api": "v1/search/files",
   "stats": {
     "catalog_total": 4052,
-    "included": 3737,
+    "included": 3733,
     "excluded_weave": 83,
     "excluded_super": 60,
     "excluded_no_zzt_world": 172,
-    "downloaded": 3737,
+    "excluded_content": 4,
+    "downloaded": 3733,
     "failed": 0,
     "skipped_existing": 0
   },
@@ -1282,25 +1283,6 @@
       "publish_date": "2021-08-01T19:14:17Z",
       "playable_boards": 26,
       "total_boards": 26,
-      "status": "ok"
-    },
-    {
-      "letter": "1",
-      "filename": "666hell1.zip",
-      "title": "666 Hell: Issue #1",
-      "author": [
-        "ZZDevelin"
-      ],
-      "genres": [
-        "Magazine"
-      ],
-      "archive_name": "zzt_666hell1",
-      "checksum": "f1dba70fff36fc2f91762b18609c6026",
-      "local_path": "archives/1/666hell1.zip",
-      "size": 11485,
-      "publish_date": "2018-11-06T00:00:00Z",
-      "playable_boards": 12,
-      "total_boards": 16,
       "status": "ok"
     },
     {
@@ -8454,7 +8436,7 @@
     {
       "letter": "b",
       "filename": "BBoC.zip",
-      "title": "Boxtop11's Bargain Bin o' Crap",
+      "title": "Boxtop11's Bargain Bin o' [removed]",
       "author": [
         "Boxtop18"
       ],
@@ -10245,7 +10227,7 @@
     {
       "letter": "c",
       "filename": "CATCAT.zip",
-      "title": "CAT, CAT, THAT DAMN CAT",
+      "title": "CAT, CAT, THAT [removed] CAT",
       "author": [
         "Commodore"
       ],
@@ -13103,7 +13085,7 @@
     {
       "letter": "c",
       "filename": "cowcrap.zip",
-      "title": "Cow Crap",
+      "title": "Cow [removed]",
       "author": [
         "Almighty Cow"
       ],
@@ -13933,7 +13915,7 @@
     {
       "letter": "d",
       "filename": "shitgame.zip",
-      "title": "Da Shit Game",
+      "title": "Da [removed] Game",
       "author": [
         "Master Raze"
       ],
@@ -16441,25 +16423,6 @@
     },
     {
       "letter": "d",
-      "filename": "dick.zip",
-      "title": "Dick",
-      "author": [
-        "Ben Baca"
-      ],
-      "genres": [
-        "Adventure"
-      ],
-      "archive_name": "zzt_dick",
-      "checksum": "a2361a04f8e806356fe1e07272c1c6fc",
-      "local_path": "archives/d/dick.zip",
-      "size": 24686,
-      "publish_date": "2018-11-06T00:00:00Z",
-      "playable_boards": 34,
-      "total_boards": 34,
-      "status": "ok"
-    },
-    {
-      "letter": "d",
       "filename": "dictum.zip",
       "title": "Dictum - Chrons of the Ug",
       "author": [
@@ -17553,7 +17516,7 @@
     {
       "letter": "d",
       "filename": "Discover.zip",
-      "title": "Dr. Dos Discovers the AKWare Toolkit Is Full of Shit",
+      "title": "Dr. Dos Discovers the AKWare Toolkit Is Full of [removed]",
       "author": [
         "Snorb"
       ],
@@ -20300,7 +20263,7 @@
     {
       "letter": "e",
       "filename": "p-c-h.zip",
-      "title": "Escape From the Probation Center of Hell",
+      "title": "Escape From the Probation Center of [removed]",
       "author": [
         "Matt Gannon",
         "Rob Tedlock"
@@ -21345,7 +21308,7 @@
     {
       "letter": "f",
       "filename": "FGHETTOB.zip",
-      "title": "Fat Ghetto Bastard (Modified)",
+      "title": "Fat Ghetto [removed] (Modified)",
       "author": [
         "DoggyShop",
         "Hercules",
@@ -23515,7 +23478,7 @@
     {
       "letter": "f",
       "filename": "FIH.zip",
-      "title": "Fuck, It's Hot",
+      "title": "[removed], It's Hot",
       "author": [
         "Agent Orange"
       ],
@@ -24963,7 +24926,7 @@
     {
       "letter": "g",
       "filename": "gdg.zip",
-      "title": "Gobble_d_Gook",
+      "title": "Gobble_d_[removed]",
       "author": [
         "WiL"
       ],
@@ -26241,7 +26204,7 @@
     {
       "letter": "h",
       "filename": "ahoh.zip",
-      "title": "A Heaven of Hell",
+      "title": "A Heaven of [removed]",
       "author": [
         "kev-san"
       ],
@@ -26340,7 +26303,7 @@
     {
       "letter": "h",
       "filename": "hellhigh1.zip",
-      "title": "Hell High (v1.1)",
+      "title": "[removed] High (v1.1)",
       "author": [
         "Dan Page"
       ],
@@ -26359,7 +26322,7 @@
     {
       "letter": "h",
       "filename": "hellhigh2.zip",
-      "title": "Hell High 2",
+      "title": "[removed] High 2",
       "author": [
         "Dan Page"
       ],
@@ -26378,7 +26341,7 @@
     {
       "letter": "h",
       "filename": "hellhigh3.zip",
-      "title": "Hell High 3",
+      "title": "[removed] High 3",
       "author": [
         "Dan Page"
       ],
@@ -26397,7 +26360,7 @@
     {
       "letter": "h",
       "filename": "HELLFURY.ZIP",
-      "title": "Hell's Fury",
+      "title": "[removed]'s Fury",
       "author": [
         "The Green Herring"
       ],
@@ -26939,26 +26902,6 @@
       "publish_date": "2018-11-06T00:00:00Z",
       "playable_boards": 39,
       "total_boards": 41,
-      "status": "ok"
-    },
-    {
-      "letter": "h",
-      "filename": "HOT-HELL.zip",
-      "title": "Hotel Hell",
-      "author": [
-        "Darby Janssen"
-      ],
-      "genres": [
-        "Adventure",
-        "Horror"
-      ],
-      "archive_name": "zzt_HOT-HELL",
-      "checksum": "493cf2db89b129cb2a9c6566a455ce67",
-      "local_path": "archives/h/HOT-HELL.zip",
-      "size": 14747,
-      "publish_date": "2018-11-06T00:00:00Z",
-      "playable_boards": 17,
-      "total_boards": 20,
       "status": "ok"
     },
     {
@@ -29182,7 +29125,7 @@
     {
       "letter": "i",
       "filename": "dickdemo.zip",
-      "title": "The Invading Dicks Demo",
+      "title": "The Invading [removed] Demo",
       "author": [
         "Master Raze"
       ],
@@ -30808,7 +30751,7 @@
     {
       "letter": "j",
       "filename": "journeytohell.zip",
-      "title": "Journey to Hell 1: The Arrival",
+      "title": "Journey to [removed] 1: The Arrival",
       "author": [
         "ZZDevelin"
       ],
@@ -34203,7 +34146,7 @@
     {
       "letter": "l",
       "filename": "lemmerkill.zip",
-      "title": "Lemmer Will Kill You Bitch",
+      "title": "Lemmer Will Kill You [removed]",
       "author": [
         "Micr0wave"
       ],
@@ -34974,7 +34917,7 @@
     {
       "letter": "l",
       "filename": "lhell.zip",
-      "title": "Living Hell",
+      "title": "Living [removed]",
       "author": [
         "Eric Hoppe"
       ],
@@ -43003,25 +42946,6 @@
     },
     {
       "letter": "o",
-      "filename": "Old_Shit.zip",
-      "title": "Old Shit",
-      "author": [
-        "Ando"
-      ],
-      "genres": [
-        "Incomplete"
-      ],
-      "archive_name": "",
-      "checksum": "2e256138286b1bf62957b443989ef9d5",
-      "local_path": "archives/o/Old_Shit.zip",
-      "size": 74402,
-      "publish_date": "2018-11-06T00:00:00Z",
-      "playable_boards": 35,
-      "total_boards": 83,
-      "status": "ok"
-    },
-    {
-      "letter": "o",
       "filename": "omegabase.zip",
       "title": "Omega Base",
       "author": [
@@ -43695,7 +43619,7 @@
     {
       "letter": "o",
       "filename": "FUNGAME.ZIP",
-      "title": "Orgy the FUCK of your life",
+      "title": "Orgy the [removed] of your life",
       "author": [
         "Unknown"
       ],
@@ -47693,7 +47617,7 @@
     {
       "letter": "p",
       "filename": "puzzdemo_incomplete.zip",
-      "title": "Puzzler's Hell (Demo, Corrupt)",
+      "title": "Puzzler's [removed] (Demo, Corrupt)",
       "author": [
         "eJECTION13"
       ],
@@ -49552,7 +49476,7 @@
       "filename": "rednex.zip",
       "title": "Rednex",
       "author": [
-        "Hell Camino"
+        "[removed] Camino"
       ],
       "genres": [
         "Action",
@@ -49572,7 +49496,7 @@
       "filename": "rdnxmech.zip",
       "title": "Rednex Mech Battle",
       "author": [
-        "Hell Camino"
+        "[removed] Camino"
       ],
       "genres": [
         "Action"
@@ -51662,7 +51586,7 @@
     {
       "letter": "r",
       "filename": "Pretty~1.zip",
-      "title": "Ryosuke's Upcoming Shit `99",
+      "title": "Ryosuke's Upcoming [removed] `99",
       "author": [
         "_ry0suke_"
       ],
@@ -52577,7 +52501,7 @@
     {
       "letter": "s",
       "filename": "BHUSS.ZIP",
-      "title": "School Bhuss Hell",
+      "title": "School Bhuss [removed]",
       "author": [
         "Unknown"
       ],
@@ -62358,7 +62282,7 @@
     {
       "letter": "t",
       "filename": "jasonhel.zip",
-      "title": "To Hell And Back",
+      "title": "To [removed] And Back",
       "author": [
         "RanmaJay"
       ],
@@ -66881,7 +66805,7 @@
     {
       "letter": "w",
       "filename": "wth.zip",
-      "title": "welcome to hell",
+      "title": "welcome to [removed]",
       "author": [
         "Tseng"
       ],
@@ -69014,7 +68938,7 @@
     {
       "letter": "y",
       "filename": "y2kyhdemo.zip",
-      "title": "Y2K:  Year of Hell Demo",
+      "title": "Y2K:  Year of [removed] Demo",
       "author": [
         "El Capitan"
       ],

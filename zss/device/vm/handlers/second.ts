@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { vmlogout } from 'zss/device/api'
+import { bridgesessionlisttoken, vmlogout } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { savestate } from 'zss/device/vm/helpers'
@@ -8,11 +8,18 @@ import {
   FLUSH_RATE,
   SECOND_TIMEOUT,
   incflushtick,
+  readsentsessionlisttoken,
   setflushtick,
+  setsentsessionlisttoken,
   tracking,
 } from 'zss/device/vm/state'
+import { issessionlistpeerid } from 'zss/feature/sessionlist/protocol'
 import { memoryscanplayers } from 'zss/memory/playermanagement'
-import { memoryreadfrozen } from 'zss/memory/session'
+import {
+  memoryreadfrozen,
+  memoryreadmainbook,
+  memoryreadoperator,
+} from 'zss/memory/session'
 import { perfmeasure } from 'zss/perf/ui'
 
 export function handlesecond(vm: DEVICE, message: MESSAGE): void {
@@ -33,6 +40,17 @@ export function handlesecond(vm: DEVICE, message: MESSAGE): void {
     }
 
     maybeemitplayerchatroster(vm, message.player)
+
+    const operator = memoryreadoperator()
+    const token = memoryreadmainbook()?.token
+    if (
+      operator &&
+      issessionlistpeerid(token) &&
+      token !== readsentsessionlisttoken()
+    ) {
+      setsentsessionlisttoken(token)
+      bridgesessionlisttoken(vm, operator, token)
+    }
 
     const flushtick = incflushtick()
     if (flushtick >= FLUSH_RATE) {

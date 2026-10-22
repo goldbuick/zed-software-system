@@ -149,6 +149,7 @@ describe('museum-zzt-filter', () => {
       excluded_weave: 1,
       excluded_super: 1,
       excluded_no_zzt_world: 1,
+      excluded_content: 0,
     })
   })
 })

@@ -12,6 +12,7 @@ import {
   layoutfromkind,
   resolvestatcode,
 } from 'ops/lib/content/zztcorpus'
+import { corpusredacttext } from 'ops/lib/content/zztcorpussanitize'
 import {
   collectzztcorpussourcefiles,
   compilezztoop,
@@ -298,7 +299,7 @@ function processsource(
       stats.fail += 1
       const tag = triagecode(code, error)
       tallytriage(triage, tag)
-      const signature = normalizeerror(error ?? 'unknown')
+      const signature = corpusredacttext(normalizeerror(error ?? 'unknown'))
       let bucket = buckets.get(signature)
       if (!bucket) {
         bucket = {
@@ -306,7 +307,7 @@ function processsource(
           triage: tag,
           count: 0,
           sample_ids: [],
-          sample_error: error ?? '',
+          sample_error: corpusredacttext(error ?? ''),
         }
         buckets.set(signature, bucket)
       }
@@ -377,7 +378,7 @@ function analyzewrapped(
     stats.fail += 1
     const tag = triagecode(source, error)
     tallytriage(triage, tag)
-    const signature = `wrapped:${normalizeerror(error ?? 'unknown')}`
+    const signature = `wrapped:${corpusredacttext(normalizeerror(error ?? 'unknown'))}`
     let bucket = buckets.get(signature)
     if (!bucket) {
       bucket = {
@@ -385,7 +386,7 @@ function analyzewrapped(
         triage: tag,
         count: 0,
         sample_ids: [path.relative(zssroot, file)],
-        sample_error: error ?? '',
+        sample_error: corpusredacttext(error ?? ''),
       }
       buckets.set(signature, bucket)
     }

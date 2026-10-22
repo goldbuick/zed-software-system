@@ -48,6 +48,7 @@ import {
   handlerefscroll,
 } from './scroll'
 import { handlesecond } from './second'
+import { handlesessionlist } from './sessionlist'
 import { handleticktock } from './ticktock'
 import { handletopic } from './topic'
 import { handlereadzipfilelist } from './zipfile'
@@ -59,6 +60,7 @@ export type VM_HANDLER = (vm: DEVICE, message: MESSAGE) => void
 export const vmhandlers: Record<string, VM_HANDLER> = {
   operator: handleoperator,
   topic: handletopic,
+  sessionlist: handlesessionlist,
   admin: handleadmin,
   zsswords: handlezsswords,
   books: handlebooks,
