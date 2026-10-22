@@ -13,7 +13,13 @@ import {
 } from 'zss/firmware/elementinput'
 import { pick } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
   READ_LAYER,
