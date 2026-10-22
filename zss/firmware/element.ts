@@ -13,7 +13,13 @@ import {
 } from 'zss/firmware/elementinput'
 import { pick } from 'zss/mapping/array'
 import { clamp } from 'zss/mapping/number'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 import { maptonumber, maptostring } from 'zss/mapping/value'
 import {
   READ_LAYER,
@@ -57,8 +63,8 @@ import { memoryhaltchip, memoryruncodepage } from 'zss/memory/runtime'
 import { memoryreadoperator } from 'zss/memory/session'
 import { memoryfindplayerforelement } from 'zss/memory/spatialqueries'
 import { BOARD_ELEMENT } from 'zss/memory/types'
-import { CATEGORY_CONSTS } from 'zss/words/category'
-import { collisionconsts } from 'zss/words/collision'
+import { CATEGORY_CONSTS, isstrcategory } from 'zss/words/category'
+import { collisionconsts, isstrcollision } from 'zss/words/collision'
 import {
   isstrcolor,
   mapcolortostrcolor,
@@ -273,6 +279,25 @@ function commandrun(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     memoryruncodepage(send.targetname, send.label)
   }
   return 0
+}
+
+function spreadarrayvalues(values: any[]): any[] {
+  const flat: any[] = []
+  for (let i = 0; i < values.length; ++i) {
+    const value = values[i]
+    if (
+      isarray(value) &&
+      !isstrdir(value) &&
+      !isstrcategory(value) &&
+      !isstrcollision(value) &&
+      !isstrcolor(value)
+    ) {
+      flat.push(...value)
+    } else {
+      flat.push(value)
+    }
+  }
+  return flat
 }
 
 export const ELEMENT_FIRMWARE = createfirmware({
@@ -806,8 +831,39 @@ export const ELEMENT_FIRMWARE = createfirmware({
 })
   .command(
     'clear',
-    [ARG_TYPE.NAME, 'variables (set to 0)'],
+    [ARG_TYPE.NAME, 'variables (set to 0), or drop an array index'],
     (chip, words) => {
+      if (isnumber(words[1])) {
+        const [name, index] = readargs(words, 0, [
+          ARG_TYPE.NAME,
+          ARG_TYPE.NUMBER,
+        ])
+        if (words.length > 2) {
+          chip.set('didfail', 1)
+          return 0
+        }
+        if (!Number.isInteger(index) || index < 0) {
+          chip.set('didfail', 1)
+          return 0
+        }
+        const current = chip.get(name)
+        if (!isarray(current)) {
+          chip.set('didfail', 1)
+          return 0
+        }
+        if (index >= current.length) {
+          chip.set('didfail', 1)
+          return 0
+        }
+        const next: any[] = []
+        for (let i = 0; i < current.length; ++i) {
+          if (i !== index) {
+            next.push(current[i])
+          }
+        }
+        chip.set(name, next)
+        return 0
+      }
       const [names] = readargsuntilend(words, 0, ARG_TYPE.NAME)
       for (let i = 0; i < names.length; ++i) {
         chip.set(names[i], 0)
@@ -1212,11 +1268,11 @@ export const ELEMENT_FIRMWARE = createfirmware({
   )
   .command(
     'array',
-    [ARG_TYPE.NAME, 'array variable'],
+    [ARG_TYPE.NAME, 'array variable; plain array values are spread'],
     (chip, words) => {
       const [name, ii] = readargs(words, 0, [ARG_TYPE.NAME])
       const [values] = readargsuntilend(words, ii, ARG_TYPE.ANY)
-      chip.set(name, values)
+      chip.set(name, spreadarrayvalues(values))
       return 0
     },
     { editor: ['variables'], lists: ['flags'] },
