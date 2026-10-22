@@ -9,8 +9,9 @@ $whiteor capture deltas into names (does not start walking)
 $whitepause until next tick  
 #set <name> <value>  
 $whiteset stat or variable  
-#clear <stat>  
+#clear <stat> [index]  
 $whiteset stats to 0  
+$whiteor drop that array index  
 #cycle <1-255>  
 $whiteset element cycle speed
 
