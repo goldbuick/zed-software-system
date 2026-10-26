@@ -1,0 +1,15 @@
+@loader info
+@event sim:load
+Drop a .zzt file onto the cafe window to open that world here.
+$7
+You can also pull worlds from the Museum of ZZT. 
+Type #zztsearch town to look up worlds by title. 
+Add a field name to search something else:
+$7
+"#zztsearch author draco
+"#zztsearch genres adventure
+$7
+The fields are: title, letter, author, genres, filename, screenshot, and publish_date.
+Each hit lists the title, author, genres, and date. 
+$7
+Type #zztrandom to do the same with one world picked at random.

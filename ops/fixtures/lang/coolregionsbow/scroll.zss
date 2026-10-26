@@ -4,7 +4,7 @@
 @ispushable
 @char 232
 @color white
-@code zssedit;edit scroll
+@code zssedit;Edit Scroll
 ' do not edit
 :think
 #give color

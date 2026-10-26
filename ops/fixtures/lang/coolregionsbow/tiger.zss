@@ -1,11 +1,11 @@
 @tiger
-@ispushable
 @cycle 2
+@ispushable
 @char 227
-@color 11
-@p1 range;intelligence
-@p2 range;firing rate
-@p3 select bullet 0 star 1;firing type?
+@color green
+@p1 range;Intelligence
+@p2 range;Firing Rate
+@p3 select Bullet 0 Star 1;Firing Type?
 :think
 #if (random 10) * 3 below or eq p2 do
  #set p4 playerx - thisx
@@ -33,8 +33,10 @@
 #think
 :touch
 #send at senderx sendery shot
+#bgplay t+c---c++++c--c
 #die
 :shot
-#give score 2
+:bombed
 #bgplay t+c---c++++c--c
+#give score 2
 #die

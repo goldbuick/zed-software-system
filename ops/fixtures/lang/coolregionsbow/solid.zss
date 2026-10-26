@@ -1,5 +1,3 @@
 @terrain solid
 @issolid
-@char 178
-@color red
-@bg black
+@char 219

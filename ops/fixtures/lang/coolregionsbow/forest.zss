@@ -1,14 +1,14 @@
 @forest
+@cycle 1
 @isitem
 @notbreakable
-@cycle 1
-@char 220
-@color green
-@bg black
+@char 176
+@color black
+@bg dkgreen
 #end
 :touch
 #bgplay ta
 #give forestnote do
- You push through the bushes.
+ $ticker A path is cleared through the forest.
 #done
 #die

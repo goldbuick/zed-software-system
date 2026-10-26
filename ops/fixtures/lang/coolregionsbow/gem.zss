@@ -7,10 +7,12 @@
 #end
 :touch
 #give gemnote do
- Gems give you Health!
+ $ticker Gems give you Health!
 #done
 #give gems
 #give health
 #give score 10
 #bgplay t+c-gec
+:shot
+:bombed
 #die

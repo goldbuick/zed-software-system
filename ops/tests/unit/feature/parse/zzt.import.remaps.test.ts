@@ -84,7 +84,10 @@ describe('zzt import remaps + kind headers', () => {
     expect(gun).toMatch(/#if not blocked by p7 0/)
     expect(gun).not.toMatch(/blocked seek shoot seek/)
     expect(gun).toMatch(/#set p4 currenttick % 8/)
-    expect(gun).toMatch(/set displaychar/)
+    expect(gun).toMatch(/#char 24/)
+    expect(gun).toMatch(/#char 26/)
+    expect(gun).toMatch(/#char 25/)
+    expect(gun).toMatch(/#char 27/)
     expect(gun).not.toMatch(/:drawdisplay/)
   })
 
@@ -126,7 +129,9 @@ describe('zzt import remaps + kind headers', () => {
     expect(ruffian).toMatch(/#send by p3 p4 shot/)
     expect(ruffian).toMatch(/#send by stepx stepy shot/)
     expect(ruffian).toMatch(/:thud\n#if any at senderx sendery player do/)
-    expect(ruffian).toMatch(/:touch\n#send at senderx sendery shot\n#die/)
+    expect(ruffian).toMatch(
+      /:touch\n#send at senderx sendery shot\n#bgplay t\+c---c\+\+\+\+c--c\n#die/,
+    )
     expect(ruffian).not.toMatch(/\?seek/)
   })
 

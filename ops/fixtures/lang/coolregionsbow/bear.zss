@@ -1,9 +1,9 @@
 @bear
-@ispushable
 @cycle 3
+@ispushable
 @char 153
-@color 6
-@p1 range
+@color brown
+@p1 range;Sensitivity?
 :think
 #set p2 0
 #set p3 0
@@ -19,12 +19,13 @@
   #set p2 0
  #done
 #done
-' --- Movement ---
 #if any by p2 p3 player do
  #send by p2 p3 shot
+ #bgplay t+c---c++++c--c
  #die
 #else if any by p2 p3 breakable do
  #send by p2 p3 shot
+ #bgplay t+c---c++++c--c
  #die
 #else do
  ?by p2 p3
@@ -34,6 +35,7 @@
 #send at senderx sendery shot
 #die
 :shot
-#give score 1
+:bombed
 #bgplay t+c---c++++c--c
+#give score 1
 #die

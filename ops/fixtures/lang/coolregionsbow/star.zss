@@ -1,7 +1,7 @@
 @star
 @cycle 1
-@char 83
 @notbreakable
+@char 83
 @p2 100
 :think
 #take p2
@@ -10,26 +10,26 @@
 #else if p2 % 2 is 0 do
  #walk seek p3 p4
  #if any by p3 p4 player do
+  #bgplay t+c---c++++c--c
   #send by p3 p4 shot
   #die
  #else if any by p3 p4 breakable do
+  #bgplay t+c---c++++c--c
   #send by p3 p4 shot
   #die
  #else do
   ?by p3 p4
  #done
 #done
-#give displaycolor
-#if displaycolor above 15 set displaycolor 9
+#give color
+#if color above 15 set color 9
 #set p4 currenttick % 4
-#if p4 is 0 set displaychar 179
-#if p4 is 1 set displaychar 47
-#if p4 is 2 set displaychar 196
-#if p4 is 3 set displaychar 92
-#idle
+#if p4 is 0 char 179
+#if p4 is 1 char 47
+#if p4 is 2 char 196
+#if p4 is 3 char 92
 #think
 :touch
 #send at senderx sendery shot
-#think
 :bombed
 #die
