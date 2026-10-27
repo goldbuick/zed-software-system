@@ -13,8 +13,6 @@ import { SOFTWARE } from 'zss/device/session'
 import type { MESSAGE } from 'zss/device/types'
 import { lastinputtime } from 'zss/device/vm/state'
 import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
-import { joinstatusscroll } from 'zss/feature/joinstatusscroll'
-import { runjoinurldestination } from 'zss/feature/joinurlflow'
 import {
   mediapayloadwithboardhelper,
   mediapayloadwithmanage,
@@ -22,7 +20,6 @@ import {
 } from 'zss/feature/mediaqueue/mediaguards'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
-import { PEER_ID_RE } from 'zss/feature/url'
 import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
@@ -95,18 +92,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
       }
       break
     }
-    case 'adminjoin':
-      if (PEER_ID_RE.test(path)) {
-        joinstatusscroll(message.player, 'joining...')
-        doasync(vm, message.player, async () => {
-          await runjoinurldestination(message.player, {
-            kind: 'joinhash',
-            peerid: path,
-            raw: path,
-          })
-        })
-      }
-      break
     case 'refscroll':
       switch (path) {
         case 'adminscroll':

@@ -193,10 +193,9 @@ export function memoryadminmenu(
       rows.push(ascii[j])
     }
   } else {
-    rows.push('session not active')
     if (!isjoin()) {
       rows.push(
-        zsszedlinklinechip('adminop', 'joincode', 'open multiplayer session'),
+        zsszedlinklinechip('adminop', 'joincode', 'start multiplayer game'),
       )
     }
     rows.push('')
@@ -204,7 +203,7 @@ export function memoryadminmenu(
 
   if (!isjoin()) {
     rows.push('')
-    rows.push('active sessions')
+    rows.push('join active games')
     rows.push(DIVIDER)
     rows.push(...memorysessionlistlines())
   }

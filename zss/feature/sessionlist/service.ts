@@ -3,7 +3,7 @@
  * PeerJS id runs the list; every other tab connects to it as a client.
  */
 import Peer, { DataConnection } from 'peerjs'
-import { apierror, apilog, vmsessionlist } from 'zss/device/api'
+import { apierror, apilog, apitoast, vmcli, vmsessionlist } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -50,6 +50,7 @@ let retrytimer: MAYBE<ReturnType<typeof setTimeout>>
 let heartbeattimer: MAYBE<ReturnType<typeof setInterval>>
 let hostingtopic = ''
 let hostingplayers = 0
+let didlistsessions = false
 let rosterhooked = false
 let unloadhooked = false
 let sessions: SESSIONLIST_ENTRY[] = []
@@ -66,6 +67,7 @@ function pushsim() {
     .filter((entry) => entry.topic !== hostingtopic)
     .map((entry) => ({ topic: entry.topic, players: entry.players }))
   vmsessionlist(SOFTWARE, player(), rows)
+  return rows
 }
 
 function clearsteptimer() {
@@ -270,6 +272,7 @@ function connectclient() {
   const current = ++serial
   teardownpeer()
   role = 'client'
+  didlistsessions = false
   const client = new Peer(peerserveroptions())
   peer = client
   steptimer = setTimeout(() => {
@@ -306,7 +309,18 @@ function connectclient() {
       }
       if (data.type === 'sessionlist:list') {
         sessions = data.sessions
-        pushsim()
+        const rows = pushsim()
+        if (!didlistsessions) {
+          didlistsessions = true
+          vmcli(SOFTWARE, player(), '#sessions')
+          if (rows.length > 0) {
+            apitoast(
+              SOFTWARE,
+              player(),
+              `$green${rows.length} active game${rows.length === 1 ? '' : 's'}`,
+            )
+          }
+        }
       }
     })
     conn.on('close', () => {

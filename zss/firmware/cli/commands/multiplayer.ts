@@ -106,7 +106,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
           SOFTWARE,
           READ_CONTEXT.elementfocus,
           zsstexttape(
-            zssheaderlines('active sessions'),
+            zssheaderlines('join active games'),
             memorysessionlistlines(),
           ),
         )
