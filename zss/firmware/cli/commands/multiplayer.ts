@@ -100,7 +100,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
     )
     .command(
       'sessions',
-      ['list active multiplayer sessions for this book'],
+      ['list active multiplayer games for this book'],
       () => {
         terminalwritelines(
           SOFTWARE,
