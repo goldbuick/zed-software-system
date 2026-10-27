@@ -26,6 +26,7 @@
   <url><loc>https://zed.cafe/docs/feature/sessionlist</loc></url>
   <url><loc>https://zed.cafe/docs/feature/speechtotext</loc></url>
   <url><loc>https://zed.cafe/docs/feature/storage</loc></url>
+  <url><loc>https://zed.cafe/docs/feature/tts-voices</loc></url>
   <url><loc>https://zed.cafe/docs/feature/tts</loc></url>
   <url><loc>https://zed.cafe/docs/feature/url</loc></url>
   <url><loc>https://zed.cafe/docs/feature/writeui</loc></url>
@@ -47,6 +48,9 @@
   <url><loc>https://zed.cafe/docs/firmware/audio</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/board</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/cli</loc></url>
+  <url><loc>https://zed.cafe/docs/firmware/commands/cli</loc></url>
+  <url><loc>https://zed.cafe/docs/firmware/commands/loader</loc></url>
+  <url><loc>https://zed.cafe/docs/firmware/commands/runtime</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/commands</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/element</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/firmware-core</loc></url>
@@ -130,6 +134,7 @@
   <url><loc>https://zed.cafe/docs/synth/algosynth</loc></url>
   <url><loc>https://zed.cafe/docs/synth/audiochain</loc></url>
   <url><loc>https://zed.cafe/docs/synth/drums</loc></url>
+  <url><loc>https://zed.cafe/docs/synth/effects</loc></url>
   <url><loc>https://zed.cafe/docs/synth/fx-and-fxchannels</loc></url>
   <url><loc>https://zed.cafe/docs/synth/fx-types-reference</loc></url>
   <url><loc>https://zed.cafe/docs/synth/gain-levels</loc></url>
@@ -137,12 +142,14 @@
   <url><loc>https://zed.cafe/docs/synth/parallel-fx-bus</loc></url>
   <url><loc>https://zed.cafe/docs/synth/playnotation</loc></url>
   <url><loc>https://zed.cafe/docs/synth/record-and-mp3</loc></url>
+  <url><loc>https://zed.cafe/docs/synth/scales</loc></url>
   <url><loc>https://zed.cafe/docs/synth/source</loc></url>
   <url><loc>https://zed.cafe/docs/synth/sourcefxsetup</loc></url>
   <url><loc>https://zed.cafe/docs/synth/tickhandler</loc></url>
   <url><loc>https://zed.cafe/docs/synth/voice-types-reference</loc></url>
   <url><loc>https://zed.cafe/docs/synth/voiceconfig</loc></url>
   <url><loc>https://zed.cafe/docs/synth/voicefx</loc></url>
+  <url><loc>https://zed.cafe/docs/synth/voices</loc></url>
   <url><loc>https://zed.cafe/docs/synth/worklets</loc></url>
   <url><loc>https://zed.cafe/docs/synth</loc></url>
   <url><loc>https://zed.cafe/docs/words/README</loc></url>

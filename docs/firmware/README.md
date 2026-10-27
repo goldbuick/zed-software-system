@@ -31,7 +31,7 @@ Commands are composed into **drivers** based on context (CLI, LOADER, RUNTIME). 
 | [runner.md](runner.md) | Driver composition and firmware orchestration |
 | [runtime.md](runtime.md) | Runtime messaging, UI, and gadget integration |
 | [transforms.md](transforms.md) | Board transformations (snapshot, copy, remix, weave, pivot) |
-| [commands.md](commands.md) | Full command reference (CLI, runtime, loader) |
+| [commands/](commands/index.md) | Full command reference: shared tables plus [cli](commands/cli.md), [runtime](commands/runtime.md), [loader](commands/loader.md) pages with one heading per command |
 
 ## Driver Types
 

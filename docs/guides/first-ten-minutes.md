@@ -36,15 +36,11 @@ Lines in the terminal can be links. Move onto one with the arrow keys and press 
 
     Press `#`, type `help`, and press Enter. A help scroll opens.
 
-2. **Look at the controls**
+2. **Open getting started**
 
-    Select **read help on controls** (hotkey `C`). Arrow keys move you. Shift plus an arrow key, or `w a s d`, shoots. `z x c v` are the A / B / X / Y buttons. Game controllers work too.
+    Select **controls and getting started** (hotkey `1`). Arrow keys move you. Shift plus an arrow key, or `w a s d`, shoots. The same page lists `#books`, `#pages`, `#boards`, and `#save`.
 
-3. **Look at books and pages**
-
-    Go back, then select **Developer - books & pages** (hotkey `3`). This short list is the map for the rest of these guides: `#books`, `#pages`, `#boards`, `@page name`, `#save`, and `#share`.
-
-4. **Close the scroll**
+3. **Close the scroll**
 
     Press `esc`.
 
@@ -114,7 +110,7 @@ A red wall appears just north of you. `#put` takes a direction and a kind. The k
 ## What you learned
 
 - The terminal is the CLI. Open it with `?`, `#`, or `@`. Close it with `esc`.
-- `#help` gives you controls and developer basics.
+- `#help`, then **controls and getting started**, covers moving, the command line, and saving.
 - A starter kit is a book of ready-made pages. ZTK gives you ZZT-style building blocks.
 - `#books`, `#pages`, `#boards`, and `#pageopen` let you explore a book.
 

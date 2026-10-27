@@ -10,7 +10,7 @@ Tier 1 scrolls are covered by Jest (see below). Tier 2 is manual only.
 |------|----------------|
 | Zip file list tape + import route | `ops/tests/unit/device/vm/handlers/zipfile.handler.test.ts`, `ops/tests/unit/device/vm/handlers/default.handlers.tier1.test.ts` |
 | Quoted zip `select` row shape | `ops/tests/unit/gadget/data/scrollwritelines.test.ts` (`zipfilelist quoted select target…`) |
-| Refscroll submenus (`char` / `color` / `bg`, admin, object/terrain lists) | `ops/tests/unit/device/vm/handlers/default.handlers.tier1.test.ts` |
+| Refscroll submenus (`char` / `color` / `bg`, admin) | `ops/tests/unit/device/vm/handlers/default.handlers.tier1.test.ts` |
 | ROM `refscroll:menu` → `handlerefscroll` | `ops/tests/unit/device/vm/handlers/scroll.refscroll.test.ts` |
 | Clear / make-it / gadget scroll handlers | `ops/tests/unit/device/vm/handlers/scroll.handlers.test.ts` |
 
@@ -27,7 +27,7 @@ Run: `yarn ops:test` (or the paths above).
 Do once per release or before a scroll-affecting merge:
 
 1. **Help / refscroll:** Open #help or meta menu; confirm refscroll menu renders.
-2. **Sub-scrolls:** From refscroll, open object list, terrain list, char, color, and bg sub-scrolls; confirm each opens without errors.
+2. **Sub-scrolls:** From refscroll, open the char, color, and bg sub-scrolls; confirm each opens without errors.
 3. **ROM + ZNS docs:** Open one ROM-backed refscroll page; publish optional overrides to `docs.at.zed.cafe` via `POST /api/set` after `#zns` login.
 4. **Bookmarks:** Open terminal and editor bookmark scrolls; exercise a hotkey link and a delete link.
 5. **Zip import:** Upload a small zip with ASCII names, one entry with a **space in the filename**, and (if possible) **`;` in the name**. Toggle YES on at least one file, use **import selected**, and note that import triggers delayed logout (see `parsezipfilelist` in `zss/feature/parse/file.ts`).

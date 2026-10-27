@@ -2,6 +2,8 @@
 title: runtime.ts
 ---
 
+For the player-facing list of every runtime command, see [Runtime commands](/firmware/commands/runtime).
+
 **Purpose**: Defines `RUNTIME_FIRMWARE` — commands for runtime messaging, gadget UI, and scroll/text display. Handles the execution context when codepages run during gameplay.
 
 ## Dependencies

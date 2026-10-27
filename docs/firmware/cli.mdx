@@ -2,6 +2,8 @@
 title: cli.ts
 ---
 
+For the player-facing list of every CLI command, see [CLI commands](/firmware/commands/cli).
+
 **Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, ZNS, and editing tools. Most commands are operator-only.
 
 ## Command help in the editor / terminal

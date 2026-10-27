@@ -2,6 +2,8 @@
 title: loader.ts
 ---
 
+For the player-facing list of every loader command, see [Loader commands](/firmware/commands/loader).
+
 **Purpose**: Defines `LOADER_FIRMWARE` — commands for loading and parsing external files (text, JSON, binary) and managing loader context. Used when importing content into books.
 
 ## Dependencies

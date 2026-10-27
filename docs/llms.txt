@@ -69,6 +69,7 @@
 - [Session list](https://zed.cafe/docs/feature/sessionlist): Book-token PeerJS lister for active multiplayer sessions
 - [storage.ts](https://zed.cafe/docs/feature/storage)
 - [stt/speechtotext.ts](https://zed.cafe/docs/feature/speechtotext)
+- [TTS voices](https://zed.cafe/docs/feature/tts-voices): Player reference for
 - [tts/](https://zed.cafe/docs/feature/tts)
 - [url.ts](https://zed.cafe/docs/feature/url)
 - [writeui.ts and zsstextui.ts](https://zed.cafe/docs/feature/writeui)
@@ -81,7 +82,6 @@
 - [element.ts](https://zed.cafe/docs/firmware/element)
 - [Firmware Documentation](https://zed.cafe/docs/firmware/README)
 - [firmware.ts (Core)](https://zed.cafe/docs/firmware/firmware-core)
-- [Full command reference](https://zed.cafe/docs/firmware/commands)
 - [loader.ts](https://zed.cafe/docs/firmware/loader)
 - [loaderbinary.ts](https://zed.cafe/docs/firmware/loaderbinary)
 - [loaderjson.ts](https://zed.cafe/docs/firmware/loaderjson)
@@ -90,6 +90,13 @@
 - [runner.ts](https://zed.cafe/docs/firmware/runner)
 - [runtime.ts](https://zed.cafe/docs/firmware/runtime)
 - [transforms.ts](https://zed.cafe/docs/firmware/transforms)
+
+### Commands
+
+- [Full command reference](https://zed.cafe/docs/firmware/commands)
+- [CLI commands](https://zed.cafe/docs/firmware/commands/cli): Every terminal
+- [Loader commands](https://zed.cafe/docs/firmware/commands/loader): The
+- [Runtime commands](https://zed.cafe/docs/firmware/commands/runtime): The
 
 ## Gadget
 
@@ -181,13 +188,16 @@
 - [Audio Worklets](https://zed.cafe/docs/synth/worklets)
 - [audiochain.ts](https://zed.cafe/docs/synth/audiochain)
 - [Drums Module](https://zed.cafe/docs/synth/drums)
+- [Effects](https://zed.cafe/docs/synth/effects): Player reference for
 - [fx.ts & fxchannels.ts](https://zed.cafe/docs/synth/fx-and-fxchannels)
 - [Gain and volume levels (Daisy)](https://zed.cafe/docs/synth/gain-levels): Reference chart of every tweakable volume/gain stage in the live Daisy synth path.
 - [Parallel voice FX bus (Daisy)](https://zed.cafe/docs/synth/parallel-fx-bus)
 - [playnotation.ts](https://zed.cafe/docs/synth/playnotation)
 - [Recording & MP3 export](https://zed.cafe/docs/synth/record-and-mp3)
+- [Scales](https://zed.cafe/docs/synth/scales): Play lines for major, minor, blues, modal, pentatonic, and exotic scales.
 - [source.ts](https://zed.cafe/docs/synth/source)
 - [sourcefxsetup.ts](https://zed.cafe/docs/synth/sourcefxsetup)
+- [Synth](https://zed.cafe/docs/synth/voices): Player reference for
 - [Synth implementation matrix](https://zed.cafe/docs/synth/implementation-matrix)
 - [Synth Module Documentation](https://zed.cafe/docs/synth/README)
 - [tickhandler.ts](https://zed.cafe/docs/synth/tickhandler)

@@ -13,6 +13,9 @@ Legacy Tone.js and Maximilian documentation paths refer to **archived** stacks u
 
 | Topic | File |
 | ----- | ---- |
+| [Synth](voices.md) | Player reference for `#synth` voices and config keys |
+| [Effects](effects.md) | Player reference for echo, reverb, and the other voice FX |
+| [Scales](scales.md) | `#play` lines for each scale and key |
 | [playnotation.ts](playnotation.md) | Text notation parser |
 | [record & mp3](record-and-mp3.md) | Recording to MP3 (Daisy path) |
 | [voice-types-reference.md](voice-types-reference.md) | All voice types, params, Daisy vs Tone defaults |
