@@ -1,7 +1,8 @@
 @energizer
+@cycle 1
 @isitem
 @char 127
-@color 5
+@color dkpurple
 #end
 :touch
 #play s.-cd#e 
@@ -9,7 +10,7 @@
 #play s.-c-a#gf#fd#c
 #give energized 128
 #give energizednote do
- Energizer - You are invincible
+ $ticker Energizer - You are invincible
 #done
 #all:energize
 #die

@@ -158,6 +158,7 @@ export function memoryexportbook(
       const codepage = memoryexportcodepage(book.pages[i], {
         format: 'json',
         strip,
+        omittypecode: true,
       })
       if (ispresent(codepage)) {
         pagesout.push(codepage)
@@ -186,7 +187,7 @@ export function memoryexportbook(
   }
 
   const pagesout = book.pages.map((codepage) =>
-    memoryexportcodepage(codepage, { strip }),
+    memoryexportcodepage(codepage, { strip, omittypecode: true }),
   )
   const wire = Object.assign({}, book, {
     pages: pagesout,

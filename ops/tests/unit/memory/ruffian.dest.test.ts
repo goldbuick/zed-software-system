@@ -46,9 +46,11 @@ describe('ruffian dest script', () => {
     expect(RUFFIAN_CODE).toMatch(/#send by p3 p4 shot/)
     expect(RUFFIAN_CODE).toMatch(/#send by stepx stepy shot/)
     expect(RUFFIAN_CODE).toMatch(
-      /:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n #die/,
+      /:thud\n#if any at senderx sendery player do\n #send at senderx sendery shot\n #bgplay t\+c---c\+\+\+\+c--c\n #die/,
     )
-    expect(RUFFIAN_CODE).toMatch(/:touch\n#send at senderx sendery shot\n#die/)
+    expect(RUFFIAN_CODE).toMatch(
+      /:touch\n#send at senderx sendery shot\n#bgplay t\+c---c\+\+\+\+c--c\n#die/,
+    )
     expect(RUFFIAN_CODE).not.toMatch(/\?seek/)
   })
 })

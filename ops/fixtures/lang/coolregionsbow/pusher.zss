@@ -1,10 +1,15 @@
 @pusher
 @cycle 4
 @char 16
-@step dir;March
-#end
+@step dir;March?
+:think
+#bgplay t--f
+?i#think
+:thud
+#idle
+#think
 :drawdisplay
-#if stepx above 0 set displaychar 16
-#if stepx below 0 set displaychar 17
-#if stepy below 0 set displaychar 30
-#if stepy above 0 set displaychar 31
+#if stepx above 0 char 16
+#if stepx below 0 char 17
+#if stepy below 0 char 30
+#if stepy above 0 char 31

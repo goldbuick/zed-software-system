@@ -9,10 +9,10 @@ $dkblue$onblack$219$white$ondkblue$223$220$ltgray$onblack$219$white$219$onblue$2
 $dkblue$onblack$219$219$219$ltgray$ondkblue$223$white$onblack$219$219$219$219$219$219$ondkblue$223$dkblue$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$219$white$220$dkblue$219$219$white$219$dkblue$219$219$219$219$219$219$219$219$219
 $ltgray$ondkblue$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$white$223$223$ltgray$205$205$205$205$205$205$205$205$205$205
 # on today's menu at the cafe
-!openit inline https://bytes.zed.cafe/CPvUq6xq;FUN facts
+!openit inline https://bytes.zed.cafe/giHhjm19;FUN facts
 !openit inline https://bytes.zed.cafe/gPyVmz5u;TTS All at Once
 !openit inline https://bytes.zed.cafe/FaUkmz2p;TTS Nicely Queue'd
-!openit inline https://bytes.zed.cafe/DQffpxba;Simple Chat
+!openit inline https://bytes.zed.cafe/MqlBjjlp;Simple Chat
 !openit inline https://bytes.zed.cafe/ndXDag2e;ZED ZAP
 !openit inline https://bytes.zed.cafe/xJbE82rz;ZED BOAT
 !openit inline https://bytes.zed.cafe/zmHFabqb;ZZT Tool Kit

@@ -5,6 +5,6 @@
 :touch
 #bgplay t--dc
 #give invisiblenote do 
- You are blocked by an invisible wall.
+ $ticker You are blocked by an invisible wall.
 #done
 #become normal

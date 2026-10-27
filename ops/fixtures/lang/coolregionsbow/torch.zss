@@ -10,6 +10,6 @@
 #give torches
 #bgplay tcase
 #give torchnote do
-Torch - used for lighting in the underground.
+ $ticker Torch - used for lighting in the underground.
 #done
 #die

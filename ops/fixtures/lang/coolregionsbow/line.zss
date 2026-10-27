@@ -1,4 +1,5 @@
 @terrain line
+@issolid
 @char 249
 :drawdisplay
 #set p1 1

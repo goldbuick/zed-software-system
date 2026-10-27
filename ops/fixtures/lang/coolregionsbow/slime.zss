@@ -1,10 +1,10 @@
 @slime
 @cycle 3
 @char 42
-@p2 range F S;Movement speed?
+@p2 range;Movement Speed
 #clear p1
 :think
-#if p1 below p2 do
+#if p1 below or eq p2 do
  #give p1
  #idle
 #else do

@@ -148,7 +148,11 @@ export function registerexportcommands(fw: FIRMWARE): FIRMWARE {
           registerdownloadjsonfile(
             SOFTWARE,
             READ_CONTEXT.elementfocus,
-            memoryexportcodepage(codepage, { format: 'json', strip: true }),
+            memoryexportcodepage(codepage, {
+              format: 'json',
+              strip: true,
+              omittypecode: true,
+            }),
             `${memoryreadcodepagename(codepage)}.${memoryreadcodepagetypeasstring(codepage)}.json`,
           )
         }

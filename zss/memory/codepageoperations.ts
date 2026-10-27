@@ -322,6 +322,8 @@ export function memoryimportbitmap(
 export type MEMORY_CODEPAGE_IO_OPTIONS = {
   format?: 'wire' | 'json'
   strip?: boolean
+  /** Save only: omit `code` on the codepage object and terrain elements. */
+  omittypecode?: boolean
 }
 
 export function memoryexportcodepage(
@@ -333,21 +335,30 @@ export function memoryexportcodepage(
   }
   const format = options?.format ?? 'wire'
   const strip = options?.strip === true
+  const omittypecode = options?.omittypecode === true
   if (format === 'json') {
     return {
       id: codepage.id,
       code: codepage.code,
       board: memoryexportboard(codepage.board, { format: 'json', strip }),
-      object: memoryexportboardelement(codepage.object, { format: 'json' }),
-      terrain: memoryexportboardelement(codepage.terrain, { format: 'json' }),
+      object: memoryexportboardelement(codepage.object, {
+        format: 'json',
+        omitcode: omittypecode,
+      }),
+      terrain: memoryexportboardelement(codepage.terrain, {
+        format: 'json',
+        omitcode: omittypecode,
+      }),
       charset: memoryexportbitmap(codepage.charset),
       palette: memoryexportbitmap(codepage.palette),
     }
   }
   return formatobject(codepage, CODE_PAGE_KEYS, {
     board: (board) => memoryexportboard(board, { strip }),
-    object: memoryexportboardelement,
-    terrain: memoryexportboardelement,
+    object: (element) =>
+      memoryexportboardelement(element, { omitcode: omittypecode }),
+    terrain: (element) =>
+      memoryexportboardelement(element, { omitcode: omittypecode }),
     charset: memoryexportbitmap,
     palette: memoryexportbitmap,
     stats: FORMAT_SKIP,

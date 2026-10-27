@@ -1,9 +1,9 @@
 @spinninggun
 @cycle 2
 @char 24
-@p1 range;intelligence
-@p2 range;firing rate
-@p3 select bullet 0 star 1;firing type?
+@p1 range;Intelligence
+@p2 range;Firing Rate
+@p3 select bullet 0 star 1;Firing Type?
 :think
 #if random 9 below p2 do
  #if p3 is 0 do
@@ -34,13 +34,13 @@
 #done
 #set p4 currenttick % 8
 #if p4 is 0 or p4 is 1 do
- #set displaychar 24
+ #char 24
 #else if p4 is 2 or p4 is 3 do
- #set displaychar 26
+ #char 26
 #else if p4 is 4 or p4 is 5 do
- #set displaychar 25
+ #char 25
 #else do
- #set displaychar 27
+ #char 27
 #done
 #idle
 #think

@@ -1,7 +1,7 @@
 @shark
+@cycle 3
 @isswimming
 @notbreakable
-@cycle 3
 @char 94
 @color 7
 @p1 range;Intelligence?
@@ -13,6 +13,7 @@
 #done
 #if any by p2 p3 player do
  #send by p2 p3 shot
+ #bgplay t+c---c++++c--c
  #die
 #else do
  ?by p2 p3
@@ -20,4 +21,5 @@
 #think
 :touch
 #send at senderx sendery shot
+#bgplay t+c---c++++c--c
 #die

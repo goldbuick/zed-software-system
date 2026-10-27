@@ -70,7 +70,9 @@ describe('lion dest script', () => {
     expect(LION_CODE).toMatch(/#walk seek p2 p3/)
     expect(LION_CODE).toMatch(/#send by p2 p3 shot/)
     expect(LION_CODE).toMatch(/\?by p2 p3/)
-    expect(LION_CODE).toMatch(/:touch\n#send at senderx sendery shot\n#die/)
+    expect(LION_CODE).toMatch(
+      /:touch\n#send at senderx sendery shot\n#bgplay t\+c---c\+\+\+\+c--c\n#die/,
+    )
     expect(LION_CODE).not.toMatch(/any by p2 p3 breakable/)
     expect(LION_CODE).not.toMatch(/\?seek/)
   })

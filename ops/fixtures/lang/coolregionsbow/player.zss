@@ -1,84 +1,49 @@
 @player
-@ispushable
 @cycle 1
+@ispushable
 @char 2
-@color white
-@bg blue
+@color white onblue
 'setup flags
-#set hint
+#set light
+#set facing 90
 #set camera far
 #set health 100
 #set wickticks 250
-#set facing 90
-#clear mute
-#clear ammo
-#clear wick
-#clear light
-#clear torches
-#clear gems
-#clear score
-#clear reload
-#clear energized
-#clear blackkey
-#clear bluekey
-#clear greenkey
-#clear cyankey
-#clear redkey
-#clear purplekey
-#clear yellowkey
-#clear whitekey
+#if deaths do 
+ $ticker You have died !!!!
+ #bgplay s.-cd#g+c-ga#+dgfg#+cf---w3c spxxx pxxx
+#done 
 :think
 ' sidebar code
-"Simple $9 $9 $9 
-" $9 $9 $9 Chat v1.14
+"     - - - - -
+"  $black$ongrey      ZTK     $white$ondkblue
+"     - - - - -
 "
-#if hint do
-"press $whiteC$yellow to chat 
-"press $white#$yellow for cli
-" 
-"from the cli to
-"set name
-"$white#set user <name>
-" 
-"toggle built-in 
-"gadget on or off
-"$white#gadget
-"with gadget users
-"can edit the board
-"
-"$black$ondkcyan Ctrl+O 
-"$ondkblue $whiteOpen the net
-"
-"$black$ondkcyan $24$25$26$27 $ondkblue $whiteMove
-"$black$onltgrey Tab $ondkblue $whiteToggle
-"$ondkblue $whitePlayer Stats
-"
-#else do
 " $white$2 $yellow Health:$health
 " $cyan$132 $yellow   Ammo:$ammo
 ' torch info
 #set torchmeter " $brown$157 $yellowTorches:$torches"
 #if torches < 10 do
- #set torchmeter torchmeter + "  "
+ #set torchmeter "${torchmeter}  "
 #else if torches < 100 do
- #set torchmeter torchmeter + " "
+ #set torchmeter "${torchmeter} "
 #done
 #if wick > 0 do
  #if wick > 50 do
-  #set torchmeter torchmeter + "$177"
- #else set torchmeter torchmeter + "$176"
+  #set torchmeter "${torchmeter}$177"
+ #else set torchmeter "${torchmeter}$176"
  #done
  #if wick > 100 do
-  #set torchmeter torchmeter + "$177"
- #else set torchmeter torchmeter + "$176"
+  #set torchmeter "${torchmeter}$177"
+ #else set torchmeter "${torchmeter}$176"
  #done
  #if wick > 150 do
-  #set torchmeter torchmeter + "$177"
- #else set torchmeter torchmeter + "$176"
+  #set torchmeter "${torchmeter}$177"
+ #else set torchmeter "${torchmeter}$176"
  #done
  #if wick > 200 do
-  #set torchmeter torchmeter + "$177"
- #else set torchmeter torchmeter + "$176"
+  #set torchmeter "${torchmeter}$177"
+ #else set torchmeter "${torchmeter}$176"
  #done
 #done
 "$torchmeter
@@ -86,14 +51,14 @@
 " $yellow    Score:$score
 ' make keys section of sidebar
 #set keylist " $white$12 $yellow   Keys:"
-#if blackkey set keylist keylist + "$black$12"
-#if bluekey set keylist keylist + "$blue$12"
-#if greenkey set keylist keylist + "$green$12"
-#if cyankey set keylist keylist + "$cyan$12"
-#if redkey set keylist keylist + "$red$12"
-#if purplekey set keylist keylist + "$purple$12"
-#if yellowkey set keylist keylist + "$yellow$12"
-#if whitekey set keylist keylist + "$white$12"
+#if blackkey set keylist "${keylist}$black$12"
+#if bluekey set keylist "${keylist}$blue$12"
+#if greenkey set keylist "${keylist}$green$12"
+#if cyankey set keylist "${keylist}$cyan$12"
+#if redkey set keylist "${keylist}$red$12"
+#if purplekey set keylist "${keylist}$purple$12"
+#if yellowkey set keylist "${keylist}$yellow$12"
+#if whitekey set keylist "${keylist}$white$12"
 "$keylist
 ' hotkeys and input info
 "
@@ -104,6 +69,12 @@
 !soundoff hk b;Be quiet
 #done
 "
+#if not started do
+!start hk p;Play
+#else do
+"
+#done
+"
 "      $black$ondkcyan $24$25$26$27$ondkblue $whiteMove
 "$black$onltgrey Shift $24$25$26$27$ondkblue $whiteShoot
 "
@@ -111,24 +82,26 @@
 !turnleft hk q;Turn Left
 !turnright hk e;Turn Right
 #done
-#done
 'update code
-#if inputmenu do
- #set hint 1 - hint
- #idle
-#else if inputmove and inputshift do
- #if not reload do
-  #give reload 3
-  #take ammo do
-   $ticker You don't have any ammo!
-  #else do
-   #shoot inputmove
+#if inputshoot do
+ #if ammo below 1 do 
+  $ticker You don't have any ammo!
+  #idle
+ #else do
+  #shoot inputshoot
+  #if not didfail do 
    #bgplay t+c-c-c
-  #done
+   #take ammo
+  #done 
  #done
- #idle
 #else if inputmove do
- ?inputmove
+ #if any inputmove water do
+  #bgplay t+c+c
+  $ticker Your way is blocked by water.
+  #idle
+ #else do
+  ?inputmove
+ #done
 #else idle
 #done
 'display code
@@ -150,38 +123,26 @@
  #done
 #done
 'timing code
-#take reload
 #take wick do
- #if light do
+ #if light above 1 do
   #play tc-c-c
-  #clear light
+  #set light 1
  #done
 #done
 'loop it
 #think
 :shot
-#if energized above 0 do
- #think
+#take health 10 do
+ #endgame
 #else do
+ $ticker Ouch!
  #bgplay t--c+c---c+d#
- #take health 10 do
-  $ticker You died!
-  #endgame
- #else do
-  $ticker Ouch!
-  #think
- #done
+ #think
 #done
-:thud
-#if any at senderx sendery water do
- $ticker blocked by water
-#done
-#idle
-#think
 :lighttorch
 #if not isdark do
  $ticker Don't need torch - room is not dark!
-#else if light do
+#else if light above 1 do
  $ticker Torch is already lit!
 #else take torches do
  $ticker You don't have any torches!
@@ -197,6 +158,10 @@
 :soundoff
 #set mute
 #vol 0
+#think
+:start
+#set started
+#goto zztstartboard
 #think
 :turnleft
 #give facing -90
