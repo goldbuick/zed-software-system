@@ -183,7 +183,7 @@ describe('handledefault refscroll', () => {
     expect(memoryadminmenu).toHaveBeenCalledWith('p1', 0)
   })
 
-  it('refscroll:notescalesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
+  it('refscroll:notesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
     jest
       .mocked(fetchrefscrolltext)
       .mockResolvedValue('$ltgrey intro\n\n[Major](<notescalesmajor>)\n')
@@ -192,7 +192,7 @@ describe('handledefault refscroll', () => {
       player: 'p1',
       id: 'id',
       sender: '',
-      target: 'refscroll:notescalesscroll',
+      target: 'refscroll:notesscroll',
       data: undefined,
     })
     await Promise.resolve()
@@ -206,7 +206,7 @@ describe('handledefault refscroll', () => {
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
       expect.stringContaining('notescalesmajor'),
-      'notescalesscroll',
+      'notesscroll',
     )
   })
 

@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { parsemarkdownwithzsstextsink } from 'zss/feature/parse/markdownzsstext'
 import {
@@ -40,8 +37,6 @@ jest.mock('zss/words/reader', () => ({
 jest.mock('zss/mapping/value', () => ({
   maptostring: jest.fn((value: unknown) => String(value)),
 }))
-
-const romdir = join(__dirname, '../../../../../zss/rom/refscroll')
 
 function parsemarkdownlines(content: string): string[] {
   const lines: string[] = []
@@ -144,7 +139,36 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('preserves blank rows between markdown blocks (algoscroll)', () => {
-    const md = readFileSync(join(romdir, 'algoscroll.md'), 'utf8')
+    const md = `## legend
+
+s1, s2, s3, s4 = sound sources/operators
+m = modulator
+c = carrier
+--> = signal flow
+
+## algo0
+
+S1 --> M --> S2 --> M --> S3 --> M --> S4 --> C
+
+## shared algo config
+
+#synth algo0
+$whiteselect algo0 (same pattern for algo1 - algo7)
+
+#algo0 harmonicity <number>
+#algo0 harmonicity1 - harmonicity3
+#algo0 modindex <number>
+#algo0 modindex1 - modindex3
+#algo0 osc1 - osc4 <sine, square, triangle, sawtooth, pulse, pwm>
+#algo0 env1 - env4 <a> <d> <s> <r>
+#algo0 env <a> <d> <s> <r>
+#algo0 port <seconds>
+#algo0 vol <db>
+
+$whiteSame keys for algo1 - algo7 (+1-5 channel forms)
+
+!synthscroll hk b " B " next;$ltgreyBack to synth
+`
     const lines = parsemarkdownlines(md)
     const flowidx = lines.findIndex((line) => line.includes('--> = signal flow'))
     const algoidx = lines.findIndex((line) => line.includes('algo0'))
