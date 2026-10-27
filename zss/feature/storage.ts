@@ -1,5 +1,5 @@
 import humanid from 'human-id'
-import { apierror, apilog, vmbooks, workstatus } from 'zss/device/api'
+import { apierror, apilog, apitoast, vmbooks, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { isclimode, ismobilewebbrowser } from 'zss/feature/detect'
@@ -9,6 +9,7 @@ import {
   durablegetmany,
   durableupdate,
 } from 'zss/feature/durable'
+import { armclipboardtext, withclipboard } from 'zss/feature/keyboard'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
@@ -315,10 +316,45 @@ export async function storagesharecontent(player: string) {
     return
   }
 
-  // gen global shorturl
+  // arm during the command gesture; the short url arrives after awaits
+  const armed = armclipboardtext()
   workstatus(SOFTWARE, player, 'share url')
   const url = await storageshorturl(player)
+  if (!url) {
+    return
+  }
   writecopyit(SOFTWARE, player, url, url)
+  const copied = await copyshareurl(armed, url)
+  if (copied) {
+    apitoast(SOFTWARE, player, '$greenshare url copied')
+  }
+}
+
+async function copyshareurl(
+  armed: ReturnType<typeof armclipboardtext>,
+  url: string,
+): Promise<boolean> {
+  if (armed) {
+    armed.settle(url)
+    return armed.written.then(
+      () => true,
+      (err) => {
+        console.error(err)
+        return false
+      },
+    )
+  }
+  const clipboard = withclipboard()
+  if (!ispresent(clipboard)) {
+    return false
+  }
+  return clipboard.writeText(url).then(
+    () => true,
+    (err) => {
+      console.error(err)
+      return false
+    },
+  )
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */

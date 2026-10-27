@@ -11,19 +11,24 @@ describe('memory sessionlist', () => {
 
   it('shows the empty line when there are no sessions', () => {
     expect(memorysessionlistlines()).toEqual([
-      'no active sessions for this book',
+      'no active games for this book',
     ])
   })
 
-  it('writes one adminjoin link per session', () => {
+  it('writes one inline join link per session', () => {
+    ;(globalThis as { location?: { href: string; origin: string } }).location =
+      {
+        href: 'https://zed.cafe/',
+        origin: 'https://zed.cafe',
+      }
     memorywritesessionlist([
       { topic: 'abcd1234', players: 3 },
       { topic: 'efgh5678', players: 1 },
     ])
     expect(memoryreadsessionlist()).toHaveLength(2)
     expect(memorysessionlistlines()).toEqual([
-      '!@adminjoin abcd1234;3 players $GREYabcd1234',
-      '!@adminjoin efgh5678;1 player $GREYefgh5678',
+      '!openit inline https://zed.cafe/join/#abcd1234;3 players $GREYabcd1234',
+      '!openit inline https://zed.cafe/join/#efgh5678;1 player $GREYefgh5678',
     ])
   })
 })

@@ -30,7 +30,11 @@ import {
   parsebroadcaststartpayload,
 } from 'zss/feature/broadcast/webbroadcastclient'
 import type { WebBroadcastClient } from 'zss/feature/broadcast/webbroadcastclient'
-import { withclipboard } from 'zss/feature/keyboard'
+import {
+  type ARMED_CLIPBOARD,
+  armclipboardtext,
+  withclipboard,
+} from 'zss/feature/keyboard'
 import {
   mediaqueuereadaudiogain,
   mediaqueuesetmainvolume,
@@ -78,6 +82,7 @@ import { NAME } from 'zss/words/types'
 import {
   apierror,
   apilog,
+  apitoast,
   bridgeshowjoincode,
   bridgetabopen,
   vmloader,
@@ -164,26 +169,59 @@ function isbridgeheadless() {
   )
 }
 
-function joinurlread() {
-  const isHeadless = isbridgeheadless()
-  const base = isHeadless ? 'https://zed.cafe' : location.origin
-  const joinurl = `${base}/join/#${readsubscribetopic()}`
-  // also copy joinurl
+let joinclipboard: ARMED_CLIPBOARD | undefined
+
+function buildjoinurl() {
+  const isheadless = isbridgeheadless()
+  const base = isheadless ? 'https://zed.cafe' : location.origin
+  return `${base}/join/#${readsubscribetopic()}`
+}
+
+function copyjoinurl(joinurl: string): Promise<boolean> {
+  const armed = joinclipboard
+  joinclipboard = undefined
+  if (armed) {
+    armed.settle(joinurl)
+    return armed.written.then(
+      () => true,
+      (err) => {
+        console.error(err)
+        return false
+      },
+    )
+  }
   const clipboard = withclipboard()
-  if (ispresent(clipboard)) {
-    clipboard.writeText(joinurl).catch((err) => console.error(err))
+  if (!ispresent(clipboard)) {
+    return Promise.resolve(false)
   }
-  if (isHeadless) {
-    const writenode = (
-      window as unknown as {
-        __nodeWriteJoinUrl?: (u: string) => Promise<void>
-      }
-    ).__nodeWriteJoinUrl
-    if (typeof writenode === 'function') {
-      void writenode(joinurl).catch((err) => console.error(err))
+  return clipboard.writeText(joinurl).then(
+    () => true,
+    (err) => {
+      console.error(err)
+      return false
+    },
+  )
+}
+
+function writejoinurlheadless(joinurl: string): Promise<boolean> {
+  if (!isbridgeheadless()) {
+    return Promise.resolve(false)
+  }
+  const writenode = (
+    window as unknown as {
+      __nodeWriteJoinUrl?: (u: string) => Promise<void>
     }
+  ).__nodeWriteJoinUrl
+  if (typeof writenode !== 'function') {
+    return Promise.resolve(false)
   }
-  return joinurl
+  return writenode(joinurl).then(
+    () => true,
+    (err) => {
+      console.error(err)
+      return false
+    },
+  )
 }
 
 function emitchatroster(player: string, routekey: string, force: boolean) {
@@ -360,6 +398,7 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'start':
+      joinclipboard = armclipboardtext()
       doasync(bridge, message.player, async () => {
         await netterminalhost()
         mediaqueuebootstrap()
@@ -380,7 +419,7 @@ const bridge = createdevice('bridge', [], (message) => {
       })
       break
     case 'tabopen': {
-      const joinurl = joinurlread()
+      const joinurl = buildjoinurl()
       window.open(joinurl, '_blank', 'noopener,noreferrer')
       break
     }
@@ -396,7 +435,16 @@ const bridge = createdevice('bridge', [], (message) => {
       }
       break
     case 'showjoincode': {
-      const joinurl = joinurlread()
+      const joinurl = buildjoinurl()
+      const player = message.player
+      void Promise.all([
+        copyjoinurl(joinurl),
+        writejoinurlheadless(joinurl),
+      ]).then(([copied, headlesscopied]) => {
+        if (copied || headlesscopied) {
+          apitoast(bridge, player, '$greenjoin url copied')
+        }
+      })
       if (message.data) {
         writecopyit(bridge, message.player, joinurl, `secret join url`, false)
       } else {
