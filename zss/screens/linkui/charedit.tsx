@@ -25,6 +25,8 @@ import {
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import { linkallowhotkeys, linkbegin, linkmodemaddress } from './surface'
 import type { LinkWidgetProps } from './types'
 
@@ -217,34 +219,13 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
     )
   }
 
-  if (surface.layout === 'panel') {
-    const cx = surface.context.x - 0.25
-    const cy = surface.context.y - 0.25
-    return (
-      <group
-        position={[
-          cx * RUNTIME.DRAW_CHAR_WIDTH(),
-          cy * RUNTIME.DRAW_CHAR_HEIGHT(),
-          1,
-        ]}
-      >
-        <Rect
-          visible={false}
-          width={badgetext.length + 0.5}
-          height={1.5}
-          blocking
-          onClick={invokeediting}
-        />
-        {surface.active && <UserInput OK_BUTTON={enterediting} />}
-        {allowhotkeys ? (
-          <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
-        ) : null}
-      </group>
-    )
-  }
-
   return (
     <>
+      <LinkTapTarget
+        surface={surface}
+        area={readlinktaparea(surface)}
+        ontap={enterediting}
+      />
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
       {allowhotkeys ? (
         <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>

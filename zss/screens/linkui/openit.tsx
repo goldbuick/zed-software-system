@@ -11,6 +11,8 @@ import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import { linkactionprefix, linkallowhotkeys, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
@@ -89,6 +91,11 @@ export function LinkOpenIt({ surface }: LinkWidgetProps) {
 
   return (
     <>
+      <LinkTapTarget
+        surface={surface}
+        area={readlinktaparea(surface)}
+        ontap={invoke}
+      />
       {surface.active ? <UserInput OK_BUTTON={invoke} /> : null}
       {allowhotkeys && shortcut ? (
         <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>

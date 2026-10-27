@@ -20,13 +20,11 @@ import {
 } from 'zss/feature/mediaqueue/mediaguards'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
-import { zsstextline, zsstexttape, zsszedlinkline } from 'zss/feature/zsstextui'
+import { zsstextline, zsstexttape } from 'zss/feature/zsstextui'
 import { gadgetstate } from 'zss/gadget/data/api'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
-import { memorylistcodepage } from 'zss/memory/bookoperations'
-import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
 import { memorysendtoboards } from 'zss/memory/gamesend'
 import { memoryinspectcommand } from 'zss/memory/inspection'
 import { memoryinspectbatchcommand } from 'zss/memory/inspectionbatch'
@@ -39,8 +37,7 @@ import {
   memoryreadplayerboard,
 } from 'zss/memory/playermanagement'
 import { memorymessagechip } from 'zss/memory/runtime'
-import { memoryreadbooklist, memoryreadmainbook } from 'zss/memory/session'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
+import { memoryreadmainbook } from 'zss/memory/session'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { NAME } from 'zss/words/types'
 
@@ -48,10 +45,6 @@ import { handlebookmarkscrollpanel } from './bookmarkscroll'
 import { handleeditorbookmarkscrollpanel } from './editorbookmarkscroll'
 import { handleimageimport } from './imageimport'
 import { handlezztbridge } from './zzt'
-const MAIN_MENU_BACK_HYPERLINK = zsszedlinkline(
-  'menu hk b " B " next',
-  '$ltgreyBack to main menu',
-)
 
 export function handledefault(vm: DEVICE, message: MESSAGE): void {
   const { target, path } = parsetarget(message.target.replace('chip:', ''))
@@ -97,50 +90,6 @@ export function handledefault(vm: DEVICE, message: MESSAGE): void {
         case 'adminscroll':
           memoryadminmenu(message.player, lastinputtime)
           break
-        case 'objectlistscroll': {
-          const pages = memorylistcodepage(memoryreadbooklist(), {
-            type: CODE_PAGE_TYPE.OBJECT,
-            sort: true,
-          })
-          const rows: string[] = []
-          for (let i = 0; i < pages.length; ++i) {
-            const codepage = pages[i]
-            const name = memoryreadcodepagename(codepage)
-            const codelines = codepage.code.split('\n').slice(0, 2)
-            const label = `@${name}$ltgrey ${codelines[1] ?? ''}`
-            rows.push(zsszedlinkline(`istargetless copyit ${name}`, label))
-          }
-          rows.push(MAIN_MENU_BACK_HYPERLINK)
-          scrollwritelines(
-            message.player,
-            'object list',
-            zsstexttape(rows).trim(),
-            'list',
-          )
-          break
-        }
-        case 'terrainlistscroll': {
-          const pages = memorylistcodepage(memoryreadbooklist(), {
-            type: CODE_PAGE_TYPE.TERRAIN,
-            sort: true,
-          })
-          const rows: string[] = []
-          for (let i = 0; i < pages.length; ++i) {
-            const codepage = pages[i]
-            const name = memoryreadcodepagename(codepage)
-            const codelines = codepage.code.split('\n').slice(0, 2)
-            const label = `@${name}$ltgrey ${codelines[1] ?? ''}`
-            rows.push(zsszedlinkline(`istargetless copyit ${name}`, label))
-          }
-          rows.push(MAIN_MENU_BACK_HYPERLINK)
-          scrollwritelines(
-            message.player,
-            'terrain list',
-            zsstexttape(rows).trim(),
-            'list',
-          )
-          break
-        }
         default: {
           doasync(vm, message.player, async () => {
             scrollwritelines(

@@ -25,11 +25,8 @@ export function TouchUI({ width, height, mode }: TouchUIProps) {
     ...store.getState(),
   }
 
-  // bail on odd game-frame states (action chrome may be shorter)
-  if (
-    mode !== 'landscape-actions' &&
-    (screensize.cols < 10 || screensize.rows < 10)
-  ) {
+  // bail on odd game-frame states
+  if (screensize.cols < 10 || screensize.rows < 10) {
     return null
   }
 

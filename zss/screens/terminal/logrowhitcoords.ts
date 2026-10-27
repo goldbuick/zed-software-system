@@ -1,3 +1,12 @@
+/** Inverse of `tapeycursor = edgebottom - ycursor + scroll` for draw row `rowy`. */
+export function terminalycursorforrowy(
+  edgebottom: number,
+  scroll: number,
+  rowy: number,
+): number {
+  return edgebottom + scroll - rowy
+}
+
 /** Pure cursor hit-test: sticky pins paint on top, then scrolled session rows. */
 export function findterminalrowindexfromcoords(args: {
   tapeycursor: number

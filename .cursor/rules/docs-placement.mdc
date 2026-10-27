@@ -24,7 +24,7 @@ Keep manuals next to code under `zss/**/docs/`. Blume ingests them via symlinks 
 
 ## Commands reference
 
-Canonical web list: [`zss/firmware/docs/commands.md`](../../zss/firmware/docs/commands.md) (mounted at `/docs/firmware/commands`). [`ops/docs/commands-summary.md`](../../ops/docs/commands-summary.md) is a short pointer only. ROM scrolls remain the in-game copy (no auto-sync required).
+Canonical web list: [`zss/firmware/docs/commands/`](../../zss/firmware/docs/commands/index.md) (mounted at `/docs/firmware/commands`; per-driver pages `cli`, `runtime`, `loader`). [`ops/docs/commands-summary.md`](../../ops/docs/commands-summary.md) is a short pointer only. ROM scrolls remain the in-game copy (no auto-sync required).
 
 ## Authoring / build
 

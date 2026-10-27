@@ -193,7 +193,7 @@ describe('scrollwritelines zed body', () => {
 
   it('refscroll menu: !command;label lines become hyperlink rows', () => {
     const body = `!helpmenu hk 1 " 1 " next;controls and $greenstart here
-!objectlistscroll hk 2 " 2 " next;list objects`
+!adminscroll hk 4 " 4 " next;cpu #admin`
     scrollwritelines('p1', 'menu', body, 'refscroll')
     const s = gadgetstate('p1')
     expect(s.scroll).toHaveLength(2)
@@ -202,7 +202,7 @@ describe('scrollwritelines zed body', () => {
     expect(r0[2]).toBe('helpmenu')
     expect(r0[3]).toBe('hk')
     const r1 = s.scroll![1] as unknown[]
-    expect(r1[2]).toBe('objectlistscroll')
+    expect(r1[2]).toBe('adminscroll')
   })
 
   it('refscroll menu: quoted arg keeps spaces', () => {

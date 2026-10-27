@@ -6,7 +6,6 @@ import { PanelComponent } from 'zss/screens/panel/component'
 import { ScreenUIFramed } from 'zss/screens/screenui/framed'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
-import { useShallow } from 'zustand/react/shallow'
 
 import { RECT, RECT_TYPE, useScreenUILayoutContext } from './layoutstate'
 
@@ -45,18 +44,11 @@ function PortraitSidebarPanel({ rect }: { rect: RECT }) {
 }
 
 function LayoutRect({ rect }: LayoutRectProps) {
-  const { islandscape, showtouchcontrols } = useDeviceData(
-    useShallow((state) => ({
-      islandscape: state.islandscape,
-      showtouchcontrols: state.showtouchcontrols,
-    })),
-  )
+  const showtouchcontrols = useDeviceData((state) => state.showtouchcontrols)
 
   switch (rect.type) {
     case RECT_TYPE.PANEL: {
-      const portraittouchsidebar =
-        rect.name === 'sidebar' && showtouchcontrols && !islandscape
-      if (portraittouchsidebar) {
+      if (rect.name === 'sidebar' && showtouchcontrols) {
         return <PortraitSidebarPanel rect={rect} />
       }
       return (

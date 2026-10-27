@@ -6,7 +6,6 @@ import { useDeviceData } from 'zss/gadget/device'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
 import {
-  LANDSCAPE_TOUCH_RAIL_COLS,
   PORTRAIT_SIDEBAR_OVERLAY_ROWS,
   TOUCH_SIDEBAR_COLS,
 } from 'zss/screens/touchui/layout'
@@ -52,15 +51,13 @@ export function useScreenChromeLayout(
   sethasscroll: (v: boolean) => void,
 ): ScreenChromeLayout | null {
   const screensize = useScreenSize()
-  const { islandscape, sidebaropen, sidebarclosing, showtouchcontrols } =
-    useDeviceData(
-      useShallow((state) => ({
-        islandscape: state.islandscape,
-        sidebaropen: state.sidebaropen,
-        sidebarclosing: state.sidebarclosing,
-        showtouchcontrols: state.showtouchcontrols,
-      })),
-    )
+  const { sidebaropen, sidebarclosing, showtouchcontrols } = useDeviceData(
+    useShallow((state) => ({
+      sidebaropen: state.sidebaropen,
+      sidebarclosing: state.sidebarclosing,
+      showtouchcontrols: state.showtouchcontrols,
+    })),
+  )
 
   const scroll = useGadgetClient(useEqual((state) => state.gadget.scroll ?? []))
   const isscrollempty = scroll.length === 0
@@ -103,19 +100,6 @@ export function useScreenChromeLayout(
           text: sidebar,
         }
         frame.width -= SIDEBAR_SIZE
-        rects.push(rect)
-      } else if (islandscape) {
-        // Far right of screen: after game + shoot rail (userscreen reserved column).
-        // Screensize is game-only; place sidebar past the right rail gap.
-        const rect = {
-          name: 'sidebar',
-          type: RECT_TYPE.PANEL,
-          x: frame.width + LANDSCAPE_TOUCH_RAIL_COLS,
-          y: frame.y,
-          width: SIDEBAR_SIZE,
-          height: frame.height,
-          text: sidebar,
-        }
         rects.push(rect)
       } else if (sidebaropen || sidebarclosing) {
         // Portrait: reserved band when open; overlay bottom of expanded game when closing.
@@ -160,7 +144,6 @@ export function useScreenChromeLayout(
     }
   }, [
     hasscroll,
-    islandscape,
     isscrollempty,
     screensize,
     scroll,

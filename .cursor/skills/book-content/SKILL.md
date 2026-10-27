@@ -80,7 +80,7 @@ Templates: [`ops/fixtures/content/templates/minimal`](../../../ops/fixtures/cont
 ## ZSS inside `code`
 
 - Page types: `@board name`, `@object name`, `@terrain name`, `@charset`, `@palette`
-- Commands and stats: [`zss/firmware/docs/commands.md`](../../../zss/firmware/docs/commands.md), [`zss/rom/editor/stats/`](../../../zss/rom/editor/stats/)
+- Commands and stats: [`zss/firmware/docs/commands/`](../../../zss/firmware/docs/commands/index.md), [`zss/rom/editor/stats/`](../../../zss/rom/editor/stats/)
 - `#play` / `#bgplay` strings: use the [play-notation](../play-notation/SKILL.md) skill
 
 ## Import formats

@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { parsezedlinkline } from 'zss/feature/zedlinkparse'
-import { useTape } from 'zss/gadget/data/zustandstores'
+import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
@@ -13,6 +13,7 @@ import {
   TapeTerminalItemProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
+import { terminalycursorforrowy } from 'zss/screens/terminal/logrowhitcoords'
 import {
   hascenter,
   textformatreadedges,
@@ -74,6 +75,12 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
     context,
     sendmessage: cc.sendmessage,
     sendclose: () => {},
+    setcursor: () => {
+      const { scroll } = useTerminal.getState()
+      useTerminal.setState({
+        ycursor: terminalycursorforrowy(edge.bottom, scroll, y),
+      })
+    },
   }
 
   return <LinkRouter linktype={linktype} surface={surface} />

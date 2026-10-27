@@ -11,6 +11,8 @@ import {
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import {
   linkbegin,
   linkmodemaddress,
@@ -84,5 +86,10 @@ export function LinkDir({ surface }: LinkWidgetProps) {
     modemwritevaluestring(address, DIR_CHOICES[next])
   }, [stateindex, address])
 
-  return surface.active ? <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} /> : null
+  return (
+    <>
+      <LinkTapTarget surface={surface} area={readlinktaparea(surface)} />
+      {surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}
+    </>
+  )
 }

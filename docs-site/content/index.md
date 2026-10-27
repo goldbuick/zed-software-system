@@ -19,7 +19,7 @@ See [Guides](/guides) for the vocabulary the guides use.
 
 ## Look things up
 
-- [Firmware commands](/firmware/commands) -- every `#command` in one list
+- [Firmware commands](/firmware/commands) -- every `#command`, with searchable [CLI](/firmware/commands/cli), [runtime](/firmware/commands/runtime), and [loader](/firmware/commands/loader) pages
 - [Features](/features) -- what the engine can do, grouped by area
 - [Glossary](/glossary) -- shared vocabulary
 - [Synth](/synth) -- music, sound effects, and the voice and effect chain

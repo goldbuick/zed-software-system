@@ -14,9 +14,6 @@ import { handlestickdirsmerged } from './stickinputs'
 
 type Manager = ReturnType<typeof nipplejs.create>
 
-/** Landscape stick vertical center (below midline for thumb reach). */
-const LANDSCAPE_PAD_TOP = '68%'
-
 type PadLayout = {
   movezone: TOUCHPAD_ZONE
   shootzone: TOUCHPAD_ZONE
@@ -45,55 +42,22 @@ function basesizefor(zone: TOUCHPAD_ZONE) {
   return Math.max(24, Math.floor(Math.min(zone.width, zone.height) * 0.7))
 }
 
-function buildpadlayout(pads: TOUCHPADS, islandscape: boolean): PadLayout {
-  const movebase = basesizefor(pads.move)
-  const shootbase = basesizefor(pads.shoot)
-  if (!islandscape) {
-    return {
-      movezone: pads.move,
-      shootzone: pads.shoot,
-      movesize: movebase,
-      shootsize: shootbase,
-      moveposition: { left: '50%', top: '50%' },
-      shootposition: { left: '50%', top: '50%' },
-    }
-  }
-  const movesize = movebase * 2
-  const shootsize = shootbase * 2
-  const moveradius = movesize * 0.5
-  const shootradius = shootsize * 0.5
+function buildpadlayout(pads: TOUCHPADS): PadLayout {
   return {
-    movezone: {
-      left: pads.move.left,
-      top: pads.move.top,
-      width: pads.move.width + moveradius,
-      height: pads.move.height,
-    },
-    shootzone: {
-      left: pads.shoot.left - shootradius,
-      top: pads.shoot.top,
-      width: pads.shoot.width + shootradius,
-      height: pads.shoot.height,
-    },
-    movesize,
-    shootsize,
-    moveposition: {
-      left: `${pads.move.width}px`,
-      top: LANDSCAPE_PAD_TOP,
-    },
-    shootposition: {
-      left: `${shootradius}px`,
-      top: LANDSCAPE_PAD_TOP,
-    },
+    movezone: pads.move,
+    shootzone: pads.shoot,
+    movesize: basesizefor(pads.move),
+    shootsize: basesizefor(pads.shoot),
+    moveposition: { left: '50%', top: '50%' },
+    shootposition: { left: '50%', top: '50%' },
   }
 }
 
-function layoutkey(layout: PadLayout | null, islandscape: boolean) {
+function layoutkey(layout: PadLayout | null) {
   if (!layout) {
     return ''
   }
   return [
-    islandscape ? 'L' : 'P',
     zonekey(layout.movezone),
     zonekey(layout.shootzone),
     layout.movesize,
@@ -127,11 +91,10 @@ function createmanager(
  */
 export function TouchPadOverlay() {
   const inputblocked = useGadgetInputBlocked()
-  const { showtouchcontrols, touchpads, islandscape } = useDeviceData(
+  const { showtouchcontrols, touchpads } = useDeviceData(
     useShallow((state) => ({
       showtouchcontrols: state.showtouchcontrols,
       touchpads: state.touchpads,
-      islandscape: state.islandscape,
     })),
   )
 
@@ -139,8 +102,8 @@ export function TouchPadOverlay() {
     if (!touchpads) {
       return null
     }
-    return buildpadlayout(touchpads, islandscape)
-  }, [touchpads, islandscape])
+    return buildpadlayout(touchpads)
+  }, [touchpads])
 
   const moveref = useRef<HTMLDivElement>(null)
   const shootref = useRef<HTMLDivElement>(null)
@@ -149,7 +112,7 @@ export function TouchPadOverlay() {
   const leftactive = useRef(false)
   const rightactive = useRef(false)
 
-  const padlayout = layoutkey(layout, islandscape)
+  const padlayout = layoutkey(layout)
 
   useEffect(() => {
     const moveel = moveref.current

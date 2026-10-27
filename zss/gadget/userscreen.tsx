@@ -13,12 +13,8 @@ import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { TouchUI } from 'zss/screens/touchui/component'
 import {
-  ACTION_ROW_WIDTH,
-  LANDSCAPE_TOUCH_RAIL_COLS,
   PORTRAIT_DOCK_STICK_TOP,
-  PORTRAIT_SIDEBAR_OVERLAY_ROWS,
-  PORTRAIT_TOUCH_DOCK_ROWS,
-  TOUCH_SIDEBAR_COLS,
+  readtouchscreenlayout,
 } from 'zss/screens/touchui/layout'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -50,21 +46,15 @@ export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
   const inputblocked = useGadgetInputBlocked()
-  const {
-    saferows,
-    islandscape,
-    showtouchcontrols,
-    sidebaropen,
-    textcapturefocused,
-  } = useDeviceData(
-    useShallow((state) => ({
-      saferows: state.saferows,
-      islandscape: state.islandscape,
-      showtouchcontrols: state.showtouchcontrols,
-      sidebaropen: state.sidebaropen,
-      textcapturefocused: state.textcapturefocused,
-    })),
-  )
+  const { saferows, showtouchcontrols, sidebaropen, textcapturefocused } =
+    useDeviceData(
+      useShallow((state) => ({
+        saferows: state.saferows,
+        showtouchcontrols: state.showtouchcontrols,
+        sidebaropen: state.sidebaropen,
+        textcapturefocused: state.textcapturefocused,
+      })),
+    )
   const hassidebar = useGadgetClient(
     (state) => (state.gadget.sidebar?.length ?? 0) > 0,
   )
@@ -79,73 +69,25 @@ export function UserScreen({ children }: UserScreenProps) {
   // Focus only: saferows < totalrows is often true from Safari chrome alone.
   const keyboardopen = textcapturefocused
 
-  let cols = totalcols
-  let rows = totalrows
-  let insetx = 0
-  const insety = 0
-  let leftrailcols = 0
-  let rightrailcols = 0
-  let dockcols = 0
-  let dockrows = 0
-  let rightrailx = 0
-  let docky = 0
-  let actionx = 0
-  let siderows = 0
-  let gamerows = totalrows
-
-  if (showtouchcontrols) {
-    if (islandscape) {
-      // Rails stay up while typing; canvas stays full height (keyboard overlays).
-      const sidecols = hassidebar ? TOUCH_SIDEBAR_COLS : 0
-      leftrailcols = LANDSCAPE_TOUCH_RAIL_COLS
-      rightrailcols = LANDSCAPE_TOUCH_RAIL_COLS
-      cols = totalcols - leftrailcols - rightrailcols - sidecols
-      insetx = leftrailcols * cw
-      rightrailx = (leftrailcols + cols) * cw
-      actionx = leftrailcols * cw
-      rows = totalrows
-    } else {
-      dockcols = totalcols
-      siderows = sidebaropen && hassidebar ? PORTRAIT_SIDEBAR_OVERLAY_ROWS : 0
-      // One row above the dock for the sidebar label; keep terminal out of it.
-      const togglerows = hassidebar && !keyboardopen ? 1 : 0
-      if (keyboardopen) {
-        // Full saferows for game; dock unmounted while typing.
-        dockrows = 0
-        gamerows = Math.max(10, saferows - siderows)
-        docky = 0
-      } else {
-        dockrows = PORTRAIT_TOUCH_DOCK_ROWS
-        gamerows = totalrows - dockrows - siderows - togglerows
-        docky = (gamerows + siderows + togglerows) * ch
-      }
-      rows = gamerows
-    }
-  }
+  const cols = totalcols
+  const { rows, dockcols, dockrows, dockrow } = readtouchscreenlayout({
+    totalcols,
+    totalrows,
+    saferows,
+    showtouchcontrols,
+    hassidebar,
+    sidebaropen,
+    keyboardopen,
+  })
+  const docky = dockrow * ch
 
   const marginx = marginxfor(viewwidth, totalcols, cw)
   const marginy = marginyfor(viewheight, totalrows, ch)
 
   const touchpads = useMemo((): TOUCHPADS | null => {
-    // Portrait typing: hide pads with the dock. Landscape keeps rail pads.
-    if (!showtouchcontrols || (keyboardopen && !islandscape)) {
+    // Typing: hide pads with the dock.
+    if (!showtouchcontrols || keyboardopen) {
       return null
-    }
-    if (islandscape) {
-      return {
-        move: {
-          left: marginx,
-          top: marginy,
-          width: leftrailcols * cw,
-          height: totalrows * ch,
-        },
-        shoot: {
-          left: marginx + rightrailx,
-          top: marginy,
-          width: rightrailcols * cw,
-          height: totalrows * ch,
-        },
-      }
     }
     const sticktop = PORTRAIT_DOCK_STICK_TOP
     const stickrows = dockrows - sticktop
@@ -168,15 +110,10 @@ export function UserScreen({ children }: UserScreenProps) {
   }, [
     showtouchcontrols,
     keyboardopen,
-    islandscape,
     marginx,
     marginy,
-    leftrailcols,
-    rightrailcols,
-    rightrailx,
     cw,
     ch,
-    totalrows,
     dockcols,
     dockrows,
     docky,
@@ -185,11 +122,11 @@ export function UserScreen({ children }: UserScreenProps) {
   useEffect(() => {
     useDeviceData.setState((state) => ({
       ...state,
-      insetcols: dockcols || leftrailcols || 1,
+      insetcols: dockcols || 1,
       insetrows: dockrows || totalrows || 1,
       touchpads,
     }))
-  }, [dockcols, dockrows, leftrailcols, totalrows, touchpads])
+  }, [dockcols, dockrows, totalrows, touchpads])
 
   const screensize = useMemo(
     () => ({ cols, rows, marginx, marginy, viewwidth, viewheight }),
@@ -207,60 +144,29 @@ export function UserScreen({ children }: UserScreenProps) {
               0,
             ]}
           >
-            <group position={[insetx, insety, 0]}>{children}</group>
-            {showtouchcontrols && !inputblocked && islandscape && (
+            {children}
+            {showtouchcontrols && !inputblocked && !keyboardopen && (
               <>
-                <group position={[0, 0, 3]}>
+                {hassidebar && (
+                  <group position={[0, docky - ch, 4]}>
+                    <TouchUI
+                      key={`sidebartoggle-${dockcols}`}
+                      mode="portrait-sidebartoggle"
+                      width={dockcols}
+                      height={1}
+                    />
+                  </group>
+                )}
+                <group position={[0, docky, 3]}>
                   <TouchUI
-                    key={`left-${leftrailcols}-${totalrows}`}
-                    mode="landscape-rail-left"
-                    width={leftrailcols}
-                    height={totalrows}
-                  />
-                </group>
-                <group position={[rightrailx, 0, 3]}>
-                  <TouchUI
-                    key={`right-${rightrailcols}-${totalrows}`}
-                    mode="landscape-rail-right"
-                    width={rightrailcols}
-                    height={totalrows}
-                  />
-                </group>
-                <group position={[actionx, 0, 4]}>
-                  <TouchUI
-                    key={`actions-${cols}`}
-                    mode="landscape-actions"
-                    width={Math.max(ACTION_ROW_WIDTH, cols)}
-                    height={3}
+                    key={`dock-${dockcols}-${dockrows}-${docky}`}
+                    mode="portrait-dock"
+                    width={dockcols}
+                    height={dockrows}
                   />
                 </group>
               </>
             )}
-            {showtouchcontrols &&
-              !inputblocked &&
-              !islandscape &&
-              !keyboardopen && (
-                <>
-                  {hassidebar && (
-                    <group position={[0, docky - ch, 4]}>
-                      <TouchUI
-                        key={`sidebartoggle-${dockcols}`}
-                        mode="portrait-sidebartoggle"
-                        width={dockcols}
-                        height={1}
-                      />
-                    </group>
-                  )}
-                  <group position={[0, docky, 3]}>
-                    <TouchUI
-                      key={`dock-${dockcols}-${dockrows}-${docky}`}
-                      mode="portrait-dock"
-                      width={dockcols}
-                      height={dockrows}
-                    />
-                  </group>
-                </>
-              )}
           </group>
         </group>
       )}
