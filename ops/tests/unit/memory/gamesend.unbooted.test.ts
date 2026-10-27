@@ -2,7 +2,6 @@ import { compilescript } from 'zss/feature/lang/langcompileclient'
 import { cleartickreadcontextall } from 'zss/firmware/runtime'
 import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memoryensureboardready } from 'zss/memory/boardlookup'
-import { memoryreadelementkindcode } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -57,7 +56,7 @@ describe('send before first tick', () => {
       'touch',
     )
     expect(bomb.p1).not.toBe(7)
-    const kindcode = `${memoryreadelementkindcode(bomb)}\n${bomb.code ?? ''}`
+    const kindcode = `${bomb.kinddata?.code ?? ''}\n${bomb.code ?? ''}`
     memorytickobject(book, board, bomb, kindcode)
     expect(bomb.p1).toBe(7)
   })

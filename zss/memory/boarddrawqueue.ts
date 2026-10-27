@@ -32,13 +32,12 @@ export function memoryelementdrawreadid(element: BOARD_ELEMENT) {
 export function memoryqueuedrawdisplay(
   board: MAYBE<BOARD>,
   element: MAYBE<BOARD_ELEMENT>,
-  kindcode = '',
 ) {
   if (!ispresent(board) || !ispresent(element)) {
     return
   }
-  // `kindcode` is the page program from memoryreadelementkindcode.
-  const code = `${kindcode}\n${element.code ?? ''}`
+  // Caller must have resolved kinddata (memoryreadelementkind) before queue.
+  const code = `${element.kinddata?.code ?? ''}\n${element.code ?? ''}`
   if (!code || !memorycodehasdrawdisplay(code)) {
     return
   }

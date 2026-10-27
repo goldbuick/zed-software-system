@@ -324,13 +324,6 @@ export type MEMORY_CODEPAGE_IO_OPTIONS = {
   strip?: boolean
 }
 
-function memoryexporttypeelement(
-  element: MAYBE<BOARD_ELEMENT>,
-  format: 'wire' | 'json',
-) {
-  return memoryexportboardelement(element, { format, omitcode: true })
-}
-
 export function memoryexportcodepage(
   codepage: MAYBE<CODE_PAGE>,
   options?: MEMORY_CODEPAGE_IO_OPTIONS,
@@ -345,20 +338,19 @@ export function memoryexportcodepage(
       id: codepage.id,
       code: codepage.code,
       board: memoryexportboard(codepage.board, { format: 'json', strip }),
-      object: memoryexporttypeelement(codepage.object, 'json'),
-      terrain: memoryexporttypeelement(codepage.terrain, 'json'),
+      object: memoryexportboardelement(codepage.object, { format: 'json' }),
+      terrain: memoryexportboardelement(codepage.terrain, { format: 'json' }),
       charset: memoryexportbitmap(codepage.charset),
       palette: memoryexportbitmap(codepage.palette),
     }
   }
   return formatobject(codepage, CODE_PAGE_KEYS, {
     board: (board) => memoryexportboard(board, { strip }),
-    object: (element) => memoryexporttypeelement(element, 'wire'),
-    terrain: (element) => memoryexporttypeelement(element, 'wire'),
+    object: memoryexportboardelement,
+    terrain: memoryexportboardelement,
     charset: memoryexportbitmap,
     palette: memoryexportbitmap,
     stats: FORMAT_SKIP,
-    kindbuilt: FORMAT_SKIP,
   })
 }
 
@@ -370,12 +362,6 @@ type CODE_PAGE_WIRE = {
   terrain?: BOARD_ELEMENT
   charset?: BITMAP
   palette?: BITMAP
-}
-
-function memorystriptypeelementcode(element: MAYBE<BOARD_ELEMENT>) {
-  if (ispresent(element)) {
-    delete element.code
-  }
 }
 
 function memorynormalizeimportedcodepage(flat: any): MAYBE<CODE_PAGE> {
@@ -390,8 +376,6 @@ function memorynormalizeimportedcodepage(flat: any): MAYBE<CODE_PAGE> {
       board.objects = {}
     }
   }
-  memorystriptypeelementcode(page.object)
-  memorystriptypeelementcode(page.terrain)
   return {
     id: page.id,
     code: page.code,
@@ -437,25 +421,6 @@ export function memoryfreecodepage(codepage: MAYBE<CODE_PAGE>) {
   codepage.terrain = undefined
   codepage.charset = undefined
   codepage.palette = undefined
-}
-
-function memoryfillcodepagetypeelement(
-  codepage: CODE_PAGE,
-  slot: 'object' | 'terrain',
-  category: CATEGORY,
-): BOARD_ELEMENT {
-  let element = codepage[slot]
-  if (!ispresent(element)) {
-    element = memorycreateboardelement()
-    codepage[slot] = element
-  }
-  element.id = codepage.id
-  delete element.code
-  element.name = memoryreadcodepagename(codepage)
-  element.category = category
-  memoryapplyelementstats(memoryreadcodepagestatdefaults(codepage), element)
-  codepage.kindbuilt = codepage.stats
-  return element
 }
 
 export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
@@ -553,18 +518,32 @@ export function memoryreadcodepagedata<T extends CODE_PAGE_TYPE>(
       return codepage.board as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.OBJECT: {
-      return memoryfillcodepagetypeelement(
-        codepage,
-        'object',
-        CATEGORY.ISOBJECT,
-      ) as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      if (!ispresent(codepage.object)) {
+        codepage.object = memorycreateboardelement()
+      }
+      codepage.object.id = codepage.id
+      codepage.object.code = codepage.code
+      codepage.object.name = memoryreadcodepagename(codepage)
+      codepage.object.category = CATEGORY.ISOBJECT
+      memoryapplyelementstats(
+        memoryreadcodepagestatdefaults(codepage),
+        codepage.object,
+      )
+      return codepage.object as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.TERRAIN: {
-      return memoryfillcodepagetypeelement(
-        codepage,
-        'terrain',
-        CATEGORY.ISTERRAIN,
-      ) as MAYBE<CODE_PAGE_TYPE_MAP[T]>
+      if (!ispresent(codepage.terrain)) {
+        codepage.terrain = memorycreateboardelement()
+      }
+      codepage.terrain.id = codepage.id
+      codepage.terrain.code = codepage.code
+      codepage.terrain.name = memoryreadcodepagename(codepage)
+      codepage.terrain.category = CATEGORY.ISTERRAIN
+      memoryapplyelementstats(
+        memoryreadcodepagestatdefaults(codepage),
+        codepage.terrain,
+      )
+      return codepage.terrain as MAYBE<CODE_PAGE_TYPE_MAP[T]>
     }
     case CODE_PAGE_TYPE.PALETTE: {
       if (!ispresent(codepage.palette)) {

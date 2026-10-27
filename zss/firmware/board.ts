@@ -32,7 +32,6 @@ import {
 import {
   memoryreadboardbyevaldir,
   memoryreadelementkind,
-  memoryreadelementkindcode,
   memoryreadelementstat,
   memorywritebullet,
   memorywriteelementfromkind,
@@ -170,7 +169,8 @@ function commandshoot(chip: CHIP, words: WORD[], arg?: WORD): 0 | 1 {
     // things shot always have the clear bg
     bullet.bg = COLOR.ONCLEAR
     // object code
-    const code = memoryreadelementkindcode(bullet)
+    const kind = memoryreadelementkind(bullet)
+    const code = bullet.code ?? kind?.code ?? ''
     // bullets get one immediate tick
     memorytickobject(READ_CONTEXT.book, board, bullet, code)
   }

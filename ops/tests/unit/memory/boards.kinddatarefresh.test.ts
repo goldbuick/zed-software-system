@@ -12,7 +12,6 @@ import { memorymoveboardobject } from 'zss/memory/boardmovement'
 import {
   memoryclearelementkinddata,
   memoryreadelementkind,
-  memoryreadelementkindcode,
 } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import {
@@ -48,15 +47,13 @@ describe('memoryreadelementkind kinddata refresh', () => {
     object!.category = CATEGORY.ISOBJECT
 
     const stub = memoryreadelementkind(object)
-    expect(stub?.code).toBeUndefined()
-    expect(memoryreadelementkindcode(object)).toBe('@widget\n')
+    expect(stub?.code).toBe('@widget\n')
 
     page.code = ['@widget', '@char 42', '@color 3', ''].join('\n')
     memoryresetcodepagestats(page)
 
     const refreshed = memoryreadelementkind(object)
-    expect(refreshed?.code).toBeUndefined()
-    expect(memoryreadelementkindcode(object)).toContain('@char 42')
+    expect(refreshed?.code).toContain('@char 42')
     expect(refreshed?.char).toBe(42)
     expect(refreshed?.color).toBe(3)
   })

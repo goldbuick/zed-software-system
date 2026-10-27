@@ -25,11 +25,7 @@ import {
   memorydeleteboardterrainnamed,
   memorywriteboardnamed,
 } from './boardlookup'
-import {
-  memoryreadelementkind,
-  memoryreadelementkindcode,
-  memoryreadelementstat,
-} from './boards'
+import { memoryreadelementkind, memoryreadelementstat } from './boards'
 import { memoryexportterrainelement } from './boardterrainmap'
 import { memoryreadelementdisplay } from './bookoperations'
 import {
@@ -228,7 +224,7 @@ export function memorycreateboardobject(
   memoryreadelementkind(object)
   memorywriteboardnamed(board, object)
   const created = board.objects[object.id]
-  memoryqueuedrawdisplay(board, created, memoryreadelementkindcode(created))
+  memoryqueuedrawdisplay(board, created)
   return created
 }
 
@@ -403,7 +399,7 @@ export function memorywriteterrain(
     memorywriteboardnamed(board, terrain, index)
   }
   const created = board.terrain[index]
-  memoryqueuedrawdisplay(board, created, memoryreadelementkindcode(created))
+  memoryqueuedrawdisplay(board, created)
   return created
 }
 

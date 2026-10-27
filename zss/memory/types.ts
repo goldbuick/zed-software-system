@@ -302,8 +302,6 @@ export type CODE_PAGE = {
   id: string
   code: string
   stats?: CODE_PAGE_STATS
-  /** Runtime stamp: `stats` object last applied onto object/terrain. Not persisted. */
-  kindbuilt?: CODE_PAGE_STATS
   board?: BOARD
   object?: BOARD_ELEMENT
   terrain?: BOARD_ELEMENT

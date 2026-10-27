@@ -39,9 +39,7 @@ title: types.ts
 | BOARD | terrain, objects, exits, over/under, plus runtime-only `named`, `distmaps`, draw*, mediaqueue* |
 | BOARD_ELEMENT | kind, id, x, y, char, color, code, collision, plus runtime-only `category`, `kinddata`, `kindsource*`, `pushedtick` |
 | BOOK | id, name, pages, `flags: Record<string, BOOK_FLAGS>` (inline bags), activelist |
-| CODE_PAGE | id, code, optional inline `board` / `object` / `terrain` / `charset` / `palette`, stats, runtime `kindbuilt` |
+| CODE_PAGE | id, code, optional inline `board` / `object` / `terrain` / `charset` / `palette`, stats |
 | BOOK_FLAGS | `Record<string, WORD>` — one owner's flag bag |
-
-Object and terrain page elements do not store `code`; the page `code` is the program. Board instance `code` remains.
 
 First-line `@` rule: `@{type}` alone names an object; `@{type} <name>` declares that codepage type (including `txt`).

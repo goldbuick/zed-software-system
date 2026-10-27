@@ -37,8 +37,6 @@ export function memoryapplyboardelementcolor(
 
 export type MEMORY_BOARDELEMENT_IO_OPTIONS = {
   format?: 'wire' | 'json'
-  /** Object/terrain codepage elements: page `code` is the stored program. */
-  omitcode?: boolean
 }
 
 export function memoryexportboardelement(
@@ -51,7 +49,7 @@ export function memoryexportboardelement(
       return undefined
     }
     if (ispresent(boardelement.id)) {
-      const exported = {
+      return {
         kind: boardelement.kind,
         id: boardelement.id,
         x: boardelement.x,
@@ -107,10 +105,6 @@ export function memoryexportboardelement(
         arg: boardelement.arg,
         removed: boardelement.removed,
       }
-      if (options?.omitcode) {
-        delete exported.code
-      }
-      return exported
     }
     return {
       kind: boardelement.kind,
@@ -134,7 +128,6 @@ export function memoryexportboardelement(
       ...BOARD_ELEMENT_RUNTIME_SKIP,
       lx: FORMAT_SKIP,
       ly: FORMAT_SKIP,
-      ...(options?.omitcode ? { code: FORMAT_SKIP } : {}),
       stopped: FORMAT_SKIP,
       bucket: FORMAT_SKIP,
     })

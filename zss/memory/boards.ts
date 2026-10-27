@@ -44,30 +44,16 @@ import {
   CODE_PAGE,
   CODE_PAGE_TYPE,
 } from './types'
-
-/** Page found while resolving kind, so kind-code reads do not scan again. */
-let kindpagescan: { element: BOARD_ELEMENT; page: MAYBE<CODE_PAGE> } | undefined
-
-function memorylookupkindpage(element: BOARD_ELEMENT): MAYBE<CODE_PAGE> {
-  const pageid = element.kindsourcepageid
-  if (!isstring(pageid) || !pageid) {
-    kindpagescan = { element, page: undefined }
-    return undefined
-  }
-  const page = memoryreadcodepage(memoryreadbooklist(), pageid)
-  kindpagescan = { element, page }
-  return page
-}
-
 function memorykinddataisfresh(
   element: BOARD_ELEMENT,
   cached: BOARD_ELEMENT,
 ): boolean {
-  const page = memorylookupkindpage(element)
-  if (!ispresent(page?.stats) || page.kindbuilt !== page.stats) {
+  const pageid = element.kindsourcepageid
+  if (!isstring(pageid) || !pageid) {
     return false
   }
-  return cached === page.object || cached === page.terrain
+  const page = memoryreadcodepage(memoryreadbooklist(), pageid)
+  return ispresent(page) && cached.code === page.code
 }
 
 function memoryapplykinddatafrompage(
@@ -86,7 +72,6 @@ function memoryapplykinddatafrompage(
   element.kinddata = kinddata
   element.kindsourcepageid = page.id
   element.kindsourcekind = NAME(kind)
-  kindpagescan = { element, page }
   return kinddata
 }
 
@@ -149,20 +134,6 @@ export function memoryreadelementkind(
   }
   // No codepage yet (make-it stub / unit fixtures): keep existing kinddata.
   return element.kinddata
-}
-
-/** Kind program from the codepage. Instance `element.code` is separate. */
-export function memoryreadelementkindcode(
-  element: MAYBE<BOARD_ELEMENT>,
-): string {
-  if (!ispresent(element)) {
-    return ''
-  }
-  memoryreadelementkind(element)
-  if (kindpagescan?.element === element) {
-    return kindpagescan.page?.code ?? ''
-  }
-  return memorylookupkindpage(element)?.code ?? ''
 }
 
 export function memoryreadelementstat(
