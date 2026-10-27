@@ -100,6 +100,7 @@ export function buildmemoryfscodepagefiles(
   const pagejson = memoryexportcodepage(page, {
     format: 'json',
     strip: true,
+    omittypecode: true,
   }) as MAYBE<Record<string, unknown>>
   if (pagejson === undefined) {
     return []
