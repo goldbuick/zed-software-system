@@ -10,7 +10,7 @@ import {
   memorycodehasdrawdisplay,
   memoryelementdrawreadid,
 } from './boarddrawqueue'
-import { memoryreadelementkind, memoryreadelementstat } from './boards'
+import { memoryreadelementkindcode, memoryreadelementstat } from './boards'
 import { BOARD, BOARD_ELEMENT, BOARD_HEIGHT, BOARD_WIDTH } from './types'
 
 function isactiveobject(object: BOARD_ELEMENT, timestamp: number) {
@@ -23,8 +23,7 @@ function isactiveobject(object: BOARD_ELEMENT, timestamp: number) {
 }
 
 function elementdrawcode(element: BOARD_ELEMENT) {
-  const kind = memoryreadelementkind(element)
-  return `${kind?.code ?? ''}\n${element.code ?? ''}`
+  return `${memoryreadelementkindcode(element)}\n${element.code ?? ''}`
 }
 
 function memoryelementdrawfingerprint(element: BOARD_ELEMENT) {

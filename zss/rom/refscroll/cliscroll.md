@@ -12,7 +12,7 @@ $ltgray$ondkblue$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205$205
 !openit inline https://bytes.zed.cafe/CPvUq6xq;FUN facts
 !openit inline https://bytes.zed.cafe/gPyVmz5u;TTS All at Once
 !openit inline https://bytes.zed.cafe/FaUkmz2p;TTS Nicely Queue'd
-!openit inline https://bytes.zed.cafe/DQffpxba;Simple Chat
+!openit inline https://bytes.zed.cafe/MqlBjjlp;Simple Chat
 !openit inline https://bytes.zed.cafe/ndXDag2e;ZED ZAP
 !openit inline https://bytes.zed.cafe/xJbE82rz;ZED BOAT
 !openit inline https://bytes.zed.cafe/zmHFabqb;ZZT Tool Kit

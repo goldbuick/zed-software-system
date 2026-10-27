@@ -49,6 +49,7 @@ describe('jsonpipe memoryrootshouldemitpath runtime skip', () => {
     expect(
       memoryrootshouldemitpath('/books/x/pages/0/board/objects/o1/kinddata/char'),
     ).toBe(false)
+    expect(memoryrootshouldemitpath('/books/x/pages/0/kindbuilt')).toBe(false)
     expect(memoryrootshouldemitpath('/books/x/flags/bid_layers/normal')).toBe(
       false,
     )

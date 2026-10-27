@@ -28,7 +28,7 @@ import {
   memoryelementdrawreadid,
 } from './boarddrawqueue'
 import { memoryensureboardready } from './boardlookup'
-import { memoryreadelementkind, memoryreadelementstat } from './boards'
+import { memoryreadelementkindcode, memoryreadelementstat } from './boards'
 import { memorytickboard } from './boardtick'
 import {
   memoryclearflags,
@@ -99,9 +99,8 @@ export function memorybootobjectchip(element: BOARD_ELEMENT) {
   if (!id || memorychipispresent(id)) {
     return
   }
-  const kind = memoryreadelementkind(element)
-  const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
-  const itemname = NAME(element.name ?? kind?.name ?? '')
+  const code = `${memoryreadelementkindcode(element)}\n${element.code ?? ''}`
+  const itemname = NAME(element.name ?? element.kinddata?.name ?? '')
   os.boot(id, DRIVER_TYPE.RUNTIME, itemname, code)
 }
 
@@ -311,8 +310,7 @@ export function memorydraindrawpending(book: MAYBE<BOOK>, board: MAYBE<BOARD>) {
     if (!ispresent(element)) {
       continue
     }
-    const kind = memoryreadelementkind(element)
-    const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
+    const code = `${memoryreadelementkindcode(element)}\n${element.code ?? ''}`
     if (!code || !memorycodehasdrawdisplay(code)) {
       continue
     }

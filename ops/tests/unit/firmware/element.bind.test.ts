@@ -2,7 +2,7 @@ import type { CHIP } from 'zss/chip'
 import { ELEMENT_FIRMWARE } from 'zss/firmware/element'
 import { memorycreateboardobject } from 'zss/memory/boardlifecycle'
 import { memoryrebuildboardnamed } from 'zss/memory/boardlookup'
-import { memoryreadelementkind } from 'zss/memory/boards'
+import { memoryreadelementkindcode } from 'zss/memory/boards'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import {
   memorycreatecodepage,
@@ -79,10 +79,8 @@ describe('#bind composite object', () => {
     expect(binder.name).toBe('l')
     expect(binder.kinddata).toBeUndefined()
 
-    const leaderkind = memoryreadelementkind(leader)
-    const binderkind = memoryreadelementkind(binder)
-    const leadertick = `${leaderkind?.code ?? ''}\n${leader.code ?? ''}`
-    const bindertick = `${binderkind?.code ?? ''}\n${binder.code ?? ''}`
+    const leadertick = `${memoryreadelementkindcode(leader)}\n${leader.code ?? ''}`
+    const bindertick = `${memoryreadelementkindcode(binder)}\n${binder.code ?? ''}`
     expect(bindertick).toBe(leadertick)
     expect(leadertick.startsWith(OBJECT_PAGE.trim())).toBe(true)
     expect(bindertick.endsWith(L_CODE)).toBe(true)

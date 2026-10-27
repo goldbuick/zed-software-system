@@ -1,5 +1,6 @@
 /** Path has a JSON pointer segment `stats`, `loaders`, or `timestamp` (omit from wire). */
-const EMIT_SKIP_SEGMENT = /(?:^|\/)(?:stats|loaders|timestamp)(?:\/|$)/
+const EMIT_SKIP_SEGMENT =
+  /(?:^|\/)(?:stats|loaders|timestamp|kindbuilt)(?:\/|$)/
 
 /** Terrain element props omitted from wire (see `memoryexportboardelement` terrain branch). */
 const TERRAIN_EMIT_SKIP_PROP =

@@ -57,6 +57,8 @@ Sibling files **outside** `memoryfs/` are ignored by MEMORY apply (skills at dro
 ## Read / write playbook
 
 - Prefer editing existing allowlisted JSON. Preserve `id`, `kind`, and structure.
+- Page code is only in `stats.json`. `object/element.json` and `terrain/element.json` do not store `code`.
+- Page code is only in `stats.json`. `object/element.json` and `terrain/element.json` do not store `code`.
 - Keep valid JSON and a trailing newline (matches cafe export style).
 - Board cells: see skill `memoryfs-board` (emitted on attach).
 - Flags: see skill `memoryfs-flags` (emitted on attach).

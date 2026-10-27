@@ -5,7 +5,7 @@ import { COLLISION } from 'zss/words/types'
 import { memoryreadidorindex } from './boardaccess'
 import { memorycodehasdrawdisplay } from './boarddrawqueue'
 import { BOOK_RUN_ARGS, memorycleanupboard } from './boardmovement'
-import { memoryreadelementkind, memoryreadelementstat } from './boards'
+import { memoryreadelementkindcode, memoryreadelementstat } from './boards'
 import { BOARD, BOARD_ELEMENT, CODE_PAGE_TYPE } from './types'
 
 const DRAW_LABEL = 'drawdisplay'
@@ -26,8 +26,7 @@ export function memorytickboard(
     if (pass === 'draw' && !includedraw) {
       return
     }
-    const kind = memoryreadelementkind(element)
-    const code = `${kind?.code ?? ''}\n${element.code ?? ''}`
+    const code = `${memoryreadelementkindcode(element)}\n${element.code ?? ''}`
     if (!code) {
       return
     }
