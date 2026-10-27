@@ -3,13 +3,13 @@ import { apierror, apilog, apitoast, vmbooks, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { isclimode, ismobilewebbrowser } from 'zss/feature/detect'
-import { armclipboardtext, withclipboard } from 'zss/feature/keyboard'
 import {
   durabledel,
   durableget,
   durablegetmany,
   durableupdate,
 } from 'zss/feature/durable'
+import { armclipboardtext, withclipboard } from 'zss/feature/keyboard'
 import { isarray, ispresent } from 'zss/mapping/types'
 import { BOOK } from 'zss/memory/types'
 
