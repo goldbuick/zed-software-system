@@ -73,40 +73,9 @@ function PortraitDock({ width }: { width: number; height: number }) {
   return <ActionRow x={actionx} y={0} />
 }
 
-function LandscapeRail({
-  mode,
-  width,
-}: {
-  mode: 'landscape-rail-left' | 'landscape-rail-right'
-  width: number
-  height: number
-}) {
-  const context = useWriteText()
-  resettiles(context, 32, FG, BG)
-  const isleft = mode === 'landscape-rail-left'
-  const label = isleft ? 'MOVE' : 'SHOOT'
-  context.x = Math.max(0, Math.floor((width - label.length) * 0.5))
-  context.y = 1
-  tokenizeandwritetextformat(`$white${label}`, context, false)
-  return null
-}
-
-function LandscapeActions({ width }: { width: number }) {
-  const context = useWriteText()
-  resettiles(context, 32, FG, COLOR.ONCLEAR)
-  const actionx = Math.max(0, Math.floor((width - ACTION_ROW_WIDTH) * 0.5))
-  return <ActionRow x={actionx} y={0} />
-}
-
 export function Elements({ mode, width, height }: ElementsProps) {
   if (mode === 'portrait-sidebartoggle') {
     return <PortraitSidebarToggle width={width} height={height} />
   }
-  if (mode === 'portrait-dock') {
-    return <PortraitDock width={width} height={height} />
-  }
-  if (mode === 'landscape-actions') {
-    return <LandscapeActions width={width} />
-  }
-  return <LandscapeRail mode={mode} width={width} height={height} />
+  return <PortraitDock width={width} height={height} />
 }

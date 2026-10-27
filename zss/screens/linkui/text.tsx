@@ -25,6 +25,8 @@ import {
 } from 'zss/words/textformat'
 import { NAME } from 'zss/words/types'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import { linkbegin, linkmodemaddress, linkpanelstripe } from './surface'
 import type { LinkWidgetProps } from './types'
 
@@ -173,20 +175,31 @@ export function LinkText({ surface }: LinkWidgetProps) {
     }
   }, [focus, usemobiletextcapture, state, cursor, selection, value])
 
+  function startediting() {
+    if (!ispresent(value)) {
+      modemwriteinitstring(address, '')
+    }
+    setfocus(true)
+    setcursor(ispresent(value) ? value.length : state.length)
+    setselection(undefined)
+  }
+
   return (
     <>
-      {surface.active && (
-        <UserInput
-          OK_BUTTON={() => {
-            if (!ispresent(value)) {
-              modemwriteinitstring(address, '')
+      {!focus && (
+        <LinkTapTarget
+          surface={surface}
+          area={readlinktaparea(surface)}
+          ontap={() => {
+            // iOS only raises the soft keyboard from inside the tap gesture
+            if (usemobiletextcapture) {
+              mobiletextfocus()
             }
-            setfocus(true)
-            setcursor(ispresent(value) ? value.length : state.length)
-            setselection(undefined)
+            startediting()
           }}
         />
       )}
+      {surface.active && <UserInput OK_BUTTON={startediting} />}
       {focus && (
         <UserFocus blockhotkeys>
           <UserInput

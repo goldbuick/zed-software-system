@@ -7,6 +7,8 @@ import { extractcontentfromargs } from 'zss/screens/inputcommon'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import { linkactionprefix, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
@@ -33,5 +35,14 @@ export function LinkRunIt({ surface }: LinkWidgetProps) {
     true,
   )
 
-  return surface.active ? <UserInput OK_BUTTON={invoke} /> : null
+  return (
+    <>
+      <LinkTapTarget
+        surface={surface}
+        area={readlinktaparea(surface)}
+        ontap={invoke}
+      />
+      {surface.active && <UserInput OK_BUTTON={invoke} />}
+    </>
+  )
 }

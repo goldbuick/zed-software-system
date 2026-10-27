@@ -1,8 +1,0 @@
-## #vibrato on
-
-#vibrato <number>
-$white 0-100, 0 is off, 100 is full volume
-#vibrato maxdelay <seconds>
-$white longer delay increases the vibrato
-
-!effectsscroll hk b " B " next;$ltgreyBack to effects

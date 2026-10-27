@@ -1,7 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { RUNTIME } from 'zss/config'
 import { parseterminalmodemprefix } from 'zss/gadget/data/api'
-import { Rect } from 'zss/gadget/rect'
 import { UserHotkey } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
 import { ispresent } from 'zss/mapping/types'
@@ -9,6 +7,8 @@ import { maptovalue } from 'zss/mapping/value'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import { linkallowhotkeys, linkbegin } from './surface'
 import type { LinkWidgetProps } from './types'
 
@@ -79,39 +79,18 @@ export function LinkHotkey({ surface }: LinkWidgetProps) {
     maybenoclose,
   ])
 
-  if (surface.layout === 'panel') {
-    const cx = surface.context.x - 0.25
-    const cy = surface.context.y - 0.25
-    return (
-      <group
-        position={[
-          cx * RUNTIME.DRAW_CHAR_WIDTH(),
-          cy * RUNTIME.DRAW_CHAR_HEIGHT(),
-          1,
-        ]}
-      >
-        <Rect
-          visible={false}
-          width={text.length + 0.5}
-          height={1.5}
-          blocking
-          onClick={invoke}
-        />
-        {surface.active && <UserInput OK_BUTTON={invoke} />}
-        {allowhotkeys && shortcut ? (
-          <UserHotkey hotkey={shortcut} althotkey={altshortcut}>
-            {invoke}
-          </UserHotkey>
-        ) : null}
-      </group>
-    )
-  }
-
   return (
     <>
+      <LinkTapTarget
+        surface={surface}
+        area={readlinktaparea(surface)}
+        ontap={invoke}
+      />
       {surface.active && <UserInput OK_BUTTON={invoke} />}
       {allowhotkeys && shortcut ? (
-        <UserHotkey hotkey={shortcut}>{invoke}</UserHotkey>
+        <UserHotkey hotkey={shortcut} althotkey={altshortcut}>
+          {invoke}
+        </UserHotkey>
       ) : null}
     </>
   )

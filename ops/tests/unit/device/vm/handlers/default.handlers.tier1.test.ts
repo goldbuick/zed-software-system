@@ -5,9 +5,6 @@ import { fetchrefscrolltext } from 'zss/feature/fetchrefscrolltext'
 import { parsezipfilelist } from 'zss/feature/parse/file'
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
-import { memoryreadcodepagename } from 'zss/memory/codepageoperations'
-import { memorylistcodepage } from 'zss/memory/bookoperations'
-import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { memoryadminmenu } from 'zss/memory/utilities'
 import { romread } from 'zss/rom'
 jest.mock('zss/config', () => ({
@@ -59,19 +56,10 @@ jest.mock('zss/memory/utilities', () => ({
   memoryadminmenu: jest.fn(),
 }))
 
-jest.mock('zss/memory/bookoperations', () => ({
-  memorylistcodepage: jest.fn(() => []),
-}))
-
 jest.mock('zss/memory/session', () => ({
   memoryreadmainbook: jest.fn(),
-  memoryreadbooklist: jest.fn(() => []),
   memoryreadoperator: jest.fn(() => ''),
   memoryreadroot: jest.fn(() => ({})),
-}))
-
-jest.mock('zss/memory/codepageoperations', () => ({
-  memoryreadcodepagename: jest.fn(),
 }))
 
 jest.mock('zss/memory/playermanagement', () => ({
@@ -161,9 +149,6 @@ describe('handledefault refscroll', () => {
     jest.mocked(romread).mockReset()
     jest.mocked(romread).mockReturnValue(undefined)
     jest.mocked(memoryadminmenu).mockClear()
-    jest.mocked(memorylistcodepage).mockReset()
-    jest.mocked(memorylistcodepage).mockReturnValue([])
-    jest.mocked(memoryreadcodepagename).mockReset()
   })
 
   it.each(['charscroll', 'colorscroll', 'bgscroll'] as const)(
@@ -198,67 +183,7 @@ describe('handledefault refscroll', () => {
     expect(memoryadminmenu).toHaveBeenCalledWith('p1', 0)
   })
 
-  it('refscroll:objectlistscroll with empty pages', () => {
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target: 'refscroll:objectlistscroll',
-      data: undefined,
-    })
-    expect(memorylistcodepage).toHaveBeenCalledWith(
-      [],
-      { type: CODE_PAGE_TYPE.OBJECT, sort: true },
-    )
-    expect(scrollwritelines).toHaveBeenCalledWith(
-      'p1',
-      'object list',
-      '!menu hk b " B " next;$ltgreyBack to main menu',
-      'list',
-    )
-  })
-
-  it('refscroll:terrainlistscroll with empty pages', () => {
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target: 'refscroll:terrainlistscroll',
-      data: undefined,
-    })
-    expect(memorylistcodepage).toHaveBeenCalledWith(
-      [],
-      { type: CODE_PAGE_TYPE.TERRAIN, sort: true },
-    )
-    expect(scrollwritelines).toHaveBeenCalledWith(
-      'p1',
-      'terrain list',
-      '!menu hk b " B " next;$ltgreyBack to main menu',
-      'list',
-    )
-  })
-
-  it('refscroll:objectlistscroll builds copyit row from code pages', () => {
-    jest
-      .mocked(memorylistcodepage)
-      .mockReturnValue([{ code: 'a\nhint line' } as any])
-    jest.mocked(memoryreadcodepagename).mockReturnValue('obj1')
-    handledefault(vm, {
-      session: '',
-      player: 'p1',
-      id: 'id',
-      sender: '',
-      target: 'refscroll:objectlistscroll',
-      data: undefined,
-    })
-    const [, , content] = jest.mocked(scrollwritelines).mock.calls[0]
-    expect(content).toContain('!istargetless copyit obj1;')
-    expect(content).toContain('@obj1$ltgrey hint line')
-  })
-
-  it('refscroll:notescalesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
+  it('refscroll:notesscroll uses parsemarkdownforscroll when fetch returns content', async () => {
     jest
       .mocked(fetchrefscrolltext)
       .mockResolvedValue('$ltgrey intro\n\n[Major](<notescalesmajor>)\n')
@@ -267,7 +192,7 @@ describe('handledefault refscroll', () => {
       player: 'p1',
       id: 'id',
       sender: '',
-      target: 'refscroll:notescalesscroll',
+      target: 'refscroll:notesscroll',
       data: undefined,
     })
     await Promise.resolve()
@@ -281,7 +206,7 @@ describe('handledefault refscroll', () => {
     expect(scrollwritemarkdownlines).toHaveBeenCalledWith(
       'p1',
       expect.stringContaining('notescalesmajor'),
-      'notescalesscroll',
+      'notesscroll',
     )
   })
 

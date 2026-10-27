@@ -38,7 +38,7 @@ Public `GET` / `HEAD` on `/` only. Returns a **VGA-styled HTML page** (EGA color
 |---------|---------|
 | What it is | Namespace publishing under `{namespace}.at.zed.cafe` |
 | Login | Copy hint `#zns <email> <namespace>`; link to `{JOIN_ORIGIN}` |
-| Example | `https://docs.at.zed.cafe/algoscroll` |
+| Example | `https://docs.at.zed.cafe/notesscroll` |
 
 **200** `text/html; charset=utf-8`, `Cache-Control: public, max-age=3600`, `X-Robots-Tag: noindex`.
 
@@ -182,7 +182,7 @@ yarn task run ops:zns:docs:publish --dry-run
 yarn task run ops:zns:docs:publish
 ```
 
-Keys are the `.md` basenames under `zss/rom/refscroll/` (`[a-z0-9-]`, e.g. `notescalesmajor`). Re-running overwrites every ROM-backed key. Optional `ZNS_APEX` overrides the default `https://at.zed.cafe`.
+Keys are the `.md` basenames under `zss/rom/refscroll/` (`[a-z0-9-]`, e.g. `notesscroll`). Re-running overwrites every ROM-backed key. Optional `ZNS_APEX` overrides the default `https://at.zed.cafe`.
 
 VGA font asset is generated via `yarn task run ops:zns:vga:sync` (runs automatically before `ops:deploy:cloudflare:zns`).
 

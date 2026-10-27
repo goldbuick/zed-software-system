@@ -19,7 +19,7 @@ This document categorizes and summarizes all exported functions, types, constant
 - **`ScreenUI()`**
   - Main screen UI coordinator component
   - Manages screen layout with sidebar and scroll panels
-  - Handles landscape/portrait orientations
+  - Touch UI is portrait-only (landscape shows `RotatePortrait`)
   - Coordinates multiple UI panels (scroll, sidebar, touch controls)
 
 ---
@@ -166,6 +166,19 @@ This document categorizes and summarizes all exported functions, types, constant
 
 - **`terminal/hyperlink.tsx`**
   - `TapeTerminalHyperlink(props)` - Hyperlink in terminal
+
+### `terminal/logrowhitcoords.ts`
+
+- **`terminalycursorforrowy(edgebottom, scroll, rowy)`** - `ycursor` that makes draw row `rowy` the active tape row (tap-to-row)
+- **`findterminalrowindexfromcoords(args)`** - pure cursor hit-test over pins + session rows
+
+### Link widget tap targets (`linkui/`)
+
+- **`linkui/linktaparea.ts`**
+  - `LINK_TAP_AREA` (type), `readlinktaparea(surface)` - row hit area for the row `linkbegin` positioned (call after writing the row)
+- **`linkui/linktap.tsx`**
+  - `LinkTapTarget({ surface, area, ontap? })` - hidden blocking `Rect` (z 1, pointer cursor); click/tap calls `surface.setcursor(striperow)` then `ontap`. Skipped when `allowhotkeys === false`.
+  - Tap actions: hyperlink / copyit / openit / viewit / runit / hotkey / zssedit run their invoke; number / charedit / coloredit enter editing; text starts editing (focuses the mobile textarea in the gesture); select / range / dir move the cursor only.
 
 ---
 
@@ -415,8 +428,8 @@ See **`editor/syntax-highlighting.md`** for how colored syntax highlighting is i
 
 ## 8. TouchUI Components
 
-Portrait dock below game; landscape side rails + always-on right stats column.
-Modes: `portrait-dock` | `landscape-rail-left` | `landscape-rail-right`.
+Portrait-only: dock below game, optional stats band above it. Touch devices in landscape get the rotate screen.
+Modes: `portrait-dock` | `portrait-sidebartoggle`.
 Minimal action keys: esc / ? / c (chat). Full `KeyboardGame` removed.
 
 ### `touchui/component.tsx`
@@ -429,12 +442,18 @@ Minimal action keys: esc / ? / c (chat). Full `KeyboardGame` removed.
 
 ### `touchui/layout.ts`
 
-- Dock / rail / sidebar size constants
+- Dock / sidebar size constants
+- **`readtouchscreenlayout(args)`** - pure game rows + dock size/row for the portrait touch layout (used by `UserScreen`)
+
+### `touchui/rotateportrait.tsx`
+
+- **`RotatePortrait()`**
+  - DOM overlay (mounted in `cafe/cafecanvas.tsx`) when `showtouchcontrols && islandscape`; blocks input and blurs the mobile textarea
 
 ### `touchui/elements.tsx`
 
 - **`Elements(props: ElementsProps)`**
-  - Chrome only (rails / dock / action row); sticks via StickOverlay
+  - Chrome only (dock / sidebar toggle / action row); sticks via StickOverlay
   - Props: mode, width, height
 
 ### `touchui/actionrow.tsx`
@@ -444,7 +463,7 @@ Minimal action keys: esc / ? / c (chat). Full `KeyboardGame` removed.
 ### `touchui/stickoverlay.tsx`
 
 - **`StickOverlay`**
-  - One TouchPlane over MOVE+game+SHOOT (or portrait dock); half-X picks stick
+  - One TouchPlane over the portrait dock; half-X picks stick
 
 ### `touchui/togglekey.tsx`
 
@@ -537,7 +556,7 @@ ScreenUI
 │   │       ├── EditorRows
 │   │       └── EditorInput
 │   └── TapeTerminalInspector
-└── TouchUI (portrait dock / landscape rails) + StickOverlay
+└── TouchUI (portrait dock) + StickOverlay
     ├── Elements / ActionRow (esc / ? / c)
     └── StickOverlay (one plane, half-X sticks)
 ```

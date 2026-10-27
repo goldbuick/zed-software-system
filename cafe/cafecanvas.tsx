@@ -1,6 +1,7 @@
 import { Canvas, events } from '@react-three/fiber'
 import type { ComponentProps } from 'react'
 import type { Intersection } from 'three'
+import { RotatePortrait } from 'zss/screens/touchui/rotateportrait'
 import { TouchPadOverlay } from 'zss/screens/touchui/touchpadoverlay'
 
 import { CafeApp } from './cafeapp'
@@ -54,6 +55,7 @@ export function CafeCanvas() {
         <CafeApp />
       </Canvas>
       <TouchPadOverlay />
+      <RotatePortrait />
     </>
   )
 }

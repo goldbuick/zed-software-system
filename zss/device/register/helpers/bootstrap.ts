@@ -53,7 +53,9 @@ export async function writehelphint(device: DEVICE): Promise<void> {
   write(
     device,
     registerreadplayer(),
-    zsstextline(`try typing $green#help$blue and pressing enter!`),
+    zsstextline(
+      `try typing $green#help$blue and pressing enter! or $green$meta+h`,
+    ),
   )
 }
 

@@ -10,6 +10,8 @@ import { useLinkEditCancelOnInactive } from 'zss/screens/linkui/linkeditcancel'
 import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
+import { LinkTapTarget } from './linktap'
+import { readlinktaparea } from './linktaparea'
 import {
   linkbegin,
   linkmodemaddress,
@@ -122,5 +124,14 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
     )
   }
 
-  return surface.active ? <UserInput OK_BUTTON={enterediting} /> : null
+  return (
+    <>
+      <LinkTapTarget
+        surface={surface}
+        area={readlinktaparea(surface)}
+        ontap={enterediting}
+      />
+      {surface.active && <UserInput OK_BUTTON={enterediting} />}
+    </>
+  )
 }

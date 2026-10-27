@@ -695,7 +695,7 @@ function buildznsapexlanding({ joinorigin, tenantsuffix }) {
   const command = '#zns <email> <namespace>'
   const title = 'ZNS — zed.cafe namespace service'
   const tagline = 'Namespace publishing for zed.cafe'
-  const exampleurl = `https://docs.${tenantsuffix}/algoscroll`
+  const exampleurl = `https://docs.${tenantsuffix}/notesscroll`
   const publishhint = `Publish to https://you.${tenantsuffix}/key`
   const cmdbox = znscmdbox(command)
   const decorinner = Math.max(

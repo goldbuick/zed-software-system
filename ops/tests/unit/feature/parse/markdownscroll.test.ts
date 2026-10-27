@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import { scrollwritemarkdownlines } from 'zss/feature/parse/markdownscroll'
 import { parsemarkdownwithzsstextsink } from 'zss/feature/parse/markdownzsstext'
 import {
@@ -40,8 +37,6 @@ jest.mock('zss/words/reader', () => ({
 jest.mock('zss/mapping/value', () => ({
   maptostring: jest.fn((value: unknown) => String(value)),
 }))
-
-const romdir = join(__dirname, '../../../../../zss/rom/refscroll')
 
 function parsemarkdownlines(content: string): string[] {
   const lines: string[] = []
@@ -144,7 +139,36 @@ describe('parsemarkdownforscroll', () => {
   })
 
   it('preserves blank rows between markdown blocks (algoscroll)', () => {
-    const md = readFileSync(join(romdir, 'algoscroll.md'), 'utf8')
+    const md = `## legend
+
+s1, s2, s3, s4 = sound sources/operators
+m = modulator
+c = carrier
+--> = signal flow
+
+## algo0
+
+S1 --> M --> S2 --> M --> S3 --> M --> S4 --> C
+
+## shared algo config
+
+#synth algo0
+$whiteselect algo0 (same pattern for algo1 - algo7)
+
+#algo0 harmonicity <number>
+#algo0 harmonicity1 - harmonicity3
+#algo0 modindex <number>
+#algo0 modindex1 - modindex3
+#algo0 osc1 - osc4 <sine, square, triangle, sawtooth, pulse, pwm>
+#algo0 env1 - env4 <a> <d> <s> <r>
+#algo0 env <a> <d> <s> <r>
+#algo0 port <seconds>
+#algo0 vol <db>
+
+$whiteSame keys for algo1 - algo7 (+1-5 channel forms)
+
+!synthscroll hk b " B " next;$ltgreyBack to synth
+`
     const lines = parsemarkdownlines(md)
     const flowidx = lines.findIndex((line) => line.includes('--> = signal flow'))
     const algoidx = lines.findIndex((line) => line.includes('algo0'))
@@ -193,7 +217,7 @@ describe('scrollwritelines zed body', () => {
 
   it('refscroll menu: !command;label lines become hyperlink rows', () => {
     const body = `!helpmenu hk 1 " 1 " next;controls and $greenstart here
-!objectlistscroll hk 2 " 2 " next;list objects`
+!adminscroll hk 4 " 4 " next;cpu #admin`
     scrollwritelines('p1', 'menu', body, 'refscroll')
     const s = gadgetstate('p1')
     expect(s.scroll).toHaveLength(2)
@@ -202,7 +226,7 @@ describe('scrollwritelines zed body', () => {
     expect(r0[2]).toBe('helpmenu')
     expect(r0[3]).toBe('hk')
     const r1 = s.scroll![1] as unknown[]
-    expect(r1[2]).toBe('objectlistscroll')
+    expect(r1[2]).toBe('adminscroll')
   })
 
   it('refscroll menu: quoted arg keeps spaces', () => {

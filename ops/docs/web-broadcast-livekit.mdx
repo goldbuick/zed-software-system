@@ -96,7 +96,7 @@ Consider extending `bridgestreamstart` to accept an object (while keeping a lega
 | Dependencies | [`package.json`](../../package.json) | Add `livekit-client` (Option A) and/or a WHIP helper for Option B; remove `amazon-ivs-web-broadcast` if IVS is fully dropped. |
 | Public bridge API | [`zss/device/api.ts`](../../zss/device/api.ts) | Extend `bridgestreamstart` payload if you pass token + URL or WHIP URL. |
 | CLI | [`zss/firmware/cli/commands/multiplayer.ts`](../../zss/firmware/cli/commands/multiplayer.ts) | `#broadcast` argument parsing for the new shape. |
-| Docs after behavior exists | [`zss/firmware/docs/commands.md`](../../zss/firmware/docs/commands.md), [`zss/device/EXPORTED_FUNCTIONS.md`](../../zss/device/EXPORTED_FUNCTIONS.md) | Describe `#broadcast` / `bridgestreamstart` for LiveKit. |
+| Docs after behavior exists | [`zss/firmware/docs/commands/cli.md`](../../zss/firmware/docs/commands/cli.md), [`zss/device/EXPORTED_FUNCTIONS.md`](../../zss/device/EXPORTED_FUNCTIONS.md) | Describe `#broadcast` / `bridgestreamstart` for LiveKit. |
 
 ## Security
 

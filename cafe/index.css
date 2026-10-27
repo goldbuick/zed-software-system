@@ -63,6 +63,24 @@ canvas {
   pointer-events: auto;
 }
 
+.rotate-portrait {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #404;
+  color: #ccc;
+  font-family: monospace;
+  font-size: 1.25rem;
+  text-align: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+}
+
 #webgl-required {
   position: fixed;
   inset: 0;

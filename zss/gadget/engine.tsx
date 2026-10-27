@@ -142,7 +142,7 @@ export function Engine() {
   // update device config + touch sidebar defaults
   useEffect(() => {
     useDeviceData.setState((state) => {
-      // Touch: stats always open (portrait push + landscape column). Desktop: open.
+      // Touch: stats always open (portrait push). Desktop: open.
       const sidebaropen = true
       return {
         ...state,
