@@ -1,19 +1,14 @@
-## help
+## what is this?
+- What do I do here?
+- Is this a game I play, or a tool I use to make games?
+- What is ZZT?
 
-!helpcontrols hk c " C " next;read help on controls
-!helptext hk t " T " next;read help on text and inputs
-!helpdeveloper hk 3 " 3 " next;$greenDeveloper - books & pages
-!helpplayer hk 4 " 4 " next;$greenPlayer settings
+## how do I use it?
+- The screen says there is no content. Do I pick something from the list?
+- Which of these three things do I click or type into first?
+- How do I move, and how do I type a command?
+- How do I close this and get back?
 
-## keyboard input
-
-- ? or / - $greenopen cli
-- esc - $greenclose cli, scroll, or editor
-- tab - $greenchange layout
-- up or down arrow keys - $greennavigate cli lines
-- left or right arrow keys - $greenchange cli lines
-- enter - $greenaction on selected line
-- alt + arrow keys - $greenskip words and cli lines
-- $meta + up / down arrow keys - $greeninput history
+!openit https://zed.cafe/docs/guides/first-ten-minutes/;open first ten minutes
 
 !menu hk b " B " next;$ltgreyBack to main menu
