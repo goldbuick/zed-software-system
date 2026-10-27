@@ -12,8 +12,8 @@
 </ul>
 </li>
 <li>Tabs hosting a non-hidden session (<code>#joincode</code> without the hidden flag, <code>#jointab</code>) register <code>{ topic, players }</code>. Clients repeat <code>register</code> every 30s; entries expire after 90s or when the connection closes.</li>
-<li>The lister pushes <code>sessionlist:list</code> to every client on each change. Each tab forwards the list (minus its own topic) to the sim with <code>vm:sessionlist</code>, stored by <a href="zss/memory/sessionlist.ts"><code>zss/memory/sessionlist.ts</code></a>.</li>
-<li><code>#admin</code> (last section, “active sessions”) and <code>#sessions</code> render one <code>!@adminjoin &lt;topic&gt;</code> link per session. The <code>adminjoin</code> chip runs the existing soft join (<code>runjoinurldestination</code>).</li>
+<li>The lister pushes <code>sessionlist:list</code> to every client on each change. Each tab forwards the list (minus its own topic) to the sim with <code>vm:sessionlist</code>, stored by <a href="zss/memory/sessionlist.ts"><code>zss/memory/sessionlist.ts</code></a>. The first list a client receives runs <code>#sessions</code>, and toasts when that list has other sessions.</li>
+<li><code>#admin</code> (last section, “active games”) and <code>#sessions</code> render one <code>!openit inline &lt;join url&gt;</code> link per session. Activating it navigates this tab to <code>/join/#&lt;topic&gt;</code>.</li>
 </ol>
 <h2 id="failover-and-bounds"><a class="blume-heading-anchor" href="#failover-and-bounds">Failover and bounds</a></h2>
 <ul>
