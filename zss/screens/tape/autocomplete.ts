@@ -18,6 +18,11 @@ import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 import { type AUTO_COMPLETE_SUGGESTION, resolveargitems } from './argcomplete'
 import { type ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
+import {
+  inferredvoiceforcommand,
+  infersynthslots,
+  synthfirstargkeywords,
+} from './synthvoiceinfer'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
 import { resolvestatlinkstage, statlinklabelromword } from './statlinkstages'
@@ -255,6 +260,8 @@ function getautocompletefromtokens(
   editorctx?: EDITOR_COMPLETE_CONTEXT,
   codepagetype?: string,
   statcomplete: 'editor' | 'codepages' = 'editor',
+  rows?: EDITOR_CODE_ROW[],
+  cursorrow?: number,
 ): MAYBE<AUTO_COMPLETE> {
   const tokens = row.tokens
   if (!tokens?.length) {
@@ -704,9 +711,16 @@ function getautocompletefromtokens(
             argctx?.firstarglower ??
             NAME(tokens[cmdidx + 2]?.image ?? '').toLowerCase()
           const meta = words.commandargmeta?.[hintcommandname]
+          const resolvedmeta = synthmetaforinferredvoice(
+            meta,
+            hintcommandname,
+            argindex,
+            rows,
+            cursorrow,
+          )
           items = resolveargitems({
             words,
-            meta,
+            meta: resolvedmeta,
             argindex,
             firstarglower,
             maybesig,
@@ -733,6 +747,30 @@ function getautocompletefromtokens(
   return undefined
 }
 
+function synthmetaforinferredvoice(
+  meta: GADGET_ZSS_WORDS['commandargmeta'][string] | undefined,
+  command: string,
+  argindex: number,
+  rows: EDITOR_CODE_ROW[] | undefined,
+  cursorrow: number | undefined,
+): GADGET_ZSS_WORDS['commandargmeta'][string] | undefined {
+  if (argindex !== 0 || !rows || cursorrow === undefined) {
+    return meta
+  }
+  const voice = inferredvoiceforcommand(
+    infersynthslots(rows, cursorrow),
+    command,
+  )
+  if (!voice) {
+    return meta
+  }
+  const keywords = synthfirstargkeywords(voice)
+  return {
+    ...meta,
+    byposition: [keywords, ...(meta?.byposition?.slice(1) ?? [])],
+  }
+}
+
 export function getautocomplete(
   row: MAYBE<EDITOR_CODE_ROW>,
   cursor: number,
@@ -740,6 +778,8 @@ export function getautocomplete(
   editorctx?: EDITOR_COMPLETE_CONTEXT,
   codepagetype?: string,
   statcomplete: 'editor' | 'codepages' = 'editor',
+  rows?: EDITOR_CODE_ROW[],
+  cursorrow?: number,
 ): AUTO_COMPLETE {
   if (!ispresent(row)) {
     return EMPTY_AUTOCOMPLETE
@@ -752,6 +792,8 @@ export function getautocomplete(
       editorctx,
       codepagetype,
       statcomplete,
+      rows,
+      cursorrow,
     ) ?? EMPTY_AUTOCOMPLETE
   )
 }

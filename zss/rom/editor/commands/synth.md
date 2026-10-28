@@ -1,3 +1,3 @@
 ---
-hint: "Select type/wave/config on play voices; use #string/#fmsquare (+1-5) for config-only"
+hint: "Select a type or wave, or set a config key, on play voices"
 ---

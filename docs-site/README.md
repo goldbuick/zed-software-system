@@ -11,7 +11,7 @@ Blume static docs for **https://zed.cafe/docs/** (Zed Cafe Docs: creator guides 
 | `public/fonts/IBMEGA8x14.woff` | Bitmap font from `ops/infra/zns-public/fonts/` |
 | `public/zns-dot-tile.svg` | Checkerboard blue-on-blue dots (tape / ZNS backplate) |
 | `content/index.md` | Introduction, the loose page above the doors |
-| `content/guides/` | **Start** — creator tutorials. URLs stay `/guides/...` |
+| `content/guides/` | **Guides** — creator tutorials. URLs stay `/guides/...` |
 | `content/(lookup)/` | **Look up** — `features/`, `glossary.md`, and the `firmware` and `synth` symlinks. URLs stay `/features`, `/glossary`, `/firmware/...`, `/synth/...` |
 | `content/(system)/` | **System** — `(reference)` (map, architecture) plus the remaining `zss/**/docs` and `ops/docs` symlinks |
 

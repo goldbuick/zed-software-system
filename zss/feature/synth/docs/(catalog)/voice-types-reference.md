@@ -37,9 +37,6 @@ See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voice
 | `#synth …` | 0–3 | Select / config `#play` voices |
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
-| `#string` / `#fmsquare` / … | 0–3 | Config-only (no type select) |
-| `#string1`–`4` / `#fmsquare1`–`4` | single play index | Config-only |
-| `#string5` / `#fmsquare5` | 4–7 | Config-only bgplay |
 
 Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
 

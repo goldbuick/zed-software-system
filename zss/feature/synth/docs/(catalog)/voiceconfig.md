@@ -27,7 +27,7 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 Per play/bgplay voice index, family blobs (`stringensemble`, `pluck`, `wind`, …) and osc/algo rows stay in memory when you change type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
 
-Top-level config-only commands (`#string`, `#fmsquare`, `#piano1`, …) adjust those slots without selecting the type — use `#synth <name>` to select.
+`#synth <name>` selects the type. `#synth <key> <value>` sets a key on the current voice and does not select a type.
 
 ## Source Type Changes
 
