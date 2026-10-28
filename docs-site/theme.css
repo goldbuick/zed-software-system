@@ -275,3 +275,8 @@ blume-mermaid foreignObject span {
   font-family: var(--blume-font-mono) !important;
   color: #ffffff !important;
 }
+
+/* Blume hardcodes Open in chat and has no config switch. */
+[data-blume-page-actions] details:has(a[data-open-in]) {
+  display: none;
+}

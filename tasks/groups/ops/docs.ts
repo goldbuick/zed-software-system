@@ -13,26 +13,32 @@ function withinrepo(root: string, target: string): boolean {
   return target === root || target.startsWith(`${root}/`)
 }
 
+function isroutegroup(name: string): boolean {
+  return name.startsWith('(') && name.endsWith(')')
+}
+
 /**
  * Parenthesized content folders are Blume route groups. They do not appear
- * in the public URL, so /glossary also lives at content/(reference)/glossary.
+ * in the public URL, including when groups nest, so /map lives at
+ * content/(system)/(reference)/map and /glossary at content/(lookup)/glossary.
  */
 function routegroupbases(root: string, rel: string): string[] {
   const contentdir = join(root, CONTENTROOT)
-  const bases = [join(contentdir, rel)]
   if (!existsSync(contentdir)) {
-    return bases
+    return [join(contentdir, rel)]
   }
-  for (const entry of readdirSync(contentdir, { withFileTypes: true })) {
-    if (
-      entry.isDirectory() &&
-      entry.name.startsWith('(') &&
-      entry.name.endsWith(')')
-    ) {
-      bases.push(join(contentdir, entry.name, rel))
+  const dirs = [contentdir]
+  function walk(dir: string) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory() && isroutegroup(entry.name)) {
+        const next = join(dir, entry.name)
+        dirs.push(next)
+        walk(next)
+      }
     }
   }
-  return bases
+  walk(contentdir)
+  return dirs.map((dir) => join(dir, rel))
 }
 
 /** Resolve Blume site paths (/glossary, /map, ...) against docs-site/content. */

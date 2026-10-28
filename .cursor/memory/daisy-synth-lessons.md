@@ -13,7 +13,7 @@ From 2026 config/DSP audits (FM harmonicity, fat/am wave maps, shared keys, env)
 7. Run: `yarn jest ops/tests/unit/feature/synth/backend/wasm/wasmvoiceconfig.test.ts ops/tests/unit/feature/synth/backend/daisy/fmsquarecarrier.test.ts --config ops/jest.config.ts --no-coverage`
 8. Ear / offline: `#synth fmsquare` vs `#synth fmsine` must differ; with `ZSS_PARITY_RENDER=1` the fmsquarecarrier offline lock asserts spectral delta.
 
-Catalog: `zss/feature/synth/docs/voice-types-reference.md` confidence matrix.
+Catalog: `zss/feature/synth/docs/(catalog)/voice-types-reference.md` confidence matrix.
 
 ## Config write ≠ DSP read
 

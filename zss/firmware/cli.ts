@@ -1,5 +1,4 @@
 import { createfirmware } from 'zss/firmware'
-import { registerairsharecommands } from 'zss/firmware/cli/commands/airshare'
 import { registerbookscommands } from 'zss/firmware/cli/commands/books'
 import { registereditorcommands } from 'zss/firmware/cli/commands/editor'
 import { registerexportcommands } from 'zss/firmware/cli/commands/export'
@@ -18,7 +17,6 @@ const REGISTER_COMMANDS = [
   registersendcommands,
   registerbookscommands,
   registerstatecommands,
-  registerairsharecommands,
   registerexportcommands,
   registereditorcommands,
   registerzztcommands,

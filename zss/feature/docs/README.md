@@ -14,9 +14,8 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
 - **stt** — Speech-to-text (Moonshine ONNX) in sttspace worker
 - **ROM** — Embedded help/documentation content
-- **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.md))
+- **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.mdx))
 - **memoryfs** — Projected MEMORY tree via folder drop ([memoryfs/docs](../memoryfs/docs/index.md))
-- **airshare** — Optical MEMORY transfer via fountain QR ([airshare/protocol](../airshare/protocol.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index
@@ -46,11 +45,11 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [speechtotext.md](speechtotext.md) | Speech recognition |
 | [fetchrefscrolltext](../fetchrefscrolltext.ts) | `docs.at.zed.cafe` then ROM refscroll text |
 | [itchiopublish.md](itchiopublish.md) | itch.io publishing |
-| [synth/docs](../synth/docs/index.md) | Audio synthesis (full docs) |
+| [synth/docs](../synth/docs/index.mdx) | Audio synthesis (full docs) |
 
 ## Submodules
 
-- **synth** — Daisy WASM synth (AudioWorklet); see [synth/docs/index.md](../synth/docs/index.md)
+- **synth** — Daisy WASM synth (AudioWorklet); see [synth/docs/index.md](../synth/docs/index.mdx)
 - **tts** — Piper/Supertonic/Fish TTS in ttsspace worker; main-thread playback in `tts/client.ts`
 - **stt** — Moonshine speech recognition in sttspace worker; mic capture in `stt/speechtotext.ts`
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`

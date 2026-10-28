@@ -4,7 +4,7 @@ Web-based software synthesizer with a **front-end** (protocol, state, device rou
 
 ## Documentation
 
-Detailed documentation is in **[docs/](docs/README.md)**. Active runtime: `backend/daisy/` (DSP) + `backend/wasm/` (shared SAB, scheduler, voice/FX config).
+Detailed documentation is in **[docs/](docs/index.mdx)**. Active runtime: `backend/daisy/` (DSP) + `backend/wasm/` (shared SAB, scheduler, voice/FX config).
 
 Task index: [ops/docs/tasks.md](../../../ops/docs/tasks.md) (daisy group).
 

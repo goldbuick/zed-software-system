@@ -31,6 +31,11 @@ export default defineConfig({
       mono: 'space-mono',
     },
   },
+  navigation: {
+    sidebar: {
+      display: 'page',
+    },
+  },
   content: {
     // Single filesystem root: colocated zss/**/docs and ops/docs are symlinked
     // under content/<prefix>/ so Blume entry ids match the Astro collection base.

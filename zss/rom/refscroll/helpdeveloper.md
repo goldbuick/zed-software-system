@@ -23,9 +23,5 @@ $whitelist books and pages you can delete (page trash is the opened book)
 $whiteflush state to register
 #share
 $whitecreate a click-to-copy share url and qr code
-#airshare
-$whiteoptical MEMORY transfer (invite QR, then stream)
-#airshare receive
-$whitepoint camera at a streaming airshare QR
 
 !helpmenu hk b " B " next;$ltgreyBack to help
