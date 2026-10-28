@@ -3,15 +3,15 @@ title: Your first ten minutes
 description: Open zed.cafe, find your way around the terminal, load a starter kit, and look inside a book.
 ---
 
-By the end of this guide you will know how to open the command line, read the built-in help, load a starter kit, and see the pages inside a book.
+By the end of this guide you will know how to open the command line, load a starter kit, and see the pages inside a book.
 
 ## Open the terminal
 
 Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the terminal opens on its own and prints three things:
 
 - a `no content found` notice (this is expected on a first visit)
-- a list of **starter kits** (the `stk list`)
-- the hint `try typing #help and pressing enter!`
+- a list of **starter kits** (below the logo)
+- the hint `try typing #help and pressing enter! or ctrl+h`
 
 The terminal is the command line, or CLI. Almost everything in Zed Cafe starts here.
 
@@ -23,34 +23,24 @@ The terminal is the command line, or CLI. Almost everything in Zed Cafe starts h
 | `C` | Open quick chat (it closes after Enter) |
 | `esc` | Close the CLI, a scroll, or the editor |
 | `tab` | Change the layout |
-| up / down arrows | Move between CLI lines |
-| enter | Run the selected line, or follow a link |
+| `up` / `down` | Move between CLI lines |
+| `enter` | Run the selected line, or follow a link |
 
 :::note
 Lines in the terminal can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
 :::
 
-## Read the help
-
-<Steps>
-  <Step title="Run #help">
-    Press `#`, type `help`, and press Enter. A help scroll opens.
-  </Step>
-  <Step title="Open getting started">
-    Select **controls and getting started** (hotkey `1`). Arrow keys move you. Shift plus an arrow key, or `w a s d`, shoots. The same page lists `#books`, `#pages`, `#boards`, and `#save`.
-  </Step>
-  <Step title="Close the scroll">
-    Press `esc`.
-  </Step>
-</Steps>
-
 ## Load a starter kit
+
+:::note
+Zed Cafe has built-in behaviors, but not built-in elements. The engine can move, collide, and run commands. A player, a wall, or a key exists only as a page in a book. A starter kit is that book, already written.
+:::
 
 A starter kit is a book that comes with useful pages already made. The guides use **ZTK - ZZT Tool Kit**. It brings a player, terrain like `solid`, `normal`, `breakable`, and `water`, and items like `key`, `door`, `scroll`, and `passage`. Every piece works like its ZZT counterpart.
 
 <Steps>
   <Step title="Pick ZTK from the starter kit list">
-    In the terminal's `stk list`, select **ZTK - ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/geNHhyjf](https://bytes.zed.cafe/geNHhyjf) directly.
+    Below the logo, select **ZTK - ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/geNHhyjf](https://bytes.zed.cafe/geNHhyjf) directly.
   </Step>
   <Step title="Wait for it to load">
     The page reloads with the kit's book in memory.
@@ -111,7 +101,6 @@ A red wall appears just north of you. `#put` takes a direction and a kind. The k
 ## What you learned
 
 - The terminal is the CLI. Open it with `?`, `#`, or `@`. Close it with `esc`.
-- `#help`, then **controls and getting started**, covers moving, the command line, and saving.
 - A starter kit is a book of ready-made pages. ZTK gives you ZZT-style building blocks.
 - `#books`, `#pages`, `#boards`, and `#pageopen` let you explore a book.
 

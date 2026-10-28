@@ -1,5 +1,5 @@
 ---
-title: Guides
+title: Overview
 description: Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
 ---
 
@@ -19,15 +19,19 @@ Keep a zed.cafe tab open next to this one. Every step is meant to be typed, not 
 
 A few words show up in every guide:
 
+- **Terminal**: the command line. Open it with `?`, `#`, or `@`. Close it with `esc`.
 - **Book**: a project. It holds everything your world needs.
 - **Page** (or codepage): one item inside a book. Pages have a type: `board`, `object`, `terrain`, `loader`, `palette`, `charset`, or `txt`.
 - **Board**: a 60x25 grid of cells. This is a room in your world.
 - **Element**: something placed on a board. Terrain fills the floor and walls. Objects sit on top and can run code.
+- **Kind**: the name of a page you place, such as `solid` or `lamp`. `#put east lamp` places that kind.
+- **Scroll**: a panel of text and clickable lines. Help, creating a page, and what an object says all open as scrolls.
 - **ZSS**: the scripting language for objects, loaders, and the command line. It is close to ZZT-OOP: `@` lines declare stats, `:` lines are labels, and `#` lines are commands.
+- **Flag**: a name an object remembers. `#set lit 1` turns it on. `#if lit` tests it.
+- **Message**: `lamp:light` tells every lamp to run `:light`. From code, that is `#send lamp:light`.
 
 ## After the guides
 
 - [Firmware commands](/firmware/commands) lists every `#command`.
 - [Features](/features) shows what the engine can do, grouped by area.
 - [Glossary](/glossary) defines the shared vocabulary.
-- The in-game help (`#help`) and [docs.at.zed.cafe](https://docs.at.zed.cafe) cover controls and command hints while you play.
