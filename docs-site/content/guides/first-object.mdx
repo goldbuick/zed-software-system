@@ -3,7 +3,7 @@ title: Your first object
 description: Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, scroll text, and links.
 ---
 
-Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have a board from [Your first board](/guides/first-board) and the **ZTK** kit loaded.
+Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have a board from [Your first board](/guides/first-board) and **ZZT Tool Kit** loaded.
 
 ## Make the lamp
 
@@ -166,7 +166,7 @@ $toast you found a gem
 #die
 ```
 
-The ZTK `key` and `door` pages use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Run `#pageopen key` and `#pageopen door` to read them.
+The ZZT Tool Kit `key` and `door` pages use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Run `#pageopen key` and `#pageopen door` to read them.
 
 ## Fix mistakes
 
