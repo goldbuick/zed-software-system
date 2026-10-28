@@ -399,7 +399,7 @@ function fastarpticks(
   return ticks
 }
 
-/** Main bus (sidechain + compressor) — Tone offline reference via parity-fixtures:regen:tone */
+/** Main bus (sidechain + compressor) parity patches. */
 export const MAIN_DYNAMICS_PARITY_PATCHES: MAIN_DYNAMICS_PARITY_PATCH[] = [
   {
     id: 'main-duck-bg',

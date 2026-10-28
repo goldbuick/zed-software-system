@@ -3,8 +3,7 @@
  *
  * Usage:
  *   yarn play-drum:loop
- *   npx tsx scripts/run-daisy-parity-loop.ts --suite sidechain
- *   npx tsx scripts/run-daisy-parity-loop.ts --suite synth-env --calibrate-on-fail
+ *   npx tsx tasks/lib/daisy/parity-loop.ts --suite notepop
  */
 import { execSync } from 'node:child_process'
 import path from 'node:path'
@@ -25,12 +24,7 @@ import {
 
 const PROJECT = process.cwd()
 
-export type DAISY_PARITY_SUITE =
-  | 'play-drum'
-  | 'sidechain'
-  | 'synth-env'
-  | 'notepop'
-  | 'pitch'
+export type DAISY_PARITY_SUITE = 'play-drum' | 'notepop' | 'pitch'
 
 const SUITE_CONFIG: Record<
   DAISY_PARITY_SUITE,
@@ -41,18 +35,6 @@ const SUITE_CONFIG: Record<
     render: 'yarn task run ops:daisy:play-drum-balance:render',
     test: 'yarn task run ops:daisy:play-drum-balance:test',
     calibrate: 'yarn task run ops:daisy:play-drum-balance:calibrate',
-  },
-  sidechain: {
-    label: 'sidechain',
-    render: 'yarn task run ops:daisy:sidechain:parity:render',
-    test: 'yarn task run ops:daisy:sidechain:parity:test',
-    calibrate: 'yarn task run ops:daisy:sidechain:parity:calibrate',
-  },
-  'synth-env': {
-    label: 'synth env',
-    render: 'yarn task run ops:daisy:synth-env:render',
-    test: 'yarn task run ops:daisy:synth-env:test',
-    calibrate: 'yarn task run ops:daisy:synth-env:calibrate',
   },
   notepop: {
     label: 'notepop',

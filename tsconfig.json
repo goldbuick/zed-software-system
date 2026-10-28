@@ -15,9 +15,6 @@
       "ops/lib/*": [
         "./ops/lib/*"
       ],
-      "ops/archive/*": [
-        "./ops/archive/*"
-      ],
       "ops/lib/test/*": [
         "./ops/lib/test/*"
       ],
@@ -57,8 +54,7 @@
     "ops/headless",
     "ops/fixtures",
     "ops/lib",
-    "ops/lib/test",
-    "ops/archive"
+    "ops/lib/test"
   ],
   "exclude": []
 }

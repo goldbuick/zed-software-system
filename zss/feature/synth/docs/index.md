@@ -59,6 +59,6 @@ Creates and returns a full synth instance (`AUDIO_SYNTH`).
 1. Creates audio chain (audiochain.ts)
 2. Creates source+FX setup (sourcefxsetup.ts)
 3. Creates tick handler (tickhandler.ts)
-4. Wraps tick handler in Tone.js Part (pacer)
+4. Schedules ticks on the Daisy engine (pacer)
 5. Creates record handler (recordhandler.ts)
 6. Starts pacer, applies defaults

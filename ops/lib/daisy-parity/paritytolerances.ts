@@ -1,6 +1,3 @@
-/** Patches with no Tone archive implementation — excluded from Tone gate count. */
-export const TONE_PARITY_EXCLUDED = ['noise-c4', 'hollow-c4'] as const
-
 export type PARITY_TOLERANCE_PROFILE = {
   rmsdbtol: number
   peakdbtol: number

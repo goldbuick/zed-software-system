@@ -1,43 +1,34 @@
-# DaisySP backend cutover
+# DaisySP backend
 
-**DaisySP is the sole synth backend** (May 2026). Maximilian WASM was archived to `archive/maxi/`.
+**DaisySP is the only synth.** `createsynthbackend()` always boots Daisy via `bootdaisysynth()`.
 
-## Reference target
+## Fixtures
 
-Parity gates use **archived Tone.js** as ground truth (`parity-metrics-tone.json`). Regenerate Tone reference after any Tone archive change:
-
-```bash
-yarn task run ops:fixtures:synth:regen:tone
-```
-
-Daisy drum fixtures (after DaisySP drum migration or preset changes):
+Drum metrics live in `ops/fixtures/synth/wasm/parity-metrics-daisy.json`. SOS voice fixtures live under `ops/fixtures/synth/daisy/`. Regenerate after a drum or SOS preset change:
 
 ```bash
 yarn task run ops:daisy:build
 yarn task run ops:fixtures:synth:regen:drums
+yarn task run ops:fixtures:synth:regen:sos-voice
 ```
 
-### Tone-excluded patches
+`yarn task run ops:fixtures:synth:regen:all` runs both after a Daisy build.
 
-These have no Tone implementation — excluded from Tone gate count (23/25 voice patches):
+## Checks
 
-- `noise-c4`, `hollow-c4` (noise voices)
+```bash
+yarn task run ops:daisy:regression:test
+yarn task run ops:daisy:adsr-parity:test
+yarn task run ops:daisy:bench:synth
+```
 
-## Cutover (done)
+Manual drum render check (not CI):
 
-`createsynthbackend()` always boots DaisySP via `bootdaisysynth()`.
+```bash
+ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 yarn ops:test wasmparity
+```
 
-## Parity gate reference
-
-Manual parity criteria:
-
-1. Voice parity: 23/25 Tone-backed `WASM_PARITY_PATCHES` pass (±1 dB RMS, ±2 dB peak, spectral tolerances per patch profile)
-2. Drum parity: 10/10 `DRUM_PARITY_PATCHES` pass vs **Daisy-native fixtures** (`parity-metrics-daisy.json`)
-3. FX parity: 7/7 `FX_PARITY_PATCHES` pass vs Tone fixtures
-4. Master parity: play/bgplay/tts mix fixtures pass
-5. Record parity: offline render matches Tone fixture expectations
-6. E2E smoke: `#play`, `#bgplay`, `#synth`, FX commands, TTS, `synthrecord`
-7. Bench: `yarn task run ops:daisy:bench:synth`
+That compares drum patches to `parity-metrics-daisy.json`. Metrics are RMS, peak, spectral centroid, and 3-band energy ratios (`paritymetrics.ts`).
 
 ## Build
 
@@ -45,30 +36,17 @@ Manual parity criteria:
 yarn task run ops:daisy:build   # requires Emscripten (source emsdk_env.sh)
 ```
 
-Rebuild and commit `cafe/public/daisy/*` after any C++ change. `yarn task run ops:daisy:build` is **manual only** — not wired into default `yarn task run cafe:build`.
+Rebuild and commit `cafe/public/daisy/*` after any C++ change. `ops:daisy:build` is manual only — it is not a step of `cafe:build`.
 
 `yarn task run ops:daisy:bundle:processor` injects SAB offsets from `daisycontrol.ts` into the worklet (must match `kVoiceCfgStride` in `zss_daisy_synth.cpp`).
 
-## Manual parity
+## Architecture
 
-```bash
-# Daisy vs Tone reference (primary gate)
-ZSS_PARITY_RENDER=1 ZSS_DAISY_PARITY=1 ZSS_TONE_REFERENCE=1 yarn ops:test wasmparity
-```
-
-Drum patches compare against `parity-metrics-daisy.json`; voice/FX use Tone reference with `ZSS_TONE_REFERENCE=1`.
-
-Parity tests are **not** run in CI.
-
-Metrics include RMS, peak, spectral centroid, and 3-band energy ratios (`paritymetrics.ts`).
-
-## Architecture notes
-
-- WASM build pattern from [WasmPatcher](https://github.com/jaffco/WasmPatcher) (Emscripten + DaisySP submodule at `submodules/DaisySP`)
+- WASM build from [WasmPatcher](https://github.com/jaffco/WasmPatcher) (Emscripten + DaisySP submodule at `submodules/DaisySP`)
 - Dedicated `daisy-processor.js` AudioWorklet
-- SAB channels synced into WASM control buffer each audio block
-- C++ graph reads `zss_osccfg`, `zss_algocfg`, `zss_vibrato`; Tone-faithful voices, FX, master; **DaisySP drum classes** for tick/tweet/snares/bass/tom (cowbell/clap/woodblocks remain custom)
-- Shared SAB/scheduling layer in `backend/wasm/` (not a runtime backend)
+- SAB channels copied into the WASM control buffer each audio block
+- C++ graph reads `zss_osccfg`, `zss_algocfg`, `zss_vibrato`
+- Shared SAB and scheduling live in `backend/wasm/`
 
 ## Bundle size (2026-05-29)
 
@@ -78,4 +56,4 @@ Metrics include RMS, peak, spectral centroid, and 3-band energy ratios (`paritym
 | `cafe/public/daisy/zss_daisy.js` | ~12 KB |
 | `cafe/public/daisy/daisy-processor.js` | ~5 KB |
 
-Only Daisy WASM ships in production builds. Maximilian assets live under `ops/archive/wasm/maximilian/` (reference only).
+Only the Daisy WASM ships in production builds.

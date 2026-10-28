@@ -32,7 +32,7 @@ Aliases: `fcrush`→`fc`, `distort`→`distortion`.
 | `off` | Mute send |
 | `0–100` (number) | Send level via `volumetodb(v) = 20·log10(v) − 35` |
 
-**`on` preset levels** ([voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts), [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts)):
+**`on` preset levels** ([wasmfxstate.ts](../backend/wasm/wasmfxstate.ts)):
 
 | FX | Tone `on` | WASM `on` |
 |----|-----------|-----------|
@@ -66,7 +66,7 @@ Bare `#echo`, `#reverb`, etc. → groups **0 and 1** only. `#echo1`…`#echo4` �
 
 **Daisy parallel sends** ([`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) `applyfxgroup()`): each FX taps the **same dry** sample; `out = dry + compress(Σ sendᵢ·Δᵢ)`. No order between FX types. Vibrato is pitch-only (not in the wet sum). Spec: [parallel-fx-bus.md](parallel-fx-bus.md).
 
-Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../ops/archive/synth/maxi/wasmfxplaycode.ts)); archived Tone used **parallel** `chain()` per effect.
+Daisy uses **parallel sends** in `applyfxgroup()`.
 
 ### Multi-FX gain (Daisy)
 
@@ -196,7 +196,7 @@ Full layout: [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts).
 
 ## Tone.js library defaults vs ZSS overrides
 
-ZSS [fx.ts](../../../../ops/archive/synth/tone/fx.ts) `applyreset()` overrides Tone library defaults:
+Historical Tone library defaults that the Daisy send levels still match:
 
 ```
 reverb:     wet 0.5, decay 2.5, preDelay 0.01
@@ -247,8 +247,6 @@ Play-wide:    echo, reverb, fcrush, autofilter, distort, vibrato, autowah
 | Topic | Path |
 |-------|------|
 | WASM SAB + config | [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts) |
-| WASM DSP chain | [wasmfxplaycode.ts](../../../../ops/archive/synth/maxi/wasmfxplaycode.ts) |
+| Daisy DSP | [zss_daisy_synth.cpp](../backend/daisy/native/zss_daisy_synth.cpp) |
 | Bus mapping | [voicefxgroup.ts](../voicefxgroup.ts) |
 | Firmware commands | [firmware/audio.ts](../../../firmware/audio.ts) |
-| Tone FX chain | [archive/tone/fx.ts](../../../../ops/archive/synth/tone/fx.ts) |
-| Tone voicefx dispatch | [archive/tone/voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts) |

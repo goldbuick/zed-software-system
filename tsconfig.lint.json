@@ -12,7 +12,6 @@
     "ops/lib",
     "ops/tests/setup",
     "ops/lib/test",
-    "ops/archive",
     "tasks",
     "vite.config.ts",
     "ops/jest.config.ts"

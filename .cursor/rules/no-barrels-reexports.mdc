@@ -55,7 +55,7 @@ Do **not** grow this pattern. When touching such a file, prefer pointing call si
 | Import for **local use only** (no re-export) | `import { foo } from './foo'; foo()` |
 | Third-party rename in a **dedicated mapping module** that owns the project name | `zss/mapping/types.ts`: `export { isEqual as isequal }` — that file **is** the defining module for `isequal` |
 
-`ops/archive/**` and `submodules/**` are out of scope for cleanup; still do not add new re-exports there.
+`submodules/**` is out of scope for cleanup; still do not add new re-exports there.
 
 ## Required instead
 

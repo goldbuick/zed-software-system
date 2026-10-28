@@ -1,39 +1,17 @@
 /**
- * ZssLinearEnv port tests + committed Tone sustain reference fixture.
- * Linear vs exponential envelopes differ in sustain level (~10+ dB); full
- * Tone-vs-Daisy gates live in `yarn env-parity:test` (amsaw + env config).
+ * ZssLinearEnv unit checks. The envelope is linear ADSR with note-on reset.
  */
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-
 import {
   ENV_PARITY_ADSR_SEC,
   ZssLinearEnv,
   defaultenvparityparams,
   renderzssenvparitysignal,
 } from 'zss/feature/synth/backend/wasm/adsrenvcurve'
-import type { LEVEL_STABILITY_METRICS } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 import { tonenotationseconds } from 'zss/feature/synth/playnotation'
-import { SYNTH_WASM_FIXTURES_DIR } from 'ops/lib/fixturepaths'
 
 const SAMPLERATE = 44100
 const WINDOW_MS = 46
-
-const FIXTURE_PATH = path.join(
-  SYNTH_WASM_FIXTURES_DIR,
-  'adsrenvcurve-tone-metrics.json',
-)
-
-type ADSR_CURVE_FIXTURE = {
-  tone: LEVEL_STABILITY_METRICS
-  sustain: { peakdb: number; rmsdb: number }
-}
-
-function loadfixture(): ADSR_CURVE_FIXTURE {
-  const raw = readFileSync(FIXTURE_PATH, 'utf8')
-  return JSON.parse(raw) as ADSR_CURVE_FIXTURE
-}
 
 function runenvtolevel(
   env: ZssLinearEnv,
@@ -80,17 +58,11 @@ describe('ZssLinearEnv', () => {
   })
 })
 
-describe('adsrenvcurve tone fixture', () => {
+describe('adsrenvcurve render', () => {
   const gatesec = tonenotationseconds('2n')
   const totalsec = gatesec + ENV_PARITY_ADSR_SEC.release + 0.5
 
-  it('loads committed Tone offline reference metrics', () => {
-    const fixture = loadfixture()
-    expect(fixture.tone.overallpeakdb).toBeGreaterThan(-20)
-    expect(fixture.sustain.peakdb).toBeLessThan(0)
-  })
-
-  it('renders finite C4 sine × linear envelope for offline parity', () => {
+  it('renders finite C4 sine times a linear envelope', () => {
     const zss = renderzssenvparitysignal(gatesec, totalsec, SAMPLERATE)
     const metrics = analyzelevelstability(zss, SAMPLERATE, WINDOW_MS)
     expect(metrics.overallpeakdb).toBeGreaterThan(-50)

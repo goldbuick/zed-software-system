@@ -14,7 +14,6 @@ export const LANG_COOLREGIONSBOW_DIR = fixturepath('lang', 'coolregionsbow')
 
 export const SYNTH_WASM_FIXTURES_DIR = fixturepath('synth', 'wasm')
 export const SYNTH_DAISY_FIXTURES_DIR = fixturepath('synth', 'daisy')
-export const SYNTH_MAXI_FIXTURES_DIR = fixturepath('synth', 'maxi')
 
 export const LANG_ZZTOOP_DIR = fixturepath('lang', 'zztoop')
 export const LANG_ZZTOOP_MANIFEST_PATH = fixturepath(

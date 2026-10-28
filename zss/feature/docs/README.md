@@ -50,7 +50,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 
 ## Submodules
 
-- **synth** — Daisy WASM synth (AudioWorklet); archived Tone.js parity refs under synth docs; see [synth/docs/index.md](../synth/docs/index.md)
+- **synth** — Daisy WASM synth (AudioWorklet); see [synth/docs/index.md](../synth/docs/index.md)
 - **tts** — Piper/Supertonic/Fish TTS in ttsspace worker; main-thread playback in `tts/client.ts`
 - **stt** — Moonshine speech recognition in sttspace worker; mic capture in `stt/speechtotext.ts`
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`

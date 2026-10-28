@@ -30,11 +30,8 @@ export async function startparityvite(
         cafe: path.join(projectroot, 'cafe'),
         'ops/fixtures': path.join(projectroot, 'ops/fixtures'),
         'ops/lib': path.join(projectroot, 'ops/lib'),
-        'ops/archive': path.join(projectroot, 'ops/archive'),
         'ops/lib/test': path.join(projectroot, 'ops/lib/test'),
       },
-      // Deep tone/build/esm/* imports must share one Tone Context with `tone`.
-      dedupe: ['tone'],
     },
     server: {
       middlewareMode: true,
@@ -46,15 +43,12 @@ export async function startparityvite(
     },
     appType: 'spa',
     optimizeDeps: {
-      // Do not list tone/build/esm/* here -- separate prebundles create a
-      // second Tone Context and Channel.receive throws InvalidAccessError.
       include: [
         'tonal',
         'vite-plugin-node-polyfills/shims/buffer',
         'vite-plugin-node-polyfills/shims/global',
         'vite-plugin-node-polyfills/shims/process',
       ],
-      exclude: ['tone'],
     },
   })
 
@@ -64,14 +58,9 @@ export async function startparityvite(
         req,
         res,
         () => {
-          fixtureprefixmiddleware(
-            '/archive/maximilian',
-            path.join(projectroot, 'ops/archive/wasm/maximilian'),
-          )(req, res, () => {
-            vite.middlewares.handle(req, res, () => {
-              res.statusCode = 404
-              res.end('not found')
-            })
+          vite.middlewares.handle(req, res, () => {
+            res.statusCode = 404
+            res.end('not found')
           })
         },
       )
