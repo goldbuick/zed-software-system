@@ -1,33 +1,33 @@
 ---
 title: Your first ten minutes
-description: Open zed.cafe, find your way around the terminal, load a starter kit, and look inside a book.
+description: Open zed.cafe, find your way around the `terminal`, load a starter kit, and look inside a book.
 ---
 
 By the end of this guide you will know how to open the command line, load a starter kit, and see the pages inside a book.
 
 ## Open the terminal
 
-Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the terminal opens on its own and prints three things:
+Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the `terminal` opens on its own and prints three things:
 
 - a `no content found` notice (this is expected on a first visit)
 - a list of **starter kits** (below the logo)
 - the hint `try typing #help and pressing enter! or ctrl+h`
 
-The terminal is the command line, or CLI. Almost everything in Zed Cafe starts here.
+The `terminal` is the command line, or `CLI`. Almost everything in Zed Cafe starts here.
 
 | Key | What it does |
 |-----|--------------|
-| `?` or `/` | Open the CLI |
-| `#` | Open the CLI with `#` already typed, ready for a command |
-| `@` | Open the CLI with `@` already typed, ready to make a page |
-| `C` | Open quick chat (it closes after Enter) |
-| `esc` | Close the CLI, a scroll, or the editor |
+| `?` or `/` | Open the `CLI` |
+| `#` | Open the `CLI` with `#` already typed, ready for a command |
+| `@` | Open the `CLI` with `@` already typed, ready to make a page |
+| `C` | Open `quick chat` (it closes after Enter) |
+| `esc` | Close the `CLI`, a `scroll`, or the `code editor` |
 | `tab` | Change the layout |
-| `up` / `down` | Move between CLI lines |
+| `up` / `down` | Move between `CLI` lines |
 | `enter` | Run the selected line, or follow a link |
 
 :::note
-Lines in the terminal can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
+Lines in the `terminal` can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
 :::
 
 ## Load a starter kit
@@ -53,7 +53,7 @@ The other kits are worth a look later. **ZZT Tool Kit** is the ZZT-style buildin
 
 ## Look inside the book
 
-Run these one at a time. Each one prints its results into the terminal.
+Run these one at a time. Each one prints its results into the `terminal`.
 
 <Steps>
   <Step title="List the books">
@@ -72,20 +72,20 @@ Run these one at a time. Each one prints its results into the terminal.
     `#boards` lists only boards. Quick Start Kit has one. Select it to go there. ZZT Tool Kit's list is empty, because that book has no board pages.
   </Step>
   <Step title="Open a page">
-    Open any page from the `#pages` list. The code editor shows how that element is written. You do not need to understand it yet. Notice its shape:
+    Open any page from the `#pages` list. The `code editor` shows how that element is written. You do not need to understand it yet. Notice its shape:
 
     - lines that start with `@` are **stats**
     - lines that start with `:` are **labels**, places where code starts running
     - lines that start with `#` are **commands**
     - lines that start with `'` are comments
 
-    Press `esc` to close the editor without changing anything.
+    Press `esc` to close the `code editor` without changing anything.
   </Step>
 </Steps>
 
 ## Try a command on the world
 
-You are standing on Quick Start Kit's board. The CLI can change it while the game runs. `#put` places an element in a direction. The kind is the name of a page in this book, which is why loading a kit first matters. Pick a terrain name from `#pages` and try:
+You are standing on Quick Start Kit's board. The `CLI` can change it while the game runs. `#put` places an element in a direction. The kind is the name of a page in this book, which is why loading a kit first matters. Pick a terrain name from `#pages` and try:
 
 ```text
 #put north red <kind>
@@ -113,7 +113,7 @@ zed.cafe will autosave every 60 seconds, but you can also manually save.
 
 ## What you learned
 
-- The terminal is the CLI. Open it with `?`, `#`, or `@`. Close it with `esc`.
+- The `terminal` is the `CLI`. Open it with `?`, `#`, or `@`. Close it with `esc`.
 - A starter kit is a book of ready-made pages. Quick Start Kit includes a board. ZZT Tool Kit is the ZZT-style set, and it has no boards.
 - `#books`, `#pages`, and `#boards` let you explore a book. `#put` places a kind from that book onto the board.
 

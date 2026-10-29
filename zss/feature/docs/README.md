@@ -27,6 +27,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardpivot.md](boardpivot.md) | Rotate board region by degrees |
 | [boardsnapshot.md](boardsnapshot.md) | Snapshot/revert board state |
 | [boardremix.md](boardremix.md) | Wavefunction collapse remix |
+| [wfcoverlapping.md](wfcoverlapping.md) | Overlapping WFC solver (fast-wfc) |
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |

@@ -8,12 +8,13 @@ import { scrollwritelines } from 'zss/gadget/data/scrollwritelines'
 import { ptstoarea } from 'zss/mapping/2d'
 import { waitfor } from 'zss/mapping/tick'
 import { isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
 import { memoryreadboardbyaddress } from './boards'
 import { memorycreateinspectionconfig } from './inspectionconfig'
 import { memoryreadplayerboard } from './playermanagement'
-import { memoryreadoperator } from './session'
+import { memoryreadmainbook, memoryreadoperator } from './session'
 
 type REMIX_CONFIG = {
   stat: string
@@ -44,9 +45,15 @@ export async function memoryinspectremixcommand(path: string, player: string) {
     case 'remixrun': {
       const cfg = remixconfig.memoryread()
       const sourceboard = memoryreadboardbyaddress(cfg.stat)
-      if (ispresent(sourceboard)) {
-        if (
-          boardremix(
+      const mainbook = memoryreadmainbook()
+      if (!ispresent(mainbook)) {
+        apitoast(SOFTWARE, player, `failed to remix`)
+      } else if (ispresent(sourceboard)) {
+        const previousbook = READ_CONTEXT.book
+        READ_CONTEXT.book = mainbook
+        let remixed = false
+        try {
+          remixed = boardremix(
             board.id,
             sourceboard.id,
             cfg.patternsize,
@@ -55,7 +62,10 @@ export async function memoryinspectremixcommand(path: string, player: string) {
             p2,
             'all',
           )
-        ) {
+        } finally {
+          READ_CONTEXT.book = previousbook
+        }
+        if (remixed) {
           await waitfor(3000)
         } else {
           apitoast(SOFTWARE, player, `failed to remix`)
