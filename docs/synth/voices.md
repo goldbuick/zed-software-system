@@ -251,29 +251,29 @@ The same keys apply to algo1 through algo7, including the 1-5 channel forms.
 
 ### detune
 
-`#string detune <0-1>`
+`#synth detune <0-1>`
 
 ### string pwm
 
-`#string pwm <0-1>`
+`#synth pwm <0-1>`
 
 ### vib
 
-`#string vib <0-1>`
+`#synth vib <0-1>`
 
 ### filter
 
-`#string filter <0-1>`
+`#synth filter <0-1>`
 
 ### string env
 
-`#string env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### string vol
 
-`#string vol <db>`
+`#synth vol <db>`
 
-`#string1` through `#string5` work like `#synth1` through `#synth5`.
+Select with `#synth string`, then set a key with `#synth detune`. `#synth1` through `#synth4` set one play voice. `#synth5` is bgplay.
 
 ### pluck
 
@@ -281,27 +281,27 @@ The same keys apply to algo1 through algo7, including the 1-5 channel forms.
 
 ### structure
 
-`#pluck structure <0-1>`
+`#synth structure <0-1>`
 
 ### pluck brightness
 
-`#pluck brightness <0-1>`
+`#synth brightness <0-1>`
 
 ### pluck damping
 
-`#pluck damping <0-1>`
+`#synth damping <0-1>`
 
 ### accent
 
-`#pluck accent <0-1>`
+`#synth accent <0-1>`
 
 ### pluck env
 
-`#pluck env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### pluck vol
 
-`#pluck vol <db>`
+`#synth vol <db>`
 
 ### flute
 
@@ -309,39 +309,39 @@ The same keys apply to algo1 through algo7, including the 1-5 channel forms.
 
 ### breath
 
-`#flute breath <0-1>`
+`#synth breath <0-1>`
 
 ### pressure
 
-`#flute pressure <0-1>`
+`#synth pressure <0-1>`
 
 ### flute brightness
 
-`#flute brightness <0-1>`
+`#synth brightness <0-1>`
 
 ### resonance
 
-`#flute resonance <0-1>`
+`#synth resonance <0-1>`
 
 ### flute env
 
-`#flute env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### flute vol
 
-`#flute vol <db>`
+`#synth vol <db>`
 
 ### clarinet
 
 `#synth clarinet`
 
-The same keys as flute, including the 1-5 channel forms.
+The same keys as flute.
 
 ### brass
 
 `#synth brass`
 
-The same keys as flute, including the 1-5 channel forms.
+The same keys as flute.
 
 ### piano
 
@@ -349,27 +349,27 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### piano spread
 
-`#piano spread <0-1>`
+`#synth spread <0-1>`
 
 ### hammer
 
-`#piano hammer <0-1>`
+`#synth hammer <0-1>`
 
 ### piano brightness
 
-`#piano brightness <0-1>`
+`#synth brightness <0-1>`
 
 ### piano damping
 
-`#piano damping <0-1>`
+`#synth damping <0-1>`
 
 ### piano env
 
-`#piano env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### piano vol
 
-`#piano vol <db>`
+`#synth vol <db>`
 
 ### violin
 
@@ -377,31 +377,31 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### bow
 
-`#violin bow <0-1>`
+`#synth bow <0-1>`
 
 ### violin pressure
 
-`#violin pressure <0-1>`
+`#synth pressure <0-1>`
 
 ### violin vib
 
-`#violin vib <0-1>`
+`#synth vib <0-1>`
 
 ### body
 
-`#violin body <0-1>`
+`#synth body <0-1>`
 
 ### violin port
 
-`#violin port <seconds>`
+`#synth port <seconds>`
 
 ### violin env
 
-`#violin env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### violin vol
 
-`#violin vol <db>`
+`#synth vol <db>`
 
 ### steel
 
@@ -409,27 +409,27 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### pick
 
-`#steel pick <0-1>`
+`#synth pick <0-1>`
 
 ### steel body
 
-`#steel body <0-1>`
+`#synth body <0-1>`
 
 ### steel damping
 
-`#steel damping <0-1>`
+`#synth damping <0-1>`
 
 ### position
 
-`#steel position <0-1>`
+`#synth position <0-1>`
 
 ### steel env
 
-`#steel env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### steel vol
 
-`#steel vol <db>`
+`#synth vol <db>`
 
 ### tonewheel
 
@@ -437,29 +437,29 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### drawbar
 
-`#tonewheel drawbar <0-1>`
+`#synth drawbar <0-1>`
 
 Drawbar is an organ parameter, not a voice type.
 
 ### click
 
-`#tonewheel click <0-1>`
+`#synth click <0-1>`
 
 ### leak
 
-`#tonewheel leak <0-1>`
+`#synth leak <0-1>`
 
 ### bright
 
-`#tonewheel bright <0-1>`
+`#synth bright <0-1>`
 
 ### tonewheel env
 
-`#tonewheel env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### tonewheel vol
 
-`#tonewheel vol <db>`
+`#synth vol <db>`
 
 ## Shared settings
 
@@ -486,11 +486,3 @@ Portamento time.
 ### env
 
 `#synth env <a> <d> <s> <r>`
-
-## Config-only commands
-
-### config only
-
-`#string`, `#fmsquare`, `#piano`, and the other voice-named commands do not select the type. Use `#synth <name>` to select.
-
-Bare `#string` is play voices 0-3. `#string1` through `#string4` set one voice. `#string5` is bgplay. The same 1-5 forms exist for the other voice names.

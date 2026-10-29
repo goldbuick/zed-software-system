@@ -125,7 +125,7 @@ Bundled under [`zss/rom/refscroll/`](../../rom/refscroll/) as **`.md`** files. A
 
 `cliscroll`, `commandsscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notesscroll`.
 
-Synth, effects, scales, and TTS voices are Blume pages opened from [`menu.md`](../../rom/refscroll/menu.md): [`voices.md`](../../feature/synth/docs/voices.md), [`effects.md`](../../feature/synth/docs/effects.md), [`scales.md`](../../feature/synth/docs/scales.md), [`tts-voices.md`](../../feature/docs/tts-voices.md).
+Synth, effects, scales, and TTS voices are Blume pages opened from [`menu.md`](../../rom/refscroll/menu.md): [`voices.md`](../../feature/synth/docs/(play)/voices.md), [`effects.md`](../../feature/synth/docs/(play)/effects.md), [`scales.md`](../../feature/synth/docs/(play)/scales.md), [`tts-voices.md`](../../feature/docs/tts-voices.md).
 
 ---
 

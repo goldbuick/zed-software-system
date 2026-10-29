@@ -17,33 +17,6 @@ title: "Recording & MP3 export"
 
 If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
 
-Archived Maximilian path: [`archive/maxi/wasmrecordhandler.ts`](../../../../ops/archive/synth/maxi/wasmrecordhandler.ts).
-
----
-
-## Archived Tone.js path (`archive/tone/recordhandler.ts`)
-
-### synthflush()
-
-Clears recording state:
-- `recordedticks = []`
-- `recordlastpercent = 0`
-- `recordisrendering = 0`
-
-### synthrecord(filename?)
-
-1. Collects `recordedticks` from tick handler
-2. Computes duration: `max(time) - min(time) + 5` seconds
-3. Shifts all times so min = 0.1 (small headroom)
-4. Captures source/FX state via `getreplay()`
-5. Creates offline context with `Offline()`
-6. Rebuilds synth: `await setupsynth()`, `createsynth()`
-7. Applies state: `applyreplay()`, `synthreplay()`
-8. Renders
-9. Converts buffer to MP3 via `converttomp3()`
-10. Triggers download via `<a download>`
-11. Destroys temporary synth
-
 ---
 
 ## mp3.ts

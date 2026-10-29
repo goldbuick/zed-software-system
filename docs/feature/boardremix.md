@@ -6,7 +6,7 @@ title: boardremix.ts
 
 ## Dependencies
 
-- `wavefunctioncollapse` — WFC algorithm
+- `./wfcoverlapping` — overlapping wave function collapse (fast-wfc propagator)
 - `zss/mapping/array` — pick
 - `zss/mapping/types` — isnumber, ispresent
 - `zss/memory/*` — board init, read, write, spatial queries
@@ -23,6 +23,6 @@ title: boardremix.ts
 ## Algorithm
 
 - Scans source board into image (element kinds mapped to alpha indices)
-- Builds WFC model from source patterns
+- Builds an overlapping WFC model from source patterns (`wfcoverlappinggenerate`)
 - Generates target region; clears existing elements first
 - Maps alpha indices back to element kinds and writes terrain/objects

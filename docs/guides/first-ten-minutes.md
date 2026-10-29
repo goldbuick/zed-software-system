@@ -1,105 +1,105 @@
 ---
 title: Your first ten minutes
-description: Open zed.cafe, find your way around the terminal, load a starter kit, and look inside a book.
+description: Open zed.cafe, find your way around the `terminal`, load a starter kit, and look inside a book.
 ---
 
-By the end of this guide you will know how to open the command line, read the built-in help, load a starter kit, and see the pages inside a book.
+By the end of this guide you will know how to open the command line, load a starter kit, and see the pages inside a book.
 
 ## Open the terminal
 
-Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the terminal opens on its own and prints three things:
+Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the `terminal` opens on its own and prints three things:
 
 - a `no content found` notice (this is expected on a first visit)
-- a list of **starter kits** (the `stk list`)
-- the hint `try typing #help and pressing enter!`
+- a list of **starter kits** (below the logo)
+- the hint `try typing #help and pressing enter! or ctrl+h`
 
-The terminal is the command line, or CLI. Almost everything in Zed Cafe starts here.
+The `terminal` is the command line, or `cli`. Almost everything in Zed Cafe starts here.
 
 | Key | What it does |
 |-----|--------------|
-| `?` or `/` | Open the CLI |
-| `#` | Open the CLI with `#` already typed, ready for a command |
-| `@` | Open the CLI with `@` already typed, ready to make a page |
-| `C` | Open quick chat (it closes after Enter) |
-| `esc` | Close the CLI, a scroll, or the editor |
+| `?` or `/` | Open the `cli` |
+| `#` | Open the `cli` with `#` already typed, ready for a command |
+| `@` | Open the `cli` with `@` already typed, ready to make a page |
+| `C` | Open `quick chat` (it closes after Enter) |
+| `esc` | Close the `cli`, a `scroll`, or the `code editor` |
 | `tab` | Change the layout |
-| up / down arrows | Move between CLI lines |
-| enter | Run the selected line, or follow a link |
+| `up` / `down` | Move between `cli` lines |
+| `enter` | Run the selected line, or follow a link |
 
 :::note
-Lines in the terminal can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
+Lines in the `terminal` can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
 :::
-
-## Read the help
-
-1. **Run #help**
-
-    Press `#`, type `help`, and press Enter. A help scroll opens.
-
-2. **Open getting started**
-
-    Select **controls and getting started** (hotkey `1`). Arrow keys move you. Shift plus an arrow key, or `w a s d`, shoots. The same page lists `#books`, `#pages`, `#boards`, and `#save`.
-
-3. **Close the scroll**
-
-    Press `esc`.
 
 ## Load a starter kit
 
-A starter kit is a book that comes with useful pages already made. The guides use **ZTK - ZZT Tool Kit**. It brings a player, terrain like `solid`, `normal`, `breakable`, and `water`, and items like `key`, `door`, `scroll`, and `passage`. Every piece works like its ZZT counterpart.
+:::note
+Zed Cafe has built-in behaviors, but not built-in elements. The engine can move, collide, and run commands. A player, a wall, or a key exists only as a page in a book. A starter kit is that book, already written.
+:::
 
-1. **Pick ZTK from the starter kit list**
+A starter kit is a book that comes with useful pages already made. This guide starts with **Quick Start Kit**, the smaller one. It includes a board, so you are standing in a room as soon as it loads.
 
-    In the terminal's `stk list`, select **ZTK - ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/geNHhyjf](https://bytes.zed.cafe/geNHhyjf) directly.
+1. **Pick Quick Start Kit from the list**
+
+    Below the logo, select **Quick Start Kit**. If the list has scrolled away, open [bytes.zed.cafe/weyMl04a](https://bytes.zed.cafe/weyMl04a) directly.
 
 2. **Wait for it to load**
 
     The page reloads with the kit's book in memory.
 
 :::tip
-The other kits in the list are worth a look later. **QK - Quick Kit** is a smaller toolkit. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
+The other kits are worth a look later. **ZZT Tool Kit** is the ZZT-style building set, with no boards of its own. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
 :::
 
 ## Look inside the book
 
-Run these one at a time. Each one prints its results into the terminal.
+Run these one at a time. Each one prints its results into the `terminal`.
 
-```text
-#books
-#pages
-#boards
-```
+1. **List the books**
 
-- `#books` lists every book in memory. One book is the **opened** book. New pages go there.
-- `#pages` lists every page, with its type. Select one to open it.
-- `#boards` lists only boards. Select one to go there.
+    <CodeBlock code="#books" />
 
-Now open the player's code:
+    `#books` lists every book in memory. One book is the **opened** book. New pages go there.
 
-```text
-#pageopen player
-```
+2. **List the pages**
 
-The code editor opens. This page decides how the player moves, shoots, and draws its sidebar. You do not need to understand it yet. Notice its shape:
+    <CodeBlock code="#pages" />
 
-- lines that start with `@` are **stats** (`@char 2`, `@color white`)
-- lines that start with `:` are **labels**, places where code starts running (`:think`, `:shot`)
-- lines that start with `#` are **commands** (`#set health 100`, `#shoot inputmove`)
-- lines that start with `'` are comments
+    `#pages` lists every page, with its type. Select one to open it.
 
-Press `esc` to close the editor without changing anything.
+3. **List the boards**
+
+    <CodeBlock code="#boards" />
+
+    `#boards` lists only boards. Quick Start Kit has one. Select it to go there. ZZT Tool Kit's list is empty, because that book has no board pages.
+
+4. **Open a page**
+
+    Open any page from the `#pages` list. The `code editor` shows how that element is written. You do not need to understand it yet. Notice its shape:
+
+    - lines that start with `@` are **stats**
+    - lines that start with `:` are **labels**, places where code starts running
+    - lines that start with `#` are **commands**
+    - lines that start with `'` are comments
+
+    Press `esc` to close the `code editor` without changing anything.
 
 ## Try a command on the world
 
-If you are standing on a board, the CLI can change it while the game runs. Try:
+You are standing on Quick Start Kit's board. The `cli` can change it while the game runs. `#put` places an element in a direction. The kind is the name of a page in this book, which is why loading a kit first matters. Pick a terrain name from `#pages` and try:
 
 ```text
-#put north red solid
+#put north red <kind>
 ```
 
-A red wall appears just north of you. `#put` takes a direction and a kind. The kind here is `solid`, with a color word in front. The direction can be `north`, `south`, `east`, or `west`. Kinds come from the book's pages, which is why loading a kit first matters.
+A red element appears just north of you. A color word such as `red` goes in front of the kind. The direction can be `north`, `south`, `east`, or `west`. The next guide stays in this session. `solid` is already in Quick Start Kit.
+
+:::note
+`up`, `down`, `left`, and `right` work too. They mean the same as `north`, `south`, `west`, and `east`.
+:::
 
 ## Save your session
+
+zed.cafe will autosave every 60 seconds, but you can also manually save.
 
 ```text
 #save
@@ -107,11 +107,14 @@ A red wall appears just north of you. `#put` takes a direction and a kind. The k
 
 `#save` writes the current state to your browser's storage, so a reload keeps your work.
 
+:::note
+`ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
+:::
+
 ## What you learned
 
-- The terminal is the CLI. Open it with `?`, `#`, or `@`. Close it with `esc`.
-- `#help`, then **controls and getting started**, covers moving, the command line, and saving.
-- A starter kit is a book of ready-made pages. ZTK gives you ZZT-style building blocks.
-- `#books`, `#pages`, `#boards`, and `#pageopen` let you explore a book.
+- The `terminal` is the `cli`. Open it with `?`, `#`, or `@`. Close it with `esc`.
+- A starter kit is a book of ready-made pages. Quick Start Kit includes a board. ZZT Tool Kit is the ZZT-style set, and it has no boards.
+- `#books`, `#pages`, and `#boards` let you explore a book. `#put` places a kind from that book onto the board.
 
 Next: [Your first board](/guides/first-board).

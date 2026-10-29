@@ -6,7 +6,7 @@ DSP spec for per-group voice FX routing in `zss_daisy_synth.cpp`.
 
 ## Routing
 
-- **4 FX groups** (play 0–1, play 2–3, bgplay, TTS) — see [voicefxgroup.ts](../voicefxgroup.ts).
+- **4 FX groups** (play 0–1, play 2–3, bgplay, TTS) — see [voicefxgroup.ts](../../voicefxgroup.ts).
 - Each effect is a **parallel send** from the same dry sample per block.
 - **Vibrato** is not in the wet sum; it modulates pitch on play voices before the FX tap.
 
@@ -68,6 +68,6 @@ Sidechain duck → master compressor → razzle → volume — unchanged downstr
 `yarn level-stability:test --filter fxmatrix`:
 
 - Peak vs `fxmatrix-dry` (≤6 dB), peak ≤ −0.5 dBFS
-- Solo FX audibility: peak within 4 dB of dry (distortion ≥ +4 dB hotter); diagnostic wet-lift report in [`fxbusmetrics.ts`](../backend/daisy/fxbusmetrics.ts)
+- Solo FX audibility: peak within 4 dB of dry (distortion ≥ +4 dB hotter); diagnostic wet-lift report in [`fxbusmetrics.ts`](../../backend/daisy/fxbusmetrics.ts)
 
 `yarn fx-bus-metrics:test` — offline wet-lift decomposition report (no Playwright).

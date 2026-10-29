@@ -79,10 +79,6 @@ Dev mode / halt execution (operator only)
 
 Share url (operator only)
 
-### #airshare
-
-Optical MEMORY transfer: invite QR then stream; `receive` opens camera decode; `stop` cancels
-
 ### #save
 
 And persist current state

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://zed.cafe/docs/airshare/protocol</loc></url>
   <url><loc>https://zed.cafe/docs/architecture</loc></url>
   <url><loc>https://zed.cafe/docs/device/README</loc></url>
   <url><loc>https://zed.cafe/docs/device/devices-and-messaging</loc></url>
@@ -29,20 +28,22 @@
   <url><loc>https://zed.cafe/docs/feature/tts-voices</loc></url>
   <url><loc>https://zed.cafe/docs/feature/tts</loc></url>
   <url><loc>https://zed.cafe/docs/feature/url</loc></url>
+  <url><loc>https://zed.cafe/docs/feature/wfcoverlapping</loc></url>
   <url><loc>https://zed.cafe/docs/feature/writeui</loc></url>
-  <url><loc>https://zed.cafe/docs/features/audio-synth</loc></url>
-  <url><loc>https://zed.cafe/docs/features/board-world-building</loc></url>
-  <url><loc>https://zed.cafe/docs/features/cli-headless</loc></url>
-  <url><loc>https://zed.cafe/docs/features/code-editor-tape</loc></url>
-  <url><loc>https://zed.cafe/docs/features/element-scripting</loc></url>
-  <url><loc>https://zed.cafe/docs/features/import-export-parse</loc></url>
-  <url><loc>https://zed.cafe/docs/features/inspector-gadget-tools</loc></url>
-  <url><loc>https://zed.cafe/docs/features/multiplayer-social</loc></url>
-  <url><loc>https://zed.cafe/docs/features/permissions-moderation</loc></url>
-  <url><loc>https://zed.cafe/docs/features/rendering-input</loc></url>
-  <url><loc>https://zed.cafe/docs/features/speech-tts</loc></url>
-  <url><loc>https://zed.cafe/docs/features/storage-session</loc></url>
-  <url><loc>https://zed.cafe/docs/features/terminal-cli</loc></url>
+  <url><loc>https://zed.cafe/docs/features/boards</loc></url>
+  <url><loc>https://zed.cafe/docs/features/books</loc></url>
+  <url><loc>https://zed.cafe/docs/features/display</loc></url>
+  <url><loc>https://zed.cafe/docs/features/editor</loc></url>
+  <url><loc>https://zed.cafe/docs/features/elements</loc></url>
+  <url><loc>https://zed.cafe/docs/features/files</loc></url>
+  <url><loc>https://zed.cafe/docs/features/headless</loc></url>
+  <url><loc>https://zed.cafe/docs/features/help</loc></url>
+  <url><loc>https://zed.cafe/docs/features/inspector</loc></url>
+  <url><loc>https://zed.cafe/docs/features/multiplayer</loc></url>
+  <url><loc>https://zed.cafe/docs/features/permissions</loc></url>
+  <url><loc>https://zed.cafe/docs/features/session</loc></url>
+  <url><loc>https://zed.cafe/docs/features/speech</loc></url>
+  <url><loc>https://zed.cafe/docs/features/synth</loc></url>
   <url><loc>https://zed.cafe/docs/features</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/README</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/audio</loc></url>
@@ -130,11 +131,11 @@
   <url><loc>https://zed.cafe/docs/ops/scroll-validation</loc></url>
   <url><loc>https://zed.cafe/docs/ops/web-broadcast-livekit</loc></url>
   <url><loc>https://zed.cafe/docs/parse/midi-import</loc></url>
-  <url><loc>https://zed.cafe/docs/synth/README</loc></url>
   <url><loc>https://zed.cafe/docs/synth/algosynth</loc></url>
   <url><loc>https://zed.cafe/docs/synth/audiochain</loc></url>
   <url><loc>https://zed.cafe/docs/synth/drums</loc></url>
   <url><loc>https://zed.cafe/docs/synth/effects</loc></url>
+  <url><loc>https://zed.cafe/docs/synth/factory</loc></url>
   <url><loc>https://zed.cafe/docs/synth/fx-and-fxchannels</loc></url>
   <url><loc>https://zed.cafe/docs/synth/fx-types-reference</loc></url>
   <url><loc>https://zed.cafe/docs/synth/gain-levels</loc></url>

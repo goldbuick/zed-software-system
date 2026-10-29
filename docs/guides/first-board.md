@@ -1,51 +1,29 @@
 ---
 title: Your first board
-description: Create two connected boards, build walls with commands and the inspector, then save and share the result.
+description: Build walls on the title board, connect a second room, then save and share the result.
 ---
 
-In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and have the **ZTK** kit loaded.
+In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and still have **Quick Start Kit** open.
 
-## Create a board
+You are already standing on **title**. That book has a board page named `title` and an object page named `player`, which is why login put you here. This guide builds on that board. It does not create a second one named `title`.
 
-1. **Make the page**
-
-    Press `@`, type `board hallway`, and press Enter.
-
-    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board hallway**. If you loaded more than one book, it also shows a book picker. Pick the book you want the board in.
-
-2. **Select create**
-
-    Select **create @board hallway**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
-
-:::tip
-Use one-word names for boards and objects while you learn, such as `hallway` instead of `the hallway`. Names with spaces work, but they need quotes in some commands.
-:::
-
-The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the scroll offers one create link for each page type.
+Walls use `solid`, a terrain page already in this book.
 
 ## Place some walls
 
-Use the CLI to put terrain next to you. Each command places one cell in a direction from where you stand:
+This is the same `#put` as last time. A color word goes in front of the kind. It places one cell in a direction from where you stand:
 
 ```text
 #put north white solid
-#put west white solid
-#put south white solid
 ```
 
-Walk with the arrow keys and repeat to sketch the outline of a room. You can also try other ZTK terrain:
+Walk with the arrow keys and repeat. Type the same command with `west`, `south`, or `east` to sketch the outline of a room. Swap `solid` for other terrain already in this book, such as `water` or `fake`.
 
-```text
-#put east normal
-#put east breakable
-#put east water
-```
-
-Placing walls one at a time is slow. The inspector makes it faster.
+Placing walls one at a time is slow. The `inspector` makes it faster.
 
 ## Copy and tile with the inspector
 
-The **inspector** (also called the gadget) lets you select cells on the board and edit them with the mouse.
+The `inspector` (also called the `gadget`) lets you select cells on the board and edit them with the mouse.
 
 1. **Turn it on**
 
@@ -53,96 +31,120 @@ The **inspector** (also called the gadget) lets you select cells on the board an
 
 2. **Inspect one cell**
 
-    Click a wall you placed. A scroll lists that element's details: its kind, collision, and links to change its **char**, **color**, and **bg** (background). Change the color and watch the wall update live.
+    Click a wall you placed. A `scroll` lists that element's details: its kind, collision, and links to change its **char**, **color**, and **bg** (background). Change the color and watch the wall update live.
 
-3. **Copy a pattern**
+3. **Copy a tile**
 
-    Put two walls next to each other. Then press on one, drag across both, and let go. The area scroll that opens has **copy elements**. Select it.
+    Click one wall. Select **copy elements**.
 
 4. **Tile it across a region**
 
-    Drag across a long empty strip where you want a wall. In the area scroll, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
+    Drag across a long empty strip where you want a wall. In the `gadget scroll` that opens, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
 
 5. **Turn it off**
 
-    Run `#gadget` again to leave the inspector.
+    Run `#gadget` again to turn off the `inspector`.
 
-The area scroll also has **cut**, **make empty**, **set chars**, **set colors**, **set bgs**, a **style** brush, and **remix**. Try them on a copy of your room. Remix fills a region with new patterns based on what is already there.
+The `area scroll` also has **cut**, **make empty**, **set chars**, **set colors**, and **set bgs**. Try them on a copy of your room.
 
 :::note
-The inspector and the CLI are two ways to do the same job. Anything you do in the inspector, a command can also do (`#put`, `#write`, `#copy`, `#remix`). That means you can script your edits later.
+The `inspector` and the `cli` are two ways to do the same job. Anything you do in the `inspector`, a command can also do (`#put`, `#write`, `#change`).
 :::
 
 ## Edit the board's stats
 
-A board is a page too, and its page holds stats that control the room. Open it:
+A board is a page too, and its page holds stats that control the room. Type the page name with `@`:
 
 ```text
-#pageopen hallway
+@title
 ```
 
-The editor opens with one line, `@board hallway`. Add a start position below it:
+The `makeit scroll` opens. It includes a link to edit the title page. Select **edit @board title**.
+
+The `code editor` opens with `@board title` already on the first line. Add a start position below it:
 
 ```text
-@board hallway
+@board title
 @startx 5
 @starty 12
 ```
 
-`@startx` and `@starty` set where a player appears when they arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
+`@startx` and `@starty` are where login spawns you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the `code editor`. Your edits are already saved to the page.
+
+This book already has `@board title` and `@player`. That pair is what login uses, which is why you appeared in this room when the kit loaded.
 
 ## Add a second room and connect them
 
-1. **Create the second board**
+`@` makes a new page. Use it for the next board, not for title.
 
-    Press `@`, type `board cellar`, and select **create @board cellar**. You are now in the empty cellar.
+1. **Type the name**
 
-2. **Add an exit from the hallway**
+    Press `@`, type `cellar`, and press Enter.
 
-    Run `#pageopen hallway` and add an exit line:
+    The `makeit scroll` opens with a create link for each page type.
+
+2. **Pick board**
+
+    Select **create @board cellar**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
+
+3. **Add an exit from title**
+
+    Run `@title`, select **edit @board title**, and add an exit line:
 
     ```text
-    @board hallway
+    @board title
     @startx 5
     @starty 12
     @exiteast cellar
     ```
 
-3. **Add the way back**
+4. **Add the way back**
 
-    Run `#pageopen cellar` and add:
+    Run `@cellar`, select **edit @board cellar**, and add:
 
     ```text
     @board cellar
-    @exitwest hallway
+    @exitwest title
     ```
 
-4. **Walk through**
+5. **Walk through**
 
-    Run `#boards` and select **hallway** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
+    Run `#boards` and select **title** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
 
-There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book. It can also be a join URL or a `https://bytes.zed.cafe/...` content link, which takes the player to a different world.
+:::tip
+Use one-word names for boards and objects while you learn, such as `cellar` instead of `the cellar`. Names with spaces work, but they need quotes in some commands.
+:::
 
-To jump to any board while you build, use `#boardopen <name>` or select it from `#boards`.
+The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the `makeit scroll` offers one create link for each page type.
+
+There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book.
+
+To jump to any board while you build, select it from `#boards` menu.
 
 ## Save and share
 
 ```text
 #save
+```
+
+`#save` writes your current state to the browser, so a reload keeps it. `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
+
+```text
 #share
 ```
 
-- `#save` writes your current state to the browser, so a reload keeps it.
-- `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
+`#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
 
 For more export options, such as downloading a book as JSON, run `#export`.
 
 ## What you learned
 
-- `@board name` creates a board and takes you there. `@` works for every page type.
-- `#put <direction> <kind>` places one element. Color words like `red` or `white` go in front of the kind.
-- `#gadget` toggles the inspector. Use it to select, recolor, copy, tile-paste, and remix.
-- Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Edit them with `#pageopen`.
-- `#save` keeps your work. `#share` hands it to someone else.
+- Quick Start Kit already has `@board title` and `@player`, which is why login put you on title.
+- `#put` places one cell in a direction. A color word such as `white` goes in front of the kind. `solid`, `water`, and `fake` are terrain already in this book.
+- `#gadget` turns the `inspector` on and off. Click one wall and select **copy elements**. Drag a region, then select **paste** and **paste terrain tiled**.
+- Type `@title` and select **edit @board title** to set `@startx` and `@starty`, the spot where login spawns you.
+- Type `@cellar` and pick **create @board cellar** on the `makeit scroll`. Reopen that page with `@cellar`, then **edit @board cellar**.
+- `@exiteast` and `@exitwest` connect the rooms. An exit names a board in your book. Select a board from `#boards` to jump there.
+- `#save` writes your work to the browser. `ctrl+s` runs `#save` too. `#share` makes a link and a QR code.
 
 Next: [Your first object](/guides/first-object).

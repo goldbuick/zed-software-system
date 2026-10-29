@@ -32,7 +32,7 @@ Aliases: `fcrush`→`fc`, `distort`→`distortion`.
 | `off` | Mute send |
 | `0–100` (number) | Send level via `volumetodb(v) = 20·log10(v) − 35` |
 
-**`on` preset levels** ([voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts), [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts)):
+**`on` preset levels** ([wasmfxstate.ts](../../backend/wasm/wasmfxstate.ts)):
 
 | FX | Tone `on` | WASM `on` |
 |----|-----------|-----------|
@@ -64,9 +64,9 @@ Default send at boot: **0** (all FX off).
 
 Bare `#echo`, `#reverb`, etc. → groups **0 and 1** only. `#echo1`…`#echo4` → single group.
 
-**Daisy parallel sends** ([`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) `applyfxgroup()`): each FX taps the **same dry** sample; `out = dry + compress(Σ sendᵢ·Δᵢ)`. No order between FX types. Vibrato is pitch-only (not in the wet sum). Spec: [parallel-fx-bus.md](parallel-fx-bus.md).
+**Daisy parallel sends** ([`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) `applyfxgroup()`): each FX taps the **same dry** sample; `out = dry + compress(Σ sendᵢ·Δᵢ)`. No order between FX types. Vibrato is pitch-only (not in the wet sum). Spec: [parallel-fx-bus.md](/synth/parallel-fx-bus).
 
-Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../ops/archive/synth/maxi/wasmfxplaycode.ts)); archived Tone used **parallel** `chain()` per effect.
+Daisy uses **parallel sends** in `applyfxgroup()`.
 
 ### Multi-FX gain (Daisy)
 
@@ -74,10 +74,10 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../op
 |-------|---------|
 | Send level | SAB slot per FX (`#reverb on` -> ~-10 dB linear for time/drive FX; vibrato/autofilter ~-1 dB; numeric 0-100 -> `volumetodb`) |
 | Per-algorithm | e.g. reverb `tanh(wet × 1.6)` post-ReverbSc, echo feedback clamp, distortion `Overdrive` with ×3 drive |
-| Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](parallel-fx-bus.md)) |
+| Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](/synth/parallel-fx-bus)) |
 | Main bus | Sidechain → compressor → razzle (unchanged) |
 
-Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn level-stability:test --filter fxmatrix`.
+Regression harness: [`fxlevelscenarios.ts`](../../backend/daisy/fxlevelscenarios.ts), `yarn level-stability:test --filter fxmatrix`.
 
 ---
 
@@ -190,13 +190,13 @@ Tone: all buses share one `FXCHAIN.autowah` — param changes affect every bus.
 
 Sends: 7 slots per group (fc, echo, reverb, autofilter, vibrato, distortion, autowah). All default **0**.
 
-Full layout: [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts).
+Full layout: [wasmfxstate.ts](../../backend/wasm/wasmfxstate.ts).
 
 ---
 
 ## Tone.js library defaults vs ZSS overrides
 
-ZSS [fx.ts](../../../../ops/archive/synth/tone/fx.ts) `applyreset()` overrides Tone library defaults:
+Historical Tone library defaults that the Daisy send levels still match:
 
 ```
 reverb:     wet 0.5, decay 2.5, preDelay 0.01
@@ -246,9 +246,7 @@ Play-wide:    echo, reverb, fcrush, autofilter, distort, vibrato, autowah
 
 | Topic | Path |
 |-------|------|
-| WASM SAB + config | [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts) |
-| WASM DSP chain | [wasmfxplaycode.ts](../../../../ops/archive/synth/maxi/wasmfxplaycode.ts) |
-| Bus mapping | [voicefxgroup.ts](../voicefxgroup.ts) |
-| Firmware commands | [firmware/audio.ts](../../../firmware/audio.ts) |
-| Tone FX chain | [archive/tone/fx.ts](../../../../ops/archive/synth/tone/fx.ts) |
-| Tone voicefx dispatch | [archive/tone/voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts) |
+| WASM SAB + config | [wasmfxstate.ts](../../backend/wasm/wasmfxstate.ts) |
+| Daisy DSP | [zss_daisy_synth.cpp](../../backend/daisy/native/zss_daisy_synth.cpp) |
+| Bus mapping | [voicefxgroup.ts](../../voicefxgroup.ts) |
+| Firmware commands | [firmware/audio.ts](../../../../firmware/audio.ts) |

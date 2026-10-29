@@ -15,25 +15,14 @@ New here? Work through the guides in order. Each takes 10-20 minutes in the brow
 2. [Your first board](/guides/first-board) -- build two rooms, connect them, save, and share
 3. [Your first object](/guides/first-object) -- write ZSS: stats, labels, flags, messages, and scroll links
 
-See [Guides](/guides) for the vocabulary the guides use.
-
 ## Look things up
 
-- [Firmware commands](/firmware/commands) -- every `#command`, with searchable [CLI](/firmware/commands/cli), [runtime](/firmware/commands/runtime), and [loader](/firmware/commands/loader) pages
 - [Features](/features) -- what the engine can do, grouped by area
-- [Glossary](/glossary) -- shared vocabulary
+- [Firmware commands](/firmware/commands) -- every `#command`
 - [Synth](/synth) -- music, sound effects, and the voice and effect chain
+- [Glossary](/glossary) -- shared vocabulary
 
-## Two "docs" surfaces
-
-| Surface | URL | Audience |
-|---------|-----|----------|
-| This site | [https://zed.cafe/docs/](https://zed.cafe/docs/) | Creators learning to build, and developers reading architecture / API narrative |
-| In-game / ZNS help | [https://docs.at.zed.cafe](https://docs.at.zed.cafe) | Players and authors via ROM refscrolls (`#help` in the terminal) |
-
-ROM help under `zss/rom/` stays in the product runtime. It is not a Blume source.
-
-## How it works (developers)
+## How it works
 
 - [System map](/map) -- product stack, workers, tick, script pipeline
 - [Architecture deep dive](/architecture) -- points at `zss/ARCHITECTURE.md`
@@ -53,52 +42,6 @@ Module manuals are colocated under `zss/**/docs/` and mounted into this site:
 | `/words` | `zss/words/docs` |
 | `/device` | `zss/device/docs` |
 | `/ops` | selected evergreen pages in `ops/docs` |
-
-## Local authoring
-
-From the repo root:
-
-```bash
-yarn task blume dev
-```
-
-Opens Blume with `docs-site/` as cwd (repo-root `yarn blume` looks for the wrong folder). Production pages ship via `yarn task run cafe:build` into `cafe/dist/docs/`. Guides live in `docs-site/content/guides/`.
-
----
-
-# Airshare wire protocol
-Source: https://zed.cafe/docs/airshare/protocol
-
-# Airshare wire protocol
-
-Clean-room optical transfer for a single `Uint8Array` (compressed MEMORY). Not compatible with Decimen / decimen.app.
-
-## Frame layout
-
-| Offset | Size | Field |
-|--------|------|-------|
-| 0 | 1 | magic `0xA2` |
-| 1 | 1 | version `1` |
-| 2 | 4 | session id (BE) |
-| 6 | 4 | sequence (BE) |
-| 10 | 2 | block count K (BE) |
-| 12 | 2 | block size (BE) |
-| 14 | 4 | total payload length (BE) |
-| 18 | 32 | SHA-256 of full payload |
-| 50 | block size | coded block |
-
-Header size is 50 bytes. QR ECC L; payload bytes are raw binary (not base64).
-
-## Systematic carousel
-
-- For `seq < K`: frame payload is source block `seq` (zero-padded to block size).
-- For `seq >= K`: payload is XOR of a mid-degree subset of blocks. Degree and indices come from mulberry32 seeded by `(session, seq)` (integer-only; no `Math.log`).
-
-Receiver locks on stream identity (magic, version, session, K, block size, total length, hash). Any change resets the decoder. Peeling recovers all K blocks; trailing padding is trimmed via `totallen`. SHA-256 must match before `vm:books` apply.
-
-## Capacity
-
-Default target QR version 27 ECC L (~1465 byte capacity) so block size ≈ 1415. Sender loops forever; receiver needs any covering set of frames (full systematic sweep at zero loss).
 
 ---
 
@@ -803,7 +746,7 @@ Source: https://zed.cafe/docs/feature/boardremix
 
 ## Dependencies
 
-- `wavefunctioncollapse` — WFC algorithm
+- `./wfcoverlapping` — overlapping wave function collapse (fast-wfc propagator)
 - `zss/mapping/array` — pick
 - `zss/mapping/types` — isnumber, ispresent
 - `zss/memory/*` — board init, read, write, spatial queries
@@ -820,7 +763,7 @@ Source: https://zed.cafe/docs/feature/boardremix
 ## Algorithm
 
 - Scans source board into image (element kinds mapped to alpha indices)
-- Builds WFC model from source patterns
+- Builds an overlapping WFC model from source patterns (`wfcoverlappinggenerate`)
 - Generates target region; clears existing elements first
 - Maps alpha indices back to element kinds and writes terrain/objects
 
@@ -1453,9 +1396,8 @@ Feature modules are **stateless utilities** and **domain logic** that:
 - **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
 - **stt** — Speech-to-text (Moonshine ONNX) in sttspace worker
 - **ROM** — Embedded help/documentation content
-- **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.md))
+- **Synth** — Audio synthesis (see [synth/docs](../synth/docs/index.mdx))
 - **memoryfs** — Projected MEMORY tree via folder drop ([memoryfs/docs](../memoryfs/docs/index.md))
-- **airshare** — Optical MEMORY transfer via fountain QR ([airshare/protocol](../airshare/protocol.md))
 - **zsstextui / writeui** — zsstext layout lines; terminal log sinks (hyperlinks, QR, copy)
 
 ## Module Index
@@ -1467,6 +1409,7 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [boardpivot.md](boardpivot.md) | Rotate board region by degrees |
 | [boardsnapshot.md](boardsnapshot.md) | Snapshot/revert board state |
 | [boardremix.md](boardremix.md) | Wavefunction collapse remix |
+| [wfcoverlapping.md](wfcoverlapping.md) | Overlapping WFC solver (fast-wfc) |
 | [boardweave.md](boardweave.md) | Shift/wrap board region |
 | [format.md](format.md) | Object formatting and msgpack serialization |
 | [netterminal.md](netterminal.md) | Peer-to-peer terminal via PeerJS |
@@ -1485,11 +1428,11 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | [speechtotext.md](speechtotext.md) | Speech recognition |
 | [fetchrefscrolltext](../fetchrefscrolltext.ts) | `docs.at.zed.cafe` then ROM refscroll text |
 | [itchiopublish.md](itchiopublish.md) | itch.io publishing |
-| [synth/docs](../synth/docs/index.md) | Audio synthesis (full docs) |
+| [synth/docs](../synth/docs/index.mdx) | Audio synthesis (full docs) |
 
 ## Submodules
 
-- **synth** — Daisy WASM synth (AudioWorklet); archived Tone.js parity refs under synth docs; see [synth/docs/index.md](../synth/docs/index.md)
+- **synth** — Daisy WASM synth (AudioWorklet); see [synth/docs/index.md](../synth/docs/index.mdx)
 - **tts** — Piper/Supertonic/Fish TTS in ttsspace worker; main-thread playback in `tts/client.ts`
 - **stt** — Moonshine speech recognition in sttspace worker; mic capture in `stt/speechtotext.ts`
 - **parse** — Format-specific parsers; dispatches from `parse/file.ts`
@@ -1845,6 +1788,30 @@ Apex API: `https://at.zed.cafe` (`ZNS_APEX`). Tenant reads: `https://{namespace}
 
 ---
 
+# wfcoverlapping.ts
+Source: https://zed.cafe/docs/feature/wfcoverlapping
+
+**Purpose**: Exports `wfcoverlappinggenerate` — overlapping wave function collapse used by `boardremix`. Port of the fast-wfc propagator (Mathieu Fehr and Nathanaelle Courant, MIT).
+
+## Dependencies
+
+- none
+
+## Exports
+
+| Function | Args | Description |
+|----------|------|-------------|
+| `wfcoverlappinggenerate` | `input`, `width`, `height`, `patternsize`, `outwidth`, `outheight`, `symmetry`, `random` | RGBA in, RGBA out. Periodic input, non-periodic output. `symmetry` is 1..8. Returns `undefined` on contradiction |
+
+## Algorithm
+
+- Extracts N-by-N patterns from the input, wrapping at the edges, and keeps the first `symmetry` rotations and reflections
+- Weights patterns by how often they occur, then precomputes which patterns agree on their N-1 overlap
+- Bans a pattern as soon as a neighbor's support count hits zero, and updates entropy in constant time
+- Returns `undefined` instead of retrying when a cell has no pattern left
+
+---
+
 # writeui.ts and zsstextui.ts
 Source: https://zed.cafe/docs/feature/writeui
 
@@ -1895,49 +1862,93 @@ Call sites import `zss/feature/zsstextui` and loop lines into `write` or `gadget
 # Features
 Source: https://zed.cafe/docs/features
 
-Overview of product capabilities by domain. Each page lists features with audience and a pointer (command or source path).
+## [Make a world](/features/boards)
 
-- [Audio & synth](/features/audio-synth)
-- [Board & world building](/features/board-world-building)
-- [CLI / headless](/features/cli-headless)
-- [Code editor & tape](/features/code-editor-tape)
-- [Element scripting](/features/element-scripting)
-- [Import / export / parse](/features/import-export-parse)
-- [Inspector & gadget tools](/features/inspector-gadget-tools)
-- [Multiplayer & social](/features/multiplayer-social)
-- [Permissions & moderation](/features/permissions-moderation)
-- [Rendering & input](/features/rendering-input)
-- [Speech & TTS](/features/speech-tts)
-- [Storage & session](/features/storage-session)
-- [Terminal & CLI](/features/terminal-cli)
+- Boards of terrain and objects, in the ZZT 60 by 25 size
+- Build boards, move between them, and place or write elements
+- Shoot, throw stars, shove, and push
+- Duplicate, change, and pick one of several kinds
+- Copy, erase, remix, weave, and rotate regions of a board
+- Snapshot a board and revert to it
+- Dark boards with per-element light
+- Character, color, and background editors
+- Inspector for editing an element in place, plus search, batch copy, and a style brush
+- In-world scrolls and panels
+- Starter kits, including a ZZT-style toolkit
+- Drop in files: ZZT and SZT worlds, BRD, ANSI, CHR fonts, ZIP, JSON books, markdown, OBJ, PNG, JPEG, GIF, WEBP, and MIDI
+- Export a page, a book, or a ZZT world, and pack a zip for itch.io
+- Search the Museum of ZZT, or open a random world
+- Publish and manage worlds on ZNS
+- Attach a folder on disk and edit the live book as JSON
+
+## [Script it](/features/elements)
+
+- ZSS, a scripting language in the spirit of ZZT-OOP
+- Pages for objects, terrain, boards, loaders, charsets, palettes, and text
+- Tape editor with syntax color, command autocomplete, and command hints
+- More than one person can edit the same page
+- Move, walk, idle, become, bind, and morph
+- Flags, arrays, and running another object's code
+- Messages between elements, scrolls, sidebar text, links, toasts, and tickers
+- Lock a script, set its speed, and turn labels off or back on
+- Fetch a URL into the running world
+
+## [Play](/features/display)
+
+- Keyboard, gamepad, and touch controls
+- Move, shoot, confirm, and cancel
+- Health, and an end-of-game
+- Prompts that ask the player for input
+- Layered display: tiles, sprites, dither, pictures, and video
+- Zoom, CRT, scanlines, and a low-resolution look
+- Screenshots
+
+## [Sound and speech](/features/synth)
+
+- Foreground and background music from written notes
+- Four play voices, plus a separate background voice
+- Waves, FM, fat and AM stacks, noise, drums, and instruments such as string, piano, flute, and brass
+- Echo, reverb, distort, crush, filter, vibrato, and wah, including per-voice sends
+- Record the synth to an MP3
+- Text-to-speech with Piper, Supertonic, or Fish, plus a speak queue and voice choice
+- Speech-to-text from the microphone
+- Separate volumes for the mix, music, background, board video, and speech
+
+## [Together](/features/multiplayer)
+
+- Host a session and join it with a code, another browser tab, or a share link and QR code
+- The host runs the world; joined players play on that world
+- A joined player can fork a personal copy
+- In-game chat
+- Bridges for Twitch, RSS, Mastodon, and Bluesky
+- Broadcast the session out
+- Roles, bans, and permission groups for building, coding, exploring, speaking, saving, and moderation
+- An admin screen for the session
+- A peer-to-peer terminal for sharing the command line
+
+## [Keep it](/features/session)
+
+- Save the session in the browser
+- List, open, create, rename, search, and trash books and pages
+- Login and a player identity
+- Wipe the session, or restart it
+
+## [The terminal](/features/help)
+
+- The command line is the front door: help, books, pages, and boards all start there
+- Scrolls with hotkeys and clickable lines
+- The same world can run in a terminal, with no board window, through the headless CLI
 
 ---
 
-# Audio & synth
-Source: https://zed.cafe/docs/features/audio-synth
-
-| Feature | Audience | Description | Pointer |
-|---------|----------|-------------|---------|
-| #play / #bgplay | Creator | Play note sequences foreground or background. | `#play` |
-| #vol / #playvol / #bgvol | Creator | Main volume and play/bg bus trims. | `#vol` |
-| #synth / #synth1–5 | Creator | Configure Daisy multi-voice synth for #play/bgplay. | `zss/feature/synth/docs/voices.md` |
-| Daisy WASM backend | Dev | Production synth: AudioWorklet + shared-array-buffer path. | `zss/feature/synth/backend/daisy/` |
-| #synthrecord / #synthflush | Creator | Record synth output to file or clear saved notes. | `#synthrecord` |
-| FX: echo/reverb/distort | Creator | Multi-voice effects on play channels. | `zss/feature/synth/docs/effects.md` |
-| Per-voice FX 1–3 | Creator | Individual echo/fcrush/autofilter/reverb/distort/vibrato/autowah. | `#echo1` |
-| #tts / #ttsengine | Creator | Text-to-speech speak, queue, engine config. | `zss/feature/docs/tts-voices.md` |
-| Drums & AlgoSynth | Creator | Percussion voices and FM algorithm synthesis. | `zss/feature/synth/docs/drums.md` |
-| MP3 recording | Creator | Record audio output to MP3 file. | `zss/feature/synth/docs/record-and-mp3.md` |
-
----
-
-# Board & world building
-Source: https://zed.cafe/docs/features/board-world-building
+# Boards
+Source: https://zed.cafe/docs/features/boards
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
 | #build | Creator | Create new board and write id to stat. | `#build` |
 | #goto / #transport | Creator | Teleport player or move elements across boards. | `#goto` |
+| #boardopen | Creator | Teleport the player to a board. | `#boardopen` |
 | #put / #putwith | Creator | Place elements in a direction. | `#put` |
 | #shoot / #throwstar | Creator | Fire projectiles with optional kind/args. | `#shoot` |
 | #duplicate / #change | Creator | Clone or transform elements by kind. | `#duplicate` |
@@ -1945,38 +1956,56 @@ Source: https://zed.cafe/docs/features/board-world-building
 | #shove / #push | Creator | Move pushable objects in direction. | `#shove` |
 | #snapshot / #revert | Creator | Save and restore board state snapshots. | `#snapshot` |
 | #copy / #remix / #weave / #pivot | Creator | Region copy, remix, weave, and rotate transforms. | `#copy` |
+| Board lighting | Creator | Dark boards with element light radius/dir. | `zss/memory/docs/board-lighting.md` |
 
 ---
 
-# CLI / headless
-Source: https://zed.cafe/docs/features/cli-headless
+# Books
+Source: https://zed.cafe/docs/features/books
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
-| zss oclif binary | Dev | Run cafe SPA in Playwright with Ink terminal overlay. | `ops/headless/src/commands/run.ts` |
-| Headless boot | Dev | bootheadless() skips Canvas; same message stack. | `cafe/index.tsx` |
-| Node storage hooks | Dev | CLI injects __nodeStorageReadPlayer for persistence. | `ops/headless/src/lib/app.tsx` |
-| Dev server mode | Dev | Attach to existing Vite dev server instead of cafe/dist. | `zss run --dev` |
+| #books / #pages / #boards | Creator | List books, pages, and board goto hyperlinks. | `#books` |
+| #bookopen | Creator | Switch the opened book by id or name. | `#bookopen` |
+| #bookcreate | Creator | Create an empty book without opening it. | `#bookcreate` |
+| #bookrename | Creator | Rename the main book (operator only). | `#bookrename` |
+| #search | Creator | Search page code across loaded books. | `#search` |
+| #pagetrash / #booktrash / #trash | Creator | Trash pages and books (operator for book trash). | `#trash` |
 
 ---
 
-# Code editor & tape
-Source: https://zed.cafe/docs/features/code-editor-tape
+# Display
+Source: https://zed.cafe/docs/features/display
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
-| Tape layout modes | Creator | TOP, FULL, BOTTOM, MAX — resize terminal/editor split. | `Tab / layout keys` |
+| Layer compositing | Both | BLANK, TILES, SPRITES, DITHER, MEDIA, CONTROL layers. | `LAYER_TYPE enum` |
+| Sprite rendering | Both | Shader-based per-player sprite overlays in R3F. | `zss/gadget/display/sprites.ts` |
+| Keyboard + gamepad | Creator | Move, shoot, ok, cancel, menu, modifier keys. | `zss/gadget/userinput.tsx` |
+| View scale | Creator | Adjust display zoom level for boards. | `VIEWSCALE` |
+| Capture / #screenshot | Both | Frame capture for export. `#screenshot` captures the display (operator). | `zss/gadget/capture/` |
+| #endgame | Both | End current game session and return to title flow. | `#endgame` |
+
+---
+
+# Editor
+Source: https://zed.cafe/docs/features/editor
+
+| Feature | Audience | Description | Pointer |
+|---------|----------|-------------|---------|
+| Tape layout modes | Creator | TOP, FULL, BOTTOM, MAX -- resize terminal/editor split. | `Tab / layout keys` |
 | Command autocomplete | Creator | Lexer-driven # command and word-list suggestions. | `zss/screens/tape/autocomplete.ts` |
 | Parse error messages | Creator | Chevrotain errors rewritten to short hints in editor and compile tape. | [`formatlangerror`](/lang/formatlangerror) |
 | ROM command hints | Creator | Long-form help from editor:commands:<name> markdown. | `zss/screens/tape/commandarghints.ts` |
 | Collaborative editing | Both | Yjs CRDT sync with cursor/selection awareness. | `zss/device/modem.ts` |
 | Editor bookmarks | Creator | Save/run CLI lines, snippets, and URLs. | `#bookmark scroll handlers` |
 | Syntax highlighting | Creator | Tape editor highlights ZSS lang tokens and stats. | `zss/screens/editor/` |
+| #pageopen | Creator | Open a codepage in the editor. | `#pageopen` |
 
 ---
 
-# Element scripting
-Source: https://zed.cafe/docs/features/element-scripting
+# Elements
+Source: https://zed.cafe/docs/features/elements
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
@@ -1986,28 +2015,110 @@ Source: https://zed.cafe/docs/features/element-scripting
 | #run / #runwith | Creator | Invoke object codepage by name with optional arg. | `#run` |
 | #die / #zap / #restore | Creator | Lifecycle: delete element, deactivate label, restore labels. | `#die` |
 | #lock / #unlock | Creator | Block or allow external messages during execution. | `#lock` |
-| #cycle | Creator | Set element tick rate divisor 1–255. | `#cycle` |
+| #cycle | Creator | Set element tick rate divisor 1-255. | `#cycle` |
 | #char / #color | Creator | Set display char/color on self or at direction. | `#char` |
 | `$toast` / `$ticker` | Creator | UI toast notification or floating ticker text (no terminal line). | `$toast` |
+| #fetch / #fetchwith | Creator | Load a URL into the running world, with a label and method. | `#fetch` |
 
 ---
 
-# Import / export / parse
-Source: https://zed.cafe/docs/features/import-export-parse
+# Files
+Source: https://zed.cafe/docs/features/files
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
-| JSON export/import | Both | Book and codepage JSON via export commands. | `#bookallexport` |
+| JSON export/import | Both | Book and codepage JSON. `#export` opens the export menus (operator); `#bookallexport` writes the book. | `#bookallexport` |
+| #pageexport / #bookexport | Both | Export single page or full book JSON. | `#pageexport` |
 | ZZT world import | Creator | Parse classic ZZT .zzt worlds into books. | `zss/feature/docs/parse.md` |
+| #zztsearch / #zztrandom | Creator | Search or random ZZT Museum content. | `#zztsearch` |
 | BRD / ANSI / CHR | Creator | Board, ANSI art, and charset file parsers. | `zss/feature/parse/` |
 | ZIP / OBJ / markdown | Creator | Archive and object format loaders. | `LOADER driver` |
 | MIDI import | Creator | Convert MIDI files to play notation. | `zss/feature/parse/docs/midi-import.mdx` |
 | itch.io publish | Creator | Package and publish to itch.io platform. | `#itchiopublish` |
+| #zns | Creator | ZNS login, list, publish, delete published content. | `#zns` |
 
 ---
 
-# Inspector & gadget tools
-Source: https://zed.cafe/docs/features/inspector-gadget-tools
+# Headless
+Source: https://zed.cafe/docs/features/headless
+
+Headless is Zed Cafe in a terminal. Playwright opens the cafe app in Chromium with no window. The sim, `#` commands, and books are the same ones the browser runs. What you see is an Ink prompt. Each line you type is sent in as a command.
+
+There is no board canvas and no WebGL. `bootheadless()` skips the canvas and starts the same message stack.
+
+Player content, config, and command history are files in a data directory, not the browser's IndexedDB. The default directory is `.zss-data` in the current working directory. When a session creates a join URL, it is written to `join-url.txt` in that directory.
+
+## Run it
+
+Use a real terminal. The prompt needs a TTY. If stdin is not a terminal, the CLI prints that input is unavailable.
+
+Dev, attached to the Vite server:
+
+```bash
+yarn task run headless:server:dev
+```
+
+That compiles the CLI, starts Vite on port 7777, then opens the prompt against that server. Ctrl+C stops both.
+
+Built app, served from `cafe/dist`:
+
+```bash
+yarn task run headless:server:run
+```
+
+That builds the cafe app and the CLI, then serves `cafe/dist` on port 4175.
+
+When the prompt reads `zed.cafe>`, type a command and press Enter. `#help` opens the reference. The up and down arrows walk command history.
+
+The first launch needs Chromium for Playwright:
+
+```bash
+npx playwright install chromium
+```
+
+If you serve `cafe/dist` and that folder is missing, the CLI stops and tells you to run `yarn task run cafe:build`.
+
+## Flags
+
+After `yarn task run headless:build`, the CLI is `./bin/dev.js` in this repo (the published bin name is `zss`).
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `--dev` | off | Attach to an already running Vite server instead of serving `cafe/dist`. |
+| `--port` | 4175 | Port for that static server. Ignored with `--dev`. |
+| `--data-dir` | `.zss-data` | Where player content, config, and history are stored. |
+
+The Vite port is 7777. The same settings are the env vars `ZSS_DEV`, `ZSS_SERVER_PORT`, `ZSS_DEV_SERVER_PORT`, and `ZSS_DATA_DIR`.
+
+```bash
+./bin/dev.js --dev --data-dir .zss-data
+```
+
+## Where it lives
+
+| Piece | Role |
+|-------|------|
+| `ops/headless/src/commands/run.ts` | CLI flags and the `zss` command. |
+| `ops/headless/src/lib/app.tsx` | Playwright, the Ink prompt, and disk storage. |
+| `cafe/index.tsx` | Headless boot. Skips the canvas. |
+
+---
+
+# Help
+Source: https://zed.cafe/docs/features/help
+
+- The command line is the front door: help, books, pages, and boards all start there.
+- Scrolls with hotkeys and clickable lines.
+- The same world can run in a terminal, with no board window, through the [headless CLI](/features/headless).
+
+| Feature | Audience | Description | Pointer |
+|---------|----------|-------------|---------|
+| #help | Creator | Open in-world help and command documentation. | `#help` |
+
+---
+
+# Inspector
+Source: https://zed.cafe/docs/features/inspector
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
@@ -2021,8 +2132,8 @@ Source: https://zed.cafe/docs/features/inspector-gadget-tools
 
 ---
 
-# Multiplayer & social
-Source: https://zed.cafe/docs/features/multiplayer-social
+# Multiplayer
+Source: https://zed.cafe/docs/features/multiplayer
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
@@ -2030,14 +2141,17 @@ Source: https://zed.cafe/docs/features/multiplayer-social
 | Tab join | Both | Join multiplayer session from another browser tab. | `#jointab` |
 | Hidden sessions | Both | Join clients use joinvm (no sim tick); host runs authoritative sim. | `/join/ URL` |
 | Stream broadcast | Both | Start/stop live stream broadcast. | `#broadcast` |
+| #chat | Both | Chat bridges into the terminal. | `#chat` |
 | Twitch chat bridge | Both | Connect Twitch chat to in-game terminal. | `bridge/twitchchatconnector.ts` |
 | RSS / Mastodon / Bluesky | Both | Social feed chat connectors. | `bridge/chatconnector.ts` |
 | Net terminal | Both | P2P terminal sharing via terminal.zed.cafe. | `zss/feature/docs/netterminal.md` |
+| #fork | Both | Join players get a personal copy of the session. | `#fork` |
+| #share | Both | Operator registers a share link and QR code. | `#share` |
 
 ---
 
-# Permissions & moderation
-Source: https://zed.cafe/docs/features/permissions-moderation
+# Permissions
+Source: https://zed.cafe/docs/features/permissions
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
@@ -2047,68 +2161,49 @@ Source: https://zed.cafe/docs/features/permissions-moderation
 | #allow / #revoke | Both | Grant or remove command group access for roles. | `#allow` |
 | #role | Both | Assign admin/mod/player role to players. | `#role` |
 | Operator bypass | Both | Session operator skips all permission checks. | `vm:operator` |
+| #admin | Both | Show admin interface for session moderation. | `#admin` |
 
 ---
 
-# Rendering & input
-Source: https://zed.cafe/docs/features/rendering-input
-
-| Feature | Audience | Description | Pointer |
-|---------|----------|-------------|---------|
-| Layer compositing | Both | BLANK, TILES, SPRITES, DITHER, MEDIA, CONTROL layers. | `LAYER_TYPE enum` |
-| Sprite rendering | Both | Shader-based per-player sprite overlays in R3F. | `zss/gadget/display/sprites.ts` |
-| Board lighting | Creator | Dark boards with element light radius/dir. | `zss/memory/docs/board-lighting.md` |
-| Keyboard + gamepad | Creator | Move, shoot, ok, cancel, menu, modifier keys. | `zss/gadget/userinput.tsx` |
-| View scale | Creator | Adjust display zoom level for boards. | `VIEWSCALE` |
-| Capture / screenshot | Both | Frame capture for export and #screenshot. | `zss/gadget/capture/` |
-
----
-
-# Speech & TTS
-Source: https://zed.cafe/docs/features/speech-tts
-
-| Feature | Audience | Description | Pointer |
-|---------|----------|-------------|---------|
-| TTS engines | Creator | Piper, Supertonic, or Fish in lazy ttsspace worker; main-thread playback queue. | `zss/feature/docs/tts-voices.md` |
-| Speech-to-text | Creator | Moonshine ONNX in lazy sttspace worker; mic on main thread. | `zss/feature/docs/speechtotext.md` |
-
----
-
-# Storage & session
-Source: https://zed.cafe/docs/features/storage-session
+# Session
+Source: https://zed.cafe/docs/features/session
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
 | IndexedDB persistence | Both | Config, CLI history, bookmarks, permissions stored locally. | `zss/feature/docs/storage.md` |
 | Player token / login | Both | Session auth via vm:login/logout handlers. | `zss/device/vm/handlers/auth.ts` |
-| Share registration | Both | Operator registers shareable session state. | `#share` |
+| #dev / #save | Both | Dev halt (operator); save and persist current state. | `#save` |
+| #nuke / #restart | Both | Operator reset: countdown wipe or restart chip/player state. | `#nuke` |
 
 ---
 
-# Terminal & CLI
-Source: https://zed.cafe/docs/features/terminal-cli
+# Speech
+Source: https://zed.cafe/docs/features/speech
 
 | Feature | Audience | Description | Pointer |
 |---------|----------|-------------|---------|
-| #help — reference scroll | Creator | Open in-world help and command documentation. | `#help` |
-| #books / #pages / #boards | Creator | List books, pages, and board goto hyperlinks. | `#books` |
-| #pageopen / #boardopen | Creator | Open codepage editor or teleport player to board. | `#pageopen` |
-| #gadget | Creator | Toggle built-in inspector for element editing. | `#gadget` |
-| #findany | Creator | Highlight elements matching a search pattern. | `#findany` |
-| #dev / #save / #fork | Both | Dev halt (operator); save and fork (persist) -- join players get a personal copy. | `#dev` |
-| #nuke / #restart | Both | Operator reset: countdown wipe or restart chip/player state. | `#nuke` |
-| #export / #bookallexport | Both | Export menus and JSON book/page export (operator). | `#export` |
-| #zztsearch / #zztrandom | Creator | Search or random ZZT Museum content. | `#zztsearch` |
-| #admin | Both | Show admin interface for session moderation. | `#admin` |
-| #joincode / #jointab | Both | Start or join multiplayer via code or tab (operator for host). | `#joincode` |
-| #chat / #broadcast | Both | Chat bridges and stream broadcast control. | `#chat` |
-| #zns | Creator | ZNS login, list, publish, delete published content. | `#zns` |
-| #screenshot | Both | Capture display screenshot (operator). | `#screenshot` |
-| #endgame | Both | End current game session and return to title flow. | `#endgame` |
-| #bookrename / #pagetrash / #trash | Creator | Rename books or trash pages and books. | `#bookrename` |
-| #pageexport / #bookexport | Both | Export single page or full book JSON. | `#pageexport` |
+| #tts / #ttsengine | Creator | Text-to-speech speak, queue, engine config. | `zss/feature/docs/tts-voices.md` |
 | #ttsvol | Creator | Set TTS playback volume level. | `#ttsvol` |
-| Speech-to-text (mic) | Creator | Pause-based mic input on tape; lazy sttspace worker transcribes. | `zss/screens/terminal/input.tsx` |
+| TTS engines | Creator | Piper, Supertonic, or Fish in lazy ttsspace worker; main-thread playback queue. | `zss/feature/docs/tts-voices.md` |
+| Speech-to-text | Creator | Moonshine ONNX in lazy sttspace worker; mic on the tape. | `zss/feature/docs/speechtotext.md` |
+
+---
+
+# Synth
+Source: https://zed.cafe/docs/features/synth
+
+Voices, effects, and the Daisy WASM path: [Synth](/synth).
+
+| Feature | Audience | Description | Pointer |
+|---------|----------|-------------|---------|
+| #play / #bgplay | Creator | Play note sequences foreground or background. | `#play` |
+| #vol / #playvol / #bgvol | Creator | Main volume and play/bg bus trims. | `#vol` |
+| #synth / #synth1-5 | Creator | Configure Daisy multi-voice synth for #play/bgplay. | `zss/feature/synth/docs/(play)/voices.md` |
+| #synthrecord / #synthflush | Creator | Record synth output to file or clear saved notes. | `#synthrecord` |
+| FX: echo/reverb/distort | Creator | Multi-voice effects on play channels. | `zss/feature/synth/docs/(play)/effects.md` |
+| Per-voice FX 1-3 | Creator | Individual echo/fcrush/autofilter/reverb/distort/vibrato/autowah. | `#echo1` |
+| Drums & AlgoSynth | Creator | Percussion voices and FM algorithm synthesis. | `zss/feature/synth/docs/(path)/drums.md` |
+| MP3 recording | Creator | Record audio output to MP3 file. | `zss/feature/synth/docs/(path)/record-and-mp3.md` |
 
 ---
 
@@ -2619,10 +2714,6 @@ Dev mode / halt execution (operator only)
 ### #share
 
 Share url (operator only)
-
-### #airshare
-
-Optical MEMORY transfer: invite QR then stream; `receive` opens camera decode; `stop` cancels
 
 ### #save
 
@@ -3697,7 +3788,7 @@ Bundled under [`zss/rom/refscroll/`](../../rom/refscroll/) as **`.md`** files. A
 
 `cliscroll`, `commandsscroll`, `helpcontrols`, `helpdeveloper`, `helpmenu`, `helpplayer`, `helptext`, `menu`, `notesscroll`.
 
-Synth, effects, scales, and TTS voices are Blume pages opened from [`menu.md`](../../rom/refscroll/menu.md): [`voices.md`](../../feature/synth/docs/voices.md), [`effects.md`](../../feature/synth/docs/effects.md), [`scales.md`](../../feature/synth/docs/scales.md), [`tts-voices.md`](../../feature/docs/tts-voices.md).
+Synth, effects, scales, and TTS voices are Blume pages opened from [`menu.md`](../../rom/refscroll/menu.md): [`voices.md`](../../feature/synth/docs/(play)/voices.md), [`effects.md`](../../feature/synth/docs/(play)/effects.md), [`scales.md`](../../feature/synth/docs/(play)/scales.md), [`tts-voices.md`](../../feature/docs/tts-voices.md).
 
 ---
 
@@ -3772,7 +3863,7 @@ Gadget owns render projection, display (R3F), scrolls/panels, and user input for
 
 - Engine entry: [`engine.tsx`](../engine.tsx)
 - Memory inspection (creator tools): [inspection.md](../../memory/docs/inspection.md)
-- Spine features: [Inspector & gadget tools](https://zed.cafe/docs/features/inspector-gadget-tools/)
+- Spine features: [Inspector](https://zed.cafe/docs/features/inspector/)
 
 ---
 
@@ -4403,16 +4494,16 @@ Source: [`zss/memory/types.ts`](https://github.com/goldbuick/zed-software-system
 
 ---
 
-# Guides
+# Overview
 Source: https://zed.cafe/docs/guides
 
 These guides teach Zed Cafe by doing. Each one takes 10-20 minutes, runs entirely in the browser at [zed.cafe](https://zed.cafe/), and builds on the one before it.
 
 | Guide | You will learn |
 |-------|----------------|
-| [Your first ten minutes](/guides/first-ten-minutes) | The terminal, help, starter kits, books, and pages |
-| [Your first board](/guides/first-board) | Creating a board, placing walls, the inspector, exits, saving, sharing |
-| [Your first object](/guides/first-object) | Writing ZSS: stats, labels, flags, messages, scroll text, and links |
+| [Your first ten minutes](/guides/first-ten-minutes) | The `terminal`, help, starter kits, books, and pages |
+| [Your first board](/guides/first-board) | Creating a board, placing walls, the `inspector`, exits, saving, sharing |
+| [Your first object](/guides/first-object) | Writing ZSS: stats, labels, flags, messages, `scroll` text, and links |
 
 :::tip
 Keep a zed.cafe tab open next to this one. Every step is meant to be typed, not just read.
@@ -4422,67 +4513,54 @@ Keep a zed.cafe tab open next to this one. Every step is meant to be typed, not 
 
 A few words show up in every guide:
 
+- `terminal`: the command line. Open it with `?`, `#`, or `@`. Close it with `esc`.
+- `code editor`: where a page's code is edited. Close it with `esc`.
 - **Book**: a project. It holds everything your world needs.
 - **Page** (or codepage): one item inside a book. Pages have a type: `board`, `object`, `terrain`, `loader`, `palette`, `charset`, or `txt`.
 - **Board**: a 60x25 grid of cells. This is a room in your world.
 - **Element**: something placed on a board. Terrain fills the floor and walls. Objects sit on top and can run code.
+- **Kind**: the name of a page you place, such as `solid` or `lamp`. `#put east lamp` places that kind.
+- `inspector`: mouse selection on the board. Turn it on and off with `#gadget`. Also called the `gadget`.
+- `makeit scroll`: the `scroll` that opens when you type `@` and a page name. It lists create and edit links.
+- `scroll`: a panel of text and clickable lines. Help and creating a page open as a scroll. Two or more lines of what an object says open as a scroll too.
+- `ticker`: one line of text at the bottom. A single plain text line from an object shows as a `ticker`.
+- `toast`: a short pop-up message, opened with `$toast`.
 - **ZSS**: the scripting language for objects, loaders, and the command line. It is close to ZZT-OOP: `@` lines declare stats, `:` lines are labels, and `#` lines are commands.
+- **Flag**: a name an object remembers. `#set lit 1` turns it on. `#if lit` tests it.
+- **Message**: `lamp:light` tells every lamp to run `:light`. From code, that is `#lamp:light`.
 
 ## After the guides
 
 - [Firmware commands](/firmware/commands) lists every `#command`.
 - [Features](/features) shows what the engine can do, grouped by area.
 - [Glossary](/glossary) defines the shared vocabulary.
-- The in-game help (`#help`) and [docs.at.zed.cafe](https://docs.at.zed.cafe) cover controls and command hints while you play.
 
 ---
 
 # Your first board
 Source: https://zed.cafe/docs/guides/first-board
 
-In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and have the **ZTK** kit loaded.
+In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and still have **Quick Start Kit** open.
 
-## Create a board
+You are already standing on **title**. That book has a board page named `title` and an object page named `player`, which is why login put you here. This guide builds on that board. It does not create a second one named `title`.
 
-1. **Make the page**
-
-    Press `@`, type `board hallway`, and press Enter.
-
-    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board hallway**. If you loaded more than one book, it also shows a book picker. Pick the book you want the board in.
-
-2. **Select create**
-
-    Select **create @board hallway**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
-
-:::tip
-Use one-word names for boards and objects while you learn, such as `hallway` instead of `the hallway`. Names with spaces work, but they need quotes in some commands.
-:::
-
-The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the scroll offers one create link for each page type.
+Walls use `solid`, a terrain page already in this book.
 
 ## Place some walls
 
-Use the CLI to put terrain next to you. Each command places one cell in a direction from where you stand:
+This is the same `#put` as last time. A color word goes in front of the kind. It places one cell in a direction from where you stand:
 
 ```text
 #put north white solid
-#put west white solid
-#put south white solid
 ```
 
-Walk with the arrow keys and repeat to sketch the outline of a room. You can also try other ZTK terrain:
+Walk with the arrow keys and repeat. Type the same command with `west`, `south`, or `east` to sketch the outline of a room. Swap `solid` for other terrain already in this book, such as `water` or `fake`.
 
-```text
-#put east normal
-#put east breakable
-#put east water
-```
-
-Placing walls one at a time is slow. The inspector makes it faster.
+Placing walls one at a time is slow. The `inspector` makes it faster.
 
 ## Copy and tile with the inspector
 
-The **inspector** (also called the gadget) lets you select cells on the board and edit them with the mouse.
+The `inspector` (also called the `gadget`) lets you select cells on the board and edit them with the mouse.
 
 1. **Turn it on**
 
@@ -4490,97 +4568,121 @@ The **inspector** (also called the gadget) lets you select cells on the board an
 
 2. **Inspect one cell**
 
-    Click a wall you placed. A scroll lists that element's details: its kind, collision, and links to change its **char**, **color**, and **bg** (background). Change the color and watch the wall update live.
+    Click a wall you placed. A `scroll` lists that element's details: its kind, collision, and links to change its **char**, **color**, and **bg** (background). Change the color and watch the wall update live.
 
-3. **Copy a pattern**
+3. **Copy a tile**
 
-    Put two walls next to each other. Then press on one, drag across both, and let go. The area scroll that opens has **copy elements**. Select it.
+    Click one wall. Select **copy elements**.
 
 4. **Tile it across a region**
 
-    Drag across a long empty strip where you want a wall. In the area scroll, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
+    Drag across a long empty strip where you want a wall. In the `gadget scroll` that opens, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
 
 5. **Turn it off**
 
-    Run `#gadget` again to leave the inspector.
+    Run `#gadget` again to turn off the `inspector`.
 
-The area scroll also has **cut**, **make empty**, **set chars**, **set colors**, **set bgs**, a **style** brush, and **remix**. Try them on a copy of your room. Remix fills a region with new patterns based on what is already there.
+The `area scroll` also has **cut**, **make empty**, **set chars**, **set colors**, and **set bgs**. Try them on a copy of your room.
 
 :::note
-The inspector and the CLI are two ways to do the same job. Anything you do in the inspector, a command can also do (`#put`, `#write`, `#copy`, `#remix`). That means you can script your edits later.
+The `inspector` and the `cli` are two ways to do the same job. Anything you do in the `inspector`, a command can also do (`#put`, `#write`, `#change`).
 :::
 
 ## Edit the board's stats
 
-A board is a page too, and its page holds stats that control the room. Open it:
+A board is a page too, and its page holds stats that control the room. Type the page name with `@`:
 
 ```text
-#pageopen hallway
+@title
 ```
 
-The editor opens with one line, `@board hallway`. Add a start position below it:
+The `makeit scroll` opens. It includes a link to edit the title page. Select **edit @board title**.
+
+The `code editor` opens with `@board title` already on the first line. Add a start position below it:
 
 ```text
-@board hallway
+@board title
 @startx 5
 @starty 12
 ```
 
-`@startx` and `@starty` set where a player appears when they arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
+`@startx` and `@starty` are where login spawns you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the `code editor`. Your edits are already saved to the page.
+
+This book already has `@board title` and `@player`. That pair is what login uses, which is why you appeared in this room when the kit loaded.
 
 ## Add a second room and connect them
 
-1. **Create the second board**
+`@` makes a new page. Use it for the next board, not for title.
 
-    Press `@`, type `board cellar`, and select **create @board cellar**. You are now in the empty cellar.
+1. **Type the name**
 
-2. **Add an exit from the hallway**
+    Press `@`, type `cellar`, and press Enter.
 
-    Run `#pageopen hallway` and add an exit line:
+    The `makeit scroll` opens with a create link for each page type.
+
+2. **Pick board**
+
+    Select **create @board cellar**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
+
+3. **Add an exit from title**
+
+    Run `@title`, select **edit @board title**, and add an exit line:
 
     ```text
-    @board hallway
+    @board title
     @startx 5
     @starty 12
     @exiteast cellar
     ```
 
-3. **Add the way back**
+4. **Add the way back**
 
-    Run `#pageopen cellar` and add:
+    Run `@cellar`, select **edit @board cellar**, and add:
 
     ```text
     @board cellar
-    @exitwest hallway
+    @exitwest title
     ```
 
-4. **Walk through**
+5. **Walk through**
 
-    Run `#boards` and select **hallway** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
+    Run `#boards` and select **title** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
 
-There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book. It can also be a join URL or a `https://bytes.zed.cafe/...` content link, which takes the player to a different world.
+:::tip
+Use one-word names for boards and objects while you learn, such as `cellar` instead of `the cellar`. Names with spaces work, but they need quotes in some commands.
+:::
 
-To jump to any board while you build, use `#boardopen <name>` or select it from `#boards`.
+The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the `makeit scroll` offers one create link for each page type.
+
+There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book.
+
+To jump to any board while you build, select it from `#boards` menu.
 
 ## Save and share
 
 ```text
 #save
+```
+
+`#save` writes your current state to the browser, so a reload keeps it. `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
+
+```text
 #share
 ```
 
-- `#save` writes your current state to the browser, so a reload keeps it.
-- `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
+`#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
 
 For more export options, such as downloading a book as JSON, run `#export`.
 
 ## What you learned
 
-- `@board name` creates a board and takes you there. `@` works for every page type.
-- `#put <direction> <kind>` places one element. Color words like `red` or `white` go in front of the kind.
-- `#gadget` toggles the inspector. Use it to select, recolor, copy, tile-paste, and remix.
-- Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Edit them with `#pageopen`.
-- `#save` keeps your work. `#share` hands it to someone else.
+- Quick Start Kit already has `@board title` and `@player`, which is why login put you on title.
+- `#put` places one cell in a direction. A color word such as `white` goes in front of the kind. `solid`, `water`, and `fake` are terrain already in this book.
+- `#gadget` turns the `inspector` on and off. Click one wall and select **copy elements**. Drag a region, then select **paste** and **paste terrain tiled**.
+- Type `@title` and select **edit @board title** to set `@startx` and `@starty`, the spot where login spawns you.
+- Type `@cellar` and pick **create @board cellar** on the `makeit scroll`. Reopen that page with `@cellar`, then **edit @board cellar**.
+- `@exiteast` and `@exitwest` connect the rooms. An exit names a board in your book. Select a board from `#boards` to jump there.
+- `#save` writes your work to the browser. `ctrl+s` runs `#save` too. `#share` makes a link and a QR code.
 
 Next: [Your first object](/guides/first-object).
 
@@ -4589,13 +4691,13 @@ Next: [Your first object](/guides/first-object).
 # Your first object
 Source: https://zed.cafe/docs/guides/first-object
 
-Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have a board from [Your first board](/guides/first-board) and the **ZTK** kit loaded.
+Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have finished [Your first board](/guides/first-board) and still have **Quick Start Kit** open, with the rooms you built.
 
 ## Make the lamp
 
 1. **Create the page**
 
-    Press `@`, type `object lamp`, and select **create object @lamp**. The code editor opens with one line: `@lamp`.
+    Press `@`, type `lamp`, and press Enter. The `makeit scroll` opens with a create link for each page type. Select **create object @lamp**. The `code editor` opens with one line: `@lamp`.
 
 2. **Write the code**
 
@@ -4616,7 +4718,7 @@ Objects are the parts of a board that think. In this guide you write three of th
     #done
     ```
 
-3. **Close the editor and place the lamp**
+3. **Close the code editor and place the lamp**
 
     Press `esc`. Then put a lamp next to you:
 
@@ -4626,7 +4728,7 @@ Objects are the parts of a board that think. In this guide you write three of th
 
 4. **Try it**
 
-    Walk into the lamp. It turns yellow and a toast pops up. Walk into it again and a scroll says it is already lit.
+    Walk into the lamp. It turns yellow and a `toast` pops up. Walk into it again and a `ticker` says it is already lit.
 
 Here is what each part does:
 
@@ -4639,8 +4741,8 @@ Here is what each part does:
 | `#if lit do` ... `#else do` ... `#done` | Branch on a **flag**. A flag nobody has set counts as false. |
 | `#set lit 1` | Set the flag so the next touch takes the other branch. |
 | `#color yellow` | Change the object's own color. |
-| `$toast ...` | Show a short pop-up message. `$ticker ...` shows a line at the bottom instead. |
-| `The lamp is already lit.` | A plain text line. Text lines are collected into a **scroll** that the player reads. |
+| `$toast ...` | Show a short `toast`. `$ticker ...` shows a `ticker` at the bottom instead. |
+| `The lamp is already lit.` | A plain text line. One line is shown as a `ticker`. Two or more lines open a `scroll`. |
 
 :::note
 Indenting the lines inside `do` ... `#done` with a space is optional. It just makes the branches easier to read.
@@ -4648,7 +4750,7 @@ Indenting the lines inside `do` ... `#done` with a space is optional. It just ma
 
 ## Send it a message
 
-Labels are not only for touch. Any label is a message the object can receive. Open the lamp again with `#pageopen lamp` and add an `#end` and a `:light` label at the bottom:
+Labels are not only for touch. Any label is a message the object can receive. Run `@lamp`, select **edit @object lamp**, and add an `#end` and a `:light` label at the bottom:
 
 ```text
 @lamp
@@ -4674,7 +4776,7 @@ $toast the lamp is lit
 Code runs straight down past labels. Without the `#end` after `#done`, every touch would also run the `:light` code below it. End each label's code with `#end` (or `#die`).
 :::
 
-Close the editor, open the CLI with `#`, and run:
+Close the `code editor`, open the `cli` with `#`, and run:
 
 ```text
 lamp:light
@@ -4688,7 +4790,7 @@ Now make an object that lights the lamp from somewhere else on the board.
 
 1. **Create it**
 
-    Press `@`, type `object switch`, and select **create object @switch**.
+    Press `@`, type `switch`, and press Enter. On the `makeit scroll`, select **create object @switch**.
 
 2. **Write the code**
 
@@ -4698,7 +4800,7 @@ Now make an object that lights the lamp from somewhere else on the board.
     @color ltgray
     #end
     :touch
-    #send lamp:light
+    #lamp:light
     #color green
     #bgplay tceg
     ```
@@ -4707,65 +4809,85 @@ Now make an object that lights the lamp from somewhere else on the board.
 
     Walk a few cells away from the lamp, then run `#put north switch`. Walk into the switch.
 
-`#send lamp:light` does from code what you typed into the CLI. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
+`#lamp:light` does from code what you typed into the `cli`. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
 
 ## Make a character that talks
 
-Scroll text can include **links**. A link line starts with `!`. It names a label to run, then a `;`, then the text the player sees.
+`scroll` text can include **links**. A link line starts with `!`. It names a label to run, then a `;`, then the text the player sees.
 
-```text
-@oracle
-@char 2
-@color cyan
-#end
-:touch
-Welcome, traveler.
-Shall I light the lamp for you?
-!yes;Yes, please
-!no;No, thanks
-#end
-:yes
-#send lamp:light
-#end
-:no
-Suit yourself.
-#end
-```
+1. **Create it**
 
-Create it with `@object oracle`, paste the code, then `#put west oracle`. Touch the oracle and pick a choice. **Yes** runs `:yes`, which sends the lamp a message. **No** runs `:no`, which opens a second scroll.
+    Press `@`, type `oracle`, and press Enter. On the `makeit scroll`, select **create object @oracle**.
+
+2. **Write the code**
+
+    ```text
+    @oracle
+    @char 2
+    @color cyan
+    #end
+    :touch
+    Welcome, traveler.
+    Shall I light the lamp for you?
+    !yes;Yes, please
+    !no;No, thanks
+    #end
+    :yes
+    #lamp:light
+    #end
+    :no
+    Suit yourself.
+    #end
+    ```
+
+3. **Place it and talk**
+
+    Run `#put west oracle`. Touch the oracle and pick a choice. **Yes** runs `:yes`, which sends the lamp a message. **No** runs `:no`, which is one line, so it shows as a `ticker`.
+
+One line of text is a `ticker`. Two or more lines are a `scroll`.
 
 ## Remove things with #die
 
-`#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up:
+`#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up.
 
-```text
-@gem
-@char 4
-@color purple
-#end
-:touch
-#set gems 1
-$toast you found a gem
-#bgplay t+c+e+g
-#die
-```
+1. **Create it**
 
-The ZTK `key` and `door` pages use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Run `#pageopen key` and `#pageopen door` to read them.
+    Press `@`, type `gem`, and press Enter. On the `makeit scroll`, select **create object @gem**.
+
+2. **Write the code**
+
+    ```text
+    @gem
+    @char 4
+    @color purple
+    #end
+    :touch
+    #give gems
+    $ticker you found a gem
+    #bgplay t+c+e+g
+    #die
+    ```
+
+3. **Place it and pick it up**
+
+    Run `#put south gem`. Walk into the gem. `#give gems` adds one gem, a `ticker` shows at the bottom, and `#die` removes the gem.
+
+**ZZT Tool Kit** includes `key` and `door` pages that use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Load that kit when you want to read them, then run `@key` and select **edit @object key**. `@door` works the same way.
 
 ## Fix mistakes
 
 - If the code has a syntax error, the error is reported as you type. Fix it before testing.
-- If nothing happens on touch, check that the first line (`@lamp`) matches the name you used in `#put` and `#send`.
+- If nothing happens on touch, check that the first line (`@lamp`) matches the name you used in `#put` and `#lamp:light`.
 - `#pages` lists every page. Select one to open it. Run `#trash` to delete a page you no longer want.
 
 ## What you learned
 
-- `@object name` creates an object page and opens the editor. `#put <direction> <name>` places it.
-- `@` stats set how an object looks. `:labels` are where code starts. `#end` waits.
-- `:touch` runs when a player walks into the object. Any other label is a message, sent with `name:label` from the CLI or with `#send` from code.
-- `#set`, `#if ... do`, `#else do`, `#done`, and `#clear` manage flags.
-- Plain text lines open a scroll. `!label;text` lines are choices in that scroll.
-- `#die` removes the object.
+- Type a name such as `@lamp` and pick **create object @lamp** on the `makeit scroll`. Reopen the page with `@lamp` and **edit @object lamp**. `#put` places it on the board.
+- `@` stats set how an object looks. `:labels` are where code starts. `#end` waits, and it stops code from running into the next label.
+- `:touch` runs when a player walks into the object. Any other label is a message, sent with `name:label` from the `cli` or with `#name:label` from code.
+- `#set`, `#if ... do`, `#else do`, and `#done` branch on a flag. `#give gems` adds one gem.
+- `$toast` is a pop-up. One line of text is a `ticker`. `$ticker` shows that line at the bottom. Two or more lines open a `scroll`. `!label;text` lines are choices in that `scroll`.
+- `#die` removes the object that runs it.
 
 For the full command list, see [Firmware commands](/firmware/commands).
 
@@ -4774,103 +4896,103 @@ For the full command list, see [Firmware commands](/firmware/commands).
 # Your first ten minutes
 Source: https://zed.cafe/docs/guides/first-ten-minutes
 
-By the end of this guide you will know how to open the command line, read the built-in help, load a starter kit, and see the pages inside a book.
+By the end of this guide you will know how to open the command line, load a starter kit, and see the pages inside a book.
 
 ## Open the terminal
 
-Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the terminal opens on its own and prints three things:
+Go to [zed.cafe](https://zed.cafe/). A fresh session has no content yet, so the `terminal` opens on its own and prints three things:
 
 - a `no content found` notice (this is expected on a first visit)
-- a list of **starter kits** (the `stk list`)
-- the hint `try typing #help and pressing enter!`
+- a list of **starter kits** (below the logo)
+- the hint `try typing #help and pressing enter! or ctrl+h`
 
-The terminal is the command line, or CLI. Almost everything in Zed Cafe starts here.
+The `terminal` is the command line, or `cli`. Almost everything in Zed Cafe starts here.
 
 | Key | What it does |
 |-----|--------------|
-| `?` or `/` | Open the CLI |
-| `#` | Open the CLI with `#` already typed, ready for a command |
-| `@` | Open the CLI with `@` already typed, ready to make a page |
-| `C` | Open quick chat (it closes after Enter) |
-| `esc` | Close the CLI, a scroll, or the editor |
+| `?` or `/` | Open the `cli` |
+| `#` | Open the `cli` with `#` already typed, ready for a command |
+| `@` | Open the `cli` with `@` already typed, ready to make a page |
+| `C` | Open `quick chat` (it closes after Enter) |
+| `esc` | Close the `cli`, a `scroll`, or the `code editor` |
 | `tab` | Change the layout |
-| up / down arrows | Move between CLI lines |
-| enter | Run the selected line, or follow a link |
+| `up` / `down` | Move between `cli` lines |
+| `enter` | Run the selected line, or follow a link |
 
 :::note
-Lines in the terminal can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
+Lines in the `terminal` can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
 :::
-
-## Read the help
-
-1. **Run #help**
-
-    Press `#`, type `help`, and press Enter. A help scroll opens.
-
-2. **Open getting started**
-
-    Select **controls and getting started** (hotkey `1`). Arrow keys move you. Shift plus an arrow key, or `w a s d`, shoots. The same page lists `#books`, `#pages`, `#boards`, and `#save`.
-
-3. **Close the scroll**
-
-    Press `esc`.
 
 ## Load a starter kit
 
-A starter kit is a book that comes with useful pages already made. The guides use **ZTK - ZZT Tool Kit**. It brings a player, terrain like `solid`, `normal`, `breakable`, and `water`, and items like `key`, `door`, `scroll`, and `passage`. Every piece works like its ZZT counterpart.
+:::note
+Zed Cafe has built-in behaviors, but not built-in elements. The engine can move, collide, and run commands. A player, a wall, or a key exists only as a page in a book. A starter kit is that book, already written.
+:::
 
-1. **Pick ZTK from the starter kit list**
+A starter kit is a book that comes with useful pages already made. This guide starts with **Quick Start Kit**, the smaller one. It includes a board, so you are standing in a room as soon as it loads.
 
-    In the terminal's `stk list`, select **ZTK - ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/geNHhyjf](https://bytes.zed.cafe/geNHhyjf) directly.
+1. **Pick Quick Start Kit from the list**
+
+    Below the logo, select **Quick Start Kit**. If the list has scrolled away, open [bytes.zed.cafe/weyMl04a](https://bytes.zed.cafe/weyMl04a) directly.
 
 2. **Wait for it to load**
 
     The page reloads with the kit's book in memory.
 
 :::tip
-The other kits in the list are worth a look later. **QK - Quick Kit** is a smaller toolkit. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
+The other kits are worth a look later. **ZZT Tool Kit** is the ZZT-style building set, with no boards of its own. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
 :::
 
 ## Look inside the book
 
-Run these one at a time. Each one prints its results into the terminal.
+Run these one at a time. Each one prints its results into the `terminal`.
 
-```text
-#books
-#pages
-#boards
-```
+1. **List the books**
 
-- `#books` lists every book in memory. One book is the **opened** book. New pages go there.
-- `#pages` lists every page, with its type. Select one to open it.
-- `#boards` lists only boards. Select one to go there.
+    <CodeBlock code="#books" />
 
-Now open the player's code:
+    `#books` lists every book in memory. One book is the **opened** book. New pages go there.
 
-```text
-#pageopen player
-```
+2. **List the pages**
 
-The code editor opens. This page decides how the player moves, shoots, and draws its sidebar. You do not need to understand it yet. Notice its shape:
+    <CodeBlock code="#pages" />
 
-- lines that start with `@` are **stats** (`@char 2`, `@color white`)
-- lines that start with `:` are **labels**, places where code starts running (`:think`, `:shot`)
-- lines that start with `#` are **commands** (`#set health 100`, `#shoot inputmove`)
-- lines that start with `'` are comments
+    `#pages` lists every page, with its type. Select one to open it.
 
-Press `esc` to close the editor without changing anything.
+3. **List the boards**
+
+    <CodeBlock code="#boards" />
+
+    `#boards` lists only boards. Quick Start Kit has one. Select it to go there. ZZT Tool Kit's list is empty, because that book has no board pages.
+
+4. **Open a page**
+
+    Open any page from the `#pages` list. The `code editor` shows how that element is written. You do not need to understand it yet. Notice its shape:
+
+    - lines that start with `@` are **stats**
+    - lines that start with `:` are **labels**, places where code starts running
+    - lines that start with `#` are **commands**
+    - lines that start with `'` are comments
+
+    Press `esc` to close the `code editor` without changing anything.
 
 ## Try a command on the world
 
-If you are standing on a board, the CLI can change it while the game runs. Try:
+You are standing on Quick Start Kit's board. The `cli` can change it while the game runs. `#put` places an element in a direction. The kind is the name of a page in this book, which is why loading a kit first matters. Pick a terrain name from `#pages` and try:
 
 ```text
-#put north red solid
+#put north red <kind>
 ```
 
-A red wall appears just north of you. `#put` takes a direction and a kind. The kind here is `solid`, with a color word in front. The direction can be `north`, `south`, `east`, or `west`. Kinds come from the book's pages, which is why loading a kit first matters.
+A red element appears just north of you. A color word such as `red` goes in front of the kind. The direction can be `north`, `south`, `east`, or `west`. The next guide stays in this session. `solid` is already in Quick Start Kit.
+
+:::note
+`up`, `down`, `left`, and `right` work too. They mean the same as `north`, `south`, `west`, and `east`.
+:::
 
 ## Save your session
+
+zed.cafe will autosave every 60 seconds, but you can also manually save.
 
 ```text
 #save
@@ -4878,12 +5000,15 @@ A red wall appears just north of you. `#put` takes a direction and a kind. The k
 
 `#save` writes the current state to your browser's storage, so a reload keeps your work.
 
+:::note
+`ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
+:::
+
 ## What you learned
 
-- The terminal is the CLI. Open it with `?`, `#`, or `@`. Close it with `esc`.
-- `#help`, then **controls and getting started**, covers moving, the command line, and saving.
-- A starter kit is a book of ready-made pages. ZTK gives you ZZT-style building blocks.
-- `#books`, `#pages`, `#boards`, and `#pageopen` let you explore a book.
+- The `terminal` is the `cli`. Open it with `?`, `#`, or `@`. Close it with `esc`.
+- A starter kit is a book of ready-made pages. Quick Start Kit includes a board. ZZT Tool Kit is the ZZT-style set, and it has no boards.
+- `#books`, `#pages`, and `#boards` let you explore a book. `#put` places a kind from that book onto the board.
 
 Next: [Your first board](/guides/first-board).
 
@@ -7886,7 +8011,7 @@ How the in-app **stream broadcast** works today, why you cannot aim it at LiveKi
 The terminal **`#broadcast`** command (operator-only, via bridge permissions) starts and stops a browser-side stream built from:
 
 - **Video:** the page’s main **`canvas`** element.
-- **Audio:** [`synthbroadcastdestination()`](../../ops/archive/synth/tone/audiochain.ts) (Tone/Web Audio routed into a `MediaStreamDestination`).
+- **Audio:** [`synthbroadcastdestination()`](../../zss/device/synth.ts) (Daisy output tapped into a `MediaStreamDestination`).
 
 Implementation lives in [`zss/device/bridge.ts`](../../zss/device/bridge.ts) on messages `bridge:streamstart` / `bridge:streamstop`. The runtime client is the first-party module [`zss/feature/broadcast/`](../../zss/feature/broadcast/README.md) (replaces the former `amazon-ivs-web-broadcast` npm dependency). Low-latency ingest uses:
 
@@ -8127,69 +8252,51 @@ flowchart LR
 
 ---
 
-# index.ts
+# Overview
 Source: https://zed.cafe/docs/synth
 
-Main entry point and synth factory.
+Commands and play notation stay in the front-end. DaisySP WASM renders the audio. The pages are grouped into four doors.
 
-## Exports
+## Play
 
-### setupsynth()
+What you type: a voice, an effect send, a scale, or the characters in a `#play` line.
 
-```typescript
-await setupsynth()
-```
+- [Synth](/synth/voices) -- `#synth` voices and config keys
+- [Effects](/synth/effects) -- echo, reverb, and the other voice FX
+- [Scales](/synth/scales) -- `#play` lines for each scale and key
+- [Notation](/synth/playnotation) -- how play text becomes notes
 
-One-time async initialization. Registers AudioWorklet modules:
+## Path
 
-- Frequency Crusher
-- Sidechain Compressor
+How sound moves from the voices to the speakers, including the drum kit and MP3 export.
 
-Call before creating synths, especially for offline rendering.
+- [Implementation matrix](/synth/implementation-matrix) -- voices, FX, drums, and the main chain
+- [Gain levels](/synth/gain-levels) -- every volume stage
+- [Main chain](/synth/audiochain) -- play, drums, and TTS into the output
+- [FX bus](/synth/parallel-fx-bus) -- parallel voice FX sends
+- [Drums](/synth/drums) -- the drum kit
+- [Recording](/synth/record-and-mp3) -- render to MP3
 
-### createsynth()
+## Catalog
 
-```typescript
-const synth = createsynth()
-```
+Parameter tables for voices and effects.
 
-Creates and returns a full synth instance (`AUDIO_SYNTH`).
+- [Voice types](/synth/voice-types-reference) -- waves, params, and defaults
+- [FX types](/synth/fx-types-reference) -- effect params and defaults
+- [Voice config](/synth/voiceconfig) -- how a voice config is applied
+- [Voice FX](/synth/voicefx) -- how an effect send is applied
 
-## Returned API
+## Engine
 
-| Method                             | Description                          |
-| ---------------------------------- | ------------------------------------ |
-| `addplay(buffer)`                  | Parse notation and schedule playback |
-| `addbgplay(buffer, quantize)`      | Schedule background SFX              |
-| `stopplay()`                       | Clear scheduled notes                |
-| `setmainvolume(v)`                 | Main scale for all buses (0-100)     |
-| `setplayvolume(v)`                 | Play bus trim (0-100)                |
-| `setbgplayvolume(v)`               | Background SFX volume                |
-| `setttsvolume(v)`                  | TTS volume                           |
-| `addaudiobuffer(buffer)`           | Play external audio (e.g. TTS)       |
-| `applyreset()`                     | Reset all sources and FX to defaults |
-| `applyreplay(source, fxchain, fx)` | Restore state for replay             |
-| `synthreplay(pattern, maxtime)`    | Schedule pattern for replay          |
-| `synthrecord(filename)`            | Render to MP3 and download           |
-| `synthflush()`                     | Clear recording buffer               |
-| `destroy()`                        | Dispose all nodes                    |
+The source files behind the doors above. Headings match the file names.
 
-## Properties
-
-- `SOURCE` — Array of 8 source wrappers
-- `FX` — Array of 4 FX channel groups
-- `FXCHAIN` — Shared effect chain
-- `changesource` — Function to change source type
-- `broadcastdestination` — MediaStream for capture (if not offline)
-
-## Internal Flow
-
-1. Creates audio chain (audiochain.ts)
-2. Creates source+FX setup (sourcefxsetup.ts)
-3. Creates tick handler (tickhandler.ts)
-4. Wraps tick handler in Tone.js Part (pacer)
-5. Creates record handler (recordhandler.ts)
-6. Starts pacer, applies defaults
+- [index.ts](/synth/factory) -- synth factory
+- [source.ts](/synth/source)
+- [sourcefxsetup.ts](/synth/sourcefxsetup)
+- [tickhandler.ts](/synth/tickhandler)
+- [fx.ts and fxchannels.ts](/synth/fx-and-fxchannels)
+- [algosynth.ts](/synth/algosynth)
+- [Audio worklets](/synth/worklets)
 
 ---
 
@@ -8264,7 +8371,7 @@ synth.triggerAttackRelease('C4', '4n')
 
 ---
 
-# audiochain.ts
+# Main chain
 Source: https://zed.cafe/docs/synth/audiochain
 
 Builds the global audio routing and processing chain for the synth.
@@ -8294,7 +8401,7 @@ hiss (pink noise) ───────┘
 - **Threshold:** -42 dB
 - **Ratio:** 5:1
 - **Attack / release:** 5 ms / 60 ms
-- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; calibrate via `ops:daisy:sidechain:parity:calibrate`)
+- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; `kScMix` / `kScMakeupDb` in `zss_config.h`)
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus
@@ -8319,7 +8426,7 @@ hiss (pink noise) ───────┘
 - **Chorus:** Widening effect (7 ms base delay, wet **0.25**)
 - **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input (very quiet bed)
 
-Full gain chart: [gain-levels.md](gain-levels.md).
+Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 ### Daisy volume laws (match Tone)
 
@@ -8377,12 +8484,9 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | 10 | Crash | `#play k` |
 | 11 | Ride | `#play r` |
 
-## Backend split (Daisy vs archived Maximilian)
+## Implementation
 
-| Backend | Drum implementation |
-|---------|---------------------|
-| **DaisySP WASM** (active) | Custom Maxi/Tone-parity bodies for all kit drums including tom (saw/tri/noise glide) and multi-harmonic bass; modal cymbals for crash/ride |
-| **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
+Daisy drums are custom bodies in `zss_drums.cpp`, including the tom glide and multi-harmonic bass, plus modal cymbals for crash and ride.
 
 See [implementation-matrix.mdx](implementation-matrix.mdx) Table 4.
 
@@ -8590,6 +8694,72 @@ Sets the smoothing time for the effect.
 
 ---
 
+# index.ts
+Source: https://zed.cafe/docs/synth/factory
+
+Main entry point and synth factory.
+
+## Exports
+
+### setupsynth()
+
+```typescript
+await setupsynth()
+```
+
+One-time async initialization. Registers AudioWorklet modules:
+
+- Frequency Crusher
+- Sidechain Compressor
+
+Call before creating synths, especially for offline rendering.
+
+### createsynth()
+
+```typescript
+const synth = createsynth()
+```
+
+Creates and returns a full synth instance (`AUDIO_SYNTH`).
+
+## Returned API
+
+| Method                             | Description                          |
+| ---------------------------------- | ------------------------------------ |
+| `addplay(buffer)`                  | Parse notation and schedule playback |
+| `addbgplay(buffer, quantize)`      | Schedule background SFX              |
+| `stopplay()`                       | Clear scheduled notes                |
+| `setmainvolume(v)`                 | Main scale for all buses (0-100)     |
+| `setplayvolume(v)`                 | Play bus trim (0-100)                |
+| `setbgplayvolume(v)`               | Background SFX volume                |
+| `setttsvolume(v)`                  | TTS volume                           |
+| `addaudiobuffer(buffer)`           | Play external audio (e.g. TTS)       |
+| `applyreset()`                     | Reset all sources and FX to defaults |
+| `applyreplay(source, fxchain, fx)` | Restore state for replay             |
+| `synthreplay(pattern, maxtime)`    | Schedule pattern for replay          |
+| `synthrecord(filename)`            | Render to MP3 and download           |
+| `synthflush()`                     | Clear recording buffer               |
+| `destroy()`                        | Dispose all nodes                    |
+
+## Properties
+
+- `SOURCE` — Array of 8 source wrappers
+- `FX` — Array of 4 FX channel groups
+- `FXCHAIN` — Shared effect chain
+- `changesource` — Function to change source type
+- `broadcastdestination` — MediaStream for capture (if not offline)
+
+## Internal Flow
+
+1. Creates audio chain (audiochain.ts)
+2. Creates source+FX setup (sourcefxsetup.ts)
+3. Creates tick handler (tickhandler.ts)
+4. Schedules ticks on the Daisy engine (pacer)
+5. Creates record handler (recordhandler.ts)
+6. Starts pacer, applies defaults
+
+---
+
 # fx.ts & fxchannels.ts
 Source: https://zed.cafe/docs/synth/fx-and-fxchannels
 
@@ -8678,7 +8848,7 @@ Aliases: `fcrush`→`fc`, `distort`→`distortion`.
 | `off` | Mute send |
 | `0–100` (number) | Send level via `volumetodb(v) = 20·log10(v) − 35` |
 
-**`on` preset levels** ([voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts), [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts)):
+**`on` preset levels** ([wasmfxstate.ts](../../backend/wasm/wasmfxstate.ts)):
 
 | FX | Tone `on` | WASM `on` |
 |----|-----------|-----------|
@@ -8710,9 +8880,9 @@ Default send at boot: **0** (all FX off).
 
 Bare `#echo`, `#reverb`, etc. → groups **0 and 1** only. `#echo1`…`#echo4` → single group.
 
-**Daisy parallel sends** ([`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) `applyfxgroup()`): each FX taps the **same dry** sample; `out = dry + compress(Σ sendᵢ·Δᵢ)`. No order between FX types. Vibrato is pitch-only (not in the wet sum). Spec: [parallel-fx-bus.md](parallel-fx-bus.md).
+**Daisy parallel sends** ([`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) `applyfxgroup()`): each FX taps the **same dry** sample; `out = dry + compress(Σ sendᵢ·Δᵢ)`. No order between FX types. Vibrato is pitch-only (not in the wet sum). Spec: [parallel-fx-bus.md](/synth/parallel-fx-bus).
 
-Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../ops/archive/synth/maxi/wasmfxplaycode.ts)); archived Tone used **parallel** `chain()` per effect.
+Daisy uses **parallel sends** in `applyfxgroup()`.
 
 ### Multi-FX gain (Daisy)
 
@@ -8720,10 +8890,10 @@ Archived Maxi used a **serial hybrid** chain ([wasmfxplaycode.ts](../../../../op
 |-------|---------|
 | Send level | SAB slot per FX (`#reverb on` -> ~-10 dB linear for time/drive FX; vibrato/autofilter ~-1 dB; numeric 0-100 -> `volumetodb`) |
 | Per-algorithm | e.g. reverb `tanh(wet × 1.6)` post-ReverbSc, echo feedback clamp, distortion `Overdrive` with ×3 drive |
-| Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](parallel-fx-bus.md)) |
+| Return bus | **`wet_sum` × 1.4** then compressor (−24 dB thresh, 4:1, 2 ms / 80 ms) — dry stays full; echo/reverb use send×wet ([parallel-fx-bus.md](/synth/parallel-fx-bus)) |
 | Main bus | Sidechain → compressor → razzle (unchanged) |
 
-Regression harness: [`fxlevelscenarios.ts`](../backend/daisy/fxlevelscenarios.ts), `yarn level-stability:test --filter fxmatrix`.
+Regression harness: [`fxlevelscenarios.ts`](../../backend/daisy/fxlevelscenarios.ts), `yarn level-stability:test --filter fxmatrix`.
 
 ---
 
@@ -8836,13 +9006,13 @@ Tone: all buses share one `FXCHAIN.autowah` — param changes affect every bus.
 
 Sends: 7 slots per group (fc, echo, reverb, autofilter, vibrato, distortion, autowah). All default **0**.
 
-Full layout: [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts).
+Full layout: [wasmfxstate.ts](../../backend/wasm/wasmfxstate.ts).
 
 ---
 
 ## Tone.js library defaults vs ZSS overrides
 
-ZSS [fx.ts](../../../../ops/archive/synth/tone/fx.ts) `applyreset()` overrides Tone library defaults:
+Historical Tone library defaults that the Daisy send levels still match:
 
 ```
 reverb:     wet 0.5, decay 2.5, preDelay 0.01
@@ -8892,12 +9062,10 @@ Play-wide:    echo, reverb, fcrush, autofilter, distort, vibrato, autowah
 
 | Topic | Path |
 |-------|------|
-| WASM SAB + config | [wasmfxstate.ts](../backend/wasm/wasmfxstate.ts) |
-| WASM DSP chain | [wasmfxplaycode.ts](../../../../ops/archive/synth/maxi/wasmfxplaycode.ts) |
-| Bus mapping | [voicefxgroup.ts](../voicefxgroup.ts) |
-| Firmware commands | [firmware/audio.ts](../../../firmware/audio.ts) |
-| Tone FX chain | [archive/tone/fx.ts](../../../../ops/archive/synth/tone/fx.ts) |
-| Tone voicefx dispatch | [archive/tone/voicefx/index.ts](../../../../ops/archive/synth/tone/voicefx/index.ts) |
+| WASM SAB + config | [wasmfxstate.ts](../../backend/wasm/wasmfxstate.ts) |
+| Daisy DSP | [zss_daisy_synth.cpp](../../backend/daisy/native/zss_daisy_synth.cpp) |
+| Bus mapping | [voicefxgroup.ts](../../voicefxgroup.ts) |
+| Firmware commands | [firmware/audio.ts](../../../../firmware/audio.ts) |
 
 ---
 
@@ -8950,7 +9118,7 @@ Play stem into the mix is still fixed at `kPlayBusGain`.
 
 ## User faders (SAB `zss_main`, 0-100)
 
-Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
+Defined in [`wasmmainsab.ts`](../../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
 SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**).
 
 | Control | SAB slot | Trim default | dB law | Notes |
@@ -8962,7 +9130,7 @@ SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, b
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
-CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
+CLI: [`zss/firmware/audio.ts`](../../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
 
 ## Master / bus constants (`zss_config.h`)
 
@@ -8974,7 +9142,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **12** | Sidechain makeup (calibrate: `ops:daisy:sidechain:parity:calibrate`) |
+| `kScMakeupDb` | **12** | Sidechain makeup (`kScMakeupDb` in `zss_config.h`) |
 | `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
 | `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
 | SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
@@ -9058,107 +9226,100 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 | Too loud at boot | `kMainFaderOffsetDb`, `WASM_DEFAULT_PLAY_VOLUME` | -- |
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
 | Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
-| Idle play too hot | `kScMakeupDb`, `kScMix` | `ops:daisy:sidechain:parity:calibrate` |
+| Idle play too hot | `kScMakeupDb`, `kScMix` | `zss_config.h` |
 | Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy
 
-[`wasmlevels.ts`](../backend/wasm/wasmlevels.ts) exports Tone-parity constants (`WASM_PLAY_BUS_GAIN`, `WASM_DRUM_BUS_GAIN`, etc.) for archived Maxi/Tone math -- **not** the live Daisy bus gains in `zss_config.h`.
+[`wasmlevels.ts`](../../backend/wasm/wasmlevels.ts) exports Tone-parity constants (`WASM_PLAY_BUS_GAIN`, `WASM_DRUM_BUS_GAIN`, etc.) for archived Maxi/Tone math -- **not** the live Daisy bus gains in `zss_config.h`.
 
 ---
 
 # Synth implementation matrix
 Source: https://zed.cafe/docs/synth/implementation-matrix
 
-Cross-reference for how ZSS implements voices, FX, drums, and master-chain processing across **DaisySP WASM** (active), archived **Maximilian WASM**, and archived **Tone.js**.
+How the DaisySP synth implements voices, FX, drums, and the main chain.
 
-Deep param/default catalogs: [voice-types-reference.md](voice-types-reference.md), [fx-types-reference.md](fx-types-reference.md), [audiochain.md](audiochain.md), [drums.md](drums.md), [CUTOVER.md](../backend/daisy/CUTOVER.md).
+Deep param catalogs: [voice-types-reference.md](/synth/voice-types-reference), [fx-types-reference.md](/synth/fx-types-reference), [audiochain.md](audiochain.md), [drums.md](drums.md), [CUTOVER.md](../../backend/daisy/CUTOVER.md).
 
-## Backend legend
+## Runtime
 
 ```mermaid
 flowchart LR
   synthCmd["#synth / #play / FX cmds"]
   sab["SharedArrayBuffer control"]
-  daisy["DaisySP WASM active"]
-  maxi["Maximilian archive/maxi"]
-  tone["Tone.js archive/tone"]
-  synthCmd --> sab
-  sab --> daisy
-  tone -.->|"parity reference only"| daisy
-  maxi -.->|"archived May 2026"| tone
+  daisy["DaisySP WASM"]
+  synthCmd --> sab --> daisy
 ```
 
-- **DaisySP** (active): C++ under [`native/zss/`](../backend/daisy/native/zss/) + WASM API in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`daisyengine.ts`](../backend/daisy/daisyengine.ts)
-- **Maximilian** (archived): [`archive/maxi/`](../../../../ops/archive/synth/maxi/) — generated play code, no longer selectable at runtime
-- **Tone** (archived): [`archive/tone/`](../../../../ops/archive/synth/tone/) — parity ground truth; Daisy voice/FX Tone-gated, drums use Daisy-native fixtures
+Playback boots through [`createsynthbackend`](../../backend/synthbackendfactory.ts), which only starts Daisy. DSP is C++ under [`native/zss/`](../../backend/daisy/native/zss/) with the WASM API in [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) and the worklet in [`daisyengine.ts`](../../backend/daisy/daisyengine.ts). Shared SAB helpers live in [`backend/wasm/`](../../backend/wasm/).
 
-**DaisySP runtime usage:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and (Daisy drums) `SyntheticBassDrum` (tom); bass is custom Membrane-style. **`#synth env`** on play voices uses custom **`ZssLinearEnv`** (linear ADSR, note-on reset, behavioral Tone parity) — not DaisySP `Adsr`. **ADSR parity:** `yarn adsr-parity:test` (Jest `adsrenvcurve` + Playwright `env-parity:test`); wasmparity patches `env-adsr-sustain` / `env-adsr-retrigger` use `#play` notation `+hc` / `+icdeg` (see `.cursor/skills/play-notation/`). **`#synth string`** uses custom SOS ensemble DSP (saws + `Svf`/`OnePole`). **Voice FX bus:** **parallel sends** in `applyfxgroup()` (each FX from same dry; DAW additive mix); return-bus **compressor on wet sum** ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main bus compressor:** Tone-shaped knee in `maincompressor()` (single 3/150 ms envelope). **Sidechain duck:** custom power-domain envelope on play bus (active). **`#reverb`** uses DaisySP-LGPL **ReverbSc** + predelay + `tanh(wet × kReverbPostGain)`.
+**DaisySP modules in use:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and `SyntheticBassDrum` (tom). Bass is a custom membrane. **`#synth env`** on play voices uses **`ZssLinearEnv`** (linear ADSR, note-on reset), not DaisySP `Adsr`. Envelope checks are `yarn task run ops:daisy:adsr-parity:test` (Jest `adsrenvcurve`). **`#synth string`** uses the SOS ensemble (saws + `Svf`/`OnePole`). **Voice FX** are parallel sends in `applyfxgroup()` ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main compressor** is a Tone-shaped knee in `maincompressor()`. **Sidechain duck** is a custom power-domain envelope on the play bus. **`#reverb`** uses DaisySP-LGPL **ReverbSc** plus predelay and `tanh(wet × kReverbPostGain)`.
 
 ---
 
 ## Table 1 — Voice types (`SOURCE_TYPE`)
 
-Enum: [`shared/sourcetype.ts`](../shared/sourcetype.ts). Dispatch: `VoiceType` in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived Maxi: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts)).
+Enum: [`shared/sourcetype.ts`](../../shared/sourcetype.ts). Dispatch: `VoiceType` in [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp).
 
-| ZSS name | Enum | Maxi (archived) | DaisySP WASM | Tone (archived) | Closest [DaisySP feature](https://github.com/electro-smith/DaisySP#-features) | Key files |
-|----------|------|------------|--------------|-----------------|-------------------------------------------------------------------------------|-----------|
-| `sine`/`square`/…/`fat*` | `SYNTH` | `maxiOsc` + hand-rolled ADSR; AM/FM/PWM/fat | `ZssLinearEnv` + `Oscillator` | `Tone.Synth` + `OmniOscillator` | Subtractive / FM (`Oscillator`, linear env) | `wasmoscplaycode.ts`, `wasmosctype.ts`, cpp `synthsource()` |
-| `retro` | `RETRO_NOISE` | LFSR table resample + ADSR | Custom LFSR tables + ADSR | `Sampler` + shelf filters | Noise (custom, not `Whitenoise`) | `noiseplaycode.ts`, `noisewave.ts` |
-| `buzz` | `BUZZ_NOISE` | same (different LFSR tap) | same | same | Noise | `noisemeta.ts` |
-| `clang` | `CLANG_NOISE` | same | same | same | Noise | same |
-| `metallic` | `METALLIC_NOISE` | same + amplitude norm | same | same | Noise | same |
-| `hollow` | `HOLLOW_NOISE` | FFT hollow table | same | Error (WASM-only) | Noise (custom spectral) | `noisewave.ts` |
-| `noise` | `WHITE_NOISE` | PRNG white table | same | Error (WASM-only) | Whitenoise (custom PRNG) | `noisewave.ts` |
-| `bells` | `BELLS` | FM stack + sparkle osc | `ModalVoice` + sparkle + `voiceenv` | `FMSynth` + `MetalSynth` | Physical modeling + FM sparkle | cpp `processvoice()` |
-| `doot` | `DOOT` | sine + pitch-decay loop | `Oscillator` + `Adsr` | `MembraneSynth` | Drum / physical (Membrane-like) | `voiceplaycode.ts` `dootvoice()` |
-| `algo0`–`algo7` | `ALGO_SYNTH` | 4× osc + 5× ADSR, 8 routings | 4× `Oscillator` + 5× `Adsr`; `oscN` on FM paths | custom `AlgoSynth` | FM (4-op routing) | `wasmalgoplaycode.ts`, [algosynth.md](algosynth.md) |
-| `string` | `STRING_VOICE` (algo 0) | — (Daisy-only) | SOS ensemble (`stringmachinevoice`) | — | Subtractive string-machine | cpp `stringmachinevoice()` |
-| `pluck` | `STRING_VOICE` (algo 1) | — (Daisy-only) | `StringVoice` × `voiceenv` | — | Physical modeling | cpp `processvoice()` |
-| `drip` | `DRIP_VOICE` | — (Daisy-only) | `Drip` × `voiceenv` | — | Physical modeling | cpp `processvoice()` |
-| `flute`–`panpipe` | `WIND_VOICE` | — | `windvoice()` formant bank + breath burst | — | Subtractive + formants | cpp `zss_sosvoices.cpp` |
-| `piano`/`epiano` | `PIANO_VOICE` | — | `pianovoice()` + `Fm2` on epiano | — | FM + `Fm2` tine | cpp `zss_sosvoices.cpp` |
-| `timpani` | `TIMPANI_VOICE` | — | `timpanivoice()` `ModalVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |
-| `violin`/`viola` | `BOWED_VOICE` | — | `bowedvoice()` delayed vibrato | — | Subtractive bowed | cpp `zss_sosvoices.cpp` |
-| `nylon`/`steel` | `GUITAR_VOICE` | — | `guitarvoice()` + `StringVoice` | — | Physical modeling | cpp `zss_sosvoices.cpp` |
-| `tonewheel`/`drawbar` | `ORGAN_VOICE` | — | `organvoice()` scanner vibrato + drawbars | — | Additive drawbars | cpp `zss_sosvoices.cpp` |
+| ZSS name | Enum | DaisySP | Closest [DaisySP feature](https://github.com/electro-smith/DaisySP#-features) | Key files |
+|----------|------|---------|-------------------------------------------------------------------------------|-----------|
+| `sine`/`square`/…/`fat*` | `SYNTH` | `ZssLinearEnv` + `Oscillator` | Subtractive / FM | cpp `synthsource()` |
+| `retro` | `RETRO_NOISE` | Custom LFSR tables + ADSR | Noise (custom) | `noisewave.ts` |
+| `buzz` | `BUZZ_NOISE` | same, different LFSR tap | Noise | `noisemeta.ts` |
+| `clang` | `CLANG_NOISE` | same | Noise | same |
+| `metallic` | `METALLIC_NOISE` | same + amplitude norm | Noise | same |
+| `hollow` | `HOLLOW_NOISE` | FFT hollow table | Noise (custom spectral) | `noisewave.ts` |
+| `noise` | `WHITE_NOISE` | PRNG white table | Whitenoise (custom PRNG) | `noisewave.ts` |
+| `bells` | `BELLS` | `ModalVoice` + sparkle + `voiceenv` | Physical modeling + FM sparkle | cpp `processvoice()` |
+| `doot` | `DOOT` | `Oscillator` + `Adsr` | Drum / physical | cpp `dootvoice()` |
+| `algo0`–`algo7` | `ALGO_SYNTH` | 4× `Oscillator` + 5× `Adsr` | FM (4-op routing) | [algosynth.md](/synth/algosynth) |
+| `string` | `STRING_VOICE` (algo 0) | SOS ensemble (`stringmachinevoice`) | Subtractive string-machine | cpp `stringmachinevoice()` |
+| `pluck` | `STRING_VOICE` (algo 1) | `StringVoice` × `voiceenv` | Physical modeling | cpp `processvoice()` |
+| `drip` | `DRIP_VOICE` | `Drip` × `voiceenv` | Physical modeling | cpp `processvoice()` |
+| `flute`–`panpipe` | `WIND_VOICE` | `windvoice()` formant bank + breath burst | Subtractive + formants | cpp `zss_sosvoices.cpp` |
+| `piano`/`epiano` | `PIANO_VOICE` | `pianovoice()` + `Fm2` on epiano | FM + `Fm2` tine | cpp `zss_sosvoices.cpp` |
+| `timpani` | `TIMPANI_VOICE` | `timpanivoice()` `ModalVoice` | Physical modeling | cpp `zss_sosvoices.cpp` |
+| `violin`/`viola` | `BOWED_VOICE` | `bowedvoice()` delayed vibrato | Subtractive bowed | cpp `zss_sosvoices.cpp` |
+| `nylon`/`steel` | `GUITAR_VOICE` | `guitarvoice()` + `StringVoice` | Physical modeling | cpp `zss_sosvoices.cpp` |
+| `tonewheel`/`drawbar` | `ORGAN_VOICE` | `organvoice()` scanner vibrato + drawbars | Additive drawbars | cpp `zss_sosvoices.cpp` |
 
-**SYNTH sub-modes** ([`wasmosctype.ts`](../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
-
----
-
-## Table 2 — Voice FX (7 types)
-
-Serial wet chain (Maxi + Daisy): **fc → echo → reverb → autofilter → distortion → autowah**. Vibrato is pitch-mod, not in wet chain. See [fx-types-reference.md](fx-types-reference.md).
-
-| ZSS FX | Aliases | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
-|--------|---------|------------|--------------|------|----------------|-------------|-----------|
-| `fc` | `fcrush` | Sample-and-hold `fxfcrush()` | `Decimator` | `FrequencyCrusher` worklet | `Decimator` | **Swapped** | `wasmfxplaycode.ts`, cpp |
-| `echo` | — | `maxiDelayline` | `DelayLine` | `FeedbackDelay` | `DelayLine` | **Swapped** | `wasmfxplaycode.ts` |
-| `reverb` | — | 4-comb + predelay | **ReverbSc** + predelay (LGPL) | `Reverb` (convolution) | — | **Done** | `wasmfxplaycode.ts` (Maxi), `zss_daisy_synth.cpp` |
-| `autofilter` | — | LFO + biquad | `Svf` + `Phasor` | `AutoFilter` | `Svf`, `Phasor` | **Swapped** | `wasmautofilterplaycode.ts` |
-| `vibrato` | — | Pitch cents `playvibratocents()` | Same + `fxvibratolfo` | Wet `Vibrato` in chain | `Oscillator` (LFO) | Keep custom | `wasmvibratoplaycode.ts` |
-| `distortion` | `distort` | `tonedistort()` | `Overdrive` | `Distortion` | `Overdrive` | **Swapped** | `wasmfxplaycode.ts` |
-| `autowah` | — | Envelope follower + peaking | `Autowah` (heuristic SAB map) | `AutoWah` | `Autowah` | **Done** (Daisy) | `wasmautowahplaycode.ts`, cpp |
-
-**Bus layout:** 4 groups via [`voicefxgroup.ts`](../voicefxgroup.ts). SAB: [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts).
+**SYNTH sub-modes** ([`wasmosctype.ts`](../../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
 
 ---
 
-## Table 3 — Master chain (not voice FX)
+## Table 2 — Voice FX
 
-| Processor | Role | Maximilian | DaisySP WASM | Tone | DaisySP module | Swap status | Key files |
-|-----------|------|------------|--------------|------|----------------|-------------|-----------|
-| Sidechain duck | Duck `#play` when bg/TTS/drums hit | Power-domain detector; clap+bass tap | Custom envelope + TTS key | `SidechainCompressor` worklet | Custom | **Active** (Daisy) | `wasmsidechainplaycode.ts`, cpp |
-| Main compressor | Bus dynamics | -28 dB / 4:1 / 3 ms / 150 ms | Custom knee compressor | `Tone.Compressor` knee 30 dB | Custom | **Active** (Daisy) | cpp `maincompressor()` |
-| Razzle | Master character | `maxiDelayline` + `maxiOsc` | Manual vibrato delay + `Chorus` + hiss | `Vibrato` + `Chorus` + noise | `Chorus` (partial) | **Partial swap** | `wasmrazzleplaycode.ts` |
-| Output safety | Peak control | — | `Limiter` | — | Final clamp | **Done** (Daisy) | cpp `zss_process()` |
-| DC block | Master out | — | `DcBlock` | — | `DcBlock` | **Swapped** | cpp `zss_process()` |
-| Master trim | Level staging | -2 dB trim + 22 dB makeup | Same | Tone graph gains | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | — | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
+Parallel wet sends. Vibrato is pitch modulation, not a wet send. See [fx-types-reference.md](/synth/fx-types-reference).
 
-**Sidechain params (Daisy):** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB. Gain applied directly to play bus (Tone worklet parity; no extra duck slew).
+| ZSS FX | Aliases | DaisySP | Key files |
+|--------|---------|---------|-----------|
+| `fc` | `fcrush` | `Decimator` | cpp `applyfxgroup()` |
+| `echo` | — | `DelayLine` | cpp |
+| `reverb` | — | **ReverbSc** + predelay (LGPL) | cpp |
+| `autofilter` | — | `Svf` + `Phasor` | cpp |
+| `vibrato` | — | Pitch cents + `fxvibratolfo` | cpp |
+| `distortion` | `distort` | `Overdrive` | cpp |
+| `autowah` | — | `Autowah` | cpp |
 
-**FX bus gain (Daisy):** per-send linear gain from [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) (`on` → 50). Echo/reverb use send×wet; **`wet_sum`** × 1.4 then return compressor before `dry + wet_sum`. Offline matrix: `yarn level-stability:test --filter fxmatrix`.
+**Bus layout:** 4 groups via [`voicefxgroup.ts`](../../voicefxgroup.ts). SAB: [`wasmfxstate.ts`](../../backend/wasm/wasmfxstate.ts).
+
+---
+
+## Table 3 — Main chain
+
+| Processor | Role | DaisySP | Key files |
+|-----------|------|---------|-----------|
+| Sidechain duck | Duck `#play` when bg/TTS/drums hit | Custom envelope + TTS key | cpp |
+| Main compressor | Bus dynamics | Custom knee compressor | cpp `maincompressor()` |
+| Razzle | Master character | Manual vibrato delay + `Chorus` + hiss | cpp |
+| Output safety | Peak control | `Limiter` | cpp `zss_process()` |
+| DC block | Master out | `DcBlock` | cpp `zss_process()` |
+| Master trim | Level staging | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
+
+**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB.
+
+**FX bus gain:** per-send linear gain from [`wasmfxstate.ts`](../../backend/wasm/wasmfxstate.ts) (`on` → 50). Echo/reverb use send×wet; **`wet_sum`** × 1.4 then the return compressor before `dry + wet_sum`. Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
 
 ```mermaid
 flowchart LR
@@ -9182,89 +9343,42 @@ flowchart LR
 
 ## Table 4 — Drums (12 IDs)
 
-**Daisy backend:** [DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where classes exist; unmatched IDs stay custom. **Maximilian** keeps Tone-parity kit in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts).
+[DaisySP Drums](https://github.com/electro-smith/DaisySP/tree/master/Source/Drums/) where a class fits. Unmatched IDs stay custom. Drum fixtures are Daisy renders in `parity-metrics-daisy.json`.
 
-| ID | Drum | Maximilian | DaisySP WASM | Tone | DaisySP class | Swap status | Key files |
-|----|------|------------|--------------|------|---------------|-------------|-----------|
-| 0 | Tick | Noise + hipass | Custom noise + EQ | `NoiseSynth` + filter | — | **Keep custom** | `drumplaycode.ts`, cpp `drumtick()` |
-| 1 | Tweet | longer noise hat | Custom noise + EQ | same | — | **Keep custom** | cpp `drumtweet()` |
-| 2 | Cowbell | dual square + bandpass | Custom | `PolySynth` | — | Keep custom | `drumcowbell()` |
-| 3 | Clap | noise + EQ chain | `WhiteNoise` + EQ | `NoiseSynth` + EQ | `WhiteNoise` (source) | **Partial swap** | `drumclap()`; sidechain tap |
-| 4 | Hi snare | osc + noise + distort | Custom (WASM parity) | same | Custom | **Done** (Daisy) | same |
-| 5 | Hi woodblock | clack + donk | Custom | bandpass stack | — | Keep custom | `drumwoodblock(true)` |
-| 6 | Low snare | lower freq snare | Custom (WASM parity) | same | Custom | **Done** (Daisy) | same |
-| 7 | Low tom | pitch glide tom | `SyntheticBassDrum` tom substitute | saw/tri/noise glide | `SyntheticBassDrum` | Migrated | same |
-| 8 | Low woodblock | lower woodblock | Custom | same | — | Keep custom | `drumwoodblock(false)` |
-| 9 | Bass | membrane-style kick | Custom sine + expo pitch (Tone Membrane) | `MembraneSynth` | Custom C++ | **Done** (Daisy) | `drumbass()`; sidechain tap |
-| 10 | Crash | — | Custom modal cymbal (`drumcrash`) | — | — | **New** | cpp `zss_drums.cpp` |
-| 11 | Ride | — | Custom modal cymbal + ping (`drumride`) | — | — | **New** | cpp `zss_drums.cpp` |
-
-**Parity:** Maximilian drums vs Tone. Daisy drums vs Daisy-native fixtures (not Tone).
+| ID | Drum | DaisySP | Key files |
+|----|------|---------|-----------|
+| 0 | Tick | Custom noise + EQ | cpp `drumtick()` |
+| 1 | Tweet | Custom noise + EQ | cpp `drumtweet()` |
+| 2 | Cowbell | Custom dual square + bandpass | `drumcowbell()` |
+| 3 | Clap | `WhiteNoise` + EQ | `drumclap()`; sidechain tap |
+| 4 | Hi snare | Custom | cpp |
+| 5 | Hi woodblock | Custom | `drumwoodblock(true)` |
+| 6 | Low snare | Custom | cpp |
+| 7 | Low tom | `SyntheticBassDrum` | cpp |
+| 8 | Low woodblock | Custom | `drumwoodblock(false)` |
+| 9 | Bass | Custom sine + expo pitch | `drumbass()`; sidechain tap |
+| 10 | Crash | Custom modal cymbal | cpp `zss_drums.cpp` |
+| 11 | Ride | Custom modal cymbal + ping | cpp `zss_drums.cpp` |
 
 ---
 
-## Table 5 — DaisySP modules: linked vs used
+## Table 5 — DaisySP modules
 
-| DaisySP category | Used in ZSS runtime | Notes |
-|------------------|---------------------|-------|
-| `Oscillator` | Yes | Voices, FX LFOs, razzle vibrato/hiss, custom drums |
-| `Fm2` | Yes | `#synth epiano` (algo 1) tine model |
-| `Adsr` | Yes | Gated voices/algo |
-| `Decimator`, `Overdrive`, `Svf`, `Phasor` | Yes | Voice FX (Tier 1–2 swaps) |
-| `DelayLine` | Yes | Echo FX |
+| DaisySP category | Used | Notes |
+|------------------|------|-------|
+| `Oscillator` | Yes | Voices, FX LFOs, razzle, custom drums |
+| `Fm2` | Yes | `#synth epiano` tine model |
+| `Adsr` | Yes | Gated voices and algo operators |
+| `Decimator`, `Overdrive`, `Svf`, `Phasor` | Yes | Voice FX |
+| `DelayLine` | Yes | Echo |
 | `Chorus` | Yes | Razzle chorus half |
-| `WhiteNoise` | Yes | Drum noise source (tick/tweet/clap paths via `drumnoise()`) |
-| `Limiter`, `DcBlock` | Yes | Master output chain |
-| `StringVoice` (`pluck` only) | Yes | `#synth pluck` strike mode; `#synth string` uses custom ensemble DSP |
-| `SyntheticBassDrum` | Yes | Daisy tom (7); bass (9) is custom Membrane |
-| `Compressor` (LGPL) | Yes | Daisy main bus only |
-| `HiHat` | No | Reverted — tick/tweet kept custom |
-| `SyntheticSnareDrum` | No | Fallback if AnalogSnare presets insufficient |
-| `KarplusString` (direct) | No | Used internally via `StringVoice` |
-
----
-
-## Table 6 — DaisySP swap opportunities (Daisy backend)
-
-**Feasibility:** Easy = refactor · Medium = param mapping · Hard = breaks Tone gate · N/A = no module
-
-### Voice FX
-
-| ZSS custom | DaisySP candidate | Feasibility | Swap status | Notes |
-|------------|-------------------|-------------|-------------|-------|
-| `fxfcrush()` | `Decimator` | Medium | **Done** | Rate reduction only; no bitcrush |
-| `fxecho()` | `DelayLine` | Easy | **Done** | Ring buffer removed |
-| `fxreverb()` | ReverbSc + predelay | Low | **Done** | Daisy: LGPL ReverbSc; Maxi archive: 4-comb |
-| `fxautofilterbus()` | `Svf` + `Phasor` | Medium | **Done** | Bandpass sweep |
-| `tonedistort()` | `Overdrive` | Hard | **Done** | Different curve (accepted) |
-| `fxautowahbus()` | `Autowah` | Hard | **Done** (Daisy) | Heuristic map: octaves→SetWah, gain→SetLevel, sensitivity→input boost |
-| Vibrato pitch cents | `PitchShifter` | Hard | Keep custom | Source pitch mod, not wet delay |
-
-### Master chain
-
-| ZSS custom | DaisySP candidate | Feasibility | Swap status |
-|------------|-------------------|-------------|-------------|
-| Sidechain + compressor | Custom envelope | — | Partial | Daisy: full-mix detect + 30 dB knee; sidechain matches Tone worklet |
-| Razzle chorus | `Chorus` | Medium | **Done** (vibrato/hiss manual) |
-| Output safety | `Limiter` | Easy | **Done** |
-| DC offset | `DcBlock` | Easy | **Done** |
-
-### Drums
-
-| ZSS drum | DaisySP class | Swap status |
-|----------|---------------|-------------|
-| 0–1 Tick/Tweet | — | **Keep custom** (HiHat reverted) |
-| 4, 6 Snares | `AnalogSnareDrum` | Migrated |
-| 9 Bass | Custom Membrane (Tone) | **Done** |
-| 7 Tom | `SyntheticBassDrum` | Migrated |
-| 3 Clap noise source | `WhiteNoise` | **Done** (EQ chain kept) |
-| 2, 5, 8 | — | Keep custom |
-
-### Build gaps (future)
-
-| Module | Source | Enables |
-|--------|--------|---------|
-| LGPL `Compressor` | DaisySP-LGPL | Daisy main bus dynamics (linked) |
+| `WhiteNoise` | Yes | Drum noise via `drumnoise()` |
+| `Limiter`, `DcBlock` | Yes | Master output |
+| `StringVoice` | Yes | `#synth pluck`; `#synth string` is the SOS ensemble |
+| `SyntheticBassDrum` | Yes | Tom (7); bass (9) is custom |
+| `Compressor` (LGPL) | Yes | Main bus |
+| `HiHat` | No | Tick and tweet stay custom |
+| `KarplusString` (direct) | No | Used inside `StringVoice` |
 
 ---
 
@@ -9272,80 +9386,13 @@ flowchart LR
 
 | Topic | Path |
 |-------|------|
-| Voice types | [`shared/sourcetype.ts`](../shared/sourcetype.ts), [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
-| Archived Maxi voices | [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts) |
-| Daisy FX | C++ FX modules in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp), [`wasmfxstate.ts`](../backend/wasm/wasmfxstate.ts) |
-| Daisy master | C++ master chain in [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
-| Archived Maxi drums | [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
-| Daisy DSP | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) |
-| Daisy build | [`build-daisy.sh`](../backend/daisy/native/build-daisy.sh) |
-| Backend factory | [`synthbackendfactory.ts`](../backend/synthbackendfactory.ts) |
-| Firmware | [`firmware/audio.ts`](../../../firmware/audio.ts) |
-
----
-
-## Summary A — DaisySP migrations
-
-### Phase 1 — drums (prior)
-
-| Category | ZSS feature | DaisySP module | Status |
-|----------|-------------|----------------|--------|
-| Drums | Tick (0), Tweet (1) | — | **Keep custom** (HiHat reverted) |
-| Drums | Hi snare (4), Low snare (6) | `AnalogSnareDrum` | Migrated |
-| Drums | Bass (9) | Custom Membrane (Tone) | **Done** |
-| Drums | Low tom (7) | `SyntheticBassDrum` | Migrated (tom substitute) |
-| Drums | Cowbell, woodblocks (2,5,8) | — | Keep custom |
-| Voices | Core 10 `SOURCE_TYPE` families | `Oscillator`, `Adsr` | Already in use |
-
-### Phase 2 — FX + master (implemented)
-
-| Category | ZSS feature | DaisySP module | Status |
-|----------|-------------|----------------|--------|
-| FX | Echo | `DelayLine` | **Done** |
-| FX | FC crush | `Decimator` | **Done** |
-| FX | Autofilter | `Svf` + `Phasor` | **Done** |
-| FX | Distortion | `Overdrive` | **Done** |
-| FX | Autowah | `Autowah` | **Done** (Daisy) |
-| Master | Razzle chorus | `Chorus` | **Done** (partial) |
-| Master | Output safety | `Limiter` | **Done** |
-| Master | DC block | `DcBlock` | **Done** |
-| Drums | Clap/tick/tweet noise | `WhiteNoise` | **Done** (EQ kept) |
-
-**Not migrating:** Maximilian reverb (4-comb, archive only), Maximilian master/sidechain (custom), noise voices, doot, algo synth.
-
----
-
-## Summary B — New voice types (Physical Modeling)
-
-| Proposed `#synth` name | DaisySP class | Status | Build deps |
-|------------------------|---------------|--------|--------------|
-| `string` | SOS ensemble (saws + Svf) | **Done** (Daisy-only, algo 0) | `detune`/`pwm`/`vib`/`filter` via SAB slots 6–9 |
-| `pluck` | `StringVoice` | **Done** (Daisy-only, algo 1) | `structure`/`brightness`/`damping`/`accent` via SAB |
-| `bells` | `ModalVoice` + sparkle FM | **Done** (Daisy `BELLS` slot) | `modalvoice.cpp`, `resonator.cpp` |
-| `drip` | `Drip` | **Done** (Daisy-only) | `drip.cpp` |
-| `epiano` | `Fm2` | **Done** (algo 1) | `fm2.cpp` |
-| `timpani` | `ModalVoice` | **Done** | `modalvoice.cpp` |
-
-```mermaid
-flowchart TB
-  subgraph phase1 [Phase 1 drums]
-    snare["Snare Bass Tom"]
-    custom["Tick Tweet Cowbell Woodblock"]
-  end
-  subgraph phase2 [Phase 2 FX master]
-    fx["DelayLine Decimator Overdrive Svf"]
-    master["Chorus Limiter DcBlock"]
-  end
-  subgraph phase2voices [Phase 2 new voices]
-    sv["StringVoice"]
-    mv["ModalVoice"]
-  end
-  phase1 --> doc["implementation-matrix.mdx"]
-  phase2 --> doc
-  phase2voices --> doc
-```
-
-Recommendation: core simplify-first swaps are complete; optional follow-ups include bitcrush on `Decimator` and LGPL `Compressor` wiring cleanup.
+| Voice types | [`shared/sourcetype.ts`](../../shared/sourcetype.ts), [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
+| FX | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp), [`wasmfxstate.ts`](../../backend/wasm/wasmfxstate.ts) |
+| Master | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
+| Drums | [`zss_drums.cpp`](../../backend/daisy/native/zss/zss_drums.cpp) |
+| Build | [`build-daisy.sh`](../../backend/daisy/native/build-daisy.sh) |
+| Backend factory | [`synthbackendfactory.ts`](../../backend/synthbackendfactory.ts) |
+| Firmware | [`firmware/audio.ts`](../../../../firmware/audio.ts) |
 
 ---
 
@@ -9356,7 +9403,7 @@ DSP spec for per-group voice FX routing in `zss_daisy_synth.cpp`.
 
 ## Routing
 
-- **4 FX groups** (play 0–1, play 2–3, bgplay, TTS) — see [voicefxgroup.ts](../voicefxgroup.ts).
+- **4 FX groups** (play 0–1, play 2–3, bgplay, TTS) — see [voicefxgroup.ts](../../voicefxgroup.ts).
 - Each effect is a **parallel send** from the same dry sample per block.
 - **Vibrato** is not in the wet sum; it modulates pitch on play voices before the FX tap.
 
@@ -9418,13 +9465,13 @@ Sidechain duck → master compressor → razzle → volume — unchanged downstr
 `yarn level-stability:test --filter fxmatrix`:
 
 - Peak vs `fxmatrix-dry` (≤6 dB), peak ≤ −0.5 dBFS
-- Solo FX audibility: peak within 4 dB of dry (distortion ≥ +4 dB hotter); diagnostic wet-lift report in [`fxbusmetrics.ts`](../backend/daisy/fxbusmetrics.ts)
+- Solo FX audibility: peak within 4 dB of dry (distortion ≥ +4 dB hotter); diagnostic wet-lift report in [`fxbusmetrics.ts`](../../backend/daisy/fxbusmetrics.ts)
 
 `yarn fx-bus-metrics:test` — offline wet-lift decomposition report (no Playwright).
 
 ---
 
-# playnotation.ts
+# Notation
 Source: https://zed.cafe/docs/synth/playnotation
 
 Parses text-based notation and converts it to scheduled note events.
@@ -9511,58 +9558,6 @@ Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and pari
 
 ---
 
-# Synth Module Documentation
-Source: https://zed.cafe/docs/synth/README
-
-The synth is a web-based software synthesizer. **Active runtime** uses a front-end / back-end split:
-
-- **Front-end** — firmware commands, `device/synth.ts` routing, `memory/synthstate.ts`, gadget `SYNTH_STATE`, play notation parsing. No audio engine imports.
-- **Back-end** — DaisySP WASM worklet (`backend/daisy/`), SAB voice/drum/FX scheduling (`backend/wasm/`), MP3 export.
-
-Legacy Tone.js and Maximilian documentation paths refer to **archived** stacks under `archive/tone/` and `archive/maxi/`. See [`../README.md`](../README.md) for the current layout.
-
-## Quick Links (active)
-
-| Topic | File |
-| ----- | ---- |
-| [Synth](voices.md) | Player reference for `#synth` voices and config keys |
-| [Effects](effects.md) | Player reference for echo, reverb, and the other voice FX |
-| [Scales](scales.md) | `#play` lines for each scale and key |
-| [playnotation.ts](playnotation.md) | Text notation parser |
-| [record & mp3](record-and-mp3.md) | Recording to MP3 (Daisy path) |
-| [voice-types-reference.md](voice-types-reference.md) | All voice types, params, Daisy vs Tone defaults |
-| [fx-types-reference.md](fx-types-reference.md) | All FX types, params, Daisy vs Tone defaults |
-| [gain-levels.md](gain-levels.md) | Every volume/gain constant and tweak guide |
-| [implementation-matrix.mdx](implementation-matrix.mdx) | Voice/FX/drum/master map (Daisy vs archived Maxi/Tone) |
-
-## Quick Links (archived)
-
-| Topic | File |
-| ----- | ---- |
-| [archive/tone/](../../../../ops/archive/synth/tone/README.md) | Tone.js stack |
-| [archive/maxi/](../../../../ops/archive/synth/maxi/README.md) | Maximilian WASM stack |
-
-## Quick Links (archived Tone.js detail)
-
-| Topic | File |
-| ----- | ---- |
-| [index.ts](index.md) | Main entry, synth factory |
-| [audiochain.ts](audiochain.md) | Global audio routing |
-| [source.ts](source.md) | Sound source factory |
-| [fx & fxchannels](fx-and-fxchannels.md) | Effects chain |
-| [drums](drums.md) | Drum kit |
-| [voiceconfig](voiceconfig.md) | Voice/source config API |
-| [voicefx](voicefx.md) | FX config API |
-| [worklets](worklets.md) | AudioWorklet processors |
-
----
-
-## Archived Tone.js reference
-
-The sections below document the former Tone.js implementation. Paths refer to `archive/tone/` unless noted.
-
----
-
 # Recording & MP3 export
 Source: https://zed.cafe/docs/synth/record-and-mp3
 
@@ -9580,33 +9575,6 @@ Source: https://zed.cafe/docs/synth/record-and-mp3
 8. Triggers download
 
 If `OfflineAudioContext` or offline worklet boot fails, `#synthrecord` surfaces an error (no real-time fallback).
-
-Archived Maximilian path: [`archive/maxi/wasmrecordhandler.ts`](../../../../ops/archive/synth/maxi/wasmrecordhandler.ts).
-
----
-
-## Archived Tone.js path (`archive/tone/recordhandler.ts`)
-
-### synthflush()
-
-Clears recording state:
-- `recordedticks = []`
-- `recordlastpercent = 0`
-- `recordisrendering = 0`
-
-### synthrecord(filename?)
-
-1. Collects `recordedticks` from tick handler
-2. Computes duration: `max(time) - min(time) + 5` seconds
-3. Shifts all times so min = 0.1 (small headroom)
-4. Captures source/FX state via `getreplay()`
-5. Creates offline context with `Offline()`
-6. Rebuilds synth: `await setupsynth()`, `createsynth()`
-7. Applies state: `applyreplay()`, `synthreplay()`
-8. Renders
-9. Converts buffer to MP3 via `converttomp3()`
-10. Triggers download via `<a download>`
-11. Destroys temporary synth
 
 ---
 
@@ -10873,7 +10841,7 @@ Reference catalog for all ZSS `#synth` voice types. **Daisy WASM is the active b
 | **Broken** | Repro exists; owner named |
 | **N/A** | Intentionally not `#synth`-settable |
 
-SAB write alone is never Proven. See [daisy-synth-config](../../../../.cursor/rules/daisy-synth-config.mdc).
+SAB write alone is never Proven. See [daisy-synth-config](../../../../../.cursor/rules/daisy-synth-config.mdc).
 
 See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voiceconfig.md).
 
@@ -10895,11 +10863,8 @@ See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voice
 | `#synth …` | 0–3 | Select / config `#play` voices |
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
-| `#string` / `#fmsquare` / … | 0–3 | Config-only (no type select) |
-| `#string1`–`4` / `#fmsquare1`–`4` | single play index | Config-only |
-| `#string5` / `#fmsquare5` | 4–7 | Config-only bgplay |
 
-Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
+Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
 
 ---
 
@@ -10925,7 +10890,7 @@ Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoi
 | fm* | + modindex; harm = note×ratio | osccfg | FM + **familywavetobasic**; **not modfreq** | **Proven** (`fmsquare`≠sine map + SAB 21) |
 | fat* | count, phase, spread (cents) | osccfg | phase-accumulator unison + family map | Proven (carrier map Jest) |
 
-**Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
+**Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
 
 ### Noise / bells / doot
 
@@ -10987,12 +10952,12 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 
 | Param | Aliases | Value | Tone default | WASM default | Notes |
 |-------|---------|-------|--------------|--------------|-------|
-| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../../../../ops/archive/synth/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
+| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | [daisysynth.ts](../../backend/daisy/daisysynth.ts) |
 | `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
 | `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | `SYNTH` + `ALGO_SYNTH` + `BOWED_VOICE`; error on retro in Tone |
-| `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
+| `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
 
-**Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../synthdefaults.ts)) on both backends.
+**Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../../synthdefaults.ts)) on both backends.
 
 **Tone `Synth` library defaults** (before ZSS reset overrides): osc `triangle`, envelope `0.005 / 0.1 / 0.3 / 1`, portamento `0`.
 
@@ -11002,7 +10967,7 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 
 ## 1. SYNTH — oscillator voices
 
-Selecting any validated wave name switches voice to `SYNTH`. Names validated by [validation.ts](../voiceconfig/validation.ts).
+Selecting any validated wave name switches voice to `SYNTH`. Names validated by [validation.ts](../../voiceconfig/validation.ts).
 
 ### Wave name families
 
@@ -11014,7 +10979,7 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | FM | `fmsine`, `fmsquare`, `fmtriangle`, `fmsawtooth` | `fmsquare8` + array |
 | Fat | `fatsine`, `fatsquare`, `fattriangle`, `fatsawtooth` | `fatsawtooth4` + array |
 
-`custom` maps to square carrier in WASM ([wasmosctype.ts](../backend/wasm/wasmosctype.ts)).
+`custom` maps to square carrier in WASM ([wasmosctype.ts](../../backend/wasm/wasmosctype.ts)).
 
 ### Config params by oscillator kind
 
@@ -11030,9 +10995,9 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
 | **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
 
-WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
+WASM osc defaults: [wasmoscconfigsab.ts](../../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
 
-**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp)). Archived Maxi play-code: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts).
+**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp)).
 
 ### WASM vs Tone — SYNTH summary
 
@@ -11058,7 +11023,7 @@ WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `D
 | `port` | Error on retro | Ignored (not applied) |
 | Osc/algo params | No | No |
 
-### Tone-only fixed params (at source creation, [source.ts](../../../../ops/archive/synth/tone/source.ts))
+### Fixed noise-voice levels
 
 | Param | retro/buzz/clang/metallic |
 |-------|---------------------------|
@@ -11069,7 +11034,7 @@ WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `D
 
 LFSR tap differences per type are in `generatenoisesynth()` (not user-configurable).
 
-### WASM-only fixed meta ([noisemeta.ts](../backend/wasm/noisemeta.ts)) — not `#synth`-settable
+### WASM-only fixed meta ([noisemeta.ts](../../backend/wasm/noisemeta.ts)) — not `#synth`-settable
 
 | Type | basepitch | pitchfiltermult | issoft | expression |
 |------|-----------|-----------------|--------|------------|
@@ -11093,7 +11058,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 | `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (`voiceenv` multiplies ModalVoice + sparkle) |
 | FM params | Via Tone FMSynth API, **not** exposed as `#synth` keys | **Not configurable** |
 
-### Tone fixed at creation + reset ([source.ts](../../../../ops/archive/synth/tone/source.ts))
+### Bells fixed levels
 
 **Main FMSynth (after ZSS reset):** harmonicity `1.5`, modulationIndex `30`, carrier `sine`, modulator `square`, envelope `0.01/3/0.3/6`, modulationEnvelope `0.5/1/0.2/4`.
 
@@ -11101,7 +11066,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 **Tone FMSynth library baseline:** ModulationSynth defaults — harmonicity `3`, modulationIndex `10`.
 
-### WASM hardcoded in play code ([voiceplaycode.ts](../../../../ops/archive/synth/maxi/voiceplaycode.ts))
+### Bells hardcoded levels
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
 
@@ -11157,7 +11122,7 @@ algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `s
 
 Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for an outer mix envelope on both backends.
 
-**Daisy routings** match [algosynth.md](algosynth.md) (including `algo4` = `1→2`, `3→4` → op2+op4). FM rewrite paths use each operator's `oscN` wave (not hardcoded sine).
+**Daisy routings** match [algosynth.md](/synth/algosynth) (including `algo4` = `1→2`, `3→4` → op2+op4). FM rewrite paths use each operator's `oscN` wave (not hardcoded sine).
 
 ---
 
@@ -11352,7 +11317,7 @@ Drip:       env/envelope | vol                          (drip voice; no timbre k
 | `#synth` no args | Applies `square` wave only | Same; full reset is `#synth restart` |
 | Default envelope | `0.01/0.01/0.5/0.01` on reset | `0.01/0.01/0.5/0.01` |
 | `#synth env` shape | Tone exponential `AmplitudeEnvelope` | **`ZssLinearEnv`** (linear ramps; behavioral parity, not sample-identical) |
-| ADSR parity tests | — | `yarn adsr-parity:test` (short amsaw); `yarn synth-env-parity:test:full` (long release, square + FM repro). Offline renders must span **gate + release** (see `paritydurationwithrelease`). FM/AM: pin `#synth modenv` when comparing timbre; carrier `#synth env` is wave-agnostic. |
+| ADSR checks | — | `yarn task run ops:daisy:adsr-parity:test`. FM/AM: pin `#synth modenv` when comparing timbre; carrier `#synth env` is wave-agnostic. |
 | Per-voice volume | Yes | Yes (all 10 types) |
 | Algo voice envelope | Per-operator + outer | Per-operator + outer (`algooutenvs`) |
 | Config storage | Tone instrument state | SAB arrays pushed to worklet |
@@ -11363,12 +11328,12 @@ Drip:       env/envelope | vol                          (drip voice; no timbre k
 
 | Topic | Path |
 |-------|------|
-| Command parsing | [firmware/audio.ts](../../../firmware/audio.ts) |
-| Type validation | [voiceconfig/validation.ts](../voiceconfig/validation.ts) |
-| WASM voice routing | [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) |
-| WASM play behavior | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts)) |
-| Tone voice config | [archive/tone/voiceconfig/index.ts](../../../../ops/archive/synth/tone/voiceconfig/index.ts) |
-| Tone source creation | [archive/tone/source.ts](../../../../ops/archive/synth/tone/source.ts) |
+| Command parsing | [firmware/audio.ts](../../../../firmware/audio.ts) |
+| Type validation | [voiceconfig/validation.ts](../../voiceconfig/validation.ts) |
+| WASM voice routing | [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts) |
+| WASM play behavior | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
+| Voice config | [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts) |
+| Daisy synth | [daisysynth.ts](../../backend/daisy/daisysynth.ts) |
 
 ---
 
@@ -11400,7 +11365,7 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 Per play/bgplay voice index, family blobs (`stringensemble`, `pluck`, `wind`, …) and osc/algo rows stay in memory when you change type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
 
-Top-level config-only commands (`#string`, `#fmsquare`, `#piano1`, …) adjust those slots without selecting the type — use `#synth <name>` to select.
+`#synth <name>` selects the type. `#synth <key> <value>` sets a key on the current voice and does not select a type.
 
 ## Source Type Changes
 
@@ -11531,7 +11496,7 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 | fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params; Daisy modulator Hz = note × `harmonicity` |
 | fat* | `count`, `phase`, `spread` | Unison count, phase, detune cents |
 
-## AlgoSynth Configs ([algosynth.md](algosynth.md))
+## AlgoSynth Configs ([algosynth.md](/synth/algosynth))
 
 | Config | Value | Description |
 |--------|-------|-------------|
@@ -11877,29 +11842,29 @@ The same keys apply to algo1 through algo7, including the 1-5 channel forms.
 
 ### detune
 
-`#string detune <0-1>`
+`#synth detune <0-1>`
 
 ### string pwm
 
-`#string pwm <0-1>`
+`#synth pwm <0-1>`
 
 ### vib
 
-`#string vib <0-1>`
+`#synth vib <0-1>`
 
 ### filter
 
-`#string filter <0-1>`
+`#synth filter <0-1>`
 
 ### string env
 
-`#string env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### string vol
 
-`#string vol <db>`
+`#synth vol <db>`
 
-`#string1` through `#string5` work like `#synth1` through `#synth5`.
+Select with `#synth string`, then set a key with `#synth detune`. `#synth1` through `#synth4` set one play voice. `#synth5` is bgplay.
 
 ### pluck
 
@@ -11907,27 +11872,27 @@ The same keys apply to algo1 through algo7, including the 1-5 channel forms.
 
 ### structure
 
-`#pluck structure <0-1>`
+`#synth structure <0-1>`
 
 ### pluck brightness
 
-`#pluck brightness <0-1>`
+`#synth brightness <0-1>`
 
 ### pluck damping
 
-`#pluck damping <0-1>`
+`#synth damping <0-1>`
 
 ### accent
 
-`#pluck accent <0-1>`
+`#synth accent <0-1>`
 
 ### pluck env
 
-`#pluck env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### pluck vol
 
-`#pluck vol <db>`
+`#synth vol <db>`
 
 ### flute
 
@@ -11935,39 +11900,39 @@ The same keys apply to algo1 through algo7, including the 1-5 channel forms.
 
 ### breath
 
-`#flute breath <0-1>`
+`#synth breath <0-1>`
 
 ### pressure
 
-`#flute pressure <0-1>`
+`#synth pressure <0-1>`
 
 ### flute brightness
 
-`#flute brightness <0-1>`
+`#synth brightness <0-1>`
 
 ### resonance
 
-`#flute resonance <0-1>`
+`#synth resonance <0-1>`
 
 ### flute env
 
-`#flute env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### flute vol
 
-`#flute vol <db>`
+`#synth vol <db>`
 
 ### clarinet
 
 `#synth clarinet`
 
-The same keys as flute, including the 1-5 channel forms.
+The same keys as flute.
 
 ### brass
 
 `#synth brass`
 
-The same keys as flute, including the 1-5 channel forms.
+The same keys as flute.
 
 ### piano
 
@@ -11975,27 +11940,27 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### piano spread
 
-`#piano spread <0-1>`
+`#synth spread <0-1>`
 
 ### hammer
 
-`#piano hammer <0-1>`
+`#synth hammer <0-1>`
 
 ### piano brightness
 
-`#piano brightness <0-1>`
+`#synth brightness <0-1>`
 
 ### piano damping
 
-`#piano damping <0-1>`
+`#synth damping <0-1>`
 
 ### piano env
 
-`#piano env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### piano vol
 
-`#piano vol <db>`
+`#synth vol <db>`
 
 ### violin
 
@@ -12003,31 +11968,31 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### bow
 
-`#violin bow <0-1>`
+`#synth bow <0-1>`
 
 ### violin pressure
 
-`#violin pressure <0-1>`
+`#synth pressure <0-1>`
 
 ### violin vib
 
-`#violin vib <0-1>`
+`#synth vib <0-1>`
 
 ### body
 
-`#violin body <0-1>`
+`#synth body <0-1>`
 
 ### violin port
 
-`#violin port <seconds>`
+`#synth port <seconds>`
 
 ### violin env
 
-`#violin env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### violin vol
 
-`#violin vol <db>`
+`#synth vol <db>`
 
 ### steel
 
@@ -12035,27 +12000,27 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### pick
 
-`#steel pick <0-1>`
+`#synth pick <0-1>`
 
 ### steel body
 
-`#steel body <0-1>`
+`#synth body <0-1>`
 
 ### steel damping
 
-`#steel damping <0-1>`
+`#synth damping <0-1>`
 
 ### position
 
-`#steel position <0-1>`
+`#synth position <0-1>`
 
 ### steel env
 
-`#steel env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### steel vol
 
-`#steel vol <db>`
+`#synth vol <db>`
 
 ### tonewheel
 
@@ -12063,29 +12028,29 @@ The same keys as flute, including the 1-5 channel forms.
 
 ### drawbar
 
-`#tonewheel drawbar <0-1>`
+`#synth drawbar <0-1>`
 
 Drawbar is an organ parameter, not a voice type.
 
 ### click
 
-`#tonewheel click <0-1>`
+`#synth click <0-1>`
 
 ### leak
 
-`#tonewheel leak <0-1>`
+`#synth leak <0-1>`
 
 ### bright
 
-`#tonewheel bright <0-1>`
+`#synth bright <0-1>`
 
 ### tonewheel env
 
-`#tonewheel env <a> <d> <s> <r>`
+`#synth env <a> <d> <s> <r>`
 
 ### tonewheel vol
 
-`#tonewheel vol <db>`
+`#synth vol <db>`
 
 ## Shared settings
 
@@ -12112,14 +12077,6 @@ Portamento time.
 ### env
 
 `#synth env <a> <d> <s> <r>`
-
-## Config-only commands
-
-### config only
-
-`#string`, `#fmsquare`, `#piano`, and the other voice-named commands do not select the type. Use `#synth <name>` to select.
-
-Bare `#string` is play voices 0-3. `#string1` through `#string4` set one voice. `#string5` is bgplay. The same 1-5 forms exist for the other voice names.
 
 ---
 

@@ -1,64 +1,47 @@
 ---
-title: index.ts
+title: Overview
+description: The four doors of the synth docs -- play, path, catalog, and engine.
 ---
 
-Main entry point and synth factory.
+Commands and play notation stay in the front-end. DaisySP WASM renders the audio. The pages are grouped into four doors.
 
-## Exports
+## Play
 
-### setupsynth()
+What you type: a voice, an effect send, a scale, or the characters in a `#play` line.
 
-```typescript
-await setupsynth()
-```
+- [Synth](/synth/voices) -- `#synth` voices and config keys
+- [Effects](/synth/effects) -- echo, reverb, and the other voice FX
+- [Scales](/synth/scales) -- `#play` lines for each scale and key
+- [Notation](/synth/playnotation) -- how play text becomes notes
 
-One-time async initialization. Registers AudioWorklet modules:
+## Path
 
-- Frequency Crusher
-- Sidechain Compressor
+How sound moves from the voices to the speakers, including the drum kit and MP3 export.
 
-Call before creating synths, especially for offline rendering.
+- [Implementation matrix](/synth/implementation-matrix) -- voices, FX, drums, and the main chain
+- [Gain levels](/synth/gain-levels) -- every volume stage
+- [Main chain](/synth/audiochain) -- play, drums, and TTS into the output
+- [FX bus](/synth/parallel-fx-bus) -- parallel voice FX sends
+- [Drums](/synth/drums) -- the drum kit
+- [Recording](/synth/record-and-mp3) -- render to MP3
 
-### createsynth()
+## Catalog
 
-```typescript
-const synth = createsynth()
-```
+Parameter tables for voices and effects.
 
-Creates and returns a full synth instance (`AUDIO_SYNTH`).
+- [Voice types](/synth/voice-types-reference) -- waves, params, and defaults
+- [FX types](/synth/fx-types-reference) -- effect params and defaults
+- [Voice config](/synth/voiceconfig) -- how a voice config is applied
+- [Voice FX](/synth/voicefx) -- how an effect send is applied
 
-## Returned API
+## Engine
 
-| Method                             | Description                          |
-| ---------------------------------- | ------------------------------------ |
-| `addplay(buffer)`                  | Parse notation and schedule playback |
-| `addbgplay(buffer, quantize)`      | Schedule background SFX              |
-| `stopplay()`                       | Clear scheduled notes                |
-| `setmainvolume(v)`                 | Main scale for all buses (0-100)     |
-| `setplayvolume(v)`                 | Play bus trim (0-100)                |
-| `setbgplayvolume(v)`               | Background SFX volume                |
-| `setttsvolume(v)`                  | TTS volume                           |
-| `addaudiobuffer(buffer)`           | Play external audio (e.g. TTS)       |
-| `applyreset()`                     | Reset all sources and FX to defaults |
-| `applyreplay(source, fxchain, fx)` | Restore state for replay             |
-| `synthreplay(pattern, maxtime)`    | Schedule pattern for replay          |
-| `synthrecord(filename)`            | Render to MP3 and download           |
-| `synthflush()`                     | Clear recording buffer               |
-| `destroy()`                        | Dispose all nodes                    |
+The source files behind the doors above. Headings match the file names.
 
-## Properties
-
-- `SOURCE` — Array of 8 source wrappers
-- `FX` — Array of 4 FX channel groups
-- `FXCHAIN` — Shared effect chain
-- `changesource` — Function to change source type
-- `broadcastdestination` — MediaStream for capture (if not offline)
-
-## Internal Flow
-
-1. Creates audio chain (audiochain.ts)
-2. Creates source+FX setup (sourcefxsetup.ts)
-3. Creates tick handler (tickhandler.ts)
-4. Wraps tick handler in Tone.js Part (pacer)
-5. Creates record handler (recordhandler.ts)
-6. Starts pacer, applies defaults
+- [index.ts](/synth/factory) -- synth factory
+- [source.ts](/synth/source)
+- [sourcefxsetup.ts](/synth/sourcefxsetup)
+- [tickhandler.ts](/synth/tickhandler)
+- [fx.ts and fxchannels.ts](/synth/fx-and-fxchannels)
+- [algosynth.ts](/synth/algosynth)
+- [Audio worklets](/synth/worklets)

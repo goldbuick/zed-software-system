@@ -33,12 +33,9 @@ Synthesized drum kit. Each file provides one or more drum sounds with trigger fu
 | 10 | Crash | `#play k` |
 | 11 | Ride | `#play r` |
 
-## Backend split (Daisy vs archived Maximilian)
+## Implementation
 
-| Backend | Drum implementation |
-|---------|---------------------|
-| **DaisySP WASM** (active) | Custom Maxi/Tone-parity bodies for all kit drums including tom (saw/tri/noise glide) and multi-harmonic bass; modal cymbals for crash/ride |
-| **Maximilian WASM** (archived) | Tone-parity custom DSP in [`archive/maxi/drumplaycode.ts`](../../../../ops/archive/synth/maxi/drumplaycode.ts) |
+Daisy drums are custom bodies in `zss_drums.cpp`, including the tom glide and multi-harmonic bass, plus modal cymbals for crash and ride.
 
 See [implementation-matrix.mdx](implementation-matrix.mdx) Table 4.
 

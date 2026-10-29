@@ -49,7 +49,7 @@ Play stem into the mix is still fixed at `kPlayBusGain`.
 
 ## User faders (SAB `zss_main`, 0-100)
 
-Defined in [`wasmmainsab.ts`](../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
+Defined in [`wasmmainsab.ts`](../../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
 SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**).
 
 | Control | SAB slot | Trim default | dB law | Notes |
@@ -61,7 +61,7 @@ SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, b
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
-CLI: [`zss/firmware/audio.ts`](../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
+CLI: [`zss/firmware/audio.ts`](../../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
 
 ## Master / bus constants (`zss_config.h`)
 
@@ -73,7 +73,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **12** | Sidechain makeup (calibrate: `ops:daisy:sidechain:parity:calibrate`) |
+| `kScMakeupDb` | **12** | Sidechain makeup (`kScMakeupDb` in `zss_config.h`) |
 | `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
 | `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
 | SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
@@ -157,9 +157,9 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 | Too loud at boot | `kMainFaderOffsetDb`, `WASM_DEFAULT_PLAY_VOLUME` | -- |
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
 | Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
-| Idle play too hot | `kScMakeupDb`, `kScMix` | `ops:daisy:sidechain:parity:calibrate` |
+| Idle play too hot | `kScMakeupDb`, `kScMix` | `zss_config.h` |
 | Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy
 
-[`wasmlevels.ts`](../backend/wasm/wasmlevels.ts) exports Tone-parity constants (`WASM_PLAY_BUS_GAIN`, `WASM_DRUM_BUS_GAIN`, etc.) for archived Maxi/Tone math -- **not** the live Daisy bus gains in `zss_config.h`.
+[`wasmlevels.ts`](../../backend/wasm/wasmlevels.ts) exports Tone-parity constants (`WASM_PLAY_BUS_GAIN`, `WASM_DRUM_BUS_GAIN`, etc.) for archived Maxi/Tone math -- **not** the live Daisy bus gains in `zss_config.h`.

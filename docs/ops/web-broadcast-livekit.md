@@ -9,7 +9,7 @@ How the in-app **stream broadcast** works today, why you cannot aim it at LiveKi
 The terminal **`#broadcast`** command (operator-only, via bridge permissions) starts and stops a browser-side stream built from:
 
 - **Video:** the page’s main **`canvas`** element.
-- **Audio:** [`synthbroadcastdestination()`](../../ops/archive/synth/tone/audiochain.ts) (Tone/Web Audio routed into a `MediaStreamDestination`).
+- **Audio:** [`synthbroadcastdestination()`](../../zss/device/synth.ts) (Daisy output tapped into a `MediaStreamDestination`).
 
 Implementation lives in [`zss/device/bridge.ts`](../../zss/device/bridge.ts) on messages `bridge:streamstart` / `bridge:streamstop`. The runtime client is the first-party module [`zss/feature/broadcast/`](../../zss/feature/broadcast/README.md) (replaces the former `amazon-ivs-web-broadcast` npm dependency). Low-latency ingest uses:
 

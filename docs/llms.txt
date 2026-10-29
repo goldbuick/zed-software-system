@@ -8,46 +8,123 @@
 
 ## Guides
 
-- [Guides](https://zed.cafe/docs/guides): Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
-- [Your first ten minutes](https://zed.cafe/docs/guides/first-ten-minutes): Open zed.cafe, find your way around the terminal, load a starter kit, and look inside a book.
-- [Your first board](https://zed.cafe/docs/guides/first-board): Create two connected boards, build walls with commands and the inspector, then save and share the result.
-- [Your first object](https://zed.cafe/docs/guides/first-object): Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, scroll text, and links.
+- [Overview](https://zed.cafe/docs/guides): Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
+- [Your first ten minutes](https://zed.cafe/docs/guides/first-ten-minutes): Open zed.cafe, find your way around the `terminal`, load a starter kit, and look inside a book.
+- [Your first board](https://zed.cafe/docs/guides/first-board): Build walls on the title board, connect a second room, then save and share the result.
+- [Your first object](https://zed.cafe/docs/guides/first-object): Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, `scroll` text, and links.
 
-## Reference
+## Look up
+
+- [Glossary](https://zed.cafe/docs/glossary): Terms used across Zed Cafe / ZSS — product, world model, devices, and more.
+
+### Features
+
+- [Features](https://zed.cafe/docs/features): Zed Cafe is a browser workshop for text-mode worlds: you build boards, script them, add sound and speech, and share a link so people can play together.
+
+#### Make a world
+
+- [Boards](https://zed.cafe/docs/features/boards): Boards, movement between them, and region edits in Zed Cafe.
+- [Inspector](https://zed.cafe/docs/features/inspector): In-place element editing, search, and style tools in Zed Cafe.
+- [Files](https://zed.cafe/docs/features/files): Import, export, and publish worlds in Zed Cafe.
+
+#### Script it
+
+- [Elements](https://zed.cafe/docs/features/elements): Element scripting commands in Zed Cafe.
+- [Editor](https://zed.cafe/docs/features/editor): Tape editor for ZSS pages in Zed Cafe.
+
+#### Play
+
+- [Display](https://zed.cafe/docs/features/display): Rendering, input, and end of game in Zed Cafe.
+
+#### Sound and speech
+
+- [Synth](https://zed.cafe/docs/features/synth): Play voices, effects, and recording in Zed Cafe.
+- [Speech](https://zed.cafe/docs/features/speech): Text-to-speech and speech-to-text in Zed Cafe.
+
+#### Together
+
+- [Multiplayer](https://zed.cafe/docs/features/multiplayer): Host, join, chat, and share a Zed Cafe session.
+- [Permissions](https://zed.cafe/docs/features/permissions): Roles, bans, and permission groups in Zed Cafe.
+
+#### Keep it
+
+- [Session](https://zed.cafe/docs/features/session): Save, login, and reset a Zed Cafe session.
+- [Books](https://zed.cafe/docs/features/books): List, open, create, rename, search, and trash books and pages.
+
+#### The terminal
+
+- [Help](https://zed.cafe/docs/features/help): The Zed Cafe command line, help scroll, and hotkeys.
+- [Headless](https://zed.cafe/docs/features/headless): Run Zed Cafe in a terminal, without the board canvas.
+
+### Firmware
+
+- [audio.ts](https://zed.cafe/docs/firmware/audio)
+- [board.ts](https://zed.cafe/docs/firmware/board)
+- [cli.ts](https://zed.cafe/docs/firmware/cli)
+- [element.ts](https://zed.cafe/docs/firmware/element)
+- [Firmware Documentation](https://zed.cafe/docs/firmware/README)
+- [firmware.ts (Core)](https://zed.cafe/docs/firmware/firmware-core)
+- [loader.ts](https://zed.cafe/docs/firmware/loader)
+- [loaderbinary.ts](https://zed.cafe/docs/firmware/loaderbinary)
+- [loaderjson.ts](https://zed.cafe/docs/firmware/loaderjson)
+- [loadertext.ts](https://zed.cafe/docs/firmware/loadertext)
+- [network.ts](https://zed.cafe/docs/firmware/network)
+- [runner.ts](https://zed.cafe/docs/firmware/runner)
+- [runtime.ts](https://zed.cafe/docs/firmware/runtime)
+- [transforms.ts](https://zed.cafe/docs/firmware/transforms)
+
+#### Commands
+
+- [Full command reference](https://zed.cafe/docs/firmware/commands)
+- [CLI commands](https://zed.cafe/docs/firmware/commands/cli): Every terminal
+- [Loader commands](https://zed.cafe/docs/firmware/commands/loader): The
+- [Runtime commands](https://zed.cafe/docs/firmware/commands/runtime): The
+
+### Synth
+
+- [Overview](https://zed.cafe/docs/synth): The four doors of the synth docs -- play, path, catalog, and engine.
+
+#### Play
+
+- [Synth](https://zed.cafe/docs/synth/voices): Player reference for
+- [Effects](https://zed.cafe/docs/synth/effects): Player reference for
+- [Scales](https://zed.cafe/docs/synth/scales): Play lines for major, minor, blues, modal, pentatonic, and exotic scales.
+- [Notation](https://zed.cafe/docs/synth/playnotation)
+
+#### Path
+
+- [Synth implementation matrix](https://zed.cafe/docs/synth/implementation-matrix)
+- [Gain and volume levels (Daisy)](https://zed.cafe/docs/synth/gain-levels): Reference chart of every tweakable volume/gain stage in the live Daisy synth path.
+- [Main chain](https://zed.cafe/docs/synth/audiochain)
+- [Parallel voice FX bus (Daisy)](https://zed.cafe/docs/synth/parallel-fx-bus)
+- [Drums Module](https://zed.cafe/docs/synth/drums)
+- [Recording & MP3 export](https://zed.cafe/docs/synth/record-and-mp3)
+
+#### Catalog
+
+- [Voice types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/voice-types-reference)
+- [Voice FX types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/fx-types-reference)
+- [Voice Config Module](https://zed.cafe/docs/synth/voiceconfig)
+- [Voice FX Module](https://zed.cafe/docs/synth/voicefx)
+
+#### Engine
+
+- [index.ts](https://zed.cafe/docs/synth/factory)
+- [source.ts](https://zed.cafe/docs/synth/source)
+- [sourcefxsetup.ts](https://zed.cafe/docs/synth/sourcefxsetup)
+- [tickhandler.ts](https://zed.cafe/docs/synth/tickhandler)
+- [fx.ts & fxchannels.ts](https://zed.cafe/docs/synth/fx-and-fxchannels)
+- [algosynth.ts](https://zed.cafe/docs/synth/algosynth)
+- [Audio Worklets](https://zed.cafe/docs/synth/worklets)
+
+## System
+
+### Overview
 
 - [System map](https://zed.cafe/docs/map): Product stack, realms and workers, tick loop, and script pipeline.
-- [Glossary](https://zed.cafe/docs/glossary): Terms used across Zed Cafe / ZSS — product, world model, devices, and more.
 - [Architecture](https://zed.cafe/docs/architecture): Pointer to the ZSS architecture deep dive and runtime overview.
 
-## Features
-
-- [Features](https://zed.cafe/docs/features): Feature domains across the fantasy terminal — CLI, inspector, synth, multiplayer, and more.
-- [Audio & synth](https://zed.cafe/docs/features/audio-synth): Audio & synth features in Zed Cafe / ZSS.
-- [Board & world building](https://zed.cafe/docs/features/board-world-building): Board & world building features in Zed Cafe / ZSS.
-- [CLI / headless](https://zed.cafe/docs/features/cli-headless): CLI / headless features in Zed Cafe / ZSS.
-- [Code editor & tape](https://zed.cafe/docs/features/code-editor-tape): Code editor & tape features in Zed Cafe / ZSS.
-- [Element scripting](https://zed.cafe/docs/features/element-scripting): Element scripting features in Zed Cafe / ZSS.
-- [Import / export / parse](https://zed.cafe/docs/features/import-export-parse): Import / export / parse features in Zed Cafe / ZSS.
-- [Inspector & gadget tools](https://zed.cafe/docs/features/inspector-gadget-tools): Inspector & gadget tools features in Zed Cafe / ZSS.
-- [Multiplayer & social](https://zed.cafe/docs/features/multiplayer-social): Multiplayer & social features in Zed Cafe / ZSS.
-- [Permissions & moderation](https://zed.cafe/docs/features/permissions-moderation): Permissions & moderation features in Zed Cafe / ZSS.
-- [Rendering & input](https://zed.cafe/docs/features/rendering-input): Rendering & input features in Zed Cafe / ZSS.
-- [Speech & TTS](https://zed.cafe/docs/features/speech-tts): Speech & TTS features in Zed Cafe / ZSS.
-- [Storage & session](https://zed.cafe/docs/features/storage-session): Storage & session features in Zed Cafe / ZSS.
-- [Terminal & CLI](https://zed.cafe/docs/features/terminal-cli): Terminal & CLI features in Zed Cafe / ZSS.
-
-## Airshare
-
-- [Airshare wire protocol](https://zed.cafe/docs/airshare/protocol): Zed-owned fountain QR format for optical MEMORY transfer
-
-## Device
-
-- [Device documentation](https://zed.cafe/docs/device/README)
-- [Device Message Flow Diagram](https://zed.cafe/docs/device/message-flow)
-- [Devices and messaging](https://zed.cafe/docs/device/devices-and-messaging)
-- [User-feedback channels audit](https://zed.cafe/docs/device/feedback-channels-audit)
-
-## Feature
+### Modules
 
 - [boardcopy.ts](https://zed.cafe/docs/feature/boardcopy)
 - [boarderase.ts](https://zed.cafe/docs/feature/boarderase)
@@ -72,70 +149,10 @@
 - [TTS voices](https://zed.cafe/docs/feature/tts-voices): Player reference for
 - [tts/](https://zed.cafe/docs/feature/tts)
 - [url.ts](https://zed.cafe/docs/feature/url)
+- [wfcoverlapping.ts](https://zed.cafe/docs/feature/wfcoverlapping)
 - [writeui.ts and zsstextui.ts](https://zed.cafe/docs/feature/writeui)
 
-## Firmware
-
-- [audio.ts](https://zed.cafe/docs/firmware/audio)
-- [board.ts](https://zed.cafe/docs/firmware/board)
-- [cli.ts](https://zed.cafe/docs/firmware/cli)
-- [element.ts](https://zed.cafe/docs/firmware/element)
-- [Firmware Documentation](https://zed.cafe/docs/firmware/README)
-- [firmware.ts (Core)](https://zed.cafe/docs/firmware/firmware-core)
-- [loader.ts](https://zed.cafe/docs/firmware/loader)
-- [loaderbinary.ts](https://zed.cafe/docs/firmware/loaderbinary)
-- [loaderjson.ts](https://zed.cafe/docs/firmware/loaderjson)
-- [loadertext.ts](https://zed.cafe/docs/firmware/loadertext)
-- [network.ts](https://zed.cafe/docs/firmware/network)
-- [runner.ts](https://zed.cafe/docs/firmware/runner)
-- [runtime.ts](https://zed.cafe/docs/firmware/runtime)
-- [transforms.ts](https://zed.cafe/docs/firmware/transforms)
-
-### Commands
-
-- [Full command reference](https://zed.cafe/docs/firmware/commands)
-- [CLI commands](https://zed.cafe/docs/firmware/commands/cli): Every terminal
-- [Loader commands](https://zed.cafe/docs/firmware/commands/loader): The
-- [Runtime commands](https://zed.cafe/docs/firmware/commands/runtime): The
-
-## Gadget
-
-- [Gadget documentation](https://zed.cafe/docs/gadget/README)
-- [Gadget scroll catalog](https://zed.cafe/docs/gadget/gadget-scrolls)
-- [Scroll panel vs terminal tape hyperlinks](https://zed.cafe/docs/gadget/scroll-vs-terminal-hyperlinks)
-
-## Lang
-
-- [ast.ts](https://zed.cafe/docs/lang/ast)
-- [formatlangerror.ts](https://zed.cafe/docs/lang/formatlangerror): Rewrites Chevrotain lexer and parser errors into short, ASCII messages for the editor and compile tape.
-- [generator.ts](https://zed.cafe/docs/lang/generator)
-- [Lang architecture](https://zed.cafe/docs/lang/architecture)
-- [Lang Documentation](https://zed.cafe/docs/lang/README)
-- [lexer.ts](https://zed.cafe/docs/lang/lexer)
-- [parser.ts](https://zed.cafe/docs/lang/parser)
-- [transformer.ts](https://zed.cafe/docs/lang/transformer)
-- [visitor.ts](https://zed.cafe/docs/lang/visitor)
-- [visitortypes.ts](https://zed.cafe/docs/lang/visitortypes)
-
-## Mapping
-
-- [2d.ts](https://zed.cafe/docs/mapping/2d)
-- [anim.ts](https://zed.cafe/docs/mapping/anim)
-- [array.ts](https://zed.cafe/docs/mapping/array)
-- [encode.ts](https://zed.cafe/docs/mapping/encode)
-- [func.ts](https://zed.cafe/docs/mapping/func)
-- [grapheme.ts](https://zed.cafe/docs/mapping/grapheme)
-- [guid.ts](https://zed.cafe/docs/mapping/guid)
-- [Mapping Documentation](https://zed.cafe/docs/mapping/README)
-- [number.ts](https://zed.cafe/docs/mapping/number)
-- [qr.ts](https://zed.cafe/docs/mapping/qr)
-- [string.ts](https://zed.cafe/docs/mapping/string)
-- [tick.ts](https://zed.cafe/docs/mapping/tick)
-- [types.ts](https://zed.cafe/docs/mapping/types)
-- [validate.ts](https://zed.cafe/docs/mapping/validate)
-- [value.ts](https://zed.cafe/docs/mapping/value)
-
-## Memory
+### Memory
 
 - [MEMORY: roots and module layout](https://zed.cafe/docs/memory)
 - [Board lighting (dark boards)](https://zed.cafe/docs/memory/board-lighting)
@@ -162,51 +179,33 @@
 - [types.ts](https://zed.cafe/docs/memory/types)
 - [utilities.ts](https://zed.cafe/docs/memory/utilities)
 
-## Memoryfs
+### Language
 
-- [memoryfs](https://zed.cafe/docs/memoryfs): Projected MEMORY filesystem via Chromium File System Access
-- [memoryfs agent skill](https://zed.cafe/docs/memoryfs/agent-skill): Agent skills for reading and writing memoryfs (emitted on cafe attach)
+- [ast.ts](https://zed.cafe/docs/lang/ast)
+- [formatlangerror.ts](https://zed.cafe/docs/lang/formatlangerror): Rewrites Chevrotain lexer and parser errors into short, ASCII messages for the editor and compile tape.
+- [generator.ts](https://zed.cafe/docs/lang/generator)
+- [Lang architecture](https://zed.cafe/docs/lang/architecture)
+- [Lang Documentation](https://zed.cafe/docs/lang/README)
+- [lexer.ts](https://zed.cafe/docs/lang/lexer)
+- [parser.ts](https://zed.cafe/docs/lang/parser)
+- [transformer.ts](https://zed.cafe/docs/lang/transformer)
+- [visitor.ts](https://zed.cafe/docs/lang/visitor)
+- [visitortypes.ts](https://zed.cafe/docs/lang/visitortypes)
 
-## Ops
+### Device
 
-- [Built-in scroll validation](https://zed.cafe/docs/ops/scroll-validation)
-- [Design: directional board-grid pan (global board space)](https://zed.cafe/docs/ops/design-directional-board-grid-pan)
-- [Desktop helper signing](https://zed.cafe/docs/ops/desktop-signing)
-- [Firmware commands summary](https://zed.cafe/docs/ops/commands-summary)
-- [LiveKit Ingress (WHIP) → YouTube Live](https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live)
-- [Local media helpers on Electron](https://zed.cafe/docs/ops/local-media-helpers)
-- [Web broadcast → LiveKit migration (ZSS)](https://zed.cafe/docs/ops/web-broadcast-livekit)
+- [Device documentation](https://zed.cafe/docs/device/README)
+- [Device Message Flow Diagram](https://zed.cafe/docs/device/message-flow)
+- [Devices and messaging](https://zed.cafe/docs/device/devices-and-messaging)
+- [User-feedback channels audit](https://zed.cafe/docs/device/feedback-channels-audit)
 
-## Parse
+### Gadget
 
-- [MIDI import: conversion and `#play` output](https://zed.cafe/docs/parse/midi-import)
+- [Gadget documentation](https://zed.cafe/docs/gadget/README)
+- [Gadget scroll catalog](https://zed.cafe/docs/gadget/gadget-scrolls)
+- [Scroll panel vs terminal tape hyperlinks](https://zed.cafe/docs/gadget/scroll-vs-terminal-hyperlinks)
 
-## Synth
-
-- [index.ts](https://zed.cafe/docs/synth)
-- [algosynth.ts](https://zed.cafe/docs/synth/algosynth)
-- [Audio Worklets](https://zed.cafe/docs/synth/worklets)
-- [audiochain.ts](https://zed.cafe/docs/synth/audiochain)
-- [Drums Module](https://zed.cafe/docs/synth/drums)
-- [Effects](https://zed.cafe/docs/synth/effects): Player reference for
-- [fx.ts & fxchannels.ts](https://zed.cafe/docs/synth/fx-and-fxchannels)
-- [Gain and volume levels (Daisy)](https://zed.cafe/docs/synth/gain-levels): Reference chart of every tweakable volume/gain stage in the live Daisy synth path.
-- [Parallel voice FX bus (Daisy)](https://zed.cafe/docs/synth/parallel-fx-bus)
-- [playnotation.ts](https://zed.cafe/docs/synth/playnotation)
-- [Recording & MP3 export](https://zed.cafe/docs/synth/record-and-mp3)
-- [Scales](https://zed.cafe/docs/synth/scales): Play lines for major, minor, blues, modal, pentatonic, and exotic scales.
-- [source.ts](https://zed.cafe/docs/synth/source)
-- [sourcefxsetup.ts](https://zed.cafe/docs/synth/sourcefxsetup)
-- [Synth](https://zed.cafe/docs/synth/voices): Player reference for
-- [Synth implementation matrix](https://zed.cafe/docs/synth/implementation-matrix)
-- [Synth Module Documentation](https://zed.cafe/docs/synth/README)
-- [tickhandler.ts](https://zed.cafe/docs/synth/tickhandler)
-- [Voice Config Module](https://zed.cafe/docs/synth/voiceconfig)
-- [Voice FX Module](https://zed.cafe/docs/synth/voicefx)
-- [Voice FX types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/fx-types-reference)
-- [Voice types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/voice-types-reference)
-
-## Words
+### Words
 
 - [category.ts](https://zed.cafe/docs/words/category)
 - [collision.ts](https://zed.cafe/docs/words/collision)
@@ -222,3 +221,40 @@
 - [textformat.ts](https://zed.cafe/docs/words/textformat)
 - [types.ts](https://zed.cafe/docs/words/types)
 - [Words Documentation](https://zed.cafe/docs/words/README)
+
+### Mapping
+
+- [2d.ts](https://zed.cafe/docs/mapping/2d)
+- [anim.ts](https://zed.cafe/docs/mapping/anim)
+- [array.ts](https://zed.cafe/docs/mapping/array)
+- [encode.ts](https://zed.cafe/docs/mapping/encode)
+- [func.ts](https://zed.cafe/docs/mapping/func)
+- [grapheme.ts](https://zed.cafe/docs/mapping/grapheme)
+- [guid.ts](https://zed.cafe/docs/mapping/guid)
+- [Mapping Documentation](https://zed.cafe/docs/mapping/README)
+- [number.ts](https://zed.cafe/docs/mapping/number)
+- [qr.ts](https://zed.cafe/docs/mapping/qr)
+- [string.ts](https://zed.cafe/docs/mapping/string)
+- [tick.ts](https://zed.cafe/docs/mapping/tick)
+- [types.ts](https://zed.cafe/docs/mapping/types)
+- [validate.ts](https://zed.cafe/docs/mapping/validate)
+- [value.ts](https://zed.cafe/docs/mapping/value)
+
+### Memoryfs
+
+- [memoryfs](https://zed.cafe/docs/memoryfs): Projected MEMORY filesystem via Chromium File System Access
+- [memoryfs agent skill](https://zed.cafe/docs/memoryfs/agent-skill): Agent skills for reading and writing memoryfs (emitted on cafe attach)
+
+### Ops
+
+- [Built-in scroll validation](https://zed.cafe/docs/ops/scroll-validation)
+- [Design: directional board-grid pan (global board space)](https://zed.cafe/docs/ops/design-directional-board-grid-pan)
+- [Desktop helper signing](https://zed.cafe/docs/ops/desktop-signing)
+- [Firmware commands summary](https://zed.cafe/docs/ops/commands-summary)
+- [LiveKit Ingress (WHIP) → YouTube Live](https://zed.cafe/docs/ops/livekit-ingress-whip-youtube-live)
+- [Local media helpers on Electron](https://zed.cafe/docs/ops/local-media-helpers)
+- [Web broadcast → LiveKit migration (ZSS)](https://zed.cafe/docs/ops/web-broadcast-livekit)
+
+### Parse
+
+- [MIDI import: conversion and `#play` output](https://zed.cafe/docs/parse/midi-import)

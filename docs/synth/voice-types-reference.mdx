@@ -15,7 +15,7 @@ Reference catalog for all ZSS `#synth` voice types. **Daisy WASM is the active b
 | **Broken** | Repro exists; owner named |
 | **N/A** | Intentionally not `#synth`-settable |
 
-SAB write alone is never Proven. See [daisy-synth-config](../../../../.cursor/rules/daisy-synth-config.mdc).
+SAB write alone is never Proven. See [daisy-synth-config](../../../../../.cursor/rules/daisy-synth-config.mdc).
 
 See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voiceconfig.md).
 
@@ -37,11 +37,8 @@ See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voice
 | `#synth …` | 0–3 | Select / config `#play` voices |
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
-| `#string` / `#fmsquare` / … | 0–3 | Config-only (no type select) |
-| `#string1`–`4` / `#fmsquare1`–`4` | single play index | Config-only |
-| `#string5` / `#fmsquare5` | 4–7 | Config-only bgplay |
 
-Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
+Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
 
 ---
 
@@ -67,7 +64,7 @@ Config path: `#synth` → [audio.ts](../../../firmware/audio.ts) `handlesynthvoi
 | fm* | + modindex; harm = note×ratio | osccfg | FM + **familywavetobasic**; **not modfreq** | **Proven** (`fmsquare`≠sine map + SAB 21) |
 | fat* | count, phase, spread (cents) | osccfg | phase-accumulator unison + family map | Proven (carrier map Jest) |
 
-**Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
+**Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
 
 ### Noise / bells / doot
 
@@ -129,12 +126,12 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 
 | Param | Aliases | Value | Tone default | WASM default | Notes |
 |-------|---------|-------|--------------|--------------|-------|
-| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | Tone: [source.ts](../../../../ops/archive/synth/tone/source.ts); Daisy: [daisysynth.ts](../backend/daisy/daisysynth.ts) |
+| `restart` | — | — | Full `applyreset()` | Resets all 8 voices + osc + algo + FX SAB | [daisysynth.ts](../../backend/daisy/daisysynth.ts) |
 | `vol` / `volume` | — | number (dB) | **Tone**: instrument volume from `get()` snapshot | **`0` dB** | All 10 WASM voice types via `zss_voicecfg` slot 5 |
 | `port` / `portamento` | — | number (seconds) | **Tone**: `0` (Monophonic) | `0` | `SYNTH` + `ALGO_SYNTH` + `BOWED_VOICE`; error on retro in Tone |
-| `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
+| `env` / `envelope` | — | `[a, d, s, r]` seconds + sustain 0–1 | See per-type below | `0.01, 0.01, 0.5, 0.01` (**Tone ZSS reset**) | SAB → [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) **`ZssLinearEnv`** (linear ramps, note-on reset to 0, Tone `triggerAttack` parity). Archived Maxi used `zssenv` (ms) in play code. |
 
-**Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../synthdefaults.ts)) on both backends.
+**Boot / `#synth` no-args / memory default wave:** `square` (**ZSS**, [synthdefaults.ts](../../synthdefaults.ts)) on both backends.
 
 **Tone `Synth` library defaults** (before ZSS reset overrides): osc `triangle`, envelope `0.005 / 0.1 / 0.3 / 1`, portamento `0`.
 
@@ -144,7 +141,7 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 
 ## 1. SYNTH — oscillator voices
 
-Selecting any validated wave name switches voice to `SYNTH`. Names validated by [validation.ts](../voiceconfig/validation.ts).
+Selecting any validated wave name switches voice to `SYNTH`. Names validated by [validation.ts](../../voiceconfig/validation.ts).
 
 ### Wave name families
 
@@ -156,7 +153,7 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | FM | `fmsine`, `fmsquare`, `fmtriangle`, `fmsawtooth` | `fmsquare8` + array |
 | Fat | `fatsine`, `fatsquare`, `fattriangle`, `fatsawtooth` | `fatsawtooth4` + array |
 
-`custom` maps to square carrier in WASM ([wasmosctype.ts](../backend/wasm/wasmosctype.ts)).
+`custom` maps to square carrier in WASM ([wasmosctype.ts](../../backend/wasm/wasmosctype.ts)).
 
 ### Config params by oscillator kind
 
@@ -172,9 +169,9 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
 | **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
 
-WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
+WASM osc defaults: [wasmoscconfigsab.ts](../../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
 
-**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp)). Archived Maxi play-code: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts).
+**Daisy C++ fallbacks** (when SAB value is 0): width `0.2`, modindex `2`, harmonicity `1`, fat count `3`, spread `20` (see [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp)).
 
 ### WASM vs Tone — SYNTH summary
 
@@ -200,7 +197,7 @@ WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `D
 | `port` | Error on retro | Ignored (not applied) |
 | Osc/algo params | No | No |
 
-### Tone-only fixed params (at source creation, [source.ts](../../../../ops/archive/synth/tone/source.ts))
+### Fixed noise-voice levels
 
 | Param | retro/buzz/clang/metallic |
 |-------|---------------------------|
@@ -211,7 +208,7 @@ WASM osc defaults: [wasmoscconfigsab.ts](../backend/wasm/wasmoscconfigsab.ts) `D
 
 LFSR tap differences per type are in `generatenoisesynth()` (not user-configurable).
 
-### WASM-only fixed meta ([noisemeta.ts](../backend/wasm/noisemeta.ts)) — not `#synth`-settable
+### WASM-only fixed meta ([noisemeta.ts](../../backend/wasm/noisemeta.ts)) — not `#synth`-settable
 
 | Type | basepitch | pitchfiltermult | issoft | expression |
 |------|-----------|-----------------|--------|------------|
@@ -235,7 +232,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 | `env` / `envelope` | Yes (FMSynth carrier envelope) | Yes (`voiceenv` multiplies ModalVoice + sparkle) |
 | FM params | Via Tone FMSynth API, **not** exposed as `#synth` keys | **Not configurable** |
 
-### Tone fixed at creation + reset ([source.ts](../../../../ops/archive/synth/tone/source.ts))
+### Bells fixed levels
 
 **Main FMSynth (after ZSS reset):** harmonicity `1.5`, modulationIndex `30`, carrier `sine`, modulator `square`, envelope `0.01/3/0.3/6`, modulationEnvelope `0.5/1/0.2/4`.
 
@@ -243,7 +240,7 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 **Tone FMSynth library baseline:** ModulationSynth defaults — harmonicity `3`, modulationIndex `10`.
 
-### WASM hardcoded in play code ([voiceplaycode.ts](../../../../ops/archive/synth/maxi/voiceplaycode.ts))
+### Bells hardcoded levels
 
 Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
 
@@ -299,7 +296,7 @@ algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `s
 
 Use **`env1`–`env4`** for per-operator shaping; use voice-level **`env`** for an outer mix envelope on both backends.
 
-**Daisy routings** match [algosynth.md](algosynth.md) (including `algo4` = `1→2`, `3→4` → op2+op4). FM rewrite paths use each operator's `oscN` wave (not hardcoded sine).
+**Daisy routings** match [algosynth.md](/synth/algosynth) (including `algo4` = `1→2`, `3→4` → op2+op4). FM rewrite paths use each operator's `oscN` wave (not hardcoded sine).
 
 ---
 
@@ -494,7 +491,7 @@ Drip:       env/envelope | vol                          (drip voice; no timbre k
 | `#synth` no args | Applies `square` wave only | Same; full reset is `#synth restart` |
 | Default envelope | `0.01/0.01/0.5/0.01` on reset | `0.01/0.01/0.5/0.01` |
 | `#synth env` shape | Tone exponential `AmplitudeEnvelope` | **`ZssLinearEnv`** (linear ramps; behavioral parity, not sample-identical) |
-| ADSR parity tests | — | `yarn adsr-parity:test` (short amsaw); `yarn synth-env-parity:test:full` (long release, square + FM repro). Offline renders must span **gate + release** (see `paritydurationwithrelease`). FM/AM: pin `#synth modenv` when comparing timbre; carrier `#synth env` is wave-agnostic. |
+| ADSR checks | — | `yarn task run ops:daisy:adsr-parity:test`. FM/AM: pin `#synth modenv` when comparing timbre; carrier `#synth env` is wave-agnostic. |
 | Per-voice volume | Yes | Yes (all 10 types) |
 | Algo voice envelope | Per-operator + outer | Per-operator + outer (`algooutenvs`) |
 | Config storage | Tone instrument state | SAB arrays pushed to worklet |
@@ -505,9 +502,9 @@ Drip:       env/envelope | vol                          (drip voice; no timbre k
 
 | Topic | Path |
 |-------|------|
-| Command parsing | [firmware/audio.ts](../../../firmware/audio.ts) |
-| Type validation | [voiceconfig/validation.ts](../voiceconfig/validation.ts) |
-| WASM voice routing | [wasmvoiceconfig.ts](../backend/wasm/wasmvoiceconfig.ts) |
-| WASM play behavior | [`zss_daisy_synth.cpp`](../backend/daisy/native/zss_daisy_synth.cpp) (archived: [`archive/maxi/voiceplaycode.ts`](../../../../ops/archive/synth/maxi/voiceplaycode.ts)) |
-| Tone voice config | [archive/tone/voiceconfig/index.ts](../../../../ops/archive/synth/tone/voiceconfig/index.ts) |
-| Tone source creation | [archive/tone/source.ts](../../../../ops/archive/synth/tone/source.ts) |
+| Command parsing | [firmware/audio.ts](../../../../firmware/audio.ts) |
+| Type validation | [voiceconfig/validation.ts](../../voiceconfig/validation.ts) |
+| WASM voice routing | [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts) |
+| WASM play behavior | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
+| Voice config | [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts) |
+| Daisy synth | [daisysynth.ts](../../backend/daisy/daisysynth.ts) |

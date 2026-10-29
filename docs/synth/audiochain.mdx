@@ -1,5 +1,5 @@
 ---
-title: audiochain.ts
+title: Main chain
 ---
 
 Builds the global audio routing and processing chain for the synth.
@@ -29,7 +29,7 @@ hiss (pink noise) ───────┘
 - **Threshold:** -42 dB
 - **Ratio:** 5:1
 - **Attack / release:** 5 ms / 60 ms
-- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; calibrate via `ops:daisy:sidechain:parity:calibrate`)
+- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; `kScMix` / `kScMakeupDb` in `zss_config.h`)
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus
@@ -54,7 +54,7 @@ hiss (pink noise) ───────┘
 - **Chorus:** Widening effect (7 ms base delay, wet **0.25**)
 - **Tape hiss:** Pink noise modulated by oscillator, feeds chorus input (very quiet bed)
 
-Full gain chart: [gain-levels.md](gain-levels.md).
+Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 ### Daisy volume laws (match Tone)
 
