@@ -55,24 +55,33 @@ The other kits are worth a look later. **ZZT Tool Kit** is the ZZT-style buildin
 
 Run these one at a time. Each one prints its results into the terminal.
 
-```text
-#books
-#pages
-#boards
-```
+<Steps>
+  <Step title="List the books">
+    <CodeBlock code="#books" />
 
-- `#books` lists every book in memory. One book is the **opened** book. New pages go there.
-- `#pages` lists every page, with its type. Select one to open it.
-- `#boards` lists only boards. Quick Start Kit has one. Select it to go there. ZZT Tool Kit's list is empty, because that book has no board pages.
+    `#books` lists every book in memory. One book is the **opened** book. New pages go there.
+  </Step>
+  <Step title="List the pages">
+    <CodeBlock code="#pages" />
 
-Open any page from the `#pages` list. The code editor shows how that element is written. You do not need to understand it yet. Notice its shape:
+    `#pages` lists every page, with its type. Select one to open it.
+  </Step>
+  <Step title="List the boards">
+    <CodeBlock code="#boards" />
 
-- lines that start with `@` are **stats**
-- lines that start with `:` are **labels**, places where code starts running
-- lines that start with `#` are **commands**
-- lines that start with `'` are comments
+    `#boards` lists only boards. Quick Start Kit has one. Select it to go there. ZZT Tool Kit's list is empty, because that book has no board pages.
+  </Step>
+  <Step title="Open a page">
+    Open any page from the `#pages` list. The code editor shows how that element is written. You do not need to understand it yet. Notice its shape:
 
-Press `esc` to close the editor without changing anything.
+    - lines that start with `@` are **stats**
+    - lines that start with `:` are **labels**, places where code starts running
+    - lines that start with `#` are **commands**
+    - lines that start with `'` are comments
+
+    Press `esc` to close the editor without changing anything.
+  </Step>
+</Steps>
 
 ## Try a command on the world
 
