@@ -1,4 +1,4 @@
-import { defineMeta } from 'blume'
+import { FolderMetaDefinition, defineMeta } from 'blume'
 
 export default defineMeta({
   title: 'Path',
@@ -12,4 +12,4 @@ export default defineMeta({
     'drums',
     'record-and-mp3',
   ],
-})
+} as FolderMetaDefinition)

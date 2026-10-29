@@ -1,4 +1,4 @@
-import { defineMeta } from 'blume'
+import { FolderMetaDefinition, defineMeta } from 'blume'
 
 export default defineMeta({
   title: 'Engine',
@@ -13,4 +13,4 @@ export default defineMeta({
     'algosynth',
     'worklets',
   ],
-})
+} as FolderMetaDefinition)
