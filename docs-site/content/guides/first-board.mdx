@@ -57,7 +57,7 @@ A board is a page too, and its page holds stats that control the room. Type the 
 @title
 ```
 
-The make-it scroll opens. It includes a link to edit the title page. Select **edit @board title**.
+The makeit scroll opens. It includes a link to edit the title page. Select **edit @board title**.
 
 The editor opens with `@board title` already on the first line. Add a start position below it:
 
@@ -76,12 +76,12 @@ This book already has `@board title` and `@player`. That pair is what login uses
 `@` makes a new page. Use it for the next board, not for title.
 
 <Steps>
-  <Step title="Make the page">
-    Press `@`, type `board cellar`, and press Enter.
+  <Step title="Type the name">
+    Press `@`, type `cellar`, and press Enter.
 
-    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board cellar**.
+    The makeit scroll opens with a create link for each page type.
   </Step>
-  <Step title="Select create">
+  <Step title="Pick board">
     Select **create @board cellar**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
   </Step>
   <Step title="Add an exit from title">
@@ -96,7 +96,7 @@ This book already has `@board title` and `@player`. That pair is what login uses
 
   </Step>
   <Step title="Add the way back">
-    Run `#pageopen cellar` and add:
+    Run `@cellar`, select **edit @board cellar**, and add:
 
     ```text
     @board cellar
@@ -115,9 +115,9 @@ Use one-word names for boards and objects while you learn, such as `cellar` inst
 
 The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the scroll offers one create link for each page type.
 
-There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book. It can also be a join URL or a `https://bytes.zed.cafe/...` content link, which takes the player to a different world.
+There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book.
 
-To jump to any board while you build, use `#boardopen <name>` or select it from `#boards`.
+To jump to any board while you build, select it from `#boards` menu.
 
 ## Save and share
 
@@ -125,19 +125,20 @@ To jump to any board while you build, use `#boardopen <name>` or select it from 
 #save
 ```
 
+`#save` writes your current state to the browser, so a reload keeps it. `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
+
 ```text
 #share
 ```
 
-- `#save` writes your current state to the browser, so a reload keeps it. `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
-- `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
+`#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
 
 For more export options, such as downloading a book as JSON, run `#export`.
 
 ## What you learned
 
 - Quick Start Kit already has `@board title` and `@player`, so login stands you on title. `@startx` and `@starty` are that spot.
-- `@board name` creates the next board and takes you there. `@` works for every page type.
+- Type `@cellar` and pick **create @board cellar** on the makeit scroll. `@` works for every page type.
 - `#put <direction> <kind>` places one element. Color words like `red` or `white` go in front of the kind.
 - `#gadget` toggles the inspector. Use it to select, recolor, copy, tile-paste, and remix.
 - Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Type `@title` and select **edit @board title**.
