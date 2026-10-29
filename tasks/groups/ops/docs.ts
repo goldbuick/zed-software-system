@@ -1,11 +1,11 @@
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { def, handler } from '../../helpers'
 import type { TaskContext, TaskDef } from '../../types'
 
-const LINKRE = /!?\[[^\]]*\]\(([^)]+)\)/g
+const LINKRE = /!?\[[^\]]*\]\(((?:[^()]|\([^()]*\))+)\)/g
 const SKIPSCHEMES = /^(https?:|mailto:|ftp:|tel:|data:|#)/i
 const CONTENTROOT = 'docs-site/content'
 
@@ -17,44 +17,56 @@ function isroutegroup(name: string): boolean {
   return name.startsWith('(') && name.endsWith(')')
 }
 
+function isfile(path: string): boolean {
+  return existsSync(path) && statSync(path).isFile()
+}
+
 /**
  * Parenthesized content folders are Blume route groups. They do not appear
- * in the public URL, including when groups nest, so /map lives at
- * content/(system)/(reference)/map and /glossary at content/(lookup)/glossary.
+ * in the public URL, including a group between two public segments:
+ * /features/boards is content/(lookup)/features/(world)/boards.md.
  */
-function routegroupbases(root: string, rel: string): string[] {
-  const contentdir = join(root, CONTENTROOT)
-  if (!existsSync(contentdir)) {
-    return [join(contentdir, rel)]
+function sitopathexists(dir: string, segments: string[]): boolean {
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+    return false
   }
-  const dirs = [contentdir]
-  function walk(dir: string) {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory() && isroutegroup(entry.name)) {
-        const next = join(dir, entry.name)
-        dirs.push(next)
-        walk(next)
+  if (segments.length === 0) {
+    return false
+  }
+  const head = segments[0]
+  const rest = segments.slice(1)
+  const direct = join(dir, head)
+  if (rest.length === 0) {
+    if (
+      isfile(direct) ||
+      isfile(`${direct}.md`) ||
+      isfile(`${direct}.mdx`) ||
+      isfile(join(direct, 'index.md')) ||
+      isfile(join(direct, 'index.mdx'))
+    ) {
+      return true
+    }
+  } else if (
+    existsSync(direct) &&
+    statSync(direct).isDirectory() &&
+    sitopathexists(direct, rest)
+  ) {
+    return true
+  }
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return false
+  }
+  for (const entry of entries) {
+    if (entry.isDirectory() && isroutegroup(entry.name)) {
+      if (sitopathexists(join(dir, entry.name), segments)) {
+        return true
       }
     }
   }
-  walk(contentdir)
-  return dirs.map((dir) => join(dir, rel))
-}
-
-/** Resolve Blume site paths (/glossary, /map, ...) against docs-site/content. */
-function contentcandidates(root: string, sitopath: string): string[] {
-  const rel = sitopath.replace(/^\//, '')
-  const candidates: string[] = []
-  for (const base of routegroupbases(root, rel)) {
-    candidates.push(
-      base,
-      `${base}.md`,
-      `${base}.mdx`,
-      join(base, 'index.md'),
-      join(base, 'index.mdx'),
-    )
-  }
-  return candidates
+  return false
 }
 
 function checkrelative(
@@ -68,10 +80,9 @@ function checkrelative(
   }
 
   if (link.startsWith('/')) {
-    for (const target of contentcandidates(root, link)) {
-      if (withinrepo(root, target) && existsSync(target)) {
-        return true
-      }
+    const segments = link.replace(/^\//, '').split('/').filter(Boolean)
+    if (sitopathexists(join(root, CONTENTROOT), segments)) {
+      return true
     }
     console.error(`  [✖] ${fromfile}: ${rawlink} → missing`)
     return false
@@ -116,6 +127,7 @@ function rundoclinks(ctx: TaskContext): number {
       continue
     }
     const content = readFileSync(fullpath, 'utf8')
+    LINKRE.lastIndex = 0
     let match: RegExpExecArray | null
     while ((match = LINKRE.exec(content)) !== null) {
       const href = match[1].trim()

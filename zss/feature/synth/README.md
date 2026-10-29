@@ -69,6 +69,6 @@ Grid-search scripts rewrite [`zss_config.h`](backend/daisy/native/zss/zss_config
 | `ZSS_DAISY_NO_MAIN_COMP=1` | Bypass main bus compressor (`?no_comp=1`) |
 | `ZSS_PARITY_RENDER=1` | Offline parity renders (manual) |
 
-**FX bus:** [parallel-fx-bus.md](docs/parallel-fx-bus.md). Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
+**FX bus:** [parallel-fx-bus.md](docs/(path)/parallel-fx-bus.md). Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
 
 COOP/COEP headers are enabled in Vite for SharedArrayBuffer.
