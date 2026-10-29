@@ -89,7 +89,7 @@ $toast the lamp is lit
 Code runs straight down past labels. Without the `#end` after `#done`, every touch would also run the `:light` code below it. End each label's code with `#end` (or `#die`).
 :::
 
-Close the `code editor`, open the `CLI` with `#`, and run:
+Close the `code editor`, open the `cli` with `#`, and run:
 
 ```text
 lamp:light
@@ -123,48 +123,70 @@ Now make an object that lights the lamp from somewhere else on the board.
   </Step>
 </Steps>
 
-`#lamp:light` does from code what you typed into the `CLI`. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
+`#lamp:light` does from code what you typed into the `cli`. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
 
 ## Make a character that talks
 
 `scroll` text can include **links**. A link line starts with `!`. It names a label to run, then a `;`, then the text the player sees.
 
-```text
-@oracle
-@char 2
-@color cyan
-#end
-:touch
-Welcome, traveler.
-Shall I light the lamp for you?
-!yes;Yes, please
-!no;No, thanks
-#end
-:yes
-#lamp:light
-#end
-:no
-Suit yourself.
-#end
-```
+<Steps>
+  <Step title="Create it">
+    Press `@`, type `oracle`, and press Enter. On the `makeit scroll`, select **create object @oracle**.
+  </Step>
+  <Step title="Write the code">
+    ```text
+    @oracle
+    @char 2
+    @color cyan
+    #end
+    :touch
+    Welcome, traveler.
+    Shall I light the lamp for you?
+    !yes;Yes, please
+    !no;No, thanks
+    #end
+    :yes
+    #lamp:light
+    #end
+    :no
+    Suit yourself.
+    #end
+    ```
 
-Create it with `@oracle` and select **create object @oracle** on the `makeit scroll`. Paste the code, then run `#put west oracle`. Touch the oracle and pick a choice. **Yes** runs `:yes`, which sends the lamp a message. **No** runs `:no`, which is one line, so it shows as a `ticker`.
+  </Step>
+  <Step title="Place it and talk">
+    Run `#put west oracle`. Touch the oracle and pick a choice. **Yes** runs `:yes`, which sends the lamp a message. **No** runs `:no`, which is one line, so it shows as a `ticker`.
+  </Step>
+</Steps>
+
+One line of text is a `ticker`. Two or more lines are a `scroll`.
 
 ## Remove things with #die
 
-`#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up:
+`#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up.
 
-```text
-@gem
-@char 4
-@color purple
-#end
-:touch
-#set gems 1
-$toast you found a gem
-#bgplay t+c+e+g
-#die
-```
+<Steps>
+  <Step title="Create it">
+    Press `@`, type `gem`, and press Enter. On the `makeit scroll`, select **create object @gem**.
+  </Step>
+  <Step title="Write the code">
+    ```text
+    @gem
+    @char 4
+    @color purple
+    #end
+    :touch
+    #give gems
+    $ticker you found a gem
+    #bgplay t+c+e+g
+    #die
+    ```
+
+  </Step>
+  <Step title="Place it and pick it up">
+    Run `#put south gem`. Walk into the gem. `#give gems` adds one gem, a `ticker` shows at the bottom, and `#die` removes the gem.
+  </Step>
+</Steps>
 
 **ZZT Tool Kit** includes `key` and `door` pages that use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Load that kit when you want to read them, then run `@key` and select **edit @object key**. `@door` works the same way.
 
@@ -177,10 +199,10 @@ $toast you found a gem
 ## What you learned
 
 - Type a name such as `@lamp` and pick **create object @lamp** on the `makeit scroll`. Reopen the page with `@lamp` and **edit @object lamp**. `#put` places it on the board.
-- `@` stats set how an object looks. `:labels` are where code starts. `#end` waits.
-- `:touch` runs when a player walks into the object. Any other label is a message, sent with `name:label` from the `CLI` or with `#name:label` from code.
-- `#set`, `#if ... do`, `#else do`, `#done`, and `#clear` manage flags.
-- One plain text line shows as a `ticker`. Two or more open a `scroll`. `!label;text` lines are choices in that `scroll`.
-- `#die` removes the object.
+- `@` stats set how an object looks. `:labels` are where code starts. `#end` waits, and it stops code from running into the next label.
+- `:touch` runs when a player walks into the object. Any other label is a message, sent with `name:label` from the `cli` or with `#name:label` from code.
+- `#set`, `#if ... do`, `#else do`, and `#done` branch on a flag. `#give gems` adds one gem.
+- `$toast` is a pop-up. One line of text is a `ticker`. `$ticker` shows that line at the bottom. Two or more lines open a `scroll`. `!label;text` lines are choices in that `scroll`.
+- `#die` removes the object that runs it.
 
 For the full command list, see [Firmware commands](/firmware/commands).
