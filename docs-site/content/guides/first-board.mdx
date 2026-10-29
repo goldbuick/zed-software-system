@@ -11,20 +11,13 @@ Walls use `solid`, a terrain page already in this book.
 
 ## Place some walls
 
-This is the same `#put` as last time. A color word goes in front of the kind. Each command places one cell in a direction from where you stand:
+This is the same `#put` as last time. A color word goes in front of the kind. It places one cell in a direction from where you stand:
 
 ```text
 #put north white solid
-#put west white solid
-#put south white solid
 ```
 
-Walk with the arrow keys and repeat to sketch the outline of a room. You can also try other terrain already in this book:
-
-```text
-#put east water
-#put east fake
-```
+Walk with the arrow keys and repeat. Type the same command with `west`, `south`, or `east` to sketch the outline of a room. Swap `solid` for other terrain already in this book, such as `water` or `fake`.
 
 Placing walls one at a time is slow. The inspector makes it faster.
 
@@ -50,19 +43,21 @@ The **inspector** (also called the gadget) lets you select cells on the board an
   </Step>
 </Steps>
 
-The area scroll also has **cut**, **make empty**, **set chars**, **set colors**, **set bgs**, a **style** brush, and **remix**. Try them on a copy of your room. Remix fills a region with new patterns based on what is already there.
+The area scroll also has **cut**, **make empty**, **set chars**, **set colors**, and **set bgs**. Try them on a copy of your room.
 
 :::note
-The inspector and the CLI are two ways to do the same job. Anything you do in the inspector, a command can also do (`#put`, `#write`, `#copy`, `#remix`). That means you can script your edits later.
+The inspector and the CLI are two ways to do the same job. Anything you do in the inspector, a command can also do (`#put`, `#write`, `#change`).
 :::
 
 ## Edit the board's stats
 
-A board is a page too, and its page holds stats that control the room. Open the one you are standing on:
+A board is a page too, and its page holds stats that control the room. Type the page name with `@`:
 
 ```text
-#pageopen title
+@title
 ```
+
+The make-it scroll opens. It includes a link to edit the title page. Select **edit @board title**.
 
 The editor opens with `@board title` already on the first line. Add a start position below it:
 
@@ -90,7 +85,7 @@ This book already has `@board title` and `@player`. That pair is what login uses
     Select **create @board cellar**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
   </Step>
   <Step title="Add an exit from title">
-    Run `#pageopen title` and add an exit line:
+    Run `@title`, select **edit @board title**, and add an exit line:
 
     ```text
     @board title
@@ -128,6 +123,9 @@ To jump to any board while you build, use `#boardopen <name>` or select it from 
 
 ```text
 #save
+```
+
+```text
 #share
 ```
 
@@ -142,7 +140,7 @@ For more export options, such as downloading a book as JSON, run `#export`.
 - `@board name` creates the next board and takes you there. `@` works for every page type.
 - `#put <direction> <kind>` places one element. Color words like `red` or `white` go in front of the kind.
 - `#gadget` toggles the inspector. Use it to select, recolor, copy, tile-paste, and remix.
-- Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Edit them with `#pageopen`.
+- Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Type `@title` and select **edit @board title**.
 - `#save` keeps your work. `#share` hands it to someone else.
 
 Next: [Your first object](/guides/first-object).

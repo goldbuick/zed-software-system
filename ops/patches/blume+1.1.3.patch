@@ -55,15 +55,23 @@ index a6eac86..cd40d2c 100644
  export type FolderMeta = z.infer<typeof folderMetaSchema>;
  /** A single configured content source. */
 diff --git a/node_modules/blume/src/components/content/mermaid-element.ts b/node_modules/blume/src/components/content/mermaid-element.ts
-index 33c9478..33ff321 100644
+index 33c9478..fff0bdf 100644
 --- a/node_modules/blume/src/components/content/mermaid-element.ts
 +++ b/node_modules/blume/src/components/content/mermaid-element.ts
-@@ -41,10 +41,94 @@ class BlumeMermaid extends HTMLElement {
+@@ -19,8 +19,6 @@ const loadMermaid = () => {
+   return loader;
+ };
+ 
+-const prefersDark = () => document.documentElement.dataset.theme === "dark";
+-
+ let counter = 0;
+ 
+ class BlumeMermaid extends HTMLElement {
+@@ -41,10 +39,58 @@ class BlumeMermaid extends HTMLElement {
        this.#renderToken += 1;
        const token = this.#renderToken;
        const mermaid = await loadMermaid();
-+      // ZSS docs: ZNS/EGA palette (docs-site theme). theme "base" allows themeVariables.
-+      const dark = prefersDark();
++      // ZSS docs: ZNS/EGA palette for both color modes.
        mermaid.initialize({
          securityLevel: "strict",
          startOnLoad: false,
@@ -76,81 +84,46 @@ index 33c9478..33ff321 100644
 +          rankSpacing: 48,
 +          htmlLabels: true,
 +        },
-+        themeVariables: dark
-+          ? {
-+              darkMode: true,
-+              background: "#000000",
-+              primaryColor: "#0000aa",
-+              primaryTextColor: "#ffffff",
-+              primaryBorderColor: "#55ffff",
-+              secondaryColor: "#000066",
-+              secondaryTextColor: "#ffffff",
-+              secondaryBorderColor: "#7777ff",
-+              tertiaryColor: "#000088",
-+              tertiaryTextColor: "#dddddd",
-+              tertiaryBorderColor: "#55ffff",
-+              lineColor: "#ffffff",
-+              textColor: "#ffffff",
-+              mainBkg: "#0000aa",
-+              nodeBorder: "#55ffff",
-+              clusterBkg: "#000066",
-+              clusterBorder: "#7777ff",
-+              titleColor: "#55ffff",
-+              edgeLabelBackground: "#000000",
-+              nodeTextColor: "#ffffff",
-+              fontFamily: "IBM EGA 8x14, ui-monospace, monospace",
-+              fontSize: "14px",
-+              actorBkg: "#0000aa",
-+              actorBorder: "#55ffff",
-+              actorTextColor: "#ffffff",
-+              actorLineColor: "#ffffff",
-+              signalColor: "#55ffff",
-+              signalTextColor: "#ffffff",
-+              labelBoxBkgColor: "#000000",
-+              labelBoxBorderColor: "#55ff55",
-+              labelTextColor: "#55ff55",
-+              loopTextColor: "#ffff55",
-+              noteBkgColor: "#000066",
-+              noteTextColor: "#ffff55",
-+              noteBorderColor: "#ffff55",
-+              activationBkgColor: "#000088",
-+              activationBorderColor: "#55ffff",
-+              sequenceNumberColor: "#000000",
-+            }
-+          : {
-+              darkMode: false,
-+              background: "#e8eefc",
-+              primaryColor: "#ffffff",
-+              primaryTextColor: "#000066",
-+              primaryBorderColor: "#00aaaa",
-+              secondaryColor: "#d0daf5",
-+              secondaryTextColor: "#000066",
-+              secondaryBorderColor: "#5555ff",
-+              tertiaryColor: "#c8d4f0",
-+              tertiaryTextColor: "#000066",
-+              tertiaryBorderColor: "#5555ff",
-+              lineColor: "#5555aa",
-+              textColor: "#000066",
-+              mainBkg: "#ffffff",
-+              nodeBorder: "#00aaaa",
-+              clusterBkg: "#d0daf5",
-+              clusterBorder: "#5555ff",
-+              titleColor: "#00aaaa",
-+              edgeLabelBackground: "#e8eefc",
-+              nodeTextColor: "#000066",
-+              fontFamily: "\"IBM EGA 8x14\", ui-monospace, monospace",
-+              fontSize: "14px",
-+              actorBkg: "#ffffff",
-+              actorBorder: "#00aaaa",
-+              actorTextColor: "#000066",
-+              signalColor: "#5555aa",
-+              labelBoxBkgColor: "#ffffff",
-+              labelBoxBorderColor: "#00aa00",
-+              labelTextColor: "#00aa00",
-+              noteBkgColor: "#ffffcc",
-+              noteTextColor: "#000066",
-+              noteBorderColor: "#aaaa00",
-+            },
++        themeVariables: {
++          darkMode: true,
++          background: "#000000",
++          primaryColor: "#0000aa",
++          primaryTextColor: "#ffffff",
++          primaryBorderColor: "#55ffff",
++          secondaryColor: "#000066",
++          secondaryTextColor: "#ffffff",
++          secondaryBorderColor: "#7777ff",
++          tertiaryColor: "#000088",
++          tertiaryTextColor: "#dddddd",
++          tertiaryBorderColor: "#55ffff",
++          lineColor: "#ffffff",
++          textColor: "#ffffff",
++          mainBkg: "#0000aa",
++          nodeBorder: "#55ffff",
++          clusterBkg: "#000066",
++          clusterBorder: "#7777ff",
++          titleColor: "#55ffff",
++          edgeLabelBackground: "#000000",
++          nodeTextColor: "#ffffff",
++          fontFamily: "IBM EGA 8x14, ui-monospace, monospace",
++          fontSize: "14px",
++          actorBkg: "#0000aa",
++          actorBorder: "#55ffff",
++          actorTextColor: "#ffffff",
++          actorLineColor: "#ffffff",
++          signalColor: "#55ffff",
++          signalTextColor: "#ffffff",
++          labelBoxBkgColor: "#000000",
++          labelBoxBorderColor: "#55ff55",
++          labelTextColor: "#55ff55",
++          loopTextColor: "#ffff55",
++          noteBkgColor: "#000066",
++          noteTextColor: "#ffff55",
++          noteBorderColor: "#ffff55",
++          activationBkgColor: "#000088",
++          activationBorderColor: "#55ffff",
++          sequenceNumberColor: "#000000",
++        },
        });
        try {
          counter += 1;
