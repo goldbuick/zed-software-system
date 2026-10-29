@@ -15,25 +15,14 @@ New here? Work through the guides in order. Each takes 10-20 minutes in the brow
 2. [Your first board](/guides/first-board) -- build two rooms, connect them, save, and share
 3. [Your first object](/guides/first-object) -- write ZSS: stats, labels, flags, messages, and scroll links
 
-See [Guides](/guides) for the vocabulary the guides use.
-
 ## Look things up
 
-- [Firmware commands](/firmware/commands) -- every `#command`, with searchable [CLI](/firmware/commands/cli), [runtime](/firmware/commands/runtime), and [loader](/firmware/commands/loader) pages
 - [Features](/features) -- what the engine can do, grouped by area
-- [Glossary](/glossary) -- shared vocabulary
+- [Firmware commands](/firmware/commands) -- every `#command`
 - [Synth](/synth) -- music, sound effects, and the voice and effect chain
+- [Glossary](/glossary) -- shared vocabulary
 
-## Two "docs" surfaces
-
-| Surface | URL | Audience |
-|---------|-----|----------|
-| This site | [https://zed.cafe/docs/](https://zed.cafe/docs/) | Creators learning to build, and developers reading architecture / API narrative |
-| In-game / ZNS help | [https://docs.at.zed.cafe](https://docs.at.zed.cafe) | Players and authors via ROM refscrolls (`#help` in the terminal) |
-
-ROM help under `zss/rom/` stays in the product runtime. It is not a Blume source.
-
-## How it works (developers)
+## How it works
 
 - [System map](/map) -- product stack, workers, tick, script pipeline
 - [Architecture deep dive](/architecture) -- points at `zss/ARCHITECTURE.md`
@@ -53,13 +42,3 @@ Module manuals are colocated under `zss/**/docs/` and mounted into this site:
 | `/words` | `zss/words/docs` |
 | `/device` | `zss/device/docs` |
 | `/ops` | selected evergreen pages in `ops/docs` |
-
-## Local authoring
-
-From the repo root:
-
-```bash
-yarn task blume dev
-```
-
-Opens Blume with `docs-site/` as cwd (repo-root `yarn blume` looks for the wrong folder). Production pages ship via `yarn task run cafe:build` into `cafe/dist/docs/`. Guides live in `docs-site/content/guides/`.

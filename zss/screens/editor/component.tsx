@@ -207,6 +207,9 @@ export function EditorComponent() {
       zsswords,
       editorctx,
       editor.type,
+      'editor',
+      rows,
+      ycursor,
     )
   }, [rows, ycursor, tapeeditor.cursor, zsswords, editorctx, editor.type])
 

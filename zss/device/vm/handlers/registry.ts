@@ -3,7 +3,6 @@ import type { MESSAGE } from 'zss/device/types'
 import { handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
 
 import { handleadmin } from './admin'
-import { handleairshare } from './airshare'
 import {
   handlelocal,
   handlelogin,
@@ -92,7 +91,6 @@ export const vmhandlers: Record<string, VM_HANDLER> = {
   zztrandom: handlezztrandom,
   publish: handlepublish,
   flush: handleflush,
-  airshare: handleairshare,
   bookmarkscroll: handlebookmarkscroll,
   bookmarkdeleteprompt: handlebookmarkdeleteprompt,
   editorbookmarkscroll: handleeditorbookmarkscroll,

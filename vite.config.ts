@@ -64,18 +64,9 @@ function servefixturesdev(): Plugin {
         fixtureprefixmiddleware('/ops/lib', path.join(root, 'ops/lib')),
       )
       server.middlewares.use(
-        fixtureprefixmiddleware('/ops/archive', path.join(root, 'ops/archive')),
-      )
-      server.middlewares.use(
         fixtureprefixmiddleware(
           '/ops/fixtures',
           path.join(root, 'ops/fixtures'),
-        ),
-      )
-      server.middlewares.use(
-        fixtureprefixmiddleware(
-          '/archive/maximilian',
-          path.join(root, 'ops/archive/wasm/maximilian'),
         ),
       )
     },
@@ -188,7 +179,6 @@ export default defineConfig(({ mode }) => {
         cafe: path.resolve(__dirname, './cafe'),
         'ops/fixtures': path.resolve(__dirname, './ops/fixtures'),
         'ops/lib': path.resolve(__dirname, './ops/lib'),
-        'ops/archive': path.resolve(__dirname, './ops/archive'),
         'ops/lib/test': path.resolve(__dirname, './ops/lib/test'),
       },
     },

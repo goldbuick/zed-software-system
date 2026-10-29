@@ -18,7 +18,6 @@
   ],
   "ignoreExportsUsedInFile": true,
   "ignore": [
-    "ops/archive/**",
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",

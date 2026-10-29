@@ -90,7 +90,7 @@ Functions for formatting and serializing objects using msgpack.
 
 ## Board Operations
 
-**Files:** `boardcopy.ts`, `boardweave.ts`, `boardremix.ts`, `boardsnapshot.ts`, `boardpivot.ts`
+**Files:** `boardcopy.ts`, `boardweave.ts`, `boardremix.ts`, `wfcoverlapping.ts`, `boardsnapshot.ts`, `boardpivot.ts`
 
 Functions for manipulating board elements, terrain, and objects.
 
@@ -106,6 +106,7 @@ Functions for manipulating board elements, terrain, and objects.
 
 ### Procedural Generation
 - `boardremix(target, source, patternsize, mirror, p1, p2, targetset)` - Generate board region using wavefunction collapse algorithm
+- `wfcoverlappinggenerate(input, width, height, patternsize, outwidth, outheight, symmetry, random)` - Overlapping wave function collapse; returns RGBA bytes or undefined on contradiction
 
 ### Snapshot & Restore
 - `boardsnapshot(target)` - Create snapshot of board state

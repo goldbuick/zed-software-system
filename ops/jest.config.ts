@@ -24,7 +24,6 @@ const config: Config = {
     '^@react-three/fiber$': '<rootDir>/ops/lib/test/mocks/reactthreefiber.ts',
     '^ops/lib/daisy-parity/(.*)$': '<rootDir>/ops/lib/daisy-parity/$1',
     '^ops/lib/test/(.*)$': '<rootDir>/ops/lib/test/$1',
-    '^ops/archive/(.*)$': '<rootDir>/ops/archive/$1',
     '^ops/lib/(.*)$': '<rootDir>/ops/lib/$1',
     '^ops/media-queue/(.*)$': '<rootDir>/ops/media-queue/$1',
     '^tasks/(.*)$': '<rootDir>/tasks/$1',

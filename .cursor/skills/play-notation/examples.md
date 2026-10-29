@@ -1,6 +1,6 @@
 # Play notation — ROM snippets
 
-From [zss/feature/synth/docs/scales.md](../../../zss/feature/synth/docs/scales.md):
+From [zss/feature/synth/docs/(play)/scales.md](../../../zss/feature/synth/docs/(play)/scales.md):
 
 ```
 #play cdefgab+c

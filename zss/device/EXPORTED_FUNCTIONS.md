@@ -176,7 +176,7 @@ Functions for managing the register device, which handles UI state, terminal, ed
 Functions for audio synthesis, playback, TTS, and voice configuration.
 
 ### Audio Control
-- `enableaudio()` - Enable audio system (initializes Tone.js context)
+- `enableaudio()` - Enable audio system (boots the Daisy synth)
 - `synthaudioenabled(device, player, board)` - Signal that audio is enabled
 - `synthrestart(device, player, board)` - Restart audio system
 - `synthflush(device, player, board)` - Flush audio buffers

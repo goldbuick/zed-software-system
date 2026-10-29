@@ -10,22 +10,24 @@ Blume static docs for **https://zed.cafe/docs/** (Zed Cafe Docs: creator guides 
 | `theme.css` | Zed Cafe / ZNS tokens — terminal blue, cyan accent, IBM EGA, dot backplate |
 | `public/fonts/IBMEGA8x14.woff` | Bitmap font from `ops/infra/zns-public/fonts/` |
 | `public/zns-dot-tile.svg` | Checkerboard blue-on-blue dots (tape / ZNS backplate) |
-| `content/` | Intro page and `features/` — real files |
-| `content/(reference)/` | Spine pages (map, glossary, architecture) — a parenthesized group folder, so URLs stay `/map`, `/glossary`, `/architecture` |
-| `content/guides/` | Creator tutorials (real files, `.mdx` for Steps / callouts) — first in the sidebar after the intro |
-| `content/<prefix>/` | Symlinks into colocated `zss/**/docs` (and `ops` → `ops/docs`) |
+| `content/index.md` | Introduction, the loose page above the doors |
+| `content/guides/` | **Guides** — creator tutorials. URLs stay `/guides/...` |
+| `content/(lookup)/` | **Look up** — `features/`, `glossary.md`, and the `firmware` and `synth` symlinks. URLs stay `/features`, `/glossary`, `/firmware/...`, `/synth/...` |
+| `content/(system)/` | **System** — `(reference)` (map, architecture) plus the remaining `zss/**/docs` and `ops/docs` symlinks |
 
-Examples: `content/lang` → `zss/feature/lang/docs`, `content/device` → `zss/device/docs`.
+The sidebar display is `page`: each door is one row, and opening it shows only that door. Inside Synth, Play, Path, Catalog, and Engine are section headers (`display: "flat"` on those folders). Upstream folder meta has no per-folder display; `ops/patches/blume+1.1.3.patch` adds it. Parentheses in a folder name group pages without adding a URL segment.
+
+Examples: `content/(system)/lang` → `zss/feature/lang/docs`, `content/(system)/device` → `zss/device/docs`.
 
 Theme inspiration: [`ops/infra/net-zns-worker.js`](../ops/infra/net-zns-worker.js) VGA page (`#0000AA` field, `#55FFFF` brand, IBM EGA 8×14).
 
 Module manuals stay next to code. Do not mass-move them here — see [`.cursor/rules/docs-placement.mdc`](../.cursor/rules/docs-placement.mdc).
 
-`content/ops` mounts the whole `ops/docs` tree. Blume `content.exclude` drops `tasks.md` (generated), `markdown-link-check.json`, and `wip-intent-*` (archival) so they never publish.
+`content/(system)/ops` mounts the whole `ops/docs` tree. Blume `content.exclude` drops `tasks.md` (generated), `markdown-link-check.json`, and `wip-intent-*` (archival) so they never publish.
 
 ## Markdown vs MDX
 
-Plain `.md` is fine for headings, tables, and normal code fences. Blume only renders **Mermaid**, callout directives (`:::note`), math, and `package-install` fences in **`.mdx`**. If a page needs a diagram, name it `*.mdx` (see `content/(reference)/map.mdx`).
+Plain `.md` is fine for headings, tables, and normal code fences. Blume only renders **Mermaid**, callout directives (`:::note`), math, and `package-install` fences in **`.mdx`**. If a page needs a diagram, name it `*.mdx` (see `content/(system)/(reference)/map.mdx`).
 
 Mermaid diagrams keep their intrinsic width (horizontal scroll in the article) and support **Expand** / click-to-open a fullscreen lightbox via [`components/MermaidZoom.astro`](components/MermaidZoom.astro) (`layout.PageFooter` in [`components.ts`](components.ts)).
 

@@ -15,20 +15,33 @@ export default defineConfig({
     mode: 'dark',
     radius: 'none',
     accent: {
-      light: '#00aaaa',
+      light: '#55ffff',
       dark: '#55ffff',
     },
     // Per-mode action colors live in theme.css (--blume-action).
     action: '#55ff55',
     background: {
-      light: '#e8eefc',
-      dark: '#0000aa',
+      light: '#0000aa',
+      dark: '#000000',
     },
     fonts: {
       // Curated fallbacks; theme.css swaps in IBM EGA 8x14.
       display: 'space-mono',
       body: 'space-mono',
       mono: 'space-mono',
+    },
+  },
+  markdown: {
+    codeBlocks: {
+      theme: {
+        light: 'github-dark',
+        dark: 'github-dark',
+      },
+    },
+  },
+  navigation: {
+    sidebar: {
+      display: 'page',
     },
   },
   content: {

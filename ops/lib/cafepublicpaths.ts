@@ -9,4 +9,3 @@ export const CAFE_PUBLIC_COEP_DIR = path.join(CAFE_PUBLIC, 'coep')
 /** HTTP URL prefixes (no trailing slash). */
 export const CAFE_PUBLIC_DAISY_URL = '/daisy'
 export const CAFE_PUBLIC_COEP_URL = '/coep'
-export const CAFE_PUBLIC_ARCHIVE_MAXIMILIAN_URL = '/archive/maximilian'

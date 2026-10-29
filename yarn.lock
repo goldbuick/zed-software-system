@@ -1251,7 +1251,7 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.29.7"
 
-"@babel/runtime@^7.1.2", "@babel/runtime@^7.25.6", "@babel/runtime@^7.29.2":
+"@babel/runtime@^7.1.2":
   version "7.29.7"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.29.7.tgz#12022450c45a4da6d8d8287b18a4ff2ddb23f768"
   integrity sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==
@@ -5921,11 +5921,6 @@
   resolved "https://registry.npmjs.org/@types/draco3d/-/draco3d-1.4.10.tgz"
   integrity sha512-AX22jp8Y7wwaBgAixaSvkoG4M/+PlAcm3Qs4OW8yT9DM4xUpWKeFhLueTAyZF39pviAdcDdeJoACapiAceqNcw==
 
-"@types/emscripten@^1.41.5":
-  version "1.41.5"
-  resolved "https://registry.yarnpkg.com/@types/emscripten/-/emscripten-1.41.5.tgz#5670e4b52b098691cb844b84ee48c9176699b68d"
-  integrity sha512-cMQm7pxu6BxtHyqJ7mQZ2kXWV5SLmugybFdHCBbJ5eHzOo6VhBckEgAT3//rP5FwPHNPeEiq4SmQ5ucBwsOo4Q==
-
 "@types/estree-jsx@^1.0.0", "@types/estree-jsx@^1.0.5":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@types/estree-jsx/-/estree-jsx-1.0.5.tgz#858a88ea20f34fe65111f005a689fa1ebf70dc18"
@@ -6944,14 +6939,6 @@ auto-bind@^5.0.1:
   version "5.0.1"
   resolved "https://registry.npmjs.org/auto-bind/-/auto-bind-5.0.1.tgz"
   integrity sha512-ooviqdwwgfIfNmDwo94wlshcdzfO64XV0Cg6oDsDYBJfITDz1EngD2z7DkbvCWn+XIMsIqW27sEVF6qcpJrRcg==
-
-automation-events@^7.0.9:
-  version "7.1.19"
-  resolved "https://registry.yarnpkg.com/automation-events/-/automation-events-7.1.19.tgz#9323849f1f8d0e6019b4658dc7a1592346197b08"
-  integrity sha512-cD+TLhJTI0q4AI3ktd353lrGZiVa9AchowSDzQzzGjSoYe22js4vlS32VUtWuaulghi1Yq0KYNWKk9wWuGymPA==
-  dependencies:
-    "@babel/runtime" "^7.29.2"
-    tslib "^2.8.1"
 
 available-typed-arrays@^1.0.7:
   version "1.0.7"
@@ -15671,15 +15658,6 @@ stacktrace-js@^2.0.2:
     stack-generator "^2.0.5"
     stacktrace-gps "^3.0.4"
 
-standardized-audio-context@^25.3.70:
-  version "25.3.77"
-  resolved "https://registry.yarnpkg.com/standardized-audio-context/-/standardized-audio-context-25.3.77.tgz#9502c40f3860f0877ce5c53a161f819f23c978f4"
-  integrity sha512-Ki9zNz6pKcC5Pi+QPjPyVsD9GwJIJWgryji0XL9cAJXMGyn+dPOf6Qik1AHei0+UNVcc4BOCa0hWLBzlwqsW/A==
-  dependencies:
-    "@babel/runtime" "^7.25.6"
-    automation-events "^7.0.9"
-    tslib "^2.7.0"
-
 stats-gl@^2.2.8:
   version "2.4.2"
   resolved "https://registry.npmjs.org/stats-gl/-/stats-gl-2.4.2.tgz"
@@ -16177,14 +16155,6 @@ tonal@^6.4.1:
     "@tonaljs/voicing" "5.1.3"
     "@tonaljs/voicing-dictionary" "5.1.3"
 
-tone@^15.1.22:
-  version "15.1.22"
-  resolved "https://registry.yarnpkg.com/tone/-/tone-15.1.22.tgz#77581c7e8347a969872ca4f90f3532cd1e307dc8"
-  integrity sha512-TCScAGD4sLsama5DjvTUXlLDXSqPealhL64nsdV1hhr6frPWve0DeSo63AKnSJwgfg55fhvxj0iPPRwPN5o0ag==
-  dependencies:
-    standardized-audio-context "^25.3.70"
-    tslib "^2.3.1"
-
 tough-cookie@^5.1.1:
   version "5.1.2"
   resolved "https://registry.npmjs.org/tough-cookie/-/tough-cookie-5.1.2.tgz#66d774b4a1d9e12dc75089725af3ac75ec31bed7"
@@ -16319,7 +16289,7 @@ tsconfig-paths@^4.1.2:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tslib@^2.0.1, tslib@^2.0.3, tslib@^2.3.1, tslib@^2.4.0, tslib@^2.4.1, tslib@^2.5.0, tslib@^2.6.2, tslib@^2.7.0, tslib@^2.8.1:
+tslib@^2.0.1, tslib@^2.0.3, tslib@^2.4.0, tslib@^2.4.1, tslib@^2.5.0, tslib@^2.6.2, tslib@^2.8.1:
   version "2.8.1"
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
@@ -16398,7 +16368,7 @@ type-fest@^4.18.2, type-fest@^4.23.0, type-fest@^4.41.0:
   resolved "https://registry.npmjs.org/type-fest/-/type-fest-4.41.0.tgz"
   integrity sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==
 
-type-fest@^5.2.0, type-fest@^5.3.1:
+type-fest@^5.3.1:
   version "5.8.0"
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-5.8.0.tgz#6d517998257c33159db4d4da6f18efa33bd47df3"
   integrity sha512-YGYEVz3Fm5iy/AybuA0oyNFq7H4CgQNfRp/qfe8nurE1kuCeNm3/vfm9X4Mtl+qLyaKJUh5xrFZwogr41SMjYA==
@@ -17075,11 +17045,6 @@ watskeburt@^4.2.3:
   resolved "https://registry.npmjs.org/watskeburt/-/watskeburt-4.2.3.tgz#fc830280f466e201b55c517024aaf3aad2f5121e"
   integrity sha512-uG9qtQYoHqAsnT711nG5iZc/8M5inSmkGCOp7pFaytKG2aTfIca7p//CjiVzAE4P7hzaYuCozMjNNaLgmhbK5g==
 
-wavefunctioncollapse@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/wavefunctioncollapse/-/wavefunctioncollapse-2.1.0.tgz"
-  integrity sha512-GclizlVcMKyS2POsjrKb8sHy//NXJj3EI7957Wa+f97DtiNOsj773CzftCo59Hylvb/RBefrqtv4k0pOFfS71g==
-
 web-namespaces@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/web-namespaces/-/web-namespaces-2.0.1.tgz#1010ff7c650eccb2592cebeeaf9a1b253fd40692"
@@ -17534,11 +17499,3 @@ zwitch@^2.0.0, zwitch@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/zwitch/-/zwitch-2.0.4.tgz#c827d4b0acb76fc3e685a4c6ec2902d51070e9d7"
   integrity sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==
-
-zxing-wasm@^2.2.4:
-  version "2.2.4"
-  resolved "https://registry.yarnpkg.com/zxing-wasm/-/zxing-wasm-2.2.4.tgz#06b73db93c5a980d4441f357c0a1f8483c7af691"
-  integrity sha512-1gq5zs4wuNTs5umWLypzNNeuJoluFvwmvjiiT3L9z/TMlVveeJRWy7h90xyUqCe+Qq0zL0w7o5zkdDMWDr9aZA==
-  dependencies:
-    "@types/emscripten" "^1.41.5"
-    type-fest "^5.2.0"

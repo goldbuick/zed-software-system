@@ -10,8 +10,8 @@ export function clearcommandromhintcache() {
 }
 
 /**
- * Channel variants (#synth1, #echo3, #fmsquare5, #algo05) share the bare command ROM.
- * Trailing digit 1-5 only (matches synth1-5 / FX1-4 / voice-config 1-5).
+ * Channel variants (#synth1, #echo3) share the bare command ROM.
+ * Trailing digit 1-5 only (matches synth1-5 / FX1-4).
  */
 function commandromlookupkeys(key: string): string[] {
   const keys = [key]

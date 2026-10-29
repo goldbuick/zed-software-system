@@ -12,7 +12,7 @@ export const EXEC_BUILD_DAISY_TIMEOUT_MS = 120_000
 /** Single render driver (`synth-env-parity:render`, etc.). */
 export const EXEC_RENDER_PARITY_TIMEOUT_MS = 600_000
 
-/** Gate-only scripts (`synth-env-parity:test`). */
+/** Gate-only scripts (pitch, play-drum, notepop). */
 export const EXEC_GATE_TIMEOUT_MS = 60_000
 
 /** One calibrator grid step (build + render + read JSON). */

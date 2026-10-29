@@ -83,15 +83,12 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
 | `yarn task run ops:daisy:adsr-parity:jest` | Jest adsrenvcurve tests (internal) | — | — | — |
-| `yarn task run ops:daisy:adsr-parity:test` | Short amsaw ADSR Jest + env parity | — | `ops:daisy:adsr-parity:jest`, `ops:daisy:env-parity:test` | — |
+| `yarn task run ops:daisy:adsr-parity:test` | Jest adsrenvcurve linear envelope checks | — | `ops:daisy:adsr-parity:jest` | — |
 | `yarn task run ops:daisy:bench:synth` | Daisy synth micro-benchmark | — | — | `ZSS_DAISY_BENCH=1` |
 | `yarn task run ops:daisy:build` | Build Daisy WASM native synth | — | — | — |
 | `yarn task run ops:daisy:bundle:processor` | Bundle daisy audio worklet processor | — | — | — |
-| `yarn task run ops:daisy:env-parity:test` | Offline env ADSR parity render + gates | — | — | — |
 | `yarn task run ops:daisy:fx-bus-metrics:test` | FX bus metrics offline test | — | — | — |
-| `yarn task run ops:daisy:level-issue:song-compare:test` | Compare offline song renders (wasm vs tone) | — | — | — |
-| `yarn task run ops:daisy:level-issue:song:render` | Offline song render (wasm) | — | — | — |
-| `yarn task run ops:daisy:level-issue:song:render:tone` | Offline song render (tone) | — | — | — |
+| `yarn task run ops:daisy:level-issue:song:render` | Offline song render | — | — | — |
 | `yarn task run ops:daisy:level-issue:voices:render` | Voice isolation offline render | — | — | — |
 | `yarn task run ops:daisy:level-stability:test` | Level stability offline matrix | — | — | — |
 | `yarn task run ops:daisy:level-stability:test:fxmatrix` | Level stability FX matrix filter | — | — | — |
@@ -111,20 +108,10 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run ops:daisy:play-drum-balance:test:full` | Build daisy native, render play-drum-balance stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:play-drum-balance:render`, `ops:daisy:play-drum-balance:test` | — |
 | `yarn task run ops:daisy:play-drum:loop` | Watch native + play-drum parity loop | — | — | — |
 | `yarn task run ops:daisy:regression:test` | Jest + critical Playwright parity gates | `slow` | — | — |
-| `yarn task run ops:daisy:sidechain:loop` | Watch native + sidechain parity loop | — | — | — |
-| `yarn task run ops:daisy:sidechain:parity:calibrate` | Calibrate sidechain parity (slow, dev-only) | `calibrate`, `slow` | — | — |
-| `yarn task run ops:daisy:sidechain:parity:render` | Sidechain parity offline render | — | — | — |
-| `yarn task run ops:daisy:sidechain:parity:test` | Sidechain parity gates | — | — | — |
-| `yarn task run ops:daisy:sidechain:parity:test:full` | Build daisy native, render sidechain:parity stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:sidechain:parity:render`, `ops:daisy:sidechain:parity:test` | — |
 | `yarn task run ops:daisy:sidechain:render` | Sidechain demo offline render | — | — | — |
 | `yarn task run ops:daisy:sidechain:render:ab` | Sidechain demo A/B offline render | — | — | — |
 | `yarn task run ops:daisy:sos-voices:test` | SOS voice parity gates | — | — | — |
 | `yarn task run ops:daisy:sos-voices:test:full` | Regenerate SOS voice fixtures and run gates | `slow` | `ops:daisy:build`, `ops:fixtures:synth:regen:sos-voice`, `ops:daisy:sos-voices:test` | — |
-| `yarn task run ops:daisy:synth-env:calibrate` | Calibrate synth env parity (slow, dev-only) | `calibrate`, `slow` | — | — |
-| `yarn task run ops:daisy:synth-env:loop` | Watch native + synth-env parity loop | — | — | — |
-| `yarn task run ops:daisy:synth-env:render` | Synth env parity offline render | — | — | — |
-| `yarn task run ops:daisy:synth-env:test` | Synth env parity gates | — | — | — |
-| `yarn task run ops:daisy:synth-env:test:full` | Build daisy native, render synth-env stems, run gates | `slow` | `ops:daisy:build`, `ops:daisy:synth-env:render`, `ops:daisy:synth-env:test` | — |
 
 
 ### deploy
@@ -186,12 +173,9 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 
 | Task | Description | Tags | Deps | Env |
 |------|-------------|------|------|-----|
-| `yarn task run ops:fixtures:synth:regen:adsrenvcurve:tone` | Regenerate adsrenvcurve tone metrics fixture | — | — | — |
-| `yarn task run ops:fixtures:synth:regen:all` | Regenerate all synth parity fixtures under ops/fixtures/synth/ | `slow` | `ops:daisy:build`, `ops:fixtures:synth:regen:tone`, `ops:fixtures:synth:regen:drums`, `ops:fixtures:synth:regen:adsrenvcurve:tone`, `ops:fixtures:synth:regen:env-adsr:tone`, `ops:fixtures:synth:regen:sos-voice` | — |
+| `yarn task run ops:fixtures:synth:regen:all` | Regenerate Daisy synth parity fixtures under ops/fixtures/synth/ | `slow` | `ops:daisy:build`, `ops:fixtures:synth:regen:drums`, `ops:fixtures:synth:regen:sos-voice` | — |
 | `yarn task run ops:fixtures:synth:regen:drums` | Regenerate daisy drum parity fixtures | — | — | — |
-| `yarn task run ops:fixtures:synth:regen:env-adsr:tone` | Regenerate env ADSR tone parity metrics fixture | — | — | — |
 | `yarn task run ops:fixtures:synth:regen:sos-voice` | Regenerate SOS voice parity fixtures | — | — | — |
-| `yarn task run ops:fixtures:synth:regen:tone` | Regenerate synth parity fixtures (tone backend) | — | — | — |
 
 
 #### fixtures/zzt

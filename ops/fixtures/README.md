@@ -11,9 +11,8 @@ add co-located `__fixtures__` trees beside implementation code.
 | `lang/integration/` | Integration oracle outputs (e.g. `simple_chat_player.*`) + `manifest.json` |
 | `lang/scripts/` | Integration-tier `.zss` sources (edge-case scripts) |
 | `lang/coolregionsbow/` | 53-chip book corpus + `manifest.json` |
-| `synth/wasm/` | Synth parity metrics JSON |
+| `synth/wasm/` | Daisy drum parity metrics JSON |
 | `synth/daisy/` | Daisy voice fixtures JSON |
-| `synth/maxi/` | Legacy Maxi parity JSON |
 | `parse/` | Parse test assets (e.g. `twomeasures.mid`) |
 | `books/` | Shipped book JSON (npm `"files"`) |
 | `content/templates/` | Importable book templates (`manifest.json` + `pages/*.json`); built books in `ops/public/books/` (gitignored; regen via `ops:fixtures:content:book:build`) |

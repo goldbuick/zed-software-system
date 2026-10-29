@@ -17,6 +17,7 @@ import {
 import { memoryreadelementdisplay } from './bookoperations'
 import { memoryensuremainbook } from './books'
 import { memoryinspectempty, memoryinspectemptymenu } from './inspection'
+import { memoryinspectremixmenu } from './inspectionremix'
 import { memoryinspectstyle, memoryinspectstylemenu } from './inspectionstyle'
 import { memoryreadplayerboard } from './playermanagement'
 import { memoryreadoperator } from './session'
@@ -184,6 +185,9 @@ export async function memoryinspectbatchcommand(path: string, player: string) {
     case 'styleobjects':
     case 'styleterrain':
       await memoryinspectstyle(player, p1, p2, batch.target)
+      break
+    case 'remix':
+      await memoryinspectremixmenu(player, p1, p2)
       break
     case 'empty':
       memoryinspectemptymenu(player, p1, p2)

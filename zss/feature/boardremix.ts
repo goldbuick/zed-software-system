@@ -1,6 +1,5 @@
-// @ts-expect-error wow amazing
-import wfc from 'wavefunctioncollapse'
 import { pick } from 'zss/mapping/array'
+import { randomnumber } from 'zss/mapping/number'
 import { isnumber, ispresent } from 'zss/mapping/types'
 import {
   READ_LAYER,
@@ -24,6 +23,7 @@ import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'
 
 import { mapelementcopy } from './boardcopy'
+import { wfcoverlappinggenerate } from './wfcoverlapping'
 
 export function boardremix(
   target: string,
@@ -95,25 +95,22 @@ export function boardremix(
   const genheight = p2.y - p1.y + 1
 
   // generate new image
-  const model = new wfc.OverlappingModel(
+  const remixdata = wfcoverlappinggenerate(
     data,
     BOARD_WIDTH,
     BOARD_HEIGHT,
-    patternsize, // pattern size
+    patternsize,
     genwidth,
     genheight,
-    true, // is the input wrapping ?
-    false, // is the output wrapping ?
-    mirror, // can we mirror the output 1 - 8
+    mirror,
+    randomnumber,
   )
-
-  if (!model.generate()) {
+  if (!ispresent(remixdata)) {
     return false
   }
 
   // unpack bytes onto targetboard
   p = 0
-  const remixdata: Uint8Array = model.graphics()
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const dpt: PT = { x, y }

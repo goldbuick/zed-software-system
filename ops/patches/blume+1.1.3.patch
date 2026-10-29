@@ -1,13 +1,77 @@
+diff --git a/node_modules/blume/dist/cli/index.js b/node_modules/blume/dist/cli/index.js
+index 3717727..5c3be49 100755
+--- a/node_modules/blume/dist/cli/index.js
++++ b/node_modules/blume/dist/cli/index.js
+@@ -7526,6 +7526,7 @@ var pageMetaSchema = pageMetaBaseSchema;
+ var sidebarDisplaySchema = z2.enum(["flat", "group", "page"]);
+ var folderMetaSchema = z2.strictObject({
+   collapsed: z2.boolean().optional(),
++  display: sidebarDisplaySchema.optional(),
+   icon: iconName.optional(),
+   order: z2.number().optional(),
+   pages: z2.array(z2.string()).optional(),
+@@ -8492,6 +8493,7 @@ var applyFolderMeta = (group, folderMeta, sharedMeta, metaPrefix) => {
+     group.icon = meta.icon ?? group.icon;
+     group.order = meta.order ?? group.order;
+     group.collapsed = meta.collapsed ?? group.collapsed;
++    group.display = meta.display ?? group.display;
+     if (meta.pages) {
+       const rank = new Map(meta.pages.map((key, i) => [key, i]));
+       for (const child of group.children) {
+@@ -8610,7 +8612,7 @@ var toNavNode = (node, display) => {
+   return {
+     children: node.children.map((child) => toNavNode(child, display)),
+     collapsed: node.collapsed,
+-    display,
++    display: node.display ?? display,
+     icon: node.icon,
+     kind: "group",
+     label: node.label,
+diff --git a/node_modules/blume/dist/types/core/schema.d.ts b/node_modules/blume/dist/types/core/schema.d.ts
+index a6eac86..cd40d2c 100644
+--- a/node_modules/blume/dist/types/core/schema.d.ts
++++ b/node_modules/blume/dist/types/core/schema.d.ts
+@@ -469,6 +469,7 @@ declare const sidebarDisplaySchema: z.ZodEnum<["flat", "group", "page"]>;
+ export type SidebarDisplay = z.infer<typeof sidebarDisplaySchema>;
+ export declare const folderMetaSchema: z.ZodObject<{
+     collapsed: z.ZodOptional<z.ZodBoolean>;
++    display: z.ZodOptional<z.ZodEnum<["flat", "group", "page"]>>;
+     icon: z.ZodOptional<z.ZodString>;
+     order: z.ZodOptional<z.ZodNumber>;
+     /** Explicit child ordering by slug segment (without numeric prefix). */
+@@ -480,12 +481,14 @@ export declare const folderMetaSchema: z.ZodObject<{
+     title?: string | undefined;
+     order?: number | undefined;
+     collapsed?: boolean | undefined;
++    display?: "flat" | "group" | "page" | undefined;
+ }, {
+     icon?: string | undefined;
+     pages?: string[] | undefined;
+     title?: string | undefined;
+     order?: number | undefined;
+     collapsed?: boolean | undefined;
++    display?: "flat" | "group" | "page" | undefined;
+ }>;
+ export type FolderMeta = z.infer<typeof folderMetaSchema>;
+ /** A single configured content source. */
 diff --git a/node_modules/blume/src/components/content/mermaid-element.ts b/node_modules/blume/src/components/content/mermaid-element.ts
-index 33c9478..33ff321 100644
+index 33c9478..fff0bdf 100644
 --- a/node_modules/blume/src/components/content/mermaid-element.ts
 +++ b/node_modules/blume/src/components/content/mermaid-element.ts
-@@ -41,10 +41,94 @@ class BlumeMermaid extends HTMLElement {
+@@ -19,8 +19,6 @@ const loadMermaid = () => {
+   return loader;
+ };
+ 
+-const prefersDark = () => document.documentElement.dataset.theme === "dark";
+-
+ let counter = 0;
+ 
+ class BlumeMermaid extends HTMLElement {
+@@ -41,10 +39,58 @@ class BlumeMermaid extends HTMLElement {
        this.#renderToken += 1;
        const token = this.#renderToken;
        const mermaid = await loadMermaid();
-+      // ZSS docs: ZNS/EGA palette (docs-site theme). theme "base" allows themeVariables.
-+      const dark = prefersDark();
++      // ZSS docs: ZNS/EGA palette for both color modes.
        mermaid.initialize({
          securityLevel: "strict",
          startOnLoad: false,
@@ -20,81 +84,92 @@ index 33c9478..33ff321 100644
 +          rankSpacing: 48,
 +          htmlLabels: true,
 +        },
-+        themeVariables: dark
-+          ? {
-+              darkMode: true,
-+              background: "#000000",
-+              primaryColor: "#0000aa",
-+              primaryTextColor: "#ffffff",
-+              primaryBorderColor: "#55ffff",
-+              secondaryColor: "#000066",
-+              secondaryTextColor: "#ffffff",
-+              secondaryBorderColor: "#7777ff",
-+              tertiaryColor: "#000088",
-+              tertiaryTextColor: "#dddddd",
-+              tertiaryBorderColor: "#55ffff",
-+              lineColor: "#ffffff",
-+              textColor: "#ffffff",
-+              mainBkg: "#0000aa",
-+              nodeBorder: "#55ffff",
-+              clusterBkg: "#000066",
-+              clusterBorder: "#7777ff",
-+              titleColor: "#55ffff",
-+              edgeLabelBackground: "#000000",
-+              nodeTextColor: "#ffffff",
-+              fontFamily: "IBM EGA 8x14, ui-monospace, monospace",
-+              fontSize: "14px",
-+              actorBkg: "#0000aa",
-+              actorBorder: "#55ffff",
-+              actorTextColor: "#ffffff",
-+              actorLineColor: "#ffffff",
-+              signalColor: "#55ffff",
-+              signalTextColor: "#ffffff",
-+              labelBoxBkgColor: "#000000",
-+              labelBoxBorderColor: "#55ff55",
-+              labelTextColor: "#55ff55",
-+              loopTextColor: "#ffff55",
-+              noteBkgColor: "#000066",
-+              noteTextColor: "#ffff55",
-+              noteBorderColor: "#ffff55",
-+              activationBkgColor: "#000088",
-+              activationBorderColor: "#55ffff",
-+              sequenceNumberColor: "#000000",
-+            }
-+          : {
-+              darkMode: false,
-+              background: "#e8eefc",
-+              primaryColor: "#ffffff",
-+              primaryTextColor: "#000066",
-+              primaryBorderColor: "#00aaaa",
-+              secondaryColor: "#d0daf5",
-+              secondaryTextColor: "#000066",
-+              secondaryBorderColor: "#5555ff",
-+              tertiaryColor: "#c8d4f0",
-+              tertiaryTextColor: "#000066",
-+              tertiaryBorderColor: "#5555ff",
-+              lineColor: "#5555aa",
-+              textColor: "#000066",
-+              mainBkg: "#ffffff",
-+              nodeBorder: "#00aaaa",
-+              clusterBkg: "#d0daf5",
-+              clusterBorder: "#5555ff",
-+              titleColor: "#00aaaa",
-+              edgeLabelBackground: "#e8eefc",
-+              nodeTextColor: "#000066",
-+              fontFamily: "\"IBM EGA 8x14\", ui-monospace, monospace",
-+              fontSize: "14px",
-+              actorBkg: "#ffffff",
-+              actorBorder: "#00aaaa",
-+              actorTextColor: "#000066",
-+              signalColor: "#5555aa",
-+              labelBoxBkgColor: "#ffffff",
-+              labelBoxBorderColor: "#00aa00",
-+              labelTextColor: "#00aa00",
-+              noteBkgColor: "#ffffcc",
-+              noteTextColor: "#000066",
-+              noteBorderColor: "#aaaa00",
-+            },
++        themeVariables: {
++          darkMode: true,
++          background: "#000000",
++          primaryColor: "#0000aa",
++          primaryTextColor: "#ffffff",
++          primaryBorderColor: "#55ffff",
++          secondaryColor: "#000066",
++          secondaryTextColor: "#ffffff",
++          secondaryBorderColor: "#7777ff",
++          tertiaryColor: "#000088",
++          tertiaryTextColor: "#dddddd",
++          tertiaryBorderColor: "#55ffff",
++          lineColor: "#ffffff",
++          textColor: "#ffffff",
++          mainBkg: "#0000aa",
++          nodeBorder: "#55ffff",
++          clusterBkg: "#000066",
++          clusterBorder: "#7777ff",
++          titleColor: "#55ffff",
++          edgeLabelBackground: "#000000",
++          nodeTextColor: "#ffffff",
++          fontFamily: "IBM EGA 8x14, ui-monospace, monospace",
++          fontSize: "14px",
++          actorBkg: "#0000aa",
++          actorBorder: "#55ffff",
++          actorTextColor: "#ffffff",
++          actorLineColor: "#ffffff",
++          signalColor: "#55ffff",
++          signalTextColor: "#ffffff",
++          labelBoxBkgColor: "#000000",
++          labelBoxBorderColor: "#55ff55",
++          labelTextColor: "#55ff55",
++          loopTextColor: "#ffff55",
++          noteBkgColor: "#000066",
++          noteTextColor: "#ffff55",
++          noteBorderColor: "#ffff55",
++          activationBkgColor: "#000088",
++          activationBorderColor: "#55ffff",
++          sequenceNumberColor: "#000000",
++        },
        });
        try {
          counter += 1;
+diff --git a/node_modules/blume/src/core/navigation.ts b/node_modules/blume/src/core/navigation.ts
+index 93c7b8c..f728692 100644
+--- a/node_modules/blume/src/core/navigation.ts
++++ b/node_modules/blume/src/core/navigation.ts
+@@ -79,6 +79,8 @@ interface MutableGroup {
+   label: string;
+   icon?: string;
+   collapsed?: boolean;
++  /** Folder-meta override of the global sidebar display. */
++  display?: SidebarDisplay;
+   order: number;
+   children: MutableNode[];
+   index: Map<string, MutableGroup>;
+@@ -181,6 +183,7 @@ const applyFolderMeta = (
+     group.icon = meta.icon ?? group.icon;
+     group.order = meta.order ?? group.order;
+     group.collapsed = meta.collapsed ?? group.collapsed;
++    group.display = meta.display ?? group.display;
+ 
+     if (meta.pages) {
+       const rank = new Map(meta.pages.map((key, i) => [key, i]));
+@@ -374,7 +377,7 @@ const toNavNode = (node: MutableNode, display: SidebarDisplay): NavNode => {
+   return {
+     children: node.children.map((child) => toNavNode(child, display)),
+     collapsed: node.collapsed,
+-    display,
++    display: node.display ?? display,
+     icon: node.icon,
+     kind: "group",
+     label: node.label,
+diff --git a/node_modules/blume/src/core/schema.ts b/node_modules/blume/src/core/schema.ts
+index cb67a55..9d515ec 100644
+--- a/node_modules/blume/src/core/schema.ts
++++ b/node_modules/blume/src/core/schema.ts
+@@ -148,6 +148,11 @@ export type SidebarDisplay = z.infer<typeof sidebarDisplaySchema>;
+ 
+ export const folderMetaSchema = z.strictObject({
+   collapsed: z.boolean().optional(),
++  /**
++   * Override the global `navigation.sidebar.display` for this folder only.
++   * Children keep the global mode unless their own meta sets `display`.
++   */
++  display: sidebarDisplaySchema.optional(),
+   icon: iconName.optional(),
+   order: z.number().optional(),
+   /** Explicit child ordering by slug segment (without numeric prefix). */
