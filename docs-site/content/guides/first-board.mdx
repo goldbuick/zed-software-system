@@ -3,7 +3,15 @@ title: Your first board
 description: Create two connected boards, build walls with commands and the inspector, then save and share the result.
 ---
 
-In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes). Load **ZZT Tool Kit** before you start. That book has the wall and item pages this guide places. It has no board pages, so the rooms you build here are new.
+In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and still have **Quick Start Kit** open.
+
+The walls here use **ZZT Tool Kit** pages such as `solid`. Load that kit before you build. The page reloads into that book.
+
+<Steps>
+  <Step title="Pick ZZT Tool Kit from the list">
+    Below the logo, select **ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/zmHFabqb](https://bytes.zed.cafe/zmHFabqb) directly.
+  </Step>
+</Steps>
 
 ## Create a board
 
@@ -11,7 +19,7 @@ In this guide you build two small rooms, connect them with an exit, and share a 
   <Step title="Make the page">
     Press `@`, type `board hallway`, and press Enter.
 
-    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board hallway**. If you loaded more than one book, it also shows a book picker. Pick the book you want the board in.
+    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board hallway**. If more than one book is open, the scroll also shows a book picker. Pick **ZZT Tool Kit**, so the wall pages in this guide are in the same book.
   </Step>
   <Step title="Select create">
     Select **create @board hallway**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
@@ -26,7 +34,7 @@ The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loa
 
 ## Place some walls
 
-Use the CLI to put terrain next to you. Each command places one cell in a direction from where you stand:
+This is the same `#put` as last time. A color word goes in front of the kind. `solid` is a ZZT Tool Kit page. Each command places one cell in a direction from where you stand:
 
 ```text
 #put north white solid
@@ -132,7 +140,7 @@ To jump to any board while you build, use `#boardopen <name>` or select it from 
 #share
 ```
 
-- `#save` writes your current state to the browser, so a reload keeps it.
+- `#save` writes your current state to the browser, so a reload keeps it. `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
 - `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
 
 For more export options, such as downloading a book as JSON, run `#export`.
