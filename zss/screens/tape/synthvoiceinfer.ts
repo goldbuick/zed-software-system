@@ -84,7 +84,11 @@ function issynthvoiceselect(word: string): boolean {
   return validatesynthtype(word, [])
 }
 
-function applysynthline(slots: SYNTH_VOICE_SLOTS, command: string, arg: string) {
+function applysynthline(
+  slots: SYNTH_VOICE_SLOTS,
+  command: string,
+  arg: string,
+) {
   const slot = COMMAND_SLOT[command]
   if (!slot || !arg) {
     return
@@ -110,7 +114,9 @@ function applysynthline(slots: SYNTH_VOICE_SLOTS, command: string, arg: string) 
   }
 }
 
-function firstargsaftercommands(row: EDITOR_CODE_ROW): { command: string; arg: string }[] {
+function firstargsaftercommands(
+  row: EDITOR_CODE_ROW,
+): { command: string; arg: string }[] {
   const tokens = row.tokens
   if (!tokens?.length) {
     return []

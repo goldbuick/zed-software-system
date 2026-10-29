@@ -18,11 +18,6 @@ import { ARG_TYPE, COLOR, NAME } from 'zss/words/types'
 import { type AUTO_COMPLETE_SUGGESTION, resolveargitems } from './argcomplete'
 import { type ZSS_WORD_LIST_KEY } from './colors'
 import { EDITOR_CODE_ROW } from './common'
-import {
-  inferredvoiceforcommand,
-  infersynthslots,
-  synthfirstargkeywords,
-} from './synthvoiceinfer'
 import type { EDITOR_COMPLETE_CONTEXT } from './editorcomplete'
 import { builtingstatnamesforcodepagetype } from './statcompletenames'
 import { resolvestatlinkstage, statlinklabelromword } from './statlinkstages'
@@ -31,6 +26,11 @@ import {
   hintfromrom,
   resolvesuggestionhint,
 } from './suggestionhints'
+import {
+  inferredvoiceforcommand,
+  infersynthslots,
+  synthfirstargkeywords,
+} from './synthvoiceinfer'
 
 const WORD_LIST_KEYS: ZSS_WORD_LIST_KEY[] = [
   'flags',

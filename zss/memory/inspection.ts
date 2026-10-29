@@ -780,11 +780,7 @@ export function memoryinspectelement(
   )
   // Match area inspect: open empty submenu (terrain/objects/both), not instant delete
   lines.push(
-    zsszedlinklinechip(
-      'batch',
-      `empty:${area} hk 0 " 0 " next`,
-      'make empty',
-    ),
+    zsszedlinklinechip('batch', `empty:${area} hk 0 " 0 " next`, 'make empty'),
   )
   lines.push(DIVIDER)
 
