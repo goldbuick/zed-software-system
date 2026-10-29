@@ -1,40 +1,17 @@
 ---
 title: Your first board
-description: Create two connected boards, build walls with commands and the inspector, then save and share the result.
+description: Build walls on the title board, connect a second room, then save and share the result.
 ---
 
 In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and still have **Quick Start Kit** open.
 
-The walls here use **ZZT Tool Kit** pages such as `solid`. Load that kit before you build. The page reloads into that book.
+You are already standing on **title**. That book has a board page named `title` and an object page named `player`, which is why login put you here. This guide builds on that board. It does not create a second one named `title`.
 
-<Steps>
-  <Step title="Pick ZZT Tool Kit from the list">
-    Below the logo, select **ZZT Tool Kit**. If the list has scrolled away, open [bytes.zed.cafe/zmHFabqb](https://bytes.zed.cafe/zmHFabqb) directly.
-  </Step>
-</Steps>
-
-## Create a board
-
-<Steps>
-  <Step title="Make the page">
-    Press `@`, type `board hallway`, and press Enter.
-
-    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board hallway**. If more than one book is open, the scroll also shows a book picker. Pick **ZZT Tool Kit**, so the wall pages in this guide are in the same book.
-  </Step>
-  <Step title="Select create">
-    Select **create @board hallway**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
-  </Step>
-</Steps>
-
-:::tip
-Use one-word names for boards and objects while you learn, such as `hallway` instead of `the hallway`. Names with spaces work, but they need quotes in some commands.
-:::
-
-The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the scroll offers one create link for each page type.
+Walls use `solid`, a terrain page already in this book.
 
 ## Place some walls
 
-This is the same `#put` as last time. A color word goes in front of the kind. `solid` is a ZZT Tool Kit page. Each command places one cell in a direction from where you stand:
+This is the same `#put` as last time. A color word goes in front of the kind. Each command places one cell in a direction from where you stand:
 
 ```text
 #put north white solid
@@ -42,12 +19,11 @@ This is the same `#put` as last time. A color word goes in front of the kind. `s
 #put south white solid
 ```
 
-Walk with the arrow keys and repeat to sketch the outline of a room. You can also try other ZZT Tool Kit terrain:
+Walk with the arrow keys and repeat to sketch the outline of a room. You can also try other terrain already in this book:
 
 ```text
-#put east normal
-#put east breakable
 #put east water
+#put east fake
 ```
 
 Placing walls one at a time is slow. The inspector makes it faster.
@@ -82,33 +58,42 @@ The inspector and the CLI are two ways to do the same job. Anything you do in th
 
 ## Edit the board's stats
 
-A board is a page too, and its page holds stats that control the room. Open it:
+A board is a page too, and its page holds stats that control the room. Open the one you are standing on:
 
 ```text
-#pageopen hallway
+#pageopen title
 ```
 
-The editor opens with one line, `@board hallway`. Add a start position below it:
+The editor opens with `@board title` already on the first line. Add a start position below it:
 
 ```text
-@board hallway
+@board title
 @startx 5
 @starty 12
 ```
 
-`@startx` and `@starty` set where a player appears when they arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
+`@startx` and `@starty` are where login stands you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
+
+This book already has `@board title` and `@player`. That pair is what login uses, which is why you appeared in this room when the kit loaded.
 
 ## Add a second room and connect them
 
+`@` makes a new page. Use it for the next board, not for title.
+
 <Steps>
-  <Step title="Create the second board">
-    Press `@`, type `board cellar`, and select **create @board cellar**. You are now in the empty cellar.
+  <Step title="Make the page">
+    Press `@`, type `board cellar`, and press Enter.
+
+    This is the **make-it** command: `@` plus a page type and a name. A small scroll opens with a link that reads **create @board cellar**.
   </Step>
-  <Step title="Add an exit from the hallway">
-    Run `#pageopen hallway` and add an exit line:
+  <Step title="Select create">
+    Select **create @board cellar**. Zed Cafe makes the board page and moves you to the middle of the new, empty board.
+  </Step>
+  <Step title="Add an exit from title">
+    Run `#pageopen title` and add an exit line:
 
     ```text
-    @board hallway
+    @board title
     @startx 5
     @starty 12
     @exiteast cellar
@@ -120,14 +105,20 @@ The editor opens with one line, `@board hallway`. Add a start position below it:
 
     ```text
     @board cellar
-    @exitwest hallway
+    @exitwest title
     ```
 
   </Step>
   <Step title="Walk through">
-    Run `#boards` and select **hallway** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
+    Run `#boards` and select **title** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
   </Step>
 </Steps>
+
+:::tip
+Use one-word names for boards and objects while you learn, such as `cellar` instead of `the cellar`. Names with spaces work, but they need quotes in some commands.
+:::
+
+The same `@` command makes any page type: `@object lamp`, `@terrain lava`, `@loader greeter`, and so on. If you type only a name (`@lamp`), the scroll offers one create link for each page type.
 
 There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. An exit can name a board in your book. It can also be a join URL or a `https://bytes.zed.cafe/...` content link, which takes the player to a different world.
 
@@ -147,7 +138,8 @@ For more export options, such as downloading a book as JSON, run `#export`.
 
 ## What you learned
 
-- `@board name` creates a board and takes you there. `@` works for every page type.
+- Quick Start Kit already has `@board title` and `@player`, so login stands you on title. `@startx` and `@starty` are that spot.
+- `@board name` creates the next board and takes you there. `@` works for every page type.
 - `#put <direction> <kind>` places one element. Color words like `red` or `white` go in front of the kind.
 - `#gadget` toggles the inspector. Use it to select, recolor, copy, tile-paste, and remix.
 - Board stats such as `@startx`, `@starty`, and `@exiteast` live on the board's page. Edit them with `#pageopen`.
