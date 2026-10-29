@@ -402,6 +402,30 @@ function registerhyperlinksforelement(
   }
 }
 
+function memoryinspectclipboardlines(
+  area: string,
+  showpaste: boolean,
+): string[] {
+  const lines = [
+    zsszedlinklinechip(
+      'batch',
+      `copy:${area} hk 1 " 1 " next`,
+      'copy elements',
+    ),
+    zsszedlinklinechip('batch', `cut:${area} hk 2 " 2 " next`, 'cut elements'),
+  ]
+  if (showpaste) {
+    lines.push(
+      zsszedlinklinechip(
+        'batch',
+        `paste:${area} hk 3 " 3 " next`,
+        'paste elements',
+      ),
+    )
+  }
+  return lines
+}
+
 export async function memoryinspect(player: string, p1: PT, p2: PT) {
   const mainbook = memoryensuremainbook()
   const showpaste = await memoryhassecretheap()
@@ -430,13 +454,16 @@ export async function memoryinspect(player: string, p1: PT, p2: PT) {
         element,
         p1,
         memoryboardelementisobject(element),
+        showpaste,
       )
       return
     }
     if (!element?.kind) {
+      const area = ptstoarea(p1, p2)
       const emptylines = [
         `empty: ${p1.x}, ${p1.y}`,
         DIVIDER,
+        ...memoryinspectclipboardlines(area, showpaste),
         zsszedlinklinechip(
           'empty',
           `copycoords:${p1.x},${p1.y} hk 5 " 5 "`,
@@ -491,22 +518,8 @@ export function memoryinspectarea(
   const lines: string[] = [
     `selected: ${p1.x},${p1.y} - ${p2.x},${p2.y}`,
     DIVIDER,
-    zsszedlinklinechip(
-      'batch',
-      `copy:${area} hk 1 " 1 " next`,
-      'copy elements',
-    ),
-    zsszedlinklinechip('batch', `cut:${area} hk 2 " 2 " next`, 'cut elements'),
+    ...memoryinspectclipboardlines(area, memoryhassecretheap),
   ]
-  if (memoryhassecretheap) {
-    lines.push(
-      zsszedlinklinechip(
-        'batch',
-        `paste:${area} hk 3 " 3 " next`,
-        'paste elements',
-      ),
-    )
-  }
   lines.push(
     zsszedlinklinechip('batch', `copycoords:${area} hk 5 " 5 "`, 'copy coords'),
   )
@@ -648,6 +661,7 @@ export function memoryinspectelement(
   element: BOARD_ELEMENT,
   p1: PT,
   isobject: boolean,
+  showpaste: boolean,
 ) {
   const mainbook = memoryensuremainbook()
   if (!ispresent(mainbook)) {
@@ -737,6 +751,8 @@ export function memoryinspectelement(
     }
   }
 
+  const area = ptstoarea(p1, p1)
+  lines.push(...memoryinspectclipboardlines(area, showpaste))
   lines.push(
     zsszedlinkline(
       memoryinspectjoinlinkwords(['copycoords', 'hk', '5', ' 5 ']),
@@ -763,11 +779,10 @@ export function memoryinspectelement(
     ),
   )
   // Match area inspect: open empty submenu (terrain/objects/both), not instant delete
-  const emptyarea = ptstoarea(p1, p1)
   lines.push(
     zsszedlinklinechip(
       'batch',
-      `empty:${emptyarea} hk 0 " 0 " next`,
+      `empty:${area} hk 0 " 0 " next`,
       'make empty',
     ),
   )

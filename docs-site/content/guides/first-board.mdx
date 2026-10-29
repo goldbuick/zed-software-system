@@ -32,14 +32,14 @@ The **inspector** (also called the gadget) lets you select cells on the board an
   <Step title="Inspect one cell">
     Click a wall you placed. A scroll lists that element's details: its kind, collision, and links to change its **char**, **color**, and **bg** (background). Change the color and watch the wall update live.
   </Step>
-  <Step title="Copy a pattern">
-    Put two walls next to each other. Then press on one, drag across both, and let go. The area scroll that opens has **copy elements**. Select it.
+  <Step title="Copy a tile">
+    Click one wall. Select **copy elements**.
   </Step>
   <Step title="Tile it across a region">
-    Drag across a long empty strip where you want a wall. In the area scroll, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
+    Drag across a long empty strip where you want a wall. In the gadget scroll that opens, select **paste**, then **paste terrain tiled**. The copied pattern repeats to fill the whole selection.
   </Step>
   <Step title="Turn it off">
-    Run `#gadget` again to leave the inspector.
+    Run `#gadget` again to turn off the inspector.
   </Step>
 </Steps>
 
@@ -67,7 +67,7 @@ The editor opens with `@board title` already on the first line. Add a start posi
 @starty 12
 ```
 
-`@startx` and `@starty` are where login stands you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
+`@startx` and `@starty` are where login spawns you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the editor. Your edits are already saved to the page.
 
 This book already has `@board title` and `@player`. That pair is what login uses, which is why you appeared in this room when the kit loaded.
 
