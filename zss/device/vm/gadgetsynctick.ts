@@ -244,6 +244,7 @@ function gadgetsynctickbody(vm: DEVICE) {
 }
 
 export function handlegadgetdesync(vm: DEVICE, message: MESSAGE): void {
-  const gadget = gadgetstate(message.player)
+  const gadget = deepcopy(gadgetstate(message.player))
+  readgadgetjsonpipe(message.player).applyfullsync(gadget)
   gadgetclientpaint(vm, message.player, gadget)
 }

@@ -1,3 +1,7 @@
+jest.mock('zss/device/api', () => ({
+  gadgetclientpaint: jest.fn(),
+}))
+
 jest.mock('zss/device/patchapi', () => ({
   gadgetclientpatch: jest.fn(),
 }))
@@ -65,8 +69,11 @@ jest.mock('zss/mapping/guid', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
+import { gadgetclientpaint } from 'zss/device/api'
 import { gadgetclientpatch } from 'zss/device/patchapi'
-import { gadgetsynctick } from 'zss/device/vm/gadgetsynctick'
+import type { MESSAGE } from 'zss/device/types'
+import { gadgetsynctick, handlegadgetdesync } from 'zss/device/vm/gadgetsynctick'
+import { createjsonpipe } from 'zss/feature/jsonpipe/observe'
 import { gadgetstate } from 'zss/gadget/data/api'
 import type { GADGET_STATE, LAYER } from 'zss/gadget/data/types'
 import { memoryreadbookgadgetlayersforboard } from 'zss/memory/gadgetlayersflags'
@@ -280,5 +287,65 @@ describe('gadgetsynctick', () => {
     expect(stubgadget.scrollname).toBe('my-scroll')
     expect(stubgadget.scroll).toEqual(['scroll-line'])
     expect(memoryconverttogadgetcontrollayer).toHaveBeenCalledTimes(1)
+  })
+
+  it('rebases the sim pipe on desync so the next layer patch applies', () => {
+    const player = 'p-history'
+    jest.mocked(memoryreadoperator).mockReturnValue(player)
+    jest.mocked(memoryreadmainbook).mockReturnValue({
+      ...stubbook,
+      activelist: [player],
+    })
+    const previous = createstubgadget()
+    jest.mocked(gadgetstate).mockReturnValue(previous)
+    gadgetsynctick(vm)
+    expect(gadgetclientpatch).toHaveBeenCalled()
+
+    const resetgadget = createstubgadget()
+    resetgadget.id = 'snap-empty'
+    jest.mocked(gadgetstate).mockReturnValue(resetgadget)
+    jest.mocked(gadgetclientpaint).mockClear()
+    const message = { player } as MESSAGE
+    handlegadgetdesync(vm, message)
+
+    expect(gadgetclientpaint).toHaveBeenCalledWith(
+      vm,
+      player,
+      expect.objectContaining({ id: 'snap-empty', layers: [] }),
+    )
+    const painted = jest.mocked(gadgetclientpaint).mock.calls[0][2] as GADGET_STATE
+
+    jest.mocked(memoryreadplayerboard).mockReturnValue({
+      id: 'board-2',
+      name: 'Next Board',
+    } as NonNullable<ReturnType<typeof memoryreadplayerboard>>)
+    jest.mocked(memoryreadbookgadgetlayersforboard).mockReturnValue({
+      iso: {
+        id: 'board-2',
+        board: 'board-2',
+        exiteast: '',
+        exitwest: '',
+        exitnorth: '',
+        exitsouth: '',
+        exitne: '',
+        exitnw: '',
+        exitse: '',
+        exitsw: '',
+        over: [],
+        under: [],
+        layers: ['layer-b'],
+        tickers: [],
+      } as unknown as MEMORY_GADGET_LAYERS,
+    })
+    jest.mocked(gadgetclientpatch).mockClear()
+    gadgetsynctick(vm)
+
+    const patch = jest.mocked(gadgetclientpatch).mock.calls[0][2]
+    const client = createjsonpipe<GADGET_STATE>({} as GADGET_STATE, () => true)
+    const baseline = client.applyfullsync(painted)
+    const next = client.applyremote(baseline, patch)
+    expect(next?.id).toBe('board-2')
+    expect(next?.board).toBe('board-2')
+    expect(next?.layers).toEqual(['layer-b', 'control'])
   })
 })
