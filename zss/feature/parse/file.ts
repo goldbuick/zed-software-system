@@ -21,6 +21,7 @@ import { parsepetscii } from './petscii'
 import { parsezzm } from './zzm'
 import { parsebrd, parseszt, parsezzt } from './zzt'
 import { isszztworldbytes, iszztworldbytes } from './zztmagic'
+import { textfromimportbytes } from './textfromimportbytes'
 import { parsezztobj } from './zztobj'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
@@ -298,13 +299,17 @@ async function handlefiletype(
   try {
     switch (filetype) {
       case 'obj': {
-        const content = await file.text()
+        const content = textfromimportbytes(
+          new Uint8Array(await file.arrayBuffer()),
+        )
         parsezztobj(player, file.name, content)
         break
       }
       case 'txt':
       case 'ini': {
-        const content = await file.text()
+        const content = textfromimportbytes(
+          new Uint8Array(await file.arrayBuffer()),
+        )
         parsetxt(player, file.name, content)
         break
       }
@@ -349,7 +354,9 @@ async function handlefiletype(
         break
       }
       case 'zzm': {
-        const content = await file.text()
+        const content = textfromimportbytes(
+          new Uint8Array(await file.arrayBuffer()),
+        )
         parsezzm(player, content)
         break
       }

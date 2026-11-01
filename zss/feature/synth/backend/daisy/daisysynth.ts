@@ -674,6 +674,10 @@ export function createdaisysynth(
     value: number | string | number[],
   ) {
     const isrestart = config === 'restart'
+    const prev = voicecfg[index]
+    const prevtype = prev?.type
+    const prevalgo = prev?.algo
+    const prevosc = prev?.osc
     if (
       applywasmvoiceconfig(
         voicecfg,
@@ -688,6 +692,16 @@ export function createdaisysynth(
         fxsab = defaultwasmfxsab()
         pushfxstate()
       }
+      const next = voicecfg[index]
+      // Type, algo, and wave index live in zss_voices. Cold config is the other SABs.
+      if (
+        isrestart ||
+        next?.type !== prevtype ||
+        next?.algo !== prevalgo ||
+        next?.osc !== prevosc
+      ) {
+        pushplayvoicestate()
+      }
       pushcoldvoiceconfig()
     }
   }
@@ -696,7 +710,7 @@ export function createdaisysynth(
     voicecfg = defaultwasmvoicestate()
     oscconfig = defaultwasmoscconfig()
     algoconfig = defaultwasmalgoconfig()
-    pushcoldvoiceconfig()
+    pushvoicestate()
   }
 
   function getvoicecfg(): WASM_VOICE_STATE[] {
