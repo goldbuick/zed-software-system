@@ -87,17 +87,26 @@ void initengine(float sr) {
   g_engine.ready = true;
 }
 
-bool ticknoteduck(ZssVoice& v, bool gate, bool request) {
+static float noterampsec(float floorsec, float hz, bool halfcycle) {
+  if (!halfcycle || hz <= 0.f) {
+    return floorsec;
+  }
+  const float half = 0.5f / hz;
+  return std::min(kSynthNoteOnRampMaxSec, std::max(floorsec, half));
+}
+
+bool ticknoteduck(ZssVoice& v, bool gate, bool request, float hz,
+                  bool halfcycle) {
   if (!gate) {
     v.noteonpending = false;
     v.noteonfade = 0.f;
     return false;
   }
   const float sr = std::max(1.f, g_engine.sample_rate);
-  const float duckinc = 1.f / std::max(1.f, kSynthNoteOnDuckSec * sr);
-  const float fadeinc = kSynthNoteOnFadeSec > 0.f
-                            ? 1.f / std::max(1.f, kSynthNoteOnFadeSec * sr)
-                            : 1.f;
+  const float ducksec = noterampsec(kSynthNoteOnDuckSec, hz, halfcycle);
+  const float fadesec = noterampsec(kSynthNoteOnFadeSec, hz, halfcycle);
+  const float duckinc = 1.f / std::max(1.f, ducksec * sr);
+  const float fadeinc = fadesec > 0.f ? 1.f / std::max(1.f, fadesec * sr) : 1.f;
   if (request) {
     v.noteonpending = true;
   }
@@ -156,7 +165,9 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     const bool rising = gate && !v.synthgateprev;
     const bool notestrike =
         gate && striketag > 0.5f && striketag != v.synthstriketag;
-    const bool resetnow = ticknoteduck(v, gate, rising || notestrike);
+    const bool halfcycle = osctype == 1 || osctype == 10 || osctype == 20;
+    const bool resetnow =
+        ticknoteduck(v, gate, rising || notestrike, notefreq, halfcycle);
     if (resetnow) {
       v.voicephasestep = 0.f;
       v.synthosc.Reset(0.f);

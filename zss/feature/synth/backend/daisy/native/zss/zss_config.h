@@ -186,6 +186,9 @@ constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;
 constexpr float kSynthNoteOnDuckSec = 0.001f;
 constexpr float kSynthNoteOnFadeSec = 0.003f;
+/** sine / amsine / fmsine: half a cycle, held between the floors and this cap.
+ */
+constexpr float kSynthNoteOnRampMaxSec = 0.010f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
 constexpr float kReverbPostGain = 1.5f;

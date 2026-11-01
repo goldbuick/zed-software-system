@@ -117,6 +117,8 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | Constant | Value | Voice / use |
 |----------|-------|-------------|
 | `kSineVoiceGain` | 2.5 | `sine`, `amsine`, `fmsine` |
+| `kSynthNoteOnDuckSec` / `kSynthNoteOnFadeSec` | 0.001 / 0.003 | Duck / fade floors |
+| `kSynthNoteOnRampMaxSec` | 0.010 | `sine`, `amsine`, `fmsine` stretch each ramp to half a cycle, capped here |
 | `kTriangleVoiceGain` / `kSawtoothVoiceGain` | 1.23 / 1.28 | Triangle / sawtooth (+ am/fm/fat carriers) |
 | `kAmVoiceGain` | 2.0 | AM family makeup (not `amsine`) |
 | `kFmVoiceGain` | 1.0 | FM (not `fmsine`; carrier amp 1.0 in `fmcarriersample`) |
