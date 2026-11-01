@@ -8,7 +8,7 @@ export function handleflush(vm: DEVICE, message: MESSAGE): void {
   const operator = memoryreadoperator()
   doasync(vm, message.player, async () => {
     if (message.player === operator) {
-      await savestate(vm)
+      await savestate(vm, false, message.data === true)
     } else {
       await savebookmarkstate(vm, message.player)
     }

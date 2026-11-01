@@ -161,7 +161,7 @@ export async function storagewritecontent(
   longcontent: string,
   compressed: string,
   books: BOOK[],
-) {
+): Promise<boolean> {
   const isautosave = label.includes('autosave')
   if (!isautosave) {
     workstatus(SOFTWARE, player, 'save url')
@@ -181,7 +181,7 @@ export async function storagewritecontent(
     if (!label.includes('autosave')) {
       apilog(SOFTWARE, player, msg)
     }
-    return
+    return true
   }
   const fragment = await contenttohashfragment(compressed)
   if (fragment !== compressed) {
@@ -197,7 +197,9 @@ export async function storagewritecontent(
       apilog(SOFTWARE, player, msg)
     }
     document.title = label
+    return true
   }
+  return false
 }
 
 export async function storagereadvars(): Promise<Record<string, any>> {

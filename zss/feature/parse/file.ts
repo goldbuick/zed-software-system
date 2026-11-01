@@ -248,7 +248,7 @@ export async function parsezipfilelist(player: string) {
   for (let i = 0; i < ordered.length; ++i) {
     await parsewebfile(player, ordered[i])
   }
-  vmflush(SOFTWARE, player)
+  vmflush(SOFTWARE, player, true)
 }
 
 function imagemimetype(kind: string, file: File): string {
