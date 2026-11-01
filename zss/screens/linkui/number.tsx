@@ -136,11 +136,7 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
         ontap={enterediting}
       />
       {surface.active && (
-        <UserInput
-          MOVE_LEFT={down}
-          MOVE_RIGHT={up}
-          OK_BUTTON={enterediting}
-        />
+        <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={enterediting} />
       )}
     </>
   )
