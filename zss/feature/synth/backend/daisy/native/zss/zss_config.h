@@ -56,7 +56,9 @@ constexpr int kRevCombMaxLen = 4096;
 
 constexpr float kPi = 3.14159265358979323846f;
 constexpr float kTwoPi = 6.28318530718f;
-constexpr float kSineVoiceGain = 1.03f;
+/** `#synth sine`, `amsine`, and `fmsine`. Other am/fm carriers use their family
+ * gain. */
+constexpr float kSineVoiceGain = 2.5f;
 /** Makeup vs square RMS for triangle / sawtooth carriers. */
 constexpr float kTriangleVoiceGain = 1.23f;
 constexpr float kSawtoothVoiceGain = 1.28f;
@@ -182,6 +184,7 @@ constexpr float kMainCompGainReleaseSec = 0.06f;
 constexpr float kMainCompMix = 1.f;
 constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;
+constexpr float kSynthNoteOnDuckSec = 0.001f;
 constexpr float kSynthNoteOnFadeSec = 0.003f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
