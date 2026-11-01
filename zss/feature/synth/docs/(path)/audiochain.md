@@ -63,7 +63,7 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
 | bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **-15 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Main fader | `40*log10(vol × 0.25)` on `mainvolume` (offset **-36 dB**, +12 dB per doubling) | `readmainvolume()` (`kMainFaderOffsetDb`) |
 
 Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
 

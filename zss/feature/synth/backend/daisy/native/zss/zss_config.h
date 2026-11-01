@@ -146,10 +146,19 @@ constexpr float kPlayBusGain = 0.168f;
  * unity with play; prior 0.141 was calibrated to a hotter bass stem.
  */
 constexpr float kDrumBusGain = 0.338f;
-/** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
-/** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs
- * prior -35). */
-constexpr float kMainFaderOffsetDb = -15.f;
+/** Main fader: 40*log10(vol*0.25) + offset. Doubling the SAB value is +12 dB.
+ */
+/** Master `#vol` fader offset. -36 keeps `#vol` 100 at the old +18 dB anchor.
+ * `#vol` 50 is then 12 dB under 100. */
+constexpr float kMainFaderOffsetDb = -36.f;
+/** DaisySP Limiter normalizes a caught peak to 1, then multiplies by 0.7.
+ * SoftLimit(0.7) was the ceiling (~0.61, ~0.88 after 1/0.7). Makeup places
+ * that peak at full scale. Output still clamps at +/-1. */
+constexpr float kMainLimiterPad = 0.7f;
+constexpr float kMainLimiterCaught =
+    kMainLimiterPad * (27.f + kMainLimiterPad * kMainLimiterPad) /
+    (27.f + 9.f * kMainLimiterPad * kMainLimiterPad);
+constexpr float kMainLimiterMakeup = 1.f / kMainLimiterCaught;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 
@@ -159,7 +168,7 @@ constexpr float kScReleaseSec = 0.06f;
 
 constexpr float kRazzleVibratoWet = 0.02f;
 constexpr float kRazzleChorusWet = 0.25f;
-constexpr float kRazzleHissGain = 0.001f;
+constexpr float kRazzleHissGain = 0.0007f;
 constexpr float kRazzleChorusBaseSec = 0.007f;
 constexpr float kRazzleChorusDepthSec = 0.007f;
 

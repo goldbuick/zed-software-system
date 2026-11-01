@@ -150,6 +150,7 @@ void zss_process(float* out, int frames, const float* tts_in) {
       final = 0.f;
     }
     g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
+    final *= kMainLimiterMakeup;
     out[f] = clampf(final, -1.f, 1.f);
   }
 }

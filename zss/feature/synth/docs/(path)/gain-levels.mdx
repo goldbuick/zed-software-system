@@ -55,7 +55,7 @@ SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, b
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
 | `#vol` main | (JS scale) | **50** | multiplies all bus trims + board TV | Outer main |
-| `#playvol` | PLAY (0) | **90** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`) |
+| `#playvol` | PLAY (0) | **90** | `40*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`). Doubling the SAB value is +12 dB |
 | `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
@@ -69,7 +69,8 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (SAB play after main scale) |
+| `kMainFaderOffsetDb` | **-36** | Added to the 40*log10 play fader. `#vol` 100 stays near the old +18 dB anchor; `#vol` 50 is 12 dB under it |
+| `kMainLimiterMakeup` | **1 / SoftLimit(0.7)** | After the Daisy limiter. Raises the limited peak from ~0.88 to full scale (0 dBFS). Output still clamps at +/-1 |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
@@ -85,7 +86,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
 | `kRazzleChorusWet` | **0.25** | |
-| `kRazzleHissGain` | **0.001** | |
+| `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
 SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
 
