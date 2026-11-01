@@ -90,7 +90,7 @@ void updateplayvibratodepth(float vstart[kVibratoGroups],
     int end = g < 2 ? start + 2 : kVoiceCount;
     bool gated = false;
     for (int i = start; i < end; ++i) {
-      if (readctrl(off_voices() + i * kVoiceStride + 1) > 0.5f) {
+      if (voicegateopen(i)) {
         gated = true;
         break;
       }
@@ -140,7 +140,7 @@ float playvibratocents(int vi, float vfreq[kVibratoGroups]) {
   (void)vfreq;
   int group = voicefxgroup(vi);
   float send = fxsendval(group, kFxVibrato);
-  if (send <= 0.f || readctrl(off_voices() + vi * kVoiceStride + 1) <= 0.5f) {
+  if (send <= 0.f || !voicegateopen(vi)) {
     return 0.f;
   }
   if (g_engine.fxvibrato_depth <= 0.0001f) {
@@ -156,9 +156,7 @@ float playvibratocents(int vi, float vfreq[kVibratoGroups]) {
 
 float detunedhz(int vi, float freq, float detune, float vfreq[kVibratoGroups]) {
   float hz = freq > 0.f ? freq : 440.f;
-  float vib = readctrl(off_voices() + vi * kVoiceStride + 1) > 0.5f
-                  ? playvibratocents(vi, vfreq)
-                  : 0.f;
+  float vib = voicegateopen(vi) ? playvibratocents(vi, vfreq) : 0.f;
   if (vib != 0.f) {
     return hz * std::pow(2.f, (detune + vib) / 1200.f);
   }

@@ -235,6 +235,7 @@ struct MaxiCombLine {
 
 struct ZssDrumState {
   int remain = 0;
+  float dursec = 0.f;
   uint32_t prev_strike = 0;
   OnePole hp;
   BiquadState eq[3], bp;
@@ -266,6 +267,15 @@ struct ZssFxGroup {
   float rev_predelay_fb = 0.f;
   int rev_predelay_len = 0;
   float return_comp_env = 0.f;
+};
+
+/** Live #play / #bgplay gate held across SAB snapshots. */
+struct PlayLatch {
+  bool live = false;
+  bool gate = false;
+  float freq = 0.f;
+  float strike = 0.f;
+  double noteid = 0.0;
 };
 
 /** Global synth engine — voices, drums, FX groups, main dynamics */
@@ -303,6 +313,10 @@ struct ZssEngine {
   float fx_return_attack_coef = 0.f;
   float fx_return_release_coef = 0.f;
   int sampleclock = 0;
+  PlayLatch playlatch[kVoiceCount];
+  double playapplied[kPlayAppliedCap] = {};
+  int playappliedn = 0;
+  double playringgen = 0.0;
   float cached_mainvol = 0.f, cached_bggain = 0.f;
   float cached_ttsgain = 0.f;
   float cached_mainraw = 80.f, cached_bgraw = 70.f, cached_ttsraw = 100.f;

@@ -99,6 +99,7 @@ float processvoice(int vi, float vstart[kVibratoGroups],
   int algo = static_cast<int>(readctrl(base + 3));
   float detune = readctrl(base + 4);
   int osctype = static_cast<int>(readctrl(base + 5));
+  applyplayvoicelatch(vi, &freq, &gate, &detune);
 
   float atk = readctrl(cfg + 0), dec = readctrl(cfg + 1);
   float sus = readctrl(cfg + 2), rel = readctrl(cfg + 3);
