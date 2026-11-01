@@ -24,14 +24,15 @@ const PLACEHOLDER_TILES = createtiles(
   BOARD_HEIGHT,
   0,
 )
-const bank = 5
+const STRIDE = 8
 const size = BOARD_WIDTH * BOARD_HEIGHT
 for (let i = 0; i < size; ++i) {
   const x = i % BOARD_WIDTH
   const y = Math.floor(i / BOARD_WIDTH)
-  const xdiagonal = (x + y) % bank === 0
-  const ydiagonal = (x - y) % bank === 0
-  PLACEHOLDER_TILES.char[i] = xdiagonal ? 249 : ydiagonal ? 7 : 250
+  const xdiagonal = (x + y) % STRIDE === 0
+  const ydiagonal = (x - y) % STRIDE === 0
+  const speck = x % STRIDE === 4 && y % STRIDE === 2
+  PLACEHOLDER_TILES.char[i] = xdiagonal ? 249 : ydiagonal ? 7 : speck ? 250 : 0
   PLACEHOLDER_TILES.color[i] = xdiagonal
     ? COLOR.LTGRAY
     : randominteger(0, 1)
