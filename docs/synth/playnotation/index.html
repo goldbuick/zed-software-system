@@ -152,7 +152,7 @@
 <li><code>SYNTH_INVOKE</code>: <code>SYNTH_OP[] | string</code></li>
 </ul>
 <h2 id="live-onset-humanize"><a class="blume-heading-anchor" href="#live-onset-humanize">Live onset humanize</a></h2>
-<p>Live note and drum onsets get a small random jitter so grid music feels slightly organic (<code>playhumanize.ts</code>):</p>
+<p>Live note and drum onsets are applied on the audio thread at the scheduled grid time (<code>playevents.ts</code>). A small random jitter is then added so grid music stays slightly organic (<code>playhumanize.ts</code>):</p>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>
 <tr>
@@ -165,12 +165,12 @@
 <tr>
 <td><code>#play</code></td>
 <td>0–3</td>
-<td>±8 ms (<code>HUMANIZE_SEC</code>)</td>
+<td>±4 ms (<code>HUMANIZE_SEC</code>)</td>
 </tr>
 <tr>
 <td><code>#bgplay</code></td>
 <td>4–7</td>
-<td>±4 ms (<code>HUMANIZE_BGPLAY_SEC</code>)</td>
+<td>±2 ms (<code>HUMANIZE_BGPLAY_SEC</code>)</td>
 </tr>
 </tbody>
 </table></div>

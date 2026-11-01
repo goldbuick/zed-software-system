@@ -75,11 +75,11 @@ Triplet divides current duration by 3; dotted multiplies by 1.5.
 
 ## Live onset humanize
 
-Live note and drum onsets get a small random jitter so grid music feels slightly organic (`playhumanize.ts`):
+Live note and drum onsets are applied on the audio thread at the scheduled grid time (`playevents.ts`). A small random jitter is then added so grid music stays slightly organic (`playhumanize.ts`):
 
 | Surface | Channels | Peak |
 |---------|----------|------|
-| `#play` | 0–3 | ±8 ms (`HUMANIZE_SEC`) |
-| `#bgplay` | 4–7 | ±4 ms (`HUMANIZE_BGPLAY_SEC`) |
+| `#play` | 0–3 | ±4 ms (`HUMANIZE_SEC`) |
+| `#bgplay` | 4–7 | ±2 ms (`HUMANIZE_BGPLAY_SEC`) |
 
 Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.
