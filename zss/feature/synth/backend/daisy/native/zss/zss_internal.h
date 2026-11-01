@@ -29,6 +29,18 @@ int off_voicecfg();
 int off_osccfg();
 int off_algocfg();
 int off_vibrato();
+int off_playevents();
+
+/** Drop latched gates when the play-ring generation changes. */
+void syncplaygeneration();
+/** Forget applied ids that are no longer in the ring snapshot. */
+void compactplayapplied();
+/** Apply play-ring events whose time has arrived at playtimesec(). */
+void applydueplayevents();
+/** SAB gate, or the latched live gate once a play event has fired. */
+bool voicegateopen(int vi);
+/** Override freq, gate, and strike from the live play latch. */
+void applyplayvoicelatch(int vi, float* freq, bool* gate, float* detune);
 
 float readctrl(int idx);
 float fxsendval(int group, int send_idx);

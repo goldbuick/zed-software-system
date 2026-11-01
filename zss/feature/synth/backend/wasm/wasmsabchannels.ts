@@ -34,6 +34,7 @@ export const WASM_SAB_SEQ_IDX = {
   OSC_CFG: 5,
   ALGO_CFG: 6,
   VIBRATO: 7,
+  PLAY: 8,
 } as const
 
 export const WASM_VIBRATO_SAB = 'zss_vibrato'
@@ -41,6 +42,14 @@ export const WASM_VIBRATO_GROUP_COUNT = 3
 export const WASM_VIBRATO_STRIDE = 4
 export const WASM_VIBRATO_SAB_LEN =
   1 + WASM_VIBRATO_GROUP_COUNT * WASM_VIBRATO_STRIDE
+
+/** Live play-event ring. Must match zss_config.h kPlayEventsLen / playevents.ts. */
+export const WASM_PLAY_SAB = 'zss_play'
+export const WASM_PLAY_RING_CAP = 32
+export const WASM_PLAY_EVENT_STRIDE = 7
+export const WASM_PLAY_RING_HEADER = 2
+export const WASM_PLAY_SAB_LEN =
+  WASM_PLAY_RING_HEADER + WASM_PLAY_RING_CAP * WASM_PLAY_EVENT_STRIDE
 
 /** Map data-channel id → seq slot (used by sabpush after each write). */
 export const WASM_SAB_SEQ_CHANNEL_TO_IDX: Record<string, number> = {
@@ -52,6 +61,7 @@ export const WASM_SAB_SEQ_CHANNEL_TO_IDX: Record<string, number> = {
   zss_osccfg: WASM_SAB_SEQ_IDX.OSC_CFG,
   zss_algocfg: WASM_SAB_SEQ_IDX.ALGO_CFG,
   [WASM_VIBRATO_SAB]: WASM_SAB_SEQ_IDX.VIBRATO,
+  [WASM_PLAY_SAB]: WASM_SAB_SEQ_IDX.PLAY,
 }
 
 export type WASM_SAB_CHANNEL = {
@@ -69,4 +79,5 @@ export const WASM_SAB_CHANNELS: WASM_SAB_CHANNEL[] = [
   { id: 'zss_osccfg', len: WASM_OSC_CFG_SAB_LEN },
   { id: 'zss_algocfg', len: WASM_ALGO_CFG_SAB_LEN },
   { id: WASM_VIBRATO_SAB, len: WASM_VIBRATO_SAB_LEN },
+  { id: WASM_PLAY_SAB, len: WASM_PLAY_SAB_LEN },
 ]

@@ -15,6 +15,7 @@ import {
   WASM_VOICES_SAB,
   WASM_VOICE_STRIDE,
 } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
+import { SOURCE_TYPE } from 'zss/feature/synth/shared/sourcetype'
 
 function createmockenginewithmessages() {
   let clock = 0
@@ -116,6 +117,19 @@ describe('sabpush zero-copy', () => {
     const seqafter = sabseqsnapshot()
     expect(seqafter[WASM_SAB_SEQ_IDX.OSC_CFG]).toBeGreaterThan(oscbefore)
     expect(seqafter[WASM_SAB_SEQ_IDX.VOICES]).toBe(voicesbefore)
+    synth.destroy()
+  })
+
+  it('publishes steel and pluck type and algo onto zss_voices', () => {
+    const { engine, snapshot } = createmocksabengine()
+    const synth = createminsabsynth(engine)
+    synth.setvoiceconfig(0, 'steel', '')
+    synth.setvoiceconfig(1, 'pluck', '')
+    const voices = snapshot(WASM_VOICES_SAB)
+    expect(voices[2]).toBe(SOURCE_TYPE.GUITAR_VOICE)
+    expect(voices[3]).toBe(1)
+    expect(voices[WASM_VOICE_STRIDE + 2]).toBe(SOURCE_TYPE.STRING_VOICE)
+    expect(voices[WASM_VOICE_STRIDE + 3]).toBe(1)
     synth.destroy()
   })
 

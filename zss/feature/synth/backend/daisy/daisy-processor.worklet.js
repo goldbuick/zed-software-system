@@ -12,7 +12,8 @@ const DAISY_SAB_CHANNEL_OFFSET = {
   "zss_voicecfg": 185,
   "zss_osccfg": 265,
   "zss_algocfg": 433,
-  "zss_vibrato": 641
+  "zss_vibrato": 641,
+  "zss_play": 654
 }
 const DAISY_SAB_CHANNEL_LEN = {
   "zss_voices": 48,
@@ -22,7 +23,8 @@ const DAISY_SAB_CHANNEL_LEN = {
   "zss_voicecfg": 80,
   "zss_osccfg": 168,
   "zss_algocfg": 208,
-  "zss_vibrato": 13
+  "zss_vibrato": 13,
+  "zss_play": 226
 }
 // @generated-end daisy-sab-layout
 

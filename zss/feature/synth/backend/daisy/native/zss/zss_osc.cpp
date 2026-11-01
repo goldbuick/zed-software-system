@@ -22,7 +22,7 @@ float glidefreq(ZssVoice& v, int vi, float target, int type, float port) {
     return target;
   }
   if (target != v.glidetarget) {
-    bool gate = readctrl(off_voices() + vi * kVoiceStride + 1) > 0.5f;
+    bool gate = voicegateopen(vi);
     float level = voiceenvlevel(v, type);
     if (gate && level > 0.05f && v.playfreq > 0.f) {
       v.glidestart = v.playfreq;

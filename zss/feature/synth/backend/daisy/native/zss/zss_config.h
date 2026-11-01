@@ -33,9 +33,20 @@ constexpr int kVoiceCfgLen = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen = kVoiceCount * kOscCfgStride;
 constexpr int kAlgoCfgLen = kVoiceCount * kAlgoCfgStride;
 constexpr int kVibratoLen = 1 + kVibratoGroups * kVibratoStride;
+/** Live #play / #bgplay event ring. Header + cap * stride. Must match
+ * playevents.ts. */
+constexpr int kPlayRingCap = 32;
+constexpr int kPlayEventStride = 7;
+constexpr int kPlayRingHeader = 2;
+constexpr int kPlayEventsLen =
+    kPlayRingHeader + kPlayRingCap * kPlayEventStride;
+constexpr int kPlayAppliedCap = 64;
+constexpr int kPlayEventNoteOn = 1;
+constexpr int kPlayEventNoteOff = 2;
+constexpr int kPlayEventDrum = 3;
 constexpr int kControlLen = kVoicesLen + kDrumsLen + kMainLen + kFxLen +
                             kVoiceCfgLen + kOscCfgLen + kAlgoCfgLen +
-                            kVibratoLen;
+                            kVibratoLen + kPlayEventsLen;
 
 constexpr int kNoiseLfsrCount = 131072;
 constexpr int kNoiseSoftCount = 32768;

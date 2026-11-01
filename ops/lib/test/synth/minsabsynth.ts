@@ -195,6 +195,10 @@ export function createminsabsynth(engine: SabEngine) {
       config: number | string,
       value: number | string | number[] = '',
     ) {
+      const prev = voicecfg[index]
+      const prevtype = prev?.type
+      const prevalgo = prev?.algo
+      const prevosc = prev?.osc
       if (
         applywasmvoiceconfig(
           voicecfg,
@@ -205,6 +209,15 @@ export function createminsabsynth(engine: SabEngine) {
           value,
         )
       ) {
+        const next = voicecfg[index]
+        if (
+          config === 'restart' ||
+          next?.type !== prevtype ||
+          next?.algo !== prevalgo ||
+          next?.osc !== prevosc
+        ) {
+          pushplayvoicestate()
+        }
         pushcoldvoiceconfig()
         pushwasmfxsab(engine, fxsab)
       }
