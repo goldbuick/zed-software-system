@@ -6,12 +6,12 @@ import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
 import { gateoffstillactive } from 'zss/feature/synth/backend/wasm/notegate'
 import {
+  type PLAY_EVENT,
   PLAY_EVENT_DRUM,
   PLAY_EVENT_HOLD_SEC,
   PLAY_EVENT_NOTE_OFF,
   PLAY_EVENT_NOTE_ON,
   PLAY_RING_CAP,
-  type PLAY_EVENT,
   packplayring,
   sortplayevents,
 } from 'zss/feature/synth/backend/wasm/playevents'
@@ -208,11 +208,7 @@ export function createdaisysynth(
     }
     playqueue = sortplayevents(pending)
     const window = playqueue.slice(0, PLAY_RING_CAP)
-    pushwasmsabvalues(
-      maxi,
-      WASM_PLAY_SAB,
-      packplayring(playgeneration, window),
-    )
+    pushwasmsabvalues(maxi, WASM_PLAY_SAB, packplayring(playgeneration, window))
   }
 
   function enqueueplayevent(event: Omit<PLAY_EVENT, 'id'>) {

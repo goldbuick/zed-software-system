@@ -99,12 +99,7 @@ export function applyplayblock(
     if (seenids.has(event.id)) {
       continue
     }
-    const sample = playsampleindex(
-      event.when,
-      blockstart,
-      frames,
-      samplerate,
-    )
+    const sample = playsampleindex(event.when, blockstart, frames, samplerate)
     if (sample < 0) {
       continue
     }

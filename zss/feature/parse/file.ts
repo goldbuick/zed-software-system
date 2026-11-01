@@ -18,10 +18,10 @@ import { stageimageimport } from './image'
 import { parsemidi } from './midi'
 import { parsetxt } from './parsetxt'
 import { parsepetscii } from './petscii'
+import { textfromimportbytes } from './textfromimportbytes'
 import { parsezzm } from './zzm'
 import { parsebrd, parseszt, parsezzt } from './zzt'
 import { isszztworldbytes, iszztworldbytes } from './zztmagic'
-import { textfromimportbytes } from './textfromimportbytes'
 import { parsezztobj } from './zztobj'
 
 export function mimetypeofbytesread(filename: string, filebytes: Uint8Array) {
