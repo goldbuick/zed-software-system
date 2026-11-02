@@ -6705,7 +6705,7 @@ Source: https://zed.cafe/docs/memory/boardmovement
 - `./gamesend` — memorybulletcollisionlabel, memorysendtoelement
 - `./spatialqueries` — memorycheckcollision
 
-> **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`.
+> **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`. Entry rules live on that function: an open cell or another player is entered; blocking terrain refuses the move; a non-item object is sent `touch` and, when `pushdir` is set and the object is pushable, pushed one step (chain included) before the cell is checked again. `@isitem` objects are entered and sent `touch` without being pushed. A refused move keeps pushes and `touch` on the destination board. Only edge exits pass `pushdir`.
 
 ## Exports
 
@@ -7133,21 +7133,21 @@ Source: https://zed.cafe/docs/memory/playermanagement
 - `./boardelement` — memoryboardelementisobject
 - `./boardlifecycle` — memorycreateboardobjectfromkind, memorydeleteboardobject
 - `./boardlookup` — memorydeleteboardobjectnamedlookup, memorywriteboardnamed, memoryensureboardready
-- `./boardmovement` — memorycheckblockedboardobject
-- `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat
+- `./boardmovement` — memorycheckblockedboardobject, memorymoveobject
+- `./boards` — memoryinitboard, memoryreadboardbyaddress, memoryreadelementstat, memorycheckelementpushable
 - `./boardvisuals` — memoryupdateboardvisuals
 - `./bookoperations` — memoryclearflags, memoryreadflag, memoryreadflags, memorywriteflag
 - `./codepageoperations` — memoryreadcodepagedata
 - `./codepages` — memorypickcodepage
+- `./gamesend` — memorysendtoelement
 - `./runtime` — memoryhaltchip
 - `./session` — memoryisoperator, memoryreadmainbook
-- `./spatialqueries` — memorycheckcollision
 
 ## Key Exports
 
 | Export | Description |
 |--------|-------------|
-| `memorymoveplayertoboard(book, player, board, dest)` | Authoritative move; called from firmware `#goto`, edge exits, and [`vm:playermovetoboard`](../../device/vm/handlers/playermovetoboard.ts) for main-thread callers. Returns `false` if the destination is blocked. |
+| `memorymoveplayertoboard(book, player, board, dest, pushdir?)` | Authoritative move; called from firmware `#goto`, edge exits, and [`vm:playermovetoboard`](../../device/vm/handlers/playermovetoboard.ts) for main-thread callers. See entry rules below. |
 | `memoryloginplayer(player, stickyflags)` | Spawn / re-attach the player element on the title board (or current board if already present). Honors `getclimode()` to keep the headless operator off-screen. |
 | `memorylogoutplayer(player, isendgame)` | Remove the player element, clear flags, halt the chip; on endgame preserves `deaths` / `highscore`. |
 | `memoryreadplayerboard(player)` | Resolve the board the player is currently on (via `flags.board`). |
@@ -7157,6 +7157,18 @@ Source: https://zed.cafe/docs/memory/playermanagement
 | `memoryreadbookplayerboards(book)` | Returns every board (over board first when present) that has at least one active player. Used by `handleticktock` and `gadgetsynctick`. |
 | `memorywritebookplayerboard(book, player, board)` | Set `flags.board` and add/remove the player from the active list as needed. |
 | `memoryscanplayers(players)` | Reconciles an external player tracking map with the active list and any orphaned player-shaped objects. |
+
+## Cross-board entry
+
+`memorymoveplayertoboard` decides from the destination cell:
+
+- **Open cell or another player:** the player crosses.
+- **Blocking terrain:** the move is refused. The player stays on the current board.
+- **Pushable object that is not an item,** and `pushdir` is set: the object is pushed one step with `memorymoveobject` (a chain behind it moves too). If the cell is then clear, the player crosses. Otherwise the move is refused. The object is sent `touch` either way.
+- **Other non-item object:** it is sent `touch` and the move is refused. Without `pushdir`, nothing is pushed.
+- **`@isitem` object:** the player crosses onto it and it is sent `touch`. Items are not pushed.
+
+Pushes and `touch` on the destination board are kept when the move is refused. Only edge exits pass `pushdir`. `#goto`, `#boardopen`, and `vm:playermovetoboard` do not, so they never push. `touch` is sent through `memorysendtoelement`, which no-ops unless `READ_CONTEXT.board` is set. Edge exits and firmware commands run with that set. `vm:playermovetoboard` does not set it, so a touch from that path is dropped.
 
 ---
 
@@ -8435,7 +8447,7 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 | Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
 | Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
 | bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `volumetodb(vol × 0.25)` on `mainvolume` (offset **-15 dB**) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Main fader | `40*log10(vol × 0.25)` on `mainvolume` (offset **-36 dB**, +12 dB per doubling) | `readmainvolume()` (`kMainFaderOffsetDb`) |
 
 Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
 
@@ -9124,7 +9136,7 @@ SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, b
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
 | `#vol` main | (JS scale) | **50** | multiplies all bus trims + board TV | Outer main |
-| `#playvol` | PLAY (0) | **90** | `20*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`) |
+| `#playvol` | PLAY (0) | **90** | `40*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`). Doubling the SAB value is +12 dB |
 | `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
@@ -9138,7 +9150,8 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-15** | Added to play fader dB law (SAB play after main scale) |
+| `kMainFaderOffsetDb` | **-36** | Added to the 40*log10 play fader. `#vol` 100 stays near the old +18 dB anchor; `#vol` 50 is 12 dB under it |
+| `kMainLimiterMakeup` | **1 / SoftLimit(0.7)** | After the Daisy limiter. Raises the limited peak from ~0.88 to full scale (0 dBFS). Output still clamps at +/-1 |
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
@@ -9154,7 +9167,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
 | `kRazzleChorusWet` | **0.25** | |
-| `kRazzleHissGain` | **0.001** | |
+| `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
 SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
 
@@ -9184,10 +9197,12 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 
 | Constant | Value | Voice / use |
 |----------|-------|-------------|
-| `kSineVoiceGain` | 1.03 | Sine |
+| `kSineVoiceGain` | 2.5 | `sine`, `amsine`, `fmsine` |
+| `kSynthNoteOnDuckSec` / `kSynthNoteOnFadeSec` | 0.001 / 0.003 | Duck / fade floors |
+| `kSynthNoteOnRampMaxSec` | 0.010 | `sine`, `amsine`, `fmsine` stretch each ramp to half a cycle, capped here |
 | `kTriangleVoiceGain` / `kSawtoothVoiceGain` | 1.23 / 1.28 | Triangle / sawtooth (+ am/fm/fat carriers) |
-| `kAmVoiceGain` | 2.0 | AM family makeup |
-| `kFmVoiceGain` | 1.0 | FM (carrier amp 1.0 in `fmcarriersample`) |
+| `kAmVoiceGain` | 2.0 | AM family makeup (not `amsine`) |
+| `kFmVoiceGain` | 1.0 | FM (not `fmsine`; carrier amp 1.0 in `fmcarriersample`) |
 | `kAlgoOpGain` | ~0.316 (-10 dB) | Algo ops |
 | `kAlgoOutGain` | 0.95 | Algo out |
 | `kNoiseVoiceGain` | 4.5 | Noise (with `kNoiseBaseExpr` 0.19) |

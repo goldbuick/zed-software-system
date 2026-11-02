@@ -17,7 +17,7 @@
 <li><code>./spatialqueries</code> — memorycheckcollision</li>
 </ul>
 <blockquote>
-<p><strong>Cross-board moves</strong> use <a href="../playermanagement.ts"><code>memorymoveplayertoboard</code></a> on the sim VM. Firmware <code>#goto</code> and edge exits call it directly; main-thread code may emit <a href="../../device/api.ts"><code>vmplayermovetoboard</code></a> → <code>vm:playermovetoboard</code>.</p>
+<p><strong>Cross-board moves</strong> use <a href="../playermanagement.ts"><code>memorymoveplayertoboard</code></a> on the sim VM. Firmware <code>#goto</code> and edge exits call it directly; main-thread code may emit <a href="../../device/api.ts"><code>vmplayermovetoboard</code></a> → <code>vm:playermovetoboard</code>. Entry rules live on that function: an open cell or another player is entered; blocking terrain refuses the move; a non-item object is sent <code>touch</code> and, when <code>pushdir</code> is set and the object is pushable, pushed one step (chain included) before the cell is checked again. <code>@isitem</code> objects are entered and sent <code>touch</code> without being pushed. A refused move keeps pushes and <code>touch</code> on the destination board. Only edge exits pass <code>pushdir</code>.</p>
 </blockquote>
 <h2 id="exports"><a class="blume-heading-anchor" href="#exports">Exports</a></h2>
 <div class="blume-table-scroll" tabindex="0"><table>

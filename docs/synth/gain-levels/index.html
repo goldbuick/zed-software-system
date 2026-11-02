@@ -61,8 +61,8 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 <td><code>#playvol</code></td>
 <td>PLAY (0)</td>
 <td><strong>90</strong></td>
-<td><code>20*log10(vol*0.25) + kMainFaderOffsetDb</code></td>
-<td>After razzle (<code>readmainvolume</code>)</td>
+<td><code>40*log10(vol*0.25) + kMainFaderOffsetDb</code></td>
+<td>After razzle (<code>readmainvolume</code>). Doubling the SAB value is +12 dB</td>
 </tr>
 <tr>
 <td><code>#bgvol</code></td>
@@ -108,8 +108,13 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 <tbody>
 <tr>
 <td><code>kMainFaderOffsetDb</code></td>
-<td><strong>-15</strong></td>
-<td>Added to play fader dB law (SAB play after main scale)</td>
+<td><strong>-36</strong></td>
+<td>Added to the 40*log10 play fader. <code>#vol</code> 100 stays near the old +18 dB anchor; <code>#vol</code> 50 is 12 dB under it</td>
+</tr>
+<tr>
+<td><code>kMainLimiterMakeup</code></td>
+<td><strong>1 / SoftLimit(0.7)</strong></td>
+<td>After the Daisy limiter. Raises the limited peak from ~0.88 to full scale (0 dBFS). Output still clamps at +/-1</td>
 </tr>
 <tr>
 <td><code>kPlayBusGain</code></td>
@@ -188,8 +193,8 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 </tr>
 <tr>
 <td><code>kRazzleHissGain</code></td>
-<td><strong>0.001</strong></td>
-<td></td>
+<td><strong>0.0007</strong></td>
+<td>Tape hiss into the chorus. About -3 dB from the prior 0.001</td>
 </tr>
 </tbody>
 </table></div>
@@ -276,8 +281,18 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 <tbody>
 <tr>
 <td><code>kSineVoiceGain</code></td>
-<td>1.03</td>
-<td>Sine</td>
+<td>2.5</td>
+<td><code>sine</code>, <code>amsine</code>, <code>fmsine</code></td>
+</tr>
+<tr>
+<td><code>kSynthNoteOnDuckSec</code> / <code>kSynthNoteOnFadeSec</code></td>
+<td>0.001 / 0.003</td>
+<td>Duck / fade floors</td>
+</tr>
+<tr>
+<td><code>kSynthNoteOnRampMaxSec</code></td>
+<td>0.010</td>
+<td><code>sine</code>, <code>amsine</code>, <code>fmsine</code> stretch each ramp to half a cycle, capped here</td>
 </tr>
 <tr>
 <td><code>kTriangleVoiceGain</code> / <code>kSawtoothVoiceGain</code></td>
@@ -287,12 +302,12 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 <tr>
 <td><code>kAmVoiceGain</code></td>
 <td>2.0</td>
-<td>AM family makeup</td>
+<td>AM family makeup (not <code>amsine</code>)</td>
 </tr>
 <tr>
 <td><code>kFmVoiceGain</code></td>
 <td>1.0</td>
-<td>FM (carrier amp 1.0 in <code>fmcarriersample</code>)</td>
+<td>FM (not <code>fmsine</code>; carrier amp 1.0 in <code>fmcarriersample</code>)</td>
 </tr>
 <tr>
 <td><code>kAlgoOpGain</code></td>
