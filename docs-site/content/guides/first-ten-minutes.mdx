@@ -30,6 +30,8 @@ The `terminal` is the command line, or `cli`. Almost everything in Zed Cafe star
 Lines in the `terminal` can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
 :::
 
+**You'll know it worked when** the `terminal` is already open and shows `no content found`, the starter kit list, and that hint.
+
 ## Load a starter kit
 
 :::note
@@ -50,6 +52,8 @@ A starter kit is a book that comes with useful pages already made. This guide st
 :::tip
 The other kits are worth a look later. **ZZT Tool Kit** is the ZZT-style building set, with no boards of its own. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
 :::
+
+**You'll know it worked when** the page has reloaded and you are standing in a room.
 
 ## Look inside the book
 
@@ -83,6 +87,8 @@ Run these one at a time. Each one prints its results into the `terminal`.
   </Step>
 </Steps>
 
+**You'll know it worked when** `#books` shows one book marked `opened`, `#pages` lists a `[terrain]` page named `solid`, `#boards` shows a single board link, and a page opens in the `code editor` with lines that start with `@`.
+
 ## Try a command on the world
 
 You are standing on Quick Start Kit's board. The `cli` can change it while the game runs. `#put` places an element in a direction. The kind is the name of a page in this book, which is why loading a kit first matters. Pick a terrain name from `#pages` and try:
@@ -91,11 +97,13 @@ You are standing on Quick Start Kit's board. The `cli` can change it while the g
 #put north red <kind>
 ```
 
-A red element appears just north of you. A color word such as `red` goes in front of the kind. The direction can be `north`, `south`, `east`, or `west`. The next guide stays in this session. `solid` is already in Quick Start Kit.
+A color word such as `red` goes in front of the kind. The direction can be `north`, `south`, `east`, or `west`. The next guide stays in this session. `solid` is already in Quick Start Kit.
 
 :::note
 `up`, `down`, `left`, and `right` work too. They mean the same as `north`, `south`, `west`, and `east`.
 :::
+
+**You'll know it worked when** a red element sits one cell north of you.
 
 ## Save your session
 
@@ -110,6 +118,8 @@ zed.cafe will autosave every 60 seconds, but you can also manually save.
 :::note
 `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
 :::
+
+**You'll know it worked when** you reload the tab and that red element is still there.
 
 ## What you learned
 
