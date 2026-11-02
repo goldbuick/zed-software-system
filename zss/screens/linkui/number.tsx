@@ -81,15 +81,19 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
 
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
+  const valueshow = surface.active
+    ? `$BLWHITE$27$green${clamped}$BLWHITE$26`
+    : `$green${clamped}`
+
   if (surface.layout === 'terminal') {
     tokenizeandwritetextformat(
-      `$red $29 ${tcolor}$onclear ${tlabel} $green${clamped}`,
+      `$red $29 ${tcolor}$onclear ${tlabel} ${valueshow}`,
       surface.context,
       false,
     )
   } else {
     tokenizeandwritetextformat(
-      `${linkpanelstripe(surface)} $29 ${tcolor}$onclear ${tlabel} $green${clamped}`,
+      `${linkpanelstripe(surface)} $29 ${tcolor}$onclear ${tlabel} ${valueshow}`,
       surface.context,
       false,
     )
@@ -131,7 +135,9 @@ export function LinkNumber({ surface }: LinkWidgetProps) {
         area={readlinktaparea(surface)}
         ontap={enterediting}
       />
-      {surface.active && <UserInput OK_BUTTON={enterediting} />}
+      {surface.active && (
+        <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} OK_BUTTON={enterediting} />
+      )}
     </>
   )
 }

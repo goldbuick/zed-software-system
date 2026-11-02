@@ -109,7 +109,7 @@ describe('zipfile import order', () => {
     await parsezipfilelist('player')
     expect(order).toEqual(['zzt', 'chr', 'txt'])
     expect(flush).toHaveBeenCalledTimes(1)
-    expect(flush).toHaveBeenCalledWith(SOFTWARE, 'player')
+    expect(flush).toHaveBeenCalledWith(SOFTWARE, 'player', true)
     flush.mockRestore()
     toast.mockRestore()
     parsezztspy.mockRestore()

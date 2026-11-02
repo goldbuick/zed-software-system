@@ -11,11 +11,13 @@ type LinkTapTargetProps = {
   ontap?: () => void
 }
 
-/** Hidden row hit target: tap moves the cursor to the row, then runs `ontap`. */
+/** Hidden row hit target: tap moves the cursor. `ontap` runs only when that row is already active. */
 export function LinkTapTarget({ surface, area, ontap }: LinkTapTargetProps) {
   const handletap = useCallback(() => {
     surface.setcursor?.(surface.striperow)
-    ontap?.()
+    if (surface.active) {
+      ontap?.()
+    }
   }, [surface, ontap])
 
   if (!linkallowhotkeys(surface)) {

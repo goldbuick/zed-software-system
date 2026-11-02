@@ -2,6 +2,7 @@ import { DEVICE } from 'zss/device'
 import { MESSAGE, registerloginready, workstatus } from 'zss/device/api'
 import { handlebooks } from 'zss/device/vm/handlers/books'
 import { tracking } from 'zss/device/vm/state'
+import * as runtime from 'zss/memory/runtime'
 import * as session from 'zss/memory/session'
 import type { BOOK } from 'zss/memory/types'
 import { memorydecompressbooks } from 'zss/memory/utilities'
@@ -48,6 +49,7 @@ describe('handlebooks sim freeze', () => {
           resolver = resolve
         }),
     )
+    jest.spyOn(runtime, 'memoryhaltallchips').mockImplementation(() => {})
     jest.spyOn(session, 'memoryresetbooks').mockImplementation(() => {})
   })
 
@@ -88,6 +90,11 @@ describe('handlebooks sim freeze', () => {
       [minimalbook],
       minimalbook.id,
     )
+    const haltorder = jest.mocked(runtime.memoryhaltallchips).mock
+      .invocationCallOrder[0]
+    const resetorder = jest.mocked(session.memoryresetbooks).mock
+      .invocationCallOrder[0]
+    expect(haltorder).toBeLessThan(resetorder)
   })
 
   it('clears simfreeze in finally when decompress rejects', async () => {

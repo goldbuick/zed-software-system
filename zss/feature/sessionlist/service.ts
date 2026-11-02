@@ -58,7 +58,7 @@ let hostingtopic = ''
 let hostingplayers = 0
 let didlistsessions = false
 let rosterhooked = false
-let unloadhooked = false
+let pagehidehooked = false
 let sessions: SESSIONLIST_ENTRY[] = []
 
 const registry = createsessionlistregistry()
@@ -111,12 +111,12 @@ function teardownpeer() {
   sessions = []
 }
 
-function hookunload() {
-  if (unloadhooked) {
+function hookpagehide() {
+  if (pagehidehooked) {
     return
   }
-  unloadhooked = true
-  window.addEventListener('unload', () => {
+  pagehidehooked = true
+  window.addEventListener('pagehide', () => {
     peer?.destroy()
     peer = undefined
   })
@@ -358,7 +358,7 @@ function claim() {
   const current = ++serial
   teardownpeer()
   role = 'claiming'
-  hookunload()
+  hookpagehide()
   const candidate = new Peer(token, peerserveroptions())
   peer = candidate
   steptimer = setTimeout(() => {

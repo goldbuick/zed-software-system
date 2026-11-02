@@ -21,6 +21,7 @@ ZSS_CPPS=(
   "$ZSS_DIR/zss_main.cpp"
   "$ZSS_DIR/zss_sosvoices.cpp"
   "$ZSS_DIR/zss_engine.cpp"
+  "$ZSS_DIR/zss_playevents.cpp"
 )
 OUT_DIR="$REPO_ROOT/cafe/public/daisy"
 

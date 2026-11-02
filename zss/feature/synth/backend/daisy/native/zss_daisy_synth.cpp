@@ -18,6 +18,8 @@
 #include "zss/zss_internal.h"
 
 using zss_daisy::advanceplayvibratolfos;
+using zss_daisy::applydueplayevents;
+using zss_daisy::compactplayapplied;
 using zss_daisy::g_control;
 using zss_daisy::g_engine;
 using zss_daisy::initengine;
@@ -31,6 +33,7 @@ using zss_daisy::readctrl;
 using zss_daisy::readmainvolume;
 using zss_daisy::readttsvolume;
 using zss_daisy::readvibratosab;
+using zss_daisy::syncplaygeneration;
 using zss_daisy::updateplayvibratodepth;
 
 extern "C" {
@@ -85,8 +88,12 @@ void zss_process(float* out, int frames, const float* tts_in) {
     g_engine.cached_ttsgain = readttsvolume();
   }
 
+  syncplaygeneration();
+  compactplayapplied();
+
   for (int f = 0; f < frames; ++f) {
     ++g_engine.sampleclock;
+    applydueplayevents();
     updateplayvibratodepth(vstart, vend, vpeak);
     advanceplayvibratolfos(vfreq);
 
@@ -143,6 +150,7 @@ void zss_process(float* out, int frames, const float* tts_in) {
       final = 0.f;
     }
     g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
+    final *= kMainLimiterMakeup;
     out[f] = clampf(final, -1.f, 1.f);
   }
 }

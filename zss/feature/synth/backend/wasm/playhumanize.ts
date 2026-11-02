@@ -1,10 +1,10 @@
 import { randomnumber } from 'zss/mapping/number'
 
 /** Peak onset jitter for live #play (±HUMANIZE_SEC). */
-export const HUMANIZE_SEC = 0.008
+export const HUMANIZE_SEC = 0.004
 
 /** Peak onset jitter for live #bgplay SFX channels. */
-export const HUMANIZE_BGPLAY_SEC = 0.004
+export const HUMANIZE_BGPLAY_SEC = 0.002
 
 /**
  * Nudge a scheduled AudioContext onset by a small random error.

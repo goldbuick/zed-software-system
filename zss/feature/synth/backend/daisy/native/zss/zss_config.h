@@ -33,9 +33,20 @@ constexpr int kVoiceCfgLen = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen = kVoiceCount * kOscCfgStride;
 constexpr int kAlgoCfgLen = kVoiceCount * kAlgoCfgStride;
 constexpr int kVibratoLen = 1 + kVibratoGroups * kVibratoStride;
+/** Live #play / #bgplay event ring. Header + cap * stride. Must match
+ * playevents.ts. */
+constexpr int kPlayRingCap = 32;
+constexpr int kPlayEventStride = 7;
+constexpr int kPlayRingHeader = 2;
+constexpr int kPlayEventsLen =
+    kPlayRingHeader + kPlayRingCap * kPlayEventStride;
+constexpr int kPlayAppliedCap = 64;
+constexpr int kPlayEventNoteOn = 1;
+constexpr int kPlayEventNoteOff = 2;
+constexpr int kPlayEventDrum = 3;
 constexpr int kControlLen = kVoicesLen + kDrumsLen + kMainLen + kFxLen +
                             kVoiceCfgLen + kOscCfgLen + kAlgoCfgLen +
-                            kVibratoLen;
+                            kVibratoLen + kPlayEventsLen;
 
 constexpr int kNoiseLfsrCount = 131072;
 constexpr int kNoiseSoftCount = 32768;
@@ -45,7 +56,9 @@ constexpr int kRevCombMaxLen = 4096;
 
 constexpr float kPi = 3.14159265358979323846f;
 constexpr float kTwoPi = 6.28318530718f;
-constexpr float kSineVoiceGain = 1.03f;
+/** `#synth sine`, `amsine`, and `fmsine`. Other am/fm carriers use their family
+ * gain. */
+constexpr float kSineVoiceGain = 2.5f;
 /** Makeup vs square RMS for triangle / sawtooth carriers. */
 constexpr float kTriangleVoiceGain = 1.23f;
 constexpr float kSawtoothVoiceGain = 1.28f;
@@ -135,10 +148,19 @@ constexpr float kPlayBusGain = 0.168f;
  * unity with play; prior 0.141 was calibrated to a hotter bass stem.
  */
 constexpr float kDrumBusGain = 0.338f;
-/** Main fader: 20*log10(vol*0.25) + offset (see gain-levels.md). */
-/** Master `#vol` fader offset; -15 is the default-50 loudness target (+20 dB vs
- * prior -35). */
-constexpr float kMainFaderOffsetDb = -15.f;
+/** Main fader: 40*log10(vol*0.25) + offset. Doubling the SAB value is +12 dB.
+ */
+/** Master `#vol` fader offset. -36 keeps `#vol` 100 at the old +18 dB anchor.
+ * `#vol` 50 is then 12 dB under 100. */
+constexpr float kMainFaderOffsetDb = -36.f;
+/** DaisySP Limiter normalizes a caught peak to 1, then multiplies by 0.7.
+ * SoftLimit(0.7) was the ceiling (~0.61, ~0.88 after 1/0.7). Makeup places
+ * that peak at full scale. Output still clamps at +/-1. */
+constexpr float kMainLimiterPad = 0.7f;
+constexpr float kMainLimiterCaught =
+    kMainLimiterPad * (27.f + kMainLimiterPad * kMainLimiterPad) /
+    (27.f + 9.f * kMainLimiterPad * kMainLimiterPad);
+constexpr float kMainLimiterMakeup = 1.f / kMainLimiterCaught;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 
@@ -148,7 +170,7 @@ constexpr float kScReleaseSec = 0.06f;
 
 constexpr float kRazzleVibratoWet = 0.02f;
 constexpr float kRazzleChorusWet = 0.25f;
-constexpr float kRazzleHissGain = 0.001f;
+constexpr float kRazzleHissGain = 0.0007f;
 constexpr float kRazzleChorusBaseSec = 0.007f;
 constexpr float kRazzleChorusDepthSec = 0.007f;
 
@@ -162,7 +184,11 @@ constexpr float kMainCompGainReleaseSec = 0.06f;
 constexpr float kMainCompMix = 1.f;
 constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;
+constexpr float kSynthNoteOnDuckSec = 0.001f;
 constexpr float kSynthNoteOnFadeSec = 0.003f;
+/** sine / amsine / fmsine: half a cycle, held between the floors and this cap.
+ */
+constexpr float kSynthNoteOnRampMaxSec = 0.010f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
 constexpr float kReverbPostGain = 1.5f;

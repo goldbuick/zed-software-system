@@ -192,7 +192,7 @@ let signalhandshaketimer: ReturnType<typeof setTimeout> | undefined
 let signalreconnecttimer: ReturnType<typeof setTimeout> | undefined
 let signalreconnectverifytimer: ReturnType<typeof setTimeout> | undefined
 let signalretrytimer: ReturnType<typeof setTimeout> | undefined
-let netterminalunloadregistered = false
+let netterminalpagehideregistered = false
 
 const NETTERMINAL_MAX_JOINS = 10
 
@@ -260,12 +260,12 @@ function netterminalclearallschedule() {
   netterminalclearsignalretrytimer()
 }
 
-function registernetterminalunload() {
-  if (netterminalunloadregistered) {
+function registernetterminalpagehide() {
+  if (netterminalpagehideregistered) {
     return
   }
-  netterminalunloadregistered = true
-  window.addEventListener('unload', () => {
+  netterminalpagehideregistered = true
+  window.addEventListener('pagehide', () => {
     networkpeer?.disconnect()
     networkpeer = undefined
   })
@@ -749,7 +749,7 @@ function netterminalcreate(topicpeerid: string, selfpeerid?: string) {
     }
     clearpeercliquestate()
     networkpeer = new Peer(peerid, peerserveroptions())
-    registernetterminalunload()
+    registernetterminalpagehide()
 
     workstatus(SOFTWARE, player, 'peer dial')
 

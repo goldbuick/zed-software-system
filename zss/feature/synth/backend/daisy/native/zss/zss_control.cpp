@@ -20,6 +20,7 @@ int off_voicecfg() { return off_fx() + kFxLen; }
 int off_osccfg() { return off_voicecfg() + kVoiceCfgLen; }
 int off_algocfg() { return off_osccfg() + kOscCfgLen; }
 int off_vibrato() { return off_algocfg() + kAlgoCfgLen; }
+int off_playevents() { return off_vibrato() + kVibratoLen; }
 
 float readctrl(int idx) { return static_cast<float>(g_control[idx]); }
 

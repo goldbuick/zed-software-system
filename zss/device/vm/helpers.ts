@@ -40,7 +40,11 @@ function localcalendardate(d = new Date()): string {
   return `${y}-${m}-${day}`
 }
 
-export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
+export async function savestate(
+  vm: DEVICELIKE,
+  autosave?: boolean,
+  autologin?: boolean,
+) {
   const books = memoryreadbooklist()
   const mainbook = memoryreadmainbook()
   if (books.length && ispresent(mainbook)) {
@@ -55,6 +59,7 @@ export async function savestate(vm: DEVICELIKE, autosave?: boolean) {
       historylabel,
       compressed,
       getclimode() ? books : undefined,
+      autologin,
     )
   }
 }

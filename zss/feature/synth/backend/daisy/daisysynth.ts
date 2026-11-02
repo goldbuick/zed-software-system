@@ -6,6 +6,16 @@ import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { isofflineaudiocontext } from 'zss/feature/synth/backend/wasm/audiocontextutil'
 import { gateoffstillactive } from 'zss/feature/synth/backend/wasm/notegate'
 import {
+  type PLAY_EVENT,
+  PLAY_EVENT_DRUM,
+  PLAY_EVENT_HOLD_SEC,
+  PLAY_EVENT_NOTE_OFF,
+  PLAY_EVENT_NOTE_ON,
+  PLAY_RING_CAP,
+  packplayring,
+  sortplayevents,
+} from 'zss/feature/synth/backend/wasm/playevents'
+import {
   HUMANIZE_BGPLAY_SEC,
   HUMANIZE_SEC,
   humanizeonset,
@@ -52,6 +62,7 @@ import {
   WASM_DRUMS_SAB,
   WASM_DRUM_COUNT,
   WASM_DRUM_SAB_LEN,
+  WASM_PLAY_SAB,
   WASM_VOICES_SAB,
   WASM_VOICE_STRIDE,
 } from 'zss/feature/synth/backend/wasm/wasmsabchannels'
@@ -180,12 +191,45 @@ export function createdaisysynth(
     recordisrendering: 0,
   }
   const scheduler = createwasmplayscheduler(maxi)
-  if (!isofflineaudiocontext(maxi.audioContext)) {
+  let playqueue: PLAY_EVENT[] = []
+  let playeventid = 1
+  let playgeneration = 0
+  const liveplayring = !isofflineaudiocontext(maxi.audioContext)
+
+  function flushplayring() {
+    const now = maxi.audioContext.currentTime
+    const hold = now - PLAY_EVENT_HOLD_SEC
+    const pending: PLAY_EVENT[] = []
+    for (let i = 0; i < playqueue.length; i++) {
+      const event = playqueue[i]
+      if (event.when >= hold) {
+        pending.push(event)
+      }
+    }
+    playqueue = sortplayevents(pending)
+    const window = playqueue.slice(0, PLAY_RING_CAP)
+    pushwasmsabvalues(maxi, WASM_PLAY_SAB, packplayring(playgeneration, window))
+  }
+
+  function enqueueplayevent(event: Omit<PLAY_EVENT, 'id'>) {
+    playqueue.push({ ...event, id: playeventid })
+    playeventid += 1
+    flushplayring()
+  }
+
+  function clearplayring() {
+    playqueue = []
+    playgeneration += 1
+    flushplayring()
+  }
+
+  if (liveplayring) {
     // After boot, waitfordaisyready clears port.onmessage. Listen for DSP ticks
-    // so note-on/off keep firing when Safari throttles main-thread timers.
+    // so the event ring refills and the pacer runs when Safari throttles timers.
     maxi.audioWorkletNode.port.addEventListener('message', (event: Event) => {
       const data = (event as MessageEvent).data as { zss_dsp_tick?: number }
       if (data?.zss_dsp_tick) {
+        flushplayring()
         scheduler.pump()
       }
     })
@@ -364,6 +408,9 @@ export function createdaisysynth(
 
   function clearschedules() {
     scheduler.clear()
+    if (liveplayring) {
+      clearplayring()
+    }
     notestrikebychan.clear()
     activegatebychan.clear()
     pacercount = 0
@@ -391,6 +438,17 @@ export function createdaisysynth(
 
   function scheduledrum(when: number, drumid: number, dursec: number) {
     if (drumid < 0 || drumid >= WASM_DRUM_COUNT) {
+      return
+    }
+    if (liveplayring) {
+      enqueueplayevent({
+        kind: PLAY_EVENT_DRUM,
+        chan: drumid,
+        when,
+        param: dursec,
+        noteid: 0,
+        strike: 0,
+      })
       return
     }
     scheduler.schedule(when, () => {
@@ -446,6 +504,29 @@ export function createdaisysynth(
       voicetype === SOURCE_TYPE.GUITAR_VOICE
     const strikedetune =
       voicetype === SOURCE_TYPE.BELLS ? detune : velocitytypes ? 1 : strike
+
+    if (liveplayring) {
+      enqueueplayevent({
+        kind: PLAY_EVENT_NOTE_ON,
+        chan,
+        when,
+        param: freq,
+        noteid,
+        strike: strikedetune,
+      })
+      enqueueplayevent({
+        kind: PLAY_EVENT_NOTE_OFF,
+        chan,
+        when: endwhen,
+        param: 0,
+        noteid,
+        strike: 0,
+      })
+      scheduler.schedule(when, () => {
+        schedulevibratoworklet(voiceindexfxgroup(chan), when, durationsec)
+      })
+      return
+    }
 
     scheduler.schedule(when, () => {
       activegatebychan.set(chan, noteid)
@@ -589,6 +670,10 @@ export function createdaisysynth(
     value: number | string | number[],
   ) {
     const isrestart = config === 'restart'
+    const prev = voicecfg[index]
+    const prevtype = prev?.type
+    const prevalgo = prev?.algo
+    const prevosc = prev?.osc
     if (
       applywasmvoiceconfig(
         voicecfg,
@@ -603,6 +688,16 @@ export function createdaisysynth(
         fxsab = defaultwasmfxsab()
         pushfxstate()
       }
+      const next = voicecfg[index]
+      // Type, algo, and wave index live in zss_voices. Cold config is the other SABs.
+      if (
+        isrestart ||
+        next?.type !== prevtype ||
+        next?.algo !== prevalgo ||
+        next?.osc !== prevosc
+      ) {
+        pushplayvoicestate()
+      }
       pushcoldvoiceconfig()
     }
   }
@@ -611,7 +706,7 @@ export function createdaisysynth(
     voicecfg = defaultwasmvoicestate()
     oscconfig = defaultwasmoscconfig()
     algoconfig = defaultwasmalgoconfig()
-    pushcoldvoiceconfig()
+    pushvoicestate()
   }
 
   function getvoicecfg(): WASM_VOICE_STATE[] {

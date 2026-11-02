@@ -112,6 +112,7 @@ int drumlength(int i, float dursec) {
 
 void retriggerdrum(int i, float dursec) {
   ZssDrumState& d = g_engine.drums[i];
+  d.dursec = dursec;
   d.remain = drumlength(i, dursec);
   d.hp.Reset();
   biquadreset(d.bp);
@@ -125,7 +126,7 @@ int drumadvance(int i) {
   if (d.remain <= 0) {
     return -1;
   }
-  float dursec = readctrl(off_drums() + kDrumCount + i);
+  float dursec = d.dursec;
   int len = drumlength(i, dursec);
   int age = len - d.remain;
   --d.remain;

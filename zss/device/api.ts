@@ -564,18 +564,25 @@ export function registersavemem(
   historylabel: string,
   compressedbooks: string,
   books?: BOOK[],
+  login?: boolean,
 ) {
   // Browser hash save only needs the string; omit BOOK[] to avoid hub clone.
   // Climode / node storage still passes books when required.
+  // Login is a trailing true only when requested, so unflagged saves keep today's payload.
   if (books) {
     device.emit(player, 'register:savemem', [
       historylabel,
       compressedbooks,
       books,
+      login,
     ])
     return
   }
-  device.emit(player, 'register:savemem', [historylabel, compressedbooks])
+  device.emit(player, 'register:savemem', [
+    historylabel,
+    compressedbooks,
+    login,
+  ])
 }
 
 export function registerscreenshot(device: DEVICELIKE, player: string) {
@@ -880,7 +887,11 @@ export function vmfindany(device: DEVICELIKE, player: string) {
   device.emit(player, 'vm:findany')
 }
 
-export function vmflush(device: DEVICELIKE, player: string) {
+export function vmflush(device: DEVICELIKE, player: string, login?: boolean) {
+  if (login) {
+    device.emit(player, 'vm:flush', true)
+    return
+  }
   device.emit(player, 'vm:flush')
 }
 

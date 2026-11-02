@@ -22,7 +22,7 @@ float glidefreq(ZssVoice& v, int vi, float target, int type, float port) {
     return target;
   }
   if (target != v.glidetarget) {
-    bool gate = readctrl(off_voices() + vi * kVoiceStride + 1) > 0.5f;
+    bool gate = voicegateopen(vi);
     float level = voiceenvlevel(v, type);
     if (gate && level > 0.05f && v.playfreq > 0.f) {
       v.glidestart = v.playfreq;
@@ -213,9 +213,8 @@ static float oscshapemakeup(int shape) {
 }
 
 float synthwavegain(int osc) {
-  // ONLY applies to #synth sine (not am/fm/fat sine — those match via family
-  // gain)
-  if (osc == 1) {
+  // sine, amsine, fmsine. fatsine stays on the fat family gain.
+  if (osc == 1 || osc == 10 || osc == 20) {
     return kSineVoiceGain;
   }
   if (osc == 2) {
