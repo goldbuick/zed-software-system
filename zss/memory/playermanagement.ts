@@ -25,8 +25,15 @@ import {
   memoryensureboardready,
   memorywriteboardnamed,
 } from './boardlookup'
-import { memorycheckblockedboardobject } from './boardmovement'
-import { memoryreadboardbyaddress, memoryreadelementstat } from './boards'
+import {
+  memorycheckblockedboardobject,
+  memorymoveobject,
+} from './boardmovement'
+import {
+  memorycheckelementpushable,
+  memoryreadboardbyaddress,
+  memoryreadelementstat,
+} from './boards'
 import { memoryupdateboardvisuals } from './boardvisuals'
 import {
   memoryclearflags,
@@ -37,6 +44,7 @@ import {
   memorywriteflag,
 } from './bookoperations'
 import { memoryreadcodepagedata } from './codepageoperations'
+import { memorysendtoelement } from './gamesend'
 import { memoryhaltchip } from './runtime'
 import {
   memoryisoperator,
@@ -45,7 +53,6 @@ import {
   memoryreadmainbook,
   memorywritemainbook,
 } from './session'
-import { memorycheckcollision } from './spatialqueries'
 import {
   BOARD,
   BOARD_HEIGHT,
@@ -110,6 +117,7 @@ export function memorymoveplayertoboard(
   player: string,
   board: string,
   dest: PT,
+  pushdir?: PT,
 ) {
   // current board
   const currentboard = memoryreadplayerboard(player)
@@ -139,39 +147,61 @@ export function memorymoveplayertoboard(
   memoryensureboardready(destboard)
 
   // read target spot
-  const maybeobject = memorycheckblockedboardobject(
+  let maybeobject = memorycheckblockedboardobject(
     destboard,
     COLLISION.ISWALK,
     dest,
     true,
   )
+  const touchtarget = memoryboardelementisobject(maybeobject)
+    ? maybeobject
+    : undefined
+  const isitem = !!memoryreadelementstat(touchtarget, 'item')
 
-  // blocked by non-object
-  if (!ispresent(maybeobject) && !memoryboardelementisobject(maybeobject)) {
-    const terraincollision = memoryreadelementstat(maybeobject, 'collision')
-    if (memorycheckcollision(COLLISION.ISWALK, terraincollision)) {
-      return false
+  // push pushable non-item objects along the entry direction
+  if (ispresent(touchtarget) && ispresent(pushdir) && !isitem) {
+    const pusherpt = {
+      x: dest.x - pushdir.x,
+      y: dest.y - pushdir.y,
+    }
+    if (memorycheckelementpushable(pusherpt, touchtarget)) {
+      memorymoveobject(book, destboard, touchtarget, {
+        x: dest.x + pushdir.x,
+        y: dest.y + pushdir.y,
+      })
+      maybeobject = memorycheckblockedboardobject(
+        destboard,
+        COLLISION.ISWALK,
+        dest,
+        true,
+      )
     }
   }
 
-  // unlink from current board; keep runtime (category / kinddata) for dest
-  memoryunlinkboardobject(currentboard, element.id)
+  // blocked by terrain or a non-item object that did not move
+  const blocked = ispresent(maybeobject) && !isitem
+  if (!blocked) {
+    // unlink from current board; keep runtime (category / kinddata) for dest
+    memoryunlinkboardobject(currentboard, element.id)
 
-  // add to dest board
-  element.x = dest.x
-  element.y = dest.y
-  destboard.objects[element.id] = element
+    // add to dest board
+    element.x = dest.x
+    element.y = dest.y
+    destboard.objects[element.id] = element
 
-  // add to dest board named index
-  memorywriteboardnamed(destboard, element)
+    // add to dest board named index
+    memorywriteboardnamed(destboard, element)
 
-  // updating tracking
-  memorywriteflag(book, player, 'enterx', dest.x)
-  memorywriteflag(book, player, 'entery', dest.y)
-  memorywritebookplayerboard(book, player, destboard.id)
+    // updating tracking
+    memorywriteflag(book, player, 'enterx', dest.x)
+    memorywriteflag(book, player, 'entery', dest.y)
+    memorywritebookplayerboard(book, player, destboard.id)
+  }
 
-  // we did move
-  return true
+  if (ispresent(touchtarget)) {
+    memorysendtoelement(element, touchtarget, 'touch')
+  }
+  return !blocked
 }
 
 function bookplayerreadboardids(book: MAYBE<BOOK>) {

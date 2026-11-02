@@ -210,9 +210,12 @@ float pianovoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
   // Abutting note-ons keep gate high; retrigger hammer / epfm on pitch change.
   const bool pitchstrike =
       gate && v.pianogateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
-  if (trigger || pitchstrike) {
+  const bool resetnow = ticknoteduck(v, gate, trigger || pitchstrike);
+  if (resetnow) {
     trigger = true;
     v.voiceenv.retrigger();
+  } else {
+    trigger = false;
   }
   v.karplushzprev = gate ? hz : 0.f;
 
@@ -290,10 +293,13 @@ float timpanivoice(ZssVoice& v, float hz, bool gate, int cfg, float velocity) {
   v.timpanigateprev = gate;
   const bool pitchstrike =
       gate && v.timpanigateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
-  if (trigger || pitchstrike) {
+  const bool resetnow = ticknoteduck(v, gate, trigger || pitchstrike);
+  if (resetnow) {
     trigger = true;
     v.timpanipitch = 1.f;
     v.voiceenv.retrigger();
+  } else {
+    trigger = false;
   }
   v.karplushzprev = gate ? hz : 0.f;
   if (gate) {
@@ -420,10 +426,13 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
   // Offline note abutting keeps gate high across note-ons; retrigger on pitch.
   const bool pitchstrike =
       gate && v.guitargateprev && std::fabs(hz - v.karplushzprev) > 0.5f;
-  if (trigger || pitchstrike) {
+  const bool resetnow = ticknoteduck(v, gate, trigger || pitchstrike);
+  if (resetnow) {
     v.stringvoice.Reset();
     v.voiceenv.retrigger();
     trigger = true;
+  } else {
+    trigger = false;
   }
   v.karplushzprev = gate ? hz : 0.f;
   // Amp envelope follows gate so note-off releases (Karplus alone can hang).

@@ -6,6 +6,7 @@ import { tracking } from 'zss/device/vm/state'
 import { getclimode } from 'zss/feature/detect'
 import { isarray, isstring } from 'zss/mapping/types'
 import { memorydeserializesnapshot } from 'zss/memory/memorysnapshotio'
+import { memoryhaltallchips } from 'zss/memory/runtime'
 import {
   memoryreadoperator,
   memoryresetbooks,
@@ -38,6 +39,7 @@ export function handlebooks(vm: DEVICE, message: MESSAGE): void {
         books = decompressed.books
         maybemain = decompressed.main
       }
+      memoryhaltallchips()
       memoryresetbooks(books, maybemain)
       registerloginready(vm, message.player)
     } finally {

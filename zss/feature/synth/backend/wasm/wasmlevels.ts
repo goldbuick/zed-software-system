@@ -83,4 +83,4 @@ export const WASM_RAZZLE_CHORUS_WET = 0.25
 export const WASM_RAZZLE_CHORUS_DEPTH_SEC = 0.007
 
 /** Always-on tape bed — very quiet. */
-export const WASM_RAZZLE_HISS_GAIN = 0.001
+export const WASM_RAZZLE_HISS_GAIN = 0.0007

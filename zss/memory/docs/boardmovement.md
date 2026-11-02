@@ -22,7 +22,7 @@ title: boardmovement.ts
 - `./gamesend` — memorybulletcollisionlabel, memorysendtoelement
 - `./spatialqueries` — memorycheckcollision
 
-> **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`.
+> **Cross-board moves** use [`memorymoveplayertoboard`](../playermanagement.ts) on the sim VM. Firmware `#goto` and edge exits call it directly; main-thread code may emit [`vmplayermovetoboard`](../../device/api.ts) → `vm:playermovetoboard`. Entry rules live on that function: an open cell or another player is entered; blocking terrain refuses the move; a non-item object is sent `touch` and, when `pushdir` is set and the object is pushable, pushed one step (chain included) before the cell is checked again. `@isitem` objects are entered and sent `touch` without being pushed. A refused move keeps pushes and `touch` on the destination board. Only edge exits pass `pushdir`.
 
 ## Exports
 

@@ -104,6 +104,15 @@ void retriggerdrum(int i, float dursec);
 float applyfxgroup(float sig, int group);
 void refreshfxderived(int group);
 
+/** Ramp `noteonfade` down when `request` is set. Returns true on the silent
+ * sample where the caller should reset, then ramps back up. Floors are 1 ms
+ * down and 3 ms up. `halfcycle` (sine, amsine, fmsine) stretches each ramp to
+ * half of `hz`, capped at 10 ms. Gate off clears the pending reset. An
+ * already-silent voice resets immediately.
+ */
+bool ticknoteduck(ZssVoice& v, bool gate, bool request, float hz = 0.f,
+                  bool halfcycle = false);
+
 float readmainvolume();
 float readbgplayvolume();
 float readttsvolume();

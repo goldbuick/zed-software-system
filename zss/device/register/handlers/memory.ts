@@ -1,5 +1,5 @@
 import type { DEVICE } from 'zss/device'
-import { apierror, workstatus } from 'zss/device/api'
+import { apierror, registerloginready, workstatus } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { itchiopublish } from 'zss/feature/itchiopublish'
@@ -39,19 +39,23 @@ export function handlesavemem(device: DEVICE, message: MESSAGE): void {
     if (!isarray(message.data)) {
       return
     }
-    const [maybelabel, maybecontent, maybebooks] = message.data
+    const [maybelabel, maybecontent, maybebooks, maybelogin] = message.data
     if (!isstring(maybelabel) || !isstring(maybecontent)) {
       return
     }
-    const books =
-      isarray(maybebooks) && maybebooks.every(isbook) ? maybebooks : []
-    await storagewritecontent(
+    const hasbooks = isarray(maybebooks) && maybebooks.every(isbook)
+    const books = hasbooks ? maybebooks : []
+    const login = hasbooks ? maybelogin === true : maybebooks === true
+    const wrote = await storagewritecontent(
       message.player,
       maybelabel,
       maybecontent,
       maybecontent,
       books,
     )
+    if (login && wrote) {
+      registerloginready(device, message.player)
+    }
   })
 }
 

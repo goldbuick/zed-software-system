@@ -14,6 +14,7 @@ function memorytryexitaddress(
   elementid: string,
   address: string,
   destpt: PT,
+  pushdir: PT,
 ): boolean {
   if (memorytryjoindestination(elementid, address)) {
     return true
@@ -29,7 +30,7 @@ function memorytryexitaddress(
   if (!ispresent(mainbook)) {
     return false
   }
-  memorymoveplayertoboard(mainbook, elementid, destboard.id, destpt)
+  memorymoveplayertoboard(mainbook, elementid, destboard.id, destpt, pushdir)
   return true
 }
 
@@ -40,28 +41,48 @@ export function memoryplayerblockedbyedge(
 ) {
   const elementid = element.id ?? ''
   if (dest.x < 0) {
-    return memorytryexitaddress(elementid, board?.exitwest ?? '', {
-      x: BOARD_WIDTH - 1,
-      y: dest.y,
-    })
+    return memorytryexitaddress(
+      elementid,
+      board?.exitwest ?? '',
+      {
+        x: BOARD_WIDTH - 1,
+        y: dest.y,
+      },
+      { x: -1, y: 0 },
+    )
   }
   if (dest.x >= BOARD_WIDTH) {
-    return memorytryexitaddress(elementid, board?.exiteast ?? '', {
-      x: 0,
-      y: dest.y,
-    })
+    return memorytryexitaddress(
+      elementid,
+      board?.exiteast ?? '',
+      {
+        x: 0,
+        y: dest.y,
+      },
+      { x: 1, y: 0 },
+    )
   }
   if (dest.y < 0) {
-    return memorytryexitaddress(elementid, board?.exitnorth ?? '', {
-      x: dest.x,
-      y: BOARD_HEIGHT - 1,
-    })
+    return memorytryexitaddress(
+      elementid,
+      board?.exitnorth ?? '',
+      {
+        x: dest.x,
+        y: BOARD_HEIGHT - 1,
+      },
+      { x: 0, y: -1 },
+    )
   }
   if (dest.y >= BOARD_HEIGHT) {
-    return memorytryexitaddress(elementid, board?.exitsouth ?? '', {
-      x: dest.x,
-      y: 0,
-    })
+    return memorytryexitaddress(
+      elementid,
+      board?.exitsouth ?? '',
+      {
+        x: dest.x,
+        y: 0,
+      },
+      { x: 0, y: 1 },
+    )
   }
   return false
 }

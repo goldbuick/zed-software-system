@@ -158,7 +158,8 @@ struct ZssVoice {
   float glidestart = 440.f, glidetarget = 440.f;
   int glidetotal = 0, glideremain = 0;
   float voicephasestep = 0.f;
-  float noteonfade = 1.f;
+  float noteonfade = 0.f;
+  bool noteonpending = false;
   bool synthgateprev = false, gateprev = false, noiseprev = false;
   float synthschedhz = 0.f;
   float synthstriketag = 0.f;
