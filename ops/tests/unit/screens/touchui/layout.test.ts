@@ -50,6 +50,18 @@ describe('readtouchscreenlayout', () => {
     expect(layout.dockrow).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
   })
 
+  it('gives the editor the visible rows and no dock', () => {
+    const layout = readtouchscreenlayout({
+      ...BASE,
+      totalcols: 40,
+      totalrows: 70,
+      saferows: 30,
+      keyboardopen: true,
+      editoropen: true,
+    })
+    expect(layout).toEqual({ rows: 30, dockcols: 40, dockrows: 0, dockrow: 0 })
+  })
+
   it('drops the dock and uses saferows while typing', () => {
     const layout = readtouchscreenlayout({
       ...BASE,

@@ -1,3 +1,4 @@
+import type { ThreeEvent } from '@react-three/fiber'
 import { JSX, ReactNode } from 'react'
 import { clamp } from 'zss/mapping/number'
 import { ismac } from 'zss/words/system'
@@ -20,10 +21,11 @@ type Props = {
   color?: number
   x?: number
   y?: number
+  z?: number
   width?: number
   height?: number
   children?: ReactNode
-  onClick?: () => void
+  onClick?: (event: ThreeEvent<MouseEvent>) => void
   onScroll?: (deltay: number) => void
 } & JSX.IntrinsicElements['group']
 
@@ -34,6 +36,7 @@ export function Scrollable({
   cursor = 'pointer',
   x = 0,
   y = 0,
+  z = 0,
   width = 30,
   height = 10,
   children,
@@ -49,6 +52,7 @@ export function Scrollable({
         visible={debug}
         x={x}
         y={y}
+        z={z}
         width={width}
         height={height}
         onClick={onClick}

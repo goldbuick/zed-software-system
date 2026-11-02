@@ -1,4 +1,6 @@
 import type { PresenceState, SharedTextHandle } from 'zss/device/modem'
+import { cellindextocodeunitoffset } from 'zss/mapping/grapheme'
+import { clamp } from 'zss/mapping/number'
 import { MAYBE, ispresent } from 'zss/mapping/types'
 import {
   type InputSelectionRange,
@@ -32,6 +34,52 @@ export function computeselection(
 ): SelectionRange {
   const r = computeselectionrange(cursor, select, strvalue)
   return { ...r, strvalueselected: r.selected }
+}
+
+export type EditorHitEdge = {
+  left: number
+  top: number
+  bottom: number
+}
+
+/**
+ * Caret for a tap on a painted editor row. Layout matches EditorRows:
+ * row y is `edge.top - yscroll + 2 + index`, the gutter is 4 cells, and
+ * code starts at `edge.left + 1 - xscroll + 4`.
+ */
+export function editorrowhitcursor(
+  cellx: number,
+  celly: number,
+  edge: EditorHitEdge,
+  xscroll: number,
+  yscroll: number,
+  findopen: boolean,
+  rows: EDITOR_CODE_ROW[],
+): number | undefined {
+  if (!rows.length) {
+    return undefined
+  }
+  if (celly <= edge.top + 1) {
+    return undefined
+  }
+  if (findopen && celly >= edge.bottom - 1) {
+    return undefined
+  }
+  const last = rows[rows.length - 1]
+  const withrows = [
+    ...rows,
+    { code: '', start: last.end + 1, end: last.end + 1 },
+  ]
+  const index = celly - (edge.top - yscroll + 2)
+  const row = withrows[index]
+  if (!ispresent(row)) {
+    return undefined
+  }
+  const text = row.code.replaceAll('\n', '')
+  const textstart = edge.left + 1 - xscroll + 4
+  const cell = Math.max(0, cellx - textstart)
+  const offset = cellindextocodeunitoffset(text, cell)
+  return clamp(row.start + offset, 0, last.end)
 }
 
 /** Editor rows split on LF. Map CR, CRLF, and unicode line separators to `\n`. */

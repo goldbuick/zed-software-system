@@ -114,12 +114,13 @@ export function ScreenUILayout() {
           )
         })}
         {inputblocked && (
+          // World z is 1: in front of the board (0), behind the editor plane (3).
           <Rect
             blocking
             visible={false}
             width={screensize.cols}
             height={screensize.rows}
-            z={600}
+            z={513}
           />
         )}
       </group>

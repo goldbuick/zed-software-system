@@ -33,6 +33,8 @@ export function readtouchscreenlayout(args: {
   hassidebar: boolean
   sidebaropen: boolean
   keyboardopen: boolean
+  /** Editor stays the same size while the soft keyboard is up. */
+  editoropen?: boolean
 }): TOUCH_SCREEN_LAYOUT {
   const {
     totalcols,
@@ -42,13 +44,15 @@ export function readtouchscreenlayout(args: {
     hassidebar,
     sidebaropen,
     keyboardopen,
+    editoropen,
   } = args
   if (!showtouchcontrols) {
     return { rows: totalrows, dockcols: 0, dockrows: 0, dockrow: 0 }
   }
   const siderows = sidebaropen && hassidebar ? PORTRAIT_SIDEBAR_OVERLAY_ROWS : 0
-  if (keyboardopen) {
-    // Full saferows for game; dock unmounted while typing.
+  // Editor sets inputblocked, which unmounts the dock. Reserving dock rows
+  // then leaves the page background in that band. Follow saferows instead.
+  if (keyboardopen || editoropen) {
     return {
       rows: Math.max(10, saferows - siderows),
       dockcols: totalcols,

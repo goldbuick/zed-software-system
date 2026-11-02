@@ -8,7 +8,7 @@ import {
   useMemo,
 } from 'react'
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
+import { useGadgetClient, useTape } from 'zss/gadget/data/zustandstores'
 import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { TouchUI } from 'zss/screens/touchui/component'
@@ -58,6 +58,9 @@ export function UserScreen({ children }: UserScreenProps) {
   const hassidebar = useGadgetClient(
     (state) => (state.gadget.sidebar?.length ?? 0) > 0,
   )
+  const editoropen = useTape(
+    (state) => state.editor.open && !state.editor.closing,
+  )
 
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
   const ch = RUNTIME.DRAW_CHAR_HEIGHT()
@@ -78,6 +81,7 @@ export function UserScreen({ children }: UserScreenProps) {
     hassidebar,
     sidebaropen,
     keyboardopen,
+    editoropen,
   })
   const docky = dockrow * ch
 
