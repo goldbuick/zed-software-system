@@ -88,7 +88,7 @@ Nested shorthand: `yarn task <group> <segment> …` (e.g. `yarn task cafe dev`).
 | `yarn task run ops:daisy:build` | Build Daisy WASM native synth | — | — | — |
 | `yarn task run ops:daisy:bundle:processor` | Bundle daisy audio worklet processor | — | — | — |
 | `yarn task run ops:daisy:fx-bus-metrics:test` | FX bus metrics offline test | — | — | — |
-| `yarn task run ops:daisy:level-issue:song:render` | Offline song render | — | — | — |
+| `yarn task run ops:daisy:level-issue:song:render` | Offline song render (default level-issue; --song dynamics-vet [--ab]) | — | — | — |
 | `yarn task run ops:daisy:level-issue:voices:render` | Voice isolation offline render | — | — | — |
 | `yarn task run ops:daisy:level-stability:test` | Level stability offline matrix | — | — | — |
 | `yarn task run ops:daisy:level-stability:test:fxmatrix` | Level stability FX matrix filter | — | — | — |

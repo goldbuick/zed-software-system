@@ -208,7 +208,8 @@ constexpr float kFxReturnCompKneeDb = 6.f;
 constexpr float kFxReturnCompAttackSec = 0.002f;
 constexpr float kFxReturnCompReleaseSec = 0.08f;
 constexpr float kFxReturnWetTrim = 1.4f;
-/** Sidechain wet mix (Tone product 0.75). Idle duck ≈ 1 + (10^(makeup/20)-1)*mix. */
+/** Sidechain wet mix (Tone product 0.75). Idle duck ≈ 1 +
+ * (10^(makeup/20)-1)*mix. */
 constexpr float kScMix = 0.75f;
 constexpr float kScTriggerFloor = 1e-5f;
 constexpr float kAutowahDefaultOct = 6.f;

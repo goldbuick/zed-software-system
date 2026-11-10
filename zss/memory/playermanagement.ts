@@ -146,22 +146,29 @@ export function memorymoveplayertoboard(
   // make sure named index is created
   memoryensureboardready(destboard)
 
+  // locals for nested place — TS does not keep outer narrowing in closures
+  const fromboard = currentboard
+  const toboard = destboard
+  const playerelement = element
+  const playerid = element.id
+  const mainbook = book
+
   function placeplayerondest() {
     // unlink from current board; keep runtime (category / kinddata) for dest
-    memoryunlinkboardobject(currentboard, element.id)
+    memoryunlinkboardobject(fromboard, playerid)
 
     // add to dest board
-    element.x = dest.x
-    element.y = dest.y
-    destboard.objects[element.id] = element
+    playerelement.x = dest.x
+    playerelement.y = dest.y
+    toboard.objects[playerid] = playerelement
 
     // add to dest board named index
-    memorywriteboardnamed(destboard, element)
+    memorywriteboardnamed(toboard, playerelement)
 
     // updating tracking
-    memorywriteflag(book, player, 'enterx', dest.x)
-    memorywriteflag(book, player, 'entery', dest.y)
-    memorywritebookplayerboard(book, player, destboard.id)
+    memorywriteflag(mainbook, player, 'enterx', dest.x)
+    memorywriteflag(mainbook, player, 'entery', dest.y)
+    memorywritebookplayerboard(mainbook, player, toboard.id)
   }
 
   // Teleport (#goto / passage / #boardopen): always place; no push, no touch.
