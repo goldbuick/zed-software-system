@@ -51,11 +51,23 @@ export function readtouchscreenlayout(args: {
   const siderows = sidebaropen && hassidebar ? PORTRAIT_SIDEBAR_OVERLAY_ROWS : 0
   // One row above the dock for the sidebar label; keep terminal out of it.
   const togglerows = hassidebar ? 1 : 0
-  const rows = totalrows - PORTRAIT_TOUCH_DOCK_ROWS - siderows - togglerows
+  // Dock sits in the bottom band and grows to match soft-keyboard height
+  // (totalrows - saferows). It is not packed into the safe area above the
+  // keyboard — when the keyboard is up it covers this same band.
+  const keyboardrows = Math.max(0, totalrows - saferows)
+  const maxdock = Math.max(
+    0,
+    totalrows - siderows - togglerows - MIN_TOUCH_CONTENT_ROWS,
+  )
+  const dockrows = Math.min(
+    maxdock,
+    Math.max(PORTRAIT_TOUCH_DOCK_ROWS, keyboardrows),
+  )
+  const rows = totalrows - dockrows - siderows - togglerows
   return {
     rows,
     dockcols: totalcols,
-    dockrows: PORTRAIT_TOUCH_DOCK_ROWS,
+    dockrows,
     dockrow: rows + siderows + togglerows,
   }
 }
