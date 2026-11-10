@@ -135,10 +135,6 @@ float stringbownoisesample(ZssVoice& v) {
   return static_cast<float>((v.noiserng >> 8) & 0xffffff) / 8388608.f - 1.f;
 }
 
-float oscmodwave(Oscillator& o, int modwave, float hz) {
-  return oscbasicwave(o, modwave, hz, kOscModWaveGain);
-}
-
 float oscwavewithphase(Oscillator& o, int wavetype, float hz, float phase,
                        ZssVoice& v) {
   if (phase == 0.f && v.voicephasestep == 0.f) {
@@ -155,10 +151,18 @@ float oscwavewithphase(Oscillator& o, int wavetype, float hz, float phase,
 float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
                       float hz, float modhz, float modidx, float moddepth,
                       int carriertype) {
-  float mod = oscmodwave(modulator, modtype, modhz) * modidx * moddepth;
-  float fmh = hz + mod * hz * kFmHzScale;
-  // Carrier at full amp; modulator already scaled by kOscModWaveGain in
-  // oscmodwave.
+  // Tone FMOscillator: f = fc + (fc * I) * m = fc * (1 + I * m), m in ±1.
+  // Full-scale mod (not kOscModWaveGain) so #synth modindex matches Tone depth.
+  const float mod =
+      oscbasicwave(modulator, modtype, modhz, 1.f) * modidx * moddepth;
+  float fmh = hz * (1.f + mod * kFmHzScale);
+  // Daisy Oscillator phase wrap is one-sided; fold through-zero like |f|.
+  if (fmh < 0.f) {
+    fmh = -fmh;
+  }
+  if (fmh < 1.f) {
+    fmh = 1.f;
+  }
   return oscbasicwave(carrier, carriertype, fmh, 1.f);
 }
 
@@ -248,7 +252,8 @@ float synthwavegain(int osc) {
 //  10–13 am*sine|square|triangle|sawtooth
 //  20–23 fm*sine|square|triangle|sawtooth
 //  30–33 fat*sine|square|triangle|sawtooth
-// partials override when zss_osccfg partialcount > 0 (#synth customN + array).
+// Partials: only basic osctypes 0-3 (custom maps to square + partials array).
+// Never let stale partialcount hijack pulse/pwm/am/fm/fat.
 float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
                   int osctype, float vfreq[kVibratoGroups]) {
   OscCfg cfg = readosccfg(vi);
@@ -258,6 +263,7 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   float harm = cfg.harmonicity > 0.f ? cfg.harmonicity : 1.f;
   int pcount =
       static_cast<int>(cfg.partialcount > 0.f ? cfg.partialcount : 0.f);
+  const bool basicpartials = pcount > 0 && osctype >= 0 && osctype <= 3;
   float sig = 0.f;
 
   if (v.modenvprev_a != cfg.modenv_a || v.modenvprev_d != cfg.modenv_d ||
@@ -269,7 +275,7 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
     v.modenvprev_r = cfg.modenv_r;
   }
 
-  if (pcount > 0) {
+  if (basicpartials) {
     sig = oscpartialsynth(v, hz, pcount, cfg.partials);
   } else if (osctype == 4) // #synth pulse
   {
@@ -291,7 +297,8 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
   } else if (osctype >= 10 && osctype <= 13) // #synth am*
   {
     float modamp = v.modenv.process(gate);
-    float modwave = oscmodwave(v.synthmod, cfg.modtype, hz * harm);
+    // Full-scale mod (±1) — matches Tone AMOscillator AudioToGain depth.
+    float modwave = oscbasicwave(v.synthmod, cfg.modtype, hz * harm, 1.f);
     int cartype = familywavetobasic(osctype - 10);
     // Tone AMOscillator: AudioToGain(mod) → 0.5 carrier when mod crosses 0.
     sig = oscbasicwave(v.synthosc, cartype, hz, 1.f) *

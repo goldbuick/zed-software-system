@@ -66,7 +66,6 @@ constexpr float kSineVoiceGain = 2.5f;
 /** Makeup vs square RMS for triangle / sawtooth carriers. */
 constexpr float kTriangleVoiceGain = 1.23f;
 constexpr float kSawtoothVoiceGain = 1.28f;
-constexpr float kOscModWaveGain = 0.1f;
 constexpr float kAmVoiceGain = 2.f;
 constexpr float kFmVoiceGain = 1.f;
 constexpr float kFatVoiceGain = 1.f;

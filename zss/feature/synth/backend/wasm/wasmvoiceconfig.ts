@@ -5,7 +5,11 @@ import { NAME } from 'zss/words/types'
 
 import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
 import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
-import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
+import {
+  applywasmoscconfig,
+  resetwasmoscconfig,
+  seedomnioscdefaults,
+} from './wasmoscconfig'
 import { type WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
@@ -705,6 +709,8 @@ export function applywasmvoiceconfig(
           osc,
         }
       }
+      // Tone OmniOscillator: new subclass defaults on each wave select.
+      seedomnioscdefaults(oscconfig, index, osc)
       if (isarray(value) || isnumber(value)) {
         applywasmoscconfig(oscconfig, index, config, value)
       }

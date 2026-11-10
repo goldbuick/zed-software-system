@@ -22,6 +22,11 @@ Params that write SAB but were ignored or wrong-field:
 | Param | Bug class |
 |-------|-----------|
 | FM `harmonicity` | DSP used `modfreq` as ratio |
+| AM `harmonicity` | Sample path used `oscmodwave` (`kOscModWaveGain` 0.1) so AM depth ~±5%; harm rate changes inaudible — use full-scale `oscbasicwave(..., 1.f)` for AM |
+| FM `modindex` | Tone FMOscillator is through-freq `f=fc*(1+I*m)` with full-scale m — not Chowning PM (PM killed fmsquare level) and not `kOscModWaveGain` 0.1 (made I 1 vs 8 hard to hear) |
+| Omni wave select | Reseed family osc defaults (`seedomnioscdefaults`); clear partials so they cannot hijack am/fm/fat/pulse |
+| `#synth phase` | Tone degrees → SAB cycles (`/360`); native reads cycles |
+| `modenv` on fm/am | Keep — Daisy extension; archive Tone wrote nonexistent `oscillator.modulationEnvelope` |
 | PWM `modfreq` | Static width only |
 | Fat `phase` / live `spread` | Ignored or apply-gated |
 | Bells / drip `#synth env` | `voiceenv` written, not multiplied |

@@ -440,7 +440,8 @@ describe('wasmvoiceconfig', () => {
     applyvoiceconfig(voices, 0, 'fatsawtooth', '', osc, algo)
     expect(applyvoiceconfig(voices, 0, 'spread', 40, osc, algo)).toBe(true)
     expect(osc[0].spread).toBe(40)
-    expect(applyvoiceconfig(voices, 0, 'phase', 0.25, osc, algo)).toBe(true)
+    // Tone OmniOscillator phase is degrees; SAB stores cycles.
+    expect(applyvoiceconfig(voices, 0, 'phase', 90, osc, algo)).toBe(true)
     expect(osc[0].phase).toBe(0.25)
     expect(applyvoiceconfig(voices, 0, 'count', 5, osc, algo)).toBe(true)
     expect(osc[0].count).toBe(5)
@@ -636,16 +637,43 @@ describe('wasmvoiceconfig', () => {
     })
   })
 
-  it('preserves fmsquare harmonicity across type switches', () => {
+  it('reseeds Omni FM defaults on wave select (Tone OmniOscillator)', () => {
     const voices = defaultwasmvoicestate()
     const osc = defaultwasmoscconfig()
     const algo = defaultwasmalgoconfig()
     applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
     applyvoiceconfig(voices, 0, 'harmonicity', 11, osc, algo)
+    applyvoiceconfig(voices, 0, 'modindex', 8, osc, algo)
     applyvoiceconfig(voices, 0, 'string', '', osc, algo)
     applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
-    expect(osc[0].harmonicity).toBe(11)
+    expect(osc[0].harmonicity).toBe(DEFAULT_WASM_OSC_CONFIG.harmonicity)
+    expect(osc[0].modindex).toBe(DEFAULT_WASM_OSC_CONFIG.modindex)
+    expect(osc[0].modtype).toBe(DEFAULT_WASM_OSC_CONFIG.modtype)
     expect(voices[0].osc).toBe(WASM_OSC_TYPE.FM_SQUARE)
+  })
+
+  it('clears partials when selecting a typed Omni wave', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'square', [1, 0.5, 0.25], osc, algo)
+    expect(osc[0].partialcount).toBe(3)
+    applyvoiceconfig(voices, 0, 'fmsquare', '', osc, algo)
+    expect(osc[0].partialcount).toBe(0)
+    expect(osc[0].partials.every((p) => p === 0)).toBe(true)
+  })
+
+  it('reseeds fat count and spread on fatsawtooth select', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'fatsawtooth', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'count', 8, osc, algo)
+    applyvoiceconfig(voices, 0, 'spread', 40, osc, algo)
+    applyvoiceconfig(voices, 0, 'sine', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'fatsawtooth', '', osc, algo)
+    expect(osc[0].count).toBe(DEFAULT_WASM_OSC_CONFIG.count)
+    expect(osc[0].spread).toBe(DEFAULT_WASM_OSC_CONFIG.spread)
   })
 
   it('restart clears envmemory and osc dormancy', () => {
