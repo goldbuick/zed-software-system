@@ -1,7 +1,7 @@
 import type { DEVICE } from 'zss/device'
 import { vmcodeaddress, vmtapeeditorclose } from 'zss/device/api'
-import type { MESSAGE } from 'zss/device/types'
 import { modemreadtextsync } from 'zss/device/modem'
+import type { MESSAGE } from 'zss/device/types'
 import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { useEditor, useTape } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'

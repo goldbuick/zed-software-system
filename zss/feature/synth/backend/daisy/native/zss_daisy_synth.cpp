@@ -26,11 +26,15 @@ using zss_daisy::initengine;
 using zss_daisy::kControlLen;
 using zss_daisy::kMainCompBypassIdx;
 using zss_daisy::kMainScBypassIdx;
+using zss_daisy::kMainScKeyMuteIdx;
 using zss_daisy::off_main;
 using zss_daisy::processvoice;
+using zss_daisy::initmainchain;
+using zss_daisy::kMainVolIdx;
 using zss_daisy::readbgplayvolume;
 using zss_daisy::readctrl;
-using zss_daisy::readmainvolume;
+using zss_daisy::readdrumvolume;
+using zss_daisy::readplayvolume;
 using zss_daisy::readttsvolume;
 using zss_daisy::readvibratosab;
 using zss_daisy::syncplaygeneration;
@@ -45,13 +49,18 @@ void zss_init(float sample_rate) {
   g_control[off_main() + 2] = 100.0;
   g_control[off_main() + kMainCompBypassIdx] = 0.0;
   g_control[off_main() + kMainScBypassIdx] = 0.0;
+  g_control[off_main() + kMainScKeyMuteIdx] = 0.0;
+  g_control[off_main() + kMainVolIdx] = 50.0;
   initengine(sample_rate > 0.f ? sample_rate : 44100.f);
-  g_engine.cached_mainvol = readmainvolume();
+  g_engine.cached_playgain = readplayvolume();
   g_engine.cached_bggain = readbgplayvolume();
   g_engine.cached_ttsgain = readttsvolume();
-  g_engine.cached_mainraw = 80.f;
+  g_engine.cached_drumgain = readdrumvolume();
+  g_engine.cached_playraw = 80.f;
   g_engine.cached_bgraw = 70.f;
   g_engine.cached_ttsraw = 100.f;
+  g_engine.cached_volraw = 50.f;
+  g_engine.playvolprev = 80.f;
 }
 
 double* zss_control_ptr() { return g_control; }
@@ -74,18 +83,27 @@ void zss_process(float* out, int frames, const float* tts_in) {
   float epoch = 0.f;
   readvibratosab(&epoch, vstart, vend, vpeak, vfreq);
 
-  float mainraw = readctrl(off_main());
+  float playraw = readctrl(off_main());
   float bgraw = readctrl(off_main() + 1);
   float ttsraw = readctrl(off_main() + 2);
-  if (mainraw != g_engine.cached_mainraw || bgraw != g_engine.cached_bgraw) {
-    g_engine.cached_mainraw = mainraw;
+  float volraw = readctrl(off_main() + kMainVolIdx);
+  if (playraw != g_engine.cached_playraw || bgraw != g_engine.cached_bgraw) {
+    if (g_engine.playvolprev <= 0.001f && playraw > 0.001f) {
+      initmainchain(g_engine.sample_rate);
+    }
+    g_engine.playvolprev = playraw;
+    g_engine.cached_playraw = playraw;
     g_engine.cached_bgraw = bgraw;
-    g_engine.cached_mainvol = mainraw <= 0.001f ? 0.f : readmainvolume();
+    g_engine.cached_playgain = playraw <= 0.001f ? 0.f : readplayvolume();
     g_engine.cached_bggain = readbgplayvolume();
   }
   if (ttsraw != g_engine.cached_ttsraw) {
     g_engine.cached_ttsraw = ttsraw;
     g_engine.cached_ttsgain = readttsvolume();
+  }
+  if (volraw != g_engine.cached_volraw) {
+    g_engine.cached_volraw = volraw;
+    g_engine.cached_drumgain = readdrumvolume();
   }
 
   syncplaygeneration();
@@ -127,7 +145,11 @@ void zss_process(float* out, int frames, const float* tts_in) {
     }
 
     float key = sidechainkey(bg * kVoiceOutGain * g_engine.cached_bggain,
-                             ttssample, g_engine.drumsidechain);
+                             ttssample,
+                             g_engine.drumsidechain * g_engine.cached_drumgain);
+    if (readctrl(off_main() + kMainScKeyMuteIdx) > 0.5f) {
+      key = 0.f;
+    }
     sidechainupdate(key);
     float duck = sidechaingain();
     if (readctrl(off_main() + kMainScBypassIdx) > 0.5f) {
@@ -135,22 +157,21 @@ void zss_process(float* out, int frames, const float* tts_in) {
     }
     g_engine.debug_duck_gain = duck;
 
-    float playbus = playfx * duck * kVoiceOutGain * kPlayBusGain;
+    float playbus = playfx * duck * kVoiceOutGain * g_engine.cached_playgain;
     float bgbus = bgfx * kVoiceOutGain * g_engine.cached_bggain;
-    float drumbus = drums * kDrumBusGain;
+    float drumbus = drums * kDrumBusGain * g_engine.cached_drumgain;
     float melodic = playbus + bgbus + ttssample;
     float dry = melodic + drumbus;
     g_engine.debug_dry_peak = std::fabs(dry);
 
     float comp = maincompressor(dry);
-    float razz = applyrazzle(comp);
-    float x = razz * g_engine.cached_mainvol;
+    float x = applyrazzle(comp);
     float final = g_engine.main_dcblock.Process(x);
     if (!std::isfinite(final)) {
       final = 0.f;
     }
+    // Peak control is Daisy Limiter only — no post makeup into +/-1.
     g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
-    final *= kMainLimiterMakeup;
     out[f] = clampf(final, -1.f, 1.f);
   }
 }

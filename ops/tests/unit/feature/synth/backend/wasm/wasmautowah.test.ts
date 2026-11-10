@@ -41,8 +41,8 @@ describe('wasmautowah', () => {
   it('uses Tone default constants', () => {
     expect(WASM_AUTOWAH_DEFAULT_BASE_FREQ).toBe(100)
     expect(WASM_AUTOWAH_DEFAULT_OCTAVES).toBe(6)
-    expect(WASM_AUTOWAH_DEFAULT_SENSITIVITY).toBe(0)
-    expect(WASM_AUTOWAH_DEFAULT_GAIN).toBe(2)
+    expect(WASM_AUTOWAH_DEFAULT_SENSITIVITY).toBe(-3)
+    expect(WASM_AUTOWAH_DEFAULT_GAIN).toBe(25)
     expect(WASM_AUTOWAH_DEFAULT_FOLLOWER).toBe(0.2)
   })
 })

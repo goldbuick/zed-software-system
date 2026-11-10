@@ -81,7 +81,9 @@ Parallel wet sends. Vibrato is pitch modulation, not a wet send. See [fx-types-r
 | DC block | Master out | `DcBlock` | cpp `zss_process()` |
 | Master trim | Level staging | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
 
-**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB.
+**Main compressor params:** threshold −28 dB, ratio 4:1, attack 3 ms, release 150 ms, knee 30 dB, applied GR slew 8 ms / 150 ms (Tone product).
+
+**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 1 ms, release 60 ms, mix 0.75, makeup **+5 dB** (Tone had +24); bg/TTS send −12 dB, drum send **−20 dB** (`kScDrumKeyDb`).
 
 **FX bus gain:** per-send linear gain from [`wasmfxstate.ts`](../../backend/wasm/wasmfxstate.ts) (`on` → 50). Echo/reverb use send×wet; **`wet_sum`** × 1.4 then the return compressor before `dry + wet_sum`. Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
 

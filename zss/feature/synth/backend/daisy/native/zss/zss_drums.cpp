@@ -244,7 +244,8 @@ float drumclap() {
   }
   float n = biquadrun(g_engine.drums[3].bp, hp, drumnoise() * amp);
   n = drumeq3(3, n, lo, mid, hi);
-  return n * kDrumGains[3];
+  // Kit gain applied in drumsout(); sidechain taps the ungained sample.
+  return n;
 }
 
 float snarepitch(bool hi, int age) {
@@ -370,7 +371,8 @@ float drumbass() {
   const float oct = std::sin(phase * 2.f * kTwoPi) * 0.42f;
   const float sub = std::sin(phase * 0.5f * kTwoPi) * 0.55f;
   const float body = drumdistort(fund + oct + sub, 0.22f);
-  return body * amp * kDrumGains[9] * dbtoamp(kDrumBassVolumeDb);
+  // Kit gain / bass volume applied in drumsout(); SC uses Tone +8 key trim.
+  return body * amp;
 }
 
 float drumcymbalmodal(int idx, int age, int len, const float ratios[6],
@@ -436,8 +438,10 @@ float drumsout() {
   sum += drumtick();
   sum += drumtweet();
   sum += drumcowbell();
+  // Clap/bass sidechain matches Tone drumaction: pre-kit-gain sample, then
+  // sidechainkey() applies kScDrumKeyDb. Audible kit still uses kDrumGains[].
   s = drumclap();
-  sum += s;
+  sum += s * kDrumGains[3];
   sc += s;
   sum += drumsnare(true);
   sum += drumwoodblock(true);
@@ -445,8 +449,8 @@ float drumsout() {
   sum += drumtom();
   sum += drumwoodblock(false);
   s = drumbass();
-  sum += s;
-  sc += s;
+  sum += s * kDrumGains[9] * dbtoamp(kDrumBassVolumeDb);
+  sc += s * dbtoamp(kScDrumBassKeyDb);
   sum += drumcrash();
   sum += drumride();
   g_engine.drumsidechain = sc;

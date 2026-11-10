@@ -42,12 +42,25 @@ title: playermanagement.ts
 
 ## Cross-board entry
 
-`memorymoveplayertoboard` decides from the destination cell:
+`memorymoveplayertoboard` splits on whether `pushdir` is set.
+
+### Teleport (no `pushdir`)
+
+Used by `#goto` (passages), `#boardopen`, and `vm:playermovetoboard`.
+
+- Always places the player at `dest`.
+- Never pushes dest objects.
+- Never sends arrival `touch`.
+- Does not refuse for blocking terrain or non-item occupants (player can co-occupy the cell).
+
+### Edge entry (`pushdir` set)
+
+Only board-edge exits pass `pushdir` (via `memorytryexitaddress`).
 
 - **Open cell or another player:** the player crosses.
 - **Blocking terrain:** the move is refused. The player stays on the current board.
-- **Pushable object that is not an item,** and `pushdir` is set: the object is pushed one step with `memorymoveobject` (a chain behind it moves too). If the cell is then clear, the player crosses. Otherwise the move is refused. The object is sent `touch` either way.
-- **Other non-item object:** it is sent `touch` and the move is refused. Without `pushdir`, nothing is pushed.
+- **Pushable object that is not an item:** pushed one step with `memorymoveobject` (a chain behind it moves too). If the cell is then clear, the player crosses. Otherwise the move is refused. The object is sent `touch` either way.
+- **Other non-item object:** sent `touch` and the move is refused.
 - **`@isitem` object:** the player crosses onto it and it is sent `touch`. Items are not pushed.
 
-Pushes and `touch` on the destination board are kept when the move is refused. Only edge exits pass `pushdir`. `#goto`, `#boardopen`, and `vm:playermovetoboard` do not, so they never push. `touch` is sent through `memorysendtoelement`, which no-ops unless `READ_CONTEXT.board` is set. Edge exits and firmware commands run with that set. `vm:playermovetoboard` does not set it, so a touch from that path is dropped.
+Pushes and arrival `touch` on the destination board are kept when an edge entry is refused. `touch` goes through `memorysendtoelement`, which no-ops unless `READ_CONTEXT.board` is set. Edge exits and firmware `#goto` run with that set; `vm:playermovetoboard` does not.

@@ -151,8 +151,8 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 |-------|--------------|--------------|
 | `basefrequency` | **100** | **100** |
 | `octaves` | **6** | **6** |
-| `sensitivity` | **0** | **0** |
-| `gain` | **2** dB | **2** dB |
+| `sensitivity` | **0** (Tone) | **−3** dB |
+| `gain` | **2** dB (Tone) | **25** dB |
 | `follower` | **0.2** s | **0.2** s |
 | `Q` | **2** (internal) | **2** hardcoded |
 | send `on` | 18 | 18 |
@@ -176,12 +176,12 @@ Tone: all buses share one `FXCHAIN.autowah` — param changes affect every bus.
 | 6 | autofilter frequency | 3 |
 | 7 | autofilter depth | 0.5 |
 | 8 | vibrato maxdelay | 0.02 |
-| 9 | autowah sensitivity | 0 |
+| 9 | autowah sensitivity | −3 |
 | 10 | vibrato depth | 0 |
 | 11 | vibrato frequency | 5 |
 | 12 | autowah basefrequency | 100 |
 | 13 | autowah octaves | 6 |
-| 14 | autowah gain | 2 |
+| 14 | autowah gain | 25 |
 | 15 | autowah follower | 0.2 |
 | 16 | autofilter basefrequency | 200 |
 | 17 | autofilter octaves | 5 |

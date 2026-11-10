@@ -20,7 +20,11 @@ import {
 } from './daisyengine'
 import { createdaisyrecordhandler } from './daisyrecordhandler'
 import { type DAISY_SYNTH, createdaisysynth } from './daisysynth'
-import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
+import {
+  isdaisymaincompbypass,
+  isdaisysidechainbypass,
+  isdaisysidechainkeymute,
+} from './flags'
 
 export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
   const engine = await ensuredaisysynthwasm()
@@ -31,6 +35,8 @@ export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
     effectivemainvolume(WASM_DEFAULT_TTS_VOLUME, WASM_DEFAULT_MAIN_VOLUME),
     isdaisymaincompbypass() ? 1 : 0,
     isdaisysidechainbypass() ? 1 : 0,
+    isdaisysidechainkeymute() ? 1 : 0,
+    WASM_DEFAULT_MAIN_VOLUME,
   )
   const synth = createdaisysynth(
     engine,
