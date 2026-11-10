@@ -2062,8 +2062,7 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
 
     function resolvesongpasses(): SONG_PASS[] {
       if (songid === 'dynamics-vet') {
-        const mod =
-          '/zss/feature/synth/backend/daisy/dynamicsvettingsong.ts'
+        const mod = '/zss/feature/synth/backend/daisy/dynamicsvettingsong.ts'
         if (ab) {
           return [
             { modulepath: mod, scenarioexport: 'dynamicsvetfullscenario' },
@@ -2081,8 +2080,7 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
       }
       return [
         {
-          modulepath:
-            '/zss/feature/synth/backend/daisy/levelissuesong.ts',
+          modulepath: '/zss/feature/synth/backend/daisy/levelissuesong.ts',
           scenarioexport: 'levelissuescenario',
           metaexport: 'levelissuesongmeta',
         },
@@ -2121,9 +2119,8 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
             PARITY_RENDER_SCRIPT_TIMEOUT_MS,
             () =>
               page.evaluate(async (spec) => {
-                const { renderdaisysongpayload } = await import(
-                  '/zss/feature/synth/backend/daisy/daisysongrender.ts'
-                )
+                const { renderdaisysongpayload } =
+                  await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
                 const mod = await import(spec.modulepath)
                 const scenario = mod[spec.scenarioexport]()
                 const songmeta = spec.metaexport

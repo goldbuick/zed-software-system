@@ -1,9 +1,9 @@
-import { estimatesequencedurationsec } from './scalecrewsong'
 import type {
   LEVEL_STABILITY_FX,
   LEVEL_STABILITY_SCENARIO,
   LEVEL_STABILITY_VOICE_CONFIG,
 } from './levelstabilitytypes'
+import { estimatesequencedurationsec } from './scalecrewsong'
 
 /** Sawtooth + port + echo song used to vet maincomp / sidechain feel. */
 export const DYNAMICS_VET_SONG_ID = 'dynamics-vet-song'
@@ -31,18 +31,8 @@ function repeatblock(lines: string[], count: number): string[] {
  * Melody-only → dual harmony → drums enter → denser drums → drums-only wind-down.
  */
 export function builddynamicsvetplaysequence(): string[] {
-  const melodya = [
-    '--sdxb#xaxfx',
-    '--sdxbxgxex',
-    '--sdx+cxdxex',
-    '--sdxgxaxbx',
-  ]
-  const melodyb = [
-    '--scxbxgxex',
-    '--scxaxfxdx',
-    '--scxax+cxdx',
-    '--scxfxgxax',
-  ]
+  const melodya = ['--sdxb#xaxfx', '--sdxbxgxex', '--sdx+cxdxex', '--sdxgxaxbx']
+  const melodyb = ['--scxbxgxex', '--scxaxfxdx', '--scxax+cxdx', '--scxfxgxax']
 
   const intro = repeatblock(
     [...repeatblock(melodya, 2), ...repeatblock(melodyb, 2)],
@@ -138,12 +128,7 @@ export function builddynamicsvetplaysequence(): string[] {
     ),
   ]
 
-  const coda = [
-    '--sdxb#xaxfx',
-    '--sdxbxgxex',
-    '--sdx+cxdxex',
-    '--sdxgxqabghb#',
-  ]
+  const coda = ['--sdxb#xaxfx', '--sdxbxgxex', '--sdx+cxdxex', '--sdxgxqabghb#']
 
   return [
     ...intro,
