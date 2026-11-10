@@ -59,9 +59,9 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 | Bus | Tone | Daisy |
 |-----|------|-------|
-| Play stem | playvolume fader | `readplayvolume()` (`40*log10-55`, `#playvol` × `#vol`) |
+| Play stem | playvolume fader | `readplayvolume()` (`60*log10-105`, `#playvol` × `#vol`) |
 | Drums | drum bus gain | `kDrumBusGain * readdrumvolume(#vol)` |
-| bgplay / TTS | `10^((40*log10(vol)-55)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
+| bgplay / TTS | `10^((60*log10(vol)-105)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
 
 Boot SAB defaults: `#vol` **50**, bus trims **90** (effective **45**), TTS trim path same.
 

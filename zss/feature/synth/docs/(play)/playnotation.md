@@ -82,4 +82,4 @@ Live note and drum onsets are applied on the audio thread at the scheduled grid 
 | `#play` | 0–3 | ±4 ms (`HUMANIZE_SEC`) |
 | `#bgplay` | 4–7 | ±2 ms (`HUMANIZE_BGPLAY_SEC`) |
 
-Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.
+Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Pitched notes also skip jitter when that voice’s `#synth port` / `portamento` is greater than zero so abutting glides stay grid-locked. Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.

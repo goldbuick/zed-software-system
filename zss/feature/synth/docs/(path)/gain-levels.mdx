@@ -43,7 +43,7 @@ flowchart LR
 
 `#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
 (`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**40** / **-55**). Doubling SAB (~`#vol` 50→100) is about **+12 dB**. Razzle is not a volume fader.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**60** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+18 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
@@ -53,7 +53,7 @@ Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: ma
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
 | `#vol` main | VOL (6) + JS scale | **50** | multiplies play/bg/tts trims; drum stem via `readdrumvolume`; board TV | Outer master |
-| `#playvol` | PLAY (0) | **90** | `40*log10(vol) - 55` | Play stem (`readplayvolume`) |
+| `#playvol` | PLAY (0) | **90** | `60*log10(vol) - 105` | Play stem (`readplayvolume`) |
 | `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |

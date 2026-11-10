@@ -2,6 +2,7 @@ import {
   HUMANIZE_BGPLAY_SEC,
   HUMANIZE_SEC,
   humanizeonset,
+  shouldhumanizeonset,
 } from 'zss/feature/synth/backend/wasm/playhumanize'
 import { gateoffstillactive } from 'zss/feature/synth/backend/wasm/notegate'
 
@@ -31,6 +32,13 @@ describe('playhumanize', () => {
     }
     expect(humanizeonset(1, rng)).toBeCloseTo(1 - HUMANIZE_SEC * 0.5, 10)
     expect(calls).toBe(1)
+  })
+
+  it('shouldhumanizeonset skips jitter when portamento is on', () => {
+    expect(shouldhumanizeonset(true, 0)).toBe(true)
+    expect(shouldhumanizeonset(true, 0.03)).toBe(false)
+    expect(shouldhumanizeonset(false, 0)).toBe(false)
+    expect(shouldhumanizeonset(false, 0.1)).toBe(false)
   })
 })
 

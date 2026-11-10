@@ -157,10 +157,10 @@ constexpr float kDrumBusGain = 1.618f;
 /** Play / bg / tts / drum (`#vol`) share SAB dB law
  * kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb
  * (readplayvolume / readbgplayvolume / readttsvolume / readdrumvolume).
- * 40 keeps #vol 50→100 ≈ +12 dB (20 was only +6). Offset holds #vol 100
- * + trim 90 near the prior 20*log10-16 absolute level. */
-constexpr float kBusVolDbPerDecade = 40.f;
-constexpr float kBusVolOffsetDb = -55.f;
+ * 60 makes #vol 50→100 ≈ +18 dB so mid is quieter while vol 100 stays
+ * ~+15 dB (offset -105). Boot stem SAB 45 ≈ -5.8 dB. */
+constexpr float kBusVolDbPerDecade = 60.f;
+constexpr float kBusVolOffsetDb = -105.f;
 
 /**
  * Sidechain makeup on the play duck path. Tone product used +24 dB (with mix
