@@ -23,14 +23,14 @@ using zss_daisy::compactplayapplied;
 using zss_daisy::g_control;
 using zss_daisy::g_engine;
 using zss_daisy::initengine;
+using zss_daisy::initmainchain;
 using zss_daisy::kControlLen;
 using zss_daisy::kMainCompBypassIdx;
 using zss_daisy::kMainScBypassIdx;
 using zss_daisy::kMainScKeyMuteIdx;
+using zss_daisy::kMainVolIdx;
 using zss_daisy::off_main;
 using zss_daisy::processvoice;
-using zss_daisy::initmainchain;
-using zss_daisy::kMainVolIdx;
 using zss_daisy::readbgplayvolume;
 using zss_daisy::readctrl;
 using zss_daisy::readdrumvolume;
@@ -144,9 +144,9 @@ void zss_process(float* out, int frames, const float* tts_in) {
       ttssample = tts_in[f] * g_engine.cached_ttsgain;
     }
 
-    float key = sidechainkey(bg * kVoiceOutGain * g_engine.cached_bggain,
-                             ttssample,
-                             g_engine.drumsidechain * g_engine.cached_drumgain);
+    float key =
+        sidechainkey(bg * kVoiceOutGain * g_engine.cached_bggain, ttssample,
+                     g_engine.drumsidechain * g_engine.cached_drumgain);
     if (readctrl(off_main() + kMainScKeyMuteIdx) > 0.5f) {
       key = 0.f;
     }

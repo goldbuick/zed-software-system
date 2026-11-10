@@ -99,16 +99,7 @@ export function UserScreen({ children }: UserScreenProps) {
         height: stickrows * ch,
       },
     }
-  }, [
-    showtouchcontrols,
-    marginx,
-    marginy,
-    cw,
-    ch,
-    dockcols,
-    dockrows,
-    docky,
-  ])
+  }, [showtouchcontrols, marginx, marginy, cw, ch, dockcols, dockrows, docky])
 
   useEffect(() => {
     useDeviceData.setState((state) => ({
