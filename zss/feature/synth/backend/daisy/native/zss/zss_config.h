@@ -24,12 +24,14 @@ constexpr int kVibratoStride = 4;
 
 constexpr int kVoicesLen = kVoiceCount * kVoiceStride;
 constexpr int kDrumsLen = kDrumCount * 2;
-constexpr int kMainLen = 6;
+constexpr int kMainLen = 7;
 /** zss_main SAB indices (match wasmmainsab.ts WASM_MAIN_IDX). */
 constexpr int kMainCompBypassIdx = 3;
 constexpr int kMainScBypassIdx = 4;
 /** 1 = mute sidechain key (duck stays wired at idle makeup; no triggers). */
 constexpr int kMainScKeyMuteIdx = 5;
+/** Raw `#vol` (0-100) for drum stem scale via readdrumvolume(). */
+constexpr int kMainVolIdx = 6;
 constexpr int kFxLen = kFxGroups * kFxSendCount + kFxGroups * kFxParamCount;
 constexpr int kVoiceCfgLen = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen = kVoiceCount * kOscCfgStride;
@@ -136,35 +138,29 @@ constexpr float kVoiceOutGain = 1.f;
  * re-tune, then yarn daisy-regression:test (local; CI runs Jest only).
  *
  *   kEnvDecayTauScale / kEnvReleaseTauScale  → yarn synth-env-parity:test:full
- *   kPlayBusGain / kDrumBusGain             → yarn play-drum-balance:test:full
+ *   kDrumBusGain                            → yarn play-drum-balance:test:full
  *   kScMix (+ kScMakeupDb below)            → yarn sidechain-parity:test:full
  */
 constexpr float kEnvDecayTauScale = 0.700f;
 constexpr float kEnvReleaseTauScale = 0.060f;
 
-/** Drive into main compressor. ~3 dB quieter than 0.238 so square does not
- * overpower drums; drum stem unchanged.
+/** Retired from live play stem (play uses shared SAB dB law). Kept so
+ * play-drum-balance:calibrate can still rewrite this symbol.
  */
-constexpr float kPlayBusGain = 0.168f;
-/** Stem-balanced vs play. After kick trim, mid-kit (hi snare proxy) sits near
- * unity with play; prior 0.141 was calibrated to a hotter bass stem.
+constexpr float kPlayBusGain = 1.000f;
+/** Stem-balanced vs play (play stem uses shared SAB dB law like bg/tts).
+ * Mid-kit (hi snare proxy) sits near unity with play.
  */
-constexpr float kDrumBusGain = 0.338f;
-/** Main fader: 40*log10(vol*0.25) + offset. Doubling the SAB value is +12 dB.
- */
-/** Master `#vol` fader offset. -36 keeps `#vol` 100 at the old +18 dB anchor.
- * `#vol` 50 is then 12 dB under 100. */
-constexpr float kMainFaderOffsetDb = -36.f;
-/** DaisySP Limiter normalizes a caught peak to 1, then multiplies by 0.7.
- * SoftLimit(0.7) was the ceiling (~0.61, ~0.88 after 1/0.7). Makeup places
- * that peak at full scale. Output still clamps at +/-1. */
-constexpr float kMainLimiterPad = 0.7f;
-constexpr float kMainLimiterCaught =
-    kMainLimiterPad * (27.f + kMainLimiterPad * kMainLimiterPad) /
-    (27.f + 9.f * kMainLimiterPad * kMainLimiterPad);
-constexpr float kMainLimiterMakeup = 1.f / kMainLimiterCaught;
-/** TTS and bgplay share the same SAB dB law (see readttsvolume /
- * readbgplayvolume). */
+constexpr float kDrumBusGain = 1.618f;
+/** Post-limiter makeup removed: output leans on DaisySP Limiter alone, then a
+ * safety +/-1 clamp. (Old pad/SoftLimit makeup pushed peaks back to 0 dBFS.) */
+/** Play / bg / tts / drum (`#vol`) share SAB dB law
+ * kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb
+ * (readplayvolume / readbgplayvolume / readttsvolume / readdrumvolume).
+ * 40 keeps #vol 50→100 ≈ +12 dB (20 was only +6). Offset holds #vol 100
+ * + trim 90 near the prior 20*log10-16 absolute level. */
+constexpr float kBusVolDbPerDecade = 40.f;
+constexpr float kBusVolOffsetDb = -55.f;
 
 /**
  * Sidechain makeup on the play duck path. Tone product used +24 dB (with mix
@@ -181,8 +177,9 @@ constexpr float kRazzleHissGain = 0.0007f;
 constexpr float kRazzleChorusBaseSec = 0.007f;
 constexpr float kRazzleChorusDepthSec = 0.007f;
 
-/** Tone product Compressor (-28 / 4:1 / 3ms / 150ms / knee 30). */
-constexpr float kMainCompThresholdDb = -28.f;
+/** Main compressor (-24 / 4:1 / 3ms / 150ms / knee 30). Was Tone -28;
+ * raised so stems keep more peak before the limiter. */
+constexpr float kMainCompThresholdDb = -24.f;
 constexpr float kMainCompRatio = 4.f;
 constexpr float kMainCompKneeDb = 30.f;
 constexpr float kMainCompAttackSec = 0.003f;

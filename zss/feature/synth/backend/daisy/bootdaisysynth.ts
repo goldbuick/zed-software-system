@@ -36,6 +36,7 @@ export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
     isdaisymaincompbypass() ? 1 : 0,
     isdaisysidechainbypass() ? 1 : 0,
     isdaisysidechainkeymute() ? 1 : 0,
+    WASM_DEFAULT_MAIN_VOLUME,
   )
   const synth = createdaisysynth(
     engine,

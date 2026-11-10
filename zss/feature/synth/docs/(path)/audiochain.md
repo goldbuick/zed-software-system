@@ -9,24 +9,23 @@ Builds the global audio routing and processing chain for the synth.
 ```
 playvolume ─────┐
                │
-bgplayvolume ──┼──► sidechaincompressor ──► razzlegain ──► maincompressor ──► razzledazzle ──► razzlechorus ──► mainvolume ──► destination
-ttsvolume ─────┤         ▲                        │
-               │         │                        │
-drumvolume ────┴─────────┼────────────────────────┘
+bgplayvolume ──┼──► sidechaincompressor ──► mix ──► maincompressor ──► razzle ──► destination
+ttsvolume ─────┤         ▲                  │
+               │         │                  │
+drumvolume ────┴─────────┼──────────────────┘
                          │
 drumaction ──────────────┘
-altaction ────────────────────────────────────────────────────────────────────────────┘
-                         │
-hiss (pink noise) ───────┘
+altaction (SC key) ──────┘
+hiss (in razzle) ─────────────────────────────────────────┘
 ```
 
-`razzlegain` sums ducked play with bg, TTS, and drums before the main compressor.
+Stem faders (`readplayvolume` / `readbgplayvolume` / `readttsvolume` / `readdrumvolume`) scale each bus into the mix. `#vol` scales play/bg/tts via effective SAB trims and drums via SAB VOL. Razzle is post-compressor bed only (not a master fader).
 
 ## Components
 
 ### Main Compressor
 
-- **Threshold:** -28 dB
+- **Threshold:** -24 dB (was Tone -28; less GR so peaks stay hotter into the limiter)
 - **Ratio:** 4:1
 - **Attack / release:** 3 ms / 150 ms (RMS envelope detector; Tone product release)
 - **Applied gain slew:** 8 ms attack / 150 ms release (`comp_gain_smooth`, separate from detector)
@@ -34,7 +33,7 @@ hiss (pink noise) ───────┘
 - **Knee:** 30 dB soft knee (Tone product `Compressor`; full width around threshold via `compressorskneedb`)
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
-- **Tone:** `Tone.Compressor` after `razzlegain` — threshold -28, ratio 4, attack 3 ms, release 150 ms, knee 30
+- **Tone reference:** `Tone.Compressor` was -28 / 4 / 3 ms / 150 ms / knee 30
 - **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders (`yarn notepop:render:ab`)
 
 ### Sidechain Compressor
@@ -60,12 +59,11 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 | Bus | Tone | Daisy |
 |-----|------|-------|
-| Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
-| Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
-| bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `40*log10(vol × 0.25)` on `mainvolume` (offset **-36 dB**, +12 dB per doubling) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Play stem | playvolume fader | `readplayvolume()` (`40*log10-55`, `#playvol` × `#vol`) |
+| Drums | drum bus gain | `kDrumBusGain * readdrumvolume(#vol)` |
+| bgplay / TTS | `10^((40*log10(vol)-55)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
 
-Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
+Boot SAB defaults: `#vol` **50**, bus trims **90** (effective **45**), TTS trim path same.
 
 ### Broadcast Destination
 

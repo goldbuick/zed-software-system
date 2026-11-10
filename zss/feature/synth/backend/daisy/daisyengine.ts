@@ -98,6 +98,7 @@ function pushdaisymainvolumes(maxi: DaisyEngine) {
     compbypass,
     scbypass,
     sckeymute,
+    daisyvol,
   ])
 }
 
@@ -300,6 +301,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     compbypass,
     scbypass,
     sckeymute,
+    daisyvol,
   )
   initwasmfxsab(engine)
   daisybootedbuildid = DAISY_BUILD_ID
@@ -363,6 +365,7 @@ export function startisolateddaisydsp(
     compbypass,
     scbypass,
     sckeymute,
+    daisyvol,
   )
   initwasmfxsab(engine)
 }

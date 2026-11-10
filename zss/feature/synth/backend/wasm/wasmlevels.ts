@@ -47,7 +47,7 @@ function volumetodb(value: number) {
 export const WASM_DRUM_BUS_DB = volumetodb(100) + 10
 export const WASM_DRUM_BUS_GAIN = Math.pow(10, WASM_DRUM_BUS_DB / 20)
 
-/** Tone playvolume: volumetodb(20) (Daisy kPlayBusGain). */
+/** Tone playvolume: volumetodb(20) (legacy; Daisy play stem uses SAB dB law). */
 export const WASM_PLAY_BUS_DB = volumetodb(20)
 export const WASM_PLAY_BUS_GAIN = Math.pow(10, WASM_PLAY_BUS_DB / 20)
 
