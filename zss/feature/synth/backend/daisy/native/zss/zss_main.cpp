@@ -53,7 +53,7 @@ void initrazzlechain(float sr) {
 
 float sidechainkey(float bg, float tts, float drumtap) {
   const float sc_send_trim = dbtoamp(-12.f);
-  const float sc_drum_trim = dbtoamp(-28.f);
+  const float sc_drum_trim = dbtoamp(kScDrumKeyDb);
   float trigger = 0.f;
   trigger += std::fabs(bg) * sc_send_trim;
   trigger += std::fabs(tts) * sc_send_trim;
@@ -122,27 +122,34 @@ float razzledelay(float* buf, int& pos, int len, float in, float delaysec) {
 }
 
 float compressorskneedb(float dbover, float ratio, float kneedb) {
-  if (dbover <= 0.f) {
-    return 0.f;
-  }
+  // Soft knee spans threshold +/- halfknee. GR is always >= 0 and meets the
+  // hard knee at +halfknee: GR = dbover * (1 - 1/ratio).
   if (kneedb <= 0.f) {
+    if (dbover <= 0.f) {
+      return 0.f;
+    }
     return dbover - dbover / ratio;
   }
   const float halfknee = kneedb * 0.5f;
+  if (dbover <= -halfknee) {
+    return 0.f;
+  }
+  const float slope = 1.f - 1.f / ratio;
   if (dbover < halfknee) {
     const float x = dbover + halfknee;
-    return x * x / (2.f * kneedb) * (1.f / ratio - 1.f);
+    return x * x / (2.f * kneedb) * slope;
   }
-  return dbover - dbover / ratio;
+  return dbover * slope;
 }
 
 float maincomptargetgain() {
-  const float thresh = std::pow(10.f, kMainCompThresholdDb / 20.f);
-  float dbover = 20.f * std::log10(g_engine.comp_env / thresh);
-  if (dbover < 0.f) {
-    dbover = 0.f;
+  if (g_engine.comp_env <= 0.f) {
+    return 1.f;
   }
-  float reduced = compressorskneedb(dbover, kMainCompRatio, kMainCompKneeDb);
+  const float thresh = std::pow(10.f, kMainCompThresholdDb / 20.f);
+  const float dbover = 20.f * std::log10(g_engine.comp_env / thresh);
+  const float reduced =
+      compressorskneedb(dbover, kMainCompRatio, kMainCompKneeDb);
   return std::pow(10.f, -reduced / 20.f);
 }
 

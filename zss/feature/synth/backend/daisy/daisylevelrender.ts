@@ -87,6 +87,7 @@ function applyscenariomainbussab(
     WASM_DEFAULT_TTS_VOLUME,
     scenario.maincompbypass ? 1 : 0,
     scenario.sidechainbypass ? 1 : 0,
+    0,
   ])
 }
 

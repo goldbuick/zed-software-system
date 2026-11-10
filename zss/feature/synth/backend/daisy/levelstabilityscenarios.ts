@@ -1,6 +1,11 @@
 import type { SYNTH_NOTE_ENTRY } from 'zss/feature/synth/playnotation'
 import { tonenotationseconds } from 'zss/feature/synth/playnotation'
 
+import {
+  dynamicsvetfullscenario,
+  dynamicsvetnocompscenario,
+  dynamicsvetnoscenario,
+} from './dynamicsvettingsong'
 import { FX_MATRIX_SCENARIOS } from './fxlevelscenarios'
 import type { LEVEL_STABILITY_SCENARIO } from './levelstabilitytypes'
 import {
@@ -146,6 +151,9 @@ export const LEVEL_STABILITY_SCENARIOS: LEVEL_STABILITY_SCENARIO[] = [
     durationsec: 2.5,
     voiceconfig: 'square',
   },
+  dynamicsvetfullscenario(),
+  dynamicsvetnocompscenario(),
+  dynamicsvetnoscenario(),
   ...FX_MATRIX_SCENARIOS,
 ]
 
@@ -197,6 +205,11 @@ export function filterlevelstabilityscenarios(
   if (filter === 'fxmatrix') {
     return LEVEL_STABILITY_SCENARIOS.filter((item) =>
       item.id.startsWith('fxmatrix-'),
+    )
+  }
+  if (filter === 'dynamics-vet') {
+    return LEVEL_STABILITY_SCENARIOS.filter((item) =>
+      item.id.startsWith('dynamics-vet-'),
     )
   }
   const one = findlevelstabilityscenario(filter)

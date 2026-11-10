@@ -166,6 +166,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.ZSS_DAISY_NO_SIDECHAIN': JSON.stringify(
         process.env.ZSS_DAISY_NO_SIDECHAIN ?? '',
       ),
+      'import.meta.env.ZSS_DAISY_NO_SC_KEY': JSON.stringify(
+        process.env.ZSS_DAISY_NO_SC_KEY ?? '',
+      ),
       'import.meta.env.ZSS_DAISY_NO_MAIN_COMP': JSON.stringify(
         process.env.ZSS_DAISY_NO_MAIN_COMP ?? '',
       ),

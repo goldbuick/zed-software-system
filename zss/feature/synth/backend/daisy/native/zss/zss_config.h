@@ -24,10 +24,12 @@ constexpr int kVibratoStride = 4;
 
 constexpr int kVoicesLen = kVoiceCount * kVoiceStride;
 constexpr int kDrumsLen = kDrumCount * 2;
-constexpr int kMainLen = 5;
+constexpr int kMainLen = 6;
 /** zss_main SAB indices (match wasmmainsab.ts WASM_MAIN_IDX). */
 constexpr int kMainCompBypassIdx = 3;
 constexpr int kMainScBypassIdx = 4;
+/** 1 = mute sidechain key (duck stays wired at idle makeup; no triggers). */
+constexpr int kMainScKeyMuteIdx = 5;
 constexpr int kFxLen = kFxGroups * kFxSendCount + kFxGroups * kFxParamCount;
 constexpr int kVoiceCfgLen = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen = kVoiceCount * kOscCfgStride;
@@ -164,8 +166,13 @@ constexpr float kMainLimiterMakeup = 1.f / kMainLimiterCaught;
 /** TTS and bgplay share the same SAB dB law (see readttsvolume /
  * readbgplayvolume). */
 
-constexpr float kScMakeupDb = 12.f;
-constexpr float kScAttackSec = 0.005f;
+/**
+ * Sidechain makeup on the play duck path. Tone product used +24 dB (with mix
+ * 0.75 ≈ +22 dB idle play); that buried drums. Trying +5 dB.
+ */
+constexpr float kScMakeupDb = 5.f;
+/** Duck onset — Tone product was 5 ms; 1 ms so drum hits punch the play bus. */
+constexpr float kScAttackSec = 0.001f;
 constexpr float kScReleaseSec = 0.06f;
 
 constexpr float kRazzleVibratoWet = 0.02f;
@@ -174,13 +181,14 @@ constexpr float kRazzleHissGain = 0.0007f;
 constexpr float kRazzleChorusBaseSec = 0.007f;
 constexpr float kRazzleChorusDepthSec = 0.007f;
 
+/** Tone product Compressor (-28 / 4:1 / 3ms / 150ms / knee 30). */
 constexpr float kMainCompThresholdDb = -28.f;
 constexpr float kMainCompRatio = 4.f;
-constexpr float kMainCompKneeDb = 6.f;
+constexpr float kMainCompKneeDb = 30.f;
 constexpr float kMainCompAttackSec = 0.003f;
-constexpr float kMainCompReleaseSec = 0.08f;
+constexpr float kMainCompReleaseSec = 0.15f;
 constexpr float kMainCompGainAttackSec = 0.008f;
-constexpr float kMainCompGainReleaseSec = 0.06f;
+constexpr float kMainCompGainReleaseSec = 0.15f;
 constexpr float kMainCompMix = 1.f;
 constexpr float kMainCompSilenceFloor = 1e-4f;
 constexpr float kMainCompSilenceDecay = 0.9995f;
@@ -200,8 +208,8 @@ constexpr float kFxReturnCompKneeDb = 6.f;
 constexpr float kFxReturnCompAttackSec = 0.002f;
 constexpr float kFxReturnCompReleaseSec = 0.08f;
 constexpr float kFxReturnWetTrim = 1.4f;
-/** Sidechain duck depth — yarn sidechain-parity:test:full */
-constexpr float kScMix = 0.50f;
+/** Sidechain wet mix (Tone product 0.75). Idle duck ≈ 1 + (10^(makeup/20)-1)*mix. */
+constexpr float kScMix = 0.75f;
 constexpr float kScTriggerFloor = 1e-5f;
 constexpr float kAutowahDefaultOct = 6.f;
 constexpr float kAutowahDefaultGain = 2.f;
@@ -215,6 +223,11 @@ constexpr float kDrumGains[kDrumCount] = {
 constexpr float kDrumCowbellVolumeDb = 8.f;
 /** Kick makeup; was +6 dB (Tone Membrane volume) but sat too hot vs kit. */
 constexpr float kDrumBassVolumeDb = 0.f;
+/** Tone MembraneSynth `volume: 8` into drumaction only — not the audible kit.
+ */
+constexpr float kScDrumBassKeyDb = 8.f;
+/** Clap/bass key bus into detector (Tone drumaction was −28; trying −20). */
+constexpr float kScDrumKeyDb = -20.f;
 
 enum VoiceType {
   kSynth = 0,

@@ -2011,7 +2011,6 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
   try {
     const {
       path,
-      readFileSync,
       writeFileSync,
       launchparitybrowser,
       parityhosturl,
@@ -2020,78 +2019,154 @@ async function rundaisyrunsongofflinerender(ctx: TaskContext): Promise<number> {
       withscripttimeout,
       RENDERS_FIXTURES_DIR,
     } = await loaddaisyparityruntime()
-    const { levelissuescenario, levelissuesongmeta } =
-      await import('zss/feature/synth/backend/daisy/levelissuesong.ts')
+    const { PARITY_RENDER_SCRIPT_TIMEOUT_MS } =
+      await import('tasks/lib/parity/parity-timeouts.ts')
     /**
-     * Offline render of the user level-issue song → WAV + metrics report.
+     * Offline song render → WAV + metrics.
      *
      * Usage:
-     *   yarn level-issue-song:render
-     *
-     * Outputs:
-     *   ops/public/renders/level-issue-song.wav
-     *   ops/public/renders/level-issue-song.json
-     *   ops/public/renders/level-issue-song.txt
+     *   yarn task run ops:daisy:level-issue:song:render
+     *   yarn task run ops:daisy:level-issue:song:render --song=dynamics-vet
+     *   yarn task run ops:daisy:level-issue:song:render --song=dynamics-vet --ab
      */
 
-    const ROOT = ctx.root
     const PROJECT = ctx.root
     const PORT = 9880
     const OUTDIR = RENDERS_FIXTURES_DIR
+    function readsongid(argv: string[]): string {
+      for (let i = 0; i < argv.length; i++) {
+        const arg = argv[i]
+        if (arg.startsWith('--song=')) {
+          return arg.slice('--song='.length) || 'level-issue'
+        }
+        if (arg === '--song') {
+          const next = argv[i + 1]
+          if (next && !next.startsWith('-')) {
+            return next
+          }
+        }
+      }
+      if (argv.includes('dynamics-vet')) {
+        return 'dynamics-vet'
+      }
+      return 'level-issue'
+    }
+    const songid = readsongid(ctx.args)
+    const ab = ctx.args.includes('--ab')
+
+    type SONG_PASS = {
+      modulepath: string
+      scenarioexport: string
+      metaexport?: string
+    }
+
+    function resolvesongpasses(): SONG_PASS[] {
+      if (songid === 'dynamics-vet') {
+        const mod =
+          '/zss/feature/synth/backend/daisy/dynamicsvettingsong.ts'
+        if (ab) {
+          return [
+            { modulepath: mod, scenarioexport: 'dynamicsvetfullscenario' },
+            { modulepath: mod, scenarioexport: 'dynamicsvetnoscenario' },
+            { modulepath: mod, scenarioexport: 'dynamicsvetnocompscenario' },
+          ]
+        }
+        return [
+          {
+            modulepath: mod,
+            scenarioexport: 'dynamicsvetfullscenario',
+            metaexport: 'dynamicsvetmeta',
+          },
+        ]
+      }
+      return [
+        {
+          modulepath:
+            '/zss/feature/synth/backend/daisy/levelissuesong.ts',
+          scenarioexport: 'levelissuescenario',
+          metaexport: 'levelissuesongmeta',
+        },
+      ]
+    }
 
     async function main() {
       fs.mkdirSync(OUTDIR, { recursive: true })
-
-      const meta = levelissuesongmeta()
-      console.log('Song meta:', JSON.stringify(meta, null, 2))
+      const passes = resolvesongpasses()
+      console.log(`Song render: ${songid}${ab ? ' (A/B)' : ''}`)
 
       const parity = await startparityvite(PROJECT, PORT)
       const browser = await launchparitybrowser()
       try {
-        const page = await browser.newPage()
-        page.setDefaultTimeout(600_000)
-        console.log('Rendering in browser (this may take several minutes)…')
-        await page.goto(parityhosturl(PORT), {
-          waitUntil: 'domcontentloaded',
-        })
+        for (const pass of passes) {
+          const page = await browser.newPage()
+          page.setDefaultTimeout(PARITY_RENDER_SCRIPT_TIMEOUT_MS)
+          page.on('console', (msg) => {
+            const text = msg.text()
+            if (
+              text.startsWith('[daisy boot]') ||
+              text.startsWith('[daisy render]')
+            ) {
+              console.log(text)
+            }
+          })
+          console.log(
+            `Rendering ${pass.scenarioexport} (may take several minutes)...`,
+          )
+          await page.goto(parityhosturl(PORT), {
+            waitUntil: 'domcontentloaded',
+          })
 
-        const payload = await page.evaluate(async () => {
-          const { renderdaisysongpayload } =
-            await import('/zss/feature/synth/backend/daisy/daisysongrender.ts')
-          const { levelissuescenario } =
-            await import('/zss/feature/synth/backend/daisy/levelissuesong.ts')
-          return renderdaisysongpayload(levelissuescenario())
-        })
+          const payload = await withscripttimeout(
+            `song-render-${pass.scenarioexport}`,
+            PARITY_RENDER_SCRIPT_TIMEOUT_MS,
+            () =>
+              page.evaluate(async (spec) => {
+                const { renderdaisysongpayload } = await import(
+                  '/zss/feature/synth/backend/daisy/daisysongrender.ts'
+                )
+                const mod = await import(spec.modulepath)
+                const scenario = mod[spec.scenarioexport]()
+                const songmeta = spec.metaexport
+                  ? mod[spec.metaexport]()
+                  : undefined
+                const body = await renderdaisysongpayload(scenario)
+                return { ...body, songmeta }
+              }, pass),
+          )
+          await page.close()
 
-        const typed = payload as SONG_RENDER_PAYLOAD
-        const wavpath = path.join(OUTDIR, `${typed.meta.scenarioid}.wav`)
-        const jsonpath = path.join(OUTDIR, `${typed.meta.scenarioid}.json`)
-        const txtpath = path.join(OUTDIR, `${typed.meta.scenarioid}.txt`)
+          const typed = payload as SONG_RENDER_PAYLOAD & {
+            songmeta?: unknown
+          }
+          const wavpath = path.join(OUTDIR, `${typed.meta.scenarioid}.wav`)
+          const jsonpath = path.join(OUTDIR, `${typed.meta.scenarioid}.json`)
+          const txtpath = path.join(OUTDIR, `${typed.meta.scenarioid}.txt`)
 
-        fs.writeFileSync(wavpath, Buffer.from(typed.wavbase64, 'base64'))
-        fs.writeFileSync(
-          jsonpath,
-          JSON.stringify(
-            {
-              meta: typed.meta,
-              songmeta: meta,
-              metrics: typed.metrics,
-              loudestwindows: typed.loudestwindows,
-            },
-            null,
-            2,
-          ),
-        )
-        fs.writeFileSync(txtpath, typed.report)
+          fs.writeFileSync(wavpath, Buffer.from(typed.wavbase64, 'base64'))
+          fs.writeFileSync(
+            jsonpath,
+            JSON.stringify(
+              {
+                meta: typed.meta,
+                songmeta: typed.songmeta,
+                metrics: typed.metrics,
+                loudestwindows: typed.loudestwindows,
+              },
+              null,
+              2,
+            ),
+          )
+          fs.writeFileSync(txtpath, typed.report)
 
-        console.log('')
-        console.log(typed.report)
-        console.log('')
-        console.log(`WAV:  ${wavpath}`)
-        console.log(`JSON: ${jsonpath}`)
-        console.log(`TXT:  ${txtpath}`)
-        console.log('')
-        console.log(`Listen: afplay ${wavpath}`)
+          console.log('')
+          console.log(typed.report)
+          console.log('')
+          console.log(`WAV:  ${wavpath}`)
+          console.log(`JSON: ${jsonpath}`)
+          console.log(`TXT:  ${txtpath}`)
+          console.log('')
+          console.log(`Listen: afplay ${wavpath}`)
+        }
       } finally {
         await browser.close()
         await stopparityvite(parity)
@@ -2490,7 +2565,8 @@ export const OPS_DAISY_TASKS: TaskDef[] = [
     run: handler(rundaisyrunfxbusmetrics),
   }),
   def('ops:daisy:level-issue:song:render', {
-    description: 'Offline song render',
+    description:
+      'Offline song render (default level-issue; --song dynamics-vet [--ab])',
     run: handler(rundaisyrunsongofflinerender),
   }),
   def('ops:daisy:level-issue:voices:render', {

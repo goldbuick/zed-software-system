@@ -74,21 +74,23 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
 | `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **12** | Sidechain makeup (`kScMakeupDb` in `zss_config.h`) |
-| `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
-| `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
-| SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
-| `kMainCompThresholdDb` | **-28** | Main compressor |
+| `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
+| `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
+| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Sidechain timing (attack faster than Tone 5 ms) |
+| SC key trims | bg/tts **-12 dB**, drums **`kScDrumKeyDb` (−20)** | Key bus only (`zss_main.cpp`) |
+| `kScDrumBassKeyDb` | **+8** | Bass into SC only (Tone MembraneSynth volume); audible kick stays `kDrumBassVolumeDb` |
+| SC clap/bass tap | pre-`kDrumGains` | `drumsout()` — kit gain is audible-only |
+| `kMainCompThresholdDb` | **-28** | Main compressor (Tone product) |
 | `kMainCompRatio` | **4** | |
-| `kMainCompKneeDb` | **6** | Soft knee (was 30; matches FX return) |
-| `kMainCompMix` | **1.0** | Full wet GR (was 0.55 parallel) |
-| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.08 | RMS detector |
-| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
+| `kMainCompKneeDb` | **30** | Soft knee (Tone `Compressor` knee) |
+| `kMainCompMix` | **1.0** | Full wet GR |
+| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.15 | RMS detector (Tone release 150 ms) |
+| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.15 | applied GR slew (release matches Tone) |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
 | `kRazzleChorusWet` | **0.25** | |
 | `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
-SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
+SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`).
 
 ## FX return bus (multi-FX)
 
@@ -160,7 +162,7 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 | Too loud at boot | `kMainFaderOffsetDb`, `WASM_DEFAULT_PLAY_VOLUME` | -- |
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
 | Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
-| Idle play too hot | `kScMakeupDb`, `kScMix` | `zss_config.h` |
+| Idle play too hot / drums buried | `kScMakeupDb`, `kScMix`, `kPlayBusGain` | `zss_config.h` |
 | Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy
