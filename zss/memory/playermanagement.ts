@@ -146,7 +146,31 @@ export function memorymoveplayertoboard(
   // make sure named index is created
   memoryensureboardready(destboard)
 
-  // read target spot
+  function placeplayerondest() {
+    // unlink from current board; keep runtime (category / kinddata) for dest
+    memoryunlinkboardobject(currentboard, element.id)
+
+    // add to dest board
+    element.x = dest.x
+    element.y = dest.y
+    destboard.objects[element.id] = element
+
+    // add to dest board named index
+    memorywriteboardnamed(destboard, element)
+
+    // updating tracking
+    memorywriteflag(book, player, 'enterx', dest.x)
+    memorywriteflag(book, player, 'entery', dest.y)
+    memorywritebookplayerboard(book, player, destboard.id)
+  }
+
+  // Teleport (#goto / passage / #boardopen): always place; no push, no touch.
+  if (!ispresent(pushdir)) {
+    placeplayerondest()
+    return true
+  }
+
+  // Edge entry: push along pushdir, refuse if still blocked, arrival touch.
   let maybeobject = memorycheckblockedboardobject(
     destboard,
     COLLISION.ISWALK,
@@ -159,7 +183,7 @@ export function memorymoveplayertoboard(
   const isitem = !!memoryreadelementstat(touchtarget, 'item')
 
   // push pushable non-item objects along the entry direction
-  if (ispresent(touchtarget) && ispresent(pushdir) && !isitem) {
+  if (ispresent(touchtarget) && !isitem) {
     const pusherpt = {
       x: dest.x - pushdir.x,
       y: dest.y - pushdir.y,
@@ -181,21 +205,7 @@ export function memorymoveplayertoboard(
   // blocked by terrain or a non-item object that did not move
   const blocked = ispresent(maybeobject) && !isitem
   if (!blocked) {
-    // unlink from current board; keep runtime (category / kinddata) for dest
-    memoryunlinkboardobject(currentboard, element.id)
-
-    // add to dest board
-    element.x = dest.x
-    element.y = dest.y
-    destboard.objects[element.id] = element
-
-    // add to dest board named index
-    memorywriteboardnamed(destboard, element)
-
-    // updating tracking
-    memorywriteflag(book, player, 'enterx', dest.x)
-    memorywriteflag(book, player, 'entery', dest.y)
-    memorywritebookplayerboard(book, player, destboard.id)
+    placeplayerondest()
   }
 
   if (ispresent(touchtarget)) {
