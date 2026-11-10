@@ -212,7 +212,8 @@ constexpr float kFxReturnWetTrim = 1.4f;
 constexpr float kScMix = 0.75f;
 constexpr float kScTriggerFloor = 1e-5f;
 constexpr float kAutowahDefaultOct = 6.f;
-constexpr float kAutowahDefaultGain = 2.f;
+constexpr float kAutowahDefaultSensDb = -3.f;
+constexpr float kAutowahDefaultGain = 25.f;
 
 constexpr float kDrumGains[kDrumCount] = {
     0.26f, 0.24f, 1.0f,  0.35f, 0.3f,  0.26f,

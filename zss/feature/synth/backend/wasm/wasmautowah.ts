@@ -1,8 +1,8 @@
 /** Tone.js AutoWah defaults — shared by SAB + unit tests. */
 export const WASM_AUTOWAH_DEFAULT_BASE_FREQ = 100
 export const WASM_AUTOWAH_DEFAULT_OCTAVES = 6
-export const WASM_AUTOWAH_DEFAULT_SENSITIVITY = 0
-export const WASM_AUTOWAH_DEFAULT_GAIN = 2
+export const WASM_AUTOWAH_DEFAULT_SENSITIVITY = -3
+export const WASM_AUTOWAH_DEFAULT_GAIN = 25
 export const WASM_AUTOWAH_DEFAULT_FOLLOWER = 0.2
 export const WASM_AUTOWAH_Q = 2
 export const WASM_AUTOWAH_SCALE_EXP = 0.5
