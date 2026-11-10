@@ -10,7 +10,6 @@ import {
 import { RUNTIME } from 'zss/config'
 import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
-import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { TouchUI } from 'zss/screens/touchui/component'
 import {
   PORTRAIT_DOCK_STICK_TOP,
@@ -45,16 +44,13 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const inputblocked = useGadgetInputBlocked()
-  const { saferows, showtouchcontrols, sidebaropen, textcapturefocused } =
-    useDeviceData(
-      useShallow((state) => ({
-        saferows: state.saferows,
-        showtouchcontrols: state.showtouchcontrols,
-        sidebaropen: state.sidebaropen,
-        textcapturefocused: state.textcapturefocused,
-      })),
-    )
+  const { saferows, showtouchcontrols, sidebaropen } = useDeviceData(
+    useShallow((state) => ({
+      saferows: state.saferows,
+      showtouchcontrols: state.showtouchcontrols,
+      sidebaropen: state.sidebaropen,
+    })),
+  )
   const hassidebar = useGadgetClient(
     (state) => (state.gadget.sidebar?.length ?? 0) > 0,
   )
@@ -66,8 +62,6 @@ export function UserScreen({ children }: UserScreenProps) {
   const rrows = viewheight / ch
   const totalcols = Math.floor(rcols)
   const totalrows = Math.floor(rrows)
-  // Focus only: saferows < totalrows is often true from Safari chrome alone.
-  const keyboardopen = textcapturefocused
 
   const cols = totalcols
   const { rows, dockcols, dockrows, dockrow } = readtouchscreenlayout({
@@ -77,7 +71,6 @@ export function UserScreen({ children }: UserScreenProps) {
     showtouchcontrols,
     hassidebar,
     sidebaropen,
-    keyboardopen,
   })
   const docky = dockrow * ch
 
@@ -85,8 +78,7 @@ export function UserScreen({ children }: UserScreenProps) {
   const marginy = marginyfor(viewheight, totalrows, ch)
 
   const touchpads = useMemo((): TOUCHPADS | null => {
-    // Typing: hide pads with the dock.
-    if (!showtouchcontrols || keyboardopen) {
+    if (!showtouchcontrols || dockrows <= PORTRAIT_DOCK_STICK_TOP) {
       return null
     }
     const sticktop = PORTRAIT_DOCK_STICK_TOP
@@ -107,17 +99,7 @@ export function UserScreen({ children }: UserScreenProps) {
         height: stickrows * ch,
       },
     }
-  }, [
-    showtouchcontrols,
-    keyboardopen,
-    marginx,
-    marginy,
-    cw,
-    ch,
-    dockcols,
-    dockrows,
-    docky,
-  ])
+  }, [showtouchcontrols, marginx, marginy, cw, ch, dockcols, dockrows, docky])
 
   useEffect(() => {
     useDeviceData.setState((state) => ({
@@ -145,7 +127,7 @@ export function UserScreen({ children }: UserScreenProps) {
             ]}
           >
             {children}
-            {showtouchcontrols && !inputblocked && !keyboardopen && (
+            {showtouchcontrols && dockrows > 0 && (
               <>
                 {hassidebar && (
                   <group position={[0, docky - ch, 4]}>

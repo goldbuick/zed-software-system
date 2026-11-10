@@ -71,6 +71,34 @@ function collectcppfiles(root: string, scope: string): string[] {
   return [...new Set(files)].sort()
 }
 
+const HOMEBREW_CLANG_FORMAT = [
+  '/opt/homebrew/opt/llvm/bin/clang-format',
+  '/usr/local/opt/llvm/bin/clang-format',
+]
+
+function resolveclangformat(envclangformat: string | undefined): string | null {
+  const candidates = [
+    envclangformat,
+    'clang-format',
+    ...HOMEBREW_CLANG_FORMAT,
+  ].filter((value): value is string => Boolean(value))
+  for (const candidate of candidates) {
+    if (candidate.includes('/')) {
+      if (existsSync(candidate)) {
+        return candidate
+      }
+      continue
+    }
+    const which = spawnSync('sh', ['-c', `command -v ${candidate}`], {
+      encoding: 'utf8',
+    })
+    if (which.status === 0) {
+      return candidate
+    }
+  }
+  return null
+}
+
 export function runclangformat(
   ctx: TaskContext,
   mode: 'check' | 'fix',
@@ -85,14 +113,14 @@ export function runclangformat(
     return 2
   }
 
-  const clangformat = ctx.env.CLANG_FORMAT ?? 'clang-format'
-  const which = spawnSync('sh', ['-c', `command -v ${clangformat}`], {
-    encoding: 'utf8',
-  })
-  if (which.status !== 0) {
-    console.error(`clang-format not found: ${clangformat}`)
+  const clangformat = resolveclangformat(ctx.env.CLANG_FORMAT)
+  if (!clangformat) {
+    console.error('clang-format not found')
     console.error(
       'install LLVM clang-format 18+ (e.g. brew install llvm, apt install clang-format-18)',
+    )
+    console.error(
+      'or set CLANG_FORMAT to the binary (macOS Homebrew: /opt/homebrew/opt/llvm/bin/clang-format)',
     )
     return 2
   }

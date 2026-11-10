@@ -47,7 +47,7 @@ ZSS `expr_*` words (`min`, `max`, `random`, …) do not match as expression toke
 
 ## Import pipeline (`zztoop`)
 
-Museum corpus extraction may run `zztoop` for `$` → `$CENTER`, label lowercasing, optional `_` escaping, and **force-quoting** indented RoZZT text lines whose first non-space looks structural (`/\/\/\/\/\`, `######`, `::::::::`, rare indented `#go`) by prefixing `"` at column 0 so leading spaces remain in the text body after compile. That is an import transform — not the lang compatibility contract. Hand-paste of such art without import still needs a manual `"`. Export (`ooptuzz`) strips a leading authoring `"`.
+Museum corpus extraction may run `zztoop` for `$` → `$CENTER`, label lowercasing, reserved-word escaping, and **force-quoting** indented RoZZT text lines whose first non-space looks structural (`/\/\/\/\/\`, `######`, `::::::::`, rare indented `#go`) by prefixing `"` at column 0 so leading spaces remain in the text body after compile. Bare label-target `do` (`#send do`, `#if flag then do`) becomes `self:do` so the ZSS `do` block keyword is not eaten; `:do` / `all:do` stay as-is. Other reserved words (`while`, `done`, `else`, …) still get a `_` prefix. That is an import transform — not the lang compatibility contract. Hand-paste of such art without import still needs a manual `"`. Export (`ooptuzz`) strips a leading authoring `"`.
 
 ## WASM lexer
 

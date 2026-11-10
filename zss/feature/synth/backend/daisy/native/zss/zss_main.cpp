@@ -53,7 +53,7 @@ void initrazzlechain(float sr) {
 
 float sidechainkey(float bg, float tts, float drumtap) {
   const float sc_send_trim = dbtoamp(-12.f);
-  const float sc_drum_trim = dbtoamp(-28.f);
+  const float sc_drum_trim = dbtoamp(kScDrumKeyDb);
   float trigger = 0.f;
   trigger += std::fabs(bg) * sc_send_trim;
   trigger += std::fabs(tts) * sc_send_trim;
@@ -96,15 +96,20 @@ void sidechainupdate(float signal) {
 
 float sidechaingain() { return 1.f + (g_engine.sc_gainlinear - 1.f) * kScMix; }
 
-float readttsvolume() {
-  // Same dB law as readbgplayvolume() so #ttsvol and #bgvol share the 0-100
-  // scale.
-  float vol = readctrl(off_main() + 2);
+namespace {
+
+float readsabbvol(int slot) {
+  float vol = readctrl(off_main() + slot);
   if (vol <= 0.001f) {
     return 0.f;
   }
-  return std::pow(10.f, (20.f * std::log10(vol) - 35.f) / 20.f);
+  return std::pow(
+      10.f, (kBusVolDbPerDecade * std::log10(vol) + kBusVolOffsetDb) / 20.f);
 }
+
+} // namespace
+
+float readttsvolume() { return readsabbvol(2); }
 
 float razzledelay(float* buf, int& pos, int len, float in, float delaysec) {
   int d = std::max(1, static_cast<int>(delaysec * g_engine.sample_rate));
@@ -122,27 +127,34 @@ float razzledelay(float* buf, int& pos, int len, float in, float delaysec) {
 }
 
 float compressorskneedb(float dbover, float ratio, float kneedb) {
-  if (dbover <= 0.f) {
-    return 0.f;
-  }
+  // Soft knee spans threshold +/- halfknee. GR is always >= 0 and meets the
+  // hard knee at +halfknee: GR = dbover * (1 - 1/ratio).
   if (kneedb <= 0.f) {
+    if (dbover <= 0.f) {
+      return 0.f;
+    }
     return dbover - dbover / ratio;
   }
   const float halfknee = kneedb * 0.5f;
+  if (dbover <= -halfknee) {
+    return 0.f;
+  }
+  const float slope = 1.f - 1.f / ratio;
   if (dbover < halfknee) {
     const float x = dbover + halfknee;
-    return x * x / (2.f * kneedb) * (1.f / ratio - 1.f);
+    return x * x / (2.f * kneedb) * slope;
   }
-  return dbover - dbover / ratio;
+  return dbover * slope;
 }
 
 float maincomptargetgain() {
-  const float thresh = std::pow(10.f, kMainCompThresholdDb / 20.f);
-  float dbover = 20.f * std::log10(g_engine.comp_env / thresh);
-  if (dbover < 0.f) {
-    dbover = 0.f;
+  if (g_engine.comp_env <= 0.f) {
+    return 1.f;
   }
-  float reduced = compressorskneedb(dbover, kMainCompRatio, kMainCompKneeDb);
+  const float thresh = std::pow(10.f, kMainCompThresholdDb / 20.f);
+  const float dbover = 20.f * std::log10(g_engine.comp_env / thresh);
+  const float reduced =
+      compressorskneedb(dbover, kMainCompRatio, kMainCompKneeDb);
   return std::pow(10.f, -reduced / 20.f);
 }
 
@@ -203,26 +215,11 @@ float applyrazzle(float input) {
   return vibrato + (chortap - vibrato) * kRazzleChorusWet;
 }
 
-float readmainvolume() {
-  float vol = readctrl(off_main());
-  if (vol <= 0.001f) {
-    return 0.f;
-  }
-  if (g_engine.mainvolprev <= 0.001f && vol > 0.001f) {
-    initmainchain(g_engine.sample_rate);
-  }
-  g_engine.mainvolprev = vol;
-  float db = 40.f * std::log10(vol * 0.25f) + kMainFaderOffsetDb;
-  return std::pow(10.f, db / 20.f);
-}
+float readplayvolume() { return readsabbvol(0); }
 
-float readbgplayvolume() {
-  float vol = readctrl(off_main() + 1);
-  if (vol <= 0.001f) {
-    return 0.f;
-  }
-  return std::pow(10.f, (20.f * std::log10(vol) - 35.f) / 20.f);
-}
+float readbgplayvolume() { return readsabbvol(1); }
+
+float readdrumvolume() { return readsabbvol(kMainVolIdx); }
 
 void applypluckparams(ZssVoice& v, int cfg) {
   const float structure = readctrl(cfg + 6);

@@ -113,9 +113,10 @@ void refreshfxderived(int group);
 bool ticknoteduck(ZssVoice& v, bool gate, bool request, float hz = 0.f,
                   bool halfcycle = false);
 
-float readmainvolume();
+float readplayvolume();
 float readbgplayvolume();
 float readttsvolume();
+float readdrumvolume();
 float sidechainkey(float bg, float tts, float drumtap);
 void sidechainupdate(float signal);
 float sidechaingain();

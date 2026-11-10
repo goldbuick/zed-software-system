@@ -1,4 +1,7 @@
+import type { ThreeEvent } from '@react-three/fiber'
 import { useEffect } from 'react'
+import { Vector3 } from 'three'
+import { RUNTIME } from 'zss/config'
 import {
   apierror,
   apitoast,
@@ -63,6 +66,7 @@ import {
   computeselection,
   drawlocalcursor,
   drawremotecursors,
+  editorrowhitcursor,
   normalizelineendings,
   togglecomments,
 } from './editorinputhelpers'
@@ -72,6 +76,60 @@ import {
   usePresenceBroadcast,
   useUndoRedo,
 } from './editorinputhooks'
+
+const clickpoint = new Vector3()
+
+function editorclickcell(
+  event: ThreeEvent<MouseEvent>,
+  originx: number,
+  originy: number,
+  width: number,
+  height: number,
+) {
+  const hit = event.intersections[0]
+  if (!hit) {
+    return undefined
+  }
+  hit.object.worldToLocal(clickpoint.copy(hit.point))
+  const cw = RUNTIME.DRAW_CHAR_WIDTH()
+  const ch = RUNTIME.DRAW_CHAR_HEIGHT()
+  const px = Math.floor(clickpoint.x / cw)
+  const py = Math.floor(clickpoint.y / ch)
+  return {
+    x: originx + Math.round(width * 0.5 + px),
+    y: originy + Math.round(height * 0.5 + py),
+  }
+}
+
+function writemobileeditorselection() {
+  const el = getmobiletextelement()
+  if (!el) {
+    return
+  }
+  const { cursor: cur, select: sel } = useEditor.getState()
+  if (!ispresent(sel)) {
+    el.setSelectionRange(cur, cur)
+    return
+  }
+  const l = Math.min(sel, cur)
+  let r = Math.max(sel, cur)
+  if (r !== l && r === cur) {
+    r--
+  }
+  el.setSelectionRange(l, r + 1)
+}
+
+function writemobileeditorfield(code: string) {
+  const el = getmobiletextelement()
+  if (!el) {
+    return
+  }
+  // Assigning value on a focused field dismisses the iOS keyboard.
+  if (el.value !== code) {
+    el.value = code
+  }
+  writemobileeditorselection()
+}
 
 export type EditorInputProps = {
   xcursor: number
@@ -146,6 +204,18 @@ export function EditorInput({
     updatescrolling,
   )
 
+  // Seed the field, then focus. Focusing first and writing after dismisses the keyboard.
+  useEffect(() => {
+    if (!usemobiletextcapture || !ispresent(codepage)) {
+      return
+    }
+    writemobileeditorfield(codepage.toJSON())
+    const el = getmobiletextelement()
+    if (el && document.activeElement !== el) {
+      mobiletextfocus()
+    }
+  }, [usemobiletextcapture, codepage])
+
   // Tier A: Android soft keyboard — `input`/IME on hidden field (keydown alone is unreliable).
   useEffect(() => {
     if (!usemobiletextcapture || !ispresent(codepage)) {
@@ -172,19 +242,7 @@ export function EditorInput({
     if (!el || document.activeElement !== el) {
       return
     }
-    el.value = strvalue
-    const cur = tapeeditor.cursor
-    const sel = tapeeditor.select
-    if (!ispresent(sel)) {
-      el.setSelectionRange(cur, cur)
-    } else {
-      const l = Math.min(sel, cur)
-      let r = Math.max(sel, cur)
-      if (r !== l && r === cur) {
-        r--
-      }
-      el.setSelectionRange(l, r + 1)
-    }
+    writemobileeditorfield(strvalue)
   }, [
     usemobiletextcapture,
     strvalue,
@@ -298,30 +356,42 @@ export function EditorInput({
         blocking
         x={edge.left}
         y={edge.top}
+        z={2}
         width={edge.width}
         height={edge.height}
-        onClick={() => {
+        onClick={(event) => {
+          if (ispresent(codepage)) {
+            const hit = editorclickcell(
+              event,
+              edge.left,
+              edge.top,
+              edge.width,
+              edge.height,
+            )
+            if (ispresent(hit)) {
+              const { xscroll, yscroll, findopen } = useEditor.getState()
+              const next = editorrowhitcursor(
+                hit.x,
+                hit.y,
+                edge,
+                xscroll,
+                yscroll,
+                findopen,
+                rows,
+              )
+              if (ispresent(next)) {
+                updatescrolling(next)
+                useEditor.setState({ cursor: next, select: undefined })
+                useTape.setState({ autocompleteindex: -1 })
+              }
+            }
+          }
           if (usemobiletextcapture) {
-            mobiletextfocus()
-            queueMicrotask(() => {
-              const el = getmobiletextelement()
-              if (!el || !ispresent(codepage)) {
-                return
-              }
-              const s = codepage.toJSON()
-              el.value = s
-              const { cursor: cur, select: sel } = useEditor.getState()
-              if (!ispresent(sel)) {
-                el.setSelectionRange(cur, cur)
-              } else {
-                const l = Math.min(sel, cur)
-                let r = Math.max(sel, cur)
-                if (r !== l && r === cur) {
-                  r--
-                }
-                el.setSelectionRange(l, r + 1)
-              }
-            })
+            const el = getmobiletextelement()
+            if (el && document.activeElement !== el) {
+              mobiletextfocus()
+            }
+            writemobileeditorselection()
           }
         }}
         onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}

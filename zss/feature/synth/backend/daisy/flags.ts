@@ -31,6 +31,16 @@ export function isdaisysidechainbypass(): boolean {
   return envflagon(import.meta.env.ZSS_DAISY_NO_SIDECHAIN) || urlflagon('no_sc')
 }
 
+/**
+ * Mute sidechain key only (live: env or `?no_sc_key=1`).
+ * Duck path stays wired at idle makeup; drums/bg/tts do not trigger GR.
+ */
+export function isdaisysidechainkeymute(): boolean {
+  return (
+    envflagon(import.meta.env.ZSS_DAISY_NO_SC_KEY) || urlflagon('no_sc_key')
+  )
+}
+
 /** Main bus compressor bypass (live dev: env or `?no_comp=1`). */
 export function isdaisymaincompbypass(): boolean {
   return (

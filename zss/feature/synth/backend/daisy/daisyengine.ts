@@ -22,7 +22,11 @@ import { MAYBE } from 'zss/mapping/types'
 
 import { DAISY_BUILD_ID } from './daisybuildid'
 import { daisyasseturl } from './daisypaths'
-import { isdaisymaincompbypass, isdaisysidechainbypass } from './flags'
+import {
+  isdaisymaincompbypass,
+  isdaisysidechainbypass,
+  isdaisysidechainkeymute,
+} from './flags'
 
 function asaudiocontext(ctx: BaseAudioContext): AudioContext {
   return ctx as AudioContext
@@ -77,18 +81,24 @@ function teardowndaisyengine() {
   daisybootedbuildid = ''
 }
 
-function daisymainbussabtail(): [number, number] {
-  return [isdaisymaincompbypass() ? 1 : 0, isdaisysidechainbypass() ? 1 : 0]
+function daisymainbussabtail(): [number, number, number] {
+  return [
+    isdaisymaincompbypass() ? 1 : 0,
+    isdaisysidechainbypass() ? 1 : 0,
+    isdaisysidechainkeymute() ? 1 : 0,
+  ]
 }
 
 function pushdaisymainvolumes(maxi: DaisyEngine) {
-  const [compbypass, scbypass] = daisymainbussabtail()
+  const [compbypass, scbypass, sckeymute] = daisymainbussabtail()
   pushwasmmainsab(maxi, [
     effectivemainvolume(daisyplayvolume, daisyvol),
     effectivemainvolume(daisybgplayvolume, daisyvol),
     effectivemainvolume(daisyttsvolume, daisyvol),
     compbypass,
     scbypass,
+    sckeymute,
+    daisyvol,
   ])
 }
 
@@ -282,7 +292,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     audioWorkletNode: worklet,
   }
   wireoutput(engine)
-  const [compbypass, scbypass] = daisymainbussabtail()
+  const [compbypass, scbypass, sckeymute] = daisymainbussabtail()
   initwasmmainsab(
     engine,
     effectivemainvolume(daisyplayvolume, daisyvol),
@@ -290,6 +300,8 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     effectivemainvolume(daisyttsvolume, daisyvol),
     compbypass,
     scbypass,
+    sckeymute,
+    daisyvol,
   )
   initwasmfxsab(engine)
   daisybootedbuildid = DAISY_BUILD_ID
@@ -344,7 +356,7 @@ export function startisolateddaisydsp(
   daisyttsvolume = ttsvolume
   // Offline / parity: write absolute SAB levels (main scale = unity).
   daisyvol = 100
-  const [compbypass, scbypass] = daisymainbussabtail()
+  const [compbypass, scbypass, sckeymute] = daisymainbussabtail()
   initwasmmainsab(
     engine,
     playvolume,
@@ -352,6 +364,8 @@ export function startisolateddaisydsp(
     ttsvolume,
     compbypass,
     scbypass,
+    sckeymute,
+    daisyvol,
   )
   initwasmfxsab(engine)
 }

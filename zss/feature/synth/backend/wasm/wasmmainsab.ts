@@ -3,7 +3,7 @@ import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 
 export const WASM_MAIN_SAB = 'zss_main'
-export const WASM_MAIN_SAB_LEN = 5
+export const WASM_MAIN_SAB_LEN = 7
 
 export const WASM_MAIN_IDX = {
   PLAY: 0,
@@ -13,6 +13,10 @@ export const WASM_MAIN_IDX = {
   COMP_BYPASS: 3,
   /** 1 = bypass play-bus sidechain duck (debug / offline A/B). */
   SC_BYPASS: 4,
+  /** 1 = mute sidechain key; duck stays wired at idle makeup. */
+  SC_KEY_MUTE: 5,
+  /** Raw `#vol` (0-100) for drum stem via readdrumvolume. */
+  VOL: 6,
 } as const
 
 /** CLI `#vol` main scale (0-100). Multiplies bus trims before SAB push. */
@@ -39,6 +43,8 @@ export function defaultwasmmainsab(): number[] {
     effectivemainvolume(WASM_DEFAULT_TTS_VOLUME),
     0,
     0,
+    0,
+    WASM_DEFAULT_MAIN_VOLUME,
   ]
 }
 
@@ -53,6 +59,8 @@ export function initwasmmainsab(
   ttsvolume = effectivemainvolume(WASM_DEFAULT_TTS_VOLUME),
   compbypass = 0,
   scbypass = 0,
+  sckeymute = 0,
+  vol = WASM_DEFAULT_MAIN_VOLUME,
 ) {
   pushwasmmainsab(maxi, [
     playvolume,
@@ -60,5 +68,7 @@ export function initwasmmainsab(
     ttsvolume,
     compbypass,
     scbypass,
+    sckeymute,
+    vol,
   ])
 }

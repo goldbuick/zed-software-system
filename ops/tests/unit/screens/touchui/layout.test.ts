@@ -9,7 +9,6 @@ const BASE = {
   showtouchcontrols: true,
   hassidebar: false,
   sidebaropen: false,
-  keyboardopen: false,
 }
 
 describe('readtouchscreenlayout', () => {
@@ -41,6 +40,7 @@ describe('readtouchscreenlayout', () => {
       ...BASE,
       totalcols: 40,
       totalrows: 70,
+      saferows: 70,
       hassidebar: true,
       sidebaropen: true,
     })
@@ -50,14 +50,26 @@ describe('readtouchscreenlayout', () => {
     expect(layout.dockrow).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
   })
 
-  it('drops the dock and uses saferows while typing', () => {
+  it('grows the bottom dock to match soft-keyboard height', () => {
     const layout = readtouchscreenlayout({
       ...BASE,
       totalcols: 40,
       totalrows: 70,
-      saferows: 30,
-      keyboardopen: true,
+      saferows: 40,
     })
-    expect(layout).toEqual({ rows: 30, dockcols: 40, dockrows: 0, dockrow: 0 })
+    expect(layout.dockrows).toBe(30)
+    expect(layout.rows).toBe(40)
+    expect(layout.dockrow).toBe(40)
+  })
+
+  it('keeps the default dock when saferows matches the frame', () => {
+    const layout = readtouchscreenlayout({
+      ...BASE,
+      totalcols: 40,
+      totalrows: 70,
+      saferows: 70,
+    })
+    expect(layout.dockrows).toBe(PORTRAIT_TOUCH_DOCK_ROWS)
+    expect(layout.rows).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
   })
 })

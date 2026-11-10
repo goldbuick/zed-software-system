@@ -139,7 +139,7 @@ describe('memorymoveplayertoboard blocked entry', () => {
     return memorymoveplayertoboard(book, PLAYER, dest.id, DESTPT, pushdir)
   }
 
-  it('refuses a wall and leaves the player on the source board', () => {
+  it('teleport without pushdir places onto a wall cell with no touch', () => {
     const { book, src, dest } = setup()
     dest.terrain[DESTPT.x + DESTPT.y * BOARD_WIDTH] = {
       kind: 'solid',
@@ -148,13 +148,51 @@ describe('memorymoveplayertoboard blocked entry', () => {
       y: DESTPT.y,
     }
 
-    expect(move(book, dest)).toBe(false)
-    expect(src.objects[PLAYER]).toBeDefined()
-    expect(dest.objects[PLAYER]).toBeUndefined()
+    expect(move(book, dest)).toBe(true)
+    expect(src.objects[PLAYER]).toBeUndefined()
+    expect(dest.objects[PLAYER]?.x).toBe(DESTPT.x)
+    expect(dest.objects[PLAYER]?.y).toBe(DESTPT.y)
     expect(touchtargets()).toEqual([])
   })
 
-  it('refuses a non-pushable object and sends touch', () => {
+  it('teleport without pushdir places onto a non-pushable object with no touch', () => {
+    const { book, src, dest } = setup()
+    const crate = memorycreateboardobjectfromkind(
+      dest,
+      DESTPT,
+      'crate',
+      'oid_crate',
+    )!
+
+    expect(move(book, dest)).toBe(true)
+    expect(src.objects[PLAYER]).toBeUndefined()
+    expect(dest.objects[PLAYER]?.x).toBe(DESTPT.x)
+    expect(dest.objects[PLAYER]?.y).toBe(DESTPT.y)
+    expect(crate.x).toBe(DESTPT.x)
+    expect(crate.y).toBe(DESTPT.y)
+    expect(touchtargets()).toEqual([])
+  })
+
+  it('teleport without pushdir places onto a pushable object with no push or touch', () => {
+    const rockpage = memorycreatecodepage('@object rock\n@ispushable\n', {})
+    const { book, src, dest } = setup([rockpage])
+    const rock = memorycreateboardobjectfromkind(
+      dest,
+      DESTPT,
+      'rock',
+      'oid_rock',
+    )!
+
+    expect(move(book, dest)).toBe(true)
+    expect(src.objects[PLAYER]).toBeUndefined()
+    expect(dest.objects[PLAYER]?.x).toBe(DESTPT.x)
+    expect(dest.objects[PLAYER]?.y).toBe(DESTPT.y)
+    expect(rock.x).toBe(DESTPT.x)
+    expect(rock.y).toBe(DESTPT.y)
+    expect(touchtargets()).toEqual([])
+  })
+
+  it('edge pushdir refuses a non-pushable object and sends touch', () => {
     const { book, src, dest } = setup()
     const crate = memorycreateboardobjectfromkind(
       dest,
@@ -171,7 +209,7 @@ describe('memorymoveplayertoboard blocked entry', () => {
     expect(touchtargets()).toEqual(['oid_crate:touch'])
   })
 
-  it('pushes a pushable object into an open cell and sends touch', () => {
+  it('edge pushdir pushes a pushable object into an open cell and sends touch', () => {
     const rockpage = memorycreatecodepage('@object rock\n@ispushable\n', {})
     const { book, src, dest } = setup([rockpage])
     const rock = memorycreateboardobjectfromkind(
@@ -191,7 +229,7 @@ describe('memorymoveplayertoboard blocked entry', () => {
     expect(touchtargets()).toEqual(['oid_rock:touch'])
   })
 
-  it('refuses a pushable object blocked by a wall and still sends touch', () => {
+  it('edge pushdir refuses a pushable object blocked by a wall and still sends touch', () => {
     const rockpage = memorycreatecodepage('@object rock\n@ispushable\n', {})
     const { book, src, dest } = setup([rockpage])
     const rock = memorycreateboardobjectfromkind(
@@ -215,7 +253,7 @@ describe('memorymoveplayertoboard blocked entry', () => {
     expect(touchtargets()).toEqual(['oid_rock:touch'])
   })
 
-  it('does not push a north-south slider when entered from the east', () => {
+  it('edge pushdir does not push a north-south slider when entered from the east', () => {
     const sliderpage = memorycreatecodepage(
       '@object slider\n@ispushable n s\n',
       {},
@@ -237,7 +275,7 @@ describe('memorymoveplayertoboard blocked entry', () => {
     expect(touchtargets()).toEqual(['oid_slider:touch'])
   })
 
-  it('crosses onto an item and sends touch', () => {
+  it('teleport without pushdir places onto an item with no touch', () => {
     const gempage = memorycreatecodepage('@object gem\n@isitem\n', {})
     const { book, src, dest } = setup([gempage])
     const gem = memorycreateboardobjectfromkind(dest, DESTPT, 'gem', 'oid_gem')!
@@ -249,10 +287,25 @@ describe('memorymoveplayertoboard blocked entry', () => {
     expect(dest.objects[PLAYER]?.y).toBe(DESTPT.y)
     expect(gem.x).toBe(DESTPT.x)
     expect(gem.y).toBe(DESTPT.y)
+    expect(touchtargets()).toEqual([])
+  })
+
+  it('edge pushdir crosses onto an item and sends touch', () => {
+    const gempage = memorycreatecodepage('@object gem\n@isitem\n', {})
+    const { book, src, dest } = setup([gempage])
+    const gem = memorycreateboardobjectfromkind(dest, DESTPT, 'gem', 'oid_gem')!
+    expect(memoryreadelementstat(gem, 'item')).toBe(1)
+
+    expect(move(book, dest, { x: 1, y: 0 })).toBe(true)
+    expect(src.objects[PLAYER]).toBeUndefined()
+    expect(dest.objects[PLAYER]?.x).toBe(DESTPT.x)
+    expect(dest.objects[PLAYER]?.y).toBe(DESTPT.y)
+    expect(gem.x).toBe(DESTPT.x)
+    expect(gem.y).toBe(DESTPT.y)
     expect(touchtargets()).toEqual(['oid_gem:touch'])
   })
 
-  it('crosses onto another player', () => {
+  it('teleport without pushdir places onto another player with no touch', () => {
     const { book, src, dest } = setup()
     memorycreateboardobjectfromkind(dest, DESTPT, MEMORY_LABEL.PLAYER, OTHER)
 

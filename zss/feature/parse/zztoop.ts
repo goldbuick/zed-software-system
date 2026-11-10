@@ -1,7 +1,7 @@
 // ZED Cafe structural keywords that don't exist in ZZT-OOP
 // and would change parsing behavior if left unescaped
+// `do` is handled by mapdo (bare targets -> self:do; keep :do defs)
 const ZSS_RESERVED = [
-  'do',
   'done',
   'else',
   'while',
@@ -96,6 +96,18 @@ function mapkeyword(line: string, keyword: string) {
   const sendRe = new RegExp(` ${kw}$`, 'i')
   scrubbed = scrubbed.replace(sendRe, ` _${kw}`)
 
+  return scrubbed
+}
+
+/**
+ * Keep `:do` / `all:do` / `#do` as-is. Rewrite bare message/label args
+ * (`#send do`, `#if x then do`) to `self:do` so the lexer does not treat
+ * whitespace-prefixed `do` as command_do.
+ */
+function mapdo(line: string): string {
+  let scrubbed = line.replace(/\b(send|zap|restore|then) do\b/gi, '$1 self:do')
+  // trailing bare do (e.g. #if flag do, #send do if mid-line miss)
+  scrubbed = scrubbed.replace(/ do$/i, ' self:do')
   return scrubbed
 }
 
@@ -247,6 +259,7 @@ export function zztoop(content: string) {
       for (const kw of ZSS_RESERVED) {
         scrubbed = mapkeyword(scrubbed, kw)
       }
+      scrubbed = mapdo(scrubbed)
 
       // handle weave commands that map to zss
       scrubbed = mapcommand(scrubbed, 'fgplay', 'play')

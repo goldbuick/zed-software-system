@@ -70,6 +70,29 @@ export function codeunitoffsettocellindex(
   return cell
 }
 
+/** Map a painted cell index back to a code-unit offset. Past the end lands on the line length. */
+export function cellindextocodeunitoffset(
+  line: string,
+  cellindex: number,
+): number {
+  if (cellindex <= 0) {
+    return 0
+  }
+  if (issinglecellascii(line)) {
+    return cellindex >= line.length ? line.length : cellindex
+  }
+  let cell = 0
+  let offset = 0
+  for (const { segment } of graphemesegmenter.segment(line)) {
+    if (cell >= cellindex) {
+      return offset
+    }
+    offset += segment.length
+    cell++
+  }
+  return offset
+}
+
 /**
  * One grapheme walk for every code-unit offset on a line.
  * An offset that is not a grapheme start maps to the next cell.

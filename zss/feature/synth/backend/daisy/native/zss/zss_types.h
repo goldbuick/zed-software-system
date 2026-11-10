@@ -318,10 +318,11 @@ struct ZssEngine {
   double playapplied[kPlayAppliedCap] = {};
   int playappliedn = 0;
   double playringgen = 0.0;
-  float cached_mainvol = 0.f, cached_bggain = 0.f;
-  float cached_ttsgain = 0.f;
-  float cached_mainraw = 80.f, cached_bgraw = 70.f, cached_ttsraw = 100.f;
-  float mainvolprev = 80.f;
+  float cached_playgain = 0.f, cached_bggain = 0.f;
+  float cached_ttsgain = 0.f, cached_drumgain = 0.f;
+  float cached_playraw = 80.f, cached_bgraw = 70.f, cached_ttsraw = 100.f;
+  float cached_volraw = 50.f;
+  float playvolprev = 80.f;
   bool ready = false;
 };
 
