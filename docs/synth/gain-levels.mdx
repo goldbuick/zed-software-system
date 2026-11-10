@@ -24,13 +24,13 @@ flowchart LR
 
   FX0 --> PLAYSUM[play sum]
   FX1 --> PLAYSUM
-  FX2 --> BG["bg x bggain"]
+  FX2 --> BG["bg x readbgplayvolume"]
 
-  DR --> DRUM["drums x kDrumBusGain"]
+  DR --> DRUM["drums x kDrumBusGain x readdrumvolume"]
   TTS --> TTSL["tts x readttsvolume"]
 
   PLAYSUM --> SC["sidechain duck"]
-  SC --> PB["play x kPlayBusGain"]
+  SC --> PB["play x readplayvolume"]
   BG --> MIX
   TTSL --> MIX
   DRUM --> MIX
@@ -38,26 +38,24 @@ flowchart LR
 
   MIX --> MC[main compressor]
   MC --> RZ[razzle]
-  RZ --> MV["x readmainvolume #playvol"]
-  MV --> OUT["clamp +/-1"]
+  RZ --> OUT["clamp +/-1"]
 ```
 
-**Naming trap:** Native `readmainvolume()` is the **play-bus post-chain fader** (SAB PLAY),
-driven by `#playvol` after `#vol` main scale (`effective = playvol * vol / 100`).
-CLI `#vol` is the outer main multiplier for play, bgplay, TTS, and board TV -- not the DSP fader name.
-Play stem into the mix is still fixed at `kPlayBusGain`.
+`#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
+(`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**40** / **-55**). Doubling SAB (~`#vol` 50→100) is about **+12 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
 Defined in [`wasmmainsab.ts`](../../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
-SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**).
+Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**). VOL slot is raw `#vol`.
 
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
-| `#vol` main | (JS scale) | **50** | multiplies all bus trims + board TV | Outer main |
-| `#playvol` | PLAY (0) | **90** | `40*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`). Doubling the SAB value is +12 dB |
-| `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
-| `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
+| `#vol` main | VOL (6) + JS scale | **50** | multiplies play/bg/tts trims; drum stem via `readdrumvolume`; board TV | Outer master |
+| `#playvol` | PLAY (0) | **90** | `40*log10(vol) - 55` | Play stem (`readplayvolume`) |
+| `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
+| `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
@@ -69,26 +67,26 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-36** | Added to the 40*log10 play fader. `#vol` 100 stays near the old +18 dB anchor; `#vol` 50 is 12 dB under it |
-| `kMainLimiterMakeup` | **1 / SoftLimit(0.7)** | After the Daisy limiter. Raises the limited peak from ~0.88 to full scale (0 dBFS). Output still clamps at +/-1 |
-| `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
-| `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
+| `kDrumBusGain` | **1.618** | Drum stem vs play under `#vol` (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **12** | Sidechain makeup (`kScMakeupDb` in `zss_config.h`) |
-| `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
-| `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
-| SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
-| `kMainCompThresholdDb` | **-28** | Main compressor |
+| `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
+| `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
+| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Sidechain timing (attack faster than Tone 5 ms) |
+| SC key trims | bg/tts **-12 dB**, drums **`kScDrumKeyDb` (−20)** | Key bus only (`zss_main.cpp`) |
+| `kScDrumBassKeyDb` | **+8** | Bass into SC only (Tone MembraneSynth volume); audible kick stays `kDrumBassVolumeDb` |
+| SC clap/bass tap | pre-`kDrumGains` | `drumsout()` — kit gain is audible-only |
+| `kMainCompThresholdDb` | **-24** | Main compressor (was Tone -28; less GR into limiter) |
 | `kMainCompRatio` | **4** | |
-| `kMainCompKneeDb` | **6** | Soft knee (was 30; matches FX return) |
-| `kMainCompMix` | **1.0** | Full wet GR (was 0.55 parallel) |
-| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.08 | RMS detector |
-| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
+| `kMainCompKneeDb` | **30** | Soft knee (Tone `Compressor` knee) |
+| `kMainCompMix` | **1.0** | Full wet GR |
+| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.15 | RMS detector (Tone release 150 ms) |
+| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.15 | applied GR slew (release matches Tone) |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
 | `kRazzleChorusWet` | **0.25** | |
 | `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
-SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
+SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`).
 
 ## FX return bus (multi-FX)
 
@@ -157,10 +155,10 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 
 | Symptom | First knobs | Calibrate task |
 |---------|-------------|----------------|
-| Too loud at boot | `kMainFaderOffsetDb`, `WASM_DEFAULT_PLAY_VOLUME` | -- |
+| Too loud at boot | `WASM_DEFAULT_PLAY_VOLUME`, `#vol` | -- |
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
-| Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
-| Idle play too hot | `kScMakeupDb`, `kScMix` | `zss_config.h` |
+| Play vs drums balance | `kDrumBusGain`, `#playvol` | `ops:daisy:play-drum-balance:calibrate` |
+| Idle play too hot / drums buried | `kScMakeupDb`, `kScMix` | `zss_config.h` |
 | Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy

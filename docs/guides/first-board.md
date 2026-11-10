@@ -21,6 +21,8 @@ Walk with the arrow keys and repeat. Type the same command with `west`, `south`,
 
 Placing walls one at a time is slow. The `inspector` makes it faster.
 
+**You'll know it worked when** a white `solid` sits one cell north of you, and the other directions sketch a room around you.
+
 ## Copy and tile with the inspector
 
 The `inspector` (also called the `gadget`) lets you select cells on the board and edit them with the mouse.
@@ -51,6 +53,8 @@ The `area scroll` also has **cut**, **make empty**, **set chars**, **set colors*
 The `inspector` and the `cli` are two ways to do the same job. Anything you do in the `inspector`, a command can also do (`#put`, `#write`, `#change`).
 :::
 
+**You'll know it worked when** a dragged strip fills with copies of the wall, and running `#gadget` again removes the cell cursor.
+
 ## Edit the board's stats
 
 A board is a page too, and its page holds stats that control the room. Type the page name with `@`:
@@ -72,6 +76,8 @@ The `code editor` opens with `@board title` already on the first line. Add a sta
 `@startx` and `@starty` are where login spawns you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the `code editor`. Your edits are already saved to the page.
 
 This book already has `@board title` and `@player`. That pair is what login uses, which is why you appeared in this room when the kit loaded.
+
+**You'll know it worked when** the `code editor` shows `@startx 5` and `@starty 12`, and `esc` returns you to the board.
 
 ## Add a second room and connect them
 
@@ -121,6 +127,8 @@ There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. 
 
 To jump to any board while you build, select it from `#boards` menu.
 
+**You'll know it worked when** walking off the east edge of title puts you in the cellar, and the cellar's west edge puts you back.
+
 ## Save and share
 
 ```text
@@ -136,6 +144,8 @@ To jump to any board while you build, select it from `#boards` menu.
 `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
 
 For more export options, such as downloading a book as JSON, run `#export`.
+
+**You'll know it worked when** a reload still has both rooms, and `#share` shows a link and a QR code in the `terminal`.
 
 ## What you learned
 

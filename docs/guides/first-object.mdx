@@ -61,6 +61,8 @@ Here is what each part does:
 Indenting the lines inside `do` ... `#done` with a space is optional. It just makes the branches easier to read.
 :::
 
+**You'll know it worked when** a brown sun-shaped lamp sits one cell east of you, the first touch turns it yellow with a `toast`, and the second touch shows a `ticker`.
+
 ## Send it a message
 
 Labels are not only for touch. Any label is a message the object can receive. Run `@lamp`, select **edit @object lamp**, and add an `#end` and a `:light` label at the bottom:
@@ -97,6 +99,8 @@ lamp:light
 
 `lamp:light` means "send the `light` message to every element named `lamp`." The lamp lights up without you touching it. This is the same message format objects use to talk to each other.
 
+**You'll know it worked when** the lamp turns yellow and a `toast` pops up without you walking into it.
+
 ## Make a switch
 
 Now make an object that lights the lamp from somewhere else on the board.
@@ -124,6 +128,8 @@ Now make an object that lights the lamp from somewhere else on the board.
 </Steps>
 
 `#lamp:light` does from code what you typed into the `cli`. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
+
+**You'll know it worked when** walking into the switch turns it green, plays a short chime, and lights the lamp.
 
 ## Make a character that talks
 
@@ -161,6 +167,8 @@ Now make an object that lights the lamp from somewhere else on the board.
 
 One line of text is a `ticker`. Two or more lines are a `scroll`.
 
+**You'll know it worked when** touching the oracle opens a `scroll` with **Yes, please** and **No, thanks**. **Yes** lights the lamp. **No** shows a `ticker`.
+
 ## Remove things with #die
 
 `#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up.
@@ -189,6 +197,8 @@ One line of text is a `ticker`. Two or more lines are a `scroll`.
 </Steps>
 
 **ZZT Tool Kit** includes `key` and `door` pages that use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Load that kit when you want to read them, then run `@key` and select **edit @object key**. `@door` works the same way.
+
+**You'll know it worked when** walking into the gem shows a `ticker` that says you found a gem, and the gem is gone.
 
 ## Fix mistakes
 

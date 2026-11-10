@@ -16,13 +16,13 @@
 
   FX0 --> PLAYSUM[play sum]
   FX1 --> PLAYSUM
-  FX2 --> BG[&quot;bg x bggain&quot;]
+  FX2 --> BG[&quot;bg x readbgplayvolume&quot;]
 
-  DR --> DRUM[&quot;drums x kDrumBusGain&quot;]
+  DR --> DRUM[&quot;drums x kDrumBusGain x readdrumvolume&quot;]
   TTS --> TTSL[&quot;tts x readttsvolume&quot;]
 
   PLAYSUM --> SC[&quot;sidechain duck&quot;]
-  SC --> PB[&quot;play x kPlayBusGain&quot;]
+  SC --> PB[&quot;play x readplayvolume&quot;]
   BG --> MIX
   TTSL --> MIX
   DRUM --> MIX
@@ -30,15 +30,13 @@
 
   MIX --> MC[main compressor]
   MC --> RZ[razzle]
-  RZ --> MV[&quot;x readmainvolume #playvol&quot;]
-  MV --> OUT[&quot;clamp +/-1&quot;]"></blume-mermaid>
-<p><strong>Naming trap:</strong> Native <code>readmainvolume()</code> is the <strong>play-bus post-chain fader</strong> (SAB PLAY),
-driven by <code>#playvol</code> after <code>#vol</code> main scale (<code>effective = playvol * vol / 100</code>).
-CLI <code>#vol</code> is the outer main multiplier for play, bgplay, TTS, and board TV – not the DSP fader name.
-Play stem into the mix is still fixed at <code>kPlayBusGain</code>.</p>
+  RZ --> OUT[&quot;clamp +/-1&quot;]"></blume-mermaid>
+<p><code>#playvol</code> / <code>#bgvol</code> / <code>#ttsvol</code> are stem faders (SAB PLAY/BGPLAY/TTS) after <code>#vol</code> scale
+(<code>effective = trim * vol / 100</code>). <code>#vol</code> is also pushed raw on SAB VOL for the drum stem.
+Play, bg, tts, and drums share dB law <code>kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb</code> (<strong>40</strong> / <strong>-55</strong>). Doubling SAB (~<code>#vol</code> 50→100) is about <strong>+12 dB</strong>. Razzle is not a volume fader.</p>
 <h2 id="user-faders-sab-zss_main-0-100"><a class="blume-heading-anchor" href="#user-faders-sab-zss_main-0-100">User faders (SAB <code>zss_main</code>, 0-100)</a></h2>
 <p>Defined in <a href="../../backend/wasm/wasmmainsab.ts"><code>wasmmainsab.ts</code></a>. Mute floor: raw <code>&lt;= 0.001</code> -&gt; gain <code>0</code>.
-SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (defaults: main <strong>50</strong>, bus trims <strong>90</strong> -&gt; SAB <strong>45</strong>).</p>
+Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (defaults: main <strong>50</strong>, bus trims <strong>90</strong> -&gt; SAB <strong>45</strong>). VOL slot is raw <code>#vol</code>.</p>
 <div class="blume-table-scroll" tabIndex="0"><table>
 <thead>
 <tr>
@@ -52,30 +50,30 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 <tbody>
 <tr>
 <td><code>#vol</code> main</td>
-<td>(JS scale)</td>
+<td>VOL (6) + JS scale</td>
 <td><strong>50</strong></td>
-<td>multiplies all bus trims + board TV</td>
-<td>Outer main</td>
+<td>multiplies play/bg/tts trims; drum stem via <code>readdrumvolume</code>; board TV</td>
+<td>Outer master</td>
 </tr>
 <tr>
 <td><code>#playvol</code></td>
 <td>PLAY (0)</td>
 <td><strong>90</strong></td>
-<td><code>40*log10(vol*0.25) + kMainFaderOffsetDb</code></td>
-<td>After razzle (<code>readmainvolume</code>). Doubling the SAB value is +12 dB</td>
+<td><code>40*log10(vol) - 55</code></td>
+<td>Play stem (<code>readplayvolume</code>)</td>
 </tr>
 <tr>
 <td><code>#bgvol</code></td>
 <td>BGPLAY (1)</td>
 <td><strong>90</strong></td>
-<td><code>20*log10(vol) - 35</code></td>
+<td>same</td>
 <td>bgplay stem</td>
 </tr>
 <tr>
 <td><code>#ttsvol</code></td>
 <td>TTS (2)</td>
 <td><strong>90</strong></td>
-<td>same as bg</td>
+<td>same</td>
 <td>TTS sample level</td>
 </tr>
 <tr>
@@ -107,24 +105,14 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 </thead>
 <tbody>
 <tr>
-<td><code>kMainFaderOffsetDb</code></td>
-<td><strong>-36</strong></td>
-<td>Added to the 40*log10 play fader. <code>#vol</code> 100 stays near the old +18 dB anchor; <code>#vol</code> 50 is 12 dB under it</td>
-</tr>
-<tr>
-<td><code>kMainLimiterMakeup</code></td>
-<td><strong>1 / SoftLimit(0.7)</strong></td>
-<td>After the Daisy limiter. Raises the limited peak from ~0.88 to full scale (0 dBFS). Output still clamps at +/-1</td>
-</tr>
-<tr>
-<td><code>kPlayBusGain</code></td>
-<td><strong>0.168</strong></td>
-<td>Fixed play stem into mix (~3 dB under prior 0.238 vs drums)</td>
+<td>Main limiter</td>
+<td>DaisySP <code>Limiter</code> @ threshold 1</td>
+<td>Peak control only; no post makeup. Safety <code>clamp +/-1</code> after</td>
 </tr>
 <tr>
 <td><code>kDrumBusGain</code></td>
-<td><strong>0.338</strong></td>
-<td>Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
+<td><strong>1.618</strong></td>
+<td>Drum stem vs play under <code>#vol</code> (hi-snare proxy ≈ 0 dB; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
 </tr>
 <tr>
 <td><code>kVoiceOutGain</code></td>
@@ -133,28 +121,38 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 </tr>
 <tr>
 <td><code>kScMakeupDb</code></td>
-<td><strong>12</strong></td>
-<td>Sidechain makeup (<code>kScMakeupDb</code> in <code>zss_config.h</code>)</td>
+<td><strong>+5</strong></td>
+<td>Sidechain makeup (Tone had +24)</td>
 </tr>
 <tr>
 <td><code>kScMix</code></td>
-<td><strong>0.50</strong></td>
-<td>Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75)</td>
+<td><strong>0.75</strong></td>
+<td>Sidechain wet mix (Tone product)</td>
 </tr>
 <tr>
 <td><code>kScAttackSec</code> / <code>kScReleaseSec</code></td>
-<td>0.005 / 0.06</td>
-<td>Sidechain timing</td>
+<td><strong>0.001</strong> / 0.06</td>
+<td>Sidechain timing (attack faster than Tone 5 ms)</td>
 </tr>
 <tr>
 <td>SC key trims</td>
-<td>bg/tts <strong>-12 dB</strong>, drums <strong>-28 dB</strong></td>
+<td>bg/tts <strong>-12 dB</strong>, drums <strong><code>kScDrumKeyDb</code> (−20)</strong></td>
 <td>Key bus only (<code>zss_main.cpp</code>)</td>
 </tr>
 <tr>
+<td><code>kScDrumBassKeyDb</code></td>
+<td><strong>+8</strong></td>
+<td>Bass into SC only (Tone MembraneSynth volume); audible kick stays <code>kDrumBassVolumeDb</code></td>
+</tr>
+<tr>
+<td>SC clap/bass tap</td>
+<td>pre-<code>kDrumGains</code></td>
+<td><code>drumsout()</code> — kit gain is audible-only</td>
+</tr>
+<tr>
 <td><code>kMainCompThresholdDb</code></td>
-<td><strong>-28</strong></td>
-<td>Main compressor</td>
+<td><strong>-24</strong></td>
+<td>Main compressor (was Tone -28; less GR into limiter)</td>
 </tr>
 <tr>
 <td><code>kMainCompRatio</code></td>
@@ -163,23 +161,23 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 </tr>
 <tr>
 <td><code>kMainCompKneeDb</code></td>
-<td><strong>6</strong></td>
-<td>Soft knee (was 30; matches FX return)</td>
+<td><strong>30</strong></td>
+<td>Soft knee (Tone <code>Compressor</code> knee)</td>
 </tr>
 <tr>
 <td><code>kMainCompMix</code></td>
 <td><strong>1.0</strong></td>
-<td>Full wet GR (was 0.55 parallel)</td>
+<td>Full wet GR</td>
 </tr>
 <tr>
 <td><code>kMainCompAttackSec</code> / <code>kMainCompReleaseSec</code></td>
-<td>0.003 / 0.08</td>
-<td>RMS detector</td>
+<td>0.003 / 0.15</td>
+<td>RMS detector (Tone release 150 ms)</td>
 </tr>
 <tr>
 <td><code>kMainCompGainAttackSec</code> / <code>kMainCompGainReleaseSec</code></td>
-<td>0.008 / 0.06</td>
-<td>applied GR slew</td>
+<td>0.008 / 0.15</td>
+<td>applied GR slew (release matches Tone)</td>
 </tr>
 <tr>
 <td><code>kRazzleVibratoWet</code></td>
@@ -198,7 +196,7 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 </tr>
 </tbody>
 </table></div>
-<p>SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.</p>
+<p>SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6) for offline A/B / live listen (<code>?no_comp=1</code>, <code>?no_sc=1</code>, <code>?no_sc_key=1</code>).</p>
 <h2 id="fx-return-bus-multi-fx"><a class="blume-heading-anchor" href="#fx-return-bus-multi-fx">FX return bus (multi-FX)</a></h2>
 <p>Bus law (<code>zss_fx.cpp</code> <code>applyfxgroup</code>):</p>
 <pre class="astro-code astro-code-themes github-dark github-dark" style="--shiki-light:#e1e4e8;--shiki-dark:#e1e4e8;--shiki-light-bg:#24292e;--shiki-dark-bg:#24292e;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )</span></span></code></pre>
@@ -451,7 +449,7 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 <tbody>
 <tr>
 <td>Too loud at boot</td>
-<td><code>kMainFaderOffsetDb</code>, <code>WASM_DEFAULT_PLAY_VOLUME</code></td>
+<td><code>WASM_DEFAULT_PLAY_VOLUME</code>, <code>#vol</code></td>
 <td>–</td>
 </tr>
 <tr>
@@ -461,11 +459,11 @@ SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (
 </tr>
 <tr>
 <td>Play vs drums balance</td>
-<td><code>kPlayBusGain</code>, <code>kDrumBusGain</code></td>
+<td><code>kDrumBusGain</code>, <code>#playvol</code></td>
 <td><code>ops:daisy:play-drum-balance:calibrate</code></td>
 </tr>
 <tr>
-<td>Idle play too hot</td>
+<td>Idle play too hot / drums buried</td>
 <td><code>kScMakeupDb</code>, <code>kScMix</code></td>
 <td><code>zss_config.h</code></td>
 </tr>

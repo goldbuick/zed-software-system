@@ -4558,6 +4558,8 @@ Walk with the arrow keys and repeat. Type the same command with `west`, `south`,
 
 Placing walls one at a time is slow. The `inspector` makes it faster.
 
+**You'll know it worked when** a white `solid` sits one cell north of you, and the other directions sketch a room around you.
+
 ## Copy and tile with the inspector
 
 The `inspector` (also called the `gadget`) lets you select cells on the board and edit them with the mouse.
@@ -4588,6 +4590,8 @@ The `area scroll` also has **cut**, **make empty**, **set chars**, **set colors*
 The `inspector` and the `cli` are two ways to do the same job. Anything you do in the `inspector`, a command can also do (`#put`, `#write`, `#change`).
 :::
 
+**You'll know it worked when** a dragged strip fills with copies of the wall, and running `#gadget` again removes the cell cursor.
+
 ## Edit the board's stats
 
 A board is a page too, and its page holds stats that control the room. Type the page name with `@`:
@@ -4609,6 +4613,8 @@ The `code editor` opens with `@board title` already on the first line. Add a sta
 `@startx` and `@starty` are where login spawns you when you arrive without a set position. The board is 60 cells wide (x from 0 to 59) and 25 tall (y from 0 to 24). Press `esc` to close the `code editor`. Your edits are already saved to the page.
 
 This book already has `@board title` and `@player`. That pair is what login uses, which is why you appeared in this room when the kit loaded.
+
+**You'll know it worked when** the `code editor` shows `@startx 5` and `@starty 12`, and `esc` returns you to the board.
 
 ## Add a second room and connect them
 
@@ -4658,6 +4664,8 @@ There are four exits: `@exitnorth`, `@exitsouth`, `@exiteast`, and `@exitwest`. 
 
 To jump to any board while you build, select it from `#boards` menu.
 
+**You'll know it worked when** walking off the east edge of title puts you in the cellar, and the cellar's west edge puts you back.
+
 ## Save and share
 
 ```text
@@ -4673,6 +4681,8 @@ To jump to any board while you build, select it from `#boards` menu.
 `#share` makes a link you can click to copy, plus a QR code. Anyone who opens the link gets a copy of your world.
 
 For more export options, such as downloading a book as JSON, run `#export`.
+
+**You'll know it worked when** a reload still has both rooms, and `#share` shows a link and a QR code in the `terminal`.
 
 ## What you learned
 
@@ -4748,6 +4758,8 @@ Here is what each part does:
 Indenting the lines inside `do` ... `#done` with a space is optional. It just makes the branches easier to read.
 :::
 
+**You'll know it worked when** a brown sun-shaped lamp sits one cell east of you, the first touch turns it yellow with a `toast`, and the second touch shows a `ticker`.
+
 ## Send it a message
 
 Labels are not only for touch. Any label is a message the object can receive. Run `@lamp`, select **edit @object lamp**, and add an `#end` and a `:light` label at the bottom:
@@ -4784,6 +4796,8 @@ lamp:light
 
 `lamp:light` means "send the `light` message to every element named `lamp`." The lamp lights up without you touching it. This is the same message format objects use to talk to each other.
 
+**You'll know it worked when** the lamp turns yellow and a `toast` pops up without you walking into it.
+
 ## Make a switch
 
 Now make an object that lights the lamp from somewhere else on the board.
@@ -4810,6 +4824,8 @@ Now make an object that lights the lamp from somewhere else on the board.
     Walk a few cells away from the lamp, then run `#put north switch`. Walk into the switch.
 
 `#lamp:light` does from code what you typed into the `cli`. `#bgplay tceg` plays a short sound effect: `t` sets a note length, and `c e g` are the notes. For music and sound, see [the synth docs](/synth).
+
+**You'll know it worked when** walking into the switch turns it green, plays a short chime, and lights the lamp.
 
 ## Make a character that talks
 
@@ -4846,6 +4862,8 @@ Now make an object that lights the lamp from somewhere else on the board.
 
 One line of text is a `ticker`. Two or more lines are a `scroll`.
 
+**You'll know it worked when** touching the oracle opens a `scroll` with **Yes, please** and **No, thanks**. **Yes** lights the lamp. **No** shows a `ticker`.
+
 ## Remove things with #die
 
 `#die` removes the object that runs it. Use it for one-time items, like a gem that should vanish when picked up.
@@ -4873,6 +4891,8 @@ One line of text is a `ticker`. Two or more lines are a `scroll`.
     Run `#put south gem`. Walk into the gem. `#give gems` adds one gem, a `ticker` shows at the bottom, and `#die` removes the gem.
 
 **ZZT Tool Kit** includes `key` and `door` pages that use this same pattern. The key sets a flag such as `bluekey` and calls `#die`. The door checks that flag with `#if`, clears it with `#clear`, and calls `#die` to open. Load that kit when you want to read them, then run `@key` and select **edit @object key**. `@door` works the same way.
+
+**You'll know it worked when** walking into the gem shows a `ticker` that says you found a gem, and the gem is gone.
 
 ## Fix mistakes
 
@@ -4923,6 +4943,8 @@ The `terminal` is the command line, or `cli`. Almost everything in Zed Cafe star
 Lines in the `terminal` can be links. Move onto one with the arrow keys and press Enter, or click it. Many links also show a one-letter hotkey such as ` C `. Pressing that key follows the link.
 :::
 
+**You'll know it worked when** the `terminal` is already open and shows `no content found`, the starter kit list, and that hint.
+
 ## Load a starter kit
 
 :::note
@@ -4942,6 +4964,8 @@ A starter kit is a book that comes with useful pages already made. This guide st
 :::tip
 The other kits are worth a look later. **ZZT Tool Kit** is the ZZT-style building set, with no boards of its own. **Simple Chat** and the **TTS** demos show off multiplayer chat and text-to-speech.
 :::
+
+**You'll know it worked when** the page has reloaded and you are standing in a room.
 
 ## Look inside the book
 
@@ -4976,6 +5000,8 @@ Run these one at a time. Each one prints its results into the `terminal`.
 
     Press `esc` to close the `code editor` without changing anything.
 
+**You'll know it worked when** `#books` shows one book marked `opened`, `#pages` lists a `[terrain]` page named `solid`, `#boards` shows a single board link, and a page opens in the `code editor` with lines that start with `@`.
+
 ## Try a command on the world
 
 You are standing on Quick Start Kit's board. The `cli` can change it while the game runs. `#put` places an element in a direction. The kind is the name of a page in this book, which is why loading a kit first matters. Pick a terrain name from `#pages` and try:
@@ -4984,11 +5010,13 @@ You are standing on Quick Start Kit's board. The `cli` can change it while the g
 #put north red <kind>
 ```
 
-A red element appears just north of you. A color word such as `red` goes in front of the kind. The direction can be `north`, `south`, `east`, or `west`. The next guide stays in this session. `solid` is already in Quick Start Kit.
+A color word such as `red` goes in front of the kind. The direction can be `north`, `south`, `east`, or `west`. The next guide stays in this session. `solid` is already in Quick Start Kit.
 
 :::note
 `up`, `down`, `left`, and `right` work too. They mean the same as `north`, `south`, `west`, and `east`.
 :::
+
+**You'll know it worked when** a red element sits one cell north of you.
 
 ## Save your session
 
@@ -5003,6 +5031,8 @@ zed.cafe will autosave every 60 seconds, but you can also manually save.
 :::note
 `ctrl+s` (or `⌘s` on a Mac) runs `#save` too.
 :::
+
+**You'll know it worked when** you reload the tab and that red element is still there.
 
 ## What you learned
 
@@ -7160,15 +7190,28 @@ Source: https://zed.cafe/docs/memory/playermanagement
 
 ## Cross-board entry
 
-`memorymoveplayertoboard` decides from the destination cell:
+`memorymoveplayertoboard` splits on whether `pushdir` is set.
+
+### Teleport (no `pushdir`)
+
+Used by `#goto` (passages), `#boardopen`, and `vm:playermovetoboard`.
+
+- Always places the player at `dest`.
+- Never pushes dest objects.
+- Never sends arrival `touch`.
+- Does not refuse for blocking terrain or non-item occupants (player can co-occupy the cell).
+
+### Edge entry (`pushdir` set)
+
+Only board-edge exits pass `pushdir` (via `memorytryexitaddress`).
 
 - **Open cell or another player:** the player crosses.
 - **Blocking terrain:** the move is refused. The player stays on the current board.
-- **Pushable object that is not an item,** and `pushdir` is set: the object is pushed one step with `memorymoveobject` (a chain behind it moves too). If the cell is then clear, the player crosses. Otherwise the move is refused. The object is sent `touch` either way.
-- **Other non-item object:** it is sent `touch` and the move is refused. Without `pushdir`, nothing is pushed.
+- **Pushable object that is not an item:** pushed one step with `memorymoveobject` (a chain behind it moves too). If the cell is then clear, the player crosses. Otherwise the move is refused. The object is sent `touch` either way.
+- **Other non-item object:** sent `touch` and the move is refused.
 - **`@isitem` object:** the player crosses onto it and it is sent `touch`. Items are not pushed.
 
-Pushes and `touch` on the destination board are kept when the move is refused. Only edge exits pass `pushdir`. `#goto`, `#boardopen`, and `vm:playermovetoboard` do not, so they never push. `touch` is sent through `memorysendtoelement`, which no-ops unless `READ_CONTEXT.board` is set. Edge exits and firmware commands run with that set. `vm:playermovetoboard` does not set it, so a touch from that path is dropped.
+Pushes and arrival `touch` on the destination board are kept when an edge entry is refused. `touch` goes through `memorysendtoelement`, which no-ops unless `READ_CONTEXT.board` is set. Edge exits and firmware `#goto` run with that set; `vm:playermovetoboard` does not.
 
 ---
 
@@ -8393,44 +8436,43 @@ Builds the global audio routing and processing chain for the synth.
 ```
 playvolume ─────┐
                │
-bgplayvolume ──┼──► sidechaincompressor ──► razzlegain ──► maincompressor ──► razzledazzle ──► razzlechorus ──► mainvolume ──► destination
-ttsvolume ─────┤         ▲                        │
-               │         │                        │
-drumvolume ────┴─────────┼────────────────────────┘
+bgplayvolume ──┼──► sidechaincompressor ──► mix ──► maincompressor ──► razzle ──► destination
+ttsvolume ─────┤         ▲                  │
+               │         │                  │
+drumvolume ────┴─────────┼──────────────────┘
                          │
 drumaction ──────────────┘
-altaction ────────────────────────────────────────────────────────────────────────────┘
-                         │
-hiss (pink noise) ───────┘
+altaction (SC key) ──────┘
+hiss (in razzle) ─────────────────────────────────────────┘
 ```
 
-`razzlegain` sums ducked play with bg, TTS, and drums before the main compressor.
+Stem faders (`readplayvolume` / `readbgplayvolume` / `readttsvolume` / `readdrumvolume`) scale each bus into the mix. `#vol` scales play/bg/tts via effective SAB trims and drums via SAB VOL. Razzle is post-compressor bed only (not a master fader).
 
 ## Components
+
+### Main Compressor
+
+- **Threshold:** -24 dB (was Tone -28; less GR so peaks stay hotter into the limiter)
+- **Ratio:** 4:1
+- **Attack / release:** 3 ms / 150 ms (RMS envelope detector; Tone product release)
+- **Applied gain slew:** 8 ms attack / 150 ms release (`comp_gain_smooth`, separate from detector)
+- **Parallel mix:** 100% wet (`kMainCompMix = 1`)
+- **Knee:** 30 dB soft knee (Tone product `Compressor`; full width around threshold via `compressorskneedb`)
+- **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
+- **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
+- **Tone reference:** `Tone.Compressor` was -28 / 4 / 3 ms / 150 ms / knee 30
+- **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders (`yarn notepop:render:ab`)
 
 ### Sidechain Compressor
 
 - **Threshold:** -42 dB
 - **Ratio:** 5:1
-- **Attack / release:** 5 ms / 60 ms
-- **Mix / makeup:** 0.50 / +12 dB (idle play ~2.5x; `kScMix` / `kScMakeupDb` in `zss_config.h`)
-- **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB)
+- **Attack / release:** 1 ms / 60 ms (`kScAttackSec` / `kScReleaseSec`; attack faster than Tone's 5 ms so drum duck punches)
+- **Mix / makeup:** 0.75 / **+5 dB** (`kScMix` / `kScMakeupDb`; Tone used +24 dB)
+- **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -20 dB via `kScDrumKeyDb`)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
-- **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus
-- **Daisy:** `sidechainkey()` sums trimmed bg/TTS/drum tap; `sidechaingain()` on play bus only (`zss_daisy_synth.cpp`); SAB slot 4 bypasses duck for offline A/B (`yarn sidechain:render:ab`) or live dev (`ZSS_DAISY_NO_SIDECHAIN=1`, `?no_sc=1`)
-
-### Main Compressor
-
-- **Threshold:** -28 dB
-- **Ratio:** 4:1
-- **Attack / release:** 3 ms / 80 ms (RMS envelope detector)
-- **Applied gain slew:** 8 ms attack / 60 ms release (`comp_gain_smooth`, separate from detector)
-- **Parallel mix:** 100% wet (`kMainCompMix = 1`) after knee/RMS fix
-- **Knee:** 6 dB (Tone `Compressor`; Daisy `kMainCompKneeDb` in `maincomptargetgain()`)
-- **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
-- **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
-- **Tone:** `Tone.Compressor` after `razzlegain` — internal gain smoothing on applied GR
-- **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders (`yarn notepop:render:ab`)
+- **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus; clap/bass feed `drumaction` before kit bus gain; bass MembraneSynth volume +8 on that path
+- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−20 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers
 
 ### Razzle Chain
 
@@ -8444,12 +8486,11 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 | Bus | Tone | Daisy |
 |-----|------|-------|
-| Play into sidechain | `volumetodb(20)` | `kPlayBusGain` |
-| Drums | `volumetodb(100) + 10` dB | `kDrumBusGain` (calibrate: `yarn play-drum-balance:calibrate`) |
-| bgplay / TTS | `10^((20*log10(vol)-35)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
-| Main fader | `40*log10(vol × 0.25)` on `mainvolume` (offset **-36 dB**, +12 dB per doubling) | `readmainvolume()` (`kMainFaderOffsetDb`) |
+| Play stem | playvolume fader | `readplayvolume()` (`40*log10-55`, `#playvol` × `#vol`) |
+| Drums | drum bus gain | `kDrumBusGain * readdrumvolume(#vol)` |
+| bgplay / TTS | `10^((40*log10(vol)-55)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
 
-Boot SAB defaults: master/play fader **50**, bgplay **50**, TTS **100**.
+Boot SAB defaults: `#vol` **50**, bus trims **90** (effective **45**), TTS trim path same.
 
 ### Broadcast Destination
 
@@ -8979,8 +9020,8 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 |-------|--------------|--------------|
 | `basefrequency` | **100** | **100** |
 | `octaves` | **6** | **6** |
-| `sensitivity` | **0** | **0** |
-| `gain` | **2** dB | **2** dB |
+| `sensitivity` | **0** (Tone) | **−3** dB |
+| `gain` | **2** dB (Tone) | **25** dB |
 | `follower` | **0.2** s | **0.2** s |
 | `Q` | **2** (internal) | **2** hardcoded |
 | send `on` | 18 | 18 |
@@ -9004,12 +9045,12 @@ Tone: all buses share one `FXCHAIN.autowah` — param changes affect every bus.
 | 6 | autofilter frequency | 3 |
 | 7 | autofilter depth | 0.5 |
 | 8 | vibrato maxdelay | 0.02 |
-| 9 | autowah sensitivity | 0 |
+| 9 | autowah sensitivity | −3 |
 | 10 | vibrato depth | 0 |
 | 11 | vibrato frequency | 5 |
 | 12 | autowah basefrequency | 100 |
 | 13 | autowah octaves | 6 |
-| 14 | autowah gain | 2 |
+| 14 | autowah gain | 25 |
 | 15 | autowah follower | 0.2 |
 | 16 | autofilter basefrequency | 200 |
 | 17 | autofilter octaves | 5 |
@@ -9105,13 +9146,13 @@ flowchart LR
 
   FX0 --> PLAYSUM[play sum]
   FX1 --> PLAYSUM
-  FX2 --> BG["bg x bggain"]
+  FX2 --> BG["bg x readbgplayvolume"]
 
-  DR --> DRUM["drums x kDrumBusGain"]
+  DR --> DRUM["drums x kDrumBusGain x readdrumvolume"]
   TTS --> TTSL["tts x readttsvolume"]
 
   PLAYSUM --> SC["sidechain duck"]
-  SC --> PB["play x kPlayBusGain"]
+  SC --> PB["play x readplayvolume"]
   BG --> MIX
   TTSL --> MIX
   DRUM --> MIX
@@ -9119,26 +9160,24 @@ flowchart LR
 
   MIX --> MC[main compressor]
   MC --> RZ[razzle]
-  RZ --> MV["x readmainvolume #playvol"]
-  MV --> OUT["clamp +/-1"]
+  RZ --> OUT["clamp +/-1"]
 ```
 
-**Naming trap:** Native `readmainvolume()` is the **play-bus post-chain fader** (SAB PLAY),
-driven by `#playvol` after `#vol` main scale (`effective = playvol * vol / 100`).
-CLI `#vol` is the outer main multiplier for play, bgplay, TTS, and board TV -- not the DSP fader name.
-Play stem into the mix is still fixed at `kPlayBusGain`.
+`#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
+(`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**40** / **-55**). Doubling SAB (~`#vol` 50→100) is about **+12 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
 Defined in [`wasmmainsab.ts`](../../backend/wasm/wasmmainsab.ts). Mute floor: raw `<= 0.001` -> gain `0`.
-SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**).
+Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: main **50**, bus trims **90** -> SAB **45**). VOL slot is raw `#vol`.
 
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
-| `#vol` main | (JS scale) | **50** | multiplies all bus trims + board TV | Outer main |
-| `#playvol` | PLAY (0) | **90** | `40*log10(vol*0.25) + kMainFaderOffsetDb` | After razzle (`readmainvolume`). Doubling the SAB value is +12 dB |
-| `#bgvol` | BGPLAY (1) | **90** | `20*log10(vol) - 35` | bgplay stem |
-| `#ttsvol` | TTS (2) | **90** | same as bg | TTS sample level |
+| `#vol` main | VOL (6) + JS scale | **50** | multiplies play/bg/tts trims; drum stem via `readdrumvolume`; board TV | Outer master |
+| `#playvol` | PLAY (0) | **90** | `40*log10(vol) - 55` | Play stem (`readplayvolume`) |
+| `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
+| `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
 | Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
 
@@ -9150,26 +9189,26 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| `kMainFaderOffsetDb` | **-36** | Added to the 40*log10 play fader. `#vol` 100 stays near the old +18 dB anchor; `#vol` 50 is 12 dB under it |
-| `kMainLimiterMakeup` | **1 / SoftLimit(0.7)** | After the Daisy limiter. Raises the limited peak from ~0.88 to full scale (0 dBFS). Output still clamps at +/-1 |
-| `kPlayBusGain` | **0.168** | Fixed play stem into mix (~3 dB under prior 0.238 vs drums) |
-| `kDrumBusGain` | **0.338** | Drum stem vs play (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
+| `kDrumBusGain` | **1.618** | Drum stem vs play under `#vol` (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **12** | Sidechain makeup (`kScMakeupDb` in `zss_config.h`) |
-| `kScMix` | **0.50** | Duck depth (idle play boost ~2.5x with makeup; was ~12x at 24/0.75) |
-| `kScAttackSec` / `kScReleaseSec` | 0.005 / 0.06 | Sidechain timing |
-| SC key trims | bg/tts **-12 dB**, drums **-28 dB** | Key bus only (`zss_main.cpp`) |
-| `kMainCompThresholdDb` | **-28** | Main compressor |
+| `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
+| `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
+| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Sidechain timing (attack faster than Tone 5 ms) |
+| SC key trims | bg/tts **-12 dB**, drums **`kScDrumKeyDb` (−20)** | Key bus only (`zss_main.cpp`) |
+| `kScDrumBassKeyDb` | **+8** | Bass into SC only (Tone MembraneSynth volume); audible kick stays `kDrumBassVolumeDb` |
+| SC clap/bass tap | pre-`kDrumGains` | `drumsout()` — kit gain is audible-only |
+| `kMainCompThresholdDb` | **-24** | Main compressor (was Tone -28; less GR into limiter) |
 | `kMainCompRatio` | **4** | |
-| `kMainCompKneeDb` | **6** | Soft knee (was 30; matches FX return) |
-| `kMainCompMix` | **1.0** | Full wet GR (was 0.55 parallel) |
-| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.08 | RMS detector |
-| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.06 | applied GR slew |
+| `kMainCompKneeDb` | **30** | Soft knee (Tone `Compressor` knee) |
+| `kMainCompMix` | **1.0** | Full wet GR |
+| `kMainCompAttackSec` / `kMainCompReleaseSec` | 0.003 / 0.15 | RMS detector (Tone release 150 ms) |
+| `kMainCompGainAttackSec` / `kMainCompGainReleaseSec` | 0.008 / 0.15 | applied GR slew (release matches Tone) |
 | `kRazzleVibratoWet` | **0.02** | Post-comp bed |
 | `kRazzleChorusWet` | **0.25** | |
 | `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
-SAB bypass slots: COMP_BYPASS (3), SC_BYPASS (4) for offline A/B.
+SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`).
 
 ## FX return bus (multi-FX)
 
@@ -9238,10 +9277,10 @@ Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOL
 
 | Symptom | First knobs | Calibrate task |
 |---------|-------------|----------------|
-| Too loud at boot | `kMainFaderOffsetDb`, `WASM_DEFAULT_PLAY_VOLUME` | -- |
+| Too loud at boot | `WASM_DEFAULT_PLAY_VOLUME`, `#vol` | -- |
 | Multi-FX pile-up | `#fx on` presets, `kFxReturnWetTrim` | `ops:daisy:level-stability:test:fxmatrix` |
-| Play vs drums balance | `kPlayBusGain`, `kDrumBusGain` | `ops:daisy:play-drum-balance:calibrate` |
-| Idle play too hot | `kScMakeupDb`, `kScMix` | `zss_config.h` |
+| Play vs drums balance | `kDrumBusGain`, `#playvol` | `ops:daisy:play-drum-balance:calibrate` |
+| Idle play too hot / drums buried | `kScMakeupDb`, `kScMix` | `zss_config.h` |
 | Player quick trim | `#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`, `#fx N` | -- |
 
 ## Legacy / not live Daisy
@@ -9332,7 +9371,9 @@ Parallel wet sends. Vibrato is pitch modulation, not a wet send. See [fx-types-r
 | DC block | Master out | `DcBlock` | cpp `zss_process()` |
 | Master trim | Level staging | **-10 dB trim**, 0 makeup (no comp); play **Tone volumetodb(20)**; drum **play × 1.35** | [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) |
 
-**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB.
+**Main compressor params:** threshold −28 dB, ratio 4:1, attack 3 ms, release 150 ms, knee 30 dB, applied GR slew 8 ms / 150 ms (Tone product).
+
+**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 1 ms, release 60 ms, mix 0.75, makeup **+5 dB** (Tone had +24); bg/TTS send −12 dB, drum send **−20 dB** (`kScDrumKeyDb`).
 
 **FX bus gain:** per-send linear gain from [`wasmfxstate.ts`](../../backend/wasm/wasmfxstate.ts) (`on` → 50). Echo/reverb use send×wet; **`wet_sum`** × 1.4 then the return compressor before `dry + wet_sum`. Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
 

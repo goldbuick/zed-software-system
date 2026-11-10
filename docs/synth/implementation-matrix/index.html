@@ -266,7 +266,8 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>Sidechain params:</strong> threshold −42 dB (power domain), ratio 5, attack 5 ms, release 60 ms, mix 0.50, makeup +12 dB; bg/TTS send −12 dB, drum send −28 dB.</p>
+<p><strong>Main compressor params:</strong> threshold −28 dB, ratio 4, attack 3 ms, release 150 ms, knee 30 dB, applied GR slew 8 ms / 150 ms (Tone product).</p>
+<p><strong>Sidechain params:</strong> threshold −42 dB (power domain), ratio 5, attack 1 ms, release 60 ms, mix 0.75, makeup <strong>+5 dB</strong> (Tone had +24); bg/TTS send −12 dB, drum send <strong>−20 dB</strong> (<code>kScDrumKeyDb</code>).</p>
 <p><strong>FX bus gain:</strong> per-send linear gain from <a href="../../backend/wasm/wasmfxstate.ts"><code>wasmfxstate.ts</code></a> (<code>on</code> → 50). Echo/reverb use send×wet; <strong><code>wet_sum</code></strong> × 1.4 then the return compressor before <code>dry + wet_sum</code>. Offline matrix: <code>yarn task run ops:daisy:level-stability:test:fxmatrix</code>.</p>
 <blume-mermaid class="not-prose my-6 flex justify-center overflow-x-auto" data-source="flowchart LR
   play[&quot;play bus + voice FX&quot;]
