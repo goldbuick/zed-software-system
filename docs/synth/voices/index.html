@@ -12,7 +12,7 @@
 <p><code>#synth custom</code></p>
 <h3 id="phase"><a class="blume-heading-anchor" href="#phase">phase</a></h3>
 <p><code>#synth phase &lt;degrees&gt;</code></p>
-<p>The phase is the starting position within the oscillator’s cycle. For example a phase of 180 would start halfway through the oscillator’s cycle. Used by sine, square, triangle, sawtooth, custom, and the fat waves.</p>
+<p>Tone OmniOscillator degrees (180 = half cycle). Daisy converts to cycles (<code>degrees / 360</code>) in osccfg. Used by sine, square, triangle, sawtooth, custom, and the fat waves.</p>
 <h3 id="pwm"><a class="blume-heading-anchor" href="#pwm">pwm</a></h3>
 <p><code>#synth pwm</code></p>
 <h3 id="modfreq"><a class="blume-heading-anchor" href="#modfreq">modfreq</a></h3>
@@ -49,8 +49,8 @@
 <h3 id="fmsawtooth"><a class="blume-heading-anchor" href="#fmsawtooth">fmsawtooth</a></h3>
 <p><code>#synth fmsawtooth</code></p>
 <h3 id="modindex"><a class="blume-heading-anchor" href="#modindex">modindex</a></h3>
-<p><code>#synth modindex &lt;degrees&gt;</code></p>
-<p>The modulation index, the depth or amount of the modulation. It is the ratio of the frequency of the modulating signal (mf) to the amplitude of the modulating signal (ma), as in ma/mf. Used by the fm waves.</p>
+<p><code>#synth modindex &lt;number&gt;</code></p>
+<p>Tone FMOscillator modulation index: carrier Hz ≈ <code>fc * (1 + index * modWave)</code>. Default <code>2</code>. Used by the fm waves.</p>
 <h3 id="fatsine"><a class="blume-heading-anchor" href="#fatsine">fatsine</a></h3>
 <p><code>#synth fatsine</code></p>
 <h3 id="fatsquare"><a class="blume-heading-anchor" href="#fatsquare">fatsquare</a></h3>

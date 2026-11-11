@@ -31,7 +31,7 @@ description: Player reference for #synth voices and their config keys.
 
 `#synth phase <degrees>`
 
-The phase is the starting position within the oscillator's cycle. For example a phase of 180 would start halfway through the oscillator's cycle. Used by sine, square, triangle, sawtooth, custom, and the fat waves.
+Tone OmniOscillator degrees (180 = half cycle). Daisy converts to cycles (`degrees / 360`) in osccfg. Used by sine, square, triangle, sawtooth, custom, and the fat waves.
 
 ### pwm
 
@@ -105,9 +105,9 @@ In seconds. Used by the am and fm waves.
 
 ### modindex
 
-`#synth modindex <degrees>`
+`#synth modindex <number>`
 
-The modulation index, the depth or amount of the modulation. It is the ratio of the frequency of the modulating signal (mf) to the amplitude of the modulating signal (ma), as in ma/mf. Used by the fm waves.
+Tone FMOscillator modulation index: carrier Hz ≈ `fc * (1 + index * modWave)`. Default `2`. Used by the fm waves.
 
 ### fatsine
 

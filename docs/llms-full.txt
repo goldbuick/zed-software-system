@@ -8360,7 +8360,7 @@ Source: https://zed.cafe/docs/synth/algosynth
 
 FM-style algorithmic synthesizer with 4 operators and 8 modulation algorithms.
 
-**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. `#synth osc1`–`osc4` set each operator wave (including carriers after FM rewrite). `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
+**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. FM depth matches Tone: `carrier_hz += (note_hz * modindex) * modulator` (enveloped op). `#synth osc1`–`osc4` set each operator wave. `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
 
 ## Overview
 
@@ -8472,7 +8472,7 @@ Stem faders (`readplayvolume` / `readbgplayvolume` / `readttsvolume` / `readdrum
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -20 dB via `kScDrumKeyDb`)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus; clap/bass feed `drumaction` before kit bus gain; bass MembraneSynth volume +8 on that path
-- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−20 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers
+- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−20 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers. After razzle, master **Daisy Limiter** still GR the full mix (drum peaks can pull play down); SAB slot 7 / `?no_lim=1` bypasses it for A/B.
 
 ### Razzle Chain
 
@@ -8486,9 +8486,9 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 | Bus | Tone | Daisy |
 |-----|------|-------|
-| Play stem | playvolume fader | `readplayvolume()` (`40*log10-55`, `#playvol` × `#vol`) |
+| Play stem | playvolume fader | `readplayvolume()` (`60*log10-105`, `#playvol` × `#vol`) |
 | Drums | drum bus gain | `kDrumBusGain * readdrumvolume(#vol)` |
-| bgplay / TTS | `10^((40*log10(vol)-55)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
+| bgplay / TTS | `10^((60*log10(vol)-105)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
 
 Boot SAB defaults: `#vol` **50**, bus trims **90** (effective **45**), TTS trim path same.
 
@@ -8886,7 +8886,7 @@ See also: [voice-types-reference.md](voice-types-reference.md), [voicefx.md](voi
 | `reverb` | Convolution reverb | `Reverb` | DaisySP-LGPL `ReverbSc` + predelay `fxreverb()` |
 | `autofilter` | LFO filter sweep | `AutoFilter` | LFO + biquad `fxautofilterbus()` |
 | `vibrato` | Pitch wobble | `Vibrato` (wet in FX chain) | Pitch cents `playvibratocents()` — **not serial wet** |
-| `distort`, `distortion` | Waveshaper | `Distortion` | `tonedistort()` / `fxdistortwet()` |
+| `distort`, `distortion` | Waveshaper | `Distortion` | `sin(dry × 3·(1+9·amt)·π)` foldback, parallel wet after return-comp |
 | `autowah` | Envelope filter | `AutoWah` | Follower + peaking `fxautowahbus()` |
 
 Aliases: `fcrush`→`fc`, `distort`→`distortion`.
@@ -9004,7 +9004,7 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 | `frequency` | not in `#synth` API | **5** | **WASM-only** |
 | send `on` | **50** | **50** | |
 
-**Tone:** wet delay in FX chain. **WASM:** pitch cents on gated voices; auto-targets depth **0.5** when send on but depth ≈ 0. Group 3 (TTS) never gets vibrato pitch mod.
+**Tone:** wet delay in FX chain. **WASM:** pitch cents on gated voices; auto-targets depth **0.5** when send on but depth ≈ 0. Play vibrato SAB is a 0..1 note-window envelope only — it scales FX depth, it does not replace `#vibrato depth` / `frequency`. Group 3 (TTS) never gets vibrato pitch mod.
 
 ### 6. `distort` / `distortion`
 
@@ -9165,7 +9165,7 @@ flowchart LR
 
 `#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
 (`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**40** / **-55**). Doubling SAB (~`#vol` 50→100) is about **+12 dB**. Razzle is not a volume fader.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**60** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+18 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
@@ -9175,7 +9175,7 @@ Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: ma
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
 | `#vol` main | VOL (6) + JS scale | **50** | multiplies play/bg/tts trims; drum stem via `readdrumvolume`; board TV | Outer master |
-| `#playvol` | PLAY (0) | **90** | `40*log10(vol) - 55` | Play stem (`readplayvolume`) |
+| `#playvol` | PLAY (0) | **90** | `60*log10(vol) - 105` | Play stem (`readplayvolume`) |
 | `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
@@ -9190,7 +9190,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | Constant | Value | Controls |
 |----------|-------|----------|
 | Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
-| `kDrumBusGain` | **1.618** | Drum stem vs play under `#vol` (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| `kDrumBusGain` | **1.0** | Drum stem vs play under `#vol` (was 1.618; cafe ear limiter duck; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
 | `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
 | `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
@@ -9208,7 +9208,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kRazzleChorusWet` | **0.25** | |
 | `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
-SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`).
+SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6), LIM_BYPASS (7) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`, `?no_lim=1`).
 
 ## FX return bus (multi-FX)
 
@@ -9226,7 +9226,7 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kFxReturnWetTrim` | **1.4** | `zss_config.h` | After wet sum |
 | `kReverbPostGain` | **1.5** | `zss_config.h` | `tanh(wet * gain)` |
 | FX return comp | **-24 dB / 4:1 / knee 6** | `zss_config.h` | On wet only |
-| Distortion drive | **dry x 3** | `zss_fx.cpp` | Into Overdrive |
+| Distortion drive | **sin(dry × 3·(1+9·amt)·π)** | `zss_fx.cpp` | Foldback wet after return-comp |
 | Echo feedback default | **0.666** (clamp 0-0.95) | `wasmfxstate.ts` | |
 | Reverb decay default | **2.5** | same | |
 
@@ -9256,12 +9256,14 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kPianoVoiceGain` | 3.15 | Piano / epiano |
 | `kTimpaniVoiceGain` | 0.70 | Timpani |
 | `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 4.4 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
-| `kOrganVoiceGain` / `kOrganTonewheelGain` | 0.65 / 1.8 | Drawbar / tonewheel (locked) |
+| `kOrganTonewheelGain` | 1.8 | Tonewheel organ (locked) |
 | `kDripVoiceGain` / `kDootVoiceGain` | 1.32 / 1.15 | Drip / doot |
 | `kDripDettackSec` | 0.35 | DaisySP drip hard-cut window |
-| `kBellsVoiceGain` | 0.49 | Bells mix (was 0.65) |
-| `kDrumTickTrim` / `kDrumTweetTrim` | 1.35 / 1.25 | Hi-hat family |
-| `kDrumGains[12]` | 0.24-1.0 | Per drum digit (cowbell +`kDrumCowbellVolumeDb`; bass `kDrumGains[9]=0.32`, `kDrumBassVolumeDb=0`) |
+| `kBellsVoiceGain` | 0.35 | Bells mix (cafe ear trim; was 0.49) |
+| `kDrumTickTrim` / `kDrumTweetTrim` | **1.0** / **1.0** | Hi-hat extras folded into flat gains |
+| `kDrumGains[12]` | **0.05** each | Flat kit (−26 dB into bus before `kDrumBusGain`); stem gate target drum−play **−11 ±2** dB |
+| `kDrumCowbellVolumeDb` | **0** | Was +8; cowbell matches flat gains |
+| `kDrumBassVolumeDb` | **0** | Kick uses `kDrumGains[9]` only |
 
 Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOLUME_DB`).
 
@@ -9510,7 +9512,7 @@ Per-group envelope follower in `ZssFxGroup::return_comp_env`. Detector still run
 
 - Reverb: DaisySP-LGPL **ReverbSc** + predelay; `tanh(wet × kReverbPostGain)` (**1.5**)
 - Echo: feedback clamp 0–0.95
-- Distortion: `Overdrive` with ×3 input drive
+- Distortion: `sin(dry × 3·(1+9·amt)·π)` foldback added after return-comp (not into the shared wet compressor)
 
 ## Main bus (out of scope)
 
@@ -9610,7 +9612,7 @@ Live note and drum onsets are applied on the audio thread at the scheduled grid 
 | `#play` | 0–3 | ±4 ms (`HUMANIZE_SEC`) |
 | `#bgplay` | 4–7 | ±2 ms (`HUMANIZE_BGPLAY_SEC`) |
 
-Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.
+Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Pitched notes also skip jitter when that voice’s `#synth port` / `portamento` is greater than zero so abutting glides stay grid-locked. Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.
 
 ---
 
@@ -10920,7 +10922,9 @@ See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voice
 | `#synth1`–`#synth4` | 0–3 individually | Per play voice |
 | `#synth5 …` | 4–7 | `#bgplay` voices |
 
-Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts). Per-slot family/osc memory survives type switches until `#synth restart`.
+Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynthvoice` → `synthvoice` → backend `setvoiceconfig` → WASM [wasmvoiceconfig.ts](../../backend/wasm/wasmvoiceconfig.ts).
+
+**OmniOscillator parity:** SYNTH wave names match archive `Tone.Synth` + OmniOscillator type strings (not MonoSynth; not FMSynth). Selecting a wave **reseeds** that family's osc defaults (`seedomnioscdefaults`). SOS family blobs and `(type, algo)` env memory still survive non-wave type hops. `#synth restart` full clear.
 
 ---
 
@@ -10939,12 +10943,13 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 
 | Kind | Keys | SAB | Native | Status |
 |------|------|-----|--------|--------|
-| basic | `phase` | osccfg | `oscwavewithphase` | Wired |
-| pulse | `width` | osccfg | pulse branch | Wired |
+| basic | `phase` (degrees → cycles/360) | osccfg | `oscwavewithphase`; reseed clears partials | Wired |
+| pulse | `width` | osccfg | pulse branch; reseed width `0.2` | Wired |
 | pwm | `width`, `modfreq` | osccfg | LFO at **modfreq** (not FM harm) | Proven (Jest: modfreq ≠ harmonicity) |
-| am* | harmonicity, modtype, modenv | osccfg | AM + **familywavetobasic** | Proven (carrier map Jest) |
-| fm* | + modindex; harm = note×ratio | osccfg | FM + **familywavetobasic**; **not modfreq** | **Proven** (`fmsquare`≠sine map + SAB 21) |
-| fat* | count, phase, spread (cents) | osccfg | phase-accumulator unison + family map | Proven (carrier map Jest) |
+| am* | harmonicity, modtype, modenv | osccfg | AM + **familywavetobasic**; mod ±1; **modenv kept** (Daisy) | Proven (carrier map Jest; cafe ear harmonicity) |
+| fm* | + modindex; harm = note×ratio | osccfg | Tone FMOscillator: `fc*(1+I*m)`, full-scale m; through-zero **signed phase** (not `|f|`); **modenv kept** | Proven (carrier + reseed Jest; ear vs Omni) |
+| fat* | count, phase (deg), spread (cents) | osccfg | phase-accumulator unison + family map | Proven (carrier map Jest) |
+| partials | array on basic/custom | osccfg | sine stack **only** osctype 0–3; cleared on typed-wave select | Proven |
 
 **Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
 
@@ -10952,8 +10957,8 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 
 | Family | `#synth` keys | N/A | Status |
 |--------|---------------|-----|--------|
-| retro/buzz/clang/metallic/hollow/noise | type, env, vol | LFSR meta | Wired |
-| bells | env (select `0.01/3/0.3/6`), vol | FM/sparkle internals | Wired |
+| retro/buzz/clang/metallic/hollow/noise | type, env, vol | LFSR meta; scan `note_hz*8` | Proven |
+| bells | env (select `0.001/2.5/0/1.2`), vol | Modal one-shot + sparkle | Proven |
 | doot | env, vol | octaves, pitchDecay | Wired |
 
 ### ALGO `algo0`–`algo7`
@@ -10968,9 +10973,9 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 | `pluck` | structure, brightness, damping, accent | 0.14/0.38/0.72/0.12 | Wired |
 | flute/clarinet/brass | breath, pressure, brightness, resonance | **per-algo** `winddefaults()` (not pool) | Wired |
 | piano | spread 0–1, hammer, brightness, damping | 0.18/0.55/0.5/0.45 | Proven (shared-key Jest) |
-| violin | bow, pressure, vib, body (+ port) | see code presets | Proven (shared-key Jest) |
+| violin | bow, pressure, vib, body (+ port) | see code presets | Proven (cafe ear) |
 | steel | pick, body, damping, position | steel select presets | Proven (shared-key Jest) |
-| tonewheel | drawbar, click, leak, bright | 0.7/0.15/0.2/0.5; `drawbar` is param only | Wired |
+| tonewheel | drawbar, click, leak, bright | 0.7/0.15/0.2/0.5; `drawbar` is param only | Proven (cafe ear) |
 
 **Removed named types** (no longer selectable): `drip`, `panpipe`, `epiano`, `timpani`, `viola`, `nylon`, `drawbar` (as voice).
 
@@ -11000,7 +11005,7 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 | `timpani` | `TIMPANI_VOICE` | — | Daisy WASM only (`timpanivoice`, pitched membrane) |
 | `violin` / `viola` | `BOWED_VOICE` (algo 0–1) | — | Daisy WASM only (`bowedvoice`, bow + formants) |
 | `nylon` / `steel` | `GUITAR_VOICE` (algo 0–1) | — | Daisy WASM only (`guitarvoice`, `StringVoice` + pick) |
-| `tonewheel` / `drawbar` | `ORGAN_VOICE` (algo 0–1) | — | Daisy WASM only (`organvoice`, drawbar stack) |
+| `tonewheel` | `ORGAN_VOICE` (algo 0) | — | Daisy WASM only (`organvoice`, live drawbar stack) |
 
 ---
 
@@ -11042,14 +11047,13 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | Osc kind | `#synth` params | WASM default | Tone default (when applicable) |
 |----------|-----------------|--------------|--------------------------------|
 | **All SYNTH** | `env` / `envelope`, `port` / `portamento` | env above; port `0` | Tone reset env `0.01/0.01/0.5/0.01`; port `0` | Daisy: linear **`ZssLinearEnv`** on voice bus; AM/FM **`modenv`** uses same helper |
-| **sine/square/triangle/sawtooth/custom** | `phase` | `0` | **Tone** Oscillator: `0` |
+| **sine/square/triangle/sawtooth/custom** | `phase` (degrees) | `0` | **Tone** OmniOscillator degrees; Daisy stores cycles (`deg/360`) |
 | **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
 | **pwm** | `modfreq`, `modulationfrequency`, `width` | modfreq `1`, width `0.2` | **Tone** / Daisy PWMOscillator: LFO at `modfreq` Hz modulates pulse width around 0.5 by `width` |
-| **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` |
-| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** / Daisy FMOscillator: harm `1`, modindex `2`, modtype `square`; modulator Hz = note × `harmonicity` (**not** `modfreq`). Carrier via `familywavetobasic` — `fmsquare` → basic square, never bare `osctype-20` |
-
-| **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator class default: count `3`, spread `20`, type `sawtooth`; **`fatsine` stacks sines** (OmniOscillator suffix) |
-| **Partials** | array value or trailing numbers | partialcount `0`, 8 zeros | **Tone**: partials `[]`, partialCount `0` |
+| **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` (no modenv). Daisy **keeps** `modenv` |
+| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | Tone **FMOscillator** (Omni `fm*`): `f = fc*(1+I*m)`; Daisy advances carrier phase with signed Hz (through-zero). **`modenv` kept** (archive Tone write was typed no-op) |
+| **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator: count `3`, spread `20`; **`fatsine` stacks sines** |
+| **Partials** | array on basic/custom only | partialcount `0` | Cleared when selecting pulse/pwm/am/fm/fat; native ignores partials outside osctype 0–3 |
 
 WASM osc defaults: [wasmoscconfigsab.ts](../../backend/wasm/wasmoscconfigsab.ts) `DEFAULT_WASM_OSC_CONFIG`.
 
@@ -11090,6 +11094,8 @@ WASM osc defaults: [wasmoscconfigsab.ts](../../backend/wasm/wasmoscconfigsab.ts)
 
 LFSR tap differences per type are in `generatenoisesynth()` (not user-configurable).
 
+**Play rate:** Daisy `noisevoice` advances the wave at `note_hz * 8` (+3 octaves). `basepitch` is only the pitch-damping gain reference, not scan rate.
+
 ### WASM-only fixed meta ([noisemeta.ts](../../backend/wasm/noisemeta.ts)) — not `#synth`-settable
 
 | Type | basepitch | pitchfiltermult | issoft | expression |
@@ -11116,19 +11122,18 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 ### Bells fixed levels
 
-**Main FMSynth (after ZSS reset):** harmonicity `1.5`, modulationIndex `30`, carrier `sine`, modulator `square`, envelope `0.01/3/0.3/6`, modulationEnvelope `0.5/1/0.2/4`.
+**Historic Tone (archive):** FMSynth harm `1.5` / modindex `30` / env `0.01/3/0.3/6` + MetalSynth sparkle. Daisy does **not** run that path.
 
-**Sparkle MetalSynth (fixed, not reset):** volume `-16` dB, envelope `0.001/1.4/0/0.321`, harmonicity `5.1`, modulationIndex `32`, resonance `4000`, octaves `1.5`.
+### Bells hardcoded levels (Daisy)
 
-**Tone FMSynth library baseline:** ModulationSynth defaults — harmonicity `3`, modulationIndex `10`.
+| Layer | Behavior |
+|-------|----------|
+| Body | DaisySP `ModalVoice`, **`SetSustain(false)`** — single trigger hit, resonator decays (no gated dust ring) |
+| Sparkle | Fixed FM-ish: +2 oct, harm `5.1`, mod `32`, env `0.001/1.4/0/0.321`, mix `× 0.15` |
+| Amp env | Select installs `0.001/2.5/0/1.2`; `#synth env` overrides |
+| Output | `× kBellsVoiceGain` (`0.35`) |
 
-### Bells hardcoded levels
-
-Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
-
-**DaisySP WASM:** body is `ModalVoice`; sparkle uses fixed `sparkleenv` and mix (`× 0.15`). Selecting `#synth bells` installs carrier env `0.01/3/0.3/6` on `voiceenv`.
-
-`#synth env` overrides that amp envelope; sparkle envelope stays fixed.
+`#synth env` overrides amp envelope; sparkle envelope stays fixed.
 
 ---
 
@@ -11165,9 +11170,19 @@ Init envelope → **0.001/0.4/0.01/1.4** s. Pitch matches Tone MembraneSynth: st
 | `env1`–`env4` | `envelope1`–`4` | per-operator ADSR |
 | `port` / `portamento` | — | glide |
 
-### Defaults (ZSS AlgoSynth + WASM mirror)
+### Defaults (Tone `AlgoSynth.getDefaults()` + Daisy mirror)
 
-algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `sine`; env1–4 `0.01/0.01/1/0.5`; operator volume `-10` dB.
+`#synth algoN` reseeds that voice’s algo SAB row (same idea as Omni wave reseed):
+
+| Field | Default |
+|-------|---------|
+| algorithm | `N` from `algoN` |
+| harmonicity1–3 | `2` |
+| modindex1–3 | `1` |
+| osc1–4 | `sine` |
+| env1–4 | `0.01 / 0.01 / 1 / 0.5` |
+| outer `env` (first visit) | `0.01 / 0.01 / 0.5 / 0.01` |
+| operator gain | −10 dB (`kAlgoOpGain`) |
 
 ### Voice-level `env` vs per-operator `env1`–`env4`
 
@@ -11314,9 +11329,9 @@ Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 
 
 ---
 
-## 14. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
+## 14. Organ — `tonewheel` (`ORGAN_VOICE`)
 
-Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#vibrato` / `#echo` FX.
+Daisy WASM only. Summed harmonic drawbars driven by live `drawbar` / `bright` + scanner vibrato (`leak`) + key-click envelope on gate rise. Bare `drawbar` as a voice type is removed (`drawbar` is the param only). Leslie not modeled — use `#vibrato` / `#echo` FX.
 
 | Param | Value | Default |
 |-------|-------|---------|
@@ -11419,13 +11434,15 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 ## Config memory across type switches
 
-Per play/bgplay voice index, family blobs (`stringensemble`, `pluck`, `wind`, …) and osc/algo rows stay in memory when you change type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
+Per play/bgplay voice index, SOS family blobs (`stringensemble`, `pluck`, `wind`, …) stay in memory when you change named type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
+
+**Omni wave select** (`sine`, `fmsquare`, `pwm`, …): reseeds that family's osc defaults via `seedomnioscdefaults` (Tone OmniOscillator subclass behavior) and clears partials. Algo rows are unchanged by wave select.
 
 `#synth <name>` selects the type. `#synth <key> <value>` sets a key on the current voice and does not select a type.
 
 ## Source Type Changes
 
-First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6` on first visit.
+First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope but **reseed osc family defaults**. `#synth bells` installs strike env `0.001/2.5/0/1.2` on first visit.
 
 | Config | Source Type |
 |--------|-------------|
@@ -11547,12 +11564,14 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 |------------|--------|-------------|
 | pwm | `modfreq` | LFO rate for pulse-width modulation (Hz) |
 | pulse | `width` | Static pulse width |
-| sine/square/triangle/sawtooth/custom | `phase` | Phase offset |
+| sine/square/triangle/sawtooth/custom | `phase` | Phase offset (degrees → cycles) |
 | am* | `harmonicity`, `modtype`, `modenv` | AM params (`harmonicity` = modulator ratio) |
 | fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params; Daisy modulator Hz = note × `harmonicity` |
 | fat* | `count`, `phase`, `spread` | Unison count, phase, detune cents |
 
 ## AlgoSynth Configs ([algosynth.md](/synth/algosynth))
+
+Selecting `#synth algo0`–`algo7` reseeds that voice’s algo row to Tone `AlgoSynth.getDefaults()` (harmonicity `2`, modindex `1`, osc `sine`, env1–4 `0.01/0.01/1/0.5`).
 
 | Config | Value | Description |
 |--------|-------|-------------|
@@ -11678,7 +11697,7 @@ Source: https://zed.cafe/docs/synth/voices
 
 `#synth phase <degrees>`
 
-The phase is the starting position within the oscillator's cycle. For example a phase of 180 would start halfway through the oscillator's cycle. Used by sine, square, triangle, sawtooth, custom, and the fat waves.
+Tone OmniOscillator degrees (180 = half cycle). Daisy converts to cycles (`degrees / 360`) in osccfg. Used by sine, square, triangle, sawtooth, custom, and the fat waves.
 
 ### pwm
 
@@ -11752,9 +11771,9 @@ In seconds. Used by the am and fm waves.
 
 ### modindex
 
-`#synth modindex <degrees>`
+`#synth modindex <number>`
 
-The modulation index, the depth or amount of the modulation. It is the ratio of the frequency of the modulating signal (mf) to the amplitude of the modulating signal (ma), as in ma/mf. Used by the fm waves.
+Tone FMOscillator modulation index: carrier Hz ≈ `fc * (1 + index * modWave)`. Default `2`. Used by the fm waves.
 
 ### fatsine
 

@@ -86,7 +86,7 @@
 <ul>
 <li>Reverb: DaisySP-LGPL <strong>ReverbSc</strong> + predelay; <code>tanh(wet × kReverbPostGain)</code> (<strong>1.5</strong>)</li>
 <li>Echo: feedback clamp 0–0.95</li>
-<li>Distortion: <code>Overdrive</code> with ×3 input drive</li>
+<li>Distortion: <code>sin(dry × 3·(1+9·amt)·π)</code> foldback added after return-comp (not into the shared wet compressor)</li>
 </ul>
 <h2 id="main-bus-out-of-scope"><a class="blume-heading-anchor" href="#main-bus-out-of-scope">Main bus (out of scope)</a></h2>
 <p>Sidechain duck → master compressor → razzle → volume — unchanged downstream of <code>applyfxgroup</code>.</p>

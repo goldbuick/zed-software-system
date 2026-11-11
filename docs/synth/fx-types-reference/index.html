@@ -46,7 +46,7 @@
 <td><code>distort</code>, <code>distortion</code></td>
 <td>Waveshaper</td>
 <td><code>Distortion</code></td>
-<td><code>tonedistort()</code> / <code>fxdistortwet()</code></td>
+<td><code>sin(dry × 3·(1+9·amt)·π)</code> foldback, parallel wet after return-comp</td>
 </tr>
 <tr>
 <td><code>autowah</code></td>
@@ -379,7 +379,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>Tone:</strong> wet delay in FX chain. <strong>WASM:</strong> pitch cents on gated voices; auto-targets depth <strong>0.5</strong> when send on but depth ≈ 0. Group 3 (TTS) never gets vibrato pitch mod.</p>
+<p><strong>Tone:</strong> wet delay in FX chain. <strong>WASM:</strong> pitch cents on gated voices; auto-targets depth <strong>0.5</strong> when send on but depth ≈ 0. Play vibrato SAB is a 0..1 note-window envelope only — it scales FX depth, it does not replace <code>#vibrato depth</code> / <code>frequency</code>. Group 3 (TTS) never gets vibrato pitch mod.</p>
 <h3 id="6-distort--distortion"><a class="blume-heading-anchor" href="#6-distort--distortion">6. <code>distort</code> / <code>distortion</code></a></h3>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>

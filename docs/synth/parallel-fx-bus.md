@@ -57,7 +57,7 @@ Per-group envelope follower in `ZssFxGroup::return_comp_env`. Detector still run
 
 - Reverb: DaisySP-LGPL **ReverbSc** + predelay; `tanh(wet × kReverbPostGain)` (**1.5**)
 - Echo: feedback clamp 0–0.95
-- Distortion: `Overdrive` with ×3 input drive
+- Distortion: `sin(dry × 3·(1+9·amt)·π)` foldback added after return-comp (not into the shared wet compressor)
 
 ## Main bus (out of scope)
 

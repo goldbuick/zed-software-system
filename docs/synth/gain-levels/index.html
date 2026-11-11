@@ -33,7 +33,7 @@
   RZ --> OUT[&quot;clamp +/-1&quot;]"></blume-mermaid>
 <p><code>#playvol</code> / <code>#bgvol</code> / <code>#ttsvol</code> are stem faders (SAB PLAY/BGPLAY/TTS) after <code>#vol</code> scale
 (<code>effective = trim * vol / 100</code>). <code>#vol</code> is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law <code>kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb</code> (<strong>40</strong> / <strong>-55</strong>). Doubling SAB (~<code>#vol</code> 50→100) is about <strong>+12 dB</strong>. Razzle is not a volume fader.</p>
+Play, bg, tts, and drums share dB law <code>kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb</code> (<strong>60</strong> / <strong>-105</strong>). Doubling SAB (~<code>#vol</code> 50→100) is about <strong>+18 dB</strong>. Razzle is not a volume fader.</p>
 <h2 id="user-faders-sab-zss_main-0-100"><a class="blume-heading-anchor" href="#user-faders-sab-zss_main-0-100">User faders (SAB <code>zss_main</code>, 0-100)</a></h2>
 <p>Defined in <a href="../../backend/wasm/wasmmainsab.ts"><code>wasmmainsab.ts</code></a>. Mute floor: raw <code>&lt;= 0.001</code> -&gt; gain <code>0</code>.
 Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (defaults: main <strong>50</strong>, bus trims <strong>90</strong> -&gt; SAB <strong>45</strong>). VOL slot is raw <code>#vol</code>.</p>
@@ -59,7 +59,7 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <td><code>#playvol</code></td>
 <td>PLAY (0)</td>
 <td><strong>90</strong></td>
-<td><code>40*log10(vol) - 55</code></td>
+<td><code>60*log10(vol) - 105</code></td>
 <td>Play stem (<code>readplayvolume</code>)</td>
 </tr>
 <tr>
@@ -111,8 +111,8 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 </tr>
 <tr>
 <td><code>kDrumBusGain</code></td>
-<td><strong>1.618</strong></td>
-<td>Drum stem vs play under <code>#vol</code> (hi-snare proxy ≈ 0 dB; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
+<td><strong>1.0</strong></td>
+<td>Drum stem vs play under <code>#vol</code> (was 1.618; cafe ear limiter duck; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
 </tr>
 <tr>
 <td><code>kVoiceOutGain</code></td>
@@ -196,7 +196,7 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 </tr>
 </tbody>
 </table></div>
-<p>SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6) for offline A/B / live listen (<code>?no_comp=1</code>, <code>?no_sc=1</code>, <code>?no_sc_key=1</code>).</p>
+<p>SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6), LIM_BYPASS (7) for offline A/B / live listen (<code>?no_comp=1</code>, <code>?no_sc=1</code>, <code>?no_sc_key=1</code>, <code>?no_lim=1</code>).</p>
 <h2 id="fx-return-bus-multi-fx"><a class="blume-heading-anchor" href="#fx-return-bus-multi-fx">FX return bus (multi-FX)</a></h2>
 <p>Bus law (<code>zss_fx.cpp</code> <code>applyfxgroup</code>):</p>
 <pre class="astro-code astro-code-themes github-dark github-dark" style="--shiki-light:#e1e4e8;--shiki-dark:#e1e4e8;--shiki-light-bg:#24292e;--shiki-dark-bg:#24292e;overflow-x:auto" tabindex="0" data-language="text"><code><span class="line"><span>out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )</span></span></code></pre>
@@ -248,9 +248,9 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 </tr>
 <tr>
 <td>Distortion drive</td>
-<td><strong>dry x 3</strong></td>
+<td><strong>sin(dry × 3·(1+9·amt)·π)</strong></td>
 <td><code>zss_fx.cpp</code></td>
-<td>Into Overdrive</td>
+<td>Foldback wet after return-comp</td>
 </tr>
 <tr>
 <td>Echo feedback default</td>
@@ -378,9 +378,9 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <td>Bowed / guitar (<code>tanh</code> after gain; pitch-retrigger)</td>
 </tr>
 <tr>
-<td><code>kOrganVoiceGain</code> / <code>kOrganTonewheelGain</code></td>
-<td>0.65 / 1.8</td>
-<td>Drawbar / tonewheel (locked)</td>
+<td><code>kOrganTonewheelGain</code></td>
+<td>1.8</td>
+<td>Tonewheel organ (locked)</td>
 </tr>
 <tr>
 <td><code>kDripVoiceGain</code> / <code>kDootVoiceGain</code></td>
@@ -394,18 +394,28 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 </tr>
 <tr>
 <td><code>kBellsVoiceGain</code></td>
-<td>0.49</td>
-<td>Bells mix (was 0.65)</td>
+<td>0.35</td>
+<td>Bells mix (cafe ear trim; was 0.49)</td>
 </tr>
 <tr>
 <td><code>kDrumTickTrim</code> / <code>kDrumTweetTrim</code></td>
-<td>1.35 / 1.25</td>
-<td>Hi-hat family</td>
+<td><strong>1.0</strong> / <strong>1.0</strong></td>
+<td>Hi-hat extras folded into flat gains</td>
 </tr>
 <tr>
 <td><code>kDrumGains[12]</code></td>
-<td>0.24-1.0</td>
-<td>Per drum digit (cowbell +<code>kDrumCowbellVolumeDb</code>; bass <code>kDrumGains[9]=0.32</code>, <code>kDrumBassVolumeDb=0</code>)</td>
+<td><strong>0.05</strong> each</td>
+<td>Flat kit (−26 dB into bus before <code>kDrumBusGain</code>); stem gate target drum−play <strong>−11 ±2</strong> dB</td>
+</tr>
+<tr>
+<td><code>kDrumCowbellVolumeDb</code></td>
+<td><strong>0</strong></td>
+<td>Was +8; cowbell matches flat gains</td>
+</tr>
+<tr>
+<td><code>kDrumBassVolumeDb</code></td>
+<td><strong>0</strong></td>
+<td>Kick uses <code>kDrumGains[9]</code> only</td>
 </tr>
 </tbody>
 </table></div>

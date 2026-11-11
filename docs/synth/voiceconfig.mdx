@@ -25,13 +25,15 @@ Handles voice/source configuration from external API (e.g. device commands). For
 
 ## Config memory across type switches
 
-Per play/bgplay voice index, family blobs (`stringensemble`, `pluck`, `wind`, …) and osc/algo rows stay in memory when you change type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
+Per play/bgplay voice index, SOS family blobs (`stringensemble`, `pluck`, `wind`, …) stay in memory when you change named type. ADSR and portamento are snapshotted per `(type, algo)` so switching away and back restores the last settings for that voice. Exclusive keys (e.g. `detune`, `structure`) also write dormantly into their family blob. Only `#synth restart` (and boot defaults) fully clear this memory.
+
+**Omni wave select** (`sine`, `fmsquare`, `pwm`, …): reseeds that family's osc defaults via `seedomnioscdefaults` (Tone OmniOscillator subclass behavior) and clears partials. Algo rows are unchanged by wave select.
 
 `#synth <name>` selects the type. `#synth <key> <value>` sets a key on the current voice and does not select a type.
 
 ## Source Type Changes
 
-First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6` on first visit.
+First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope but **reseed osc family defaults**. `#synth bells` installs strike env `0.001/2.5/0/1.2` on first visit.
 
 | Config | Source Type |
 |--------|-------------|
@@ -153,12 +155,14 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 |------------|--------|-------------|
 | pwm | `modfreq` | LFO rate for pulse-width modulation (Hz) |
 | pulse | `width` | Static pulse width |
-| sine/square/triangle/sawtooth/custom | `phase` | Phase offset |
+| sine/square/triangle/sawtooth/custom | `phase` | Phase offset (degrees → cycles) |
 | am* | `harmonicity`, `modtype`, `modenv` | AM params (`harmonicity` = modulator ratio) |
 | fm* | `harmonicity`, `modindex`, `modtype`, `modenv` | FM params; Daisy modulator Hz = note × `harmonicity` |
 | fat* | `count`, `phase`, `spread` | Unison count, phase, detune cents |
 
 ## AlgoSynth Configs ([algosynth.md](/synth/algosynth))
+
+Selecting `#synth algo0`–`algo7` reseeds that voice’s algo row to Tone `AlgoSynth.getDefaults()` (harmonicity `2`, modindex `1`, osc `sine`, env1–4 `0.01/0.01/1/0.5`).
 
 | Config | Value | Description |
 |--------|-------|-------------|

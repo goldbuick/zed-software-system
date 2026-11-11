@@ -34,7 +34,7 @@
 <li><strong>Sidechain sources:</strong> <code>altaction</code> (TTS + bgplay @ -12 dB), <code>drumaction</code> (clap+bass @ -20 dB via <code>kScDrumKeyDb</code>)</li>
 <li><strong>Purpose:</strong> Ducks <code>#play</code> when bg/TTS/drums hit (not bg/TTS/drum buses themselves)</li>
 <li><strong>Tone:</strong> <code>SidechainCompressor</code> AudioWorklet — input 0 = play, input 1 = summed key bus; clap/bass feed <code>drumaction</code> before kit bus gain; bass MembraneSynth volume +8 on that path</li>
-<li><strong>Daisy:</strong> <code>drumsout()</code> taps clap ungained and bass with <code>kScDrumBassKeyDb</code> (+8) into <code>drumsidechain</code>; <code>sidechainkey()</code> then applies <code>kScDrumKeyDb</code> (−20 dB). Audible kit still uses <code>kDrumGains</code> / <code>kDrumBassVolumeDb</code>. SAB slot 4 bypasses duck (<code>yarn sidechain:render:ab</code>, <code>?no_sc=1</code>). SAB slot 5 mutes the key only (<code>?no_sc_key=1</code>) — duck stays at idle makeup, no triggers</li>
+<li><strong>Daisy:</strong> <code>drumsout()</code> taps clap ungained and bass with <code>kScDrumBassKeyDb</code> (+8) into <code>drumsidechain</code>; <code>sidechainkey()</code> then applies <code>kScDrumKeyDb</code> (−20 dB). Audible kit still uses <code>kDrumGains</code> / <code>kDrumBassVolumeDb</code>. SAB slot 4 bypasses duck (<code>yarn sidechain:render:ab</code>, <code>?no_sc=1</code>). SAB slot 5 mutes the key only (<code>?no_sc_key=1</code>) — duck stays at idle makeup, no triggers. After razzle, master <strong>Daisy Limiter</strong> still GR the full mix (drum peaks can pull play down); SAB slot 7 / <code>?no_lim=1</code> bypasses it for A/B.</li>
 </ul>
 <h3 id="razzle-chain"><a class="blume-heading-anchor" href="#razzle-chain">Razzle Chain</a></h3>
 <ul>
@@ -56,7 +56,7 @@
 <tr>
 <td>Play stem</td>
 <td>playvolume fader</td>
-<td><code>readplayvolume()</code> (<code>40*log10-55</code>, <code>#playvol</code> × <code>#vol</code>)</td>
+<td><code>readplayvolume()</code> (<code>60*log10-105</code>, <code>#playvol</code> × <code>#vol</code>)</td>
 </tr>
 <tr>
 <td>Drums</td>
@@ -65,7 +65,7 @@
 </tr>
 <tr>
 <td>bgplay / TTS</td>
-<td><code>10^((40*log10(vol)-55)/20)</code></td>
+<td><code>10^((60*log10(vol)-105)/20)</code></td>
 <td><code>readbgplayvolume()</code> / <code>readttsvolume()</code> (same law)</td>
 </tr>
 </tbody>

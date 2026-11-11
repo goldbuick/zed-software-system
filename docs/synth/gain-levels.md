@@ -43,7 +43,7 @@ flowchart LR
 
 `#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
 (`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**40** / **-55**). Doubling SAB (~`#vol` 50→100) is about **+12 dB**. Razzle is not a volume fader.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**60** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+18 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
@@ -53,7 +53,7 @@ Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: ma
 | Control | SAB slot | Trim default | dB law | Notes |
 |---------|----------|--------------|--------|-------|
 | `#vol` main | VOL (6) + JS scale | **50** | multiplies play/bg/tts trims; drum stem via `readdrumvolume`; board TV | Outer master |
-| `#playvol` | PLAY (0) | **90** | `40*log10(vol) - 55` | Play stem (`readplayvolume`) |
+| `#playvol` | PLAY (0) | **90** | `60*log10(vol) - 105` | Play stem (`readplayvolume`) |
 | `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
@@ -68,7 +68,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | Constant | Value | Controls |
 |----------|-------|----------|
 | Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
-| `kDrumBusGain` | **1.618** | Drum stem vs play under `#vol` (hi-snare proxy ≈ 0 dB; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| `kDrumBusGain` | **1.0** | Drum stem vs play under `#vol` (was 1.618; cafe ear limiter duck; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
 | `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
 | `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
@@ -86,7 +86,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | `kRazzleChorusWet` | **0.25** | |
 | `kRazzleHissGain` | **0.0007** | Tape hiss into the chorus. About -3 dB from the prior 0.001 |
 
-SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`).
+SAB bypass / control slots: COMP_BYPASS (3), SC_BYPASS (4), SC_KEY_MUTE (5), VOL (6), LIM_BYPASS (7) for offline A/B / live listen (`?no_comp=1`, `?no_sc=1`, `?no_sc_key=1`, `?no_lim=1`).
 
 ## FX return bus (multi-FX)
 
@@ -104,7 +104,7 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kFxReturnWetTrim` | **1.4** | `zss_config.h` | After wet sum |
 | `kReverbPostGain` | **1.5** | `zss_config.h` | `tanh(wet * gain)` |
 | FX return comp | **-24 dB / 4:1 / knee 6** | `zss_config.h` | On wet only |
-| Distortion drive | **dry x 3** | `zss_fx.cpp` | Into Overdrive |
+| Distortion drive | **sin(dry × 3·(1+9·amt)·π)** | `zss_fx.cpp` | Foldback wet after return-comp |
 | Echo feedback default | **0.666** (clamp 0-0.95) | `wasmfxstate.ts` | |
 | Reverb decay default | **2.5** | same | |
 
@@ -134,12 +134,14 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kPianoVoiceGain` | 3.15 | Piano / epiano |
 | `kTimpaniVoiceGain` | 0.70 | Timpani |
 | `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 4.4 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
-| `kOrganVoiceGain` / `kOrganTonewheelGain` | 0.65 / 1.8 | Drawbar / tonewheel (locked) |
+| `kOrganTonewheelGain` | 1.8 | Tonewheel organ (locked) |
 | `kDripVoiceGain` / `kDootVoiceGain` | 1.32 / 1.15 | Drip / doot |
 | `kDripDettackSec` | 0.35 | DaisySP drip hard-cut window |
-| `kBellsVoiceGain` | 0.49 | Bells mix (was 0.65) |
-| `kDrumTickTrim` / `kDrumTweetTrim` | 1.35 / 1.25 | Hi-hat family |
-| `kDrumGains[12]` | 0.24-1.0 | Per drum digit (cowbell +`kDrumCowbellVolumeDb`; bass `kDrumGains[9]=0.32`, `kDrumBassVolumeDb=0`) |
+| `kBellsVoiceGain` | 0.35 | Bells mix (cafe ear trim; was 0.49) |
+| `kDrumTickTrim` / `kDrumTweetTrim` | **1.0** / **1.0** | Hi-hat extras folded into flat gains |
+| `kDrumGains[12]` | **0.05** each | Flat kit (−26 dB into bus before `kDrumBusGain`); stem gate target drum−play **−11 ±2** dB |
+| `kDrumCowbellVolumeDb` | **0** | Was +8; cowbell matches flat gains |
+| `kDrumBassVolumeDb` | **0** | Kick uses `kDrumGains[9]` only |
 
 Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOLUME_DB`).
 

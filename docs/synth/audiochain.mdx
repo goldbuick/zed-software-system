@@ -45,7 +45,7 @@ Stem faders (`readplayvolume` / `readbgplayvolume` / `readttsvolume` / `readdrum
 - **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -20 dB via `kScDrumKeyDb`)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus; clap/bass feed `drumaction` before kit bus gain; bass MembraneSynth volume +8 on that path
-- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−20 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers
+- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−20 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers. After razzle, master **Daisy Limiter** still GR the full mix (drum peaks can pull play down); SAB slot 7 / `?no_lim=1` bypasses it for A/B.
 
 ### Razzle Chain
 
@@ -59,9 +59,9 @@ Full gain chart: [gain-levels.mdx](gain-levels.mdx).
 
 | Bus | Tone | Daisy |
 |-----|------|-------|
-| Play stem | playvolume fader | `readplayvolume()` (`40*log10-55`, `#playvol` × `#vol`) |
+| Play stem | playvolume fader | `readplayvolume()` (`60*log10-105`, `#playvol` × `#vol`) |
 | Drums | drum bus gain | `kDrumBusGain * readdrumvolume(#vol)` |
-| bgplay / TTS | `10^((40*log10(vol)-55)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
+| bgplay / TTS | `10^((60*log10(vol)-105)/20)` | `readbgplayvolume()` / `readttsvolume()` (same law) |
 
 Boot SAB defaults: `#vol` **50**, bus trims **90** (effective **45**), TTS trim path same.
 

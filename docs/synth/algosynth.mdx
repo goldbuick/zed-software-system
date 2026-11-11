@@ -4,7 +4,7 @@ title: algosynth.ts
 
 FM-style algorithmic synthesizer with 4 operators and 8 modulation algorithms.
 
-**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. `#synth osc1`–`osc4` set each operator wave (including carriers after FM rewrite). `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
+**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. FM depth matches Tone: `carrier_hz += (note_hz * modindex) * modulator` (enveloped op). `#synth osc1`–`osc4` set each operator wave. `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
 
 ## Overview
 

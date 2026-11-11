@@ -41,10 +41,11 @@
 </tbody>
 </table></div>
 <h2 id="config-memory-across-type-switches"><a class="blume-heading-anchor" href="#config-memory-across-type-switches">Config memory across type switches</a></h2>
-<p>Per play/bgplay voice index, family blobs (<code>stringensemble</code>, <code>pluck</code>, <code>wind</code>, …) and osc/algo rows stay in memory when you change type. ADSR and portamento are snapshotted per <code>(type, algo)</code> so switching away and back restores the last settings for that voice. Exclusive keys (e.g. <code>detune</code>, <code>structure</code>) also write dormantly into their family blob. Only <code>#synth restart</code> (and boot defaults) fully clear this memory.</p>
+<p>Per play/bgplay voice index, SOS family blobs (<code>stringensemble</code>, <code>pluck</code>, <code>wind</code>, …) stay in memory when you change named type. ADSR and portamento are snapshotted per <code>(type, algo)</code> so switching away and back restores the last settings for that voice. Exclusive keys (e.g. <code>detune</code>, <code>structure</code>) also write dormantly into their family blob. Only <code>#synth restart</code> (and boot defaults) fully clear this memory.</p>
+<p><strong>Omni wave select</strong> (<code>sine</code>, <code>fmsquare</code>, <code>pwm</code>, …): reseeds that family’s osc defaults via <code>seedomnioscdefaults</code> (Tone OmniOscillator subclass behavior) and clears partials. Algo rows are unchanged by wave select.</p>
 <p><code>#synth &lt;name&gt;</code> selects the type. <code>#synth &lt;key&gt; &lt;value&gt;</code> sets a key on the current voice and does not select a type.</p>
 <h2 id="source-type-changes"><a class="blume-heading-anchor" href="#source-type-changes">Source Type Changes</a></h2>
-<p>First visit to a named type (or SYNTH via a wave name) installs that destination’s default ADSR. Returning to a previously used <code>(type, algo)</code> restores the snapshotted envelope and portamento. Same-SYNTH wave changes (<code>square</code> → <code>sawtooth</code>) keep the current envelope. <code>#synth bells</code> installs Tone-parity carrier env <code>0.01/3/0.3/6</code> on first visit.</p>
+<p>First visit to a named type (or SYNTH via a wave name) installs that destination’s default ADSR. Returning to a previously used <code>(type, algo)</code> restores the snapshotted envelope and portamento. Same-SYNTH wave changes (<code>square</code> → <code>sawtooth</code>) keep the current envelope but <strong>reseed osc family defaults</strong>. <code>#synth bells</code> installs strike env <code>0.001/2.5/0/1.2</code> on first visit.</p>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>
 <tr>
@@ -442,7 +443,7 @@
 <tr>
 <td>sine/square/triangle/sawtooth/custom</td>
 <td><code>phase</code></td>
-<td>Phase offset</td>
+<td>Phase offset (degrees → cycles)</td>
 </tr>
 <tr>
 <td>am*</td>
@@ -462,6 +463,7 @@
 </tbody>
 </table></div>
 <h2 id="algosynth-configs-algosynthmd">AlgoSynth Configs (<a href="/docs/synth/algosynth">algosynth.md</a>)</h2>
+<p>Selecting <code>#synth algo0</code>–<code>algo7</code> reseeds that voice’s algo row to Tone <code>AlgoSynth.getDefaults()</code> (harmonicity <code>2</code>, modindex <code>1</code>, osc <code>sine</code>, env1–4 <code>0.01/0.01/1/0.5</code>).</p>
 <div class="blume-table-scroll" tabindex="0"><table>
 <thead>
 <tr>
