@@ -115,7 +115,7 @@ Optional phase (degrees; 180 = half cycle):
 
 ### 1.5 FM carrier + harmonicity + modindex (+ modenv)
 
-Tone FMOscillator law: `f ≈ fc*(1+I*m)`. Daisy folds through-zero to `|f|`.
+Tone FMOscillator law: `f ≈ fc*(1+I*m)`. Daisy advances carrier phase with signed Hz (through-zero; not `|f|`).
 
 ```text
 #synth restart
@@ -169,16 +169,26 @@ Reseed check (harmonicity should reset to 1 after re-select):
 
 ### 1.7 partials (basic only; cleared on typed wave)
 
+Partials on basic waves are a **sine stack** (not "square plus harmonics"). Contrast is easier as four plays:
+
 ```text
 #synth restart
 #synth square
+#play qc
 #synth square 1 0.5 0.25
 #play qc
 #synth fmsquare
 #play qc
+#synth square
+#play qc
 ```
 
-(Second play should be FM square, not partials stack.)
+| Play | Expect |
+|------|--------|
+| 1 plain `#synth square` | Hard square buzz |
+| 2 `#synth square 1 0.5 0.25` | Softer organ-ish (1f+2f+3f sines) — **must differ from play 1** |
+| 3 `#synth fmsquare` | FM grit like step 1.5 — **must not still be the organ stack** |
+| 4 `#synth square` again | Hard square again (wave select cleared partials) |
 
 ---
 

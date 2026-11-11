@@ -161,7 +161,9 @@ float noisevoice(ZssVoice& v, int vi, int noisetype, float freq, bool gate,
   }
 
   float hz = freq > 0.f ? freq : 440.f;
-  float phasedelta = hz / g_engine.sample_rate;
+  // Scan rate is note Hz raised by kNoiseHzOctaveBoost; damping still uses
+  // written MIDI pitch so gain vs basepitch does not shift with the boost.
+  float phasedelta = (hz * kNoiseHzMult) / g_engine.sample_rate;
   float pitchfilter = std::min(1.f, phasedelta * meta.pitchfiltermult);
   float notepitch = 69.f + 12.f * (std::log(hz / 440.f) / std::log(2.f));
   float pitchdamping = meta.issoft ? 24.f : 60.f;

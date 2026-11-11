@@ -65,9 +65,9 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 | pulse | `width` | osccfg | pulse branch; reseed width `0.2` | Wired |
 | pwm | `width`, `modfreq` | osccfg | LFO at **modfreq** (not FM harm) | Proven (Jest: modfreq ≠ harmonicity) |
 | am* | harmonicity, modtype, modenv | osccfg | AM + **familywavetobasic**; mod ±1; **modenv kept** (Daisy) | Proven (carrier map Jest; cafe ear harmonicity) |
-| fm* | + modindex; harm = note×ratio | osccfg | Tone FMOscillator: `fc*(1+I*m)`, full-scale m; through-zero `|f|`; **modenv kept** | Proven (carrier + reseed Jest) |
+| fm* | + modindex; harm = note×ratio | osccfg | Tone FMOscillator: `fc*(1+I*m)`, full-scale m; through-zero **signed phase** (not `|f|`); **modenv kept** | Proven (carrier + reseed Jest; ear vs Omni) |
 | fat* | count, phase (deg), spread (cents) | osccfg | phase-accumulator unison + family map | Proven (carrier map Jest) |
-| partials | array on basic/custom | osccfg | sine stack **only** osctype 0–3; cleared on typed-wave select | Wired |
+| partials | array on basic/custom | osccfg | sine stack **only** osctype 0–3; cleared on typed-wave select | Proven |
 
 **Enum trap (must never regress):** basic `square=0 sine=1`; family am/fm/fat at +10/+20/+30 ordered **sine, square, tri, saw**. Use `familywavetobasic` in [`wasmosctype.ts`](../../backend/wasm/wasmosctype.ts) and [`zss_osc.cpp`](../../backend/daisy/native/zss/zss_osc.cpp). Bare `osctype - 20` makes `#synth fmsquare` sound like sine.
 
@@ -75,7 +75,7 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 
 | Family | `#synth` keys | N/A | Status |
 |--------|---------------|-----|--------|
-| retro/buzz/clang/metallic/hollow/noise | type, env, vol | LFSR meta | Wired |
+| retro/buzz/clang/metallic/hollow/noise | type, env, vol | LFSR meta; scan `note_hz*8` | Proven |
 | bells | env (select `0.01/3/0.3/6`), vol | FM/sparkle internals | Wired |
 | doot | env, vol | octaves, pitchDecay | Wired |
 
@@ -169,7 +169,7 @@ Selecting any validated wave name switches voice to `SYNTH`. Names validated by 
 | **pulse** | `width` | `0.2` | **Tone** PulseOscillator: `0.2` |
 | **pwm** | `modfreq`, `modulationfrequency`, `width` | modfreq `1`, width `0.2` | **Tone** / Daisy PWMOscillator: LFO at `modfreq` Hz modulates pulse width around 0.5 by `width` |
 | **am\*** | `harmonicity`, `modtype`/`modulationtype`, `modenv`/`modulationenvelope` | harm `1`, modtype `square`, modenv `0.01/0.01/1/0.5` | **Tone** AMOscillator: harm `1`, modtype `square` (no modenv). Daisy **keeps** `modenv` |
-| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | Tone **FMOscillator** (Omni `fm*`): `f = fc*(1+I*m)`; Daisy folds through-zero to `|f|`. **`modenv` kept** (archive Tone write was typed no-op) |
+| **fm\*** | `harmonicity`, `modindex`, `modtype`, `modenv` | harm `1`, modindex `2`, modtype `square`, modenv `0.01/0.01/1/0.5` | Tone **FMOscillator** (Omni `fm*`): `f = fc*(1+I*m)`; Daisy advances carrier phase with signed Hz (through-zero). **`modenv` kept** (archive Tone write was typed no-op) |
 | **fat\*** | `count`, `phase`, `spread` | count `3`, phase `0`, spread `20` | **Tone** FatOscillator: count `3`, spread `20`; **`fatsine` stacks sines** |
 | **Partials** | array on basic/custom only | partialcount `0` | Cleared when selecting pulse/pwm/am/fm/fat; native ignores partials outside osctype 0–3 |
 
@@ -211,6 +211,8 @@ WASM osc defaults: [wasmoscconfigsab.ts](../../backend/wasm/wasmoscconfigsab.ts)
 | Reset envelope | `0.01 / 0.01 / 0.5 / 0.01` (**ZSS**) |
 
 LFSR tap differences per type are in `generatenoisesynth()` (not user-configurable).
+
+**Play rate:** Daisy `noisevoice` advances the wave at `note_hz * 8` (+3 octaves). `basepitch` is only the pitch-damping gain reference, not scan rate.
 
 ### WASM-only fixed meta ([noisemeta.ts](../../backend/wasm/noisemeta.ts)) — not `#synth`-settable
 

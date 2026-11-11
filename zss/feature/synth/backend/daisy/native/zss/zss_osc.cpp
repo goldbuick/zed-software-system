@@ -148,22 +148,18 @@ float oscwavewithphase(Oscillator& o, int wavetype, float hz, float phase,
   return oscbasicwave(o, wavetype, hz, 1.f);
 }
 
-float fmcarriersample(Oscillator& carrier, Oscillator& modulator, int modtype,
-                      float hz, float modhz, float modidx, float moddepth,
+float fmcarriersample(ZssVoice& v, Oscillator& modulator, int modtype, float hz,
+                      float modhz, float modidx, float moddepth,
                       int carriertype) {
   // Tone FMOscillator: f = fc + (fc * I) * m = fc * (1 + I * m), m in ±1.
   // Full-scale mod (not kOscModWaveGain) so #synth modindex matches Tone depth.
   const float mod =
       oscbasicwave(modulator, modtype, modhz, 1.f) * modidx * moddepth;
-  float fmh = hz * (1.f + mod * kFmHzScale);
-  // Daisy Oscillator phase wrap is one-sided; fold through-zero like |f|.
-  if (fmh < 0.f) {
-    fmh = -fmh;
-  }
-  if (fmh < 1.f) {
-    fmh = 1.f;
-  }
-  return oscbasicwave(carrier, carriertype, fmh, 1.f);
+  const float fmh = hz * (1.f + mod * kFmHzScale);
+  // Through-zero like Tone AudioParam FM: signed Hz runs phase backward.
+  // Do not fold with |f| (that added harsh discontinuities vs Omni).
+  v.voicephasestep += fmh / g_engine.sample_rate;
+  return oscwavefromphase(carriertype, v.voicephasestep);
 }
 
 // am*/fm*/fat* enums are SINE,SQUARE,TRIANGLE,SAWTOOTH at +0..+3, but basic
@@ -309,8 +305,8 @@ float synthsource(ZssVoice& v, int vi, float freq, bool gate, float detune,
     int cartype = familywavetobasic(osctype - 20);
     // Tone FMOscillator: modulator rate = carrier hz * harmonicity
     const float fmmodhz = hz * harm;
-    sig = fmcarriersample(v.synthosc, v.synthmod, cfg.modtype, hz, fmmodhz,
-                          modidx, moddepth, cartype);
+    sig = fmcarriersample(v, v.synthmod, cfg.modtype, hz, fmmodhz, modidx,
+                          moddepth, cartype);
   } else if (osctype >= 30 && osctype <= 33) // #synth fat*
   {
     // Unison via one phase accumulator: φ' = hz/sr, voice i at φ*mul_i.

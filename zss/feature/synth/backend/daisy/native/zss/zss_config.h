@@ -77,6 +77,9 @@ constexpr float kNoiseVoiceGain = 4.5f;
 constexpr float kLfsrVoiceBoost = 1.6f;
 constexpr float kNoiseBaseExpr = 0.19f;
 constexpr float kNoiseSoftGain = 1.1f;
+/** Cafe ear: LFSR/soft noise scanned 3 octaves above note Hz (×8). */
+constexpr float kNoiseHzOctaveBoost = 3.f;
+constexpr float kNoiseHzMult = 8.f; // 2^kNoiseHzOctaveBoost
 constexpr float kMetallicNorm = 1.f / 22.f;
 constexpr float kMetallicAmp = 4.f;
 
