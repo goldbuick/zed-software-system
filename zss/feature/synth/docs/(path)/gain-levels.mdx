@@ -104,7 +104,7 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kFxReturnWetTrim` | **1.4** | `zss_config.h` | After wet sum |
 | `kReverbPostGain` | **1.5** | `zss_config.h` | `tanh(wet * gain)` |
 | FX return comp | **-24 dB / 4:1 / knee 6** | `zss_config.h` | On wet only |
-| Distortion drive | **dry x 3** | `zss_fx.cpp` | Into Overdrive |
+| Distortion drive | **sin(dry × 3·(1+9·amt)·π)** | `zss_fx.cpp` | Foldback wet after return-comp |
 | Echo feedback default | **0.666** (clamp 0-0.95) | `wasmfxstate.ts` | |
 | Reverb decay default | **2.5** | same | |
 

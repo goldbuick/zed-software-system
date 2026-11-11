@@ -19,7 +19,7 @@ Manual cafe ear checklist (all live voice FX): [`ops/docs/fx-cafe-ear-pass.md`](
 | `reverb` | Convolution reverb | `Reverb` | DaisySP-LGPL `ReverbSc` + predelay `fxreverb()` |
 | `autofilter` | LFO filter sweep | `AutoFilter` | LFO + biquad `fxautofilterbus()` |
 | `vibrato` | Pitch wobble | `Vibrato` (wet in FX chain) | Pitch cents `playvibratocents()` — **not serial wet** |
-| `distort`, `distortion` | Waveshaper | `Distortion` | `tonedistort()` / `fxdistortwet()` |
+| `distort`, `distortion` | Waveshaper | `Distortion` | `sin(dry × 3·(1+9·amt)·π)` foldback, parallel wet after return-comp |
 | `autowah` | Envelope filter | `AutoWah` | Follower + peaking `fxautowahbus()` |
 
 Aliases: `fcrush`→`fc`, `distort`→`distortion`.

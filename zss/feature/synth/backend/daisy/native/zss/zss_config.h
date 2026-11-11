@@ -198,6 +198,8 @@ constexpr float kSynthNoteOnRampMaxSec = 0.010f;
 
 /** Post-gain after ReverbSc (internal kOutputGain 0.35 in reverbsc.cpp) */
 constexpr float kReverbPostGain = 1.5f;
+/** Pre-gain into DaisySP Overdrive for `#distort` (gain-levels / parallel-fx-bus). */
+constexpr float kDistortPreGain = 3.f;
 constexpr float kReverbScLpHz = 10000.f;
 /** Parallel FX return bus — see docs/parallel-fx-bus.md */
 constexpr float kFxReturnCompThresholdDb = -24.f;

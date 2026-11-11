@@ -266,18 +266,6 @@ float fxautowahbus(float x, int group) {
   return filtered - x;
 }
 
-/** Tone Distortion polynomial waveshaper (no pre-gain). */
-float tonedistort(float x, float amt) {
-  float k = amt * 100.f;
-  float deg = 0.01745329252f;
-  float ax = std::fabs(x);
-  if (ax < 0.001f) {
-    return 0.f;
-  }
-  float sign = x < 0.f ? -1.f : 1.f;
-  return sign * ((3.f + k) * ax * 20.f * deg) / (kPi + k * ax);
-}
-
 bool fxgrouphasactivesends(int group) {
   for (int s = 0; s < kFxSendCount; ++s) {
     if (fxsendval(group, s) > 0.0001f) {
@@ -352,19 +340,23 @@ float applyfxgroup(float sig, int group) {
   if (s3 > 0.f) {
     wet_sum += s3 * fxautofilterbus(dry, group);
   }
-  if (s5 > 0.f) {
-    float amt = fxparam(group, kFxDistortion);
-    if (amt <= 0.f) {
-      amt = 0.4f;
-    }
-    float wet5 = tonedistort(dry, clampf(amt, 0.f, 1.f));
-    wet_sum += s5 * (wet5 - dry);
-  }
   if (s6 > 0.f) {
     wet_sum += s6 * fxautowahbus(dry, group);
   }
   wet_sum *= kFxReturnWetTrim;
   wet_sum = fxreturncompress(wet_sum, group);
-  return dry + wet_sum;
+  // Drive after return-comp. Soft-clip of a bright saw is nearly inaudible as
+  // parallel wet; sine foldback destroys the waveform so `#distort` is obvious.
+  float drive_wet = 0.f;
+  if (s5 > 0.f) {
+    float amt = fxparam(group, kFxDistortion);
+    if (amt <= 0.f) {
+      amt = 0.4f;
+    }
+    amt = clampf(amt, 0.f, 1.f);
+    const float drive = kDistortPreGain * (1.f + amt * 9.f);
+    drive_wet = s5 * std::sin(dry * drive * kPi);
+  }
+  return dry + wet_sum + drive_wet;
 }
 } // namespace zss_daisy
