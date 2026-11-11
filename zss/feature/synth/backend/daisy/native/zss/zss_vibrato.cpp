@@ -80,8 +80,25 @@ void updateplayvibratodepth(float vstart[kVibratoGroups],
     }
     return;
   }
+  // FX depth is the wobble amount (auto 0.5 when unset). Play vibrato SAB is
+  // only a 0..1 envelope shape while the note window is active -- it must not
+  // replace `#vibrato depth`.
+  float fxdepth = 0.f;
+  for (int g = 0; g < 3; ++g) {
+    if (fxsendval(g, kFxVibrato) <= 0.f) {
+      continue;
+    }
+    float d = fxparam(g, kFxVibratoDepth);
+    if (d > fxdepth) {
+      fxdepth = d;
+    }
+  }
+  if (fxdepth <= 0.0001f) {
+    fxdepth = 0.5f;
+  }
   float t = playtimesec();
   float target = 0.f;
+  bool anygated = false;
   for (int g = 0; g < 3; ++g) {
     if (fxsendval(g, kFxVibrato) <= 0.f) {
       continue;
@@ -98,23 +115,19 @@ void updateplayvibratodepth(float vstart[kVibratoGroups],
     if (!gated) {
       continue;
     }
-    float depth = vibratodepthat(g, t, vstart, vend, vpeak);
-    if (depth > target) {
-      target = depth;
+    anygated = true;
+    float env = vibratodepthat(g, t, vstart, vend, vpeak);
+    float pk = vpeak[g];
+    float shaped = fxdepth;
+    if (env > 0.0001f && pk > 0.0001f) {
+      shaped = (env / pk) * fxdepth;
+    }
+    if (shaped > target) {
+      target = shaped;
     }
   }
-  if (target <= 0.0001f) {
-    float sabdepth = 0.f;
-    for (int g2 = 0; g2 < 3; ++g2) {
-      if (fxsendval(g2, kFxVibrato) <= 0.f) {
-        continue;
-      }
-      float d2 = fxparam(g2, kFxVibratoDepth);
-      if (d2 > sabdepth) {
-        sabdepth = d2;
-      }
-    }
-    target = sabdepth > 0.0001f ? sabdepth : 0.5f;
+  if (!anygated || target <= 0.0001f) {
+    target = fxdepth;
   }
   float rate = target > g_engine.fxvibrato_depth ? 0.004f : 0.001f;
   g_engine.fxvibrato_depth += (target - g_engine.fxvibrato_depth) * rate;
@@ -122,9 +135,10 @@ void updateplayvibratodepth(float vstart[kVibratoGroups],
 
 void advanceplayvibratolfos(float vfreq[kVibratoGroups]) {
   for (int g = 0; g < kVibratoGroups; ++g) {
-    float freq = vfreq[g];
+    // Prefer `#vibrato frequency` (default 5). Play SAB rate is fallback only.
+    float freq = fxparam(g, kFxVibratoFreq);
     if (freq <= 0.f) {
-      freq = fxparam(g, kFxVibratoFreq);
+      freq = vfreq[g];
     }
     if (freq <= 0.f) {
       freq = 5.f;

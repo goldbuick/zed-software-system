@@ -137,7 +137,7 @@ WASM/Daisy: **ReverbSc** (8 modulated delay lines, stereo internal, mono sum); p
 | `frequency` | not in `#synth` API | **5** | **WASM-only** |
 | send `on` | **50** | **50** | |
 
-**Tone:** wet delay in FX chain. **WASM:** pitch cents on gated voices; auto-targets depth **0.5** when send on but depth ≈ 0. Group 3 (TTS) never gets vibrato pitch mod.
+**Tone:** wet delay in FX chain. **WASM:** pitch cents on gated voices; auto-targets depth **0.5** when send on but depth ≈ 0. Play vibrato SAB is a 0..1 note-window envelope only — it scales FX depth, it does not replace `#vibrato depth` / `frequency`. Group 3 (TTS) never gets vibrato pitch mod.
 
 ### 6. `distort` / `distortion`
 

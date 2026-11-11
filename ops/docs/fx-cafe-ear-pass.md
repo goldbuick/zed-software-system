@@ -32,19 +32,9 @@ Digits in `#play` are **drums**, not duration or octave.
 
 Use `#play qc` for most FX; `#play hc` for vibrato; `#play qceg` for autowah (envelope needs dynamics).
 
-### FX isolation (every batch)
+### FX isolation
 
-`#synth restart` does **not** clear FX sends. Start each batch by muting all seven bare FX, then enable only the FX under test:
-
-```text
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
-```
+`#synth restart` resets FX sends and params (`defaultwasmfxsab`). No mute-all block needed after restart. Mid-batch, turn off only the FX you just enabled (or restart again).
 
 ### Shared protocol notes
 
@@ -63,13 +53,6 @@ Use `#play qc` for most FX; `#play hc` for vibrato; `#play qceg` for autowah (en
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play qc
 #fcrush on
 #play qc
@@ -107,13 +90,6 @@ Low rate = heavier crush / stepped; high rate = closer to dry.
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play qc
 #echo on
 #play qc
@@ -159,13 +135,6 @@ Few repeats vs long ringing trail (clamped ≤ 0.95).
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play qc
 #reverb on
 #play qc
@@ -207,13 +176,6 @@ Immediate bloom vs audible gap before the wash.
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play hc
 #autofilter on
 #play hc
@@ -274,13 +236,6 @@ Daisy `#distort` is sine foldback (timbre wrecks a saw — not a subtle soft-cli
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play qc
 #distort 80
 #distort distortion 0.8
@@ -318,13 +273,6 @@ Pitch cents on gated play voices (not a wet delay in the FX sum). Group 3 (TTS) 
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play hc
 #vibrato on
 #play hc
@@ -353,7 +301,7 @@ Pitch cents on gated play voices (not a wet delay in the FX sum). Group 3 (TTS) 
 #play hc
 ```
 
-`depth` / `frequency` are WASM-only config keys (not in the player effects scroll).
+`depth` / `frequency` are WASM-only config keys (not in the player effects scroll). Play SAB envelopes the note window only; FX `depth` / `frequency` own amount and LFO rate.
 
 ---
 
@@ -366,13 +314,6 @@ Needs dynamics — use `#play qceg`.
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play qceg
 #autowah on
 #play qceg
@@ -421,17 +362,6 @@ Bare FX → groups 0+1. Suffixed `*1`…`*4` → one group. Group map: `*1` = `#
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
-#echo1 off
-#echo2 off
-#echo3 off
-#echo4 off
 #echo1 on
 #play qc
 #echo1 off
@@ -467,13 +397,6 @@ Parallel sends share one dry tap; wet sum should stay present without smashing t
 ```text
 #synth restart
 #synth sawtooth
-#fcrush off
-#echo off
-#reverb off
-#autofilter off
-#distort off
-#vibrato off
-#autowah off
 #play qc
 #echo on
 #reverb on
