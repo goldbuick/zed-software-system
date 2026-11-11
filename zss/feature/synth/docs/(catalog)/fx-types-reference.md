@@ -6,6 +6,8 @@ Reference catalog for all ZSS voice FX (`#echo`, `#reverb`, `#fcrush`, etc.). **
 
 See also: [voice-types-reference.md](voice-types-reference.md), [voicefx.md](voicefx.md).
 
+Manual cafe ear checklist (all live voice FX): [`ops/docs/fx-cafe-ear-pass.md`](../../../../../ops/docs/fx-cafe-ear-pass.md).
+
 ---
 
 ## Seven voice FX types

@@ -3,7 +3,11 @@ import { validatesynthtype } from 'zss/feature/synth/voiceconfig/validation'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
+import {
+  applywasmalgoconfig,
+  resetwasmalgoconfig,
+  seedalgodefaults,
+} from './wasmalgoconfig'
 import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
 import {
   applywasmoscconfig,
@@ -688,6 +692,10 @@ export function applywasmvoiceconfig(
     const source = parsesourcetype(config, voicestate[index])
     if (source) {
       voicestate[index] = source
+      // Tone AlgoSynth: selecting algoN reseeds op defaults (like Omni wave).
+      if (source.type === SOURCE_TYPE.ALGO_SYNTH) {
+        seedalgodefaults(algoconfig, index)
+      }
       return true
     }
 

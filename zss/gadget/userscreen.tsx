@@ -64,21 +64,22 @@ export function UserScreen({ children }: UserScreenProps) {
   const totalrows = Math.floor(rrows)
 
   const cols = totalcols
-  const { rows, dockcols, dockrows, dockrow } = readtouchscreenlayout({
-    totalcols,
-    totalrows,
-    saferows,
-    showtouchcontrols,
-    hassidebar,
-    sidebaropen,
-  })
+  const { rows, dockcols, dockrows, dockrow, showdockui } =
+    readtouchscreenlayout({
+      totalcols,
+      totalrows,
+      saferows,
+      showtouchcontrols,
+      hassidebar,
+      sidebaropen,
+    })
   const docky = dockrow * ch
 
   const marginx = marginxfor(viewwidth, totalcols, cw)
   const marginy = marginyfor(viewheight, totalrows, ch)
 
   const touchpads = useMemo((): TOUCHPADS | null => {
-    if (!showtouchcontrols || dockrows <= PORTRAIT_DOCK_STICK_TOP) {
+    if (!showdockui || dockrows <= PORTRAIT_DOCK_STICK_TOP) {
       return null
     }
     const sticktop = PORTRAIT_DOCK_STICK_TOP
@@ -99,7 +100,7 @@ export function UserScreen({ children }: UserScreenProps) {
         height: stickrows * ch,
       },
     }
-  }, [showtouchcontrols, marginx, marginy, cw, ch, dockcols, dockrows, docky])
+  }, [showdockui, marginx, marginy, cw, ch, dockcols, dockrows, docky])
 
   useEffect(() => {
     useDeviceData.setState((state) => ({
@@ -127,7 +128,7 @@ export function UserScreen({ children }: UserScreenProps) {
             ]}
           >
             {children}
-            {showtouchcontrols && dockrows > 0 && (
+            {showdockui && dockrows > 0 && (
               <>
                 {hassidebar && (
                   <group position={[0, docky - ch, 4]}>

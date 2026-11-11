@@ -24,7 +24,7 @@ constexpr int kVibratoStride = 4;
 
 constexpr int kVoicesLen = kVoiceCount * kVoiceStride;
 constexpr int kDrumsLen = kDrumCount * 2;
-constexpr int kMainLen = 7;
+constexpr int kMainLen = 8;
 /** zss_main SAB indices (match wasmmainsab.ts WASM_MAIN_IDX). */
 constexpr int kMainCompBypassIdx = 3;
 constexpr int kMainScBypassIdx = 4;
@@ -32,6 +32,8 @@ constexpr int kMainScBypassIdx = 4;
 constexpr int kMainScKeyMuteIdx = 5;
 /** Raw `#vol` (0-100) for drum stem scale via readdrumvolume(). */
 constexpr int kMainVolIdx = 6;
+/** 1 = bypass master Daisy Limiter (debug / offline A/B). */
+constexpr int kMainLimBypassIdx = 7;
 constexpr int kFxLen = kFxGroups * kFxSendCount + kFxGroups * kFxParamCount;
 constexpr int kVoiceCfgLen = kVoiceCount * kVoiceCfgStride;
 constexpr int kOscCfgLen = kVoiceCount * kOscCfgStride;
@@ -88,10 +90,6 @@ constexpr float kStringMachineGain = 1.35f;
 constexpr float kStringPluckGain = 4.2f;
 /** DaisySP Karplus: damping >= 0.95 crossfades toward infinite ring. */
 constexpr float kKarplusMaxDamping = 0.85f;
-constexpr float kStringDefaultDetune = 2.f;
-constexpr float kStringDefaultPwm = 0.2f;
-constexpr float kStringDefaultVib = 2.5f;
-constexpr float kStringDefaultFilter = 0.5f;
 constexpr float kStringMaxDetuneCents = 8.f;
 constexpr float kStringMaxVibCents = 8.f;
 constexpr float kStringSubOctaveMix = 0.1f;
@@ -119,8 +117,7 @@ constexpr float kPianoVoiceGain = 3.15f;
 constexpr float kTimpaniVoiceGain = 0.70f;
 constexpr float kBowedVoiceGain = 1.2f;
 constexpr float kGuitarVoiceGain = 4.4f;
-constexpr float kOrganVoiceGain = 0.65f;
-/** Tonewheel (algo 0) harmonic stack is quieter than drawbar (algo 1). */
+/** Tonewheel organ harmonic stack (drawbar voice type removed). */
 constexpr float kOrganTonewheelGain = 1.8f;
 constexpr float kDripVoiceGain = 1.32f;
 /** DaisySP Drip dettack: seconds until shake energy is forced to zero. */
@@ -130,8 +127,9 @@ constexpr float kDootVoiceGain = 1.15f;
 constexpr float kDootOctaves = 10.f;
 constexpr float kDootPitchDecaySec = 0.05f;
 
-constexpr float kDrumTickTrim = 1.35f;
-constexpr float kDrumTweetTrim = 1.25f;
+/** Folded into flat kDrumGains; kept so drumtick/tweet call sites stay. */
+constexpr float kDrumTickTrim = 1.f;
+constexpr float kDrumTweetTrim = 1.f;
 
 constexpr float kVoiceOutGain = 1.f;
 
@@ -153,7 +151,8 @@ constexpr float kPlayBusGain = 1.000f;
 /** Stem-balanced vs play (play stem uses shared SAB dB law like bg/tts).
  * Mid-kit (hi snare proxy) sits near unity with play.
  */
-constexpr float kDrumBusGain = 1.618f;
+/** Was 1.618; cafe ear — kit slammed limiter and ducked play. */
+constexpr float kDrumBusGain = 1.0f;
 /** Post-limiter makeup removed: output leans on DaisySP Limiter alone, then a
  * safety +/-1 clamp. (Old pad/SoftLimit makeup pushed peaks back to 0 dBFS.) */
 /** Play / bg / tts / drum (`#vol`) share SAB dB law
@@ -215,13 +214,14 @@ constexpr float kAutowahDefaultOct = 6.f;
 constexpr float kAutowahDefaultSensDb = -3.f;
 constexpr float kAutowahDefaultGain = 25.f;
 
-constexpr float kDrumGains[kDrumCount] = {
-    0.26f, 0.24f, 1.0f,  0.35f, 0.3f,  0.26f,
-    0.3f,  0.28f, 0.26f, 0.32f, 0.42f, 0.36f,
-};
-/** Tone PolySynth cowbell volume offset baked into gain (was missing +16 dB).
+/** Flat kit trim: every digit ~0.05 (−26 dB) into drum bus before kDrumBusGain.
  */
-constexpr float kDrumCowbellVolumeDb = 8.f;
+constexpr float kDrumGains[kDrumCount] = {
+    0.05f, 0.05f, 0.05f, 0.05f, 0.05f, 0.05f,
+    0.05f, 0.05f, 0.05f, 0.05f, 0.05f, 0.05f,
+};
+/** Was +8 dB Tone makeup; zeroed so cowbell matches flat kDrumGains. */
+constexpr float kDrumCowbellVolumeDb = 0.f;
 /** Kick makeup; was +6 dB (Tone Membrane volume) but sat too hot vs kit. */
 constexpr float kDrumBassVolumeDb = 0.f;
 /** Tone MembraneSynth `volume: 8` into drumaction only — not the audible kit.

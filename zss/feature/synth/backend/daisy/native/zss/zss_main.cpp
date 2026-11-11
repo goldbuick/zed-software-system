@@ -252,13 +252,11 @@ void applystringensembleparams(ZssVoice& v, int cfg, float& detunecents,
   const float pwmraw = readctrl(cfg + 7);
   const float vibraw = readctrl(cfg + 8);
   const float filtraw = readctrl(cfg + 9);
-  detunecents = detraw > 0.f ? clampf(detraw, 0.f, 1.f) * kStringMaxDetuneCents
-                             : kStringDefaultDetune;
-  pwmdepth = pwmraw > 0.f ? clampf(pwmraw, 0.f, 1.f) : kStringDefaultPwm;
-  vibcents = vibraw > 0.f ? clampf(vibraw, 0.f, 1.f) * kStringMaxVibCents
-                          : kStringDefaultVib;
-  filterscale =
-      filtraw > 0.f ? clampf(filtraw, 0.f, 1.f) : kStringDefaultFilter;
+  // SAB owns defaults (JS writes on type select); 0 is a valid ear extreme.
+  detunecents = clampf(detraw, 0.f, 1.f) * kStringMaxDetuneCents;
+  pwmdepth = clampf(pwmraw, 0.f, 1.f);
+  vibcents = clampf(vibraw, 0.f, 1.f) * kStringMaxVibCents;
+  filterscale = clampf(filtraw, 0.f, 1.f);
 }
 
 void applystringvoicepreset(ZssVoice& v, int algo) {

@@ -162,6 +162,8 @@ When config is a valid oscillator type: `sine`, `square`, `triangle`, `sawtooth`
 
 ## AlgoSynth Configs ([algosynth.md](/synth/algosynth))
 
+Selecting `#synth algo0`–`algo7` reseeds that voice’s algo row to Tone `AlgoSynth.getDefaults()` (harmonicity `2`, modindex `1`, osc `sine`, env1–4 `0.01/0.01/1/0.5`).
+
 | Config | Value | Description |
 |--------|-------|-------------|
 | `harmonicity` | number | All three harmonicities |

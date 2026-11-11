@@ -21,6 +21,7 @@ import {
 import { createdaisyrecordhandler } from './daisyrecordhandler'
 import { type DAISY_SYNTH, createdaisysynth } from './daisysynth'
 import {
+  isdaisylimiterbypass,
   isdaisymaincompbypass,
   isdaisysidechainbypass,
   isdaisysidechainkeymute,
@@ -37,6 +38,7 @@ export async function bootdaisysynth(): Promise<DAISY_SYNTH> {
     isdaisysidechainbypass() ? 1 : 0,
     isdaisysidechainkeymute() ? 1 : 0,
     WASM_DEFAULT_MAIN_VOLUME,
+    isdaisylimiterbypass() ? 1 : 0,
   )
   const synth = createdaisysynth(
     engine,

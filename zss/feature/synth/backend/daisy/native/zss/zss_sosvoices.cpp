@@ -118,10 +118,11 @@ static float windres(float envout, int algo, float resonance, float pressure) {
 
 float windvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg) {
   const SosParams p = readsosparams(cfg);
-  const float breath = clamp01(p.p0 > 0.f ? p.p0 : 0.3f);
-  const float pressure = clamp01(p.p1 > 0.f ? p.p1 : 0.45f);
-  const float brightness = clamp01(p.p2 > 0.f ? p.p2 : 0.45f);
-  const float resonance = clamp01(p.p3 > 0.f ? p.p3 : 0.15f);
+  // SAB owns defaults (JS writes on type select); 0 is a valid ear extreme.
+  const float breath = clamp01(p.p0);
+  const float pressure = clamp01(p.p1);
+  const float brightness = clamp01(p.p2);
+  const float resonance = clamp01(p.p3);
 
   bool trigger = gate && !v.windgateprev;
   v.windgateprev = gate;
@@ -199,10 +200,10 @@ static float pianobodyresonance(ZssVoice& v, float sig, float mix) {
 float pianovoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
                  float velocity) {
   const SosParams p = readsosparams(cfg);
-  const float spread = clamp01(p.p0 > 0.f ? p.p0 : 0.18f);
-  const float hammer = clamp01(p.p1 > 0.f ? p.p1 : 0.55f);
-  const float brightness = clamp01(p.p2 > 0.f ? p.p2 : 0.5f);
-  const float damping = clamp01(p.p3 > 0.f ? p.p3 : 0.45f);
+  const float spread = clamp01(p.p0);
+  const float hammer = clamp01(p.p1);
+  const float brightness = clamp01(p.p2);
+  const float damping = clamp01(p.p3);
   const float vel = clampf(velocity, 0.1f, 1.f);
 
   bool trigger = gate && !v.pianogateprev;
@@ -282,10 +283,10 @@ float pianovoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
 
 float timpanivoice(ZssVoice& v, float hz, bool gate, int cfg, float velocity) {
   const SosParams p = readsosparams(cfg);
-  const float tension = clamp01(p.p0 > 0.f ? p.p0 : 0.5f);
-  const float decayscale = clamp01(p.p1 > 0.f ? p.p1 : 0.55f);
-  const float tone = clamp01(p.p2 > 0.f ? p.p2 : 0.45f);
-  const float strike = clamp01(p.p3 > 0.f ? p.p3 : 0.6f);
+  const float tension = clamp01(p.p0);
+  const float decayscale = clamp01(p.p1);
+  const float tone = clamp01(p.p2);
+  const float strike = clamp01(p.p3);
   const float vel = clampf(velocity, 0.1f, 1.f);
 
   hz = hz > 0.f ? hz : 110.f;
@@ -338,10 +339,10 @@ float timpanivoice(ZssVoice& v, float hz, bool gate, int cfg, float velocity) {
 float bowedvoice(ZssVoice& v, int vi, float hz, bool gate, int algo, int cfg,
                  float port, float velocity) {
   const SosParams p = readsosparams(cfg);
-  const float bow = clamp01(p.p0 > 0.f ? p.p0 : 0.24f);
-  const float pressure = clamp01(p.p1 > 0.f ? p.p1 : 0.5f);
-  const float vibdepth = clamp01(p.p2 > 0.f ? p.p2 : 0.35f);
-  const float bodymix = clamp01(p.p3 > 0.f ? p.p3 : 0.55f);
+  const float bow = clamp01(p.p0);
+  const float pressure = clamp01(p.p1);
+  const float vibdepth = clamp01(p.p2);
+  const float bodymix = clamp01(p.p3);
   const float vel = clampf(velocity, 0.1f, 1.f);
 
   hz = glidefreq(v, vi, hz > 0.f ? hz : 440.f, kBowedVoice, port);
@@ -356,24 +357,25 @@ float bowedvoice(ZssVoice& v, int vi, float hz, bool gate, int algo, int cfg,
       bow * (algo == 1 ? 1.2f : 1.f) * (0.65f + pressure * 0.55f);
   sig += breathlayer(v, envout, bowamt);
 
-  v.stringbodylo.SetFreq(algo == 1 ? 360.f : 450.f);
-  v.stringbodylo.SetRes(0.38f);
-  v.stringbodylo.Process(sig);
-  float out = sig * (1.f - bodymix * 0.45f);
-  out += v.stringbodylo.Band() * bodymix * 0.38f;
-
-  v.stringbodyhi.SetFreq(algo == 1 ? 2400.f : 3000.f);
-  v.stringbodyhi.SetRes(0.24f);
-  v.stringbodyhi.Process(sig);
-  out += v.stringbodyhi.Band() * bodymix * 0.2f;
-
+  // Pressure LP first so body formants sit in the passband (old hi peak at
+  // 3 kHz was wiped by ~1.8 kHz cutoff, so body 0 vs 1 was inaudible).
   const float cutoff = clampf(480.f + pressure * envout * vel * 2600.f, 350.f,
                               g_engine.sample_rate * 0.32f);
   v.stringlp.SetFreq(cutoff);
   v.stringlp.SetRes(0.12f + pressure * envout * 0.18f);
   v.stringlp.SetDrive(1.f);
-  v.stringlp.Process(out);
-  out = v.stringlp.Low() * envout;
+  v.stringlp.Process(sig);
+  const float filtered = v.stringlp.Low();
+
+  v.stringbodylo.SetFreq(algo == 1 ? 280.f : 440.f);
+  v.stringbodylo.SetRes(0.55f + bodymix * 0.3f);
+  v.stringbodylo.Process(filtered);
+  v.stringbodyhi.SetFreq(algo == 1 ? 900.f : 1250.f);
+  v.stringbodyhi.SetRes(0.42f + bodymix * 0.25f);
+  v.stringbodyhi.Process(filtered);
+  const float formants =
+      v.stringbodylo.Band() * 0.85f + v.stringbodyhi.Band() * 0.65f;
+  float out = (filtered * (1.f - bodymix) + formants * bodymix) * envout;
 
   v.lastenv = envout;
   return out * kBowedVoiceGain;
@@ -381,10 +383,10 @@ float bowedvoice(ZssVoice& v, int vi, float hz, bool gate, int algo, int cfg,
 
 static void applyguitarparams(ZssVoice& v, int cfg, int algo) {
   const SosParams p = readsosparams(cfg);
-  const float pick = clamp01(p.p0 > 0.f ? p.p0 : 0.35f);
-  const float body = clamp01(p.p1 > 0.f ? p.p1 : 0.38f);
-  const float damping = clamp01(p.p2 > 0.f ? p.p2 : 0.5f);
-  const float position = clamp01(p.p3 > 0.f ? p.p3 : 0.45f);
+  const float pick = clamp01(p.p0);
+  const float body = clamp01(p.p1);
+  const float damping = clamp01(p.p2);
+  const float position = clamp01(p.p3);
 
   const float structure = 0.1f + position * 0.12f;
   const float brightness = 0.15f + position * 0.35f + (algo == 1 ? 0.12f : 0.f);
@@ -464,86 +466,76 @@ float guitarvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg,
 }
 
 static float orgscannervib(ZssVoice& v, float hz, float leak, int harmonic) {
-  const float rate = 5.8f + leak * 1.4f;
+  if (leak <= 0.f) {
+    return hz;
+  }
+  const float rate = 5.5f + leak * 2.5f;
   v.organvibphase += (kTwoPi * rate) / g_engine.sample_rate;
   if (v.organvibphase > kTwoPi) {
     v.organvibphase -= kTwoPi;
   }
-  const float depth = 0.0012f + leak * 0.0018f;
+  // ~20 cents peak at leak=1 so scanner is obvious in ear A/B.
+  const float depth = leak * 0.012f;
   const float phase = v.organvibphase * (1.f + harmonic * 0.17f);
   return hz * (1.f + std::sin(phase) * depth);
 }
 
 float organvoice(ZssVoice& v, float hz, bool gate, int algo, int cfg) {
+  (void)algo;
   const SosParams p = readsosparams(cfg);
-  const float drawbar = clamp01(p.p0 > 0.f ? p.p0 : 0.7f);
-  const float click = clamp01(p.p1 > 0.f ? p.p1 : 0.15f);
-  const float leak = clamp01(p.p2 > 0.f ? p.p2 : 0.2f);
-  const float bright = clamp01(p.p3 > 0.f ? p.p3 : 0.5f);
+  const float drawbar = clamp01(p.p0);
+  const float click = clamp01(p.p1);
+  const float leak = clamp01(p.p2);
+  const float bright = clamp01(p.p3);
 
   hz = hz > 0.f ? hz : 440.f;
-  bool trigger = gate && !v.organgateprev;
+  const bool trigger = gate && !v.organgateprev;
   v.organgateprev = gate;
 
   float envout = v.voiceenv.process(gate);
 
+  // Live drawbar stack (former algo-1 path). Tonewheel is the only organ
+  // voice now; the old fixed algo-0 registration ignored drawbar/bright.
+  const float d16 = drawbar * 0.45f;
+  const float d513 = drawbar * 0.28f * (0.25f + bright * 0.75f);
+  const float d8 = 0.2f + drawbar * 0.55f;
+  const float d4 = 0.12f + drawbar * 0.45f + bright * 0.15f;
+  const float d223 = bright * 0.4f;
+  const float d2 = bright * 0.35f;
+  const float d1 = bright * 0.28f;
+  const float d12 = bright * 0.2f;
+
   float sig = 0.f;
-  if (algo == 1) {
-    const float d16 = drawbar * 0.35f;
-    const float d513 = drawbar * 0.22f * bright;
-    const float d8 = 0.35f + drawbar * 0.35f;
-    const float d4 = 0.28f + drawbar * 0.3f;
-    const float d223 = 0.18f + bright * 0.22f;
-    const float d2 = 0.2f + bright * 0.18f;
-    const float d1 = 0.14f + bright * 0.12f;
-    const float d12 = 0.1f + bright * 0.08f;
-    sig += oscbasicwave(v.synthosc, 1, orgscannervib(v, hz * 0.5f, leak, 0),
-                        d16 + leak * 0.08f);
-    sig += oscbasicwave(v.synthmod, 1, orgscannervib(v, hz * 0.666f, leak, 1),
-                        d513);
-    sig += oscbasicwave(v.algoops[0], 1, orgscannervib(v, hz, leak, 2), d8);
-    sig +=
-        oscbasicwave(v.algoops[1], 1, orgscannervib(v, hz * 2.f, leak, 3), d4);
-    sig += oscbasicwave(v.algoops[2], 3, orgscannervib(v, hz * 2.67f, leak, 4),
-                        d223);
-    sig +=
-        oscbasicwave(v.sparklemod, 1, orgscannervib(v, hz * 4.f, leak, 5), d2);
-    sig +=
-        oscbasicwave(v.sparklecar, 1, orgscannervib(v, hz * 8.f, leak, 6), d1);
-    sig +=
-        oscbasicwave(v.dootosc, 3, orgscannervib(v, hz * 12.f, leak, 7), d12);
-  } else {
-    const float d8 = 0.55f;
-    const float d4 = 0.45f;
-    const float d2 = 0.35f + bright * 0.25f;
-    const float d1 = 0.25f + bright * 0.15f;
-    sig +=
-        oscbasicwave(v.synthosc, 1, orgscannervib(v, hz, leak, 0), d8 * 0.35f);
-    sig += oscbasicwave(v.synthmod, 1, orgscannervib(v, hz * 2.f, leak, 1),
-                        d4 * 0.28f);
-    sig += oscbasicwave(v.algoops[0], 1, orgscannervib(v, hz * 4.f, leak, 2),
-                        d2 * 0.22f);
-    sig += oscbasicwave(v.algoops[1], 3, orgscannervib(v, hz * 8.f, leak, 3),
-                        d1 * 0.18f);
-    sig += oscbasicwave(v.algoops[2], 3, orgscannervib(v, hz * 0.5f, leak, 4),
-                        leak * 0.12f);
+  sig += oscbasicwave(v.synthosc, 1, orgscannervib(v, hz * 0.5f, leak, 0), d16);
+  sig +=
+      oscbasicwave(v.synthmod, 1, orgscannervib(v, hz * 0.666f, leak, 1), d513);
+  sig += oscbasicwave(v.algoops[0], 1, orgscannervib(v, hz, leak, 2), d8);
+  sig += oscbasicwave(v.algoops[1], 1, orgscannervib(v, hz * 2.f, leak, 3), d4);
+  sig += oscbasicwave(v.algoops[2], 3, orgscannervib(v, hz * 2.67f, leak, 4),
+                      d223);
+  sig += oscbasicwave(v.sparklemod, 1, orgscannervib(v, hz * 4.f, leak, 5), d2);
+  sig += oscbasicwave(v.sparklecar, 1, orgscannervib(v, hz * 8.f, leak, 6), d1);
+  sig += oscbasicwave(v.dootosc, 3, orgscannervib(v, hz * 12.f, leak, 7), d12);
+
+  // Tonewheel leakage / crosstalk (audible at leak=1, silent at 0).
+  if (leak > 0.f) {
+    sig += oscbasicwave(v.algoops[3], 1, orgscannervib(v, hz * 3.f, leak, 8),
+                        leak * 0.18f);
+    sig += stringbownoisesample(v) * leak * 0.04f;
   }
 
+  // Key click: dedicated exp decay (ADSR one-sample gate never peaked).
   if (trigger) {
-    sig += stringbownoisesample(v) * click * 0.18f;
-    if (algo == 1 && click > 0.4f) {
-      v.sparkleenv.SetTime(ADSR_SEG_ATTACK, 0.001f);
-      v.sparkleenv.SetTime(ADSR_SEG_DECAY, 0.06f);
-      v.sparkleenv.SetSustainLevel(0.f);
-      v.sparkleenv.SetTime(ADSR_SEG_RELEASE, 0.04f);
-      sig +=
-          stringbownoisesample(v) * v.sparkleenv.Process(true) * click * 0.12f;
-    }
+    v.organclick = click;
   }
+  const float clicksec = 0.035f + click * 0.04f;
+  v.organclick *=
+      std::exp(-1.f / std::max(1.f, clicksec * g_engine.sample_rate));
+  const float clicksig = stringbownoisesample(v) * v.organclick * 1.1f;
 
   v.lastenv = envout;
-  const float organgain = algo == 1 ? kOrganVoiceGain : kOrganTonewheelGain;
-  return sig * envout * organgain;
+  // Click rides above the tone envelope so the attack transient stays clear.
+  return (sig * envout + clicksig) * kOrganTonewheelGain;
 }
 
 } // namespace zss_daisy

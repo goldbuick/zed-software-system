@@ -17,8 +17,6 @@ Reference catalog for all ZSS `#synth` voice types. **Daisy WASM is the active b
 
 SAB write alone is never Proven. See [daisy-synth-config](../../../../../.cursor/rules/daisy-synth-config.mdc).
 
-Manual cafe ear checklist (all live-selectable voices): [`ops/docs/synth-cafe-ear-pass.md`](../../../../../ops/docs/synth-cafe-ear-pass.md).
-
 See also: [fx-types-reference.md](fx-types-reference.md), [voiceconfig.md](voiceconfig.md).
 
 ## Config path (trust this chain)
@@ -91,9 +89,9 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 | `pluck` | structure, brightness, damping, accent | 0.14/0.38/0.72/0.12 | Wired |
 | flute/clarinet/brass | breath, pressure, brightness, resonance | **per-algo** `winddefaults()` (not pool) | Wired |
 | piano | spread 0–1, hammer, brightness, damping | 0.18/0.55/0.5/0.45 | Proven (shared-key Jest) |
-| violin | bow, pressure, vib, body (+ port) | see code presets | Proven (shared-key Jest) |
+| violin | bow, pressure, vib, body (+ port) | see code presets | Proven (cafe ear) |
 | steel | pick, body, damping, position | steel select presets | Proven (shared-key Jest) |
-| tonewheel | drawbar, click, leak, bright | 0.7/0.15/0.2/0.5; `drawbar` is param only | Wired |
+| tonewheel | drawbar, click, leak, bright | 0.7/0.15/0.2/0.5; `drawbar` is param only | Proven (cafe ear) |
 
 **Removed named types** (no longer selectable): `drip`, `panpipe`, `epiano`, `timpani`, `viola`, `nylon`, `drawbar` (as voice).
 
@@ -123,7 +121,7 @@ harmonicity[1–3], modindex[1–3], osc1–4 (**basic/pulse/pwm only**), env1�
 | `timpani` | `TIMPANI_VOICE` | — | Daisy WASM only (`timpanivoice`, pitched membrane) |
 | `violin` / `viola` | `BOWED_VOICE` (algo 0–1) | — | Daisy WASM only (`bowedvoice`, bow + formants) |
 | `nylon` / `steel` | `GUITAR_VOICE` (algo 0–1) | — | Daisy WASM only (`guitarvoice`, `StringVoice` + pick) |
-| `tonewheel` / `drawbar` | `ORGAN_VOICE` (algo 0–1) | — | Daisy WASM only (`organvoice`, drawbar stack) |
+| `tonewheel` | `ORGAN_VOICE` (algo 0) | — | Daisy WASM only (`organvoice`, live drawbar stack) |
 
 ---
 
@@ -288,9 +286,19 @@ Init envelope → **0.001/0.4/0.01/1.4** s. Pitch matches Tone MembraneSynth: st
 | `env1`–`env4` | `envelope1`–`4` | per-operator ADSR |
 | `port` / `portamento` | — | glide |
 
-### Defaults (ZSS AlgoSynth + WASM mirror)
+### Defaults (Tone `AlgoSynth.getDefaults()` + Daisy mirror)
 
-algorithm via `algoN` name; harmonicity1/2/3 `2`; modindex1/2/3 `1`; osc1–4 `sine`; env1–4 `0.01/0.01/1/0.5`; operator volume `-10` dB.
+`#synth algoN` reseeds that voice’s algo SAB row (same idea as Omni wave reseed):
+
+| Field | Default |
+|-------|---------|
+| algorithm | `N` from `algoN` |
+| harmonicity1–3 | `2` |
+| modindex1–3 | `1` |
+| osc1–4 | `sine` |
+| env1–4 | `0.01 / 0.01 / 1 / 0.5` |
+| outer `env` (first visit) | `0.01 / 0.01 / 0.5 / 0.01` |
+| operator gain | −10 dB (`kAlgoOpGain`) |
 
 ### Voice-level `env` vs per-operator `env1`–`env4`
 
@@ -437,9 +445,9 @@ Daisy WASM only. `StringVoice` strike + pick burst + body peak; algo 0 = nylon, 
 
 ---
 
-## 14. Organ — `tonewheel` / `drawbar` (`ORGAN_VOICE`)
+## 14. Organ — `tonewheel` (`ORGAN_VOICE`)
 
-Daisy WASM only. Summed harmonic drawbars (9-level mapping on `drawbar` algo) + scanner vibrato + key click on gate rise; `tonewheel` uses fixed registration, `drawbar` uses live `drawbar` param. Leslie not modeled — use `#vibrato` / `#echo` FX.
+Daisy WASM only. Summed harmonic drawbars driven by live `drawbar` / `bright` + scanner vibrato (`leak`) + key-click envelope on gate rise. Bare `drawbar` as a voice type is removed (`drawbar` is the param only). Leslie not modeled — use `#vibrato` / `#echo` FX.
 
 | Param | Value | Default |
 |-------|-------|---------|

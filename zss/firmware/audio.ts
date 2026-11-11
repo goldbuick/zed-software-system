@@ -18,6 +18,7 @@ import {
   synthvoicefx,
 } from 'zss/device/api'
 import { SOFTWARE } from 'zss/device/session'
+import { rejointonenotation } from 'zss/feature/synth/playnotation'
 import { synthdebugtrace } from 'zss/feature/synth/synthdebugtrace'
 import { SYNTH_DEFAULT_WAVE } from 'zss/feature/synth/synthdefaults'
 import { SYNTH_NAMED_TYPES } from 'zss/feature/synth/voiceconfig/validation'
@@ -44,7 +45,7 @@ import { mapstrcollision } from 'zss/words/collision'
 import { mapstrcolor } from 'zss/words/color'
 import { mapstrdir } from 'zss/words/dir'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
-import { ARG_TYPE, WORD } from 'zss/words/types'
+import { ARG_TYPE, NAME, WORD } from 'zss/words/types'
 
 /** Inlined desc for dynamically named audio commands (synth1–5, echo1–4, fcrush1–4, etc.). */
 const AUDIO_CMD_DESC: Record<string, string> = {
@@ -140,12 +141,25 @@ function handlesynthvoicefx(
   fx: string,
   words: WORD[],
 ) {
-  const [maybeconfig, maybevalue] = readargs(words, 0, [
+  const [maybeconfig, maybevalue, ii] = readargs(words, 0, [
     ARG_TYPE.NUMBER_OR_STRING,
     ARG_TYPE.MAYBE_NUMBER_OR_STRING,
   ])
-  synthvoicefx(SOFTWARE, player, board, idx, fx, maybeconfig, maybevalue)
-  memorymergesynthvoicefx(board, idx, fx, maybeconfig, maybevalue)
+  // Lang splits `16n` into `16` + `n`; rejoin for delaytime Tone notation.
+  const maybevaluerejoined =
+    isstring(maybeconfig) && NAME(maybeconfig) === 'delaytime'
+      ? rejointonenotation(maybevalue, words[ii])
+      : maybevalue
+  synthvoicefx(
+    SOFTWARE,
+    player,
+    board,
+    idx,
+    fx,
+    maybeconfig,
+    maybevaluerejoined,
+  )
+  memorymergesynthvoicefx(board, idx, fx, maybeconfig, maybevaluerejoined)
 }
 
 function handlesynthplayvoicefx(

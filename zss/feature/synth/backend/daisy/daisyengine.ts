@@ -23,6 +23,7 @@ import { MAYBE } from 'zss/mapping/types'
 import { DAISY_BUILD_ID } from './daisybuildid'
 import { daisyasseturl } from './daisypaths'
 import {
+  isdaisylimiterbypass,
   isdaisymaincompbypass,
   isdaisysidechainbypass,
   isdaisysidechainkeymute,
@@ -81,16 +82,17 @@ function teardowndaisyengine() {
   daisybootedbuildid = ''
 }
 
-function daisymainbussabtail(): [number, number, number] {
+function daisymainbussabtail(): [number, number, number, number] {
   return [
     isdaisymaincompbypass() ? 1 : 0,
     isdaisysidechainbypass() ? 1 : 0,
     isdaisysidechainkeymute() ? 1 : 0,
+    isdaisylimiterbypass() ? 1 : 0,
   ]
 }
 
 function pushdaisymainvolumes(maxi: DaisyEngine) {
-  const [compbypass, scbypass, sckeymute] = daisymainbussabtail()
+  const [compbypass, scbypass, sckeymute, limbypass] = daisymainbussabtail()
   pushwasmmainsab(maxi, [
     effectivemainvolume(daisyplayvolume, daisyvol),
     effectivemainvolume(daisybgplayvolume, daisyvol),
@@ -99,6 +101,7 @@ function pushdaisymainvolumes(maxi: DaisyEngine) {
     scbypass,
     sckeymute,
     daisyvol,
+    limbypass,
   ])
 }
 
@@ -292,7 +295,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     audioWorkletNode: worklet,
   }
   wireoutput(engine)
-  const [compbypass, scbypass, sckeymute] = daisymainbussabtail()
+  const [compbypass, scbypass, sckeymute, limbypass] = daisymainbussabtail()
   initwasmmainsab(
     engine,
     effectivemainvolume(daisyplayvolume, daisyvol),
@@ -302,6 +305,7 @@ async function bootdaisyoncontext(ctx: BaseAudioContext): Promise<DaisyEngine> {
     scbypass,
     sckeymute,
     daisyvol,
+    limbypass,
   )
   initwasmfxsab(engine)
   daisybootedbuildid = DAISY_BUILD_ID
@@ -356,7 +360,7 @@ export function startisolateddaisydsp(
   daisyttsvolume = ttsvolume
   // Offline / parity: write absolute SAB levels (main scale = unity).
   daisyvol = 100
-  const [compbypass, scbypass, sckeymute] = daisymainbussabtail()
+  const [compbypass, scbypass, sckeymute, limbypass] = daisymainbussabtail()
   initwasmmainsab(
     engine,
     playvolume,
@@ -366,6 +370,7 @@ export function startisolateddaisydsp(
     scbypass,
     sckeymute,
     daisyvol,
+    limbypass,
   )
   initwasmfxsab(engine)
 }

@@ -1,6 +1,9 @@
 import { wasmsabsnapshot } from 'zss/feature/synth/backend/wasm/sabpush'
 import { createmocksabengine } from 'ops/lib/test/synth/mocksab'
-import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
+import {
+  DEFAULT_WASM_ALGO_CONFIG,
+  defaultwasmalgoconfig,
+} from 'zss/feature/synth/backend/wasm/wasmalgoconfigsab'
 import { initwasmvoicesab } from 'zss/feature/synth/backend/wasm/wasminitsab'
 import {
   DEFAULT_WASM_OSC_CONFIG,
@@ -674,6 +677,23 @@ describe('wasmvoiceconfig', () => {
     applyvoiceconfig(voices, 0, 'fatsawtooth', '', osc, algo)
     expect(osc[0].count).toBe(DEFAULT_WASM_OSC_CONFIG.count)
     expect(osc[0].spread).toBe(DEFAULT_WASM_OSC_CONFIG.spread)
+  })
+
+  it('reseeds AlgoSynth defaults on algoN select (Tone AlgoSynth.getDefaults)', () => {
+    const voices = defaultwasmvoicestate()
+    const osc = defaultwasmoscconfig()
+    const algo = defaultwasmalgoconfig()
+    applyvoiceconfig(voices, 0, 'algo0', '', osc, algo)
+    applyvoiceconfig(voices, 0, 'harmonicity1', 11, osc, algo)
+    applyvoiceconfig(voices, 0, 'modindex1', 8, osc, algo)
+    applyvoiceconfig(voices, 0, 'osc4', 'sawtooth', osc, algo)
+    applyvoiceconfig(voices, 0, 'algo4', '', osc, algo)
+    expect(voices[0].type).toBe(SOURCE_TYPE.ALGO_SYNTH)
+    expect(voices[0].algo).toBe(4)
+    expect(algo[0].harmonicity1).toBe(DEFAULT_WASM_ALGO_CONFIG.harmonicity1)
+    expect(algo[0].modindex1).toBe(DEFAULT_WASM_ALGO_CONFIG.modindex1)
+    expect(algo[0].osc4).toBe(DEFAULT_WASM_ALGO_CONFIG.osc4)
+    expect(algo[0].env1).toEqual(DEFAULT_WASM_ALGO_CONFIG.env1)
   })
 
   it('restart clears envmemory and osc dormancy', () => {
