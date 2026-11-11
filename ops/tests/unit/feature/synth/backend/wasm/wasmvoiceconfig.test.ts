@@ -289,10 +289,10 @@ describe('wasmvoiceconfig', () => {
     applyvoiceconfig(voices, 0, 'bells', '')
     expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
     expect(voices[0].envelope).toEqual({
-      attack: 0.01,
-      decay: 3,
-      sustain: 0.3,
-      release: 6,
+      attack: 0.001,
+      decay: 2.5,
+      sustain: 0,
+      release: 1.2,
     })
     expect(voices[0].portamento).toBe(0)
   })
@@ -332,10 +332,10 @@ describe('wasmvoiceconfig', () => {
     applyvoiceconfig(voices, 0, 'bells', '')
     expect(voices[0].type).toBe(SOURCE_TYPE.BELLS)
     expect(voices[0].envelope).toEqual({
-      attack: 0.01,
-      decay: 3,
-      sustain: 0.3,
-      release: 6,
+      attack: 0.001,
+      decay: 2.5,
+      sustain: 0,
+      release: 1.2,
     })
   })
 
@@ -533,10 +533,10 @@ describe('wasmvoiceconfig', () => {
     const voices = defaultwasmvoicestate()
     applyvoiceconfig(voices, 0, 'bells', '')
     expect(voices[0].envelope).toEqual({
-      attack: 0.01,
-      decay: 3,
-      sustain: 0.3,
-      release: 6,
+      attack: 0.001,
+      decay: 2.5,
+      sustain: 0,
+      release: 1.2,
     })
     applyvoiceconfig(voices, 0, 'flute', '')
     expect(

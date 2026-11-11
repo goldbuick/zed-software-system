@@ -9,8 +9,8 @@ describe('playdrumbalance', () => {
   it('passes when drums are near play peak', () => {
     const gate = evalplaydrumbalancegate({
       playpeakdb: -6,
-      drumpeakdb: -6,
-      drumminusplaydb: 0,
+      drumpeakdb: -17,
+      drumminusplaydb: -11,
     })
     expect(gate.pass).toBe(true)
   })
@@ -18,8 +18,8 @@ describe('playdrumbalance', () => {
   it('fails when play is much hotter than drums', () => {
     const gate = evalplaydrumbalancegate({
       playpeakdb: -2,
-      drumpeakdb: -8,
-      drumminusplaydb: -6,
+      drumpeakdb: -20,
+      drumminusplaydb: -18,
     })
     expect(gate.pass).toBe(false)
   })
@@ -34,9 +34,9 @@ describe('playdrumbalance', () => {
     expect(gate.reasons[0]).toContain(String(PLAY_DRUM_BALANCE_MAX_DB))
   })
 
-  it('uses target 0 dB band -2..+2', () => {
-    expect(PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB).toBe(0)
-    expect(PLAY_DRUM_BALANCE_MIN_DB).toBe(-2)
-    expect(PLAY_DRUM_BALANCE_MAX_DB).toBe(2)
+  it('uses target -11 dB band -13..-9', () => {
+    expect(PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB).toBe(-11)
+    expect(PLAY_DRUM_BALANCE_MIN_DB).toBe(-13)
+    expect(PLAY_DRUM_BALANCE_MAX_DB).toBe(-9)
   })
 })
