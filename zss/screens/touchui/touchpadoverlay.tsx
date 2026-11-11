@@ -5,11 +5,13 @@ import {
   type TOUCHPAD_ZONE,
   useDeviceData,
 } from 'zss/gadget/device'
-import { INPUT_RATE } from 'zss/gadget/userinput'
 import { modpositive, snap } from 'zss/mapping/number'
 import { useShallow } from 'zustand/react/shallow'
 
-import { handlestickdirsmerged } from './stickinputs'
+import {
+  handlestickdirsmerged,
+  handlestickmergesreset,
+} from './stickinputs'
 
 type Manager = ReturnType<typeof nipplejs.create>
 
@@ -78,8 +80,10 @@ function createmanager(
     mode: 'static',
     position,
     size,
-    restOpacity: 0.55,
-    color: '#ccc',
+    shape: 'square',
+    restOpacity: 0.85,
+    // Fallback if CSS misses; cafe/index.css owns .joystick .back/.front.
+    color: { front: '#ccc', back: '#2a002a' },
     dynamicPage: true,
   })
 }
@@ -120,9 +124,12 @@ export function TouchPadOverlay() {
       rightsnap.current = null
       leftactive.current = false
       rightactive.current = false
+      handlestickmergesreset()
       handlestickdirsmerged(null, null, false)
       return
     }
+
+    handlestickmergesreset()
 
     const movemanager = createmanager(
       moveel,
@@ -177,20 +184,14 @@ export function TouchPadOverlay() {
       applymerged()
     })
 
-    const timer = window.setInterval(() => {
-      if (leftactive.current || rightactive.current) {
-        applymerged()
-      }
-    }, INPUT_RATE)
-
     return () => {
-      window.clearInterval(timer)
       movemanager.destroy()
       shootmanager.destroy()
       leftsnap.current = null
       rightsnap.current = null
       leftactive.current = false
       rightactive.current = false
+      handlestickmergesreset()
       handlestickdirsmerged(null, null, false)
     }
     // layout object identity changes; padlayout encodes geometry.
