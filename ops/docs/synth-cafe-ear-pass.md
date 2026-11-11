@@ -220,7 +220,7 @@ Repeat type line for: `buzz`, `clang`, `metallic`, `hollow`, `noise`.
 #play qc
 ```
 
-(Default bells env is long; reshape should still be audible.)
+(Default is a one-shot strike that decays; reshape should still be audible.)
 
 ### 2.3 doot
 

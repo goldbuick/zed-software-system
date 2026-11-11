@@ -33,7 +33,7 @@ Per play/bgplay voice index, SOS family blobs (`stringensemble`, `pluck`, `wind`
 
 ## Source Type Changes
 
-First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope but **reseed osc family defaults**. `#synth bells` installs Tone-parity carrier env `0.01/3/0.3/6` on first visit.
+First visit to a named type (or SYNTH via a wave name) installs that destination's default ADSR. Returning to a previously used `(type, algo)` restores the snapshotted envelope and portamento. Same-SYNTH wave changes (`square` → `sawtooth`) keep the current envelope but **reseed osc family defaults**. `#synth bells` installs strike env `0.001/2.5/0/1.2` on first visit.
 
 | Config | Source Type |
 |--------|-------------|

@@ -400,7 +400,8 @@ function parsesourcetype(
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BELLS,
         algo: 0,
-        envelope: { attack: 0.01, decay: 3, sustain: 0.3, release: 6 },
+        // Percussive hit — sustain 0 so amp follows modal decay, not a hold.
+        envelope: { attack: 0.001, decay: 2.5, sustain: 0, release: 1.2 },
       })
     case 'doot':
       return namedvoiceswitch(current, { type: SOURCE_TYPE.DOOT, algo: 0 })

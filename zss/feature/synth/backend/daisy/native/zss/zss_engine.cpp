@@ -214,7 +214,8 @@ float processvoice(int vi, float vstart[kVibratoGroups],
     }
     v.karplushzprev = gate ? basehz : 0.f;
     v.modalvoice.SetFreq(hz);
-    v.modalvoice.SetSustain(gate);
+    // One-shot strike: sustain dust would keep "ringing" the bell while gated.
+    v.modalvoice.SetSustain(false);
     float body = v.modalvoice.Process(resetnow);
     float sparkhz = hz * 4.f;
     v.sparklemod.SetFreq(sparkhz * 5.1f);

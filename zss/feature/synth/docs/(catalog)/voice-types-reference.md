@@ -76,7 +76,7 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 | Family | `#synth` keys | N/A | Status |
 |--------|---------------|-----|--------|
 | retro/buzz/clang/metallic/hollow/noise | type, env, vol | LFSR meta; scan `note_hz*8` | Proven |
-| bells | env (select `0.01/3/0.3/6`), vol | FM/sparkle internals | Wired |
+| bells | env (select `0.001/2.5/0/1.2`), vol | Modal one-shot + sparkle | Proven |
 | doot | env, vol | octaves, pitchDecay | Wired |
 
 ### ALGO `algo0`–`algo7`
@@ -240,19 +240,18 @@ Default envelope: same WASM global `0.01/0.01/0.5/0.01`.
 
 ### Bells fixed levels
 
-**Main FMSynth (after ZSS reset):** harmonicity `1.5`, modulationIndex `30`, carrier `sine`, modulator `square`, envelope `0.01/3/0.3/6`, modulationEnvelope `0.5/1/0.2/4`.
+**Historic Tone (archive):** FMSynth harm `1.5` / modindex `30` / env `0.01/3/0.3/6` + MetalSynth sparkle. Daisy does **not** run that path.
 
-**Sparkle MetalSynth (fixed, not reset):** volume `-16` dB, envelope `0.001/1.4/0/0.321`, harmonicity `5.1`, modulationIndex `32`, resonance `4000`, octaves `1.5`.
+### Bells hardcoded levels (Daisy)
 
-**Tone FMSynth library baseline:** ModulationSynth defaults — harmonicity `3`, modulationIndex `10`.
+| Layer | Behavior |
+|-------|----------|
+| Body | DaisySP `ModalVoice`, **`SetSustain(false)`** — single trigger hit, resonator decays (no gated dust ring) |
+| Sparkle | Fixed FM-ish: +2 oct, harm `5.1`, mod `32`, env `0.001/1.4/0/0.321`, mix `× 0.15` |
+| Amp env | Select installs `0.001/2.5/0/1.2`; `#synth env` overrides |
+| Output | `× kBellsVoiceGain` (`0.35`) |
 
-### Bells hardcoded levels
-
-Bell FM: harm `1.5`, modindex `30`, envelope init → **0.01/3/0.3/6** s. Sparkle: harm `5.1`, modindex `32`, envelope → **0.001/1.4/0/0.321** s. Output `× 0.35`.
-
-**DaisySP WASM:** body is `ModalVoice`; sparkle uses fixed `sparkleenv` and mix (`× 0.15`). Selecting `#synth bells` installs carrier env `0.01/3/0.3/6` on `voiceenv`.
-
-`#synth env` overrides that amp envelope; sparkle envelope stays fixed.
+`#synth env` overrides amp envelope; sparkle envelope stays fixed.
 
 ---
 
