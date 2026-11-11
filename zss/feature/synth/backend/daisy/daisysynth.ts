@@ -19,6 +19,7 @@ import {
   HUMANIZE_BGPLAY_SEC,
   HUMANIZE_SEC,
   humanizeonset,
+  shouldhumanizeonset,
 } from 'zss/feature/synth/backend/wasm/playhumanize'
 import {
   playpatternendtime,
@@ -334,7 +335,8 @@ export function createdaisysynth(
     if (note.startsWith('#')) {
       return
     }
-    const when = livehumanize
+    const port = voicecfg[chan]?.portamento ?? 0
+    const when = shouldhumanizeonset(livehumanize, port)
       ? humanizeonset(gridwhen, undefined, humanizepeak)
       : gridwhen
     schedulenote(chan, when, note, tonenotationseconds(notation))

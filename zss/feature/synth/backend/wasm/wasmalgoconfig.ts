@@ -162,14 +162,22 @@ export function applywasmalgoconfig(
   return false
 }
 
+/** Tone AlgoSynth.getDefaults() mirror for one voice row. */
+export function seedalgodefaults(config: WASM_ALGO_CONFIG[], index: number) {
+  if (index < 0 || index >= config.length) {
+    return
+  }
+  config[index] = {
+    ...DEFAULT_WASM_ALGO_CONFIG,
+    env1: { ...DEFAULT_WASM_ALGO_CONFIG.env1 },
+    env2: { ...DEFAULT_WASM_ALGO_CONFIG.env2 },
+    env3: { ...DEFAULT_WASM_ALGO_CONFIG.env3 },
+    env4: { ...DEFAULT_WASM_ALGO_CONFIG.env4 },
+  }
+}
+
 export function resetwasmalgoconfig(config: WASM_ALGO_CONFIG[]) {
   for (let i = 0; i < config.length; i++) {
-    config[i] = {
-      ...DEFAULT_WASM_ALGO_CONFIG,
-      env1: { ...DEFAULT_WASM_ALGO_CONFIG.env1 },
-      env2: { ...DEFAULT_WASM_ALGO_CONFIG.env2 },
-      env3: { ...DEFAULT_WASM_ALGO_CONFIG.env3 },
-      env4: { ...DEFAULT_WASM_ALGO_CONFIG.env4 },
-    }
+    seedalgodefaults(config, i)
   }
 }

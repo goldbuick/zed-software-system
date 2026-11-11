@@ -4,7 +4,65 @@ import {
   DEFAULT_WASM_OSC_CONFIG,
   type WASM_OSC_CONFIG,
 } from './wasmoscconfigsab'
-import { parsemodtype, parsewasmosc } from './wasmosctype'
+import { WASM_OSC_TYPE, parsemodtype, parsewasmosc } from './wasmosctype'
+
+/** Tone OmniOscillator phase is degrees; native SAB stores cycles 0-1. */
+export function phasedegreestocycles(degrees: number): number {
+  return degrees / 360
+}
+
+function clearoscpartials(cfg: WASM_OSC_CONFIG) {
+  cfg.partialcount = 0
+  cfg.partials = [0, 0, 0, 0, 0, 0, 0, 0]
+}
+
+/**
+ * Reseed osc row like Tone OmniOscillator constructing a new subclass.
+ * Always clears partials; caller may re-apply partials via wave+array.
+ */
+export function seedomnioscdefaults(
+  config: WASM_OSC_CONFIG[],
+  index: number,
+  osctype: WASM_OSC_TYPE,
+): void {
+  if (index < 0 || index >= config.length) {
+    return
+  }
+  const cfg = config[index]
+  clearoscpartials(cfg)
+  const t = osctype as number
+  if (t >= 0 && t <= 3) {
+    cfg.phase = 0
+    return
+  }
+  if (t === (WASM_OSC_TYPE.PULSE as number)) {
+    cfg.width = DEFAULT_WASM_OSC_CONFIG.width
+    return
+  }
+  if (t === (WASM_OSC_TYPE.PWM as number)) {
+    cfg.width = DEFAULT_WASM_OSC_CONFIG.width
+    cfg.modfreq = DEFAULT_WASM_OSC_CONFIG.modfreq
+    return
+  }
+  if (t >= 10 && t <= 13) {
+    cfg.harmonicity = DEFAULT_WASM_OSC_CONFIG.harmonicity
+    cfg.modtype = DEFAULT_WASM_OSC_CONFIG.modtype
+    cfg.modenv = { ...DEFAULT_WASM_OSC_CONFIG.modenv }
+    return
+  }
+  if (t >= 20 && t <= 23) {
+    cfg.harmonicity = DEFAULT_WASM_OSC_CONFIG.harmonicity
+    cfg.modindex = DEFAULT_WASM_OSC_CONFIG.modindex
+    cfg.modtype = DEFAULT_WASM_OSC_CONFIG.modtype
+    cfg.modenv = { ...DEFAULT_WASM_OSC_CONFIG.modenv }
+    return
+  }
+  if (t >= 30 && t <= 33) {
+    cfg.count = DEFAULT_WASM_OSC_CONFIG.count
+    cfg.spread = DEFAULT_WASM_OSC_CONFIG.spread
+    cfg.phase = 0
+  }
+}
 
 export function applywasmoscconfig(
   config: WASM_OSC_CONFIG[],
@@ -20,7 +78,7 @@ export function applywasmoscconfig(
   switch (key) {
     case 'phase':
       if (isnumber(value)) {
-        cfg.phase = value
+        cfg.phase = phasedegreestocycles(value)
         return true
       }
       break
@@ -94,11 +152,13 @@ export function applywasmoscconfig(
   }
 
   if (isarray(value)) {
-    cfg.partials = value.filter((item) => isnumber(item)).slice(0, 8)
-    while (cfg.partials.length < 8) {
-      cfg.partials.push(0)
+    const partials = value.filter((item) => isnumber(item)).slice(0, 8)
+    const n = partials.length
+    while (partials.length < 8) {
+      partials.push(0)
     }
-    cfg.partialcount = cfg.partials.length
+    cfg.partials = partials
+    cfg.partialcount = n
     return true
   }
 

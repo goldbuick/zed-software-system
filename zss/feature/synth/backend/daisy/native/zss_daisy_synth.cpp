@@ -26,6 +26,7 @@ using zss_daisy::initengine;
 using zss_daisy::initmainchain;
 using zss_daisy::kControlLen;
 using zss_daisy::kMainCompBypassIdx;
+using zss_daisy::kMainLimBypassIdx;
 using zss_daisy::kMainScBypassIdx;
 using zss_daisy::kMainScKeyMuteIdx;
 using zss_daisy::kMainVolIdx;
@@ -51,6 +52,7 @@ void zss_init(float sample_rate) {
   g_control[off_main() + kMainScBypassIdx] = 0.0;
   g_control[off_main() + kMainScKeyMuteIdx] = 0.0;
   g_control[off_main() + kMainVolIdx] = 50.0;
+  g_control[off_main() + kMainLimBypassIdx] = 0.0;
   initengine(sample_rate > 0.f ? sample_rate : 44100.f);
   g_engine.cached_playgain = readplayvolume();
   g_engine.cached_bggain = readbgplayvolume();
@@ -171,7 +173,9 @@ void zss_process(float* out, int frames, const float* tts_in) {
       final = 0.f;
     }
     // Peak control is Daisy Limiter only — no post makeup into +/-1.
-    g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
+    if (readctrl(off_main() + kMainLimBypassIdx) <= 0.5f) {
+      g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
+    }
     out[f] = clampf(final, -1.f, 1.f);
   }
 }

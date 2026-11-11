@@ -47,3 +47,8 @@ export function isdaisymaincompbypass(): boolean {
     envflagon(import.meta.env.ZSS_DAISY_NO_MAIN_COMP) || urlflagon('no_comp')
   )
 }
+
+/** Master Daisy Limiter bypass (live dev: env or `?no_lim=1`). */
+export function isdaisylimiterbypass(): boolean {
+  return envflagon(import.meta.env.ZSS_DAISY_NO_LIMITER) || urlflagon('no_lim')
+}

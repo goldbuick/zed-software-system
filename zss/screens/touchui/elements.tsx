@@ -12,6 +12,7 @@ type ElementsProps = {
   mode: TouchUIMode
   width: number
   height: number
+  showactionrow?: boolean
 }
 
 const FG = COLOR.WHITE
@@ -56,7 +57,14 @@ function PortraitSidebarToggle({
   )
 }
 
-function PortraitDock({ width }: { width: number; height: number }) {
+function PortraitDock({
+  width,
+  showactionrow,
+}: {
+  width: number
+  height: number
+  showactionrow: boolean
+}) {
   const context = useWriteText()
   resettiles(context, 32, FG, BG)
 
@@ -68,14 +76,25 @@ function PortraitDock({ width }: { width: number; height: number }) {
   context.y = 4
   tokenizeandwritetextformat(`$whiteSHOOT`, context, false)
 
+  if (!showactionrow) {
+    return null
+  }
+
   const actionx = Math.max(0, Math.floor((width - ACTION_ROW_WIDTH) * 0.5))
 
   return <ActionRow x={actionx} y={0} />
 }
 
-export function Elements({ mode, width, height }: ElementsProps) {
+export function Elements({
+  mode,
+  width,
+  height,
+  showactionrow = true,
+}: ElementsProps) {
   if (mode === 'portrait-sidebartoggle') {
     return <PortraitSidebarToggle width={width} height={height} />
   }
-  return <PortraitDock width={width} height={height} />
+  return (
+    <PortraitDock width={width} height={height} showactionrow={showactionrow} />
+  )
 }

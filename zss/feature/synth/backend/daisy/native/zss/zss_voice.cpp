@@ -45,6 +45,13 @@ float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo,
   float e2 = v.algoenvs[2].Process(gate);
   float e3 = v.algoenvs[3].Process(gate);
 
+  // Tone AlgoSynth FM: carrier_hz += (note_hz * modindex) * modulator_audio.
+  // Old Daisy used raw*mi (Hz-scale ~0.3) so harmonicity/modindex were
+  // inaudible.
+  const float d1 = hz * mi1;
+  const float d2 = hz * mi2;
+  const float d3 = hz * mi3;
+
   // Single Process() per operator per sample (serial FM dependency order).
   float raw1 = algopwave(v.algoops[0], cfg.osctype[0], hz * h1) * kAlgoOpGain;
   float op1 = raw1 * e0;
@@ -53,66 +60,72 @@ float algovoice(ZssVoice& v, int vi, float freq, bool gate, int algo,
   float op4 = 0.f;
 
   if (algo == 0) {
-    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+    // 1→2→3→4
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + op1 * d1) *
                  kAlgoOpGain;
     op2 = raw2 * e1;
-    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) *
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + op2 * d2) *
                  kAlgoOpGain;
     op3 = raw3 * e2;
     float raw4 =
-        algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * kAlgoOpGain;
+        algopwave(v.algoops[3], cfg.osctype[3], hz + op3 * d3) * kAlgoOpGain;
     op4 = raw4 * e3;
   } else if (algo == 1) {
+    // 1,2→3→4
     float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
     op2 = raw2 * e1;
-    float raw3 = algopwave(v.algoops[2], cfg.osctype[2],
-                           hz * h3 + (raw1 + raw2) * mi2 * 0.5f) *
+    float raw3 =
+        algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + op1 * d1 + op2 * d2) *
+        kAlgoOpGain;
+    op3 = raw3 * e2;
+    float raw4 =
+        algopwave(v.algoops[3], cfg.osctype[3], hz + op3 * d3) * kAlgoOpGain;
+    op4 = raw4 * e3;
+  } else if (algo == 2) {
+    // 1→4, 2→3→4
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
+    op2 = raw2 * e1;
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + op2 * d2) *
                  kAlgoOpGain;
     op3 = raw3 * e2;
     float raw4 =
-        algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * kAlgoOpGain;
-    op4 = raw4 * e3;
-  } else if (algo == 2) {
-    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
-    op2 = raw2 * e1;
-    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw2 * mi2) *
-                 kAlgoOpGain;
-    op3 = raw3 * e2;
-    float raw4 = algopwave(v.algoops[3], cfg.osctype[3],
-                           hz + (raw1 + raw3) * mi3 * 0.5f) *
-                 kAlgoOpGain;
+        algopwave(v.algoops[3], cfg.osctype[3], hz + op1 * d1 + op3 * d3) *
+        kAlgoOpGain;
     op4 = raw4 * e3;
   } else if (algo == 3) {
+    // 1,2,3→4
     float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2) * kAlgoOpGain;
     op2 = raw2 * e1;
     float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3) * kAlgoOpGain;
     op3 = raw3 * e2;
     float raw4 = algopwave(v.algoops[3], cfg.osctype[3],
-                           hz + (raw1 + raw2 + raw3) * mi3 * 0.33f) *
+                           hz + op1 * d1 + op2 * d2 + op3 * d3) *
                  kAlgoOpGain;
     op4 = raw4 * e3;
   } else if (algo == 4) {
     // 1→2, 3→4 → op2 + op4
-    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + op1 * d1) *
                  kAlgoOpGain;
     op2 = raw2 * e1;
     float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3) * kAlgoOpGain;
     op3 = raw3 * e2;
     float raw4 =
-        algopwave(v.algoops[3], cfg.osctype[3], hz + raw3 * mi3) * kAlgoOpGain;
+        algopwave(v.algoops[3], cfg.osctype[3], hz + op3 * d3) * kAlgoOpGain;
     op4 = raw4 * e3;
   } else if (algo == 5) {
-    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+    // 1→2, 1→3, 1→4
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + op1 * d1) *
                  kAlgoOpGain;
     op2 = raw2 * e1;
-    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + raw1 * mi2) *
+    float raw3 = algopwave(v.algoops[2], cfg.osctype[2], hz * h3 + op1 * d2) *
                  kAlgoOpGain;
     op3 = raw3 * e2;
     float raw4 =
-        algopwave(v.algoops[3], cfg.osctype[3], hz + raw1 * mi3) * kAlgoOpGain;
+        algopwave(v.algoops[3], cfg.osctype[3], hz + op1 * d3) * kAlgoOpGain;
     op4 = raw4 * e3;
   } else if (algo == 6) {
-    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + raw1 * mi1) *
+    // 1→2
+    float raw2 = algopwave(v.algoops[1], cfg.osctype[1], hz * h2 + op1 * d1) *
                  kAlgoOpGain;
     op2 = raw2 * e1;
   } else {
@@ -161,7 +174,9 @@ float noisevoice(ZssVoice& v, int vi, int noisetype, float freq, bool gate,
   }
 
   float hz = freq > 0.f ? freq : 440.f;
-  float phasedelta = hz / g_engine.sample_rate;
+  // Scan rate is note Hz raised by kNoiseHzOctaveBoost; damping still uses
+  // written MIDI pitch so gain vs basepitch does not shift with the boost.
+  float phasedelta = (hz * kNoiseHzMult) / g_engine.sample_rate;
   float pitchfilter = std::min(1.f, phasedelta * meta.pitchfiltermult);
   float notepitch = 69.f + 12.f * (std::log(hz / 440.f) / std::log(2.f));
   float pitchdamping = meta.issoft ? 24.f : 60.f;

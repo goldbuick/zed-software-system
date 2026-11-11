@@ -3,6 +3,7 @@ import {
   durationseconds,
   nextsubdivisionseconds,
   parsetimeseconds,
+  rejointonenotation,
   resolvebgplayonstart,
   tonenotationcandidates,
   tonenotationseconds,
@@ -63,6 +64,20 @@ describe('playnotation duration helpers', () => {
       12,
     )
     expect(parsetimeseconds('not-a-time')).toBeUndefined()
+  })
+
+  it('rejointonenotation rebuilds lang-split Tone suffixes', () => {
+    expect(rejointonenotation(16, 'n')).toBe('16n')
+    expect(rejointonenotation(1, 'n')).toBe('1n')
+    expect(rejointonenotation(8, 'n.')).toBe('8n.')
+    expect(rejointonenotation(4, 't')).toBe('4t')
+    expect(rejointonenotation(1, 'm')).toBe('1m')
+    expect(rejointonenotation(16, 'north')).toBe(16)
+    expect(rejointonenotation('16n', 'n')).toBe('16n')
+    expect(parsetimeseconds(rejointonenotation(16, 'n') as string)).toBeCloseTo(
+      tonenotationseconds('16n'),
+      12,
+    )
   })
 
   it('nextsubdivisionseconds waits a full subdiv when on boundary', () => {

@@ -3,7 +3,7 @@ import type { SabEngine } from 'zss/feature/synth/backend/shared/sabengine'
 import { pushwasmsabvalues } from './sabpush'
 
 export const WASM_MAIN_SAB = 'zss_main'
-export const WASM_MAIN_SAB_LEN = 7
+export const WASM_MAIN_SAB_LEN = 8
 
 export const WASM_MAIN_IDX = {
   PLAY: 0,
@@ -17,6 +17,8 @@ export const WASM_MAIN_IDX = {
   SC_KEY_MUTE: 5,
   /** Raw `#vol` (0-100) for drum stem via readdrumvolume. */
   VOL: 6,
+  /** 1 = bypass master Daisy Limiter (debug / offline A/B). */
+  LIM_BYPASS: 7,
 } as const
 
 /** CLI `#vol` main scale (0-100). Multiplies bus trims before SAB push. */
@@ -45,6 +47,7 @@ export function defaultwasmmainsab(): number[] {
     0,
     0,
     WASM_DEFAULT_MAIN_VOLUME,
+    0,
   ]
 }
 
@@ -61,6 +64,7 @@ export function initwasmmainsab(
   scbypass = 0,
   sckeymute = 0,
   vol = WASM_DEFAULT_MAIN_VOLUME,
+  limbypass = 0,
 ) {
   pushwasmmainsab(maxi, [
     playvolume,
@@ -70,5 +74,6 @@ export function initwasmmainsab(
     scbypass,
     sckeymute,
     vol,
+    limbypass,
   ])
 }

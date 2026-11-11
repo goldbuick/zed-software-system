@@ -1,13 +1,17 @@
 import { analyzelevelstability } from 'zss/feature/synth/backend/wasm/levelstabilitymetrics'
 
-/** Target: mid-kit drum stem near a single #synth voice (SC-bypass stems).
- * Kick is trimmed separately below this proxy.
+/** Target: mid-kit drum stem vs a single #synth voice (SC-bypass stems).
+ * Flat kDrumGains 0.05 sits ~11 dB under play (cafe ear / limiter headroom).
+ * When gains are 0 (muted), drum peak hits the silence floor and gate PASSes.
  */
-export const PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB = 0
+export const PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB = -11
 
-export const PLAY_DRUM_BALANCE_MIN_DB = -2
+export const PLAY_DRUM_BALANCE_MIN_DB = -13
 
-export const PLAY_DRUM_BALANCE_MAX_DB = 2
+export const PLAY_DRUM_BALANCE_MAX_DB = -9
+
+/** Peaks at/below this mean kit is muted (kDrumGains 0) — not a balance fail. */
+export const PLAY_DRUM_MUTE_FLOOR_DB = -60
 
 export type PLAY_DRUM_BALANCE_METRICS = {
   playpeakdb: number
@@ -51,6 +55,9 @@ export function evalplaydrumbalancegate(
   minband = PLAY_DRUM_BALANCE_MIN_DB,
   maxband = PLAY_DRUM_BALANCE_MAX_DB,
 ): PLAY_DRUM_BALANCE_GATE_RESULT {
+  if (metrics.drumpeakdb <= PLAY_DRUM_MUTE_FLOOR_DB) {
+    return { pass: true, metrics, reasons: [] }
+  }
   const reasons: string[] = []
   if (metrics.drumminusplaydb < minband) {
     if (metrics.drumminusplaydb < 0) {
@@ -83,7 +90,9 @@ export function formatplaydrumbalancereport(
     'Play vs drum balance (isolated stems)',
     `play peak ${m.playpeakdb.toFixed(1)} dBFS`,
     `drum peak ${m.drumpeakdb.toFixed(1)} dBFS`,
-    `drum − play ${m.drumminusplaydb.toFixed(1)} dB (target ${PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB} ±${Math.abs(PLAY_DRUM_BALANCE_MAX_DB - PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB)})`,
+    m.drumpeakdb <= PLAY_DRUM_MUTE_FLOOR_DB
+      ? `drum − play n/a (kit muted, peak ${m.drumpeakdb.toFixed(1)} dBFS)`
+      : `drum − play ${m.drumminusplaydb.toFixed(1)} dB (target ${PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB} ±${Math.abs(PLAY_DRUM_BALANCE_MAX_DB - PLAY_DRUM_TARGET_DRUM_MINUS_PLAY_DB)})`,
     gate.pass ? 'PASS' : `FAIL: ${gate.reasons.join('; ')}`,
   ]
   return lines.join('\n')

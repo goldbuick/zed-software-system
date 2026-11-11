@@ -200,6 +200,8 @@ struct ZssVoice {
    */
   float karplushzprev = 0.f;
   bool organgateprev = false;
+  /** Tonewheel key-click amp envelope (1 → 0 after note-on). */
+  float organclick = 0.f;
   float timpanipitch = 1.f;
   int guitarpreset = -1;
   float guitarprev[4] = {-1.f, -1.f, -1.f, -1.f};

@@ -20,7 +20,14 @@ describe('readtouchscreenlayout', () => {
         totalrows: 40,
         showtouchcontrols: false,
       }),
-    ).toEqual({ rows: 40, dockcols: 0, dockrows: 0, dockrow: 0 })
+    ).toEqual({
+      rows: 40,
+      dockcols: 0,
+      dockrows: 0,
+      dockrow: 0,
+      showdockui: false,
+      showactionrow: false,
+    })
   })
 
   it('uses the full-width portrait dock in a landscape-sized frame', () => {
@@ -33,6 +40,8 @@ describe('readtouchscreenlayout', () => {
     expect(layout.dockrows).toBe(PORTRAIT_TOUCH_DOCK_ROWS)
     expect(layout.rows).toBe(40 - PORTRAIT_TOUCH_DOCK_ROWS)
     expect(layout.dockrow).toBe(layout.rows)
+    expect(layout.showdockui).toBe(true)
+    expect(layout.showactionrow).toBe(true)
   })
 
   it('reserves the sidebar band and toggle row above the dock', () => {
@@ -48,9 +57,11 @@ describe('readtouchscreenlayout', () => {
       70 - PORTRAIT_TOUCH_DOCK_ROWS - PORTRAIT_SIDEBAR_OVERLAY_ROWS - 1,
     )
     expect(layout.dockrow).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
+    expect(layout.showdockui).toBe(true)
+    expect(layout.showactionrow).toBe(true)
   })
 
-  it('grows the bottom dock to match soft-keyboard height', () => {
+  it('grows the bottom band for soft keyboard and hides ActionRow only', () => {
     const layout = readtouchscreenlayout({
       ...BASE,
       totalcols: 40,
@@ -60,6 +71,8 @@ describe('readtouchscreenlayout', () => {
     expect(layout.dockrows).toBe(30)
     expect(layout.rows).toBe(40)
     expect(layout.dockrow).toBe(40)
+    expect(layout.showdockui).toBe(true)
+    expect(layout.showactionrow).toBe(false)
   })
 
   it('keeps the default dock when saferows matches the frame', () => {
@@ -71,5 +84,7 @@ describe('readtouchscreenlayout', () => {
     })
     expect(layout.dockrows).toBe(PORTRAIT_TOUCH_DOCK_ROWS)
     expect(layout.rows).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
+    expect(layout.showdockui).toBe(true)
+    expect(layout.showactionrow).toBe(true)
   })
 })

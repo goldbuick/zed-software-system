@@ -3,9 +3,17 @@ import { validatesynthtype } from 'zss/feature/synth/voiceconfig/validation'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
-import { applywasmalgoconfig, resetwasmalgoconfig } from './wasmalgoconfig'
+import {
+  applywasmalgoconfig,
+  resetwasmalgoconfig,
+  seedalgodefaults,
+} from './wasmalgoconfig'
 import type { WASM_ALGO_CONFIG } from './wasmalgoconfigsab'
-import { applywasmoscconfig, resetwasmoscconfig } from './wasmoscconfig'
+import {
+  applywasmoscconfig,
+  resetwasmoscconfig,
+  seedomnioscdefaults,
+} from './wasmoscconfig'
 import { type WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
 import {
@@ -396,7 +404,8 @@ function parsesourcetype(
       return namedvoiceswitch(current, {
         type: SOURCE_TYPE.BELLS,
         algo: 0,
-        envelope: { attack: 0.01, decay: 3, sustain: 0.3, release: 6 },
+        // Percussive hit — sustain 0 so amp follows modal decay, not a hold.
+        envelope: { attack: 0.001, decay: 2.5, sustain: 0, release: 1.2 },
       })
     case 'doot':
       return namedvoiceswitch(current, { type: SOURCE_TYPE.DOOT, algo: 0 })
@@ -683,6 +692,10 @@ export function applywasmvoiceconfig(
     const source = parsesourcetype(config, voicestate[index])
     if (source) {
       voicestate[index] = source
+      // Tone AlgoSynth: selecting algoN reseeds op defaults (like Omni wave).
+      if (source.type === SOURCE_TYPE.ALGO_SYNTH) {
+        seedalgodefaults(algoconfig, index)
+      }
       return true
     }
 
@@ -705,6 +718,8 @@ export function applywasmvoiceconfig(
           osc,
         }
       }
+      // Tone OmniOscillator: new subclass defaults on each wave select.
+      seedomnioscdefaults(oscconfig, index, osc)
       if (isarray(value) || isnumber(value)) {
         applywasmoscconfig(oscconfig, index, config, value)
       }

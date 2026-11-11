@@ -89,6 +89,7 @@ function applyscenariomainbussab(
     scenario.sidechainbypass ? 1 : 0,
     0,
     100,
+    0,
   ])
 }
 

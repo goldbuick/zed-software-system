@@ -174,6 +174,26 @@ export function parsetimeseconds(value: number | string): number | undefined {
   return undefined
 }
 
+const TONE_NOTATION_SUFFIX = /^(n\.?|t|m)$/i
+
+/**
+ * Lang lexes `16n` as number `16` + word `n` (dir). Rejoin into a Tone notation
+ * string so `#echo delaytime 16n` reaches `parsetimeseconds` intact.
+ */
+export function rejointonenotation(
+  value: number | string | undefined,
+  nextword: unknown,
+): number | string | undefined {
+  if (!isnumber(value) || !isstring(nextword)) {
+    return value
+  }
+  const suffix = nextword.trim()
+  if (!TONE_NOTATION_SUFFIX.test(suffix)) {
+    return value
+  }
+  return `${value}${suffix.toLowerCase()}`
+}
+
 /**
  * Closest notation string for `{ '64n': duration }`, matching Tone `Time.toNotation()`.
  */
