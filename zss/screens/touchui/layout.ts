@@ -25,8 +25,10 @@ export type TOUCH_SCREEN_LAYOUT = {
   dockrows: number
   /** Dock top in chars from the frame top. */
   dockrow: number
-  /** Render dock chrome / touchpads; false while soft keyboard is open. */
+  /** Render dock chrome / touchpads when touch controls are on. */
   showdockui: boolean
+  /** Render ActionRow; false while soft keyboard is open. */
+  showactionrow: boolean
 }
 
 /** Touch is portrait-only (landscape is covered by RotatePortrait). */
@@ -54,14 +56,15 @@ export function readtouchscreenlayout(args: {
       dockrows: 0,
       dockrow: 0,
       showdockui: false,
+      showactionrow: false,
     }
   }
   const siderows = sidebaropen && hassidebar ? PORTRAIT_SIDEBAR_OVERLAY_ROWS : 0
   // One row above the dock for the sidebar label; keep terminal out of it.
   const togglerows = hassidebar ? 1 : 0
   // Bottom band grows to match soft-keyboard height (totalrows - saferows) so
-  // the game frame stays in the safe area. Dock chrome is hidden while the
-  // keyboard is open; only the reserved band remains.
+  // the game frame stays in the safe area. ActionRow is hidden while the
+  // keyboard is open; dock chrome and sticks stay mounted.
   const keyboardrows = Math.max(0, totalrows - saferows)
   const maxdock = Math.max(
     0,
@@ -77,6 +80,7 @@ export function readtouchscreenlayout(args: {
     dockcols: totalcols,
     dockrows,
     dockrow: rows + siderows + togglerows,
-    showdockui: keyboardrows === 0,
+    showdockui: true,
+    showactionrow: keyboardrows === 0,
   }
 }

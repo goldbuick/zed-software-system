@@ -64,7 +64,7 @@ export function UserScreen({ children }: UserScreenProps) {
   const totalrows = Math.floor(rrows)
 
   const cols = totalcols
-  const { rows, dockcols, dockrows, dockrow, showdockui } =
+  const { rows, dockcols, dockrows, dockrow, showdockui, showactionrow } =
     readtouchscreenlayout({
       totalcols,
       totalrows,
@@ -146,6 +146,7 @@ export function UserScreen({ children }: UserScreenProps) {
                     mode="portrait-dock"
                     width={dockcols}
                     height={dockrows}
+                    showactionrow={showactionrow}
                   />
                 </group>
               </>
