@@ -1,13 +1,14 @@
-import {
-  registerterminalopen,
-  registerterminalquickopen,
-  vmclirepeatlast,
-} from 'zss/device/api'
+import { registerterminalopen, registerterminalquickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { inputdown, inputup, triggerhotkey } from 'zss/gadget/userinput'
+import {
+  editorcopy,
+  editorcut,
+  editorpaste,
+} from 'zss/screens/editor/editortouchactions'
 
 import { ToggleKey } from './togglekey'
 
@@ -40,7 +41,7 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           y={y}
           letters="cut"
           onToggle={() => {
-            triggerhotkey('x', { ctrl: true })
+            editorcut(player)
           }}
         />
         <ToggleKey
@@ -48,7 +49,7 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           y={y}
           letters="copy"
           onToggle={() => {
-            triggerhotkey('c', { ctrl: true })
+            editorcopy(player)
           }}
         />
         <ToggleKey
@@ -56,24 +57,20 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           y={y}
           letters="paste"
           onToggle={() => {
-            triggerhotkey('v', { ctrl: true })
+            editorpaste(player)
           }}
         />
         <ToggleKey
           x={x + pitch * 4}
           y={y}
-          letters="$META+z"
-          onToggle={() => {
-            triggerhotkey('z', { ctrl: true })
-          }}
+          letters="undo"
+          onToggle={() => triggerhotkey('z', { ctrl: true })}
         />
         <ToggleKey
           x={x + pitch * 5}
           y={y}
-          letters="$META+p"
-          onToggle={() => {
-            triggerhotkey('p', { ctrl: true })
-          }}
+          letters="play"
+          onToggle={() => triggerhotkey('p', { ctrl: true })}
         />
         <ToggleKey
           x={x + pitch * 6}
@@ -99,6 +96,65 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
             inputup(0, INPUT.CANCEL_BUTTON)
           }}
         />
+        <ToggleKey
+          x={x + pitch}
+          y={y}
+          letters="prev"
+          onToggle={() => {
+            inputdown(0, INPUT.CTRL)
+            inputdown(0, INPUT.MOVE_UP)
+            inputup(0, INPUT.MOVE_UP)
+            inputup(0, INPUT.CTRL)
+          }}
+        />
+        <ToggleKey
+          x={x + pitch * 2}
+          y={y}
+          letters="next"
+          onToggle={() => {
+            inputdown(0, INPUT.CTRL)
+            inputdown(0, INPUT.MOVE_DOWN)
+            inputup(0, INPUT.MOVE_DOWN)
+            inputup(0, INPUT.CTRL)
+          }}
+        />
+        <ToggleKey
+          x={x + pitch * 3}
+          y={y}
+          letters="up"
+          onToggle={() => {
+            inputdown(0, INPUT.ALT)
+            inputdown(0, INPUT.MOVE_UP)
+            inputup(0, INPUT.MOVE_UP)
+            inputup(0, INPUT.ALT)
+          }}
+        />
+        <ToggleKey
+          x={x + pitch * 4}
+          y={y}
+          letters="down"
+          onToggle={() => {
+            inputdown(0, INPUT.ALT)
+            inputdown(0, INPUT.MOVE_DOWN)
+            inputup(0, INPUT.MOVE_DOWN)
+            inputup(0, INPUT.ALT)
+          }}
+        />
+        <ToggleKey
+          x={x + pitch * 5}
+          y={y}
+          letters="save"
+          onToggle={() => triggerhotkey('s', { ctrl: true })}
+        />
+        <ToggleKey
+          x={x + pitch * 6}
+          y={y}
+          letters="enter"
+          onToggle={() => {
+            inputdown(0, INPUT.OK_BUTTON)
+            inputup(0, INPUT.OK_BUTTON)
+          }}
+        />
       </>
     )
   }
@@ -117,25 +173,19 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
         x={x + pitch}
         y={y}
         letters="?"
-        onToggle={() => {
-          registerterminalopen(SOFTWARE, player)
-        }}
+        onToggle={() => registerterminalopen(SOFTWARE, player)}
       />
       <ToggleKey
         x={x + pitch * 2}
         y={y}
         letters="c"
-        onToggle={() => {
-          registerterminalquickopen(SOFTWARE, player, '')
-        }}
+        onToggle={() => registerterminalquickopen(SOFTWARE, player, '')}
       />
       <ToggleKey
         x={x + pitch * 3}
         y={y}
-        letters="$META+p"
-        onToggle={() => {
-          vmclirepeatlast(SOFTWARE, player)
-        }}
+        letters="play"
+        onToggle={() => triggerhotkey('p', { ctrl: true })}
       />
       <ToggleKey
         x={x + pitch * 4}

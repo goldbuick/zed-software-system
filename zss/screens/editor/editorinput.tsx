@@ -4,10 +4,12 @@ import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import {
   apierror,
+  apitoast,
   registereditorbookmarkscroll,
   registereditorclose,
   registerterminalclose,
   registerterminalinclayout,
+  vmcli,
 } from 'zss/device/api'
 import { type SharedTextHandle } from 'zss/device/modem'
 import { registerreadplayer } from 'zss/device/registerplayer'
@@ -76,7 +78,6 @@ import {
   usePresenceBroadcast,
   useUndoRedo,
 } from './editorinputhooks'
-import { editorrunmetap } from './editorrunmetap'
 
 const clickpoint = new Vector3()
 
@@ -703,7 +704,21 @@ export function EditorInput({
                     break
                   }
                   case 'p':
-                    editorrunmetap(player)
+                    if (hasselection) {
+                      vmcli(SOFTWARE, player, strvalueselected)
+                      apitoast(
+                        SOFTWARE,
+                        player,
+                        `running $WHITE${strvalueselected.substring(0, 16)}...$BLUE`,
+                      )
+                    } else {
+                      vmcli(SOFTWARE, player, coderow.code)
+                      apitoast(
+                        SOFTWARE,
+                        player,
+                        `running $WHITE${coderow.code.substring(0, 16)}...$BLUE`,
+                      )
+                    }
                     break
                   case 'b': {
                     const { title, path } = useTape.getState().editor
