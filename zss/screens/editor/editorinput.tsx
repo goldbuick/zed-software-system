@@ -38,6 +38,7 @@ import {
   drawautocomplete,
   drawcommandarghint,
 } from 'zss/screens/tape/autocomplete'
+import { AutocompleteTapTargets } from 'zss/screens/tape/autocompletetap'
 import {
   applyautocompletesuggestion,
   computestatushintrect,
@@ -396,6 +397,16 @@ export function EditorInput({
         }}
         onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}
       />
+      {autocompleteactive && (
+        <AutocompleteTapTargets
+          autocomplete={autocomplete}
+          px={startx + autocomplete.wordcol}
+          py={drawabove ? starty - 1 : starty}
+          edge={edge}
+          drawabove={drawabove}
+          onaccept={acceptsuggestion}
+        />
+      )}
       <UserInput
         MOVE_LEFT={(mods) => {
           if (tapeeditor.findopen) {

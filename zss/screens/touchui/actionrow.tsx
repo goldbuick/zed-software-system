@@ -52,6 +52,15 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           inputup(0, INPUT.MENU_BUTTON)
         }}
       />
+      <ToggleKey
+        x={x + pitch * 4}
+        y={y}
+        letters="enter"
+        onToggle={() => {
+          inputdown(0, INPUT.OK_BUTTON)
+          inputup(0, INPUT.OK_BUTTON)
+        }}
+      />
     </>
   )
 }

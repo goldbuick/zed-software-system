@@ -899,22 +899,26 @@ export function drawcommandarghint(
   }
 }
 
-export function drawautocomplete(
+export type AUTOCOMPLETE_ROW_HIT = {
+  index: number
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/** Shared row geometry for paint and touch hit targets. */
+export function layoutautocompleterows(
   autocomplete: AUTO_COMPLETE,
-  autocompleteindex: number,
   px: number,
   py: number,
   edge: AutocompleteEdge,
-  context: WRITE_TEXT_CONTEXT,
-  words: GADGET_ZSS_WORDS,
   drawabove?: boolean,
-  omitselectedhint?: boolean,
-) {
+): AUTOCOMPLETE_ROW_HIT[] {
   if (autocomplete.suggestions.length === 0) {
-    return
+    return []
   }
 
-  const effectiveindex = Math.max(0, autocompleteindex)
   const numrows = autocomplete.suggestions.length
   const maxitemlen =
     autocomplete.maxsuggestionwordlen > 0
@@ -938,14 +942,12 @@ export function drawautocomplete(
   }
 
   const minY = drawabove ? edge.top : edge.top + 2
+  const hits: AUTOCOMPLETE_ROW_HIT[] = []
   for (let i = 0; i < autocomplete.suggestions.length; i++) {
     const y = yforindex(i)
     if (y >= edge.bottom || y < minY) {
       continue
     }
-
-    const selected = i === effectiveindex
-    const bg = selected ? AC_SEL_BG : AC_BG
 
     const rowstart = Math.max(px, edge.left)
     const rowend = Math.min(px + itemwidth - 1, edge.right - 1)
@@ -953,16 +955,56 @@ export function drawautocomplete(
       continue
     }
 
-    const textoffset = rowstart - px
+    hits.push({
+      index: i,
+      x: rowstart,
+      y,
+      width: rowend - rowstart + 1,
+      height: 1,
+    })
+  }
+  return hits
+}
+
+export function drawautocomplete(
+  autocomplete: AUTO_COMPLETE,
+  autocompleteindex: number,
+  px: number,
+  py: number,
+  edge: AutocompleteEdge,
+  context: WRITE_TEXT_CONTEXT,
+  words: GADGET_ZSS_WORDS,
+  drawabove?: boolean,
+  omitselectedhint?: boolean,
+) {
+  if (autocomplete.suggestions.length === 0) {
+    return
+  }
+
+  const effectiveindex = Math.max(0, autocompleteindex)
+  const maxitemlen =
+    autocomplete.maxsuggestionwordlen > 0
+      ? autocomplete.maxsuggestionwordlen
+      : autocomplete.suggestions.reduce(
+          (max, s) => Math.max(max, s.word.length),
+          0,
+        )
+  const itemwidth = maxitemlen + 2
+  const hits = layoutautocompleterows(autocomplete, px, py, edge, drawabove)
+
+  for (let h = 0; h < hits.length; h++) {
+    const hit = hits[h]
+    const i = hit.index
+    const selected = i === effectiveindex
+    const bg = selected ? AC_SEL_BG : AC_BG
+
+    const textoffset = hit.x - px
     const fulltext = ` ${autocomplete.suggestions[i].word} `
       .padEnd(itemwidth, ' ')
       .substring(0, itemwidth)
-    const text = fulltext.substring(
-      textoffset,
-      textoffset + (rowend - rowstart + 1),
-    )
+    const text = fulltext.substring(textoffset, textoffset + hit.width)
 
-    const bufindex = rowstart + y * context.width
+    const bufindex = hit.x + hit.y * context.width
     applysuggestioncolors(
       bufindex,
       text,
@@ -974,8 +1016,8 @@ export function drawautocomplete(
     if (selected && !omitselectedhint) {
       const hint = resolvesuggestionhint(autocomplete.suggestions[i], words)
       if (hint) {
-        const hintx = rowstart + text.length
-        drawhinttext(hint, hintx, y, edge.right, context, AC_HINT_FG)
+        const hintx = hit.x + text.length
+        drawhinttext(hint, hintx, hit.y, edge.right, context, AC_HINT_FG)
       }
     }
   }

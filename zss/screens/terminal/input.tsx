@@ -44,6 +44,7 @@ import {
   drawhinttext,
   getautocomplete,
 } from 'zss/screens/tape/autocomplete'
+import { AutocompleteTapTargets } from 'zss/screens/tape/autocompletetap'
 import {
   applyautocompletesuggestion,
   computeterminalstatushintrect,
@@ -576,6 +577,16 @@ export function TerminalInput({
           inputstateycursor(-deltay)
         }}
       />
+      {autocompleteactive && (
+        <AutocompleteTapTargets
+          autocomplete={autocomplete}
+          px={popupleftx}
+          py={status.y}
+          edge={edge}
+          drawabove
+          onaccept={acceptsuggestion}
+        />
+      )}
       <UserInput
         MOVE_LEFT={(mods) => {
           useTape.setState({ autocompleteindex: -1 })
