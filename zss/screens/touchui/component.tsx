@@ -9,21 +9,14 @@ import {
 import { COLOR } from 'zss/words/types'
 
 import { Elements } from './elements'
-import type { TouchUIMode } from './layout'
 
 export type TouchUIProps = {
   width: number
   height: number
-  mode: TouchUIMode
   showactionrow?: boolean
 }
 
-export function TouchUI({
-  width,
-  height,
-  mode,
-  showactionrow = true,
-}: TouchUIProps) {
+export function TouchUI({ width, height, showactionrow = true }: TouchUIProps) {
   const screensize = useScreenSize()
   const store = useTiles(width, height, 32, COLOR.WHITE, COLOR.DKPURPLE)
   const context: WRITE_TEXT_CONTEXT = {
@@ -39,12 +32,7 @@ export function TouchUI({
   return (
     <TilesData store={store}>
       <WriteTextContext.Provider value={context}>
-        <Elements
-          mode={mode}
-          width={width}
-          height={height}
-          showactionrow={showactionrow}
-        />
+        <Elements width={width} showactionrow={showactionrow} />
       </WriteTextContext.Provider>
       <TilesRender label="touchui" width={width} height={height} />
     </TilesData>

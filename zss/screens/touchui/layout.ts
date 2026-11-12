@@ -16,8 +16,6 @@ export const ACTION_ROW_WIDTH = 41
 /** Minimum game / editor frame rows while the dock is present. */
 const MIN_TOUCH_CONTENT_ROWS = 10
 
-export type TouchUIMode = 'portrait-dock' | 'portrait-sidebartoggle'
-
 export type TOUCH_SCREEN_LAYOUT = {
   /** Game frame rows (cols are always the full width). */
   rows: number
