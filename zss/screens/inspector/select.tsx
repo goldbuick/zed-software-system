@@ -315,9 +315,7 @@ export function InspectorSelect() {
           }}
           onPointerUp={enddrag}
           onPointerOut={pointerleave}
-          onPointerCancel={
-            showtouchcontrols ? clearhoveronly : pointerleave
-          }
+          onPointerCancel={showtouchcontrols ? clearhoveronly : pointerleave}
         >
           <meshBasicMaterial
             transparent

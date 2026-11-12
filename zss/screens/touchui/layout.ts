@@ -10,8 +10,8 @@ export const PORTRAIT_SIDEBAR_OVERLAY_ROWS = 15
 /** Portrait dock rows reserved above stick plane (header + action row). */
 export const PORTRAIT_DOCK_STICK_TOP = 5
 
-/** Portrait action row: 6 keys x 5 + 5 gaps (pitch 6). */
-export const ACTION_ROW_WIDTH = 35
+/** Portrait action row: 7 keys x 5 + 6 gaps (pitch 6). */
+export const ACTION_ROW_WIDTH = 41
 
 /** Minimum game / editor frame rows while the dock is present. */
 const MIN_TOUCH_CONTENT_ROWS = 10

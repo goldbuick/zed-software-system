@@ -193,6 +193,28 @@ export function modsfromevent(event: KeyboardEvent): UserInputMods {
   }
 }
 
+/**
+ * Fire a synthetic keydown through the same path as a real keyboard event
+ * (mods + focused UserInput keydown). Mirrors the old T9 NumKey `user.keyboard`
+ * chord approach without @testing-library/user-event.
+ */
+export function triggerhotkey(
+  key: string,
+  mods: { ctrl?: boolean; shift?: boolean; alt?: boolean } = {},
+) {
+  const ctrl = !!mods.ctrl
+  const event = new KeyboardEvent('keydown', {
+    key,
+    bubbles: true,
+    cancelable: true,
+    ctrlKey: ismac ? false : ctrl,
+    metaKey: ismac ? ctrl : false,
+    shiftKey: !!mods.shift,
+    altKey: !!mods.alt,
+  })
+  handlekeydown(event)
+}
+
 function userinputinvoke(index: number, input: INPUT, mods: UserInputMods) {
   perfmeasure('input:userinputinvoke', () => {
     if (index === 0) {

@@ -53,11 +53,7 @@ export function readinspectorbounds(pickw: number): {
   }
 }
 
-export function ptininspectrect(
-  x: number,
-  y: number,
-  pickw: number,
-): boolean {
+export function ptininspectrect(x: number, y: number, pickw: number): boolean {
   const { start, end } = readinspectorbounds(pickw)
   return x >= start.x && x <= end.x && y >= start.y && y <= end.y
 }
