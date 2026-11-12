@@ -8,10 +8,7 @@ import {
 import { modpositive, snap } from 'zss/mapping/number'
 import { useShallow } from 'zustand/react/shallow'
 
-import {
-  handlestickdirsmerged,
-  handlestickmergesreset,
-} from './stickinputs'
+import { handlestickdirsmerged, handlestickmergesreset } from './stickinputs'
 
 type Manager = ReturnType<typeof nipplejs.create>
 
