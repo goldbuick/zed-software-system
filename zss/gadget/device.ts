@@ -20,7 +20,7 @@ export type DEVICE_DATA = {
   islowrez: boolean
   islandscape: boolean
   sidebaropen: boolean
-  /** Portrait sidebar PanelSlide exit in progress; layout stays reserved until done. */
+  /** Touch sidebar PanelSlide exit in progress; right column stays until done. */
   sidebarclosing: boolean
   keyboardalt: boolean
   keyboardctrl: boolean

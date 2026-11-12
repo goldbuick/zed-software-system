@@ -125,9 +125,10 @@ export function Engine() {
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
     deviceType === 'touchOnly' || primaryInput === 'touch' || forcetouchui
-  /** Touch-primary devices, durable touchui. */
-  const usemobiletextcapture =
-    (deviceType === 'touchOnly' && primaryInput === 'touch') || forcetouchui
+  // Soft KB / IME must follow touch UI. detect-it reports many iPhones as
+  // deviceType "hybrid" (not touchOnly); the old AND gate left capture unmounted
+  // while sticks/ActionRow were already on (Safari softkb H1/H2 logs).
+  const usemobiletextcapture = showtouchcontrols
 
   // config FX
   const shouldcrt =
@@ -140,6 +141,15 @@ export function Engine() {
 
   // update device config + touch sidebar defaults
   useEffect(() => {
+    // eslint-disable-next-line no-console -- soft-keyboard probe (filter [softkb)
+    console.info('[softkb H1] engine:device-flags', {
+      t: Date.now(),
+      deviceType,
+      primaryInput,
+      forcetouchui,
+      showtouchcontrols,
+      usemobiletextcapture,
+    })
     useDeviceData.setState((state) => {
       // Touch: stats always open (portrait push). Desktop: open.
       const sidebaropen = true
@@ -160,6 +170,9 @@ export function Engine() {
     showtouchcontrols,
     shouldcrt,
     usemobiletextcapture,
+    deviceType,
+    primaryInput,
+    forcetouchui,
   ])
 
   return (

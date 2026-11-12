@@ -28,6 +28,7 @@ import {
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,
+  softkblog,
 } from 'zss/gadget/mobiletext'
 import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
@@ -126,6 +127,14 @@ export function TerminalInput({
     (state) => state.usemobiletextcapture,
   )
   const edge = textformatreadedges(context)
+
+  useEffect(() => {
+    softkblog('H3', 'terminal-input:mounted', {
+      usemobiletextcapture,
+      hasEl: !!getmobiletextelement(),
+      terminalmode,
+    })
+  }, [usemobiletextcapture, terminalmode])
 
   // input & selection
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
@@ -274,9 +283,14 @@ export function TerminalInput({
       return
     }
     const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-    el.value = line
+    // Assigning value on a focused field dismisses the iOS keyboard.
+    if (el.value !== line) {
+      el.value = line
+    }
     const pos = clamp(tapeterminal.xcursor, 0, line.length)
-    el.setSelectionRange(pos, pos)
+    if (el.selectionStart !== pos || el.selectionEnd !== pos) {
+      el.setSelectionRange(pos, pos)
+    }
   }, [
     usemobiletextcapture,
     inputstate,
@@ -561,16 +575,40 @@ export function TerminalInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
-        onClick={() => {
-          mobiletextfocus()
+        onPointerDown={() => {
+          // iOS soft keyboard only opens for focus() inside the touch gesture;
+          // R3F onClick is too late / after possible layout thrash.
+          softkblog('H4', 'terminal:pointerdown', {
+            usemobiletextcapture,
+            hasEl: !!getmobiletextelement(),
+          })
           if (usemobiletextcapture) {
             const el = getmobiletextelement()
             if (el) {
               const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-              el.value = line
+              // Seed before focus — assigning value on a focused field dismisses
+              // the iOS keyboard (same order as editor writemobileeditorfield).
+              const seeded = el.value !== line
+              if (seeded) {
+                el.value = line
+              }
               const pos = clamp(tapeterminal.xcursor, 0, line.length)
               el.setSelectionRange(pos, pos)
+              const needfocus = document.activeElement !== el
+              softkblog('H4', 'terminal:seed', {
+                seeded,
+                needfocus,
+                lineLen: line.length,
+              })
+              if (needfocus) {
+                mobiletextfocus()
+              }
+            } else {
+              softkblog('H2', 'terminal:pointerdown-no-el')
             }
+          } else {
+            softkblog('H1', 'terminal:capture-off')
+            mobiletextfocus()
           }
         }}
         onScroll={(deltay: number) => {

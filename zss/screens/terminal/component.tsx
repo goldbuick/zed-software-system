@@ -5,6 +5,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { storagereadconfig } from 'zss/feature/storage'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
+import { softkblog } from 'zss/gadget/mobiletext'
 import { useWriteText } from 'zss/gadget/writetext'
 import { totarget } from 'zss/mapping/string'
 import { MAYBE } from 'zss/mapping/types'
@@ -31,9 +32,15 @@ export function TerminalComponent() {
 
   const [voice2text, setvoice2text] = useState<MAYBE<boolean>>(undefined)
   useLayoutEffect(() => {
+    softkblog('H3', 'terminal:voice2text-pending')
     doasync(SOFTWARE, registerreadplayer(), async () => {
       const voice2text = await storagereadconfig('voice2text')
-      setvoice2text(voice2text === 'on')
+      const on = voice2text === 'on'
+      softkblog('H3', 'terminal:voice2text-ready', {
+        config: voice2text,
+        on,
+      })
+      setvoice2text(on)
     })
   }, [])
 

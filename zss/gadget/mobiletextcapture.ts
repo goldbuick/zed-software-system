@@ -1,17 +1,44 @@
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { setupmobiletextkeyboardlisteners } from 'zss/gadget/userinput'
 
-import { setmobiletextelement } from './mobiletext'
+import { setmobiletextelement, softkblog } from './mobiletext'
 
 let unsubkeyboard: (() => void) | undefined
 let captureel: HTMLTextAreaElement | null = null
 let storeunsub: (() => void) | undefined
+/** Prevent blur->focus->blur loops if hold-focus fails. */
+let refocusguard = false
+
+function shouldholdsoftkeyboard(): boolean {
+  if (!captureel || !useDeviceData.getState().usemobiletextcapture) {
+    return false
+  }
+  const { terminal, terminalmode, editor } = useTape.getState()
+  return editor.open || terminal.open || terminalmode === 'quick'
+}
 
 function oncapturefocus() {
+  softkblog('H5', 'capture:dom-focus')
   useDeviceData.setState({ textcapturefocused: true })
 }
 
-function oncaptureblur() {
+function oncaptureblur(event: FocusEvent) {
+  const related =
+    (event.relatedTarget as HTMLElement | null)?.tagName ?? null
+  // iOS blurs the capture field when visualViewport shrinks for the keyboard
+  // even with layout frozen (softkb H5 after H6 skipped). Re-focus in the same
+  // blur turn while CLI/editor still owns text input so the KB stays up.
+  if (shouldholdsoftkeyboard() && captureel && !refocusguard) {
+    refocusguard = true
+    softkblog('H5', 'capture:dom-blur-refocus', { related })
+    captureel.focus({ preventScroll: true })
+    queueMicrotask(() => {
+      refocusguard = false
+    })
+    return
+  }
+  softkblog('H5', 'capture:dom-blur', { related, held: false })
   useDeviceData.setState({ textcapturefocused: false })
 }
 
@@ -28,6 +55,7 @@ export function bootstrapmobiletextcapture() {
 
   function mount() {
     if (captureel) {
+      softkblog('H2', 'mount:already')
       return
     }
     const ta = document.createElement('textarea')
@@ -35,9 +63,12 @@ export function bootstrapmobiletextcapture() {
     ta.rows = 1
     ta.setAttribute('autocapitalize', 'off')
     ta.setAttribute('autocomplete', 'off')
+    ta.setAttribute('autocorrect', 'off')
+    ta.setAttribute('enterkeyhint', 'enter')
+    ta.inputMode = 'text'
     ta.spellcheck = false
     ta.setAttribute('translate', 'no')
-    ta.setAttribute('aria-hidden', 'true')
+    // Do not set aria-hidden: iOS treats that as non-editable and drops the KB.
     ta.tabIndex = -1
     ta.addEventListener('focus', oncapturefocus)
     ta.addEventListener('blur', oncaptureblur)
@@ -45,9 +76,14 @@ export function bootstrapmobiletextcapture() {
     captureel = ta
     setmobiletextelement(ta)
     unsubkeyboard = setupmobiletextkeyboardlisteners(ta)
+    softkblog('H2', 'mount:ok', {
+      className: ta.className,
+      tabIndex: ta.tabIndex,
+    })
   }
 
   function unmount() {
+    softkblog('H2', 'unmount')
     if (unsubkeyboard) {
       unsubkeyboard()
       unsubkeyboard = undefined
@@ -63,6 +99,7 @@ export function bootstrapmobiletextcapture() {
   }
 
   let last = useDeviceData.getState().usemobiletextcapture
+  softkblog('H1', 'bootstrap', { usemobiletextcapture: last })
   if (last) {
     mount()
   }
@@ -72,6 +109,10 @@ export function bootstrapmobiletextcapture() {
     if (next === last) {
       return
     }
+    softkblog('H1', 'flag-change', {
+      from: last,
+      to: next,
+    })
     last = next
     if (next) {
       mount()

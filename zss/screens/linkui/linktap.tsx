@@ -34,7 +34,7 @@ export function LinkTapTarget({ surface, area, ontap }: LinkTapTargetProps) {
       z={1}
       width={area.width}
       height={area.height}
-      onClick={handletap}
+      onPointerDown={handletap}
     />
   )
 }

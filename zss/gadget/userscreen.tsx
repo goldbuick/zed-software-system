@@ -8,7 +8,6 @@ import {
   useMemo,
 } from 'react'
 import { RUNTIME } from 'zss/config'
-import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { type TOUCHPADS, useDeviceData } from 'zss/gadget/device'
 import { TouchUI } from 'zss/screens/touchui/component'
 import {
@@ -44,15 +43,11 @@ type UserScreenProps = PropsWithChildren<any>
 export function UserScreen({ children }: UserScreenProps) {
   const { viewport } = useThree()
   const { width: viewwidth, height: viewheight } = viewport.getCurrentViewport()
-  const { saferows, showtouchcontrols, sidebaropen } = useDeviceData(
+  const { saferows, showtouchcontrols } = useDeviceData(
     useShallow((state) => ({
       saferows: state.saferows,
       showtouchcontrols: state.showtouchcontrols,
-      sidebaropen: state.sidebaropen,
     })),
-  )
-  const hassidebar = useGadgetClient(
-    (state) => (state.gadget.sidebar?.length ?? 0) > 0,
   )
 
   const cw = RUNTIME.DRAW_CHAR_WIDTH()
@@ -70,8 +65,6 @@ export function UserScreen({ children }: UserScreenProps) {
       totalrows,
       saferows,
       showtouchcontrols,
-      hassidebar,
-      sidebaropen,
     })
   const docky = dockrow * ch
 
@@ -132,7 +125,10 @@ export function UserScreen({ children }: UserScreenProps) {
               <>
                 <group position={[0, docky, 3]}>
                   <TouchUI
-                    key={`dock-${dockcols}-${dockrows}-${docky}`}
+                    // Stable key: dockrows must not change with the soft keyboard
+                    // (see readtouchscreenlayout); including it remounted sticks
+                    // and helped Safari blur the Tier A capture field.
+                    key={`dock-${dockcols}`}
                     width={dockcols}
                     height={dockrows}
                     showactionrow={showactionrow}

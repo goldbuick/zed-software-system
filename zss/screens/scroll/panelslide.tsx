@@ -13,10 +13,15 @@ import {
 
 export type PanelSlideProps = {
   shouldclose: boolean
-  /** BOTTOM enters/exits from below; TOP/FULL from above. Ignored when fromleft. */
+  /** BOTTOM enters/exits from below; TOP/FULL from above. Ignored when fromleft/fromright. */
   frombottom?: boolean
   /** Enter/exit from the left (X axis). */
   fromleft?: boolean
+  /** Enter/exit from the right (X axis). */
+  fromright?: boolean
+  /** maath damp smoothTime; higher = slower. Defaults to shared chrome. */
+  openvelocity?: number
+  closevelocity?: number
   onclosed: () => void
   children: ReactNode
 }
@@ -24,11 +29,15 @@ export type PanelSlideProps = {
 function readoffscreen(
   viewport: { width: number; height: number },
   fromleft: boolean,
+  fromright: boolean,
   frombottom: boolean,
 ) {
   // Match animpositiontotarget snap so completion can reach < 0.1.
   if (fromleft) {
     return animsnapx(-viewport.width)
+  }
+  if (fromright) {
+    return animsnapx(viewport.width)
   }
   return animsnapy(frombottom ? viewport.height : -viewport.height)
 }
@@ -39,11 +48,14 @@ function seedaxis(group: Group, axis: 'x' | 'y', value: number) {
   group.userData[`v${axis}`] = 0
 }
 
-/** Layout-aware slide: Y for top/bottom, X when fromleft. */
+/** Layout-aware slide: Y for top/bottom, X when fromleft/fromright. */
 export function PanelSlide({
   shouldclose,
   frombottom = false,
   fromleft = false,
+  fromright = false,
+  openvelocity = SLIDE_OPEN_VELOCITY,
+  closevelocity = SLIDE_CLOSE_VELOCITY,
   onclosed,
   children,
 }: PanelSlideProps) {
@@ -54,8 +66,8 @@ export function PanelSlide({
   const edgeoffref = useRef(0)
   const onclosedref = useRef(onclosed)
   onclosedref.current = onclosed
-  const axis = fromleft ? 'x' : 'y'
-  const off = readoffscreen(viewport, fromleft, frombottom)
+  const axis = fromleft || fromright ? 'x' : 'y'
+  const off = readoffscreen(viewport, fromleft, fromright, frombottom)
 
   function finishclose() {
     if (closedref.current) {
@@ -95,7 +107,7 @@ export function PanelSlide({
       return
     }
     const target = shouldclose ? edgeoffref.current : 0
-    const velocity = shouldclose ? SLIDE_CLOSE_VELOCITY : SLIDE_OPEN_VELOCITY
+    const velocity = shouldclose ? closevelocity : openvelocity
     if (animpositiontotarget(groupref.current, axis, target, delta, velocity)) {
       if (shouldclose) {
         finishclose()

@@ -26,6 +26,7 @@ import {
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,
+  softkblog,
 } from 'zss/gadget/mobiletext'
 import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
@@ -361,6 +362,19 @@ export function EditorInput({
         z={2}
         width={edge.width}
         height={edge.height}
+        onPointerDown={() => {
+          // Focus first in the gesture so iOS raises the soft keyboard.
+          softkblog('H4', 'editor:pointerdown', {
+            usemobiletextcapture,
+            hasEl: !!getmobiletextelement(),
+          })
+          if (usemobiletextcapture) {
+            const el = getmobiletextelement()
+            if (el && document.activeElement !== el) {
+              mobiletextfocus()
+            }
+          }
+        }}
         onClick={(event) => {
           if (ispresent(codepage)) {
             const hit = editorclickcell(
@@ -389,10 +403,6 @@ export function EditorInput({
             }
           }
           if (usemobiletextcapture) {
-            const el = getmobiletextelement()
-            if (el && document.activeElement !== el) {
-              mobiletextfocus()
-            }
             writemobileeditorselection()
           }
         }}

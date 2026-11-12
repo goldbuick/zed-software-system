@@ -12,6 +12,42 @@ let mobiletextelement: Mobiletextfield | null = null
 const subscribers = new Set<MobiletextInputCallback>()
 const subscribercleanups = new Map<MobiletextInputCallback, () => void>()
 
+/**
+ * Temporary Safari soft-keyboard probe. Filter DevTools console for `[softkb`.
+ * Hypotheses: H1 capture-flag, H2 mount, H3 terminal-input-gate, H4 pointer,
+ * H5 focus/blur, H6 visualViewport, H7 actionrow.
+ */
+export function softkblog(
+  hypothesis: string,
+  message: string,
+  data?: Record<string, unknown>,
+) {
+  const vv = typeof window !== 'undefined' ? window.visualViewport : null
+  // eslint-disable-next-line no-console -- intentional soft-keyboard probe
+  console.info(`[softkb ${hypothesis}] ${message}`, {
+    t: Date.now(),
+    vvH: vv ? Math.round(vv.height) : null,
+    innerH:
+      typeof window !== 'undefined' ? Math.round(window.innerHeight) : null,
+    active:
+      typeof document !== 'undefined'
+        ? (document.activeElement as HTMLElement | null)?.tagName ?? null
+        : null,
+    activeClass:
+      typeof document !== 'undefined'
+        ? (document.activeElement as HTMLElement | null)?.className || null
+        : null,
+    ...data,
+  })
+}
+
+function softkbfocusprobe(label: string) {
+  softkblog('H5', label, {
+    hasEl: !!mobiletextelement,
+    elIsActive: document.activeElement === mobiletextelement,
+  })
+}
+
 function attachsubscriber(
   callback: MobiletextInputCallback,
   element: Mobiletextfield,
@@ -67,10 +103,24 @@ export function getmobiletextelement(): Mobiletextfield | null {
 }
 
 export function mobiletextfocus() {
-  mobiletextelement?.focus()
+  softkbfocusprobe('focus:before')
+  if (!mobiletextelement) {
+    softkblog('H2', 'focus:no-element')
+    return
+  }
+  // preventScroll: iOS otherwise scrolls the off-screen capture field into view
+  // and can drop the soft-keyboard user activation.
+  mobiletextelement.focus({ preventScroll: true })
+  softkbfocusprobe('focus:sync-after')
+  queueMicrotask(() => softkbfocusprobe('focus:microtask'))
+  requestAnimationFrame(() => {
+    softkbfocusprobe('focus:raf')
+    requestAnimationFrame(() => softkbfocusprobe('focus:raf2'))
+  })
 }
 
 export function mobiletextblur() {
+  softkblog('H5', 'blur:call')
   mobiletextelement?.blur()
 }
 

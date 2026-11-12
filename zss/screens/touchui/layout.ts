@@ -4,9 +4,6 @@ export const PORTRAIT_TOUCH_DOCK_ROWS = 14
 /** Stats sidebar width (chars); matches screenui SIDEBAR_SIZE. */
 export const TOUCH_SIDEBAR_COLS = 20
 
-/** Portrait stats band height when sidebar open (chars). */
-export const PORTRAIT_SIDEBAR_OVERLAY_ROWS = 15
-
 /** Portrait dock rows reserved above stick plane (header + action row). */
 export const PORTRAIT_DOCK_STICK_TOP = 5
 
@@ -36,17 +33,8 @@ export function readtouchscreenlayout(args: {
   /** Visible rows above the soft keyboard (visualViewport). */
   saferows: number
   showtouchcontrols: boolean
-  hassidebar: boolean
-  sidebaropen: boolean
 }): TOUCH_SCREEN_LAYOUT {
-  const {
-    totalcols,
-    totalrows,
-    saferows,
-    showtouchcontrols,
-    hassidebar,
-    sidebaropen,
-  } = args
+  const { totalcols, totalrows, saferows, showtouchcontrols } = args
   if (!showtouchcontrols) {
     return {
       rows: totalrows,
@@ -57,27 +45,21 @@ export function readtouchscreenlayout(args: {
       showactionrow: false,
     }
   }
-  const siderows = sidebaropen && hassidebar ? PORTRAIT_SIDEBAR_OVERLAY_ROWS : 0
-  // One row above the dock for the sidebar label; keep terminal out of it.
-  const togglerows = hassidebar ? 1 : 0
-  // Bottom band grows to match soft-keyboard height (totalrows - saferows) so
-  // the game frame stays in the safe area. ActionRow is hidden while the
-  // keyboard is open; dock chrome and sticks stay mounted.
+  // Keep dockrows fixed while the soft keyboard is open. Growing the dock to
+  // match keyboardrows remounts TouchUI (userscreen key) and shrinks the game
+  // frame; Safari then blurs the Tier A textarea ~100ms after vvH drops
+  // (softkb: focus ok -> saferows shrink -> capture:dom-blur, no gl-resize).
+  // ActionRow hides; sticks stay under the keyboard (unused while typing).
+  // Sidebar width is owned by screenui (right column), not this band.
   const keyboardrows = Math.max(0, totalrows - saferows)
-  const maxdock = Math.max(
-    0,
-    totalrows - siderows - togglerows - MIN_TOUCH_CONTENT_ROWS,
-  )
-  const dockrows = Math.min(
-    maxdock,
-    Math.max(PORTRAIT_TOUCH_DOCK_ROWS, keyboardrows),
-  )
-  const rows = totalrows - dockrows - siderows - togglerows
+  const maxdock = Math.max(0, totalrows - MIN_TOUCH_CONTENT_ROWS)
+  const dockrows = Math.min(maxdock, PORTRAIT_TOUCH_DOCK_ROWS)
+  const rows = totalrows - dockrows
   return {
     rows,
     dockcols: totalcols,
     dockrows,
-    dockrow: rows + siderows + togglerows,
+    dockrow: rows,
     showdockui: true,
     showactionrow: keyboardrows === 0,
   }

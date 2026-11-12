@@ -11,6 +11,9 @@ const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
 /** Shared by PanelSlide and board TV slide (maath damp + rsqw). */
 export const SLIDE_OPEN_VELOCITY = 2.8
 export const SLIDE_CLOSE_VELOCITY = 1.4
+/** Touch sidebar only — ~2x damp smoothTime (slower) than shared chrome. */
+export const SIDEBAR_SLIDE_OPEN_VELOCITY = 5.6
+export const SIDEBAR_SLIDE_CLOSE_VELOCITY = 2.8
 export const SLIDE_CLOSE_FAILSAFE_MS = 5000
 
 export function animsnapy(value: number) {
