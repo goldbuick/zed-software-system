@@ -28,6 +28,12 @@ import { UserInput } from 'zss/gadget/userinput.bridge'
 import { UserInputMods } from 'zss/gadget/userinputtypes'
 import { ispid } from 'zss/mapping/guid'
 import { ispresent } from 'zss/mapping/types'
+import {
+  clearinspectorselection,
+  commitinspectorinspect,
+  inspectorselectionparked,
+  nudgeinspectorbound,
+} from 'zss/screens/inspector/inspectselection'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { NAME } from 'zss/words/types'
 
@@ -79,16 +85,76 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
     <>
       {!inputblocked && (
         <UserInput
-          MOVE_LEFT={(mods) => sendinput(player, INPUT.MOVE_LEFT, mods)}
-          MOVE_RIGHT={(mods) => sendinput(player, INPUT.MOVE_RIGHT, mods)}
-          MOVE_UP={(mods) => sendinput(player, INPUT.MOVE_UP, mods)}
-          MOVE_DOWN={(mods) => sendinput(player, INPUT.MOVE_DOWN, mods)}
-          SHOOT_LEFT={(mods) => sendinput(player, INPUT.SHOOT_LEFT, mods)}
-          SHOOT_RIGHT={(mods) => sendinput(player, INPUT.SHOOT_RIGHT, mods)}
-          SHOOT_UP={(mods) => sendinput(player, INPUT.SHOOT_UP, mods)}
-          SHOOT_DOWN={(mods) => sendinput(player, INPUT.SHOOT_DOWN, mods)}
-          OK_BUTTON={(mods) => sendinput(player, INPUT.OK_BUTTON, mods)}
-          CANCEL_BUTTON={(mods) => sendinput(player, INPUT.CANCEL_BUTTON, mods)}
+          MOVE_LEFT={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('start', -1, 0)
+              return
+            }
+            sendinput(player, INPUT.MOVE_LEFT, mods)
+          }}
+          MOVE_RIGHT={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('start', 1, 0)
+              return
+            }
+            sendinput(player, INPUT.MOVE_RIGHT, mods)
+          }}
+          MOVE_UP={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('start', 0, -1)
+              return
+            }
+            sendinput(player, INPUT.MOVE_UP, mods)
+          }}
+          MOVE_DOWN={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('start', 0, 1)
+              return
+            }
+            sendinput(player, INPUT.MOVE_DOWN, mods)
+          }}
+          SHOOT_LEFT={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('end', -1, 0)
+              return
+            }
+            sendinput(player, INPUT.SHOOT_LEFT, mods)
+          }}
+          SHOOT_RIGHT={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('end', 1, 0)
+              return
+            }
+            sendinput(player, INPUT.SHOOT_RIGHT, mods)
+          }}
+          SHOOT_UP={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('end', 0, -1)
+              return
+            }
+            sendinput(player, INPUT.SHOOT_UP, mods)
+          }}
+          SHOOT_DOWN={(mods) => {
+            if (inspectorselectionparked()) {
+              nudgeinspectorbound('end', 0, 1)
+              return
+            }
+            sendinput(player, INPUT.SHOOT_DOWN, mods)
+          }}
+          OK_BUTTON={(mods) => {
+            if (inspectorselectionparked()) {
+              commitinspectorinspect(player)
+              return
+            }
+            sendinput(player, INPUT.OK_BUTTON, mods)
+          }}
+          CANCEL_BUTTON={(mods) => {
+            if (inspectorselectionparked()) {
+              clearinspectorselection()
+              return
+            }
+            sendinput(player, INPUT.CANCEL_BUTTON, mods)
+          }}
           MENU_BUTTON={(mods) => sendinput(player, INPUT.MENU_BUTTON, mods)}
           BUTTON_A={(mods) => sendinput(player, INPUT.BUTTON_A, mods)}
           BUTTON_B={(mods) => sendinput(player, INPUT.BUTTON_B, mods)}
