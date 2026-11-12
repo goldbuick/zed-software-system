@@ -4,11 +4,6 @@ import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { inputdown, inputup, triggerhotkey } from 'zss/gadget/userinput'
-import {
-  editorcopy,
-  editorcut,
-  editorpaste,
-} from 'zss/screens/editor/editortouchactions'
 
 import { ToggleKey } from './togglekey'
 
@@ -40,25 +35,19 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           x={x + pitch}
           y={y}
           letters="cut"
-          onToggle={() => {
-            editorcut(player)
-          }}
+          onToggle={() => triggerhotkey('x', { ctrl: true })}
         />
         <ToggleKey
           x={x + pitch * 2}
           y={y}
           letters="copy"
-          onToggle={() => {
-            editorcopy(player)
-          }}
+          onToggle={() => triggerhotkey('c', { ctrl: true })}
         />
         <ToggleKey
           x={x + pitch * 3}
           y={y}
           letters="paste"
-          onToggle={() => {
-            editorpaste(player)
-          }}
+          onToggle={() => triggerhotkey('v', { ctrl: true })}
         />
         <ToggleKey
           x={x + pitch * 4}
