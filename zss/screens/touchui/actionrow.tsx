@@ -3,6 +3,7 @@ import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { useTape } from 'zss/gadget/data/zustandstores'
+import { useDeviceData } from 'zss/gadget/device'
 import { inputdown, inputup, triggerhotkey } from 'zss/gadget/userinput'
 
 import { ToggleKey } from './togglekey'
@@ -161,24 +162,6 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
       <ToggleKey
         x={x + pitch}
         y={y}
-        letters="?"
-        onToggle={() => registerterminalopen(SOFTWARE, player)}
-      />
-      <ToggleKey
-        x={x + pitch * 2}
-        y={y}
-        letters="c"
-        onToggle={() => registerterminalquickopen(SOFTWARE, player, '')}
-      />
-      <ToggleKey
-        x={x + pitch * 3}
-        y={y}
-        letters="play"
-        onToggle={() => triggerhotkey('p', { ctrl: true })}
-      />
-      <ToggleKey
-        x={x + pitch * 4}
-        y={y}
         letters="tab"
         onToggle={() => {
           inputdown(0, INPUT.MENU_BUTTON)
@@ -186,7 +169,41 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
         }}
       />
       <ToggleKey
+        x={x + pitch * 2}
+        y={y}
+        letters="?"
+        onToggle={() => registerterminalopen(SOFTWARE, player)}
+      />
+      <ToggleKey
+        x={x + pitch * 3}
+        y={y}
+        letters="c"
+        onToggle={() => registerterminalquickopen(SOFTWARE, player, '')}
+      />
+      <ToggleKey
+        x={x + pitch * 4}
+        y={y}
+        letters="side"
+        onToggle={() => {
+          useDeviceData.setState((state) => {
+            if (state.sidebarclosing) {
+              return { ...state, sidebaropen: true, sidebarclosing: false }
+            }
+            if (state.sidebaropen) {
+              return { ...state, sidebaropen: false, sidebarclosing: true }
+            }
+            return { ...state, sidebaropen: true, sidebarclosing: false }
+          })
+        }}
+      />
+      <ToggleKey
         x={x + pitch * 5}
+        y={y}
+        letters="play"
+        onToggle={() => triggerhotkey('p', { ctrl: true })}
+      />
+      <ToggleKey
+        x={x + pitch * 6}
         y={y}
         letters="enter"
         onToggle={() => {
