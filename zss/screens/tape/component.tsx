@@ -144,7 +144,7 @@ function TapeSlidePanel({
         left={0}
         right={geom.cols - 1}
         bottom={geom.top + geom.height - 1}
-        alpha={geom.terminalmode === 'quick' ? 0.666 : 0.333}
+        alpha={0.777}
       />
       <TapeLayout
         terminalmode={geom.terminalmode}
