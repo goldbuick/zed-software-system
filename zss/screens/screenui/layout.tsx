@@ -114,13 +114,14 @@ export function ScreenUILayout() {
           )
         })}
         {inputblocked && (
-          // World z is 1: in front of the board (0), behind the editor plane (3).
+          // Local 511 -> world -1 with this group at -512: in front of the board
+          // (-512), behind the tape / sidebar (0) and scroll / editor (900+).
           <Rect
             blocking
             visible={false}
             width={screensize.cols}
             height={screensize.rows}
-            z={513}
+            z={511}
           />
         )}
       </group>
