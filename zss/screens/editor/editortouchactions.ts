@@ -1,9 +1,9 @@
 import { apierror, vmcodeaddress } from 'zss/device/api'
 import {
+  type SharedTextHandle,
   marknextpatchaslocal,
   modemgetsharedtexthandle,
   setcursorbeforeedit,
-  type SharedTextHandle,
 } from 'zss/device/modem'
 import { SOFTWARE } from 'zss/device/session'
 import { withclipboard } from 'zss/feature/keyboard'
