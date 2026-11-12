@@ -63,6 +63,27 @@ canvas {
   pointer-events: auto;
 }
 
+/* CRT tile pads — nipplejs 1.0.4 uses .joystick (not .nipple) */
+.touchpad-zone .joystick {
+  opacity: 1 !important;
+}
+
+.touchpad-zone .joystick .back {
+  border-radius: 2px !important;
+  background: #d0d !important;
+  border: 1px solid #a0a !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+}
+
+.touchpad-zone .joystick .front {
+  border-radius: 2px !important;
+  background: #fff !important;
+  border: 1px solid #fff !important;
+  opacity: 0.95 !important;
+  box-shadow: none !important;
+}
+
 .rotate-portrait {
   position: fixed;
   inset: 0;

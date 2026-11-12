@@ -1,4 +1,8 @@
-import { registerterminalopen, registerterminalquickopen } from 'zss/device/api'
+import {
+  registerterminalopen,
+  registerterminalquickopen,
+  vmclirepeatlast,
+} from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
@@ -46,10 +50,27 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
       <ToggleKey
         x={x + pitch * 3}
         y={y}
+        letters="$META+p"
+        onToggle={() => {
+          vmclirepeatlast(SOFTWARE, player)
+        }}
+      />
+      <ToggleKey
+        x={x + pitch * 4}
+        y={y}
         letters="tab"
         onToggle={() => {
           inputdown(0, INPUT.MENU_BUTTON)
           inputup(0, INPUT.MENU_BUTTON)
+        }}
+      />
+      <ToggleKey
+        x={x + pitch * 5}
+        y={y}
+        letters="enter"
+        onToggle={() => {
+          inputdown(0, INPUT.OK_BUTTON)
+          inputup(0, INPUT.OK_BUTTON)
         }}
       />
     </>

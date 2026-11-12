@@ -6,14 +6,18 @@ import { inputdown, inputup } from 'zss/gadget/userinput'
 import { modpositive, snap } from 'zss/mapping/number'
 
 const mergevec = new Vector2()
-const angleunit = new Vector2()
+const mergeu1 = new Vector2()
+const mergeu2 = new Vector2()
 
-function angleunitfromsnap(snapdir: number) {
+/** Last merged snap applied to inputstate; undefined = never applied this session. */
+let lastappliedmerged: number | null | undefined
+
+function angleunitfromsnap(snapdir: number, out: Vector2) {
   const rad = (snapdir * Math.PI) / 180
-  return angleunit.set(Math.cos(rad), Math.sin(rad))
+  return out.set(Math.cos(rad), Math.sin(rad))
 }
 
-function mergedsnapdir(
+export function mergedsnapdir(
   left: number | null,
   right: number | null,
 ): number | null {
@@ -26,9 +30,9 @@ function mergedsnapdir(
   if (right === null) {
     return left
   }
-  const u1 = angleunitfromsnap(left)
-  const u2 = angleunitfromsnap(right)
-  mergevec.copy(u1).add(u2)
+  angleunitfromsnap(left, mergeu1)
+  angleunitfromsnap(right, mergeu2)
+  mergevec.copy(mergeu1).add(mergeu2)
   if (mergevec.lengthSq() < 1e-6) {
     return null
   }
@@ -82,10 +86,18 @@ export function handlestickclear() {
   inputup(0, INPUT.MOVE_RIGHT)
 }
 
+/** Reset merge edge tracking (overlay mount/unmount). */
+export function handlestickmergesreset() {
+  lastappliedmerged = undefined
+}
+
 /**
  * Merged dual-thumbstick input. Right snap forces SHIFT while non-null; left is move-only.
  * Pass null when that stick is idle or inside its dead zone.
  * When `anypointerdown` is true and merged direction is null (all touches in dead zone), move keys are left unchanged — same as the legacy single-stick behavior.
+ *
+ * Only re-edges move keys when the merged snap changes so pollinput owns hold-repeat
+ * (same cadence as keyboard). Re-clear+down every frame would spam userinputinvoke.
  */
 export function handlestickdirsmerged(
   leftsnap: number | null,
@@ -119,6 +131,7 @@ export function handlestickdirsmerged(
   if (merged === null) {
     if (!anypointerdown) {
       handlestickclear()
+      lastappliedmerged = null
       return
     }
     const bothsnapnull = leftsnap === null && rightsnap === null
@@ -128,9 +141,14 @@ export function handlestickdirsmerged(
     }
     // Opposing directions cancel — clear moves.
     handlestickclear()
+    lastappliedmerged = null
     return
   }
 
+  if (merged === lastappliedmerged) {
+    return
+  }
   handlestickclear()
   applymovedirection(merged)
+  lastappliedmerged = merged
 }

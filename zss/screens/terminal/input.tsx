@@ -29,6 +29,7 @@ import {
   mobiletextfocus,
   onmobiletextinput,
 } from 'zss/gadget/mobiletext'
+import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { modsfromevent } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
@@ -43,6 +44,7 @@ import {
   drawcommandarghint,
   drawhinttext,
   getautocomplete,
+  layoutautocompleterows,
 } from 'zss/screens/tape/autocomplete'
 import {
   applyautocompletesuggestion,
@@ -576,6 +578,36 @@ export function TerminalInput({
           inputstateycursor(-deltay)
         }}
       />
+      {autocompleteactive &&
+        layoutautocompleterows(
+          autocomplete,
+          popupleftx,
+          status.y,
+          edge,
+          true,
+        ).map((hit) => {
+          const effectiveindex = Math.max(0, autocompleteindex)
+          return (
+            <Rect
+              key={`ac-tap-${hit.index}-${hit.y}`}
+              visible={false}
+              blocking
+              cursor="pointer"
+              x={hit.x}
+              y={hit.y}
+              z={3}
+              width={hit.width}
+              height={hit.height}
+              onClick={() => {
+                if (hit.index === effectiveindex) {
+                  acceptsuggestion()
+                  return
+                }
+                useTape.setState({ autocompleteindex: hit.index })
+              }}
+            />
+          )
+        })}
       <UserInput
         MOVE_LEFT={(mods) => {
           useTape.setState({ autocompleteindex: -1 })

@@ -27,6 +27,7 @@ import {
   mobiletextfocus,
   onmobiletextinput,
 } from 'zss/gadget/mobiletext'
+import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { modsfromevent } from 'zss/gadget/userinput'
 import { UserInput } from 'zss/gadget/userinput.bridge'
@@ -37,6 +38,7 @@ import {
   AUTO_COMPLETE,
   drawautocomplete,
   drawcommandarghint,
+  layoutautocompleterows,
 } from 'zss/screens/tape/autocomplete'
 import {
   applyautocompletesuggestion,
@@ -396,6 +398,36 @@ export function EditorInput({
         }}
         onScroll={(ydelta: number) => moveycursor(ydelta * 0.75)}
       />
+      {autocompleteactive &&
+        layoutautocompleterows(
+          autocomplete,
+          startx + autocomplete.wordcol,
+          drawabove ? starty - 1 : starty,
+          edge,
+          drawabove,
+        ).map((hit) => {
+          const effectiveindex = Math.max(0, autocompleteindex)
+          return (
+            <Rect
+              key={`ac-tap-${hit.index}-${hit.y}`}
+              visible={false}
+              blocking
+              cursor="pointer"
+              x={hit.x}
+              y={hit.y}
+              z={3}
+              width={hit.width}
+              height={hit.height}
+              onClick={() => {
+                if (hit.index === effectiveindex) {
+                  acceptsuggestion()
+                  return
+                }
+                useTape.setState({ autocompleteindex: hit.index })
+              }}
+            />
+          )
+        })}
       <UserInput
         MOVE_LEFT={(mods) => {
           if (tapeeditor.findopen) {
