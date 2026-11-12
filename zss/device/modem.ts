@@ -203,15 +203,23 @@ export function getundomanager(key: string): Y.UndoManager | undefined {
   return getorcreateundomanager(key).um
 }
 
-/** Test-only: get SharedTextHandle for a key if it exists and is text. */
-export function getsharedtexthandlefortest(
+/** Get SharedTextHandle for a key if it exists and is text. */
+export function modemgetsharedtexthandle(
   key: string,
 ): SharedTextHandle | undefined {
   const val = ROOT.get(key)
   if (val instanceof Y.Text) {
+    getorcreateundomanager(key)
     return createsharedtexthandle(key, val)
   }
   return undefined
+}
+
+/** Test-only: get SharedTextHandle for a key if it exists and is text. */
+export function getsharedtexthandlefortest(
+  key: string,
+): SharedTextHandle | undefined {
+  return modemgetsharedtexthandle(key)
 }
 
 /** Test-only: reset a text key to empty and clear its UndoManager so tests start clean. */

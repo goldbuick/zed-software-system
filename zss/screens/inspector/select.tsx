@@ -11,9 +11,7 @@ import {
   Vector3,
 } from 'three'
 import { RAYCAST_DEBUG_DOT, RAYCAST_DEBUG_PICKSHEET, RUNTIME } from 'zss/config'
-import { vminspect } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
-import { SOFTWARE } from 'zss/device/session'
 import { buildboxframe } from 'zss/gadget/boxframe'
 import { layersreadcontrol } from 'zss/gadget/data/types'
 import {
@@ -21,6 +19,7 @@ import {
   useInspector,
   useTape,
 } from 'zss/gadget/data/zustandstores'
+import { useDeviceData } from 'zss/gadget/device'
 import { StaticDither } from 'zss/gadget/graphics/dither'
 import { Tiles } from 'zss/gadget/graphics/tiles'
 import { noraycastmesh } from 'zss/gadget/noraycastmesh'
@@ -35,6 +34,11 @@ import {
   createboardpickgeometry,
   createpixelquadgeometry,
 } from './boardpickgeometry'
+import {
+  commitinspectorinspect,
+  parkinspectorselection,
+  ptininspectrect,
+} from './inspectselection'
 
 const point = new Vector3()
 
@@ -83,6 +87,7 @@ export function InspectorSelect() {
     null,
   )
   const inspector = useTape((state) => state.inspector)
+  const showtouchcontrols = useDeviceData((state) => state.showtouchcontrols)
   const gadgetlayers = useGadgetClient((s) => s.gadget.layers)
   const control = useMemo(
     () => layersreadcontrol(gadgetlayers ?? []),
@@ -166,24 +171,32 @@ export function InspectorSelect() {
     }
   }, [seloutergeo, selinnergeo])
 
-  // track selection state
-  function completeselection() {
-    if (isnumber(useInspector.getState().cursor)) {
-      vminspect(SOFTWARE, registerreadplayer(), selectstart, selectend)
-    }
-    useInspector.setState(() => ({
-      cursor: undefined,
-      select: undefined,
-    }))
+  function commitinspect() {
+    commitinspectorinspect(registerreadplayer())
   }
 
-  function pointerleave() {
+  function enddrag() {
+    if (showtouchcontrols) {
+      parkinspectorselection()
+      return
+    }
+    commitinspect()
+  }
+
+  function clearhoveronly() {
     hoverrayref.current = null
     if (RAYCAST_DEBUG_DOT) {
       setdebughit(null)
     }
     sethovertile(null)
-    completeselection()
+  }
+
+  function pointerleave() {
+    clearhoveronly()
+    if (showtouchcontrols) {
+      return
+    }
+    commitinspect()
   }
 
   function storehoverray(ray: Ray) {
@@ -269,8 +282,18 @@ export function InspectorSelect() {
             }
             const pt = coordstileorigin(pickw, pickh)
             sethovertile({ x: pt.x, y: pt.y })
+            if (
+              showtouchcontrols &&
+              isnumber(useInspector.getState().cursor) &&
+              ptininspectrect(pt.x, pt.y, pickw)
+            ) {
+              commitinspect()
+              return
+            }
             useInspector.setState(() => ({
               cursor: pttoindex(pt, pickw),
+              select: undefined,
+              parked: false,
             }))
           }}
           onPointerMove={(e: ThreeEvent<PointerEvent>) => {
@@ -290,9 +313,9 @@ export function InspectorSelect() {
               clearhovertile()
             }
           }}
-          onPointerUp={completeselection}
+          onPointerUp={enddrag}
           onPointerOut={pointerleave}
-          onPointerCancel={pointerleave}
+          onPointerCancel={showtouchcontrols ? clearhoveronly : pointerleave}
         >
           <meshBasicMaterial
             transparent

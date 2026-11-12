@@ -1,5 +1,8 @@
 // simple abstraction
 
+/** In-tab clipboard when OS Clipboard API denies or is missing. */
+let memoryclipboardtext = ''
+
 function isCliClipboardAvailable(): boolean {
   try {
     const w = typeof globalThis !== 'undefined' && (globalThis as any).window
@@ -7,6 +10,42 @@ function isCliClipboardAvailable(): boolean {
   } catch {
     return false
   }
+}
+
+function oclipboard(): Clipboard | undefined {
+  try {
+    return typeof navigator !== 'undefined' ? navigator.clipboard : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function memorywritetext(text: string): Promise<void> {
+  memoryclipboardtext = text
+  const os = oclipboard()
+  if (!os || typeof os.writeText !== 'function') {
+    return Promise.resolve()
+  }
+  return os.writeText(text).then(
+    () => undefined,
+    () => undefined,
+  )
+}
+
+function memoryreadtext(): Promise<string> {
+  const os = oclipboard()
+  if (!os || typeof os.readText !== 'function') {
+    return Promise.resolve(memoryclipboardtext)
+  }
+  return os.readText().then(
+    (text) => text,
+    () => memoryclipboardtext,
+  )
+}
+
+/** Test-only: clear the in-memory clipboard buffer. */
+export function resetmemoryclipboardfortest() {
+  memoryclipboardtext = ''
 }
 
 export function withclipboard(): Clipboard | undefined {
@@ -17,7 +56,10 @@ export function withclipboard(): Clipboard | undefined {
       readText: () => w.__nodeClipboardRead() as Promise<string>,
     } as Clipboard
   }
-  return navigator.clipboard
+  return {
+    writeText: memorywritetext,
+    readText: memoryreadtext,
+  } as Clipboard
 }
 
 export type ARMED_CLIPBOARD = {
@@ -27,7 +69,7 @@ export type ARMED_CLIPBOARD = {
 
 /** Start a clipboard write during a user gesture. Settle later with the text. */
 export function armclipboardtext(): ARMED_CLIPBOARD | undefined {
-  const clipboard = withclipboard()
+  const clipboard = oclipboard()
   if (
     !clipboard ||
     typeof clipboard.write !== 'function' ||
@@ -45,7 +87,10 @@ export function armclipboardtext(): ARMED_CLIPBOARD | undefined {
     ),
   })
   return {
-    settle: resolvetext,
+    settle: (text: string) => {
+      memoryclipboardtext = text
+      resolvetext(text)
+    },
     written: clipboard.write([item]),
   }
 }

@@ -304,16 +304,20 @@ export const useInspector = create<{
   pts: PT[]
   cursor: MAYBE<number>
   select: MAYBE<number>
+  /** Dock mode: selection is waiting for confirm; sticks drive corners. */
+  parked: boolean
   reset: () => void
 }>((set) => ({
   pts: [],
   cursor: undefined,
   select: undefined,
+  parked: false,
   reset() {
     set({
       pts: [],
       cursor: undefined,
       select: undefined,
+      parked: false,
     })
   },
 }))
