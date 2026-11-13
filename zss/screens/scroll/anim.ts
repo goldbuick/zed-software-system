@@ -8,13 +8,15 @@ const CHAR_HEIGHT = 14
 const DRAW_CHAR_WIDTH = CHAR_WIDTH * CHAR_SCALE
 const DRAW_CHAR_HEIGHT = CHAR_HEIGHT * CHAR_SCALE
 
-/** Shared by PanelSlide and board TV slide (maath damp + rsqw). */
 export const SLIDE_OPEN_VELOCITY = 2.8
 export const SLIDE_CLOSE_VELOCITY = 1.4
-/** Touch sidebar only — ~2x damp smoothTime (slower) than shared chrome. */
-export const SIDEBAR_SLIDE_OPEN_VELOCITY = 5.6
-export const SIDEBAR_SLIDE_CLOSE_VELOCITY = 2.8
 export const SLIDE_CLOSE_FAILSAFE_MS = 5000
+
+export const SIDEBAR_SLIDE_OPEN_VELOCITY = 2.3
+export const SIDEBAR_SLIDE_CLOSE_VELOCITY = 2.5
+export const SIDEBAR_SLIDE_MAX_SPEED = DRAW_CHAR_WIDTH * 1.5
+
+const DEFAULT_SLIDE_MAX_SPEED = DRAW_CHAR_HEIGHT * 12
 
 export function animsnapy(value: number) {
   return snap(value, DRAW_CHAR_HEIGHT * 0.5)
@@ -30,21 +32,14 @@ export function animpositiontotarget(
   target: number,
   delta: number,
   velocity = 1.235,
+  maxspeed = DEFAULT_SLIDE_MAX_SPEED,
 ) {
   function easing(t: number) {
     return rsqw(t, delta)
   }
 
   // easing move, with step filter
-  damp(
-    object.userData,
-    axis,
-    target,
-    velocity,
-    delta,
-    DRAW_CHAR_HEIGHT * 12,
-    easing,
-  )
+  damp(object.userData, axis, target, velocity, delta, maxspeed, easing)
   const snapfn = axis === 'x' ? animsnapx : animsnapy
   object.position[axis] = snapfn(object.userData[axis])
 

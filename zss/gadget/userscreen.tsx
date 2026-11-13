@@ -125,8 +125,6 @@ export function UserScreen({ children }: UserScreenProps) {
               <>
                 <group position={[0, docky, 3]}>
                   <TouchUI
-                    // Stable key: do not include dockrows (keyboard resize).
-                    key={`dock-${dockcols}`}
                     width={dockcols}
                     height={dockrows}
                     showactionrow={showactionrow}

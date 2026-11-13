@@ -22,6 +22,10 @@ export type PanelSlideProps = {
   /** maath damp smoothTime; higher = slower. Defaults to shared chrome. */
   openvelocity?: number
   closevelocity?: number
+  /** maath damp maxSpeed; lower = slower travel cap. */
+  maxspeed?: number
+  /** Override close failsafe (ms) when damp is intentionally slow. */
+  closefailsafe?: number
   onclosed: () => void
   children: ReactNode
 }
@@ -56,6 +60,8 @@ export function PanelSlide({
   fromright = false,
   openvelocity = SLIDE_OPEN_VELOCITY,
   closevelocity = SLIDE_CLOSE_VELOCITY,
+  maxspeed,
+  closefailsafe = SLIDE_CLOSE_FAILSAFE_MS,
   onclosed,
   children,
 }: PanelSlideProps) {
@@ -98,9 +104,9 @@ export function PanelSlide({
     if (!shouldclose) {
       return
     }
-    const timer = setTimeout(finishclose, SLIDE_CLOSE_FAILSAFE_MS)
+    const timer = setTimeout(finishclose, closefailsafe)
     return () => clearTimeout(timer)
-  }, [shouldclose])
+  }, [shouldclose, closefailsafe])
 
   useFrame((_, delta) => {
     if (!ispresent(groupref.current)) {
@@ -108,7 +114,16 @@ export function PanelSlide({
     }
     const target = shouldclose ? edgeoffref.current : 0
     const velocity = shouldclose ? closevelocity : openvelocity
-    if (animpositiontotarget(groupref.current, axis, target, delta, velocity)) {
+    if (
+      animpositiontotarget(
+        groupref.current,
+        axis,
+        target,
+        delta,
+        velocity,
+        maxspeed,
+      )
+    ) {
       if (shouldclose) {
         finishclose()
       }

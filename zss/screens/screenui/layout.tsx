@@ -1,5 +1,5 @@
-import { Color } from 'three'
 import { useCallback, useContext, useMemo, useState } from 'react'
+import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useDeviceData } from 'zss/gadget/device'
 import { Rect } from 'zss/gadget/rect'
@@ -9,6 +9,7 @@ import { ScreenUIFramed } from 'zss/screens/screenui/framed'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import {
   SIDEBAR_SLIDE_CLOSE_VELOCITY,
+  SIDEBAR_SLIDE_MAX_SPEED,
   SIDEBAR_SLIDE_OPEN_VELOCITY,
 } from 'zss/screens/scroll/anim'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
@@ -21,13 +22,7 @@ type LayoutRectProps = {
   rect: RECT
 }
 
-function SidebarPanel({
-  rect,
-  slide,
-}: {
-  rect: RECT
-  slide: boolean
-}) {
+function SidebarPanel({ rect, slide }: { rect: RECT; slide: boolean }) {
   const parent = useContext(ScrollContext)
   const [selected, setselected] = useState(-1)
   const sidebarclosing = useDeviceData((state) => state.sidebarclosing)
@@ -74,6 +69,7 @@ function SidebarPanel({
             fromright
             openvelocity={SIDEBAR_SLIDE_OPEN_VELOCITY}
             closevelocity={SIDEBAR_SLIDE_CLOSE_VELOCITY}
+            maxspeed={SIDEBAR_SLIDE_MAX_SPEED}
             onclosed={finishclose}
           >
             {panel}
