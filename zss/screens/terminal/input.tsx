@@ -70,6 +70,7 @@ import { findterminalrowindexforcursor } from './logrowhit'
 import { tokenizeline } from './terminalinputhelpers'
 
 type TerminalInputProps = {
+  top: number
   terminalmode: TERMINAL_MODE
   voice2text: boolean
   tapeycursor: number
@@ -89,6 +90,7 @@ function isquickmediakeepopen(line: string): boolean {
 }
 
 export function TerminalInput({
+  top,
   terminalmode,
   voice2text,
   tapeycursor,
@@ -534,7 +536,7 @@ export function TerminalInput({
       <Scrollable
         blocking
         x={edge.left}
-        y={edge.top}
+        y={top}
         width={edge.width}
         height={edge.height}
         onClick={() => {
