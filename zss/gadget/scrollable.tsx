@@ -26,8 +26,6 @@ type Props = {
   height?: number
   children?: ReactNode
   onClick?: (event: ThreeEvent<MouseEvent>) => void
-  /** Prefer for mobiletextfocus — iOS soft keyboard needs focus in the touch gesture. */
-  onPointerDown?: (event: ThreeEvent<PointerEvent>) => void
   onScroll?: (deltay: number) => void
 } & JSX.IntrinsicElements['group']
 
@@ -43,7 +41,6 @@ export function Scrollable({
   height = 10,
   children,
   onClick,
-  onPointerDown,
   onScroll,
   ...props
 }: Props) {
@@ -59,7 +56,6 @@ export function Scrollable({
         width={width}
         height={height}
         onClick={onClick}
-        onPointerDown={onPointerDown}
         onWheel={(event: any) => {
           if (disabled) {
             return
