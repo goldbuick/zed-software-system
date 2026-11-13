@@ -54,16 +54,17 @@ describe('readtouchscreenlayout', () => {
     expect(layout.showactionrow).toBe(true)
   })
 
-  it('keeps dock height stable for soft keyboard and hides ActionRow only', () => {
+  it('grows dock to cover soft keyboard and hides ActionRow', () => {
     const layout = readtouchscreenlayout({
       ...BASE,
       totalcols: 40,
       totalrows: 70,
       saferows: 40,
     })
-    expect(layout.dockrows).toBe(PORTRAIT_TOUCH_DOCK_ROWS)
-    expect(layout.rows).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
-    expect(layout.dockrow).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
+    // keyboardrows = totalrows - saferows; dock clamps that between min dock and maxdock
+    expect(layout.dockrows).toBe(30)
+    expect(layout.rows).toBe(40)
+    expect(layout.dockrow).toBe(40)
     expect(layout.showdockui).toBe(true)
     expect(layout.showactionrow).toBe(false)
   })
