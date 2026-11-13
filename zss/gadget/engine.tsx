@@ -125,9 +125,9 @@ export function Engine() {
   const islandscape = viewwidth > viewheight
   const showtouchcontrols =
     deviceType === 'touchOnly' || primaryInput === 'touch' || forcetouchui
-  /** Touch-primary devices, durable touchui. */
-  const usemobiletextcapture =
-    (deviceType === 'touchOnly' && primaryInput === 'touch') || forcetouchui
+  // Soft KB / IME follows touch UI. detect-it reports many iPhones as
+  // deviceType "hybrid" (not touchOnly); gate on showtouchcontrols only.
+  const usemobiletextcapture = showtouchcontrols
 
   // config FX
   const shouldcrt =
@@ -160,6 +160,7 @@ export function Engine() {
     showtouchcontrols,
     shouldcrt,
     usemobiletextcapture,
+    forcetouchui,
   ])
 
   return (

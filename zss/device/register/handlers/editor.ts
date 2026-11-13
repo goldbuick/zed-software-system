@@ -1,35 +1,15 @@
 import type { DEVICE } from 'zss/device'
-import { vmcodeaddress, vmtapeeditorclose } from 'zss/device/api'
-import { modemreadtextsync } from 'zss/device/modem'
+import { vmtapeeditorclose } from 'zss/device/api'
 import type { MESSAGE } from 'zss/device/types'
 import { synctapeactivelayout } from 'zss/feature/tapelayout'
 import { useEditor, useTape } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import {
-  getmobiletextelement,
-  mobiletextblur,
-  mobiletextfocus,
-} from 'zss/gadget/mobiletext'
-import { MAYBE, isarray, isstring } from 'zss/mapping/types'
-
-function focuseditortext(book: string, path: MAYBE<string>[]) {
-  if (!useDeviceData.getState().usemobiletextcapture) {
-    return
-  }
-  const el = getmobiletextelement()
-  const code = modemreadtextsync(vmcodeaddress(book, path))
-  if (el && el.value !== code) {
-    el.value = code
-  }
-  mobiletextfocus()
-}
+import { mobiletextblur } from 'zss/gadget/mobiletext'
+import { isarray } from 'zss/mapping/types'
 
 export function handleeditoropen(_device: DEVICE, message: MESSAGE): void {
   if (isarray(message.data)) {
     const [book, path, type, title, startline] = message.data
-    if (isstring(book)) {
-      focuseditortext(book, isarray(path) ? path : [])
-    }
     useEditor.setState({ startline })
     useTape.setState(() => ({
       editor: {

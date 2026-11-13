@@ -5,10 +5,7 @@ import { useGadgetClient } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { clamp } from 'zss/mapping/number'
-import {
-  PORTRAIT_SIDEBAR_OVERLAY_ROWS,
-  TOUCH_SIDEBAR_COLS,
-} from 'zss/screens/touchui/layout'
+import { TOUCH_SIDEBAR_COLS } from 'zss/screens/touchui/layout'
 import { useShallow } from 'zustand/react/shallow'
 
 export enum RECT_TYPE {
@@ -88,35 +85,22 @@ export function useScreenChromeLayout(
 
     const rects: RECT[] = []
 
-    if (sidebar.length) {
-      if (!showtouchcontrols) {
-        const rect = {
-          name: 'sidebar',
-          type: RECT_TYPE.PANEL,
-          x: frame.x + frame.width - SIDEBAR_SIZE,
-          y: frame.y,
-          width: SIDEBAR_SIZE,
-          height: frame.height,
-          text: sidebar,
-        }
-        frame.width -= SIDEBAR_SIZE
-        rects.push(rect)
-      } else if (sidebaropen || sidebarclosing) {
-        // Portrait: reserved band when open; overlay bottom of expanded game when closing.
-        const height = PORTRAIT_SIDEBAR_OVERLAY_ROWS
-        const rect = {
-          name: 'sidebar',
-          type: RECT_TYPE.PANEL,
-          x: 0,
-          y: sidebaropen
-            ? frame.height
-            : frame.height - PORTRAIT_SIDEBAR_OVERLAY_ROWS,
-          width: frame.width,
-          height,
-          text: sidebar,
-        }
-        rects.push(rect)
+    if (
+      sidebar.length &&
+      (!showtouchcontrols || sidebaropen || sidebarclosing)
+    ) {
+      // Desktop always; touch only while open or closing (full-width reclaim when closed).
+      const rect = {
+        name: 'sidebar',
+        type: RECT_TYPE.PANEL,
+        x: frame.x + frame.width - SIDEBAR_SIZE,
+        y: frame.y,
+        width: SIDEBAR_SIZE,
+        height: frame.height,
+        text: sidebar,
       }
+      frame.width -= SIDEBAR_SIZE
+      rects.push(rect)
     }
 
     const scrollrect: RECT = {

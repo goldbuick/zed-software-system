@@ -22,7 +22,11 @@ import { useShallow } from 'zustand/react/shallow'
 import { TerminalInput } from './input'
 import { TerminalRows } from './rows'
 
-export function TerminalComponent() {
+type TerminalComponentProps = {
+  top: number
+}
+
+export function TerminalComponent({ top }: TerminalComponentProps) {
   const player = registerreadplayer()
   const terminalmode = useTape((state) => state.terminalmode)
   const pinlines = useTape((state) => state.terminal.pinlines)
@@ -92,6 +96,7 @@ export function TerminalComponent() {
         <TerminalRows />
         {voice2text !== undefined && (
           <TerminalInput
+            top={top}
             terminalmode={terminalmode}
             voice2text={voice2text}
             tapeycursor={tapeycursor}

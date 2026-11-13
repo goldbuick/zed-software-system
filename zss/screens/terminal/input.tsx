@@ -24,11 +24,7 @@ import {
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import {
-  getmobiletextelement,
-  mobiletextfocus,
-  onmobiletextinput,
-} from 'zss/gadget/mobiletext'
+import { mobiletextfocus, onmobiletextinput } from 'zss/gadget/mobiletext'
 import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { modsfromevent } from 'zss/gadget/userinput'
@@ -74,6 +70,7 @@ import { findterminalrowindexforcursor } from './logrowhit'
 import { tokenizeline } from './terminalinputhelpers'
 
 type TerminalInputProps = {
+  top: number
   terminalmode: TERMINAL_MODE
   voice2text: boolean
   tapeycursor: number
@@ -93,6 +90,7 @@ function isquickmediakeepopen(line: string): boolean {
 }
 
 export function TerminalInput({
+  top,
   terminalmode,
   voice2text,
   tapeycursor,
@@ -264,26 +262,6 @@ export function TerminalInput({
       })
     })
   }, [usemobiletextcapture, inputstatereplace])
-
-  useEffect(() => {
-    if (!usemobiletextcapture) {
-      return
-    }
-    const el = getmobiletextelement()
-    if (!el || document.activeElement !== el) {
-      return
-    }
-    const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-    el.value = line
-    const pos = clamp(tapeterminal.xcursor, 0, line.length)
-    el.setSelectionRange(pos, pos)
-  }, [
-    usemobiletextcapture,
-    inputstate,
-    tapeterminal.buffer,
-    tapeterminal.bufferindex,
-    tapeterminal.xcursor,
-  ])
 
   // navigate input history
   function inputstateswitch(switchto: number) {
@@ -558,20 +536,11 @@ export function TerminalInput({
       <Scrollable
         blocking
         x={edge.left}
-        y={edge.top}
+        y={top}
         width={edge.width}
         height={edge.height}
         onClick={() => {
           mobiletextfocus()
-          if (usemobiletextcapture) {
-            const el = getmobiletextelement()
-            if (el) {
-              const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-              el.value = line
-              const pos = clamp(tapeterminal.xcursor, 0, line.length)
-              el.setSelectionRange(pos, pos)
-            }
-          }
         }}
         onScroll={(deltay: number) => {
           trackselection(false)

@@ -98,6 +98,51 @@ export default defineConfig(({ mode }) => {
   const hmronly = !!JSON.parse(process.env.ZSS_HMR_ONLY ?? 'false')
   const useanalyzer = !!JSON.parse(process.env.ZSS_ANALYZER ?? 'false')
   const usewasmheaders = true
+  // COEP require-corp needs CORP on every response or Safari blocks Vite
+  // module workers (`@fs/...`) with "Worker load was blocked by COEP".
+  // Apply via middleware (not only server.headers): Safari 304 cache hits
+  // often omit CORP from server.headers, then refuse the worker module graph.
+  const wasmheaders: Record<string, string> | undefined = usewasmheaders
+    ? {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+      }
+    : undefined
+
+  function wasmcoepheadersplugin(): Plugin {
+    const apply = (
+      req: { url?: string },
+      res: { setHeader: (k: string, v: string) => void },
+    ) => {
+      if (!wasmheaders) {
+        return
+      }
+      for (const [key, value] of Object.entries(wasmheaders)) {
+        res.setHeader(key, value)
+      }
+      // Stop Safari serving @fs worker modules from 304s without CORP.
+      if (req.url?.includes('/@fs/')) {
+        res.setHeader('Cache-Control', 'no-store')
+      }
+    }
+    return {
+      name: 'wasm-coep-headers',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          apply(req, res)
+          next()
+        })
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use((req, res, next) => {
+          apply(req, res)
+          next()
+        })
+      },
+    }
+  }
+
   const devHost = process.env.ZSS_DEV_HOST?.trim()
   const mkcertHosts = ['localhost', ...(devHost ? [devHost] : [])]
 
@@ -143,6 +188,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       stripzstdsourcemaprefs(),
+      ...(wasmheaders ? [wasmcoepheadersplugin()] : []),
       servefixturesdev(),
       react(),
       nodePolyfills({
@@ -192,20 +238,10 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      headers: usewasmheaders
-        ? {
-            'Cross-Origin-Opener-Policy': 'same-origin',
-            'Cross-Origin-Embedder-Policy': 'require-corp',
-          }
-        : undefined,
+      headers: wasmheaders,
     },
     preview: {
-      headers: usewasmheaders
-        ? {
-            'Cross-Origin-Opener-Policy': 'same-origin',
-            'Cross-Origin-Embedder-Policy': 'require-corp',
-          }
-        : undefined,
+      headers: wasmheaders,
     },
   }
 })

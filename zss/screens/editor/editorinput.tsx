@@ -362,6 +362,7 @@ export function EditorInput({
         width={edge.width}
         height={edge.height}
         onClick={(event) => {
+          mobiletextfocus()
           if (ispresent(codepage)) {
             const hit = editorclickcell(
               event,
@@ -389,10 +390,6 @@ export function EditorInput({
             }
           }
           if (usemobiletextcapture) {
-            const el = getmobiletextelement()
-            if (el && document.activeElement !== el) {
-              mobiletextfocus()
-            }
             writemobileeditorselection()
           }
         }}

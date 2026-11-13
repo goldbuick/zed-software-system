@@ -1,10 +1,17 @@
+import { useCallback, useContext, useMemo, useState } from 'react'
 import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useDeviceData } from 'zss/gadget/device'
 import { Rect } from 'zss/gadget/rect'
+import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import { ScreenUIFramed } from 'zss/screens/screenui/framed'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
+import {
+  SIDEBAR_SLIDE_CLOSE_VELOCITY,
+  SIDEBAR_SLIDE_MAX_SPEED,
+  SIDEBAR_SLIDE_OPEN_VELOCITY,
+} from 'zss/screens/scroll/anim'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
 
 import { RECT, RECT_TYPE, useScreenUILayoutContext } from './layoutstate'
@@ -15,31 +22,67 @@ type LayoutRectProps = {
   rect: RECT
 }
 
-function PortraitSidebarPanel({ rect }: { rect: RECT }) {
+function SidebarPanel({ rect, slide }: { rect: RECT; slide: boolean }) {
+  const parent = useContext(ScrollContext)
+  const [selected, setselected] = useState(-1)
   const sidebarclosing = useDeviceData((state) => state.sidebarclosing)
+  const setcursor = useCallback((index: number) => {
+    setselected(index)
+  }, [])
+  const scroll = useMemo(
+    () => ({
+      sendmessage: parent.sendmessage,
+      sendclose: parent.sendclose,
+      didclose: parent.didclose,
+      setcursor,
+    }),
+    [parent.didclose, parent.sendclose, parent.sendmessage, setcursor],
+  )
+
+  const panel = (
+    <PanelComponent
+      width={rect.width}
+      height={rect.height}
+      color={14}
+      bg={1}
+      text={rect.text}
+      ymargin={0}
+      selected={selected}
+      mediasource="board"
+    />
+  )
+
+  function finishclose() {
+    setselected(-1)
+    useDeviceData.setState((state) => ({
+      ...state,
+      sidebarclosing: false,
+    }))
+  }
+
+  if (slide) {
+    return (
+      <ScrollContext.Provider value={scroll}>
+        <group position-z={512}>
+          <PanelSlide
+            shouldclose={sidebarclosing}
+            fromright
+            openvelocity={SIDEBAR_SLIDE_OPEN_VELOCITY}
+            closevelocity={SIDEBAR_SLIDE_CLOSE_VELOCITY}
+            maxspeed={SIDEBAR_SLIDE_MAX_SPEED}
+            onclosed={finishclose}
+          >
+            {panel}
+          </PanelSlide>
+        </group>
+      </ScrollContext.Provider>
+    )
+  }
+
   return (
-    <group position-z={512}>
-      <PanelSlide
-        shouldclose={sidebarclosing}
-        frombottom
-        onclosed={() => {
-          useDeviceData.setState((state) => ({
-            ...state,
-            sidebarclosing: false,
-          }))
-        }}
-      >
-        <PanelComponent
-          width={rect.width}
-          height={rect.height}
-          color={14}
-          bg={1}
-          text={rect.text}
-          ymargin={0}
-          mediasource="board"
-        />
-      </PanelSlide>
-    </group>
+    <ScrollContext.Provider value={scroll}>
+      <group position-z={512}>{panel}</group>
+    </ScrollContext.Provider>
   )
 }
 
@@ -48,8 +91,8 @@ function LayoutRect({ rect }: LayoutRectProps) {
 
   switch (rect.type) {
     case RECT_TYPE.PANEL: {
-      if (rect.name === 'sidebar' && showtouchcontrols) {
-        return <PortraitSidebarPanel rect={rect} />
+      if (rect.name === 'sidebar') {
+        return <SidebarPanel rect={rect} slide={showtouchcontrols} />
       }
       return (
         <group position-z={512}>

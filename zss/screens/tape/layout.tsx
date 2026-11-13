@@ -46,7 +46,7 @@ export function TapeLayout({
       width={terminalwidth}
       height={height}
     >
-      <TerminalComponent />
+      <TerminalComponent top={top} />
     </TapeLayoutTiles>
   )
 }

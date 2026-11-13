@@ -89,6 +89,15 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
         <ToggleKey
           x={x + pitch}
           y={y}
+          letters="tab"
+          onToggle={() => {
+            inputdown(0, INPUT.MENU_BUTTON)
+            inputup(0, INPUT.MENU_BUTTON)
+          }}
+        />
+        <ToggleKey
+          x={x + pitch * 2}
+          y={y}
           letters="prev"
           onToggle={() => {
             inputdown(0, INPUT.CTRL)
@@ -98,7 +107,7 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           }}
         />
         <ToggleKey
-          x={x + pitch * 2}
+          x={x + pitch * 3}
           y={y}
           letters="next"
           onToggle={() => {
@@ -109,24 +118,13 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
           }}
         />
         <ToggleKey
-          x={x + pitch * 3}
+          x={x + pitch * 4}
           y={y}
-          letters="up"
+          letters="pgup"
           onToggle={() => {
             inputdown(0, INPUT.ALT)
             inputdown(0, INPUT.MOVE_UP)
             inputup(0, INPUT.MOVE_UP)
-            inputup(0, INPUT.ALT)
-          }}
-        />
-        <ToggleKey
-          x={x + pitch * 4}
-          y={y}
-          letters="down"
-          onToggle={() => {
-            inputdown(0, INPUT.ALT)
-            inputdown(0, INPUT.MOVE_DOWN)
-            inputup(0, INPUT.MOVE_DOWN)
             inputup(0, INPUT.ALT)
           }}
         />
@@ -178,7 +176,9 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
         x={x + pitch * 3}
         y={y}
         letters="c"
-        onToggle={() => registerterminalquickopen(SOFTWARE, player, '')}
+        onToggle={() => {
+          registerterminalquickopen(SOFTWARE, player, '')
+        }}
       />
       <ToggleKey
         x={x + pitch * 4}

@@ -20,7 +20,7 @@ export type DEVICE_DATA = {
   islowrez: boolean
   islandscape: boolean
   sidebaropen: boolean
-  /** Portrait sidebar PanelSlide exit in progress; layout stays reserved until done. */
+  /** Touch sidebar PanelSlide exit in progress; right column stays until done. */
   sidebarclosing: boolean
   keyboardalt: boolean
   keyboardctrl: boolean
@@ -30,8 +30,6 @@ export type DEVICE_DATA = {
   crtactive: boolean
   /** Tier A: hidden input + IME sync (strict touch-primary). */
   usemobiletextcapture: boolean
-  /** Tier A capture textarea focused (soft keyboard / typing). */
-  textcapturefocused: boolean
   /** Pixel rects for DOM MOVE/SHOOT touchpads; null when touch UI is off. */
   touchpads: TOUCHPADS | null
   checknumbers: string
@@ -54,7 +52,6 @@ export const useDeviceData = create<DEVICE_DATA>(() => ({
   showtouchcontrols: false,
   crtactive: false,
   usemobiletextcapture: false,
-  textcapturefocused: false,
   touchpads: null,
   checknumbers: '',
   wordlist: [],

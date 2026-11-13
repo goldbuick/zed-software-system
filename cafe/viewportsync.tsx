@@ -11,6 +11,7 @@ function applyviewport(store: ReturnType<typeof useStore>) {
   const innerheight = window.innerHeight
   const width = makeeven(innerwidth)
   const height = makeeven(innerheight)
+
   // saferows: visible band above soft keyboard (portrait typing layout).
   const safeheight = window.visualViewport
     ? Math.min(innerheight, Math.floor(window.visualViewport.height))
@@ -18,37 +19,29 @@ function applyviewport(store: ReturnType<typeof useStore>) {
   const saferows = Math.floor(safeheight / RUNTIME.DRAW_CHAR_HEIGHT())
   useDeviceData.setState({ saferows })
 
+  // Soft keyboard only changes visualViewport.height (saferows). window.inner*
+  // stays put — only resize the GL canvas when inner size actually changes.
   const { size } = store.getState()
-  if (size.width !== width || size.height !== height) {
+  const sizechanged = size.width !== width || size.height !== height
+  if (sizechanged) {
     store.getState().setSize(width, height, size.top, size.left)
+    forcer3fglresize(store)
   }
-  forcer3fglresize(store)
 }
 
 export function ViewportSync() {
   const store = useStore()
 
   useLayoutEffect(() => {
-    const syncnow = () => {
-      applyviewport(store)
-    }
+    const syncnow = () => applyviewport(store)
     const syncdebounced = debounce(syncnow, 256)
 
-    syncnow()
-    requestAnimationFrame(syncnow)
-
-    // Debounce window resize; visualViewport must be immediate for keyboard.
+    syncdebounced()
     window.addEventListener('resize', syncdebounced)
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', syncnow)
       window.visualViewport.addEventListener('scroll', syncnow)
     }
-
-    const unsub = useDeviceData.subscribe((state, prev) => {
-      if (state.textcapturefocused !== prev.textcapturefocused) {
-        syncnow()
-      }
-    })
 
     return () => {
       syncdebounced.clear()
@@ -57,7 +50,6 @@ export function ViewportSync() {
         window.visualViewport.removeEventListener('resize', syncnow)
         window.visualViewport.removeEventListener('scroll', syncnow)
       }
-      unsub()
     }
   }, [store])
 

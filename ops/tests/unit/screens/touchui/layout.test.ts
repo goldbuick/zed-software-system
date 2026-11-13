@@ -1,5 +1,4 @@
 import {
-  PORTRAIT_SIDEBAR_OVERLAY_ROWS,
   PORTRAIT_TOUCH_DOCK_ROWS,
   readtouchscreenlayout,
 } from 'zss/screens/touchui/layout'
@@ -7,8 +6,6 @@ import {
 const BASE = {
   saferows: 40,
   showtouchcontrols: true,
-  hassidebar: false,
-  sidebaropen: false,
 }
 
 describe('readtouchscreenlayout', () => {
@@ -44,30 +41,27 @@ describe('readtouchscreenlayout', () => {
     expect(layout.showactionrow).toBe(true)
   })
 
-  it('reserves the sidebar band and toggle row above the dock', () => {
+  it('does not reserve vertical space for the sidebar', () => {
     const layout = readtouchscreenlayout({
       ...BASE,
       totalcols: 40,
       totalrows: 70,
       saferows: 70,
-      hassidebar: true,
-      sidebaropen: true,
     })
-    expect(layout.rows).toBe(
-      70 - PORTRAIT_TOUCH_DOCK_ROWS - PORTRAIT_SIDEBAR_OVERLAY_ROWS - 1,
-    )
+    expect(layout.rows).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
     expect(layout.dockrow).toBe(70 - PORTRAIT_TOUCH_DOCK_ROWS)
     expect(layout.showdockui).toBe(true)
     expect(layout.showactionrow).toBe(true)
   })
 
-  it('grows the bottom band for soft keyboard and hides ActionRow only', () => {
+  it('grows dock to cover soft keyboard and hides ActionRow', () => {
     const layout = readtouchscreenlayout({
       ...BASE,
       totalcols: 40,
       totalrows: 70,
       saferows: 40,
     })
+    // keyboardrows = totalrows - saferows; dock clamps that between min dock and maxdock
     expect(layout.dockrows).toBe(30)
     expect(layout.rows).toBe(40)
     expect(layout.dockrow).toBe(40)
