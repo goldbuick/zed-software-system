@@ -39,9 +39,8 @@ canvas {
 }
 
 .mobiletextcapture {
-  /* Full-width bottom bar: Safari dismisses opacity:0 / 1px fields when the
-     soft keyboard opens (softkb: focus ok -> vvH drop -> blur with saferows
-     skipped). Keep pointer-events:none so sticks still receive taps. */
+  /* Near-invisible bottom bar for soft keyboard / IME. pointer-events:none
+     so MOVE/SHOOT sticks still receive taps. */
   position: fixed;
   left: 0;
   right: 0;

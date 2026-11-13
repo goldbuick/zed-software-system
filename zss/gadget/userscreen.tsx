@@ -125,9 +125,7 @@ export function UserScreen({ children }: UserScreenProps) {
               <>
                 <group position={[0, docky, 3]}>
                   <TouchUI
-                    // Stable key: dockrows must not change with the soft keyboard
-                    // (see readtouchscreenlayout); including it remounted sticks
-                    // and helped Safari blur the Tier A capture field.
+                    // Stable key: do not include dockrows (keyboard resize).
                     key={`dock-${dockcols}`}
                     width={dockcols}
                     height={dockrows}
