@@ -4,7 +4,6 @@ import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
 import { useTape } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import { mobiletextfocus } from 'zss/gadget/mobiletext'
 import { inputdown, inputup, triggerhotkey } from 'zss/gadget/userinput'
 
 import { ToggleKey } from './togglekey'
