@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
 import { PANEL_ITEM } from 'zss/gadget/data/types'
 import { type TILES_MEDIA_SOURCE } from 'zss/gadget/gadgetmedia'
 import { resettiles, useTiles } from 'zss/gadget/tiles'
@@ -10,8 +10,9 @@ import {
   createwritetextcontext,
 } from 'zss/words/textformat'
 
-import { PanelEndPass } from './panelendpass'
+import { ScrollContext } from './common'
 import { PanelItem } from './panelitem'
+import { RowSelectHit } from './rowselecthit'
 
 type PanelProps = {
   inline?: boolean
@@ -29,6 +30,8 @@ type PanelProps = {
   text: PANEL_ITEM[]
   /** board = playfield charset/palette; ui = chrome. Default ui. */
   mediasource?: TILES_MEDIA_SOURCE
+  /** Row select owner; defaults to ScrollContext.setcursor. */
+  onselectrow?: (contentindex: number) => void
 }
 
 export function PanelComponent({
@@ -44,10 +47,25 @@ export function PanelComponent({
   bg,
   text,
   mediasource = 'ui',
+  onselectrow,
 }: PanelProps) {
-  const textref = useRef(text)
   const store = useTiles(width, height, 0, color, bg)
   const state = store.getState()
+  const scroll = useContext(ScrollContext)
+  const hitx = xmargin !== 0 ? 1 : 0
+  const hitwidth = Math.max(1, width - hitx)
+
+  const selectrow = useCallback(
+    (contentindex: number) => {
+      if (onselectrow) {
+        onselectrow(contentindex)
+        return
+      }
+      scroll.setcursor(contentindex)
+    },
+    [onselectrow, scroll],
+  )
+
   const context: WRITE_TEXT_CONTEXT = useMemo(
     () => ({
       ...createwritetextcontext(
@@ -61,19 +79,11 @@ export function PanelComponent({
         height - ymargin - 1,
       ),
       ...store.getState(),
-      padlineright: true,
-      panelcarry: true,
       x: xmargin,
       y: ymargin,
     }),
     [bg, color, height, store, width, xmargin, ymargin],
   )
-
-  if (textref.current !== text) {
-    context.panelcarrycolor = undefined
-    context.panelcarrybg = undefined
-    textref.current = text
-  }
 
   resettiles(state, 0, color, bg)
 
@@ -84,6 +94,7 @@ export function PanelComponent({
         width={width}
         height={height}
         mediasource={mediasource}
+        skipraycast
       />
       <WriteTextContext.Provider value={context}>
         {perfmeasure('panel:items', () =>
@@ -98,11 +109,31 @@ export function PanelComponent({
             />
           )),
         )}
-        <PanelEndPass
-          defaultcolor={color}
-          defaultbg={bg}
-          hastext={text.length > 0}
-        />
+        {!inline &&
+          text.map((_, index) => {
+            const drawy = (rowys?.[index] ?? index) + ymargin
+            // Without rowys each item is one row; do not stretch hits to panel bottom
+            // (that stacked full-panel planes and broke per-row select).
+            let rowheight = 1
+            if (rowys) {
+              const nextdrawy =
+                index + 1 < rowys.length
+                  ? rowys[index + 1] + ymargin
+                  : height - ymargin
+              rowheight = Math.max(1, nextdrawy - drawy)
+            }
+            const contentindex = striperowbase + index
+            return (
+              <RowSelectHit
+                key={`rowhit-${contentindex}`}
+                x={hitx}
+                y={drawy}
+                width={hitwidth}
+                height={rowheight}
+                onselect={() => selectrow(contentindex)}
+              />
+            )
+          })}
       </WriteTextContext.Provider>
     </TilesData>
   )

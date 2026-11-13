@@ -177,7 +177,8 @@ This document categorizes and summarizes all exported functions, types, constant
 - **`linkui/linktaparea.ts`**
   - `LINK_TAP_AREA` (type), `readlinktaparea(surface)` - row hit area for the row `linkbegin` positioned (call after writing the row)
 - **`linkui/linktap.tsx`**
-  - `LinkTapTarget({ surface, area, ontap? })` - hidden blocking `Rect` (z 1, pointer cursor); click/tap calls `surface.setcursor(striperow)` then `ontap`. Skipped when `allowhotkeys === false`.
+  - `LinkTapTarget({ surface, area, ontap? })` - activate-only blocking `Rect` (z 2) when `ontap` and row already active; row select is container `RowSelectHit`.
+  - `RowSelectHit({ x, y, width, height, onselect, z? })` - container-owned invisible row select hit target.
   - Tap actions: hyperlink / copyit / openit / viewit / runit / hotkey / zssedit run their invoke; number / charedit / coloredit enter editing; text starts editing (focuses the mobile textarea in the gesture); select / range / dir move the cursor only.
 
 ---

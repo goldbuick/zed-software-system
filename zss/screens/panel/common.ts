@@ -3,6 +3,8 @@ import { MAYBE, ispresent } from 'zss/mapping/types'
 import { WRITE_TEXT_CONTEXT } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 
+import { rowlabelcolor } from './activerow'
+
 export type PanelItemProps = {
   sidebar: boolean
   player: string
@@ -36,7 +38,7 @@ export const theme = {
 }
 
 export function inputcolor(active: boolean) {
-  return active ? theme.input.active : theme.input.color
+  return rowlabelcolor(active)
 }
 
 export function strsplice(

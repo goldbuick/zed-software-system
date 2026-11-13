@@ -11,6 +11,7 @@ import type { LinkSurface } from 'zss/screens/linkui/types'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { scrolltextlineclosesonenter } from 'zss/screens/scroll/scrollpick'
 
+import { applyactiverowpen } from './activerow'
 import { ScrollContext, setuppanelitem } from './common'
 import { PanelContent } from './content'
 
@@ -35,6 +36,7 @@ export function PanelItem({
   const overlayownsinput = useGadgetInputBlocked()
 
   setuppanelitem(sidebar, row, context)
+  applyactiverowpen(context, active)
 
   if (typeof item === 'string') {
     return (
@@ -78,11 +80,11 @@ export function PanelItem({
     row: drawrow,
     striperow: striperow ?? drawrow,
     sidebar,
+    // Letter hotkeys stay off while terminal/editor owns input.
     allowhotkeys: !(sidebar && overlayownsinput),
     context,
     sendmessage: scroll.sendmessage,
     sendclose: scroll.sendclose,
-    setcursor: scroll.setcursor,
   }
 
   return <LinkRouter linktype={linktype} surface={surface} />

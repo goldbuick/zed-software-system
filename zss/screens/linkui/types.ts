@@ -17,14 +17,13 @@ export type LinkSurface = {
   striperow: number
   sidebar: boolean
   /**
-   * When false, widgets must not mount UserHotkey (sidebar while scroll/editor
+   * When false, widgets must not mount UserHotkey (sidebar while terminal/editor
    * overlay owns letter keys). Missing means true.
    */
   allowhotkeys?: boolean
   context: WRITE_TEXT_CONTEXT
   sendmessage: (chip: string, target: string, data: unknown[]) => void
   sendclose: () => void
-  setcursor?: (index: number) => void
 }
 
 export type LinkWidgetProps = {

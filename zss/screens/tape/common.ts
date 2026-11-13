@@ -2,6 +2,7 @@ import { IToken } from 'chevrotain'
 import { createContext } from 'react'
 import type { LANG_ERROR } from 'zss/feature/lang/lexer'
 import type { CodeNode } from 'zss/feature/lang/visitor'
+import { applyactiverowpen } from 'zss/screens/panel/activerow'
 import { BG_ACTIVE, FG_SELECTED } from 'zss/screens/tape/colors'
 import { WRITE_TEXT_CONTEXT, textformatreadedges } from 'zss/words/textformat'
 
@@ -49,7 +50,7 @@ export function setuplogitem(
   const edge = textformatreadedges(context)
   // reset context
   context.iseven = context.y % 2 === 0
-  context.active.bg = active ? BG_ACTIVE : context.reset.bg
+  applyactiverowpen(context, active)
   context.active.leftedge = edge.left
   context.active.rightedge = edge.right
   context.active.topedge = edge.top

@@ -93,9 +93,8 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
   }, [address, state])
 
   const invokeediting = useCallback(() => {
-    surface.setcursor?.(surface.striperow)
     enterediting()
-  }, [surface, enterediting])
+  }, [enterediting])
 
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
@@ -227,7 +226,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
         ontap={enterediting}
       />
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
-      {allowhotkeys ? (
+      {allowhotkeys && surface.active ? (
         <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
       ) : null}
     </>

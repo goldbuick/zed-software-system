@@ -19,6 +19,7 @@ export function linkbegin(surface: LinkSurface): void {
  * Do not follow with a hardcoded `$ondkblue` — that splits icon vs label bg.
  */
 export function linkpanelstripe(surface: LinkSurface): string {
+  // Selection is yellow label via inputcolor — not an active stripe fill.
   return surface.context.iseven ? '$dkgreen$onblack' : '$green$ondkgrey'
 }
 
