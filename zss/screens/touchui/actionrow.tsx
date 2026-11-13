@@ -2,49 +2,11 @@ import { registerterminalopen, registerterminalquickopen } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import { INPUT } from 'zss/gadget/data/types'
-import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import {
-  getmobiletextelement,
-  mobiletextfocus,
-  softkblog,
-} from 'zss/gadget/mobiletext'
 import { inputdown, inputup, triggerhotkey } from 'zss/gadget/userinput'
-import { clamp } from 'zss/mapping/number'
 
 import { ToggleKey } from './togglekey'
-
-/** Seed + focus Tier A field inside the ActionRow pointerdown gesture (iOS KB). */
-function focuscliinput() {
-  const usemobiletextcapture =
-    useDeviceData.getState().usemobiletextcapture
-  softkblog('H7', 'actionrow:focuscli', {
-    usemobiletextcapture,
-    hasEl: !!getmobiletextelement(),
-  })
-  if (!usemobiletextcapture) {
-    return
-  }
-  const el = getmobiletextelement()
-  if (!el) {
-    softkblog('H2', 'actionrow:no-el')
-    return
-  }
-  const term = useTerminal.getState()
-  const line = term.buffer[term.bufferindex] ?? ''
-  if (el.value !== line) {
-    el.value = line
-  }
-  const pos = clamp(term.xcursor, 0, line.length)
-  if (el.selectionStart !== pos || el.selectionEnd !== pos) {
-    el.setSelectionRange(pos, pos)
-  }
-  if (document.activeElement !== el) {
-    mobiletextfocus()
-  } else {
-    softkblog('H7', 'actionrow:already-focused')
-  }
-}
 
 type ActionRowProps = {
   /** Left char column of first key. */
@@ -210,19 +172,13 @@ export function ActionRow({ x, y, pitch = 6 }: ActionRowProps) {
         x={x + pitch * 2}
         y={y}
         letters="?"
-        onToggle={() => {
-          registerterminalopen(SOFTWARE, player)
-          focuscliinput()
-        }}
+        onToggle={() => registerterminalopen(SOFTWARE, player)}
       />
       <ToggleKey
         x={x + pitch * 3}
         y={y}
         letters="c"
-        onToggle={() => {
-          registerterminalquickopen(SOFTWARE, player, '')
-          focuscliinput()
-        }}
+        onToggle={() => registerterminalquickopen(SOFTWARE, player, '')}
       />
       <ToggleKey
         x={x + pitch * 4}

@@ -67,11 +67,11 @@ export function getmobiletextelement(): Mobiletextfield | null {
 }
 
 export function mobiletextfocus() {
-  // mobiletextelement?.focus({ preventScroll: true })
+  mobiletextelement?.focus({ preventScroll: true })
 }
 
 export function mobiletextblur() {
-  // mobiletextelement?.blur()
+  mobiletextelement?.blur()
 }
 
 /**

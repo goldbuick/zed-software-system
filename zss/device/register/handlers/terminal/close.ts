@@ -14,7 +14,6 @@ export function handleterminalclose(device: DEVICE, message: MESSAGE): void {
       open: false,
     },
   }))
-  // Drop Tier A focus after open=false so blur hold-guard does not re-focus.
   mobiletextblur()
   synctapeactivelayout()
 }

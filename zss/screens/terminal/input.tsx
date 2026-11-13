@@ -28,7 +28,6 @@ import {
   getmobiletextelement,
   mobiletextfocus,
   onmobiletextinput,
-  softkblog,
 } from 'zss/gadget/mobiletext'
 import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
@@ -127,14 +126,6 @@ export function TerminalInput({
     (state) => state.usemobiletextcapture,
   )
   const edge = textformatreadedges(context)
-
-  useEffect(() => {
-    softkblog('H3', 'terminal-input:mounted', {
-      usemobiletextcapture,
-      hasEl: !!getmobiletextelement(),
-      terminalmode,
-    })
-  }, [usemobiletextcapture, terminalmode])
 
   // input & selection
   const inputstate = tapeterminal.buffer[tapeterminal.bufferindex]
@@ -274,30 +265,30 @@ export function TerminalInput({
     })
   }, [usemobiletextcapture, inputstatereplace])
 
-  useEffect(() => {
-    if (!usemobiletextcapture) {
-      return
-    }
-    const el = getmobiletextelement()
-    if (!el || document.activeElement !== el) {
-      return
-    }
-    const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-    // Assigning value on a focused field dismisses the iOS keyboard.
-    if (el.value !== line) {
-      el.value = line
-    }
-    const pos = clamp(tapeterminal.xcursor, 0, line.length)
-    if (el.selectionStart !== pos || el.selectionEnd !== pos) {
-      el.setSelectionRange(pos, pos)
-    }
-  }, [
-    usemobiletextcapture,
-    inputstate,
-    tapeterminal.buffer,
-    tapeterminal.bufferindex,
-    tapeterminal.xcursor,
-  ])
+  // useEffect(() => {
+  //   if (!usemobiletextcapture) {
+  //     return
+  //   }
+  //   const el = getmobiletextelement()
+  //   if (!el || document.activeElement !== el) {
+  //     return
+  //   }
+  //   const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
+  //   // Assigning value on a focused field dismisses the iOS keyboard.
+  //   if (el.value !== line) {
+  //     el.value = line
+  //   }
+  //   const pos = clamp(tapeterminal.xcursor, 0, line.length)
+  //   if (el.selectionStart !== pos || el.selectionEnd !== pos) {
+  //     el.setSelectionRange(pos, pos)
+  //   }
+  // }, [
+  //   usemobiletextcapture,
+  //   inputstate,
+  //   tapeterminal.buffer,
+  //   tapeterminal.bufferindex,
+  //   tapeterminal.xcursor,
+  // ])
 
   // navigate input history
   function inputstateswitch(switchto: number) {
@@ -576,40 +567,26 @@ export function TerminalInput({
         width={edge.width}
         height={edge.height}
         onPointerDown={() => {
-          // iOS soft keyboard only opens for focus() inside the touch gesture;
-          // R3F onClick is too late / after possible layout thrash.
-          softkblog('H4', 'terminal:pointerdown', {
-            usemobiletextcapture,
-            hasEl: !!getmobiletextelement(),
-          })
-          if (usemobiletextcapture) {
-            const el = getmobiletextelement()
-            if (el) {
-              const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-              // Seed before focus — assigning value on a focused field dismisses
-              // the iOS keyboard (same order as editor writemobileeditorfield).
-              const seeded = el.value !== line
-              if (seeded) {
-                el.value = line
-              }
-              const pos = clamp(tapeterminal.xcursor, 0, line.length)
-              el.setSelectionRange(pos, pos)
-              const needfocus = document.activeElement !== el
-              softkblog('H4', 'terminal:seed', {
-                seeded,
-                needfocus,
-                lineLen: line.length,
-              })
-              if (needfocus) {
-                mobiletextfocus()
-              }
-            } else {
-              softkblog('H2', 'terminal:pointerdown-no-el')
-            }
-          } else {
-            softkblog('H1', 'terminal:capture-off')
-            mobiletextfocus()
-          }
+          // iOS soft keyboard only opens for focus() inside the touch gesture.
+          // if (usemobiletextcapture) {
+          //   const el = getmobiletextelement()
+          //   if (el) {
+          //     const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
+          //     // Seed before focus — assigning value on a focused field dismisses
+          //     // the iOS keyboard (same order as editor writemobileeditorfield).
+          //     if (el.value !== line) {
+          //       el.value = line
+          //     }
+          //     const pos = clamp(tapeterminal.xcursor, 0, line.length)
+          //     el.setSelectionRange(pos, pos)
+          //     if (document.activeElement !== el) {
+          //       mobiletextfocus()
+          //     }
+          //   }
+          // } else {
+          //   mobiletextfocus()
+          // }
+          mobiletextfocus()
         }}
         onScroll={(deltay: number) => {
           trackselection(false)
