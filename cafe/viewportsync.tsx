@@ -36,20 +36,20 @@ export function ViewportSync() {
     const syncnow = () => applyviewport(store)
     const syncdebounced = debounce(syncnow, 256)
 
-    // window.addEventListener('resize', syncdebounced)
-    // if (window.visualViewport) {
-    //   window.visualViewport.addEventListener('resize', syncnow)
-    //   window.visualViewport.addEventListener('scroll', syncnow)
-    // }
-
     syncdebounced()
+    window.addEventListener('resize', syncdebounced)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncnow)
+      window.visualViewport.addEventListener('scroll', syncnow)
+    }
+
     return () => {
       syncdebounced.clear()
-      // window.removeEventListener('resize', syncdebounced)
-      // if (window.visualViewport) {
-      //   window.visualViewport.removeEventListener('resize', syncnow)
-      //   window.visualViewport.removeEventListener('scroll', syncnow)
-      // }
+      window.removeEventListener('resize', syncdebounced)
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', syncnow)
+        window.visualViewport.removeEventListener('scroll', syncnow)
+      }
     }
   }, [store])
 
