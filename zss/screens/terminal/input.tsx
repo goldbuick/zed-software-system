@@ -24,11 +24,7 @@ import {
   useTerminal,
 } from 'zss/gadget/data/zustandstores'
 import { useDeviceData } from 'zss/gadget/device'
-import {
-  getmobiletextelement,
-  mobiletextfocus,
-  onmobiletextinput,
-} from 'zss/gadget/mobiletext'
+import { mobiletextfocus, onmobiletextinput } from 'zss/gadget/mobiletext'
 import { Rect } from 'zss/gadget/rect'
 import { Scrollable } from 'zss/gadget/scrollable'
 import { modsfromevent } from 'zss/gadget/userinput'
@@ -264,31 +260,6 @@ export function TerminalInput({
       })
     })
   }, [usemobiletextcapture, inputstatereplace])
-
-  // useEffect(() => {
-  //   if (!usemobiletextcapture) {
-  //     return
-  //   }
-  //   const el = getmobiletextelement()
-  //   if (!el || document.activeElement !== el) {
-  //     return
-  //   }
-  //   const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-  //   // Assigning value on a focused field dismisses the iOS keyboard.
-  //   if (el.value !== line) {
-  //     el.value = line
-  //   }
-  //   const pos = clamp(tapeterminal.xcursor, 0, line.length)
-  //   if (el.selectionStart !== pos || el.selectionEnd !== pos) {
-  //     el.setSelectionRange(pos, pos)
-  //   }
-  // }, [
-  //   usemobiletextcapture,
-  //   inputstate,
-  //   tapeterminal.buffer,
-  //   tapeterminal.bufferindex,
-  //   tapeterminal.xcursor,
-  // ])
 
   // navigate input history
   function inputstateswitch(switchto: number) {
@@ -566,26 +537,7 @@ export function TerminalInput({
         y={edge.top}
         width={edge.width}
         height={edge.height}
-        onPointerDown={() => {
-          // iOS soft keyboard only opens for focus() inside the touch gesture.
-          // if (usemobiletextcapture) {
-          //   const el = getmobiletextelement()
-          //   if (el) {
-          //     const line = tapeterminal.buffer[tapeterminal.bufferindex] ?? ''
-          //     // Seed before focus — assigning value on a focused field dismisses
-          //     // the iOS keyboard (same order as editor writemobileeditorfield).
-          //     if (el.value !== line) {
-          //       el.value = line
-          //     }
-          //     const pos = clamp(tapeterminal.xcursor, 0, line.length)
-          //     el.setSelectionRange(pos, pos)
-          //     if (document.activeElement !== el) {
-          //       mobiletextfocus()
-          //     }
-          //   }
-          // } else {
-          //   mobiletextfocus()
-          // }
+        onClick={() => {
           mobiletextfocus()
         }}
         onScroll={(deltay: number) => {

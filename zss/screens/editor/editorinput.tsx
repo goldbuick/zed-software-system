@@ -361,16 +361,8 @@ export function EditorInput({
         z={2}
         width={edge.width}
         height={edge.height}
-        onPointerDown={() => {
-          // Focus first in the gesture so iOS raises the soft keyboard.
-          if (usemobiletextcapture) {
-            const el = getmobiletextelement()
-            if (el && document.activeElement !== el) {
-              mobiletextfocus()
-            }
-          }
-        }}
         onClick={(event) => {
+          mobiletextfocus()
           if (ispresent(codepage)) {
             const hit = editorclickcell(
               event,
