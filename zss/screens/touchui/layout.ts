@@ -1,3 +1,5 @@
+import { clamp } from 'zss/mapping/number'
+
 /** Bottom control band height in portrait (chars). */
 export const PORTRAIT_TOUCH_DOCK_ROWS = 14
 
@@ -45,15 +47,9 @@ export function readtouchscreenlayout(args: {
       showactionrow: false,
     }
   }
-  // Keep dockrows fixed while the soft keyboard is open. Growing the dock to
-  // match keyboardrows remounts TouchUI (userscreen key) and shrinks the game
-  // frame; Safari then blurs the Tier A textarea ~100ms after vvH drops
-  // (softkb: focus ok -> saferows shrink -> capture:dom-blur, no gl-resize).
-  // ActionRow hides; sticks stay under the keyboard (unused while typing).
-  // Sidebar width is owned by screenui (right column), not this band.
   const keyboardrows = Math.max(0, totalrows - saferows)
   const maxdock = Math.max(0, totalrows - MIN_TOUCH_CONTENT_ROWS)
-  const dockrows = Math.min(maxdock, PORTRAIT_TOUCH_DOCK_ROWS)
+  const dockrows = clamp(keyboardrows, PORTRAIT_TOUCH_DOCK_ROWS, maxdock)
   const rows = totalrows - dockrows
   return {
     rows,
