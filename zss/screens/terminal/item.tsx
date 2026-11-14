@@ -1,19 +1,18 @@
 import { useContext } from 'react'
 import { parsezedlinkline } from 'zss/feature/zedlinkparse'
-import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
+import { useTape } from 'zss/gadget/data/zustandstores'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { ispresent } from 'zss/mapping/types'
 import { resolvelinktypeandwords } from 'zss/screens/linkui/linktypes'
 import { LinkRouter } from 'zss/screens/linkui/router'
 import type { LinkSurface } from 'zss/screens/linkui/types'
-import { BG_ACTIVE, bgcolorformode } from 'zss/screens/tape/colors'
+import { bgcolorformode } from 'zss/screens/tape/colors'
 import {
   TapeTerminalContext,
   TapeTerminalItemProps,
   setuplogitem,
 } from 'zss/screens/tape/common'
-import { terminalycursorforrowy } from 'zss/screens/terminal/logrowhitcoords'
 import {
   hascenter,
   textformatreadedges,
@@ -28,8 +27,8 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
   const edge = textformatreadedges(context)
   const ishyperlink = text.startsWith('!')
 
+  context.reset.bg = bgcolorformode(terminalmode)
   setuplogitem(!!active, 0, y, context)
-  context.reset.bg = active ? BG_ACTIVE : bgcolorformode(terminalmode)
   context.active.bottomedge = edge.bottom
 
   const centertext = hascenter(text)
@@ -75,12 +74,6 @@ export function TerminalItem({ active, text, y }: TapeTerminalItemProps) {
     context,
     sendmessage: cc.sendmessage,
     sendclose: () => {},
-    setcursor: () => {
-      const { scroll } = useTerminal.getState()
-      useTerminal.setState({
-        ycursor: terminalycursorforrowy(edge.bottom, scroll, y),
-      })
-    },
   }
 
   return <LinkRouter linktype={linktype} surface={surface} />

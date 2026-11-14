@@ -3,16 +3,26 @@ import { Color } from 'three'
 import { RUNTIME } from 'zss/config'
 import { useDeviceData } from 'zss/gadget/device'
 import { Rect } from 'zss/gadget/rect'
+import { useTiles } from 'zss/gadget/tiles'
+import { TilesData, TilesRender } from 'zss/gadget/usetiles'
+import { WriteTextContext } from 'zss/gadget/writetext'
 import { ScrollContext } from 'zss/screens/panel/common'
 import { PanelComponent } from 'zss/screens/panel/component'
 import { ScreenUIFramed } from 'zss/screens/screenui/framed'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
+import { SidebarBackPlate } from 'zss/screens/screenui/sidebarbackplate'
+import { SidebarCursor } from 'zss/screens/screenui/sidebarcursor'
 import {
   SIDEBAR_SLIDE_CLOSE_VELOCITY,
   SIDEBAR_SLIDE_MAX_SPEED,
   SIDEBAR_SLIDE_OPEN_VELOCITY,
 } from 'zss/screens/scroll/anim'
 import { PanelSlide } from 'zss/screens/scroll/panelslide'
+import {
+  WRITE_TEXT_CONTEXT,
+  createwritetextcontext,
+} from 'zss/words/textformat'
+import { COLOR } from 'zss/words/types'
 
 import { RECT, RECT_TYPE, useScreenUILayoutContext } from './layoutstate'
 
@@ -39,17 +49,56 @@ function SidebarPanel({ rect, slide }: { rect: RECT; slide: boolean }) {
     [parent.didclose, parent.sendclose, parent.sendmessage, setcursor],
   )
 
-  const panel = (
-    <PanelComponent
-      width={rect.width}
-      height={rect.height}
-      color={14}
-      bg={1}
-      text={rect.text}
-      ymargin={0}
-      selected={selected}
-      mediasource="board"
-    />
+  const tilesstore = useTiles(
+    rect.width,
+    rect.height,
+    0,
+    COLOR.WHITE,
+    COLOR.DKBLUE,
+  )
+  const context: WRITE_TEXT_CONTEXT = useMemo(
+    () => ({
+      ...createwritetextcontext(
+        rect.width,
+        rect.height,
+        COLOR.WHITE,
+        COLOR.DKBLUE,
+        0,
+        0,
+        rect.width - 1,
+        rect.height - 1,
+      ),
+      ...tilesstore.getState(),
+    }),
+    [rect.height, rect.width, tilesstore],
+  )
+
+  const chrome = (
+    <TilesData store={tilesstore}>
+      <TilesRender
+        label="sidebar"
+        width={rect.width}
+        height={rect.height}
+        mediasource="board"
+        skipraycast
+      />
+      <WriteTextContext.Provider value={context}>
+        <SidebarBackPlate width={rect.width} height={rect.height} />
+        {selected >= 0 ? <SidebarCursor row={selected} /> : null}
+        <PanelComponent
+          width={rect.width}
+          height={rect.height}
+          color={COLOR.WHITE}
+          bg={COLOR.ONCLEAR}
+          text={rect.text}
+          xmargin={1}
+          ymargin={0}
+          selected={selected}
+          mediasource="board"
+          onselectrow={setcursor}
+        />
+      </WriteTextContext.Provider>
+    </TilesData>
   )
 
   function finishclose() {
@@ -72,7 +121,7 @@ function SidebarPanel({ rect, slide }: { rect: RECT; slide: boolean }) {
             maxspeed={SIDEBAR_SLIDE_MAX_SPEED}
             onclosed={finishclose}
           >
-            {panel}
+            {chrome}
           </PanelSlide>
         </group>
       </ScrollContext.Provider>
@@ -81,7 +130,7 @@ function SidebarPanel({ rect, slide }: { rect: RECT; slide: boolean }) {
 
   return (
     <ScrollContext.Provider value={scroll}>
-      <group position-z={512}>{panel}</group>
+      <group position-z={512}>{chrome}</group>
     </ScrollContext.Provider>
   )
 }

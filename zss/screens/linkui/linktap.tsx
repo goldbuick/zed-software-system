@@ -11,30 +11,32 @@ type LinkTapTargetProps = {
   ontap?: () => void
 }
 
-/** Hidden row hit target: tap moves the cursor. `ontap` runs only when that row is already active. */
+/**
+ * Activate-only hit target when the row is already selected by the container.
+ * Row select lives on Terminal / Scroll / Sidebar via RowSelectHit.
+ */
 export function LinkTapTarget({ surface, area, ontap }: LinkTapTargetProps) {
-  const handletap = useCallback(() => {
-    surface.setcursor?.(surface.striperow)
-    if (surface.active) {
-      ontap?.()
-    }
-  }, [surface, ontap])
+  const handleactivate = useCallback(() => {
+    ontap?.()
+  }, [ontap])
 
-  if (!linkallowhotkeys(surface)) {
+  const allowtaps = surface.layout === 'panel' || linkallowhotkeys(surface)
+  if (!allowtaps || !ontap || !surface.active) {
     return null
   }
 
   return (
     <Rect
-      visible={false}
+      visible
+      opacity={0}
       blocking
       cursor="pointer"
       x={area.x}
       y={area.y}
-      z={1}
+      z={2}
       width={area.width}
       height={area.height}
-      onPointerDown={handletap}
+      onPointerDown={handleactivate}
     />
   )
 }

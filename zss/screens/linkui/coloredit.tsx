@@ -107,9 +107,8 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   }, [address, state])
 
   const invokeediting = useCallback(() => {
-    surface.setcursor?.(surface.striperow)
     enterediting()
-  }, [surface, enterediting])
+  }, [enterediting])
 
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
@@ -258,7 +257,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
         ontap={enterediting}
       />
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
-      {allowhotkeys ? (
+      {allowhotkeys && surface.active ? (
         <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
       ) : null}
     </>

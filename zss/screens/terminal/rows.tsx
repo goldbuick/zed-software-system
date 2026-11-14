@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useEqual } from 'zss/gadget/data/useequal'
 import { useTape, useTerminal } from 'zss/gadget/data/zustandstores'
 import { useScreenSize } from 'zss/gadget/userscreen'
 import { useWriteText } from 'zss/gadget/writetext'
 import { clamp } from 'zss/mapping/number'
 import { useLinkEditingKey } from 'zss/screens/linkui/linkediting'
+import { RowSelectHit } from 'zss/screens/panel/rowselecthit'
+import { terminalycursorforrowy } from 'zss/screens/terminal/logrowhitcoords'
 import {
   readpinrowycoords,
   readsesslogrowycoords,
@@ -59,6 +61,16 @@ export function TerminalRows() {
     [layout.sessionheights, layout.sessionstackbottom],
   )
 
+  const selectrowy = useCallback(
+    (rowy: number) => {
+      const { scroll: currentscroll } = useTerminal.getState()
+      useTerminal.setState({
+        ycursor: terminalycursorforrowy(edge.bottom, currentscroll, rowy),
+      })
+    },
+    [edge.bottom],
+  )
+
   // control panning
   useEffect(() => {
     const pan = useTerminal.getState().pan
@@ -83,6 +95,8 @@ export function TerminalRows() {
     layout.pinareaheight > 0
       ? drawpinstarty + layout.pinareaheight
       : layout.logzonetop
+  const hitwidth = Math.max(1, context.width)
+  const hitx = edge.left
 
   const visiblepins = layout.visiblepinlines
     .map((text, index) => {
@@ -97,8 +111,9 @@ export function TerminalRows() {
         mergedindex,
         text,
         y,
+        yheight,
         tapeycursor >= y && tapeycursor < ybottom,
-      ] as [number, string, number, boolean]
+      ] as [number, string, number, number, boolean]
     })
     .filter((item) => item !== null)
 
@@ -118,39 +133,48 @@ export function TerminalRows() {
         index,
         text,
         y,
+        yheight,
         tapeycursor >= y &&
           tapeycursor < ybottom &&
           tapeycursor >= pinbandbottom,
-      ] as [number, string, number, boolean]
+      ] as [number, string, number, number, boolean]
     })
     .filter((item) => item !== null)
 
   return (
     <>
-      {visiblesessionlogs.map(([index, text, y, active]) =>
-        active ? (
-          <TapeTerminalActiveItem
-            key={`log-${index}`}
-            active
-            text={text}
+      {visiblesessionlogs.map(([index, text, y, yheight, active]) => (
+        <group key={`log-${index}`}>
+          {active ? (
+            <TapeTerminalActiveItem active text={text} y={y} />
+          ) : (
+            <TerminalItem text={text} y={y} />
+          )}
+          <RowSelectHit
+            x={hitx}
             y={y}
+            width={hitwidth}
+            height={Math.max(1, yheight)}
+            onselect={() => selectrowy(y)}
           />
-        ) : (
-          <TerminalItem key={`log-${index}`} text={text} y={y} />
-        ),
-      )}
-      {visiblepins.map(([index, text, y, active]) =>
-        active ? (
-          <TapeTerminalActiveItem
-            key={`pin-${index}`}
-            active
-            text={text}
+        </group>
+      ))}
+      {visiblepins.map(([index, text, y, yheight, active]) => (
+        <group key={`pin-${index}`}>
+          {active ? (
+            <TapeTerminalActiveItem active text={text} y={y} />
+          ) : (
+            <TerminalItem text={text} y={y} />
+          )}
+          <RowSelectHit
+            x={hitx}
             y={y}
+            width={hitwidth}
+            height={Math.max(1, yheight)}
+            onselect={() => selectrowy(y)}
           />
-        ) : (
-          <TerminalItem key={`pin-${index}`} text={text} y={y} />
-        ),
-      )}
+        </group>
+      ))}
     </>
   )
 }

@@ -241,7 +241,7 @@ export function TapeComponent() {
         focused={terminalfocused}
         marginx={screensize.marginx}
         marginy={screensize.marginy}
-        z={0}
+        z={2}
       />
       <TapeSlidePanel
         slide={editorslide}
@@ -249,7 +249,7 @@ export function TapeComponent() {
         focused={editorfocused}
         marginx={screensize.marginx}
         marginy={screensize.marginy}
-        z={1}
+        z={3}
         onclosed={() => {
           if (useTape.getState().editor.closing) {
             finisheditorclose(SOFTWARE, player)

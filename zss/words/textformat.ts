@@ -258,7 +258,7 @@ export type WRITE_TEXT_CONTEXT = {
   writefullwidth: MAYBE<number>
   /**
    * Panel: pad each line to tile `width - 1` with the active pen; `writefullwidth` uses the same edge.
-   * Gutter sync runs only from `runpanelpostpass` when `PANEL_END_PASS_ENABLED` (`guttersync.ts`).
+   * Gutter sync / panel end-pass was removed; `padlineright` only pads within a write.
    */
   padlineright: boolean
   /** When true, `tokenizeandwritetextformat` restores/saves `panelcarrycolor` / `panelcarrybg` across rows. */

@@ -8,8 +8,6 @@ import { maptovalue } from 'zss/mapping/value'
 import { inputcolor, strsplice } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
-import { LinkTapTarget } from './linktap'
-import { readlinktaparea } from './linktaparea'
 import {
   linkbegin,
   linkmodemaddress,
@@ -95,10 +93,5 @@ export function LinkRange({ surface }: LinkWidgetProps) {
     [min, state, address],
   )
 
-  return (
-    <>
-      <LinkTapTarget surface={surface} area={readlinktaparea(surface)} />
-      {surface.active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}
-    </>
-  )
+  return <>{surface.active && <UserInput MOVE_LEFT={down} MOVE_RIGHT={up} />}</>
 }

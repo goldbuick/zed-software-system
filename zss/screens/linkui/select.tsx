@@ -8,8 +8,6 @@ import { inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { WORD } from 'zss/words/types'
 
-import { LinkTapTarget } from './linktap'
-import { readlinktaparea } from './linktaparea'
 import {
   linkbegin,
   linkmodemaddress,
@@ -96,10 +94,5 @@ export function LinkSelect({ surface }: LinkWidgetProps) {
     }
   }, [stateindex, address, values])
 
-  return (
-    <>
-      <LinkTapTarget surface={surface} area={readlinktaparea(surface)} />
-      {surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}
-    </>
-  )
+  return <>{surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
 }
