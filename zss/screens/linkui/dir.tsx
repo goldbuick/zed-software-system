@@ -84,7 +84,5 @@ export function LinkDir({ surface }: LinkWidgetProps) {
     modemwritevaluestring(address, DIR_CHOICES[next])
   }, [stateindex, address])
 
-  return (
-    <>{surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
-  )
+  return <>{surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
 }

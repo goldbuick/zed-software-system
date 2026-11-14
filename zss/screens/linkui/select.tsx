@@ -94,7 +94,5 @@ export function LinkSelect({ surface }: LinkWidgetProps) {
     }
   }, [stateindex, address, values])
 
-  return (
-    <>{surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
-  )
+  return <>{surface.active && <UserInput MOVE_LEFT={up} MOVE_RIGHT={down} />}</>
 }

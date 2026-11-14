@@ -46,9 +46,7 @@ export function LinkHotkey({ surface }: LinkWidgetProps) {
   const text = maybetext || ` ${(shortcut ?? '').toUpperCase()} `
   const tcolor = inputcolor(!!surface.active)
 
-  const badgebg = surface.context.iseven
-    ? '$black$onltgray'
-    : '$black$ondkcyan'
+  const badgebg = surface.context.iseven ? '$black$onltgray' : '$black$ondkcyan'
   const content = `${badgebg}${text}${tcolor}$onclear ${surface.label}${surface.layout === 'panel' && ispresent(surface.row) ? `\n` : ''}`
 
   tokenizeandwritetextformat(content, surface.context, true)

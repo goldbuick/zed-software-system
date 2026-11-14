@@ -20,8 +20,7 @@ export function LinkTapTarget({ surface, area, ontap }: LinkTapTargetProps) {
     ontap?.()
   }, [ontap])
 
-  const allowtaps =
-    surface.layout === 'panel' || linkallowhotkeys(surface)
+  const allowtaps = surface.layout === 'panel' || linkallowhotkeys(surface)
   if (!allowtaps || !ontap || !surface.active) {
     return null
   }
