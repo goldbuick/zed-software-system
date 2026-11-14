@@ -12,6 +12,7 @@ import { ScreenUIFramed } from 'zss/screens/screenui/framed'
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { SidebarBackPlate } from 'zss/screens/screenui/sidebarbackplate'
 import { SidebarCursor } from 'zss/screens/screenui/sidebarcursor'
+import { ScreenUITickerText } from 'zss/screens/screenui/tickertext'
 import {
   SIDEBAR_SLIDE_CLOSE_VELOCITY,
   SIDEBAR_SLIDE_MAX_SPEED,
@@ -216,6 +217,13 @@ export function ScreenUILayout() {
             z={511}
           />
         )}
+        {/* Full screensize so strip can paint over the sidebar column (z above sidebar 512). */}
+        <group position-z={520}>
+          <ScreenUITickerText
+            width={screensize.cols}
+            height={screensize.rows}
+          />
+        </group>
       </group>
     </>
   )
