@@ -37,8 +37,6 @@ import {
 import { useGadgetInputBlocked } from 'zss/screens/screenui/gadgetinputblocked'
 import { NAME } from 'zss/words/types'
 
-import { ScreenUITickerText } from './tickertext'
-
 function sendinput(player: string, input: INPUT, mods: UserInputMods) {
   let bits = 0
   if (mods.alt) {
@@ -212,12 +210,6 @@ export function ScreenUIFramed({ width, height }: ScreenUIFramedProps) {
       {graphics === 'mode7' && <Mode7Graphics width={width} height={height} />}
       {graphics === 'iso' && <IsoGraphics width={width} height={height} />}
       {graphics === 'fpv' && <FPVGraphics width={width} height={height} />}
-      <group position-z={520}>
-        <ScreenUITickerText
-          width={Math.floor(width)}
-          height={Math.floor(height)}
-        />
-      </group>
     </>
   )
 }
