@@ -4,5 +4,5 @@ export default defineMeta({
   title: 'Play',
   icon: 'music',
   display: 'flat',
-  pages: ['voices', 'effects', 'scales', 'playnotation'],
+  pages: ['voices', 'effects', 'playnotation', 'scales'],
 } as FolderMetaDefinition)

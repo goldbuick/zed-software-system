@@ -1,10 +1,22 @@
 ---
 title: Notation
+description: How to write #play lines — durations, notes, drums, and a few example bars.
 ---
 
-Parses text-based notation and converts it to scheduled note events.
+`#play` and `#bgplay` take a short string of durations, notes, and drum hits.
 
-## Character Map
+## The digit trap
+
+Digits `0`–`9` (and `p` / `k` / `r`) are **drum triggers**, not tempo or octave numbers.
+
+| Wrong idea | What actually plays |
+|------------|---------------------|
+| `#play 50 c` as “C at 50” | Hi woodblock + hat + note C |
+| Pitch literal `C4` in a play string | Digit `4` is hi snare — do not embed Tone-style pitches |
+
+Prefer duration + note letters: `#play qc`, `hc`, `qceg`.
+
+## Character map
 
 | Character | Operation |
 |-----------|------------|
@@ -36,50 +48,55 @@ Parses text-based notation and converts it to scheduled note events.
 | k | Crash cymbal |
 | r | Ride cymbal |
 
-## Parse Format
+## Write a bar
 
-- Multiple voices separated by `;`
-- Example: `"#play qcdef;wx"` — voice 0 quarter notes C4–F4, voice 1 whole rest + drum pattern
-- Voices 5-8 bleed onto `#bgplay` channels 4-7 (the fifth semicolon part is always channel 4). Those slots keep the bgplay patch, volume, FX, and humanize. A ninth voice is dropped.
-- **Do not** embed Tone pitch literals (`C4`) in play strings; digit `4` is hi snare. Use `qcde` (duration `q`, notes `cde` at default octave 4).
+Duration sticks until you change it. Notes after a duration use that length.
 
-## invokeplay()
-
-```typescript
-invokeplay(synthIndex, startTime, play, withendofpattern?)
+```text
+#synth square
+#play qcde
 ```
 
-- `play`: `SYNTH_OP[]` or raw note string (e.g. `"C4"`)
-- `withendofpattern`: If true, appends `-1` marker to signal pattern end (default true)
-- Returns: `SYNTH_NOTE_ENTRY[]` — `[time, [chan, duration, note]]` pairs
+Quarter notes C–D–E at the default octave.
 
-## Duration Logic
+```text
+#play hc x qc
+```
 
-Base unit is `64n`. Duration values map to multiples:
-- TIME_64: 1
-- TIME_32: 2
-- TIME_16: 4
-- TIME_8: 8
-- TIME_4: 16
-- TIME_2: 32
-- TIME_1: 64
+Half-note C, rest, quarter C.
 
-Triplet divides current duration by 3; dotted multiplies by 1.5.
+```text
+#play qceg;ixix
+```
 
-## Types
+Voice 0: quarter C–E–G. Voice 1 (after `;`): eighth rests and notes. More voices: more `;` parts. Voices past the fourth `#play` slot bleed onto `#bgplay` (see below).
 
-- `SYNTH_NOTE`: `null` (rest) | `string` (pitch) | `number` (drum id or -1)
-- `SYNTH_NOTE_ON`: `[chan, duration, note]`
-- `SYNTH_NOTE_ENTRY`: `[time, SYNTH_NOTE_ON]`
-- `SYNTH_INVOKE`: `SYNTH_OP[] | string`
+```text
+#play q9 q4 qc
+```
 
-## Live onset humanize
+Bass drum, snare, then a pitched C — useful with [drums](/synth/drums).
 
-Live note and drum onsets are applied on the audio thread at the scheduled grid time (`playevents.ts`). A small random jitter is then added so grid music stays slightly organic (`playhumanize.ts`):
+## Multi-voice and bgplay
 
-| Surface | Channels | Peak |
-|---------|----------|------|
-| `#play` | 0–3 | ±4 ms (`HUMANIZE_SEC`) |
-| `#bgplay` | 4–7 | ±2 ms (`HUMANIZE_BGPLAY_SEC`) |
+- Separate voices with `;`
+- Fifth semicolon part lands on `#bgplay` channel 4 (keeps bgplay patch / volume / FX)
+- A ninth voice is dropped
 
-Rests / end-of-pattern markers are not jittered. Offline `#synthrecord` and parity OfflineAudioContext renders stay grid-locked (no jitter). Pitched notes also skip jitter when that voice’s `#synth port` / `portamento` is greater than zero so abutting glides stay grid-locked. Mono re-triggers on a channel ignore a superseded note’s scheduled gate-off so humanize cannot cut the next note.
+Full scale cheat sheets: [scales](/synth/scales). Voice and FX teaching: [voices](/synth/voices), [effects](/synth/effects).
+
+## Duration math (quick)
+
+Base unit is a 64th. Triplet divides by 3; dotted multiplies by 1.5.
+
+| Token | Relative length |
+|-------|-----------------|
+| y | 1 |
+| t | 2 |
+| s | 4 |
+| i | 8 |
+| q | 16 |
+| h | 32 |
+| w | 64 |
+
+Live `#play` / `#bgplay` add a tiny onset humanize (±4 ms / ±2 ms). Offline `#synthrecord` stays grid-locked. Portamento notes skip jitter so glides stay locked.

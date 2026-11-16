@@ -1,5 +1,6 @@
 ---
-title: "Recording & MP3 export"
+title: Recording
+description: Offline #synthrecord path and MP3 export.
 ---
 
 ## Active path — Daisy (`backend/daisy/daisyrecordhandler.ts` + `daisyofflinerender.ts`)
