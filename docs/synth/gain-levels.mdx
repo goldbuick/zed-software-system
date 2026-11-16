@@ -70,7 +70,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | Main limiter | DaisySP `Limiter` @ 1, then `kMainLimiterMakeup` (~**1.632** / +4.3 dB) | SoftLimit(0.7) ceiling → full scale; safety `clamp +/-1` after |
 | `kPlayBusGain` | **1.000** | Retired for live play (SAB dB law); calibrate may rewrite |
 | `kDrumBusGain` | **1.000** | Drum stem vs play (target drum−play **−11 ±2** dB; `ops:daisy:play-drum-balance:calibrate`) |
-| `kVoiceOutGain` | **1.0** | Post-FX voice output |
+| `kVoiceOutGain` | **0.5** (−6 dB) | Post-FX voice output (flat trim after type-level normalize) |
 | `kScMakeupDb` | **+5** | Sidechain makeup (Tone +24 buried kit; cafe ear) |
 | `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
 | `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Fast duck onset so hits punch play |
