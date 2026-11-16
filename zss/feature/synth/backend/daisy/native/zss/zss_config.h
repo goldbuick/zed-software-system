@@ -133,7 +133,8 @@ constexpr float kDootPitchDecaySec = 0.05f;
 constexpr float kDrumTickTrim = 1.f;
 constexpr float kDrumTweetTrim = 1.f;
 
-// Flat −6 dB after voice-level normalize (cafe ear; relative match stays in VOICE_LEVEL_VOLUME_DB).
+// Flat −6 dB after voice-level normalize (cafe ear; relative match stays in
+// VOICE_LEVEL_VOLUME_DB).
 constexpr float kVoiceOutGain = 0.5f;
 
 /*
