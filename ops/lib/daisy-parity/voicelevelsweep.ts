@@ -14,8 +14,11 @@ import { defaultwasmalgoconfig } from 'zss/feature/synth/backend/wasm/wasmalgoco
 import { defaultwasmfxsab } from 'zss/feature/synth/backend/wasm/wasmfxstate'
 import {
   WASM_DEFAULT_BGPLAY_VOLUME,
+  WASM_DEFAULT_MAIN_VOLUME,
   WASM_DEFAULT_PLAY_VOLUME,
   WASM_DEFAULT_TTS_VOLUME,
+  effectivemainvolume,
+  pushwasmmainsab,
 } from 'zss/feature/synth/backend/wasm/wasmmainsab'
 import { defaultwasmoscconfig } from 'zss/feature/synth/backend/wasm/wasmoscconfigsab'
 import type { WASM_REPLAY_STATE } from 'zss/feature/synth/backend/wasm/wasmreplaystate'
@@ -34,7 +37,8 @@ const NOTE_ON_SEC = 0
 /** Half-note C4 — ROM play notation (see play-notation skill). */
 const NOTATION = '+hc'
 const DURATION_SEC = 1.5
-const TOLERANCE_DB = 3
+/** Plan: normalize to square within ±1.5 dB mid-window RMS. */
+export const VOICE_LEVEL_TOLERANCE_DB = 1.5
 const SILENT_DB = -120
 /** Full-buffer RMS below this means the offline render produced no voice. */
 const MIN_VALID_RMS_DB = -70
@@ -176,6 +180,18 @@ async function rendervoicebuffer(voice: string): Promise<AudioBuffer> {
   synth.applyreplay(buildreplay())
   synth.setvoiceconfig(0, voice, '')
   synth.setplayvolume(WASM_DEFAULT_PLAY_VOLUME)
+  // Effective stem levels (same as live cafe) + bypass maincomp / SC / limiter
+  // so GR and brickwall do not skew mid-window RMS vs square.
+  pushwasmmainsab(engine, [
+    effectivemainvolume(WASM_DEFAULT_PLAY_VOLUME),
+    effectivemainvolume(WASM_DEFAULT_BGPLAY_VOLUME),
+    effectivemainvolume(WASM_DEFAULT_TTS_VOLUME),
+    1,
+    1,
+    0,
+    WASM_DEFAULT_MAIN_VOLUME,
+    1,
+  ])
   synth.synthreplay(ticks, DURATION_SEC)
   synth.prepareofflinerender()
   const buffer = await offlinectx.startRendering()
@@ -199,6 +215,11 @@ function measurevoice(
     // Post-attack body on half-note: skip hammer/pick, before ring dies
     const m = windowrmsdb(samples, samplerate, noteon + 0.1, noteon + 0.4)
     return { kind: 'body', ...m }
+  }
+  // String ensemble attack is 0.6s — measure after attack settles.
+  if (voice === 'string') {
+    const m = windowrmsdb(samples, samplerate, noteon + 0.75, noteon + 1.15)
+    return { kind: 'held', ...m }
   }
   // Mid half-note sustain (~0.88s at DEFAULT_BPM)
   const m = windowrmsdb(samples, samplerate, noteon + 0.25, noteon + 0.7)
@@ -245,7 +266,7 @@ export function buildvoicelevelsweep(
 ): VOICE_LEVEL_SWEEP {
   const rows: VOICE_LEVEL_ROW[] = metrics.map((m) => {
     const deltadb = m.rmsdb - squarermsdb
-    const pass = !m.silent && Math.abs(deltadb) <= TOLERANCE_DB
+    const pass = !m.silent && Math.abs(deltadb) <= VOICE_LEVEL_TOLERANCE_DB
     return {
       voice: m.voice,
       kind: m.kind,
@@ -260,7 +281,7 @@ export function buildvoicelevelsweep(
   rows.sort((a, b) => a.deltadb - b.deltadb)
   return {
     squarermsdb,
-    toleranceDb: TOLERANCE_DB,
+    toleranceDb: VOICE_LEVEL_TOLERANCE_DB,
     rows,
     failcount: rows.filter((r) => !r.pass).length,
   }

@@ -57,7 +57,7 @@ Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: ma
 | `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
-| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
+| Voice `vol` | voice cfg | type table / **0** | `dbtoamp(vol_db)` | `#synth` type select sets [`VOICE_LEVEL_VOLUME_DB`](../../backend/wasm/voicelevelvolume.ts); `#synthN vol` overrides |
 
 CLI: [`zss/firmware/audio.ts`](../../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
 
@@ -68,15 +68,16 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 | Constant | Value | Controls |
 |----------|-------|----------|
 | Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
-| `kDrumBusGain` | **1.0** | Drum stem vs play under `#vol` (was 1.618; cafe ear limiter duck; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| `kPlayBusGain` | **1.000** | Retired for live play (SAB dB law); calibrate may rewrite |
+| `kDrumBusGain` | **1.000** | Drum stem vs play (target drum−play **−11 ±2** dB; `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
+| `kScMakeupDb` | **+5** | Sidechain makeup (Tone +24 buried kit; cafe ear) |
 | `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
-| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Sidechain timing (attack faster than Tone 5 ms) |
+| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Fast duck onset so hits punch play |
 | SC key trims | bg/tts **-12 dB**, drums **`kScDrumKeyDb` (−20)** | Key bus only (`zss_main.cpp`) |
 | `kScDrumBassKeyDb` | **+8** | Bass into SC only (Tone MembraneSynth volume); audible kick stays `kDrumBassVolumeDb` |
 | SC clap/bass tap | pre-`kDrumGains` | `drumsout()` — kit gain is audible-only |
-| `kMainCompThresholdDb` | **-24** | Main compressor (was Tone -28; less GR into limiter) |
+| `kMainCompThresholdDb` | **-24** | Main compressor (was Tone −28) |
 | `kMainCompRatio` | **4** | |
 | `kMainCompKneeDb` | **30** | Soft knee (Tone `Compressor` knee) |
 | `kMainCompMix` | **1.0** | Full wet GR |
@@ -143,7 +144,7 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kDrumCowbellVolumeDb` | **0** | Was +8; cowbell matches flat gains |
 | `kDrumBassVolumeDb` | **0** | Kick uses `kDrumGains[9]` only |
 
-Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOLUME_DB`).
+Native `k*VoiceGain` values above are waveform makeup inside DSP. **Effective loudness vs `#synth square`** is normalized on type select via per-type `volume` dB in [`voicelevelvolume.ts`](../../backend/wasm/voicelevelvolume.ts) (`withlevelvolume` in `wasmvoiceconfig.ts`), written to voicecfg slot 5. Offline gate: mid-window RMS within **±1.5 dB** of square (comp/SC/limiter bypassed; `ops/lib/daisy-parity/voicelevelsweep.ts`). Base default remains **0** (`DEFAULT_WASM_VOICE_VOLUME_DB`) until a `#synth` type is selected.
 
 ## Web Audio shell
 

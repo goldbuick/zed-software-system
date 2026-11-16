@@ -223,6 +223,9 @@ float synthwavegain(int osc) {
   if (osc == 3) {
     return kSawtoothVoiceGain;
   }
+  if (osc == 4) {
+    return kPulseVoiceGain;
+  }
   // Adjust am*
   if (osc >= 10 && osc <= 13) {
     return kAmVoiceGain * oscshapemakeup(familywavetobasic(osc - 10));

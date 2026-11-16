@@ -63,11 +63,13 @@ constexpr int kRevCombMaxLen = 4096;
 constexpr float kPi = 3.14159265358979323846f;
 constexpr float kTwoPi = 6.28318530718f;
 /** `#synth sine`, `amsine`, and `fmsine`. Other am/fm carriers use their family
- * gain. */
+ * gain. Loudness vs square is normalized via per-type voice `volume` dB. */
 constexpr float kSineVoiceGain = 2.5f;
 /** Makeup vs square RMS for triangle / sawtooth carriers. */
 constexpr float kTriangleVoiceGain = 1.23f;
 constexpr float kSawtoothVoiceGain = 1.28f;
+/** `#synth pulse` duty wave (not square). */
+constexpr float kPulseVoiceGain = 1.f;
 constexpr float kAmVoiceGain = 2.f;
 constexpr float kFmVoiceGain = 1.f;
 constexpr float kFatVoiceGain = 1.f;
@@ -151,8 +153,9 @@ constexpr float kPlayBusGain = 1.000f;
 /** Stem-balanced vs play (play stem uses shared SAB dB law like bg/tts).
  * Mid-kit (hi snare proxy) sits near unity with play.
  */
-/** Was 1.618; cafe ear — kit slammed limiter and ducked play. */
-constexpr float kDrumBusGain = 1.0f;
+/** Kit vs play: was 1.618 (slammed lim), calibrate 0.84 buried kit after voice
+ * level-normalize; 1.0 restores pre-calibrate cafe ear within −11 ±2 dB gate. */
+constexpr float kDrumBusGain = 1.000f;
 /** Post-limiter makeup removed: output leans on DaisySP Limiter alone, then a
  * safety +/-1 clamp. (Old pad/SoftLimit makeup pushed peaks back to 0 dBFS.) */
 /** Play / bg / tts / drum (`#vol`) share SAB dB law
@@ -165,10 +168,11 @@ constexpr float kBusVolOffsetDb = -105.f;
 
 /**
  * Sidechain makeup on the play duck path. Tone product used +24 dB (with mix
- * 0.75 ≈ +22 dB idle play); that buried drums. Trying +5 dB.
+ * 0.75 ≈ +22 dB idle play); that buries the kit under leveled voices. Cafe ear
+ * uses +5 dB so drums stay audible when SC is not fully ducking.
  */
 constexpr float kScMakeupDb = 5.f;
-/** Duck onset — Tone product was 5 ms; 1 ms so drum hits punch the play bus. */
+/** Duck onset — 1 ms so drum hits punch the play bus (Tone product was 5 ms). */
 constexpr float kScAttackSec = 0.001f;
 constexpr float kScReleaseSec = 0.06f;
 
@@ -230,7 +234,7 @@ constexpr float kDrumBassVolumeDb = 0.f;
 /** Tone MembraneSynth `volume: 8` into drumaction only — not the audible kit.
  */
 constexpr float kScDrumBassKeyDb = 8.f;
-/** Clap/bass key bus into detector (Tone drumaction was −28; trying −20). */
+/** Clap/bass key bus into detector (Tone drumaction was −28; −20 for cafe ear). */
 constexpr float kScDrumKeyDb = -20.f;
 
 enum VoiceType {
