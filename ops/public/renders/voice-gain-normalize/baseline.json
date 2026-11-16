@@ -1,0 +1,437 @@
+{
+  "squarermsdb": -15.626272710424464,
+  "toleranceDb": 1.5,
+  "rows": [
+    {
+      "voice": "bells",
+      "kind": "body",
+      "rmsdb": -34.07221231707085,
+      "peakdb": -21.23069616822629,
+      "fullrmsdb": -39.117967774600224,
+      "deltadb": -18.445939606646384,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo5",
+      "kind": "held",
+      "rmsdb": -28.454420886057754,
+      "peakdb": -23.320682824352986,
+      "fullrmsdb": -32.36174252465619,
+      "deltadb": -12.82814817563329,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo7",
+      "kind": "held",
+      "rmsdb": -27.94532863724436,
+      "peakdb": -23.434481831300907,
+      "fullrmsdb": -31.85708193671044,
+      "deltadb": -12.319055926819894,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo1",
+      "kind": "held",
+      "rmsdb": -27.24543911481414,
+      "peakdb": -23.871435667988106,
+      "fullrmsdb": -31.113163619287345,
+      "deltadb": -11.619166404389675,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo0",
+      "kind": "held",
+      "rmsdb": -26.046447795744033,
+      "peakdb": -22.552875072744463,
+      "fullrmsdb": -29.913223491303054,
+      "deltadb": -10.420175085319569,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo6",
+      "kind": "held",
+      "rmsdb": -25.9388759420617,
+      "peakdb": -22.375616460611457,
+      "fullrmsdb": -29.83827405595335,
+      "deltadb": -10.312603231637235,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo3",
+      "kind": "held",
+      "rmsdb": -25.93681998263037,
+      "peakdb": -22.944625180626147,
+      "fullrmsdb": -29.84491700677404,
+      "deltadb": -10.310547272205907,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo2",
+      "kind": "held",
+      "rmsdb": -25.81003082010396,
+      "peakdb": -22.51750581001626,
+      "fullrmsdb": -29.66660428321262,
+      "deltadb": -10.183758109679497,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "algo4",
+      "kind": "held",
+      "rmsdb": -22.843602356179137,
+      "peakdb": -17.666014109759093,
+      "fullrmsdb": -26.755253041837697,
+      "deltadb": -7.217329645754672,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "noise",
+      "kind": "body",
+      "rmsdb": -22.475205254637416,
+      "peakdb": -13.697745305656833,
+      "fullrmsdb": -24.35130334090843,
+      "deltadb": -6.848932544212952,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "metallic",
+      "kind": "body",
+      "rmsdb": -21.54228831850785,
+      "peakdb": -17.379020170933906,
+      "fullrmsdb": -25.58252181142979,
+      "deltadb": -5.916015608083386,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "hollow",
+      "kind": "body",
+      "rmsdb": -21.497815075256664,
+      "peakdb": -10.80743939185657,
+      "fullrmsdb": -25.629117623297862,
+      "deltadb": -5.8715423648322,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "buzz",
+      "kind": "body",
+      "rmsdb": -20.830746909686294,
+      "peakdb": -16.330745497054227,
+      "fullrmsdb": -24.678450089234268,
+      "deltadb": -5.2044741992618295,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "retro",
+      "kind": "body",
+      "rmsdb": -20.409093876681975,
+      "peakdb": -15.937200520236289,
+      "fullrmsdb": -24.27459542149945,
+      "deltadb": -4.782821166257511,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fatsawtooth",
+      "kind": "held",
+      "rmsdb": -20.361589447651443,
+      "peakdb": -10.495164549093133,
+      "fullrmsdb": -24.36083426802786,
+      "deltadb": -4.735316737226979,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fatsine",
+      "kind": "held",
+      "rmsdb": -20.34237833961906,
+      "peakdb": -12.491258783375,
+      "fullrmsdb": -24.299846707657466,
+      "deltadb": -4.716105629194596,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fattriangle",
+      "kind": "held",
+      "rmsdb": -20.326534862662587,
+      "peakdb": -11.18229597919743,
+      "fullrmsdb": -24.280927084682318,
+      "deltadb": -4.700262152238123,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "clang",
+      "kind": "body",
+      "rmsdb": -19.988873075934105,
+      "peakdb": -13.315573485401798,
+      "fullrmsdb": -23.754937520590968,
+      "deltadb": -4.362600365509641,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fmtriangle",
+      "kind": "held",
+      "rmsdb": -18.543824537055876,
+      "peakdb": -11.1455499399345,
+      "fullrmsdb": -22.4004429495631,
+      "deltadb": -2.9175518266314118,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "pluck",
+      "kind": "body",
+      "rmsdb": -18.13062664693898,
+      "peakdb": -8.25281167456928,
+      "fullrmsdb": -22.44027665402518,
+      "deltadb": -2.504353936514514,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "piano",
+      "kind": "held",
+      "rmsdb": -18.128638818261894,
+      "peakdb": -9.035262625422689,
+      "fullrmsdb": -18.913348236879497,
+      "deltadb": -2.50236610783743,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fmsawtooth",
+      "kind": "held",
+      "rmsdb": -17.615906873182272,
+      "peakdb": -9.211234823347462,
+      "fullrmsdb": -21.09798757262027,
+      "deltadb": -1.9896341627578078,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fatsquare",
+      "kind": "held",
+      "rmsdb": -17.568685696081946,
+      "peakdb": -11.879090626843212,
+      "fullrmsdb": -21.54449415711555,
+      "deltadb": -1.9424129856574819,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "steel",
+      "kind": "body",
+      "rmsdb": -16.406561882777385,
+      "peakdb": -7.394974175015569,
+      "fullrmsdb": -20.953885521133813,
+      "deltadb": -0.7802891723529211,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "square",
+      "kind": "held",
+      "rmsdb": -15.626272710424464,
+      "peakdb": -14.863102606559478,
+      "fullrmsdb": -19.633044376187065,
+      "deltadb": 0,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "amsquare",
+      "kind": "held",
+      "rmsdb": -15.600549747890337,
+      "peakdb": -14.270961151276541,
+      "fullrmsdb": -19.331492313226942,
+      "deltadb": 0.025722962534127092,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "string",
+      "kind": "held",
+      "rmsdb": -15.487650874417971,
+      "peakdb": -5.218289222760776,
+      "fullrmsdb": -17.15007602723009,
+      "deltadb": 0.13862183600649303,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "sawtooth",
+      "kind": "held",
+      "rmsdb": -15.433702237601443,
+      "peakdb": -10.341878076204887,
+      "fullrmsdb": -19.443642876958375,
+      "deltadb": 0.19257047282302153,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "violin",
+      "kind": "held",
+      "rmsdb": -15.387429115623917,
+      "peakdb": -8.288368144699703,
+      "fullrmsdb": -20.053360017746908,
+      "deltadb": 0.23884359480054762,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "triangle",
+      "kind": "held",
+      "rmsdb": -15.315769797052813,
+      "peakdb": -10.96367424605872,
+      "fullrmsdb": -19.327091271142883,
+      "deltadb": 0.3105029133716517,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "amsawtooth",
+      "kind": "held",
+      "rmsdb": -14.892087729246462,
+      "peakdb": -8.435146214249869,
+      "fullrmsdb": -18.71075966890803,
+      "deltadb": 0.7341849811780019,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "flute",
+      "kind": "held",
+      "rmsdb": -14.772013855013913,
+      "peakdb": -8.701223598507237,
+      "fullrmsdb": -18.988746225966693,
+      "deltadb": 0.854258855410551,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "pulse",
+      "kind": "held",
+      "rmsdb": -14.677016502453723,
+      "peakdb": -7.956865930410371,
+      "fullrmsdb": -18.348251843647127,
+      "deltadb": 0.9492562079707412,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "clarinet",
+      "kind": "held",
+      "rmsdb": -14.57106723709126,
+      "peakdb": -11.130706595882245,
+      "fullrmsdb": -18.56999149138289,
+      "deltadb": 1.0552054733332046,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "fmsquare",
+      "kind": "held",
+      "rmsdb": -14.555434924985475,
+      "peakdb": -8.039056368546035,
+      "fullrmsdb": -18.24358165221289,
+      "deltadb": 1.0708377854389894,
+      "pass": true,
+      "silent": false
+    },
+    {
+      "voice": "doot",
+      "kind": "body",
+      "rmsdb": -14.066233223971025,
+      "peakdb": -11.050812770280864,
+      "fullrmsdb": -18.0808947504754,
+      "deltadb": 1.560039486453439,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "amtriangle",
+      "kind": "held",
+      "rmsdb": -13.95493465697859,
+      "peakdb": -6.817721658506385,
+      "fullrmsdb": -17.960453641588245,
+      "deltadb": 1.671338053445874,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "brass",
+      "kind": "held",
+      "rmsdb": -13.585271664048824,
+      "peakdb": -4.936020783458664,
+      "fullrmsdb": -17.453128097069907,
+      "deltadb": 2.0410010463756407,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "amsine",
+      "kind": "held",
+      "rmsdb": -12.97088904534186,
+      "peakdb": -8.08998372003288,
+      "fullrmsdb": -16.78132836843284,
+      "deltadb": 2.6553836650826046,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "pwm",
+      "kind": "held",
+      "rmsdb": -12.624368039286406,
+      "peakdb": -10.54844898561907,
+      "fullrmsdb": -16.631506308911735,
+      "deltadb": 3.0019046711380586,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "fmsine",
+      "kind": "held",
+      "rmsdb": -8.265440678456732,
+      "peakdb": -0.8119007062112402,
+      "fullrmsdb": -11.952661899499333,
+      "deltadb": 7.360832031967732,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "sine",
+      "kind": "held",
+      "rmsdb": -7.322192043719369,
+      "peakdb": -4.30871051550553,
+      "fullrmsdb": -11.33221024472303,
+      "deltadb": 8.304080666705095,
+      "pass": false,
+      "silent": false
+    },
+    {
+      "voice": "tonewheel",
+      "kind": "held",
+      "rmsdb": -5.601497150538986,
+      "peakdb": 0,
+      "fullrmsdb": -9.683648301803018,
+      "deltadb": 10.024775559885478,
+      "pass": false,
+      "silent": false
+    }
+  ],
+  "failcount": 31
+}

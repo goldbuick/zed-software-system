@@ -3,6 +3,7 @@ import { validatesynthtype } from 'zss/feature/synth/voiceconfig/validation'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { voicelevelvolumedb } from './voicelevelvolume'
 import {
   applywasmalgoconfig,
   resetwasmalgoconfig,
@@ -364,6 +365,13 @@ function namedvoiceswitch(
   return next
 }
 
+function withlevelvolume(
+  state: WASM_VOICE_STATE,
+  typename: string,
+): WASM_VOICE_STATE {
+  return { ...state, volume: voicelevelvolumedb(typename) }
+}
+
 function parsesourcetype(
   config: string,
   current: WASM_VOICE_STATE,
@@ -371,147 +379,173 @@ function parsesourcetype(
   const type = NAME(config)
   switch (type) {
     case 'retro':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.RETRO_NOISE,
-        algo: 0,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.RETRO_NOISE,
+          algo: 0,
+        }),
+        type,
+      )
     case 'buzz':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.BUZZ_NOISE,
-        algo: 0,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.BUZZ_NOISE,
+          algo: 0,
+        }),
+        type,
+      )
     case 'clang':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.CLANG_NOISE,
-        algo: 0,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.CLANG_NOISE,
+          algo: 0,
+        }),
+        type,
+      )
     case 'metallic':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.METALLIC_NOISE,
-        algo: 0,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.METALLIC_NOISE,
+          algo: 0,
+        }),
+        type,
+      )
     case 'noise':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.WHITE_NOISE,
-        algo: 0,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.WHITE_NOISE,
+          algo: 0,
+        }),
+        type,
+      )
     case 'hollow':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.HOLLOW_NOISE,
-        algo: 0,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.HOLLOW_NOISE,
+          algo: 0,
+        }),
+        type,
+      )
     case 'bells':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.BELLS,
-        algo: 0,
-        // Percussive hit — sustain 0 so amp follows modal decay, not a hold.
-        envelope: { attack: 0.001, decay: 2.5, sustain: 0, release: 1.2 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.BELLS,
+          algo: 0,
+          // Percussive hit — sustain 0 so amp follows modal decay, not a hold.
+          envelope: { attack: 0.001, decay: 2.5, sustain: 0, release: 1.2 },
+        }),
+        type,
+      )
     case 'doot':
-      return namedvoiceswitch(current, { type: SOURCE_TYPE.DOOT, algo: 0 })
+      return withlevelvolume(
+        namedvoiceswitch(current, { type: SOURCE_TYPE.DOOT, algo: 0 }),
+        type,
+      )
     case 'algo0':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 0,
-      })
     case 'algo1':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 1,
-      })
     case 'algo2':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 2,
-      })
     case 'algo3':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 3,
-      })
     case 'algo4':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 4,
-      })
     case 'algo5':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 5,
-      })
     case 'algo6':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 6,
-      })
     case 'algo7':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ALGO_SYNTH,
-        algo: 7,
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.ALGO_SYNTH,
+          algo: Number(type.slice(4)),
+        }),
+        type,
+      )
     case 'string':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.STRING_VOICE,
-        algo: 0,
-        stringensemble: defaultstringensemble(),
-        envelope: { attack: 0.6, decay: 0.15, sustain: 0.88, release: 1.0 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.STRING_VOICE,
+          algo: 0,
+          stringensemble: defaultstringensemble(),
+          envelope: { attack: 0.6, decay: 0.15, sustain: 0.88, release: 1.0 },
+        }),
+        type,
+      )
     case 'pluck':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.STRING_VOICE,
-        algo: 1,
-        pluck: defaultpluck(),
-        envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.35 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.STRING_VOICE,
+          algo: 1,
+          pluck: defaultpluck(),
+          envelope: { attack: 0.008, decay: 0.05, sustain: 1, release: 0.35 },
+        }),
+        type,
+      )
     case 'flute':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.WIND_VOICE,
-        algo: 0,
-        wind: winddefaults(0),
-        envelope: windenvelope(0),
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.WIND_VOICE,
+          algo: 0,
+          wind: winddefaults(0),
+          envelope: windenvelope(0),
+        }),
+        type,
+      )
     case 'clarinet':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.WIND_VOICE,
-        algo: 1,
-        wind: winddefaults(1),
-        envelope: windenvelope(1),
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.WIND_VOICE,
+          algo: 1,
+          wind: winddefaults(1),
+          envelope: windenvelope(1),
+        }),
+        type,
+      )
     case 'brass':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.WIND_VOICE,
-        algo: 2,
-        wind: winddefaults(2),
-        envelope: windenvelope(2),
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.WIND_VOICE,
+          algo: 2,
+          wind: winddefaults(2),
+          envelope: windenvelope(2),
+        }),
+        type,
+      )
     case 'piano':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.PIANO_VOICE,
-        algo: 0,
-        piano: defaultpiano(),
-        envelope: { attack: 0.001, decay: 1.8, sustain: 0.55, release: 1.2 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.PIANO_VOICE,
+          algo: 0,
+          piano: defaultpiano(),
+          envelope: { attack: 0.001, decay: 1.8, sustain: 0.55, release: 1.2 },
+        }),
+        type,
+      )
     case 'violin':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.BOWED_VOICE,
-        algo: 0,
-        bowed: { bow: 0.2, pressure: 0.5, vib: 0.4, body: 0.55 },
-        envelope: { attack: 0.2, decay: 0.25, sustain: 0.9, release: 0.6 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.BOWED_VOICE,
+          algo: 0,
+          bowed: { bow: 0.2, pressure: 0.5, vib: 0.4, body: 0.55 },
+          envelope: { attack: 0.2, decay: 0.25, sustain: 0.9, release: 0.6 },
+        }),
+        type,
+      )
     case 'steel':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.GUITAR_VOICE,
-        algo: 1,
-        guitar: { pick: 0.5, body: 0.35, damping: 0.7, position: 0.6 },
-        envelope: { attack: 0.008, decay: 0.04, sustain: 1, release: 0.3 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.GUITAR_VOICE,
+          algo: 1,
+          guitar: { pick: 0.5, body: 0.35, damping: 0.7, position: 0.6 },
+          envelope: { attack: 0.008, decay: 0.04, sustain: 1, release: 0.3 },
+        }),
+        type,
+      )
     case 'tonewheel':
-      return namedvoiceswitch(current, {
-        type: SOURCE_TYPE.ORGAN_VOICE,
-        algo: 0,
-        organ: defaultorgan(),
-        envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
-      })
+      return withlevelvolume(
+        namedvoiceswitch(current, {
+          type: SOURCE_TYPE.ORGAN_VOICE,
+          algo: 0,
+          organ: defaultorgan(),
+          envelope: { attack: 0.001, decay: 0.01, sustain: 1, release: 0.05 },
+        }),
+        type,
+      )
     default:
       return undefined
   }
@@ -702,21 +736,28 @@ export function applywasmvoiceconfig(
     const osc = parsewasmosc(config)
     if (osc !== undefined) {
       const prev = voicestate[index]
+      const wavename = NAME(config).replace(/[0-9]+$/, '')
       if (prev.type !== SOURCE_TYPE.SYNTH) {
         // Keep oscconfig row; restore SYNTH ADSR from envmemory when returning.
-        voicestate[index] = namedvoiceswitch(prev, {
-          type: SOURCE_TYPE.SYNTH,
-          algo: 0,
-          osc,
-          envelope: { ...DEFAULT_WASM_ENVELOPE },
-        })
+        voicestate[index] = withlevelvolume(
+          namedvoiceswitch(prev, {
+            type: SOURCE_TYPE.SYNTH,
+            algo: 0,
+            osc,
+            envelope: { ...DEFAULT_WASM_ENVELOPE },
+          }),
+          wavename,
+        )
       } else {
-        voicestate[index] = {
-          ...prev,
-          type: SOURCE_TYPE.SYNTH,
-          algo: 0,
-          osc,
-        }
+        voicestate[index] = withlevelvolume(
+          {
+            ...prev,
+            type: SOURCE_TYPE.SYNTH,
+            algo: 0,
+            osc,
+          },
+          wavename,
+        )
       }
       // Tone OmniOscillator: new subclass defaults on each wave select.
       seedomnioscdefaults(oscconfig, index, osc)
