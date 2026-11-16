@@ -43,7 +43,7 @@ flowchart LR
 
 `#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
 (`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**60** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+18 dB**. Razzle is not a volume fader.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**70** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+21 dB**; raw `#vol` 100 ≈ **+35 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
@@ -67,7 +67,7 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
+| Main limiter | DaisySP `Limiter` @ 1, then `kMainLimiterMakeup` (~**1.632** / +4.3 dB) | SoftLimit(0.7) ceiling → full scale; safety `clamp +/-1` after |
 | `kPlayBusGain` | **1.000** | Retired for live play (SAB dB law); calibrate may rewrite |
 | `kDrumBusGain` | **1.000** | Drum stem vs play (target drum−play **−11 ±2** dB; `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |

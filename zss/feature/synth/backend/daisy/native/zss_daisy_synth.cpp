@@ -172,9 +172,10 @@ void zss_process(float* out, int frames, const float* tts_in) {
     if (!std::isfinite(final)) {
       final = 0.f;
     }
-    // Peak control is Daisy Limiter only — no post makeup into +/-1.
+    // Peak control: Daisy Limiter (SoftLimit @ 0.7), then makeup to ~0 dBFS.
     if (readctrl(off_main() + kMainLimBypassIdx) <= 0.5f) {
       g_engine.main_limiter.ProcessBlock(&final, 1, 1.f);
+      final *= kMainLimiterMakeup;
     }
     out[f] = clampf(final, -1.f, 1.f);
   }

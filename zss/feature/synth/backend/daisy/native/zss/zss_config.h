@@ -156,14 +156,21 @@ constexpr float kPlayBusGain = 1.000f;
 /** Kit vs play: was 1.618 (slammed lim), calibrate 0.84 buried kit after voice
  * level-normalize; 1.0 restores pre-calibrate cafe ear within −11 ±2 dB gate. */
 constexpr float kDrumBusGain = 1.000f;
-/** Post-limiter makeup removed: output leans on DaisySP Limiter alone, then a
- * safety +/-1 clamp. (Old pad/SoftLimit makeup pushed peaks back to 0 dBFS.) */
+/** DaisySP Limiter catches peaks to 1, then multiplies by 0.7 and SoftLimits —
+ * ceiling lands ~0.61. Makeup places that peak at full scale; output still
+ * clamps +/-1. Cafe ear trial with steeper #vol law (kBusVolDbPerDecade 70). */
+constexpr float kMainLimiterPad = 0.7f;
+constexpr float kMainLimiterCaught =
+    kMainLimiterPad * (27.f + kMainLimiterPad * kMainLimiterPad) /
+    (27.f + 9.f * kMainLimiterPad * kMainLimiterPad);
+constexpr float kMainLimiterMakeup = 1.f / kMainLimiterCaught;
 /** Play / bg / tts / drum (`#vol`) share SAB dB law
  * kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb
  * (readplayvolume / readbgplayvolume / readttsvolume / readdrumvolume).
- * 60 makes #vol 50→100 ≈ +18 dB so mid is quieter while vol 100 stays
- * ~+15 dB (offset -105). Boot stem SAB 45 ≈ -5.8 dB. */
-constexpr float kBusVolDbPerDecade = 60.f;
+ * 70 makes #vol 50→100 ≈ +21 dB (was 60 / ~+18); vol 100 ≈ +35 dB with
+ * offset -105. Boot stem SAB 45 ≈ +10.5 dB. Cafe ear trial — dial back if
+ * mid/#vol 50 is too hot. */
+constexpr float kBusVolDbPerDecade = 70.f;
 constexpr float kBusVolOffsetDb = -105.f;
 
 /**

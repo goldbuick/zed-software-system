@@ -1,3 +1,3 @@
 /** Bumped by `yarn task run ops:daisy:build` — busts browser cache when wasm changes on same commit. */
-    export const DAISY_BUILD_ID = '1794808625'
+    export const DAISY_BUILD_ID = '1794809238'
     
