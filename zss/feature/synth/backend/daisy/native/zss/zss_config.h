@@ -154,7 +154,8 @@ constexpr float kPlayBusGain = 1.000f;
  * Mid-kit (hi snare proxy) sits near unity with play.
  */
 /** Kit vs play: was 1.618 (slammed lim), calibrate 0.84 buried kit after voice
- * level-normalize; 1.0 restores pre-calibrate cafe ear within −11 ±2 dB gate. */
+ * level-normalize; 1.0 restores pre-calibrate cafe ear within −11 ±2 dB gate.
+ */
 constexpr float kDrumBusGain = 1.000f;
 /** DaisySP Limiter catches peaks to 1, then multiplies by 0.7 and SoftLimits —
  * ceiling lands ~0.61. Makeup places that peak at full scale; output still
@@ -179,7 +180,8 @@ constexpr float kBusVolOffsetDb = -105.f;
  * uses +5 dB so drums stay audible when SC is not fully ducking.
  */
 constexpr float kScMakeupDb = 5.f;
-/** Duck onset — 1 ms so drum hits punch the play bus (Tone product was 5 ms). */
+/** Duck onset — 1 ms so drum hits punch the play bus (Tone product was 5 ms).
+ */
 constexpr float kScAttackSec = 0.001f;
 constexpr float kScReleaseSec = 0.06f;
 
@@ -241,7 +243,8 @@ constexpr float kDrumBassVolumeDb = 0.f;
 /** Tone MembraneSynth `volume: 8` into drumaction only — not the audible kit.
  */
 constexpr float kScDrumBassKeyDb = 8.f;
-/** Clap/bass key bus into detector (Tone drumaction was −28; −20 for cafe ear). */
+/** Clap/bass key bus into detector (Tone drumaction was −28; −20 for cafe ear).
+ */
 constexpr float kScDrumKeyDb = -20.f;
 
 enum VoiceType {

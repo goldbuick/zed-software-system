@@ -3,6 +3,7 @@ import { validatesynthtype } from 'zss/feature/synth/voiceconfig/validation'
 import { isarray, isnumber, isstring } from 'zss/mapping/types'
 import { NAME } from 'zss/words/types'
 
+import { voicelevelvolumedb } from './voicelevelvolume'
 import {
   applywasmalgoconfig,
   resetwasmalgoconfig,
@@ -16,7 +17,6 @@ import {
 } from './wasmoscconfig'
 import { type WASM_OSC_CONFIG } from './wasmoscconfigsab'
 import { WASM_OSC_TYPE, parsewasmosc } from './wasmosctype'
-import { voicelevelvolumedb } from './voicelevelvolume'
 import {
   DEFAULT_WASM_BOWED,
   DEFAULT_WASM_ENVELOPE,
