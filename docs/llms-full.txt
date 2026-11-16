@@ -8452,7 +8452,7 @@ Stem faders (`readplayvolume` / `readbgplayvolume` / `readttsvolume` / `readdrum
 
 ### Main Compressor
 
-- **Threshold:** -24 dB (was Tone -28; less GR so peaks stay hotter into the limiter)
+- **Threshold:** -28 dB (Tone product)
 - **Ratio:** 4:1
 - **Attack / release:** 3 ms / 150 ms (RMS envelope detector; Tone product release)
 - **Applied gain slew:** 8 ms attack / 150 ms release (`comp_gain_smooth`, separate from detector)
@@ -8460,19 +8460,19 @@ Stem faders (`readplayvolume` / `readbgplayvolume` / `readttsvolume` / `readdrum
 - **Knee:** 30 dB soft knee (Tone product `Compressor`; full width around threshold via `compressorskneedb`)
 - **Silence guard:** When `|dry|` is below ~-80 dBFS, `comp_env` fast-decays so gain returns to unity before the next note
 - **Purpose:** Dynamics on full post-sidechain mix (ducked play + bg + TTS + drums)
-- **Tone reference:** `Tone.Compressor` was -28 / 4 / 3 ms / 150 ms / knee 30
+- **Tone reference:** `Tone.Compressor` -28 / 4 / 3 ms / 150 ms / knee 30
 - **Daisy:** `maincompressor()` — detector (`comp_env`) + smoothed multiplier (`comp_gain_smooth`); SAB slot 3 bypasses for A/B renders (`yarn notepop:render:ab`)
 
 ### Sidechain Compressor
 
 - **Threshold:** -42 dB
 - **Ratio:** 5:1
-- **Attack / release:** 1 ms / 60 ms (`kScAttackSec` / `kScReleaseSec`; attack faster than Tone's 5 ms so drum duck punches)
-- **Mix / makeup:** 0.75 / **+5 dB** (`kScMix` / `kScMakeupDb`; Tone used +24 dB)
-- **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -20 dB via `kScDrumKeyDb`)
+- **Attack / release:** 5 ms / 60 ms (`kScAttackSec` / `kScReleaseSec`; Tone product)
+- **Mix / makeup:** 0.75 / **+24 dB** (`kScMix` / `kScMakeupDb`; Tone product)
+- **Sidechain sources:** `altaction` (TTS + bgplay @ -12 dB), `drumaction` (clap+bass @ -28 dB via `kScDrumKeyDb`)
 - **Purpose:** Ducks `#play` when bg/TTS/drums hit (not bg/TTS/drum buses themselves)
 - **Tone:** `SidechainCompressor` AudioWorklet — input 0 = play, input 1 = summed key bus; clap/bass feed `drumaction` before kit bus gain; bass MembraneSynth volume +8 on that path
-- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−20 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers. After razzle, master **Daisy Limiter** still GR the full mix (drum peaks can pull play down); SAB slot 7 / `?no_lim=1` bypasses it for A/B.
+- **Daisy:** `drumsout()` taps clap ungained and bass with `kScDrumBassKeyDb` (+8) into `drumsidechain`; `sidechainkey()` then applies `kScDrumKeyDb` (−28 dB). Audible kit still uses `kDrumGains` / `kDrumBassVolumeDb`. SAB slot 4 bypasses duck (`yarn sidechain:render:ab`, `?no_sc=1`). SAB slot 5 mutes the key only (`?no_sc_key=1`) — duck stays at idle makeup, no triggers. After razzle, master **Daisy Limiter** still GR the full mix (drum peaks can pull play down), then `kMainLimiterMakeup` (~+4.3 dB) restores SoftLimit(0.7) peaks toward full scale before `clamp +/-1`; SAB slot 7 / `?no_lim=1` bypasses limiter+makeup for A/B.
 
 ### Razzle Chain
 
@@ -9165,7 +9165,7 @@ flowchart LR
 
 `#playvol` / `#bgvol` / `#ttsvol` are stem faders (SAB PLAY/BGPLAY/TTS) after `#vol` scale
 (`effective = trim * vol / 100`). `#vol` is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**60** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+18 dB**. Razzle is not a volume fader.
+Play, bg, tts, and drums share dB law `kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb` (**70** / **-105**). Doubling SAB (~`#vol` 50→100) is about **+21 dB**; raw `#vol` 100 ≈ **+35 dB**. Razzle is not a volume fader.
 
 ## User faders (SAB `zss_main`, 0-100)
 
@@ -9179,7 +9179,7 @@ Play/bg/tts SAB values are **effective** trims: `bus * #vol / 100` (defaults: ma
 | `#bgvol` | BGPLAY (1) | **90** | same | bgplay stem |
 | `#ttsvol` | TTS (2) | **90** | same | TTS sample level |
 | `#mediavol` | (HTML video) | **20** | linear `mediavol/100 * vol/100` | Board TV only |
-| Voice `vol` | voice cfg | **0 dB** | `dbtoamp(vol_db)` | Per-voice via `#synthN` |
+| Voice `vol` | voice cfg | type table / **0** | `dbtoamp(vol_db)` | `#synth` type select sets [`VOICE_LEVEL_VOLUME_DB`](../../backend/wasm/voicelevelvolume.ts); `#synthN vol` overrides |
 
 CLI: [`zss/firmware/audio.ts`](../../../../firmware/audio.ts) (`#vol`, `#playvol`, `#bgvol`, `#ttsvol`, `#mediavol`).
 
@@ -9189,16 +9189,17 @@ Parity-tuned values -- change only with `yarn task run ops:daisy:*:calibrate` or
 
 | Constant | Value | Controls |
 |----------|-------|----------|
-| Main limiter | DaisySP `Limiter` @ threshold 1 | Peak control only; no post makeup. Safety `clamp +/-1` after |
-| `kDrumBusGain` | **1.0** | Drum stem vs play under `#vol` (was 1.618; cafe ear limiter duck; calibrate: `ops:daisy:play-drum-balance:calibrate`) |
+| Main limiter | DaisySP `Limiter` @ 1, then `kMainLimiterMakeup` (~**1.632** / +4.3 dB) | SoftLimit(0.7) ceiling → full scale; safety `clamp +/-1` after |
+| `kPlayBusGain` | **1.000** | Retired for live play (SAB dB law); calibrate may rewrite |
+| `kDrumBusGain` | **1.000** | Drum stem vs play (target drum−play **−11 ±2** dB; `ops:daisy:play-drum-balance:calibrate`) |
 | `kVoiceOutGain` | **1.0** | Post-FX voice output |
-| `kScMakeupDb` | **+5** | Sidechain makeup (Tone had +24) |
+| `kScMakeupDb` | **+5** | Sidechain makeup (Tone +24 buried kit; cafe ear) |
 | `kScMix` | **0.75** | Sidechain wet mix (Tone product) |
-| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Sidechain timing (attack faster than Tone 5 ms) |
+| `kScAttackSec` / `kScReleaseSec` | **0.001** / 0.06 | Fast duck onset so hits punch play |
 | SC key trims | bg/tts **-12 dB**, drums **`kScDrumKeyDb` (−20)** | Key bus only (`zss_main.cpp`) |
 | `kScDrumBassKeyDb` | **+8** | Bass into SC only (Tone MembraneSynth volume); audible kick stays `kDrumBassVolumeDb` |
 | SC clap/bass tap | pre-`kDrumGains` | `drumsout()` — kit gain is audible-only |
-| `kMainCompThresholdDb` | **-24** | Main compressor (was Tone -28; less GR into limiter) |
+| `kMainCompThresholdDb` | **-24** | Main compressor (was Tone −28) |
 | `kMainCompRatio` | **4** | |
 | `kMainCompKneeDb` | **30** | Soft knee (Tone `Compressor` knee) |
 | `kMainCompMix` | **1.0** | Full wet GR |
@@ -9265,7 +9266,7 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | `kDrumCowbellVolumeDb` | **0** | Was +8; cowbell matches flat gains |
 | `kDrumBassVolumeDb` | **0** | Kick uses `kDrumGains[9]` only |
 
-Default per-voice volume dB: **0** (`wasmvoicecfgsab.ts` `DEFAULT_WASM_VOICE_VOLUME_DB`).
+Native `k*VoiceGain` values above are waveform makeup inside DSP. **Effective loudness vs `#synth square`** is normalized on type select via per-type `volume` dB in [`voicelevelvolume.ts`](../../backend/wasm/voicelevelvolume.ts) (`withlevelvolume` in `wasmvoiceconfig.ts`), written to voicecfg slot 5. Offline gate: mid-window RMS within **±1.5 dB** of square (comp/SC/limiter bypassed; `ops/lib/daisy-parity/voicelevelsweep.ts`). Base default remains **0** (`DEFAULT_WASM_VOICE_VOLUME_DB`) until a `#synth` type is selected.
 
 ## Web Audio shell
 
@@ -9375,7 +9376,7 @@ Parallel wet sends. Vibrato is pitch modulation, not a wet send. See [fx-types-r
 
 **Main compressor params:** threshold −28 dB, ratio 4:1, attack 3 ms, release 150 ms, knee 30 dB, applied GR slew 8 ms / 150 ms (Tone product).
 
-**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 1 ms, release 60 ms, mix 0.75, makeup **+5 dB** (Tone had +24); bg/TTS send −12 dB, drum send **−20 dB** (`kScDrumKeyDb`).
+**Sidechain params:** threshold −42 dB (power domain), ratio 5:1, attack 5 ms, release 60 ms, mix 0.75, makeup **+24 dB** (Tone product); bg/TTS send −12 dB, drum send **−28 dB** (`kScDrumKeyDb`).
 
 **FX bus gain:** per-send linear gain from [`wasmfxstate.ts`](../../backend/wasm/wasmfxstate.ts) (`on` → 50). Echo/reverb use send×wet; **`wet_sum`** × 1.4 then the return compressor before `dry + wet_sum`. Offline matrix: `yarn task run ops:daisy:level-stability:test:fxmatrix`.
 
@@ -10935,7 +10936,7 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 | Key | Default | SAB | Sample owner | Status |
 |-----|---------|-----|--------------|--------|
 | `restart` | — | resets voices+osc+algo+FX | applyreset | Proven (apply test) |
-| `vol`/`volume` | 0 dB | voicecfg slot 5 | all voices | Wired |
+| `vol`/`volume` | type table then user | voicecfg slot 5 | all voices | Wired; `#synth` type select applies [`VOICE_LEVEL_VOLUME_DB`](../../backend/wasm/voicelevelvolume.ts) so voices match square ±1.5 dB RMS |
 | `env`/`envelope` | `0.01/0.01/0.5/0.01` (type may override) | voicecfg 0–3 | `ZssLinearEnv` / algo out / SOS | Wired |
 | `port`/`portamento` | 0 | voicecfg 4 | SYNTH, ALGO, BOWED only | Wired |
 

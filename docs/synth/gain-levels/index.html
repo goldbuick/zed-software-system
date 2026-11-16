@@ -33,7 +33,7 @@
   RZ --> OUT[&quot;clamp +/-1&quot;]"></blume-mermaid>
 <p><code>#playvol</code> / <code>#bgvol</code> / <code>#ttsvol</code> are stem faders (SAB PLAY/BGPLAY/TTS) after <code>#vol</code> scale
 (<code>effective = trim * vol / 100</code>). <code>#vol</code> is also pushed raw on SAB VOL for the drum stem.
-Play, bg, tts, and drums share dB law <code>kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb</code> (<strong>60</strong> / <strong>-105</strong>). Doubling SAB (~<code>#vol</code> 50→100) is about <strong>+18 dB</strong>. Razzle is not a volume fader.</p>
+Play, bg, tts, and drums share dB law <code>kBusVolDbPerDecade*log10(vol)+kBusVolOffsetDb</code> (<strong>70</strong> / <strong>-105</strong>). Doubling SAB (~<code>#vol</code> 50→100) is about <strong>+21 dB</strong>; raw <code>#vol</code> 100 ≈ <strong>+35 dB</strong>. Razzle is not a volume fader.</p>
 <h2 id="user-faders-sab-zss_main-0-100"><a class="blume-heading-anchor" href="#user-faders-sab-zss_main-0-100">User faders (SAB <code>zss_main</code>, 0-100)</a></h2>
 <p>Defined in <a href="../../backend/wasm/wasmmainsab.ts"><code>wasmmainsab.ts</code></a>. Mute floor: raw <code>&lt;= 0.001</code> -&gt; gain <code>0</code>.
 Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 100</code> (defaults: main <strong>50</strong>, bus trims <strong>90</strong> -&gt; SAB <strong>45</strong>). VOL slot is raw <code>#vol</code>.</p>
@@ -86,9 +86,9 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <tr>
 <td>Voice <code>vol</code></td>
 <td>voice cfg</td>
-<td><strong>0 dB</strong></td>
+<td>type table / <strong>0</strong></td>
 <td><code>dbtoamp(vol_db)</code></td>
-<td>Per-voice via <code>#synthN</code></td>
+<td><code>#synth</code> type select sets <a href="../../backend/wasm/voicelevelvolume.ts"><code>VOICE_LEVEL_VOLUME_DB</code></a>; <code>#synthN vol</code> overrides</td>
 </tr>
 </tbody>
 </table></div>
@@ -106,13 +106,18 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <tbody>
 <tr>
 <td>Main limiter</td>
-<td>DaisySP <code>Limiter</code> @ threshold 1</td>
-<td>Peak control only; no post makeup. Safety <code>clamp +/-1</code> after</td>
+<td>DaisySP <code>Limiter</code> @ 1, then <code>kMainLimiterMakeup</code> (~<strong>1.632</strong> / +4.3 dB)</td>
+<td>SoftLimit(0.7) ceiling → full scale; safety <code>clamp +/-1</code> after</td>
+</tr>
+<tr>
+<td><code>kPlayBusGain</code></td>
+<td><strong>1.000</strong></td>
+<td>Retired for live play (SAB dB law); calibrate may rewrite</td>
 </tr>
 <tr>
 <td><code>kDrumBusGain</code></td>
-<td><strong>1.0</strong></td>
-<td>Drum stem vs play under <code>#vol</code> (was 1.618; cafe ear limiter duck; calibrate: <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
+<td><strong>1.000</strong></td>
+<td>Drum stem vs play (target drum−play <strong>−11 ±2</strong> dB; <code>ops:daisy:play-drum-balance:calibrate</code>)</td>
 </tr>
 <tr>
 <td><code>kVoiceOutGain</code></td>
@@ -122,7 +127,7 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <tr>
 <td><code>kScMakeupDb</code></td>
 <td><strong>+5</strong></td>
-<td>Sidechain makeup (Tone had +24)</td>
+<td>Sidechain makeup (Tone +24 buried kit; cafe ear)</td>
 </tr>
 <tr>
 <td><code>kScMix</code></td>
@@ -132,7 +137,7 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <tr>
 <td><code>kScAttackSec</code> / <code>kScReleaseSec</code></td>
 <td><strong>0.001</strong> / 0.06</td>
-<td>Sidechain timing (attack faster than Tone 5 ms)</td>
+<td>Fast duck onset so hits punch play</td>
 </tr>
 <tr>
 <td>SC key trims</td>
@@ -152,7 +157,7 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 <tr>
 <td><code>kMainCompThresholdDb</code></td>
 <td><strong>-24</strong></td>
-<td>Main compressor (was Tone -28; less GR into limiter)</td>
+<td>Main compressor (was Tone −28)</td>
 </tr>
 <tr>
 <td><code>kMainCompRatio</code></td>
@@ -419,7 +424,7 @@ Play/bg/tts SAB values are <strong>effective</strong> trims: <code>bus * #vol / 
 </tr>
 </tbody>
 </table></div>
-<p>Default per-voice volume dB: <strong>0</strong> (<code>wasmvoicecfgsab.ts</code> <code>DEFAULT_WASM_VOICE_VOLUME_DB</code>).</p>
+<p>Native <code>k*VoiceGain</code> values above are waveform makeup inside DSP. <strong>Effective loudness vs <code>#synth square</code></strong> is normalized on type select via per-type <code>volume</code> dB in <a href="../../backend/wasm/voicelevelvolume.ts"><code>voicelevelvolume.ts</code></a> (<code>withlevelvolume</code> in <code>wasmvoiceconfig.ts</code>), written to voicecfg slot 5. Offline gate: mid-window RMS within <strong>±1.5 dB</strong> of square (comp/SC/limiter bypassed; <code>ops/lib/daisy-parity/voicelevelsweep.ts</code>). Base default remains <strong>0</strong> (<code>DEFAULT_WASM_VOICE_VOLUME_DB</code>) until a <code>#synth</code> type is selected.</p>
 <h2 id="web-audio-shell"><a class="blume-heading-anchor" href="#web-audio-shell">Web Audio shell</a></h2>
 <div class="blume-table-scroll" tabIndex="0"><table>
 <thead>

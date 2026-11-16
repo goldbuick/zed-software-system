@@ -51,7 +51,7 @@ Config path: `#synth` → [audio.ts](../../../../firmware/audio.ts) `handlesynth
 | Key | Default | SAB | Sample owner | Status |
 |-----|---------|-----|--------------|--------|
 | `restart` | — | resets voices+osc+algo+FX | applyreset | Proven (apply test) |
-| `vol`/`volume` | 0 dB | voicecfg slot 5 | all voices | Wired |
+| `vol`/`volume` | type table then user | voicecfg slot 5 | all voices | Wired; `#synth` type select applies [`VOICE_LEVEL_VOLUME_DB`](../../backend/wasm/voicelevelvolume.ts) so voices match square ±1.5 dB RMS |
 | `env`/`envelope` | `0.01/0.01/0.5/0.01` (type may override) | voicecfg 0–3 | `ZssLinearEnv` / algo out / SOS | Wired |
 | `port`/`portamento` | 0 | voicecfg 4 | SYNTH, ALGO, BOWED only | Wired |
 
