@@ -24,7 +24,7 @@ function isfile(path: string): boolean {
 /**
  * Parenthesized content folders are Blume route groups. They do not appear
  * in the public URL, including a group between two public segments:
- * /features/boards is content/(lookup)/features/(world)/boards.md.
+ * /synth/gain-levels is content/(lookup)/synth/(path)/gain-levels.mdx.
  */
 function sitopathexists(dir: string, segments: string[]): boolean {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {

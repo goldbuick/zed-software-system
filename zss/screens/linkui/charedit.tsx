@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registercopy } from 'zss/device/api'
@@ -22,7 +22,7 @@ import {
   setlinkeditingkey,
   useLinkEditingKey,
 } from 'zss/screens/linkui/linkediting'
-import { inputcolor } from 'zss/screens/panel/common'
+import { ScrollContext, inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 
 import { LinkTapTarget } from './linktap'
@@ -50,6 +50,7 @@ function coords() {
 export function LinkCharEdit({ surface }: LinkWidgetProps) {
   linkbegin(surface)
   const allowhotkeys = linkallowhotkeys(surface)
+  const scroll = useContext(ScrollContext)
 
   const target = maptovalue(surface.words[0], '')
 
@@ -93,8 +94,11 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
   }, [address, state])
 
   const invokeediting = useCallback(() => {
+    // Scroll window is mid-anchored on cursor; select this row before expand
+    // so the ascii grid is in the visible panel (not below the fold).
+    scroll.setcursor(surface.striperow)
     enterediting()
-  }, [enterediting])
+  }, [scroll, surface.striperow, enterediting])
 
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
@@ -226,7 +230,7 @@ export function LinkCharEdit({ surface }: LinkWidgetProps) {
         ontap={enterediting}
       />
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
-      {allowhotkeys && surface.active ? (
+      {allowhotkeys && (surface.layout === 'panel' || surface.active) ? (
         <UserHotkey hotkey={SHORTCUT}>{invokeediting}</UserHotkey>
       ) : null}
     </>

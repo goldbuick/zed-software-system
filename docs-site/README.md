@@ -12,7 +12,7 @@ Blume static docs for **https://zed.cafe/docs/** (Zed Cafe Docs: creator guides 
 | `public/zns-dot-tile.svg` | Checkerboard blue-on-blue dots (tape / ZNS backplate) |
 | `content/index.md` | Introduction, the loose page above the doors |
 | `content/guides/` | **Guides** — creator tutorials. URLs stay `/guides/...` |
-| `content/(lookup)/` | **Look up** — `features/`, `glossary.md`, and the `firmware` and `synth` symlinks. URLs stay `/features`, `/glossary`, `/firmware/...`, `/synth/...` |
+| `content/(lookup)/` | **Look up** — `glossary.md`, and the `firmware` and `synth` symlinks. URLs stay `/glossary`, `/firmware/...`, `/synth/...` |
 | `content/(system)/` | **System** — `(reference)` (map, architecture) plus the remaining `zss/**/docs` and `ops/docs` symlinks |
 
 The sidebar display is `page`: each door is one row, and opening it shows only that door. Inside Synth, Play and Internals (folder id `path`) are section headers (`display: "flat"` on those folders). Upstream folder meta has no per-folder display; `ops/patches/blume+1.1.3.patch` adds it. Parentheses in a folder name group pages without adding a URL segment.
