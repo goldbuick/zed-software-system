@@ -260,3 +260,63 @@ blume-mermaid foreignObject span {
 [data-blume-page-actions] details:has(a[data-open-in]) {
   display: none;
 }
+
+/* Firmware command where-badges (C / L / R). */
+.fw-where-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin: 0.75rem 0 1.25rem;
+  color: var(--blume-muted-foreground);
+  font-size: 0.9em;
+}
+
+/* Keep Where column wide enough for C+L+R on one row. */
+article.prose table:has(.fw-where-cell) th:nth-child(2),
+article.prose table:has(.fw-where-cell) td:nth-child(2) {
+  width: 6.5rem;
+  min-width: 6.5rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.fw-where-cell {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.2em;
+  white-space: nowrap;
+}
+
+.fw-where {
+  display: inline-block;
+  min-width: 1.25em;
+  padding: 0.05em 0.25em;
+  border: 1px solid var(--blume-border);
+  font-size: 0.75em;
+  font-family: var(--blume-font-mono);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fw-where-cli {
+  color: #000000;
+  background: var(--blume-action);
+  border-color: var(--blume-action);
+}
+
+.fw-where-loader {
+  color: #000000;
+  background: #ffaa55;
+  border-color: #ffaa55;
+}
+
+.fw-where-runtime {
+  color: #000000;
+  background: var(--blume-accent);
+  border-color: var(--blume-accent);
+}
+

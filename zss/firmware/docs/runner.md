@@ -4,12 +4,6 @@ title: runner.ts
 
 **Purpose**: Composes firmware modules into drivers and provides the orchestration API for command lookup, stat access, and tick hooks. The runner determines which firmwares are active for each execution context.
 
-## Dependencies
-
-- `zss/chip` — CHIP type
-- `zss/firmware` — FIRMWARE, FIRMWARE_COMMAND types
-- All firmware modules (audio, board, cli, element, loader, network, runtime, transforms)
-
 ## DRIVER_TYPE Enum
 
 | Value | Purpose |

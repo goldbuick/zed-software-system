@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { defineCommand, runMain } from 'citty'
 
-import { checktasksdoc, writetasksdoc } from './docs'
 import { getalltasks, gettaskmap, taskidfromsegments } from './registry'
 import { explaintask, listtasks, runtask } from './runner'
 import { TASK_GROUPS } from './types'
@@ -263,26 +262,43 @@ const explaincmd = defineCommand({
 const docscmd = defineCommand({
   meta: {
     name: 'docs',
-    description: 'Generate ops/docs/tasks.md (use --check in CI)',
+    description:
+      'Generate ops/docs/tasks.md and firmware command catalog (use --check in CI)',
   },
   args: {
     check: {
       type: 'boolean',
-      description: 'Exit 1 if ops/docs/tasks.md is out of date',
+      description:
+        'Exit 1 if tasks.md or firmware command catalog docs are out of date',
       default: false,
     },
   },
-  run({ args }) {
+  async run({ args }) {
+    const {
+      checkfirmwarecatalogdocs,
+      checktasksdoc,
+      writefirmwarecatalogdocs,
+      writetasksdoc,
+    } = await import('./docs')
     if (args.check) {
       if (!checktasksdoc()) {
         console.error('ops/docs/tasks.md is out of date — run: yarn task docs')
         process.exit(1)
       }
       console.log('ops/docs/tasks.md is up to date')
+      if (!checkfirmwarecatalogdocs()) {
+        console.error(
+          'firmware command catalog is out of date — run: yarn task docs',
+        )
+        process.exit(1)
+      }
+      console.log('firmware command catalog is up to date')
       return
     }
     writetasksdoc()
     console.log('wrote ops/docs/tasks.md')
+    writefirmwarecatalogdocs()
+    console.log('wrote firmware command catalog (overview)')
   },
 })
 

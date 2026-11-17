@@ -2,38 +2,29 @@
 title: Firmware Documentation
 ---
 
-The firmware system provides the command vocabulary for the Zed Software System (ZSS) — a game engine and creative coding environment. Each firmware module defines a set of commands that can be invoked from user-written code (codepages) or from the command-line interface.
+Blume landing page: [Overview](index.mdx) (`/docs/firmware`) — generated A–Z `#command` table with where-badges (`yarn task docs`).
 
-## Architecture Overview
+The firmware system provides the `#command` vocabulary for ZSS. Modules register handlers via `createfirmware()`; [`runner.ts`](../runner.ts) composes them into CLI, LOADER, and RUNTIME drivers.
 
-Firmware modules are created via `createfirmware()` from `zss/firmware.ts` and can optionally define:
+## Module index
 
-- **Commands** — Named handlers invoked when the user types `#commandname args`
-- **get/set hooks** — Custom variable access for the chip's execution context
-- **everytick/aftertick** — Per-tick lifecycle callbacks
-
-Commands are composed into **drivers** based on context (CLI, LOADER, RUNTIME). The runner (`runner.ts`) orchestrates which firmwares are active for each driver type.
-
-## Module Index
+Published under `/docs/firmware` (same order as Overview Modules):
 
 | File | Purpose |
 |------|---------|
-| [firmware-core.md](firmware-core.md) | Core firmware factory and types (`zss/firmware.ts`) |
+| [index.mdx](index.mdx) | Overview (drivers + full command table; generated) |
 | [audio.md](audio.md) | Audio synthesis, playback, TTS, and effects |
 | [board.md](board.md) | Board creation, element placement, shooting, duplication |
 | [cli.md](cli.md) | Command-line interface, book/page management, export, multiplayer |
 | [element.md](element.md) | Element stats, movement, lifecycle, and code execution |
-| [loader.md](loader.md) | File loading (text, JSON, binary) and loader context |
-| [loaderbinary.md](loaderbinary.md) | Binary file parsing (typed reads) |
-| [loaderjson.md](loaderjson.md) | JSON parsing with JMESPath |
-| [loadertext.md](loadertext.md) | Text file parsing (line-by-line, regex) |
+| [loader.md](loader.md) | File loading + `loader/text|json|binary|media` handlers |
 | [network.md](network.md) | HTTP fetch commands |
-| [runner.md](runner.md) | Driver composition and firmware orchestration |
 | [runtime.md](runtime.md) | Runtime messaging, UI, and gadget integration |
 | [transforms.md](transforms.md) | Board transformations (snapshot, copy, remix, weave, pivot) |
-| [commands/](commands/index.md) | Full command reference: shared tables plus [cli](commands/cli.md), [runtime](commands/runtime.md), [loader](commands/loader.md) pages with one heading per command |
 
-## Driver Types
+Repo only (not published): [firmware-core.md](firmware-core.md), [runner.md](runner.md), [loadertext.md](loadertext.md), [loaderjson.md](loaderjson.md), [loaderbinary.md](loaderbinary.md).
+
+## Driver types
 
 - **CLI** — User input driving software/terminal state (cli + standardlib)
 - **LOADER** — Importing external content into books (loader + standardlib)

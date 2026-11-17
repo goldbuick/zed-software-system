@@ -57,6 +57,13 @@ export default defineConfig({
       '**/tasks.md',
       '**/markdown-link-check.json',
       '**/wip-intent-*',
+      // Repo browsing only — Overview is /firmware (index.mdx).
+      '**/firmware/README.md',
+      '**/firmware/firmware-core.md',
+      '**/firmware/runner.md',
+      '**/firmware/loadertext.md',
+      '**/firmware/loaderjson.md',
+      '**/firmware/loaderbinary.md',
     ],
   },
   search: {

@@ -1,10 +1,12 @@
 ---
-title: firmware.ts (Core)
+title: Core factory
+description: createfirmware API and types in zss/firmware.ts — register commands and lifecycle hooks.
 ---
 
-**Location**: `zss/firmware.ts` (parent of firmware folder)
+**Location**: [`zss/firmware.ts`](zss/firmware.ts) (parent of the firmware folder)
 
-**Purpose**: Defines the firmware factory and types. `createfirmware` builds a firmware module that can register commands and optional lifecycle/get/set hooks.
+**Purpose**: Defines the firmware factory and types. `createfirmware` builds a firmware module that can register commands and optional lifecycle/get/set hooks. For the product overview, start at [Overview](index.mdx).
+
 
 ## Types
 

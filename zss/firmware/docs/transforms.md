@@ -1,18 +1,8 @@
 ---
-title: transforms.ts
+title: Transforms
 ---
 
 **Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, erase, weave, and pivot. Used for level editing and procedural generation.
-
-## Dependencies
-
-- `zss/feature/boardcopy` — boardcopy
-- `zss/feature/boarderase` — boarderase
-- `zss/feature/boardpivot` — boardpivot
-- `zss/feature/boardremix` — boardremix
-- `zss/feature/boardsnapshot` — boardsnapshot, boardrevert
-- `zss/feature/boardweave` — boardweave
-- `zss/memory/*` — book/codepage lookups
 
 ## Commands
 
