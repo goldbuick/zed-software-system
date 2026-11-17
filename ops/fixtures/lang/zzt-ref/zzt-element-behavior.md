@@ -5,7 +5,7 @@ Implementation reference for fixing the cafe element library so each kind matche
 - **ZZT truth:** [Reconstruction of ZZT](https://github.com/asiekierka/reconstruction-of-zzt) -- [`SRC/ELEMENTS.PAS`](https://github.com/asiekierka/reconstruction-of-zzt/blob/master/SRC/ELEMENTS.PAS) (procs + `InitElementDefs`) and [`SRC/GAMEVARS.PAS`](https://github.com/asiekierka/reconstruction-of-zzt/blob/master/SRC/GAMEVARS.PAS) (`E_*` ids, `TElementDef`, `TStat`).
 - **Source of truth to fix (canonical element library):** the coolregionsbow book at [`ops/fixtures/books/example-coolregionsbow.book.json`](../../books/example-coolregionsbow.book.json), loaded via [`ops/lib/coolregionsbowbook.ts`](../../../lib/coolregionsbowbook.ts) (`loadcoolregionsbowelementlibrary`). Fix the element codepages here.
 - **Inspection snapshot:** the workspace export `darkpianoshammer` / `sid_vuYEPNKWWAPd` (`/Users/goldbuick/Development/zed-workspace/darkpianoshammer-sid_vuYEPNKWWAPd`, `<kind>-sid_<id>/{object|terrain}/element.json`) is an instance of that library and is what the code excerpts below were read from -- edit the book source, not this export.
-- **ZSS command surface:** [`zss/firmware/docs/element.md`](../../../../zss/firmware/docs/element.md). ID <-> kind import map: [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts).
+- **ZSS command surface:** [`zss/firmware/docs/element.mdx`](../../../../zss/firmware/docs/element.mdx). ID <-> kind import map: [`zss/feature/parse/zzt.ts`](../../../../zss/feature/parse/zzt.ts).
 
 ## ZZT tick model mapped to ZSS
 
@@ -48,7 +48,7 @@ Implications for the elements below:
 
 ## ZSS stat and flag reference
 
-Vocabulary these elements rely on. Full command surface: [`zss/firmware/docs/element.md`](../../../../zss/firmware/docs/element.md); collision names: [`zss/words/collision.ts`](../../../../zss/words/collision.ts).
+Vocabulary these elements rely on. Full command surface: [`zss/firmware/docs/element.mdx`](../../../../zss/firmware/docs/element.mdx); collision names: [`zss/words/collision.ts`](../../../../zss/words/collision.ts).
 
 ### World stats (player-scoped, ZZT `World.Info`)
 

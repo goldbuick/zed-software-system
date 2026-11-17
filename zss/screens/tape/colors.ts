@@ -429,7 +429,7 @@ function zssplaywordcolor(word: string) {
 }
 
 const PLAY_COMMAND_RE =
-  /^(play|bgplay|bgplayon64n|bgplayon32n|bgplayon16n|bgplayon8n|bgplayon4n|bgplayon2n|bgplayon1n) /i
+  /^(play|bgplay) /i
 
 export function zsswordcolor(
   word: string,

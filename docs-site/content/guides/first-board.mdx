@@ -5,9 +5,9 @@ description: Build walls on the title board, connect a second room, then save an
 
 In this guide you build two small rooms, connect them with an exit, and share a link to them. It assumes you have finished [Your first ten minutes](/guides/first-ten-minutes) and still have **Quick Start Kit** open.
 
-You are already standing on **title**. That book has a board page named `title` and an object page named `player`, which is why login put you here. This guide builds on that board. It does not create a second one named `title`.
+You are already standing on **title**. That book has a <Tooltip tip="A code page that stores a board layout inside a book." headline="board page" href="/glossary#board-page">board page</Tooltip> named `title` and an <Tooltip tip="A code page that defines reusable object behavior bound by kind name." headline="object page" href="/glossary#object-page">object page</Tooltip> named `player`, which is why login put you here. This guide builds on that board. It does not create a second one named `title`.
 
-Walls use `solid`, a terrain page already in this book.
+Walls use `solid`, a <Tooltip tip="A code page of background tile kinds for the board terrain layer." headline="terrain page" href="/glossary#terrain-page">terrain page</Tooltip> already in this book.
 
 ## Place some walls
 
@@ -19,13 +19,13 @@ This is the same `#put` as last time. A color word goes in front of the kind. It
 
 Walk with the arrow keys and repeat. Type the same command with `west`, `south`, or `east` to sketch the outline of a room. Swap `solid` for other terrain already in this book, such as `water` or `fake`.
 
-Placing walls one at a time is slow. The `inspector` makes it faster.
+Placing walls one at a time is slow. The <Tooltip tip="Visual edit mode (#gadget) for picking cells, changing stats, and copy/find tools." headline="inspector" href="/glossary#inspector">inspector</Tooltip> makes it faster.
 
 **You'll know it worked when** a white `solid` sits one cell north of you, and the other directions sketch a room around you.
 
 ## Copy and tile with the inspector
 
-The `inspector` (also called the `gadget`) lets you select cells on the board and edit them with the mouse.
+The inspector (also called the <Tooltip tip="The render and UI projection of the world — layers, scrolls, per-player view." headline="gadget" href="/glossary#gadget">gadget</Tooltip>) lets you select cells on the board and edit them with the mouse.
 
 <Steps>
   <Step title="Turn it on">
@@ -111,7 +111,7 @@ This book already has `@board title` and `@player`. That pair is what login uses
 
   </Step>
   <Step title="Walk through">
-    Run `#boards` and select **title** to go back. Walk off the east edge of the board. You arrive in the cellar. Walk off its west edge to return.
+    Run `#boards` and select **title** to go back. Walk off the east edge of the board (the <Tooltip tip="A board edge link such as @exiteast — walking off that edge goes to the named board." headline="exit" href="/glossary#exit">exit</Tooltip>). You arrive in the cellar. Walk off its west edge to return.
   </Step>
 </Steps>
 

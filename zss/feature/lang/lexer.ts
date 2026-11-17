@@ -431,7 +431,7 @@ export const rparen = createSimpleToken({
 export const command_play = createSimpleToken({
   name: 'command_play',
   pattern:
-    /(play|bgplay|bgplayon64n|bgplayon32n|bgplayon16n|bgplayon8n|bgplayon4n|bgplayon2n|bgplayon1n) .*/i,
+    /(play|bgplay) .*/i,
   start_chars_hint: all_chars,
   longer_alt: stringliteral,
 })

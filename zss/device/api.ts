@@ -643,9 +643,8 @@ export function synthbgplay(
   player: string,
   board: MAYBE<string>,
   buffer: string,
-  quantize: string,
 ) {
-  device.emit(player, 'synth:bgplay', [board, buffer, quantize])
+  device.emit(player, 'synth:bgplay', [board, buffer])
 }
 
 export function synthbgplayvolume(

@@ -222,13 +222,12 @@ function handleplaystr(chip: CHIP, words: WORD[]) {
   return withbuffer
 }
 
-function handlebgplay(chip: CHIP, words: WORD[], quantize: string) {
+function handlebgplay(chip: CHIP, words: WORD[]) {
   synthbgplay(
     SOFTWARE,
     READ_CONTEXT.elementfocus,
     READ_CONTEXT.board?.id ?? '',
     handleplaystr(chip, words),
-    quantize,
   )
 }
 
@@ -393,38 +392,10 @@ export const AUDIO_FIRMWARE = createfirmware()
     'bgplay',
     [ARG_TYPE.MAYBE_NAME, '#play but for sound effects'],
     (chip, words) => {
-      handlebgplay(chip, words, '')
+      handlebgplay(chip, words)
       return 0
     },
   )
-  .command('bgplayon64n', ['bgplay on 64n'], (chip, words) => {
-    handlebgplay(chip, words, '@64n')
-    return 0
-  })
-  .command('bgplayon32n', ['bgplay on 32n'], (chip, words) => {
-    handlebgplay(chip, words, '@32n')
-    return 0
-  })
-  .command('bgplayon16n', ['bgplay on 16n'], (chip, words) => {
-    handlebgplay(chip, words, '@16n')
-    return 0
-  })
-  .command('bgplayon8n', ['bgplay on 8n'], (chip, words) => {
-    handlebgplay(chip, words, '@8n')
-    return 0
-  })
-  .command('bgplayon4n', ['bgplay on 4n'], (chip, words) => {
-    handlebgplay(chip, words, '@4n')
-    return 0
-  })
-  .command('bgplayon2n', ['bgplay on 2n'], (chip, words) => {
-    handlebgplay(chip, words, '@2n')
-    return 0
-  })
-  .command('bgplayon1n', ['bgplay on 1n'], (chip, words) => {
-    handlebgplay(chip, words, '@1n')
-    return 0
-  })
   .command(
     'synth',
     ['all 4 channels of #play synth voices'],

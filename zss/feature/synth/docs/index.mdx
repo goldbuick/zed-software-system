@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: Synth
 description: Synth docs -- play commands, then internals (signal path and module maps).
 ---
 

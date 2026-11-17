@@ -63,6 +63,17 @@ html {
   -moz-osx-font-smoothing: unset;
 }
 
+/*
+ * Desktop: Blume prose defaults to 0.875rem (~14px at a 16px root), which reads
+ * small for IBM EGA 8x14 on wide layouts. Bump the root so rem-based chrome and
+ * prose scale together. Mobile keeps the browser default.
+ */
+@media (min-width: 1024px) {
+  html {
+    font-size: 18px;
+  }
+}
+
 body {
   background-color: var(--blume-background);
   background-image: url('/docs/zns-dot-tile.svg');
