@@ -17,8 +17,7 @@ New here? Work through the guides in order. Each takes 10-20 minutes in the brow
 
 ## Look things up
 
-- [Features](/features) -- what the engine can do, grouped by area
-- [Firmware commands](/firmware/commands) -- every `#command`
+- [Firmware commands](/firmware#all-commands) -- every `#command`
 - [Synth](/synth) -- music, sound effects, and the voice and effect chain
 - [Glossary](/glossary) -- shared vocabulary
 

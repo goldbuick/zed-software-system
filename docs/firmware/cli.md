@@ -1,23 +1,14 @@
 ---
-title: cli.ts
+title: CLI
 ---
 
-For the player-facing list of every CLI command, see [CLI commands](/firmware/commands/cli).
+For the player-facing list of every `#command`, see [All commands](/firmware#all-commands) (filter by the **C** badge).
 
 **Purpose**: Defines `CLI_FIRMWARE` — command-line interface commands for system management, book/page operations, export, multiplayer, ZNS, and editing tools. Most commands are operator-only.
 
 ## Command help in the editor / terminal
 
 Firmware command signatures stay short. Longer inline help for autocomplete hints can be added as Markdown under [`zss/rom/editor/commands/<command>.md`](../../rom/editor/commands/) (bundled via Vite `import.meta.glob` into [`zss/rom/contentmap.ts`](../../rom/contentmap.ts)). The UI reads these through [`commandromhint`](../../screens/tape/commandarghints.ts) (`editor:commands:<lowercase name>`).
-
-## Dependencies
-
-- `zss/device/api` — API layer (vm*, bridge*, register*, etc.)
-- `zss/device/modem` — modemwriteinitstring
-- `zss/rom` — romparse, romprint, romread
-- `zss/feature/url` — znslogin, znslist, znsdelete, etc.
-- `zss/feature/zsstextui` — layout lines; `zss/feature/writeui` — write, hyperlinks, QR, copy
-- `zss/memory/*` — book/page/board/codepage operations
 
 ## Command Categories
 
@@ -96,10 +87,3 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 | Command | Args | Description |
 |---------|------|-------------|
 | `zns` | … | Bare `#zns` → menu (login guide, or publish/import when logged in). Login: `#zns <email> <namespace>`, then `#zns <code>`. Subcommands: `login`, `restart`, `publish bytes\|book\|code`, `import code <key>`, `del`/`delete`. Peer auto-published on multiplayer connect. |
-
-
-## Internal State
-
-- `znstoken`, `znsemail` — ZNS login state (module-level)
-- `isoperator` — Checks if player === memoryreadoperator()
-- `vmflushop` — Flushes VM for operator

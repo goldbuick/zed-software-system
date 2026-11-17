@@ -1,8 +1,9 @@
 ---
-title: "fx.ts & fxchannels.ts"
+title: FX modules
+description: Shared FX chain and per-voice sends (`fx.ts`, `fxchannels.ts`).
 ---
 
-## fx.ts
+## Shared chain (`fx.ts`)
 
 Shared effect chain. All voices route through these effects via FX channels.
 
@@ -28,7 +29,7 @@ Creates Tone.js effects:
 
 ---
 
-## fxchannels.ts
+## Per-voice sends (`fxchannels.ts`)
 
 Per-voice FX send/return. Each voice has a send level for each effect.
 

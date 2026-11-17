@@ -1,8 +1,9 @@
 ---
-title: sourcefxsetup.ts
+title: Source wiring
+description: 8 voices into 4 FX groups (`sourcefxsetup.ts`).
 ---
 
-Wires 8 sound sources and 4 FX channel groups into the audio chain.
+Wires 8 sound sources and 4 FX channel groups into the audio chain (`sourcefxsetup.ts`).
 
 ## Layout
 

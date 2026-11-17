@@ -1,10 +1,11 @@
 ---
-title: Synth implementation matrix
+title: Matrix
+description: Daisy voice, FX, drum, and main-chain implementation map.
 ---
 
 How the DaisySP synth implements voices, FX, drums, and the main chain.
 
-Deep param catalogs: [voice-types-reference.md](/synth/voice-types-reference), [fx-types-reference.md](/synth/fx-types-reference), [audiochain.md](audiochain.md), [drums.md](drums.md), [CUTOVER.md](../../backend/daisy/CUTOVER.md).
+Related: [audiochain.md](audiochain.md), [drums.md](drums.md), [parallel-fx-bus.md](parallel-fx-bus.md), [CUTOVER.md](../../backend/daisy/CUTOVER.md). Player-facing param teaching: [voices](/synth/voices), [effects](/synth/effects).
 
 ## Runtime
 
@@ -18,7 +19,7 @@ flowchart LR
 
 Playback boots through [`createsynthbackend`](../../backend/synthbackendfactory.ts), which only starts Daisy. DSP is C++ under [`native/zss/`](../../backend/daisy/native/zss/) with the WASM API in [`zss_daisy_synth.cpp`](../../backend/daisy/native/zss_daisy_synth.cpp) and the worklet in [`daisyengine.ts`](../../backend/daisy/daisyengine.ts). Shared SAB helpers live in [`backend/wasm/`](../../backend/wasm/).
 
-**DaisySP modules in use:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), `Drip`, and `SyntheticBassDrum` (tom). Bass is a custom membrane. **`#synth env`** on play voices uses **`ZssLinearEnv`** (linear ADSR, note-on reset), not DaisySP `Adsr`. Envelope checks are `yarn task run ops:daisy:adsr-parity:test` (Jest `adsrenvcurve`). **`#synth string`** uses the SOS ensemble (saws + `Svf`/`OnePole`). **Voice FX** are parallel sends in `applyfxgroup()` ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main compressor** is a Tone-shaped knee in `maincompressor()`. **Sidechain duck** is a custom power-domain envelope on the play bus. **`#reverb`** uses DaisySP-LGPL **ReverbSc** plus predelay and `tanh(wet × kReverbPostGain)`.
+**DaisySP modules in use:** `Oscillator`, `Adsr` (doot/sparkle/algo operators only), `Decimator`, `Overdrive`, `Svf`, `Phasor`, `DelayLine`, `Chorus`, `WhiteNoise`, `DcBlock`, `OnePole`, `Autowah`, `StringVoice` (`#synth pluck` strike), `ModalVoice` (bells), and `SyntheticBassDrum` (tom). Bass is a custom membrane. **`#synth env`** on play voices uses **`ZssLinearEnv`** (linear ADSR, note-on reset), not DaisySP `Adsr`. Envelope checks are `yarn task run ops:daisy:adsr-parity:test` (Jest `adsrenvcurve`). **`#synth string`** uses the SOS ensemble (saws + `Svf`/`OnePole`). **Voice FX** are parallel sends in `applyfxgroup()` ([parallel-fx-bus.md](parallel-fx-bus.md)). **Main compressor** is a Tone-shaped knee in `maincompressor()`. **Sidechain duck** is a custom power-domain envelope on the play bus. **`#reverb`** uses DaisySP-LGPL **ReverbSc** plus predelay and `tanh(wet × kReverbPostGain)`.
 
 ---
 
@@ -37,16 +38,16 @@ Enum: [`shared/sourcetype.ts`](../../shared/sourcetype.ts). Dispatch: `VoiceType
 | `noise` | `WHITE_NOISE` | PRNG white table | Whitenoise (custom PRNG) | `noisewave.ts` |
 | `bells` | `BELLS` | `ModalVoice` + sparkle + `voiceenv` | Physical modeling + FM sparkle | cpp `processvoice()` |
 | `doot` | `DOOT` | `Oscillator` + `Adsr` | Drum / physical | cpp `dootvoice()` |
-| `algo0`–`algo7` | `ALGO_SYNTH` | 4× `Oscillator` + 5× `Adsr` | FM (4-op routing) | [algosynth.md](/synth/algosynth) |
+| `algo0`–`algo7` | `ALGO_SYNTH` | 4× `Oscillator` + 5× `Adsr` | FM (4-op routing) | [Algo FM](/synth/algosynth) |
 | `string` | `STRING_VOICE` (algo 0) | SOS ensemble (`stringmachinevoice`) | Subtractive string-machine | cpp `stringmachinevoice()` |
 | `pluck` | `STRING_VOICE` (algo 1) | `StringVoice` × `voiceenv` | Physical modeling | cpp `processvoice()` |
-| `drip` | `DRIP_VOICE` | `Drip` × `voiceenv` | Physical modeling | cpp `processvoice()` |
-| `flute`–`panpipe` | `WIND_VOICE` | `windvoice()` formant bank + breath burst | Subtractive + formants | cpp `zss_sosvoices.cpp` |
-| `piano`/`epiano` | `PIANO_VOICE` | `pianovoice()` + `Fm2` on epiano | FM + `Fm2` tine | cpp `zss_sosvoices.cpp` |
-| `timpani` | `TIMPANI_VOICE` | `timpanivoice()` `ModalVoice` | Physical modeling | cpp `zss_sosvoices.cpp` |
-| `violin`/`viola` | `BOWED_VOICE` | `bowedvoice()` delayed vibrato | Subtractive bowed | cpp `zss_sosvoices.cpp` |
-| `nylon`/`steel` | `GUITAR_VOICE` | `guitarvoice()` + `StringVoice` | Physical modeling | cpp `zss_sosvoices.cpp` |
-| `tonewheel`/`drawbar` | `ORGAN_VOICE` | `organvoice()` scanner vibrato + drawbars | Additive drawbars | cpp `zss_sosvoices.cpp` |
+| `flute` / `clarinet` / `brass` | `WIND_VOICE` | `windvoice()` formant bank + breath burst | Subtractive + formants | cpp `zss_sosvoices.cpp` |
+| `piano` | `PIANO_VOICE` | `pianovoice()` | FM / hammer model | cpp `zss_sosvoices.cpp` |
+| `violin` | `BOWED_VOICE` | `bowedvoice()` delayed vibrato | Subtractive bowed | cpp `zss_sosvoices.cpp` |
+| `steel` | `GUITAR_VOICE` | `guitarvoice()` + `StringVoice` | Physical modeling | cpp `zss_sosvoices.cpp` |
+| `tonewheel` | `ORGAN_VOICE` | `organvoice()` scanner vibrato + drawbars | Additive drawbars | cpp `zss_sosvoices.cpp` |
+
+**Removed named types** (not selectable): `drip`, `panpipe`, `epiano`, `timpani`, `viola`, `nylon`, and `drawbar` as a voice (`drawbar` remains a `#synth tonewheel` param). Allowlist: [`voiceconfig/validation.ts`](../../voiceconfig/validation.ts).
 
 **SYNTH sub-modes** ([`wasmosctype.ts`](../../backend/wasm/wasmosctype.ts)): basic waves, pulse/PWM, AM, FM, fat.
 
@@ -54,7 +55,7 @@ Enum: [`shared/sourcetype.ts`](../../shared/sourcetype.ts). Dispatch: `VoiceType
 
 ## Table 2 — Voice FX
 
-Parallel wet sends. Vibrato is pitch modulation, not a wet send. See [fx-types-reference.md](/synth/fx-types-reference).
+Parallel wet sends. Vibrato is pitch modulation, not a wet send. See [parallel-fx-bus.md](parallel-fx-bus.md) and [effects](/synth/effects).
 
 | ZSS FX | Aliases | DaisySP | Key files |
 |--------|---------|---------|-----------|
@@ -133,7 +134,7 @@ flowchart LR
 | DaisySP category | Used | Notes |
 |------------------|------|-------|
 | `Oscillator` | Yes | Voices, FX LFOs, razzle, custom drums |
-| `Fm2` | Yes | `#synth epiano` tine model |
+| `Fm2` | Struct only | Was `#synth epiano` tine; type removed (field may remain in native) |
 | `Adsr` | Yes | Gated voices and algo operators |
 | `Decimator`, `Overdrive`, `Svf`, `Phasor` | Yes | Voice FX |
 | `DelayLine` | Yes | Echo |

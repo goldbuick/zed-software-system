@@ -37,6 +37,5 @@ A few words show up in every guide:
 
 ## After the guides
 
-- [Firmware commands](/firmware/commands) lists every `#command`.
-- [Features](/features) shows what the engine can do, grouped by area.
+- [Firmware commands](/firmware#all-commands) lists every `#command`.
 - [Glossary](/glossary) defines the shared vocabulary.

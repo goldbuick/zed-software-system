@@ -16,4 +16,3 @@ Gadget owns render projection, display (R3F), scrolls/panels, and user input for
 
 - Engine entry: [`engine.tsx`](../engine.tsx)
 - Memory inspection (creator tools): [inspection.md](../../memory/docs/inspection.md)
-- Spine features: [Inspector](https://zed.cafe/docs/features/inspector/)

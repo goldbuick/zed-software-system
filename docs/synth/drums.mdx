@@ -1,5 +1,6 @@
 ---
-title: Drums Module
+title: Drums
+description: Kit IDs and how drum triggers map into the Daisy path.
 ---
 
 Synthesized drum kit. Each file provides one or more drum sounds with trigger functions.

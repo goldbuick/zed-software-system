@@ -1,69 +1,137 @@
 ---
-title: algosynth.ts
+title: Algo FM
+description: 4-op FM routings for algo0–algo7 (`algosynth.ts` / Daisy algovoice).
 ---
 
 FM-style algorithmic synthesizer with 4 operators and 8 modulation algorithms.
 
-**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. FM depth matches Tone: `carrier_hz += (note_hz * modindex) * modulator` (enveloped op). `#synth osc1`–`osc4` set each operator wave. `#synth algo4` is dual FM: `1→2` and `3→4`, summed as op2+op4.
+**Active runtime:** Daisy WASM (`algovoice` in `zss_voice.cpp`) implements the same 8 routings below. FM depth matches Tone: `carrier_hz += (note_hz * modindex) * modulator` (enveloped op). `#synth osc1`–`osc4` set each operator wave. Select with `#synth algo0` … `#synth algo7`.
+
+Solid arrows below are **audio** into the mix. Dashed arrows are **FM** into another operator’s frequency.
 
 ## Overview
 
-Archived Tone `AlgoSynth` extends `Monophonic` with the same 4-operator FM architecture. Each operator has its own oscillator and envelope; operators modulate each other or output directly based on the selected algorithm.
+Each operator has its own oscillator and envelope. Harmonicity scales op1–op3 vs the note; modindex scales FM depth on the dashed links.
 
-## Architecture
-
+```mermaid
+flowchart LR
+  note[noteHz]
+  note --> harm1[harmonicity1]
+  note --> harm2[harmonicity2]
+  note --> harm3[harmonicity3]
+  note --> op4[op4]
+  harm1 --> op1[op1]
+  harm2 --> op2[op2]
+  harm3 --> op3[op3]
+  op1 -.->|modindex1| op2
+  op2 -.->|modindex2| op3
+  op3 -.->|modindex3| op4
+  op4 --> mix[out]
 ```
-                    ┌─ harmonicity1 ─► operator1 ─┬─ modulation1 ─► operator2 frequency
-                    │                              │
-  frequency ────────┼─ harmonicity2 ─► operator2 ─┼─ modulation2 ─► operator3 frequency
-                    │                              │
-                    └─ harmonicity3 ─► operator3 ─┼─ modulation3 ─► operator4 frequency
-                                                  │
-                    (direct) ─────────────────────► operator4 ─► output
-```
 
-## Algorithm Reference
+That sketch is the classic serial chain (algo 0). Other algorithms change which ops modulate which, and which ops are mixed to the output.
 
-| Algo | Modulation Path | Output |
-|------|-----------------|--------|
-| 0 | 1→2→3→4 (serial) | op4 |
+## Algorithm reference
+
+| Algo | Modulation | Output |
+|------|------------|--------|
+| 0 | 1→2→3→4 serial | op4 |
 | 1 | 1,2→3→4 | op4 |
 | 2 | 1→4, 2→3→4 | op4 |
 | 3 | 1,2,3→4 | op4 |
 | 4 | 1→2, 3→4 | op2 + op4 |
 | 5 | 1→2, 1→3, 1→4 | op2 + op3 + op4 |
 | 6 | 1→2 | op2 |
-| 7 | (additive) | op1 + op2 + op3 + op4 |
+| 7 | none (additive) | op1 + op2 + op3 + op4 |
 
-## Parameters
+### algo0 — serial stack
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `algorithm` | 0-7 | Selects modulation routing |
-| `harmonicity1` | Unit.Positive | Freq ratio for op1 (default 2) |
-| `harmonicity2` | Unit.Positive | Freq ratio for op2 |
-| `harmonicity3` | Unit.Positive | Freq ratio for op3 |
-| `modulationindex1` | Unit.Positive | Modulation depth 1→2 |
-| `modulationindex2` | Unit.Positive | Modulation depth 2→3 |
-| `modulationindex3` | Unit.Positive | Modulation depth 3→4 |
-| `oscillator1`-`4` | OmniOscillatorSynthOptions | Per-operator oscillator (default sine) |
-| `envelope1`-`4` | EnvelopeOptions | Per-operator ADSR |
-
-## Usage
-
-```typescript
-import { AlgoSynth } from './algosynth'
-
-const synth = new AlgoSynth({
-  algorithm: 3,
-  harmonicity1: 2,
-  harmonicity2: 4,
-  modulationindex1: 10,
-  oscillator4: { type: 'sine' },
-})
-synth.triggerAttackRelease('C4', '4n')
+```mermaid
+flowchart LR
+  op1[op1] -.-> op2[op2]
+  op2 -.-> op3[op3]
+  op3 -.-> op4[op4]
+  op4 --> outNode[out]
 ```
 
-## Dependencies
+### algo1 — dual into 3→4
 
-- Tone.js: `Monophonic`, `Synth`, `Multiply`, `Gain`, `Signal`, `Envelope`, `OmniOscillator`
+```mermaid
+flowchart LR
+  op1[op1] -.-> op3[op3]
+  op2[op2] -.-> op3
+  op3 -.-> op4[op4]
+  op4 --> outNode[out]
+```
+
+### algo2 — side carrier + stack
+
+```mermaid
+flowchart LR
+  op1[op1] -.-> op4[op4]
+  op2[op2] -.-> op3[op3]
+  op3 -.-> op4
+  op4 --> outNode[out]
+```
+
+### algo3 — three into carrier
+
+```mermaid
+flowchart LR
+  op1[op1] -.-> op4[op4]
+  op2[op2] -.-> op4
+  op3[op3] -.-> op4
+  op4 --> outNode[out]
+```
+
+### algo4 — dual FM pairs
+
+```mermaid
+flowchart LR
+  op1[op1] -.-> op2[op2]
+  op3[op3] -.-> op4[op4]
+  op2 --> outNode[out]
+  op4 --> outNode
+```
+
+### algo5 — one modulator, three carriers
+
+```mermaid
+flowchart LR
+  op1[op1] -.-> op2[op2]
+  op1 -.-> op3[op3]
+  op1 -.-> op4[op4]
+  op2 --> outNode[out]
+  op3 --> outNode
+  op4 --> outNode
+```
+
+### algo6 — single pair
+
+```mermaid
+flowchart LR
+  op1[op1] -.-> op2[op2]
+  op2 --> outNode[out]
+```
+
+### algo7 — additive
+
+```mermaid
+flowchart LR
+  op1[op1] --> outNode[out]
+  op2[op2] --> outNode
+  op3[op3] --> outNode
+  op4[op4] --> outNode
+```
+
+## Parameters (`#synth` after `algoN`)
+
+| Parameter | Description |
+|-----------|-------------|
+| `harmonicity1`…`3` | Freq ratio for op1–op3 vs note |
+| `modindex1`…`3` | FM depth on the dashed links |
+| `osc1`…`osc4` | Operator wave (basic / pulse / pwm) |
+| `env1`…`env4` | Per-operator ADSR |
+| `env` / `port` / `vol` | Outer voice envelope, glide, level |
+
+Player recipes: [Synth voices](/synth/voices#algo-fm-algo0algo7).

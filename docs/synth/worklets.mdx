@@ -1,5 +1,6 @@
 ---
-title: Audio Worklets
+title: Worklets
+description: Frequency crusher and sidechain AudioWorklet processors.
 ---
 
 Custom AudioWorklet processors for effects not available in Tone.js.

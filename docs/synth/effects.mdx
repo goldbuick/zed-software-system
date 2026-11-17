@@ -1,170 +1,239 @@
 ---
 title: Effects
-description: Player reference for #fcrush, #echo, #reverb, #autofilter, #distort, #vibrato, and #autowah.
+description: Learn voice FX sends — bus addressing, starter presets, and what each effect should sound like.
 ---
 
-Each effect takes a send level from 0 to 100. 0 is off and 100 is full volume. Turn one on with `#fcrush on`, `#echo on`, and the same `on` form for the others. Parameter detail and backend status: [FX types](/synth/fx-types-reference).
+Voice FX are **parallel sends**: dry stays full; wet is mixed beside it. Bus law: [FX bus](/synth/parallel-fx-bus).
 
-## fcrush
+## How sends work
 
-### fcrush level
+| Form | Meaning |
+|------|---------|
+| `#echo on` / `#echo off` | Enable / mute (preset send level) |
+| `#echo <0–100>` | Send amount (`0` = off) |
+| `#echo delaytime …` | Effect parameter |
 
-`#fcrush <number>`
+:::tip Isolate one effect
+Turn others off, change one knob, listen. If A/B gets sticky, `#synth restart` clears FX SAB.
+:::
 
-0-100. 0 is off, 100 is full volume.
+### Which bus?
 
-### rate
+Bare `#echo`, `#reverb`, … hit **play groups 0 and 1** (all four `#play` voices). Numbered suffix picks one bus:
 
-`#fcrush rate <number>`
+| Suffix | Audio |
+|--------|--------|
+| `*1` | `#play` voices 0–1 |
+| `*2` | `#play` voices 2–3 |
+| `*3` | `#bgplay` voices 4–7 |
+| `*4` | TTS |
 
-1 or higher. More rate, more crush.
+Mnemonic: `*1` = play, `*3` = bgplay. Example: `#echo3 on` for background delay only.
 
-## echo
+**`on` preset levels:** vibrato / autofilter ≈ 50; echo / reverb / fcrush / distort / autowah ≈ 18.
 
-### echo level
+---
 
-`#echo <number>`
+## Distort — foldback grit
 
-0-100. 0 is off, 100 is full volume.
+Sine foldback, not soft clip. `oversample` is Tone-only — skip it on Daisy.
 
-### delaytime
+| Key | Default | Ear |
+|-----|---------|-----|
+| `distortion` | 0.4 | Fold amount — higher = harsher |
 
-`#echo delaytime <seconds or notation>`
+```text
+#synth square
+#distort off
+#play hc
+#distort on
+#distort distortion 0.8
+#play hc
+```
 
-Duration between echos. Seconds (for example 1) or note values 1n, 2n, 4n, 8n, 16n, 32n, 64n, 128n.
+**Expect:** clean square → folded / raspy square.
 
-### feedback
+---
 
-`#echo feedback <number>`
+## Vibrato — pitch wobble
 
-A number between 0 and 1. 1 is forever feedback and 0 is none.
+Pitch cents on the voice (not a wet delay). `#vibrato on` auto-targets depth ~0.5 when depth was ~0. Use a held note: `#play hc`.
 
-## reverb
+| Key | Default | Ear |
+|-----|---------|-----|
+| `depth` | 0 (auto ~0.5 on `on`) | How wide the wobble |
+| `frequency` | 5 | Wobble rate (Hz) |
+| `maxdelay` | 0.02 (WASM) | Legacy Tone name; keep fixed while A/B depth |
 
-### reverb level
+```text
+#synth sine
+#vibrato on
+#vibrato depth 0.05
+#play hc
+#vibrato depth 1
+#play hc
+```
 
-`#reverb <number>`
+**Expect:** almost still → obvious pitch shake. Same maxdelay both times.
 
-0-100. 0 is off, 100 is full volume.
+---
 
-### predelay
+## Autowah — envelope filter
 
-`#reverb predelay <seconds>`
+Follower opens the filter from note energy. Needs a **run of notes** (`qceg`), not one held tone. There is **no LFO** here — that is `#autofilter`. Crank send so on/off is obvious.
 
-The amount of time before the reverb is fully ramped in.
+| Key | Default | Ear |
+|-----|---------|-----|
+| `basefrequency` | 100 | Closed filter floor |
+| `octaves` | 6 | How far it opens |
+| `sensitivity` | −3 dB | How easily notes trigger |
+| `gain` | 25 dB | Peak loudness of the wah |
+| `follower` | 0.2 s | Smoothing — the “clock” of the sweep |
 
-### decay
+```text
+#synth sawtooth
+#autowah off
+#play qceg
+#autowah on
+#autowah gain 30
+#play qceg
+```
 
-`#reverb decay <seconds>`
+**Expect:** dry run → vocal / quacky filter that opens on each note attack.
 
-The duration of the reverb.
+---
 
-## autofilter
+## Echo — slapback vs trails
 
-### autofilter level
+| Key | Default | Ear |
+|-----|---------|-----|
+| `delaytime` | `8n` (or seconds / `4n` / `16n` …) | Time between repeats |
+| `feedback` | 0.666 (clamped ≤ ~0.95) | How long the trail lasts |
 
-`#autofilter <number>`
+### Starter: slapback
 
-0-100. 0 is off, 100 is full volume.
+```text
+#synth square
+#echo on
+#echo delaytime 16n
+#echo feedback 0.25
+#play qc eg
+```
 
-### depth
+**Expect:** tight short repeats, notes still clear.
 
-`#autofilter depth <number>`
+### Starter: long hall delay
 
-Controls the intensity of the filter.
+```text
+#echo delaytime 4n
+#echo feedback 0.8
+#play qc
+```
 
-### frequency
+**Expect:** slower echoes that hang longer.
 
-`#autofilter frequency <number>`
+Bgplay only: `#echo3 on` then the same params.
 
-The rate of oscillation of the effect.
+---
 
-### autofilter octaves
+## Reverb — room wash
 
-`#autofilter octaves <number>`
+| Key | Default | Ear |
+|-----|---------|-----|
+| `decay` | 2.5 | How long the tail lasts |
+| `predelay` | 0.01 | Gap before the wash starts |
 
-Controls the range of the effect.
+### Starter: small room
 
-### q
+```text
+#synth piano
+#reverb on
+#reverb decay 1.2
+#reverb predelay 0.01
+#play qc eg
+```
 
-`#autofilter q <number>`
+**Expect:** short room around the dry attack.
 
-Sets the intensity of the effect.
+### Starter: big hall
 
-### type
+```text
+#reverb decay 4
+#reverb predelay 0.05
+#play qc
+```
 
-`#autofilter type <lowpass, highpass, ...>`
+**Expect:** longer wash; attack still audible because dry is parallel.
 
-Sets the behavior of the filter. Filter type names: [BiquadFilterNode type](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type).
+---
 
-## distort
+## Frequency crush — `fcrush` / `fc`
 
-### distort level
+Sample-and-hold grit.
 
-`#distort <number>`
+| Key | Default | Ear |
+|-----|---------|-----|
+| `rate` | 32 (≥ 1) | Lower = crunchier / more aliased |
 
-0-100. 0 is off, 100 is full volume.
+```text
+#synth sawtooth
+#fcrush on
+#fcrush rate 64
+#play hc
+#fcrush rate 8
+#play hc
+```
 
-### distortion
+**Expect:** mild lo-fi → harsh crushed tone.
 
-`#distort distortion <number>`
+---
 
-0 or higher. Controls the strength of the effect.
+## Autofilter — LFO sweep
 
-### oversample
+LFO moves a filter (unlike autowah’s follower).
 
-`#distort oversample <2x|4x|none>`
+| Key | Default | Ear |
+|-----|---------|-----|
+| `frequency` | 3 | LFO rate (Hz) |
+| `depth` | 0.5 | Sweep intensity |
+| `octaves` | 5 | Sweep range |
+| `q` | 1 | Resonance |
+| `type` | lowpass | Biquad type ([MDN names](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode/type)) |
 
-Oversample improves quality.
+```text
+#synth sawtooth
+#autofilter on
+#autofilter frequency 1
+#autofilter depth 0.8
+#play hw
+```
 
-## vibrato
+**Expect:** slow whoosh of brightness on a held note.
 
-### vibrato level
+---
 
-`#vibrato <number>`
+## Multi-FX together
 
-0-100. 0 is off, 100 is full volume.
+Sends sum in parallel — order between FX types does not chain.
 
-### maxdelay
+```text
+#synth square
+#echo on
+#echo delaytime 8n
+#echo feedback 0.4
+#reverb on
+#reverb decay 2.5
+#play qceg
+```
 
-`#vibrato maxdelay <seconds>`
+**Expect:** delay repeats **and** room wash, with dry attack still clear.
 
-A longer delay increases the vibrato.
+More routing detail: [parallel FX bus](/synth/parallel-fx-bus).
 
-## autowah
+---
 
-### autowah level
+## Next
 
-`#autowah <number>`
-
-0-100. 0 is off, 100 is full volume.
-
-### basefrequency
-
-`#autowah basefrequency <frequency>`
-
-The frequency the filter is set to at the low point of the wah.
-
-### autowah octaves
-
-`#autowah octaves <number>`
-
-The number of octaves above the base frequency the filter will sweep to when fully open.
-
-### sensitivity
-
-`#autowah sensitivity <number>`
-
-The decibel threshold sensitivity for the incoming signal. Normal range of -40 to 0.
-
-### gain
-
-`#autowah gain <number>`
-
-Controls the loudness of the effect.
-
-### follower
-
-`#autowah follower <seconds>`
-
-Sets the smoothing time for the effect.
+- [Synth voices](/synth/voices) — pick a patch
+- [Notation](/synth/playnotation) — `#play` characters
+- [FX bus](/synth/parallel-fx-bus) — parallel send routing

@@ -1,14 +1,8 @@
 ---
-title: network.ts
+title: Network
 ---
 
 **Purpose**: Defines `NETWORK_FIRMWARE` — commands for HTTP requests. Provides `#fetch` and `#fetchwith` to perform GET or POST requests and handle responses via callbacks.
-
-## Dependencies
-
-- `zss/device/api` — bridgefetch
-- `zss/device/session` — SOFTWARE
-- `zss/words/*` — argument parsing, type guards (isstrcategory, isstrcollision, isstrcolor, isstrdir)
 
 ## Commands
 

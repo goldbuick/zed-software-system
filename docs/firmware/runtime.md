@@ -1,17 +1,10 @@
 ---
-title: runtime.ts
+title: Runtime
 ---
 
-For the player-facing list of every runtime command, see [Runtime commands](/firmware/commands/runtime).
+For the player-facing list of every `#command`, see [All commands](/firmware#all-commands) (filter by the **R** badge).
 
 **Purpose**: Defines `RUNTIME_FIRMWARE` — commands for runtime messaging, gadget UI, and scroll/text display. Handles the execution context when codepages run during gameplay.
-
-## Dependencies
-
-- `zss/device/api` — vmrefscroll
-- `zss/gadget/data/api` — gadgetaddcenterpadding, gadgetcheckqueue, gadgetcheckset, gadgethyperlink, gadgetstate, gadgettext
-- `zss/memory/gamesend` — memorysendtoelements
-- `zss/words/send` — parsesend
 
 ## Hooks
 

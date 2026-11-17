@@ -1,17 +1,8 @@
 ---
-title: audio.ts
+title: Audio
 ---
 
 **Purpose**: Defines `AUDIO_FIRMWARE` — commands for audio synthesis, playback, text-to-speech (TTS), and effects. Wraps the synth device API for use from user codepages.
-
-## Dependencies
-
-- `zss/chip` — CHIP type for execution context
-- `zss/device/api` — synth functions (synthplay, synthtts, etc.)
-- `zss/device/session` — SOFTWARE session
-- `zss/firmware` — createfirmware
-- `zss/mapping/types` — type guards (isnumber, ispresent, isstring)
-- `zss/words/*` — argument parsing, category/collision/color/dir mapping
 
 ## Command Categories
 
@@ -69,14 +60,3 @@ title: audio.ts
 | `distort1` … `distort3` | Distortion on specific voice |
 | `vibrato1` … `vibrato3` | Vibrato on specific voice |
 | `autowah1` … `autowah3` | Autowah on specific voice |
-
-## Internal Helpers
-
-- **`handlesynthvoice`** — Parses voice config (volume or partials) and calls `synthvoice`
-- **`handlesynthvoicefx`** — Parses fx config/value and calls `synthvoicefx`
-- **`handleplaystr`** — Resolves play buffer from chip vars; validates it’s not a mapped word (category, collision, color, dir)
-- **`handlebgplay`** — Wraps `synthbgplay` with play string; `#bgplayon*` pass `@subdiv` quantize strings
-
-## Context
-
-Uses `READ_CONTEXT.elementfocus` and `READ_CONTEXT.board?.id` for player/board context. All synth calls go through the `SOFTWARE` session.

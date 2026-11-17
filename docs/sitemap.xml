@@ -30,39 +30,15 @@
   <url><loc>https://zed.cafe/docs/feature/url</loc></url>
   <url><loc>https://zed.cafe/docs/feature/wfcoverlapping</loc></url>
   <url><loc>https://zed.cafe/docs/feature/writeui</loc></url>
-  <url><loc>https://zed.cafe/docs/features/boards</loc></url>
-  <url><loc>https://zed.cafe/docs/features/books</loc></url>
-  <url><loc>https://zed.cafe/docs/features/display</loc></url>
-  <url><loc>https://zed.cafe/docs/features/editor</loc></url>
-  <url><loc>https://zed.cafe/docs/features/elements</loc></url>
-  <url><loc>https://zed.cafe/docs/features/files</loc></url>
-  <url><loc>https://zed.cafe/docs/features/headless</loc></url>
-  <url><loc>https://zed.cafe/docs/features/help</loc></url>
-  <url><loc>https://zed.cafe/docs/features/inspector</loc></url>
-  <url><loc>https://zed.cafe/docs/features/multiplayer</loc></url>
-  <url><loc>https://zed.cafe/docs/features/permissions</loc></url>
-  <url><loc>https://zed.cafe/docs/features/session</loc></url>
-  <url><loc>https://zed.cafe/docs/features/speech</loc></url>
-  <url><loc>https://zed.cafe/docs/features/synth</loc></url>
-  <url><loc>https://zed.cafe/docs/features</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/README</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/audio</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/board</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/cli</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/commands/cli</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/commands/loader</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/commands/runtime</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/commands</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/element</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/firmware-core</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/loader</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/loaderbinary</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/loaderjson</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/loadertext</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/network</loc></url>
-  <url><loc>https://zed.cafe/docs/firmware/runner</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/runtime</loc></url>
   <url><loc>https://zed.cafe/docs/firmware/transforms</loc></url>
+  <url><loc>https://zed.cafe/docs/firmware</loc></url>
   <url><loc>https://zed.cafe/docs/gadget/README</loc></url>
   <url><loc>https://zed.cafe/docs/gadget/gadget-scrolls</loc></url>
   <url><loc>https://zed.cafe/docs/gadget/scroll-vs-terminal-hyperlinks</loc></url>
@@ -137,7 +113,6 @@
   <url><loc>https://zed.cafe/docs/synth/effects</loc></url>
   <url><loc>https://zed.cafe/docs/synth/factory</loc></url>
   <url><loc>https://zed.cafe/docs/synth/fx-and-fxchannels</loc></url>
-  <url><loc>https://zed.cafe/docs/synth/fx-types-reference</loc></url>
   <url><loc>https://zed.cafe/docs/synth/gain-levels</loc></url>
   <url><loc>https://zed.cafe/docs/synth/implementation-matrix</loc></url>
   <url><loc>https://zed.cafe/docs/synth/parallel-fx-bus</loc></url>
@@ -147,9 +122,6 @@
   <url><loc>https://zed.cafe/docs/synth/source</loc></url>
   <url><loc>https://zed.cafe/docs/synth/sourcefxsetup</loc></url>
   <url><loc>https://zed.cafe/docs/synth/tickhandler</loc></url>
-  <url><loc>https://zed.cafe/docs/synth/voice-types-reference</loc></url>
-  <url><loc>https://zed.cafe/docs/synth/voiceconfig</loc></url>
-  <url><loc>https://zed.cafe/docs/synth/voicefx</loc></url>
   <url><loc>https://zed.cafe/docs/synth/voices</loc></url>
   <url><loc>https://zed.cafe/docs/synth/worklets</loc></url>
   <url><loc>https://zed.cafe/docs/synth</loc></url>

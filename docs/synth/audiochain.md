@@ -1,5 +1,6 @@
 ---
 title: Main chain
+description: Play, drums, TTS, sidechain, compressor, and razzle into the output.
 ---
 
 Builds the global audio routing and processing chain for the synth.

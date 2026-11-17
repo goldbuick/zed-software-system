@@ -16,4 +16,4 @@ Devices are the message-oriented edges of ZSS: register (UI), vm (sim), bridge, 
 
 - Spine: [System map](https://zed.cafe/docs/map/) · [Architecture](https://zed.cafe/docs/architecture/)
 - Join mode VM: [`joinvm.ts`](../joinvm.ts) (via `createplatform(true)` in [`platform.ts`](../../platform.ts))
-- Firmware commands: [commands/index.md](../../firmware/docs/commands/index.md)
+- Firmware commands: [Overview](../../firmware/docs/index.mdx)

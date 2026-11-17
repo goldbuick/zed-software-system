@@ -1,488 +1,327 @@
 ---
 title: Synth
-description: Player reference for #synth voices and their config keys.
+description: Learn #synth voices by family — what they sound like, which knobs matter, and pasteable A/B recipes.
 ---
 
-`#synth <name>` selects a voice for all four `#play` channels. `#synth1` through `#synth4` set one play voice. `#synth5` sets the `#bgplay` voices. Parameter detail and backend status: [voice types](/synth/voice-types-reference).
+This page is for writing music in cafe.
 
-## Waves
+## Before you play
 
-### sine
+| Command | What it does |
+|---------|--------------|
+| `#synth <name>` | Select / configure all four `#play` voices |
+| `#synth1` … `#synth4` | One play voice |
+| `#synth5 …` | `#bgplay` voices |
+| `#synth restart` | Clear sticky config and FX SAB when A/B gets muddy |
 
-`#synth sine`
+:::tip Digits in `#play` are drums
+`#play 50 c` is woodblock + hat + C — not “C at tempo 50”. Prefer `#play qc`, `hc`, or `qceg`. See [notation](/synth/playnotation).
+:::
 
-### square
+**Expect language below** means: paste the recipe, listen once, change one knob, listen again.
 
-`#synth square`
+## Shared knobs (all voices)
 
-### triangle
+| Key | Meaning |
+|-----|---------|
+| `vol` | Level in dB. Type select already applies a per-voice normalize; `#synth vol` overrides. |
+| `env <a> <d> <s> <r>` | Attack / decay / sustain / release (seconds; sustain 0–1) |
+| `port <seconds>` | Portamento (glide). Works on oscillator, algo, and violin. |
 
-`#synth triangle`
-
-### sawtooth
-
-`#synth sawtooth`
-
-### custom
-
-`#synth custom`
-
-### phase
-
-`#synth phase <degrees>`
-
-Tone OmniOscillator degrees (180 = half cycle). Daisy converts to cycles (`degrees / 360`) in osccfg. Used by sine, square, triangle, sawtooth, custom, and the fat waves.
-
-### pwm
-
-`#synth pwm`
-
-### modfreq
-
-`#synth modfreq <frequency>`
-
-This sets the frequency of change for the pulse width of this oscillator.
-
-### pulse
-
-`#synth pulse`
-
-### width
-
-`#synth width <range>`
-
-A number that is between [-1, 1]. Altering this value changes the shape of the square wave.
-
-### amsine
-
-`#synth amsine`
-
-### amsquare
-
-`#synth amsquare`
-
-### amtriangle
-
-`#synth amtriangle`
-
-### amsawtooth
-
-`#synth amsawtooth`
-
-### harmonicity
-
-`#synth harmonicity <number>`
-
-Harmonicity is the frequency ratio between the carrier and the modulator oscillators. A harmonicity of 1 gives both oscillators the same frequency. Harmonicity = 2 means a change of an octave. Used by the am and fm waves.
-
-### modtype
-
-`#synth modtype <sine, square, triangle, sawtooth>`
-
-Used by the am and fm waves.
-
-### modenv
-
-`#synth modenv <a> <d> <s> <r>`
-
-In seconds. Used by the am and fm waves.
-
-### fmsine
-
-`#synth fmsine`
-
-### fmsquare
-
-`#synth fmsquare`
-
-### fmtriangle
-
-`#synth fmtriangle`
-
-### fmsawtooth
-
-`#synth fmsawtooth`
-
-### modindex
-
-`#synth modindex <number>`
-
-Tone FMOscillator modulation index: carrier Hz ≈ `fc * (1 + index * modWave)`. Default `2`. Used by the fm waves.
-
-### fatsine
-
-`#synth fatsine`
-
-### fatsquare
-
-`#synth fatsquare`
-
-### fattriangle
-
-`#synth fattriangle`
-
-### fatsawtooth
-
-`#synth fatsawtooth`
-
-### count
-
-`#synth count <number>`
-
-This sets the number of oscillators to spread along the given range. Used by the fat waves.
-
-### spread
-
-`#synth spread <cents>`
-
-This signals the number of cents between oscillators. On fat waves this is cents, not the piano unison amount.
-
-## Noise and chips
-
-### retro
-
-`#synth retro`
-
-### buzz
-
-`#synth buzz`
-
-### clang
-
-`#synth clang`
-
-### metallic
-
-`#synth metallic`
-
-### noise
-
-`#synth noise`
-
-### hollow
-
-`#synth hollow`
-
-### bells
-
-`#synth bells`
-
-### doot
-
-`#synth doot`
-
-## Algo and instruments
-
-### algo0
-
-`#synth algo0`
-
-Signal flow legend: s1, s2, s3, s4 are sound sources. m is modulator. c is carrier. `-->` is signal flow.
+Configs can survive a type switch until `#synth restart`.
 
 ```text
-S1 --> M --> S2 --> M --> S3 --> M --> S4 --> C
+#synth square
+#synth env 0.01 0.1 0.4 0.2
+#play qceg
 ```
 
-### harmonicity1
+**Expect:** short square arpeggio with a little sustain.
 
-`#algo0 harmonicity <number>`
+---
 
-`#algo0 harmonicity1` through `harmonicity3`.
+## Basic waves
 
-### modindex1
+Clean single oscillators: `sine`, `square`, `triangle`, `sawtooth`, `custom` (`custom` maps to square in Daisy).
 
-`#algo0 modindex <number>`
+| Key | Ear meaning |
+|-----|-------------|
+| `phase <degrees>` | Start phase (180 = half cycle). Used by basic and fat waves. |
 
-`#algo0 modindex1` through `modindex3`.
+```text
+#synth sine
+#play hc
+#synth square
+#play hc
+```
 
-### osc1
+**Expect:** soft round tone → bright hollow square, same pitch and length.
 
-`#algo0 osc1` through `osc4 <sine, square, triangle, sawtooth, pulse, pwm>`
+---
 
-### env1
+## Pulse and PWM
 
-`#algo0 env1` through `env4 <a> <d> <s> <r>`
+| Voice | Intent |
+|-------|--------|
+| `pulse` | Fixed pulse shape |
+| `pwm` | Pulse width moves with an LFO |
 
-### algo env
+| Key | Range | Ear meaning |
+|-----|-------|-------------|
+| `width` | −1…1 (default ~0.2) | Pulse shape — thinner vs fatter |
+| `modfreq` | Hz (default 1) | **PWM LFO rate**, not FM. Faster = buzzier warble |
 
-`#algo0 env <a> <d> <s> <r>`
+```text
+#synth pulse
+#synth width 0.1
+#play qc
+#synth pwm
+#synth modfreq 4
+#synth width 0.4
+#play hc
+```
 
-### algo port
+**Expect:** static thin pulse → slow-then-faster width wiggle on a held note.
 
-`#algo0 port <seconds>`
+---
 
-### algo vol
+## AM and FM
 
-`#algo0 vol <db>`
+AM rings the carrier with a modulator. FM bends pitch with a modulator (`#synth fm*` ≈ Tone FMOscillator, not FMSynth).
 
-The same keys apply to algo1 through algo7, including the 1-5 channel forms.
+| Key | AM | FM | Defaults |
+|-----|----|----|----------|
+| `harmonicity` | yes | yes | `1` (mod Hz = note × ratio; `2` = octave) |
+| `modtype` | yes | yes | `square` (`sine` / `triangle` / `sawtooth` also) |
+| `modenv` | yes | yes | ADSR on modulation depth |
+| `modindex` | no | **yes** | `2` — depth. Law: `f ≈ fc * (1 + I * m)` |
 
-### algo1
+```text
+#synth fmsine
+#synth harmonicity 1
+#synth modindex 2
+#play qc
+#synth modindex 8
+#play qc
+```
 
-`#synth algo1`
+**Expect:** mild metallic FM → much more clangy / sideband-heavy.
 
-### algo2
+```text
+#synth amsquare
+#synth harmonicity 2
+#play hc
+```
 
-`#synth algo2`
+**Expect:** amplitude wobble at twice the note rate (octave-related AM).
 
-### algo3
+---
 
-`#synth algo3`
+## Fat (unison)
 
-### algo4
+Several detuned copies of one wave: `fatsine`, `fatsquare`, `fattriangle`, `fatsawtooth`.
 
-`#synth algo4`
+| Key | Default | Ear meaning |
+|-----|---------|-------------|
+| `count` | 3 | How many oscillators |
+| `spread` | 20 | Cents between them (not piano unison) |
+| `phase` | 0 | Same as basic waves |
 
-### algo5
+```text
+#synth fatsawtooth
+#synth count 3
+#synth spread 20
+#play hc
+#synth spread 80
+#play hc
+```
 
-`#synth algo5`
+**Expect:** mild chorus → wide detuned stack.
 
-### algo6
+---
 
-`#synth algo6`
+## Noise, chips, bells, doot
 
-### algo7
+| Voice | Intent |
+|-------|--------|
+| `retro` / `buzz` / `clang` / `metallic` | Chip / LFSR noise flavors |
+| `noise` / `hollow` | White / hollow spectral noise (Daisy) |
+| `bells` | Modal one-shot chime |
+| `doot` | Short pitched blip |
 
-`#synth algo7`
+Mostly `env` and `vol` — no oscillator knobs.
 
-### string
+```text
+#synth bells
+#play qc
+#synth metallic
+#play qceg
+```
 
-`#synth string`
+**Expect:** decaying bell hit → scratchy metallic run.
 
-### detune
+---
 
-`#synth detune <0-1>`
+## Algo FM (`algo0`–`algo7`)
 
-### string pwm
+Four-operator FM routings. Select with `#synth algoN`, then set keys with `#synth …` (not `#algo0 …`).
 
-`#synth pwm <0-1>`
+| Key | Meaning |
+|-----|---------|
+| `harmonicity1`…`3` | Operator frequency ratios |
+| `modindex1`…`3` | Operator modulation depths |
+| `osc1`…`osc4` | Wave: basic / pulse / pwm only |
+| `env1`…`env4` | Per-op envelopes |
+| `env` / `port` / `vol` | Outer voice envelope, glide, level |
 
-### vib
+Routing pictures: [algosynth](/synth/algosynth).
 
-`#synth vib <0-1>`
+```text
+#synth algo0
+#play qceg
+#synth algo5
+#play qceg
+```
 
-### filter
+**Expect:** different FM timbres on the same notes (algo5 is usually thinner / brighter than algo0).
 
-`#synth filter <0-1>`
+```text
+#synth algo0
+#synth osc1 sine
+#synth harmonicity1 2
+#synth modindex1 3
+#play hc
+```
 
-### string env
+**Expect:** clearer sine carrier with stronger mod from op 1.
 
-`#synth env <a> <d> <s> <r>`
+---
 
-### string vol
+## Instruments (SOS)
 
-`#synth vol <db>`
+These voices follow Gordon Reid’s [Synth Secrets](https://www.soundonsound.com/series/synth-secrets-sound-sound) instrument articles (Sound On Sound) — subtractive / heuristic models, not sample libraries. Shared `env` / `vol` / `port` (where wired) still apply. Exclusive knobs are 0–1 unless noted.
 
-Select with `#synth string`, then set a key with `#synth detune`. `#synth1` through `#synth4` set one play voice. `#synth5` is bgplay.
+### String machine — `string`
 
-### pluck
+Based on: [Synthesizing Strings: String Machines](https://www.soundonsound.com/techniques/synthesizing-strings-string-machines), [PWM & String Sounds](https://www.soundonsound.com/techniques/synthesizing-strings-pwm-string-sounds).
 
-`#synth pluck`
+| Key | Default-ish | Ear |
+|-----|-------------|-----|
+| `detune` | 0.25 | Ensemble width |
+| `pwm` | 0.2 | OSC2 PWM amount |
+| `vib` | 0.35 | Vibrato |
+| `filter` | 0.5 | Body brightness |
 
-### structure
+```text
+#synth string
+#play hcde
+#synth filter 0.9
+#play hcde
+```
 
-`#synth structure <0-1>`
+**Expect:** pad-like saw stack → brighter / thinner body.
 
-### pluck brightness
+### Pluck — `pluck`
 
-`#synth brightness <0-1>`
+Based on: [Synthesizing Plucked Strings](https://www.soundonsound.com/techniques/synthesizing-plucked-strings) (DaisySP `StringVoice` / Karplus-Strong family).
 
-### pluck damping
+`structure`, `brightness`, `damping`, `accent` — strike and decay of a string model.
 
-`#synth damping <0-1>`
+```text
+#synth pluck
+#play qc egc
+#synth damping 0.3
+#play qc egc
+```
 
-### accent
+**Expect:** short plucked notes → longer ring when damping drops.
 
-`#synth accent <0-1>`
+### Wind — `flute`, `clarinet`, `brass`
 
-### pluck env
+Same keys: `breath`, `pressure`, `brightness`, `resonance`.
 
-`#synth env <a> <d> <s> <r>`
+| Voice | Synth Secrets |
+|-------|---------------|
+| `flute` | [Synthesizing Simple Flutes](https://www.soundonsound.com/techniques/synthesizing-simple-flutes), [Practical Flute Synthesis](https://www.soundonsound.com/techniques/practical-flute-synthesis) |
+| `clarinet` | [Synthesizing Wind Instruments](https://www.soundonsound.com/techniques/synthesizing-wind-instruments) (reed / odd-harmonic square) |
+| `brass` | [Synthesizing Brass Instruments](https://www.soundonsound.com/techniques/synthesizing-brass-instruments) |
 
-### pluck vol
+```text
+#synth flute
+#play qceg
+#synth brass
+#play qceg
+```
 
-`#synth vol <db>`
+**Expect:** airy flute → brassier / louder formants on the same line.
 
-### flute
+### Piano — `piano`
 
-`#synth flute`
+Based on: [Synthesizing Pianos](https://www.soundonsound.com/techniques/synthesizing-pianos).
 
-### breath
+`spread` (0–1 unison), `hammer`, `brightness`, `damping`.
 
-`#synth breath <0-1>`
+```text
+#synth piano
+#play qc eg
+#synth hammer 0.9
+#play qc eg
+```
 
-### pressure
+**Expect:** soft hammer → harder attack.
 
-`#synth pressure <0-1>`
+### Violin — `violin`
 
-### flute brightness
+Based on: [Synthesizing Bowed Strings: The Violin Family](https://www.soundonsound.com/techniques/synthesizing-bowed-strings-violin-family), [Practical Bowed-string Synthesis](https://www.soundonsound.com/techniques/practical-bowed-string-synthesis).
 
-`#synth brightness <0-1>`
+`bow`, `pressure`, `vib`, `body`, plus `port` for slides.
 
-### resonance
+```text
+#synth violin
+#synth port 0.15
+#play hcde
+```
 
-`#synth resonance <0-1>`
+**Expect:** bowed tone with audible glide between notes.
 
-### flute env
+### Steel guitar — `steel`
 
-`#synth env <a> <d> <s> <r>`
+Based on: [The Theoretical Acoustic Guitar Patch](https://www.soundonsound.com/techniques/theoretical-acoustic-guitar-patch), [A Final Attempt To Synthesize Guitars](https://www.soundonsound.com/techniques/final-attempt-synthesize-guitars).
 
-### flute vol
+`pick`, `body`, `damping`, `position`.
 
-`#synth vol <db>`
+```text
+#synth steel
+#play qceg
+#synth pick 0.8
+#play qceg
+```
 
-### clarinet
+**Expect:** brighter / snappier pick attack.
 
-`#synth clarinet`
+### Tonewheel organ — `tonewheel`
 
-The same keys as flute.
+Based on: [Synthesizing Tonewheel Organs: Part 1](https://www.soundonsound.com/techniques/synthesizing-tonewheel-organs-part-1), [Part 2](https://www.soundonsound.com/techniques/synthesizing-tonewheel-organs-part-2), [Tonewheel Organ Implementations Compared](https://www.soundonsound.com/techniques/tonewheel-organ-implementations-compared).
 
-### brass
+| Key | Note |
+|-----|------|
+| `drawbar` | Organ mix param — **not** a voice type |
+| `click` / `leak` / `bright` | Key click, crosstalk, brightness |
 
-`#synth brass`
+```text
+#synth tonewheel
+#play qceg
+#synth drawbar 0.9
+#synth bright 0.8
+#play qceg
+```
 
-The same keys as flute.
+**Expect:** fuller drawbar stack and brighter top.
 
-### piano
+---
 
-`#synth piano`
+## Next
 
-### piano spread
-
-`#synth spread <0-1>`
-
-### hammer
-
-`#synth hammer <0-1>`
-
-### piano brightness
-
-`#synth brightness <0-1>`
-
-### piano damping
-
-`#synth damping <0-1>`
-
-### piano env
-
-`#synth env <a> <d> <s> <r>`
-
-### piano vol
-
-`#synth vol <db>`
-
-### violin
-
-`#synth violin`
-
-### bow
-
-`#synth bow <0-1>`
-
-### violin pressure
-
-`#synth pressure <0-1>`
-
-### violin vib
-
-`#synth vib <0-1>`
-
-### body
-
-`#synth body <0-1>`
-
-### violin port
-
-`#synth port <seconds>`
-
-### violin env
-
-`#synth env <a> <d> <s> <r>`
-
-### violin vol
-
-`#synth vol <db>`
-
-### steel
-
-`#synth steel`
-
-### pick
-
-`#synth pick <0-1>`
-
-### steel body
-
-`#synth body <0-1>`
-
-### steel damping
-
-`#synth damping <0-1>`
-
-### position
-
-`#synth position <0-1>`
-
-### steel env
-
-`#synth env <a> <d> <s> <r>`
-
-### steel vol
-
-`#synth vol <db>`
-
-### tonewheel
-
-`#synth tonewheel`
-
-### drawbar
-
-`#synth drawbar <0-1>`
-
-Drawbar is an organ parameter, not a voice type.
-
-### click
-
-`#synth click <0-1>`
-
-### leak
-
-`#synth leak <0-1>`
-
-### bright
-
-`#synth bright <0-1>`
-
-### tonewheel env
-
-`#synth env <a> <d> <s> <r>`
-
-### tonewheel vol
-
-`#synth vol <db>`
-
-## Shared settings
-
-Configs survive a type switch until restart.
-
-### restart
-
-`#synth restart`
-
-Clears config memory.
-
-### vol
-
-`#synth vol <db>`
-
-Control volume.
-
-### port
-
-`#synth port <seconds>`
-
-Portamento time.
-
-### env
-
-`#synth env <a> <d> <s> <r>`
+- [Effects](/synth/effects) — echo, reverb, distort, vibrato, …
+- [Notation](/synth/playnotation) — `#play` characters
+- [Scales](/synth/scales) — copy-paste scale lines

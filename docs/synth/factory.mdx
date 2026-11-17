@@ -1,8 +1,9 @@
 ---
-title: index.ts
+title: Factory
+description: setupsynth / createsynth entry (`zss/feature/synth/index.ts`).
 ---
 
-Main entry point and synth factory.
+Main entry point and synth factory (`index.ts`).
 
 ## Exports
 

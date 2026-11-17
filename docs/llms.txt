@@ -17,105 +17,44 @@
 
 - [Glossary](https://zed.cafe/docs/glossary): Terms used across Zed Cafe / ZSS — product, world model, devices, and more.
 
-### Features
-
-- [Features](https://zed.cafe/docs/features): Zed Cafe is a browser workshop for text-mode worlds: you build boards, script them, add sound and speech, and share a link so people can play together.
-
-#### Make a world
-
-- [Boards](https://zed.cafe/docs/features/boards): Boards, movement between them, and region edits in Zed Cafe.
-- [Inspector](https://zed.cafe/docs/features/inspector): In-place element editing, search, and style tools in Zed Cafe.
-- [Files](https://zed.cafe/docs/features/files): Import, export, and publish worlds in Zed Cafe.
-
-#### Script it
-
-- [Elements](https://zed.cafe/docs/features/elements): Element scripting commands in Zed Cafe.
-- [Editor](https://zed.cafe/docs/features/editor): Tape editor for ZSS pages in Zed Cafe.
-
-#### Play
-
-- [Display](https://zed.cafe/docs/features/display): Rendering, input, and end of game in Zed Cafe.
-
-#### Sound and speech
-
-- [Synth](https://zed.cafe/docs/features/synth): Play voices, effects, and recording in Zed Cafe.
-- [Speech](https://zed.cafe/docs/features/speech): Text-to-speech and speech-to-text in Zed Cafe.
-
-#### Together
-
-- [Multiplayer](https://zed.cafe/docs/features/multiplayer): Host, join, chat, and share a Zed Cafe session.
-- [Permissions](https://zed.cafe/docs/features/permissions): Roles, bans, and permission groups in Zed Cafe.
-
-#### Keep it
-
-- [Session](https://zed.cafe/docs/features/session): Save, login, and reset a Zed Cafe session.
-- [Books](https://zed.cafe/docs/features/books): List, open, create, rename, search, and trash books and pages.
-
-#### The terminal
-
-- [Help](https://zed.cafe/docs/features/help): The Zed Cafe command line, help scroll, and hotkeys.
-- [Headless](https://zed.cafe/docs/features/headless): Run Zed Cafe in a terminal, without the board canvas.
-
 ### Firmware
 
-- [audio.ts](https://zed.cafe/docs/firmware/audio)
-- [board.ts](https://zed.cafe/docs/firmware/board)
-- [cli.ts](https://zed.cafe/docs/firmware/cli)
-- [element.ts](https://zed.cafe/docs/firmware/element)
-- [Firmware Documentation](https://zed.cafe/docs/firmware/README)
-- [firmware.ts (Core)](https://zed.cafe/docs/firmware/firmware-core)
-- [loader.ts](https://zed.cafe/docs/firmware/loader)
-- [loaderbinary.ts](https://zed.cafe/docs/firmware/loaderbinary)
-- [loaderjson.ts](https://zed.cafe/docs/firmware/loaderjson)
-- [loadertext.ts](https://zed.cafe/docs/firmware/loadertext)
-- [network.ts](https://zed.cafe/docs/firmware/network)
-- [runner.ts](https://zed.cafe/docs/firmware/runner)
-- [runtime.ts](https://zed.cafe/docs/firmware/runtime)
-- [transforms.ts](https://zed.cafe/docs/firmware/transforms)
-
-#### Commands
-
-- [Full command reference](https://zed.cafe/docs/firmware/commands)
-- [CLI commands](https://zed.cafe/docs/firmware/commands/cli): Every terminal
-- [Loader commands](https://zed.cafe/docs/firmware/commands/loader): The
-- [Runtime commands](https://zed.cafe/docs/firmware/commands/runtime): The
+- [Overview](https://zed.cafe/docs/firmware): Firmware is the
+- [Audio](https://zed.cafe/docs/firmware/audio)
+- [Board](https://zed.cafe/docs/firmware/board)
+- [CLI](https://zed.cafe/docs/firmware/cli)
+- [Element](https://zed.cafe/docs/firmware/element)
+- [Loader](https://zed.cafe/docs/firmware/loader)
+- [Network](https://zed.cafe/docs/firmware/network)
+- [Runtime](https://zed.cafe/docs/firmware/runtime)
+- [Transforms](https://zed.cafe/docs/firmware/transforms)
 
 ### Synth
 
-- [Overview](https://zed.cafe/docs/synth): The four doors of the synth docs -- play, path, catalog, and engine.
+- [Overview](https://zed.cafe/docs/synth): Synth docs -- play commands, then internals (signal path and module maps).
 
 #### Play
 
-- [Synth](https://zed.cafe/docs/synth/voices): Player reference for
-- [Effects](https://zed.cafe/docs/synth/effects): Player reference for
+- [Synth](https://zed.cafe/docs/synth/voices): Learn
+- [Effects](https://zed.cafe/docs/synth/effects): Learn voice FX sends — bus addressing, starter presets, and what each effect should sound like.
+- [Notation](https://zed.cafe/docs/synth/playnotation): How to write
 - [Scales](https://zed.cafe/docs/synth/scales): Play lines for major, minor, blues, modal, pentatonic, and exotic scales.
-- [Notation](https://zed.cafe/docs/synth/playnotation)
 
-#### Path
+#### Internals
 
-- [Synth implementation matrix](https://zed.cafe/docs/synth/implementation-matrix)
-- [Gain and volume levels (Daisy)](https://zed.cafe/docs/synth/gain-levels): Reference chart of every tweakable volume/gain stage in the live Daisy synth path.
-- [Main chain](https://zed.cafe/docs/synth/audiochain)
-- [Parallel voice FX bus (Daisy)](https://zed.cafe/docs/synth/parallel-fx-bus)
-- [Drums Module](https://zed.cafe/docs/synth/drums)
-- [Recording & MP3 export](https://zed.cafe/docs/synth/record-and-mp3)
-
-#### Catalog
-
-- [Voice types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/voice-types-reference)
-- [Voice FX types, config params, and WASM vs Tone defaults](https://zed.cafe/docs/synth/fx-types-reference)
-- [Voice Config Module](https://zed.cafe/docs/synth/voiceconfig)
-- [Voice FX Module](https://zed.cafe/docs/synth/voicefx)
-
-#### Engine
-
-- [index.ts](https://zed.cafe/docs/synth/factory)
-- [source.ts](https://zed.cafe/docs/synth/source)
-- [sourcefxsetup.ts](https://zed.cafe/docs/synth/sourcefxsetup)
-- [tickhandler.ts](https://zed.cafe/docs/synth/tickhandler)
-- [fx.ts & fxchannels.ts](https://zed.cafe/docs/synth/fx-and-fxchannels)
-- [algosynth.ts](https://zed.cafe/docs/synth/algosynth)
-- [Audio Worklets](https://zed.cafe/docs/synth/worklets)
+- [Matrix](https://zed.cafe/docs/synth/implementation-matrix): Daisy voice, FX, drum, and main-chain implementation map.
+- [Main chain](https://zed.cafe/docs/synth/audiochain): Play, drums, TTS, sidechain, compressor, and razzle into the output.
+- [FX bus](https://zed.cafe/docs/synth/parallel-fx-bus): Parallel voice FX send/return law in Daisy.
+- [Gain levels](https://zed.cafe/docs/synth/gain-levels): Every tweakable volume/gain stage in the live Daisy synth path.
+- [Drums](https://zed.cafe/docs/synth/drums): Kit IDs and how drum triggers map into the Daisy path.
+- [Recording](https://zed.cafe/docs/synth/record-and-mp3): Offline
+- [Factory](https://zed.cafe/docs/synth/factory): setupsynth / createsynth entry (`zss/feature/synth/index.ts`).
+- [Sources](https://zed.cafe/docs/synth/source): SOURCE_TYPE enum and source factory (`source.ts`).
+- [Source wiring](https://zed.cafe/docs/synth/sourcefxsetup): 8 voices into 4 FX groups (`sourcefxsetup.ts`).
+- [FX modules](https://zed.cafe/docs/synth/fx-and-fxchannels): Shared FX chain and per-voice sends (`fx.ts`, `fxchannels.ts`).
+- [Note ticks](https://zed.cafe/docs/synth/tickhandler): Scheduled note and drum events (`tickhandler.ts`).
+- [Algo FM](https://zed.cafe/docs/synth/algosynth): 4-op FM routings for algo0–algo7 (`algosynth.ts` / Daisy algovoice).
+- [Worklets](https://zed.cafe/docs/synth/worklets): Frequency crusher and sidechain AudioWorklet processors.
 
 ## System
 
