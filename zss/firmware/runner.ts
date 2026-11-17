@@ -36,6 +36,29 @@ const firmwares: Record<string, FIRMWARE> = {
   transform: TRANSFORM_FIRMWARE,
 }
 
+/** Docs path per firmware module id (Overview Modules / sidebar order). */
+const FIRMWARE_MODULE_DOC_PATH: Record<string, string> = {
+  audio: '/firmware/audio',
+  board: '/firmware/board',
+  cli: '/firmware/cli',
+  element: '/firmware/element',
+  loader: '/firmware/loader',
+  network: '/firmware/network',
+  runtime: '/firmware/runtime',
+  transform: '/firmware/transforms',
+}
+
+const FIRMWARE_MODULE_DOC_ORDER = [
+  'audio',
+  'board',
+  'cli',
+  'element',
+  'loader',
+  'network',
+  'runtime',
+  'transform',
+]
+
 const standardlib = ['audio', 'board', 'network', 'transform', 'element']
 
 const DRIVER_FIRMWARE = {
@@ -71,6 +94,21 @@ export function firmwarelistcommands(driver: DRIVER_TYPE): string[] {
   }
 
   return commands
+}
+
+/**
+ * Blume docs path for the firmware module that registers `name`.
+ * First match in Overview Modules order wins when a command is shared.
+ */
+export function firmwarecommandmodulepath(name: string): string | undefined {
+  for (let i = 0; i < FIRMWARE_MODULE_DOC_ORDER.length; i++) {
+    const id = FIRMWARE_MODULE_DOC_ORDER[i]
+    const ware = firmwares[id]
+    if (ispresent(ware?.getcommand(name))) {
+      return FIRMWARE_MODULE_DOC_PATH[id]
+    }
+  }
+  return undefined
 }
 
 export function firmwaregetcommand(

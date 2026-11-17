@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
@@ -7,6 +8,8 @@ import { TASK_GROUPS } from './types'
 import type { TaskDef } from './types'
 
 const DOCS_PATH = path.join(taskroot(), 'ops/docs/tasks.md')
+const FIRMWARE_CATALOG_TEST =
+  'ops/tests/unit/ops/firmwarecommandcatalog.test.ts'
 
 function escmd(value: string): string {
   return value.replace(/\|/g, '\\|')
@@ -154,4 +157,41 @@ export function checktasksdoc(): boolean {
 
 export function taskdocpath(): string {
   return DOCS_PATH
+}
+
+/**
+ * Firmware catalog imports zss/firmware/runner (heavy graph). Generate/check
+ * via Jest so chevrotain resolves the same way as ops:test.
+ */
+function runfirmwarecatalogjest(write: boolean): number {
+  const result = spawnSync(
+    'yarn',
+    [
+      'jest',
+      FIRMWARE_CATALOG_TEST,
+      '--config',
+      'ops/jest.config.ts',
+      '--no-coverage',
+    ],
+    {
+      cwd: taskroot(),
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        FIRMWARE_CATALOG_WRITE: write ? '1' : '',
+      },
+    },
+  )
+  return result.status ?? 1
+}
+
+export function writefirmwarecatalogdocs(): void {
+  const status = runfirmwarecatalogjest(true)
+  if (status !== 0) {
+    throw new Error('firmware command catalog write failed')
+  }
+}
+
+export function checkfirmwarecatalogdocs(): boolean {
+  return runfirmwarecatalogjest(false) === 0
 }

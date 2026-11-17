@@ -74,6 +74,6 @@ Or set `CLANG_FORMAT` in the environment permanently.
 
 ## Docs / Blume
 
-Edit `zss/feature/synth/docs/*` — `docs-site/content/synth/*` is the same inode (hardlink). No separate copy step.
+Edit `zss/feature/synth/docs/*` — Blume mounts via `docs-site/content/(lookup)/synth` symlink. No separate copy step.
 
-Confidence matrix + status legend live in `voice-types-reference.md`. Agent checklist: `.cursor/memory/daisy-synth-lessons.md`.
+Player teaching: `(play)/voices.mdx` / `effects.mdx`. Selectable names: `voiceconfig/validation.ts`. Agent checklist: `.cursor/memory/daisy-synth-lessons.md`.

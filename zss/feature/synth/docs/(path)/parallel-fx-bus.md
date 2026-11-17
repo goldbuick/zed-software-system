@@ -1,5 +1,6 @@
 ---
-title: Parallel voice FX bus (Daisy)
+title: FX bus
+description: Parallel voice FX send/return law in Daisy.
 ---
 
 DSP spec for per-group voice FX routing in `zss_daisy_synth.cpp`.

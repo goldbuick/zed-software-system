@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { Vector3 } from 'three'
 import { RUNTIME } from 'zss/config'
 import { registercopy } from 'zss/device/api'
@@ -23,7 +23,7 @@ import {
   setlinkeditingkey,
   useLinkEditingKey,
 } from 'zss/screens/linkui/linkediting'
-import { inputcolor } from 'zss/screens/panel/common'
+import { ScrollContext, inputcolor } from 'zss/screens/panel/common'
 import { tokenizeandwritetextformat } from 'zss/words/textformat'
 import { COLOR } from 'zss/words/types'
 
@@ -56,6 +56,7 @@ type LinkColorEditProps = LinkWidgetProps & { isbg?: boolean }
 export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   linkbegin(surface)
   const allowhotkeys = linkallowhotkeys(surface)
+  const scroll = useContext(ScrollContext)
 
   const shortcut = isbg ? 'b' : 'c'
   const target = maptovalue(surface.words[0], '')
@@ -107,8 +108,11 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
   }, [address, state])
 
   const invokeediting = useCallback(() => {
+    // Scroll window is mid-anchored on cursor; select this row before expand
+    // so the color/bg grid is in the visible panel (not below the fold).
+    scroll.setcursor(surface.striperow)
     enterediting()
-  }, [enterediting])
+  }, [scroll, surface.striperow, enterediting])
 
   useLinkEditCancelOnInactive(!!surface.active, cancelediting)
 
@@ -257,7 +261,7 @@ export function LinkColorEdit({ surface, isbg = false }: LinkColorEditProps) {
         ontap={enterediting}
       />
       {surface.active && <UserInput OK_BUTTON={enterediting} />}
-      {allowhotkeys && surface.active ? (
+      {allowhotkeys && (surface.layout === 'panel' || surface.active) ? (
         <UserHotkey hotkey={shortcut}>{invokeediting}</UserHotkey>
       ) : null}
     </>

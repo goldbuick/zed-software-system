@@ -31,4 +31,4 @@ yarn sos-voices:test:full
 
 ## Patch list
 
-See [`sosvoicepatches.ts`](sosvoicepatches.ts) — 12 SOS instrument renders (wind ×4, piano ×2, bowed ×2, organ ×2, timpani, string ensemble).
+See [`sosvoicepatches.ts`](sosvoicepatches.ts) for the current offline patch list (selectable SOS names only — no removed types such as panpipe/epiano/timpani).

@@ -1,6 +1,6 @@
 ---
-title: Gain and volume levels (Daisy)
-description: Reference chart of every tweakable volume/gain stage in the live Daisy synth path.
+title: Gain levels
+description: Every tweakable volume/gain stage in the live Daisy synth path.
 ---
 
 Canonical inventory for the active WASM/Daisy synth. For routing narrative see
@@ -130,14 +130,15 @@ out = dry + compress( (Sigma send_i * contribution_i) * kFxReturnWetTrim )
 | clang expression | 0.475 | `noisemetafor` (was 0.4) |
 | `kStringMachineGain` / `kStringPluckGain` | 1.35 / 4.2 | String (`tanh(x*gain)` crest limit; accent 0.12; pitch-retrigger) |
 | `kKarplusMaxDamping` | 0.85 | Cap for pluck/guitar (DaisySP >= 0.95 = infinite ring); note-off also via voiceenv |
-| `kWindFluteGain` / `kWindClarinetGain` / `kWindBrassGain` / `kWindPanpipeGain` | 3.11 / 1.79 / 2.5 / 3.41 | Wind algos |
-| `kWind*BreathCont` / `kWind*BreathBurst` | flute/panpipe 0.04/0.42; clarinet 0.02/0.55; brass 0.04/0.60 | Louder short chiff (~45 ms); light sustain air |
-| `kPianoVoiceGain` | 3.15 | Piano / epiano |
-| `kTimpaniVoiceGain` | 0.70 | Timpani |
-| `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 4.4 | Bowed / guitar (`tanh` after gain; pitch-retrigger) |
+| `kWindFluteGain` / `kWindClarinetGain` / `kWindBrassGain` | 3.11 / 1.79 / 2.5 | Selectable wind (`#synth flute`/`clarinet`/`brass`) |
+| `kWindPanpipeGain` | 3.41 | Legacy native ( `#synth panpipe` removed) |
+| `kWind*BreathCont` / `kWind*BreathBurst` | flute 0.04/0.42; clarinet 0.02/0.55; brass 0.04/0.60 | Louder short chiff (~45 ms); light sustain air |
+| `kPianoVoiceGain` | 3.15 | `#synth piano` |
+| `kTimpaniVoiceGain` | 0.70 | Legacy native (`#synth timpani` removed) |
+| `kBowedVoiceGain` / `kGuitarVoiceGain` | 1.2 / 4.4 | Violin / steel (`tanh` after gain; pitch-retrigger) |
 | `kOrganTonewheelGain` | 1.8 | Tonewheel organ (locked) |
-| `kDripVoiceGain` / `kDootVoiceGain` | 1.32 / 1.15 | Drip / doot |
-| `kDripDettackSec` | 0.35 | DaisySP drip hard-cut window |
+| `kDootVoiceGain` | 1.15 | Doot |
+| `kDripVoiceGain` / `kDripDettackSec` | 1.32 / 0.35 | Legacy native (`#synth drip` removed) |
 | `kBellsVoiceGain` | 0.35 | Bells mix (cafe ear trim; was 0.49) |
 | `kDrumTickTrim` / `kDrumTweetTrim` | **1.0** / **1.0** | Hi-hat extras folded into flat gains |
 | `kDrumGains[12]` | **0.05** each | Flat kit (−26 dB into bus before `kDrumBusGain`); stem gate target drum−play **−11 ±2** dB |

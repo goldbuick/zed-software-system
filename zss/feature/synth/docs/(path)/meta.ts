@@ -1,15 +1,24 @@
 import { FolderMetaDefinition, defineMeta } from 'blume'
 
 export default defineMeta({
-  title: 'Path',
-  icon: 'git-branch',
+  title: 'Internals',
+  icon: 'cpu',
   display: 'flat',
   pages: [
+    // Signal path
     'implementation-matrix',
-    'gain-levels',
     'audiochain',
     'parallel-fx-bus',
+    'gain-levels',
     'drums',
     'record-and-mp3',
+    // Module maps
+    'factory',
+    'source',
+    'sourcefxsetup',
+    'fx-and-fxchannels',
+    'tickhandler',
+    'algosynth',
+    'worklets',
   ],
 } as FolderMetaDefinition)

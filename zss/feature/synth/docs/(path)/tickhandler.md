@@ -1,8 +1,9 @@
 ---
-title: tickhandler.ts
+title: Note ticks
+description: Scheduled note and drum events (`tickhandler.ts`).
 ---
 
-Handles scheduled note events. Called by the Tone.js Part (pacer) for each scheduled tick.
+Handles scheduled note events (`tickhandler.ts`). Called by the Tone.js Part (pacer) for each scheduled tick.
 
 ## createtickhandler(sourceFx, chain, recording, playback)
 

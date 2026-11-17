@@ -8,7 +8,7 @@ Pick a scale family below. For other keys, transpose from the notes menu. Piano 
 
 ## Major
 
-Ionian. Twelve keys.
+Ionian. Twelve keys. Source: [Piano Major Scales](https://www.pianoscales.org/major.html).
 
 ### C major
 
@@ -83,7 +83,7 @@ Ionian. Twelve keys.
 ```
 ## Natural minor
 
-Twelve natural minors. Harmonic and melodic forms are on [pianoscales.org](https://www.pianoscales.org/).
+Twelve natural minors. Source: [Piano Minor Scales](https://www.pianoscales.org/minor.html). Also [melodic](https://www.pianoscales.org/minor-melodic.html) and [harmonic](https://www.pianoscales.org/minor-harmonic.html).
 
 ### C natural minor
 
@@ -158,7 +158,7 @@ Twelve natural minors. Harmonic and melodic forms are on [pianoscales.org](https
 ```
 ## Blues
 
-Hexatonic: 1 b3 4 b5 5 b7. Twelve keys.
+Hexatonic: 1 b3 4 b5 5 b7. Twelve keys. Source: [Piano Blues Scales](https://www.pianoscales.org/blues.html).
 
 ### C blues
 
@@ -233,7 +233,7 @@ Hexatonic: 1 b3 4 b5 5 b7. Twelve keys.
 ```
 ## Jazz modal
 
-Same major pitches, new tonic each. Ionian through Locrian. [Learn jazz scales for piano](https://www.pianoscales.org/jazz.html).
+Same major pitches, new tonic each. Ionian through Locrian. Source: [Jazz scales](https://www.pianoscales.org/jazz.html).
 
 - [Ionian](#ionian)
 - [Dorian](#dorian)
@@ -245,7 +245,7 @@ Same major pitches, new tonic each. Ionian through Locrian. [Learn jazz scales f
 
 ## Ionian
 
-Same as major. First mode, twelve keys.
+Same as major. First mode, twelve keys. Source: [Ionian](https://www.pianoscales.org/ionian.html).
 
 ### C Ionian
 
@@ -320,7 +320,7 @@ Same as major. First mode, twelve keys.
 ```
 ## Dorian
 
-Mode 2 of the major scale. Twelve keys.
+Mode 2 of the major scale. Twelve keys. Source: [Dorian](https://www.pianoscales.org/dorian.html).
 
 ### C Dorian
 
@@ -395,7 +395,7 @@ Mode 2 of the major scale. Twelve keys.
 ```
 ## Phrygian
 
-Mode 3 of the major scale. Twelve keys.
+Mode 3 of the major scale. Twelve keys. Source: [Phrygian](https://www.pianoscales.org/phrygian.html).
 
 ### C Phrygian
 
@@ -470,7 +470,7 @@ Mode 3 of the major scale. Twelve keys.
 ```
 ## Lydian
 
-Mode 4 of the major scale. Twelve keys.
+Mode 4 of the major scale. Twelve keys. Source: [Lydian](https://www.pianoscales.org/lydian.html).
 
 ### C Lydian
 
@@ -545,7 +545,7 @@ Mode 4 of the major scale. Twelve keys.
 ```
 ## Mixolydian
 
-Mode 5 of the major scale. Twelve keys.
+Mode 5 of the major scale. Twelve keys. Source: [Mixolydian](https://www.pianoscales.org/mixolydian.html).
 
 ### C Mixolydian
 
@@ -620,7 +620,7 @@ Mode 5 of the major scale. Twelve keys.
 ```
 ## Aeolian
 
-Natural minor, mode 6. Twelve keys.
+Natural minor, mode 6. Twelve keys. Source: [Aeolian](https://www.pianoscales.org/aeolian.html).
 
 ### C Aeolian
 
@@ -695,7 +695,7 @@ Natural minor, mode 6. Twelve keys.
 ```
 ## Locrian
 
-Mode 7 of the major scale. Twelve keys.
+Mode 7 of the major scale. Twelve keys. Source: [Locrian](https://www.pianoscales.org/locrian.html).
 
 ### C Locrian
 
@@ -770,14 +770,14 @@ Mode 7 of the major scale. Twelve keys.
 ```
 ## Pentatonic
 
-Major and minor pentatonic, twelve keys each. [pianoscales.org](https://www.pianoscales.org/).
+Major and minor pentatonic, twelve keys each. Source: [Pentatonic](https://www.pianoscales.org/pentatonic.html).
 
 - [Major pentatonic](#major-pentatonic)
 - [Minor pentatonic](#minor-pentatonic)
 
 ## Major pentatonic
 
-Twelve keys.
+Twelve keys. Source: [Pentatonic](https://www.pianoscales.org/pentatonic.html).
 
 ### C major pentatonic
 
@@ -852,7 +852,7 @@ Twelve keys.
 ```
 ## Minor pentatonic
 
-Twelve keys.
+Twelve keys. Source: [Pentatonic](https://www.pianoscales.org/pentatonic.html).
 
 ### C minor pentatonic
 
@@ -927,7 +927,7 @@ Twelve keys.
 ```
 ## Exotic
 
-Modal and parent modes, one tonic each. [pianoscales.org](https://www.pianoscales.org/).
+Modal and parent modes, one tonic each. Source: [Jazz scales](https://www.pianoscales.org/jazz.html) (modes overview); more rare scales on [Exotic](https://www.pianoscales.org/exotic.html).
 
 - [Modes of C major](#modes-of-c-major)
 - [Melodic minor modes](#melodic-minor-modes)
@@ -935,7 +935,7 @@ Modal and parent modes, one tonic each. [pianoscales.org](https://www.pianoscale
 
 ## Modes of C major
 
-Ionian through Locrian.
+Ionian through Locrian. Source: [Jazz scales](https://www.pianoscales.org/jazz.html).
 
 ### C Ionian
 
@@ -980,7 +980,7 @@ Ionian through Locrian.
 ```
 ## Melodic minor modes
 
-Modes of C melodic minor (jazz minor parent).
+Modes of C melodic minor (jazz minor parent). Source: [Melodic Minor](https://www.pianoscales.org/minor-melodic.html).
 
 ### C melodic minor
 
@@ -1025,7 +1025,7 @@ Modes of C melodic minor (jazz minor parent).
 ```
 ## Harmonic minor modes
 
-Modes of C harmonic minor.
+Modes of C harmonic minor. Source: [Harmonic Minor](https://www.pianoscales.org/minor-harmonic.html).
 
 ### C harmonic minor
 

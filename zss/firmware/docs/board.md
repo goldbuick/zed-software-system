@@ -1,16 +1,8 @@
 ---
-title: board.ts
+title: Board
 ---
 
 **Purpose**: Defines `BOARD_FIRMWARE` — commands for board creation, element placement, shooting, duplication, and text writing. Handles board-level and element-placement operations.
-
-## Dependencies
-
-- `zss/chip` — CHIP type
-- `zss/feature/boardcopy` — boardcopy, mapelementcopy
-- `zss/feature/boardbuild` — boardbuild
-- `zss/memory/*` — board/element ops, movement, spatial queries, etc.
-- `zss/words/*` — argument parsing, kind/color/dir parsing, text formatting
 
 ## Command Categories
 
@@ -47,12 +39,6 @@ Cross-board placement commands (`put`/`shoot`/`dupe`/`write`/`shove`/`push` with
 | `transport` | `target` | First open cell along the shoot ray; an opposite-facing same-kind transporter arms the cell past it; requires approach delta match |
 | `change` | `target` `into` | Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind. |
 | `write` | `dir` `color` `text…` | Write colored text on board at direction (E/W/N/S) |
-
-## Internal Functions
-
-- **`commandshoot`** — Handles shoot logic: validates player/element, enforces maxplayershots, writes projectile with direction/party, forces `ISBULLET` collision (breakable stays from kind `@isbreakable` / `@notbreakable`), sets `didfail`, yields. For **contact damage**, prefer `#send at x y shot` (see [gamesend.md](../../memory/docs/gamesend.md)) instead of point-blank `#shoot`.
-- **`commandput`** — Handles put: validates context, parses dir+kind, handles multi-target dirs, clipping, ghost vs solid, pushable shove, empty delete, color apply, object/terrain write
-- **`commanddupe`** — Duplicates element at dir in dupedir; blocks on player kind and blocked dest
 
 ## Safety
 

@@ -1,15 +1,8 @@
 ---
-title: element.ts
+title: Element
 ---
 
 **Purpose**: Defines `ELEMENT_FIRMWARE` — commands and hooks for element stats, movement, lifecycle, code execution, and player input. Provides the core vocabulary for object behavior.
-
-## Dependencies
-
-- `zss/device/api` — registerstickyuser, registerstickyvoice, vmlogout
-- `zss/gadget/data/types` — INPUT, INPUT_ALT, INPUT_CTRL, INPUT_SHIFT
-- `zss/memory/*` — element/board operations, movement, spatial queries
-- `zss/words/*` — category, collision, color, dir, kind, reader
 
 ## Hooks
 

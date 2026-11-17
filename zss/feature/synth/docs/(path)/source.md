@@ -1,8 +1,9 @@
 ---
-title: source.ts
+title: Sources
+description: SOURCE_TYPE enum and source factory (`source.ts`).
 ---
 
-Factory for creating sound sources. Defines all available synth types and their implementations.
+Factory for creating sound sources (`source.ts`). Defines available synth types and their implementations.
 
 ## SOURCE_TYPE Enum
 
