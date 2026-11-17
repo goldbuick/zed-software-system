@@ -585,10 +585,6 @@ export function registersavemem(
   ])
 }
 
-export function registerscreenshot(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:screenshot')
-}
-
 export function registershare(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:share', undefined)
 }

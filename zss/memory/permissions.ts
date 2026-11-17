@@ -93,7 +93,6 @@ export const PERMISSION_CONTROLLED_COMMANDS: Record<string, string> = {
   pageexport: 'risk',
   pagetrash: 'risk',
   restart: 'risk',
-  screenshot: 'risk',
   trash: 'risk',
   zztrandom: 'risk',
   zztsearch: 'risk',

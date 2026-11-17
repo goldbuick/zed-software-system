@@ -1,4 +1,3 @@
-import { registerscreenshot } from 'zss/device/api'
 import { doasync } from 'zss/device/doasync'
 import { SOFTWARE } from 'zss/device/session'
 import { rundeeplinks } from 'zss/feature/deeplinkrun'
@@ -36,10 +35,6 @@ import { ARG_TYPE, NAME } from 'zss/words/types'
 
 export function registermisccommands(fw: FIRMWARE): FIRMWARE {
   return fw
-    .command('screenshot', ['screenshot for capture'], () => {
-      registerscreenshot(SOFTWARE, READ_CONTEXT.elementfocus)
-      return 0
-    })
     .command(
       'zns',
       [ARG_TYPE.ANY, 'zns menu — login, publish bytes/code, import code'],

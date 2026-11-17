@@ -4,7 +4,6 @@ import { doasync } from 'zss/device/doasync'
 import type { MESSAGE } from 'zss/device/types'
 import { withclipboard } from 'zss/feature/keyboard'
 import { storagesharecontent } from 'zss/feature/storage'
-import { capturecurrentboardtopng } from 'zss/gadget/capture'
 import { isarray, ispresent, isstring } from 'zss/mapping/types'
 
 export function handlecopy(device: DEVICE, message: MESSAGE): void {
@@ -94,9 +93,4 @@ export function handleshare(device: DEVICE, message: MESSAGE): void {
   doasync(device, message.player, async function () {
     await storagesharecontent(message.player)
   })
-}
-
-export function handlescreenshot(device: DEVICE, message: MESSAGE): void {
-  workstatus(device, message.player, 'export png')
-  capturecurrentboardtopng()
 }
