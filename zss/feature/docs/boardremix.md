@@ -18,11 +18,11 @@ title: boardremix.ts
 
 | Function | Args | Description |
 |----------|------|-------------|
-| `boardremix` | `target`, `source`, `patternsize`, `mirror`, `p1`, `p2`, `targetset` | Generate target region from source using WFC; patternsize and mirror control pattern; returns boolean success |
+| `boardremix` | `target`, `source`, `patternsize`, `mirror`, `p1`, `p2`, `targetset`, `self?` | Generate target region from source using WFC; patternsize and mirror control pattern; returns boolean success. When `self` is set, that invoker object is not soft-deleted and no stamped object is stacked on its cell. |
 
 ## Algorithm
 
 - Scans source board into image (element kinds mapped to alpha indices)
 - Builds an overlapping WFC model from source patterns (`wfcoverlappinggenerate`)
-- Generates target region; clears existing elements first
+- Generates target region; clears existing elements first (skips `self`)
 - Maps alpha indices back to element kinds and writes terrain/objects

@@ -1,6 +1,6 @@
 import { pick } from 'zss/mapping/array'
 import { randomnumber } from 'zss/mapping/number'
-import { isnumber, ispresent } from 'zss/mapping/types'
+import { MAYBE, isnumber, ispresent } from 'zss/mapping/types'
 import {
   READ_LAYER,
   memorylistelement,
@@ -18,12 +18,33 @@ import {
   memoryreadelementstat,
   memorywriteelementfromkind,
 } from 'zss/memory/boards'
-import { BOARD_HEIGHT, BOARD_SIZE, BOARD_WIDTH } from 'zss/memory/types'
+import {
+  BOARD,
+  BOARD_ELEMENT,
+  BOARD_HEIGHT,
+  BOARD_SIZE,
+  BOARD_WIDTH,
+  BOOK,
+} from 'zss/memory/types'
 import { READ_CONTEXT } from 'zss/words/reader'
 import { NAME, PT } from 'zss/words/types'
 
 import { mapelementcopy } from './boardcopy'
 import { wfcoverlappinggenerate } from './wfcoverlapping'
+
+function isinvokerobject(element: MAYBE<BOARD_ELEMENT>, self: string) {
+  return !!self && ispresent(element?.id) && element.id === self
+}
+
+function blankcellobject(book: BOOK, targetboard: BOARD, pt: PT, self: string) {
+  const maybeobject = memoryreadelement(targetboard, pt, READ_LAYER.ANY)
+  if (
+    memoryboardelementisobject(maybeobject) &&
+    !isinvokerobject(maybeobject, self)
+  ) {
+    memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
+  }
+}
 
 export function boardremix(
   target: string,
@@ -33,6 +54,7 @@ export function boardremix(
   p1: PT,
   p2: PT,
   targetset: string,
+  self = '',
 ): boolean {
   if (!ispresent(READ_CONTEXT.book)) {
     return false
@@ -122,26 +144,12 @@ export function boardremix(
       // blank target region
       switch (targetset) {
         case 'all': {
-          const maybeobject = memoryreadelement(
-            targetboard,
-            { x, y },
-            READ_LAYER.ANY,
-          )
-          if (memoryboardelementisobject(maybeobject)) {
-            memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
-          }
+          blankcellobject(book, targetboard, dpt, self)
           memorywriteterrain(targetboard, { x, y })
           break
         }
         case 'object': {
-          const maybeobject = memoryreadelement(
-            targetboard,
-            { x, y },
-            READ_LAYER.ANY,
-          )
-          if (memoryboardelementisobject(maybeobject)) {
-            memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
-          }
+          blankcellobject(book, targetboard, dpt, self)
           break
         }
         case 'terrain':
@@ -181,17 +189,22 @@ export function boardremix(
           }
           if (maybekind) {
             // blank target region
-            const maybeobject = memoryreadelement(
-              targetboard,
-              { x, y },
-              READ_LAYER.ANY,
-            )
-            if (memoryboardelementisobject(maybeobject)) {
-              memorysafedeleteelement(targetboard, maybeobject, book.timestamp)
-            }
+            blankcellobject(book, targetboard, dpt, self)
             memorywriteterrain(targetboard, { x, y })
           }
           break
+      }
+
+      // do not stack a stamped object on the invoker
+      if (
+        maybekind &&
+        memoryboardelementisobject(sourceelement) &&
+        isinvokerobject(
+          memoryreadelement(targetboard, dpt, READ_LAYER.OBJECT),
+          self,
+        )
+      ) {
+        continue
       }
 
       const maybenew = maybekind

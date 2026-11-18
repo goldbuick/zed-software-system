@@ -1,5 +1,7 @@
 import { boardcopy, mapelementcopy } from 'zss/feature/boardcopy'
 import { pttoindex } from 'zss/mapping/2d'
+import { READ_LAYER, memoryreadelement } from 'zss/memory/boardaccess'
+import { memorycreateboardobjectfromkind } from 'zss/memory/boardlifecycle'
 import { memorycreatebook } from 'zss/memory/bookoperations'
 import { memorycreatecodepage } from 'zss/memory/codepageoperations'
 import { memoryresetbooks } from 'zss/memory/session'
@@ -98,5 +100,74 @@ describe('boardcopy runtime', () => {
     expect(copied!.kinddata?.name).toBe('wall')
     expect(copied!.kinddata).not.toBe(srctile.kinddata)
     expect(copied!.char).toBe(219)
+  })
+
+  it('boardcopy all preserves invoker and skips stacking an object on its cell', () => {
+    const srcboard = makeboard('srcboard', makewallterrain(0, 0))
+    srcboard.terrain[pttoindex({ x: 1, y: 0 }, BOARD_WIDTH)] =
+      makewallterrain(1, 0)
+    const dstboard = makeboard('dstboard')
+
+    const wallcp = memorycreatecodepage('@terrain wall\n', {
+      terrain: { id: 'wall', name: 'wall', kind: 'wall' },
+    })
+    const runnercp = memorycreatecodepage('@object runner\n', {
+      object: { id: 'runnerkind', name: 'runner', kind: 'runner' },
+    })
+    const foecp = memorycreatecodepage('@object foe\n', {
+      object: { id: 'foekind', name: 'foe', kind: 'foe' },
+    })
+    const srccp = memorycreatecodepage('@board srcboard\n', { board: srcboard })
+    const dstcp = memorycreatecodepage('@board dstboard\n', { board: dstboard })
+    const book = memorycreatebook([wallcp, runnercp, foecp, srccp, dstcp])
+    book.timestamp = 10
+    memoryresetbooks([book])
+    READ_CONTEXT.book = book
+
+    const invoker = memorycreateboardobjectfromkind(
+      dstboard,
+      { x: 0, y: 0 },
+      'runner',
+    )
+    expect(invoker?.id).toBeTruthy()
+    const other = memorycreateboardobjectfromkind(
+      dstboard,
+      { x: 1, y: 0 },
+      'foe',
+    )
+    expect(other?.id).toBeTruthy()
+
+    const srcfoe = memorycreateboardobjectfromkind(
+      srcboard,
+      { x: 0, y: 0 },
+      'foe',
+    )
+    expect(srcfoe?.id).toBeTruthy()
+
+    expect(
+      boardcopy(
+        'srcboard',
+        'dstboard',
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        'all',
+        undefined,
+        invoker!.id!,
+      ),
+    ).toBe(true)
+
+    expect(invoker!.removed).toBeUndefined()
+    expect(other!.removed).toBe(10)
+    expect(dstboard.terrain[0]?.kind).toBe('wall')
+    const atinvoker = memoryreadelement(
+      dstboard,
+      { x: 0, y: 0 },
+      READ_LAYER.OBJECT,
+    )
+    expect(atinvoker?.id).toBe(invoker!.id)
+    const stacked = Object.values(dstboard.objects).filter(
+      (el) => el.x === 0 && el.y === 0 && !el.removed,
+    )
+    expect(stacked).toHaveLength(1)
   })
 })

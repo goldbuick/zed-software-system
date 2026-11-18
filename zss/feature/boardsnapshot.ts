@@ -58,7 +58,7 @@ export function boardsnapshot(target: string) {
   }
 
   const copied = withmainbook(() =>
-    boardcopy(target, snapshotboard.id, p1, p2, targetset),
+    boardcopy(target, snapshotboard.id, p1, p2, targetset, undefined, ''),
   )
   if (!copied) {
     return
@@ -81,7 +81,7 @@ export function boardrevert(target: string) {
   }
 
   const copied = withmainbook(() =>
-    boardcopy(snapshotboard.id, target, p1, p2, targetset),
+    boardcopy(snapshotboard.id, target, p1, p2, targetset, undefined, ''),
   )
   if (!copied) {
     return

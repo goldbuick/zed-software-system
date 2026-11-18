@@ -26,11 +26,18 @@ import {
 import { READ_CONTEXT } from 'zss/words/reader'
 import { PT } from 'zss/words/types'
 
-function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT) {
+function isinvokerobject(element: MAYBE<BOARD_ELEMENT>, self: string) {
+  return !!self && ispresent(element?.id) && element.id === self
+}
+
+function emptyarea(book: BOOK, board: BOARD, p1: PT, p2: PT, self: string) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
-      if (memoryboardelementisobject(maybeobject)) {
+      if (
+        memoryboardelementisobject(maybeobject) &&
+        !isinvokerobject(maybeobject, self)
+      ) {
         memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
       memorywriteterrain(board, { x, y })
@@ -46,11 +53,14 @@ function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
   }
 }
 
-function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT) {
+function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT, self: string) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
-      if (memoryboardelementisobject(maybeobject)) {
+      if (
+        memoryboardelementisobject(maybeobject) &&
+        !isinvokerobject(maybeobject, self)
+      ) {
         memorysafedeleteelement(board, maybeobject, book.timestamp)
       }
       memorywriteterrain(board, { x, y })
@@ -121,6 +131,7 @@ export function boardcopy(
   srcp2: PT,
   targetset: string,
   dest?: PT,
+  self = '',
 ) {
   switch (targetset) {
     case 'all':
@@ -128,7 +139,7 @@ export function boardcopy(
     case 'terrain':
       break
     default:
-      return boardcopygroup(source, target, dest ?? srcp1, '', targetset)
+      return boardcopygroup(source, target, dest ?? srcp1, self, targetset)
   }
   if (!ispresent(READ_CONTEXT.book)) {
     return false
@@ -159,10 +170,10 @@ export function boardcopy(
     // blank target region
     switch (targetset) {
       case 'all':
-        emptyarea(book, targetboard, destp1, destp2)
+        emptyarea(book, targetboard, destp1, destp2, self)
         break
       case 'object':
-        emptyareaobject(book, targetboard, destp1, destp2)
+        emptyareaobject(book, targetboard, destp1, destp2, self)
         break
       case 'terrain':
         emptyareaterrain(targetboard, destp1, destp2)
@@ -210,19 +221,19 @@ export function boardcopy(
         }
 
         // write dest element
-        const dest: PT = { x: destp1.x + x, y: destp1.y + y }
+        const destpt: PT = { x: destp1.x + x, y: destp1.y + y }
         if (
           ispresent(terrain) &&
           (copyterrain ||
             (isgroup && memoryreadelementstat(terrain, 'group') === targetset))
         ) {
           if (isgroup) {
-            emptyarea(book, targetboard, dest, dest)
+            emptyarea(book, targetboard, destpt, destpt, self)
           }
           const el = memorywriteelementfromkind(
             targetboard,
             [terrain.kind ?? ''],
-            dest,
+            destpt,
           )
           mapelementcopy(el, terrain)
         }
@@ -232,13 +243,21 @@ export function boardcopy(
           (copyobject ||
             (isgroup && memoryreadelementstat(object, 'group') === targetset))
         ) {
+          const destobject = memoryreadelement(
+            targetboard,
+            destpt,
+            READ_LAYER.OBJECT,
+          )
+          if (isinvokerobject(destobject, self)) {
+            continue
+          }
           if (isgroup) {
-            emptyareaobject(book, targetboard, dest, dest)
+            emptyareaobject(book, targetboard, destpt, destpt, self)
           }
           const el = memorywriteelementfromkind(
             targetboard,
             [object.kind ?? ''],
-            dest,
+            destpt,
           )
           mapelementcopy(el, object)
         }
@@ -320,7 +339,10 @@ export function boardcopygroup(
 
       const destelement = memoryreadelement(targetboard, pt, READ_LAYER.ANY)
       if (ispresent(destelement)) {
-        if (memoryboardelementisobject(destelement)) {
+        if (
+          memoryboardelementisobject(destelement) &&
+          !isinvokerobject(destelement, self)
+        ) {
           memorysafedeleteelement(targetboard, destelement, book.timestamp)
         }
         memorywriteterrain(targetboard, pt)
@@ -338,6 +360,11 @@ export function boardcopygroup(
       const pt: PT = {
         x: p1.x + (el.x ?? 0) - corner.x,
         y: p1.y + (el.y ?? 0) - corner.y,
+      }
+
+      const destobject = memoryreadelement(targetboard, pt, READ_LAYER.OBJECT)
+      if (isinvokerobject(destobject, self)) {
+        continue
       }
 
       const copyel = memorywriteelementfromkind(
