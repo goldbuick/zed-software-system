@@ -160,7 +160,7 @@ function expandnumericrange(left: string, right: string): string[] {
   const b = right.replace(/^#/, '')
   const ma = /^([a-zA-Z]+)(\d+)([a-zA-Z]*)$/.exec(a)
   const mb = /^([a-zA-Z]+)(\d+)([a-zA-Z]*)$/.exec(b)
-  if (ma && mb && ma[1] === mb[1] && ma[3] === mb[3]) {
+  if (ma && ma[1] === mb?.[1] && ma[3] === mb[3]) {
     const lo = Math.min(Number(ma[2]), Number(mb[2]))
     const hi = Math.max(Number(ma[2]), Number(mb[2]))
     const names: string[] = []
@@ -172,10 +172,7 @@ function expandnumericrange(left: string, right: string): string[] {
   return [a, b]
 }
 
-function commandnamesfromtokens(
-  source: string,
-  tokens: string[],
-): string[] {
+function commandnamesfromtokens(source: string, tokens: string[]): string[] {
   if (tokens.length === 0) {
     return []
   }
@@ -271,7 +268,7 @@ function rendercommandtable(
 
 export function renderfirmwareoverviewmdx(
   rows: FIRMWARE_CATALOG_ROW[] = collectfirmwarecatalog(),
-  categoryanchors: Map<string, string> = new Map(),
+  categoryanchors = new Map<string, string>(),
 ): string {
   return [
     '---',
@@ -322,7 +319,9 @@ export function renderfirmwareoverviewmdx(
 }
 
 /** Union #### command anchors from every module page (name -> heading slug). */
-export function collectallmodulecommandanchors(root: string): Map<string, string> {
+export function collectallmodulecommandanchors(
+  root: string,
+): Map<string, string> {
   const map = new Map<string, string>()
   const paths = firmwarecatalogpaths(root)
   for (let i = 0; i < paths.modules.length; i++) {
@@ -350,7 +349,7 @@ function handmdxaftercatalog(filetext: string): string {
 /** Generated block between firmware-catalog markers (no trailing newline). */
 export function rendermodulecatalogblock(
   rows: FIRMWARE_CATALOG_ROW[],
-  categoryanchors: Map<string, string> = new Map(),
+  categoryanchors = new Map<string, string>(),
 ): string {
   return [
     `{/* ${GENERATED_BANNER} */}`,
@@ -365,10 +364,7 @@ export function rendermodulecatalogblock(
   ].join('\n')
 }
 
-export function splicefirmwarecatalog(
-  filetext: string,
-  block: string,
-): string {
+export function splicefirmwarecatalog(filetext: string, block: string): string {
   const begin = filetext.indexOf(CATALOG_BEGIN)
   const end = filetext.indexOf(CATALOG_END)
   if (begin < 0 || end < 0 || end < begin) {
@@ -435,8 +431,7 @@ export function checkfirmwarecatalogdocs(root: string): boolean {
   const paths = firmwarecatalogpaths(root)
   const allanchors = collectallmodulecommandanchors(root)
   if (
-    readorempty(paths.overview) !==
-    renderfirmwareoverviewmdx(rows, allanchors)
+    readorempty(paths.overview) !== renderfirmwareoverviewmdx(rows, allanchors)
   ) {
     return false
   }

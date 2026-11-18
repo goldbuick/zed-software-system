@@ -53,7 +53,13 @@ function emptyareaterrain(board: BOARD, p1: PT, p2: PT) {
   }
 }
 
-function emptyareaobject(book: BOOK, board: BOARD, p1: PT, p2: PT, self: string) {
+function emptyareaobject(
+  book: BOOK,
+  board: BOARD,
+  p1: PT,
+  p2: PT,
+  self: string,
+) {
   for (let y = p1.y; y <= p2.y; ++y) {
     for (let x = p1.x; x <= p2.x; ++x) {
       const maybeobject = memoryreadelement(board, { x, y }, READ_LAYER.ANY)
