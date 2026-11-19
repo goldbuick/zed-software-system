@@ -184,6 +184,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           filter.pt2,
           filter.targetset,
           filter.dest,
+          READ_CONTEXT.elementid,
         )
           ? 0
           : 1,
@@ -229,6 +230,7 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           filter.pt1,
           filter.pt2,
           filter.targetset,
+          READ_CONTEXT.elementid,
         )
           ? 0
           : 1,

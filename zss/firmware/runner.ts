@@ -111,6 +111,24 @@ export function firmwarecommandmodulepath(name: string): string | undefined {
   return undefined
 }
 
+/** Command names registered on a single firmware module (not first-match ownership). */
+export function firmwaremodulelistcommands(moduleid: string): string[] {
+  const ware = firmwares[moduleid]
+  if (!ispresent(ware)) {
+    return []
+  }
+  return [...ware.listcommands()].sort((a, b) => a.localeCompare(b))
+}
+
+/** Firmware module ids that have Blume sidebar pages. */
+export function firmwaremoduledocids(): string[] {
+  return [...FIRMWARE_MODULE_DOC_ORDER]
+}
+
+export function firmwaremoduledocpath(moduleid: string): string | undefined {
+  return FIRMWARE_MODULE_DOC_PATH[moduleid]
+}
+
 export function firmwaregetcommand(
   driver: DRIVER_TYPE,
   method: string,

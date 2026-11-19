@@ -88,7 +88,6 @@ import {
   SYNTH_SFX_RESET,
   invokeplay,
   parseplay,
-  resolvebgplayonstart,
   tonenotationseconds,
 } from 'zss/feature/synth/playnotation'
 import type { RECORDING_STATE } from 'zss/feature/synth/shared/recording'
@@ -184,7 +183,6 @@ export function createdaisysynth(
   let pacercount = 0
   let playvolume = 80
   let bgplayvolume = WASM_DEFAULT_BGPLAY_VOLUME
-  const beatgridepoch = maxi.audioContext.currentTime
   const bgplaybusyuntil = new Array(WASM_VOICE_COUNT).fill(0)
   const recording: RECORDING_STATE = {
     recordedticks: [],
@@ -609,13 +607,9 @@ export function createdaisysynth(
     return best
   }
 
-  function addbgplay(buffer: string, quantize: string) {
+  function addbgplay(buffer: string) {
     const invokes = parseplay(buffer)
-    const now = maxi.audioContext.currentTime
-    const starttime =
-      quantize === ''
-        ? now + 0.05
-        : resolvebgplayonstart(now, beatgridepoch, quantize)
+    const starttime = maxi.audioContext.currentTime + 0.05
     for (let i = 0; i < invokes.length; ++i) {
       const probe = invokeplay(0, starttime, invokes[i], false)
       const endtime = playpatternendtime(probe, starttime)

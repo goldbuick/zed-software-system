@@ -33,7 +33,7 @@ Creates and returns a full synth instance (`AUDIO_SYNTH`).
 | Method                             | Description                          |
 | ---------------------------------- | ------------------------------------ |
 | `addplay(buffer)`                  | Parse notation and schedule playback |
-| `addbgplay(buffer, quantize)`      | Schedule background SFX              |
+| `addbgplay(buffer)`                | Schedule background SFX              |
 | `stopplay()`                       | Clear scheduled notes                |
 | `setmainvolume(v)`                 | Main scale for all buses (0-100)     |
 | `setplayvolume(v)`                 | Play bus trim (0-100)                |

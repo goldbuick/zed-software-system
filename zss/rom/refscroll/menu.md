@@ -5,7 +5,7 @@ use hotkeys or up/down arrows + enter to select
 !color coloredit hk c " C " next;color
 !bg bgedit hk b " B " next;bg
 !notesscroll hk n " N " next;notes
-!openit https://zed.cafe/docs/firmware#all-commands hk f " F ";#commands
+!openit https://zed.cafe/docs/firmware#all-commands hk f " F ";firmware #commands
 !openit https://zed.cafe/docs/synth/voices/ hk s " S ";synth
 !openit https://zed.cafe/docs/synth/effects/ hk e " E ";effects
 !openit https://zed.cafe/docs/synth/scales/ hk l " L ";scales

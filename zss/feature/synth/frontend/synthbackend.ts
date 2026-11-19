@@ -13,7 +13,7 @@ export type FXNAME =
 
 export type SynthBackend = {
   addplay(buffer: string): void
-  addbgplay(buffer: string, quantize: string): void
+  addbgplay(buffer: string): void
   stopplay(): void
   setmainvolume(volume: number): void
   setplayvolume(volume: number): void

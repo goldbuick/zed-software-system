@@ -186,7 +186,7 @@ Functions for audio synthesis, playback, TTS, and voice configuration.
 
 ### Playback
 - `synthplay(device, player, board, buffer)` - Play audio buffer on board
-- `synthbgplay(device, player, board, buffer, quantize)` - Play background audio
+- `synthbgplay(device, player, board, buffer)` - Play background audio
 - `synthmainvolume(device, player, board, volume)` - Set main volume
 - `synthplayvolume(device, player, board, volume)` - Set play bus volume
 - `synthbgplayvolume(device, player, board, volume)` - Set background volume

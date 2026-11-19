@@ -26,7 +26,6 @@ import {
   handlecopy,
   handledownloadbinaryfile,
   handledownloadjsonfile,
-  handlescreenshot,
   handleshare,
 } from './files'
 import { handleinput } from './input'
@@ -86,7 +85,6 @@ export const registerhandlers: Record<string, REGISTER_HANDLER> = {
   downloadjsonfile: handledownloadjsonfile,
   downloadbinaryfile: handledownloadbinaryfile,
   share: handleshare,
-  screenshot: handlescreenshot,
   nuke: handlenuke,
   savemem: handlesavemem,
   forkmem: handleforkmem,

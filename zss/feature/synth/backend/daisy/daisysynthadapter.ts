@@ -10,7 +10,7 @@ import type { DAISY_SYNTH } from './daisysynth'
 export function createdaisysynthadapter(synth: DAISY_SYNTH): SynthBackend {
   return {
     addplay: (buffer) => synth.addplay(buffer),
-    addbgplay: (buffer, quantize) => synth.addbgplay(buffer, quantize),
+    addbgplay: (buffer) => synth.addbgplay(buffer),
     stopplay: () => synth.stopplay(),
     setmainvolume: (volume) => synth.setmainvolume(volume),
     setplayvolume: (volume) => synth.setplayvolume(volume),

@@ -585,10 +585,6 @@ export function registersavemem(
   ])
 }
 
-export function registerscreenshot(device: DEVICELIKE, player: string) {
-  device.emit(player, 'register:screenshot')
-}
-
 export function registershare(device: DEVICELIKE, player: string) {
   device.emit(player, 'register:share', undefined)
 }
@@ -643,9 +639,8 @@ export function synthbgplay(
   player: string,
   board: MAYBE<string>,
   buffer: string,
-  quantize: string,
 ) {
-  device.emit(player, 'synth:bgplay', [board, buffer, quantize])
+  device.emit(player, 'synth:bgplay', [board, buffer])
 }
 
 export function synthbgplayvolume(

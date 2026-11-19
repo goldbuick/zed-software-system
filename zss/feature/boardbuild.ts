@@ -229,6 +229,8 @@ export function boardbuild(
       COPY_P1,
       COPY_P2,
       COPY_TARGETSET,
+      undefined,
+      '',
     )
     READ_CONTEXT.book = prevbook
     if (!copied) {

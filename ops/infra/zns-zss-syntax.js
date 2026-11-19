@@ -17,8 +17,7 @@ const TAPE_COLOR = {
   DKCYAN: 'dkcyan',
 }
 
-const PLAY_COMMAND_RE =
-  /^(play|bgplay|bgplayon64n|bgplayon32n|bgplayon16n|bgplayon8n|bgplayon4n|bgplayon2n|bgplayon1n)(?=$|\s)/i
+const PLAY_COMMAND_RE = /^(play|bgplay)(?=$|\s)/i
 
 const MUSIC_COLOR = new Map([
   ['a', TAPE_COLOR.GREEN],

@@ -36,13 +36,6 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 |---------|-------------|
 | `play` | Play audio buffer |
 | `bgplay` | Play background audio |
-| `bgplayon64n` | Play background audio quantized to 64th note |
-| `bgplayon32n` | Play background audio quantized to 32nd note |
-| `bgplayon16n` | Play background audio quantized to 16th note |
-| `bgplayon8n` | Play background audio quantized to 8th note |
-| `bgplayon4n` | Play background audio quantized to quarter note |
-| `bgplayon2n` | Play background audio quantized to half note |
-| `bgplayon1n` | Play background audio quantized to whole note |
 | `vol` | Set main volume |
 | `playvol` | Set play volume |
 | `bgvol` | Set background playback volume |
