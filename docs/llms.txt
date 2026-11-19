@@ -8,18 +8,18 @@
 
 ## Guides
 
-- [Overview](https://zed.cafe/docs/guides): Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
+- [Guides](https://zed.cafe/docs/guides): Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
 - [Your first ten minutes](https://zed.cafe/docs/guides/first-ten-minutes): Open zed.cafe, find your way around the `terminal`, load a starter kit, and look inside a book.
 - [Your first board](https://zed.cafe/docs/guides/first-board): Build walls on the title board, connect a second room, then save and share the result.
 - [Your first object](https://zed.cafe/docs/guides/first-object): Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, `scroll` text, and links.
 
 ## Look up
 
-- [Glossary](https://zed.cafe/docs/glossary): Terms used across Zed Cafe / ZSS — product, world model, devices, and more.
+- [Glossary](https://zed.cafe/docs/glossary): Shared Zed Cafe vocabulary — short definitions, cross-links, and where to read more.
 
 ### Firmware
 
-- [Overview](https://zed.cafe/docs/firmware): Firmware is the
+- [Firmware](https://zed.cafe/docs/firmware): Firmware is the
 - [Audio](https://zed.cafe/docs/firmware/audio)
 - [Board](https://zed.cafe/docs/firmware/board)
 - [CLI](https://zed.cafe/docs/firmware/cli)
@@ -31,7 +31,7 @@
 
 ### Synth
 
-- [Overview](https://zed.cafe/docs/synth): Synth docs -- play commands, then internals (signal path and module maps).
+- [Synth](https://zed.cafe/docs/synth): Synth docs -- play commands, then internals (signal path and module maps).
 
 #### Play
 

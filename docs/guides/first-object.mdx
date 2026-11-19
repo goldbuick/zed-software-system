@@ -3,13 +3,13 @@ title: Your first object
 description: Write ZSS code for a lamp, a switch, and a talking character, using stats, labels, flags, messages, `scroll` text, and links.
 ---
 
-Objects are the parts of a board that think. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have finished [Your first board](/guides/first-board) and still have **Quick Start Kit** open, with the rooms you built.
+Objects are the parts of a board that think — each one runs a <Tooltip tip="The per-element script runner: compiled ZSS, stats, #commands, and messages." headline="chip" href="/glossary#chip">chip</Tooltip>. In this guide you write three of them: a lamp you can light, a switch that lights it from across the room, and a character who talks and offers choices. It assumes you have finished [Your first board](/guides/first-board) and still have **Quick Start Kit** open, with the rooms you built.
 
 ## Make the lamp
 
 <Steps>
   <Step title="Create the page">
-    Press `@`, type `lamp`, and press Enter. The `makeit scroll` opens with a create link for each page type. Select **create object @lamp**. The `code editor` opens with one line: `@lamp`.
+    Press `@`, type `lamp`, and press Enter. The makeit <Tooltip tip="An in-world text panel for help, lists, and hyperlinks." headline="scroll" href="/glossary#scroll">scroll</Tooltip> opens with a create link for each page type. Select **create object @lamp**. The code editor opens with one line: `@lamp`.
   </Step>
   <Step title="Write the code">
     Replace the contents with:
@@ -39,7 +39,7 @@ Objects are the parts of a board that think. In this guide you write three of th
 
   </Step>
   <Step title="Try it">
-    Walk into the lamp. It turns yellow and a `toast` pops up. Walk into it again and a `ticker` says it is already lit.
+    Walk into the lamp. It turns yellow and a <Tooltip tip="A short pop-up message ($toast ...)." headline="toast" href="/glossary#toast">toast</Tooltip> pops up. Walk into it again and a <Tooltip tip="One line of text at the bottom of the view." headline="ticker" href="/glossary#ticker">ticker</Tooltip> says it is already lit.
   </Step>
 </Steps>
 
@@ -97,7 +97,7 @@ Close the `code editor`, open the `cli` with `#`, and run:
 lamp:light
 ```
 
-`lamp:light` means "send the `light` message to every element named `lamp`." The lamp lights up without you touching it. This is the same message format objects use to talk to each other.
+`lamp:light` means send the `light` <Tooltip tip="name:label from the CLI, or #name:label from code, runs that label on matching elements." headline="message" href="/glossary#message">message</Tooltip> to every element named `lamp`. The lamp lights up without you touching it. This is the same message format objects use to talk to each other.
 
 **You'll know it worked when** the lamp turns yellow and a `toast` pops up without you walking into it.
 

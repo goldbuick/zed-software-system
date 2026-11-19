@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: Guides
 description: Step-by-step tutorials for making things in Zed Cafe, from your first visit to your first scripted object.
 ---
 
@@ -38,4 +38,4 @@ A few words show up in every guide:
 ## After the guides
 
 - [Firmware commands](/firmware#all-commands) lists every `#command`.
-- [Glossary](/glossary) defines the shared vocabulary.
+- [Glossary](/glossary) defines the shared vocabulary (hover tips in these guides link there).

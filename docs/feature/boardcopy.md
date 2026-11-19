@@ -16,15 +16,15 @@ title: boardcopy.ts
 
 | Function | Args | Description |
 |----------|------|-------------|
-| `boardcopy` | `source`, `target`, `p1`, `p2`, `targetset` | Copy board region from source to target; targetset: `'all'`, `'object'`, `'terrain'`, or group name |
+| `boardcopy` | `source`, `target`, `p1`, `p2`, `targetset`, `dest?`, `self?` | Copy board region from source to target; targetset: `'all'`, `'object'`, `'terrain'`, or group name. When `self` is a live object id, that invoker is not soft-deleted and no stamped object is stacked on its cell (terrain under it still updates). |
 | `boardcopygroup` | `source`, `target`, `p1`, `self`, `targetgroup` | Copy elements by group with collision handling |
 | `mapelementcopy` | `maybenew`, `from` | Copy element surface stats from one element to another, then copy kinddata fields (`category`, `kinddata`, `kindsource*`, `pushedtick`) onto `maybenew` via `memorycopyelementkinddata` |
 
 ## Internal Helpers
 
-- **`emptyarea`** — Clear region (terrain + objects)
+- **`emptyarea`** — Clear region (terrain + objects); skips soft-delete of `self`
 - **`emptyareaterrain`** — Clear terrain only
-- **`emptyareaobject`** — Clear objects only
+- **`emptyareaobject`** — Clear objects only; skips soft-delete of `self`
 
 ## Targetset
 
