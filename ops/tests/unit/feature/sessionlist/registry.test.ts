@@ -48,4 +48,16 @@ describe('sessionlist registry', () => {
       { topic: 'small', players: 2, updated: 400 },
     ])
   })
+
+  it('carries optional host display name through upsert and snapshot', () => {
+    const registry = createsessionlistregistry()
+    sessionlistupsert(registry, 'c1', 'topica', 2, 100, 'Cool Dungeon')
+    expect(sessionlistsnapshot(registry)).toEqual([
+      { topic: 'topica', players: 2, updated: 100, name: 'Cool Dungeon' },
+    ])
+    sessionlistupsert(registry, 'c1', 'topica', 3, 200)
+    expect(sessionlistsnapshot(registry)).toEqual([
+      { topic: 'topica', players: 3, updated: 200 },
+    ])
+  })
 })

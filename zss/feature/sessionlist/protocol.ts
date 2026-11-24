@@ -8,6 +8,8 @@ const SESSIONLIST_PEER_ID_RE = /^sl_[a-zA-Z0-9]{20}$/
 export type SESSIONLIST_ROW = {
   topic: string
   players: number
+  /** Host `#set session` display name when set. */
+  name?: string
 }
 
 export type SESSIONLIST_ENTRY = SESSIONLIST_ROW & {
@@ -18,6 +20,7 @@ export type SESSIONLIST_REGISTER = {
   type: 'sessionlist:register'
   topic: string
   players: number
+  name?: string
 }
 
 export type SESSIONLIST_UNREGISTER = {
@@ -48,6 +51,12 @@ export function issessionlistpeerid(value: unknown): value is string {
   return typeof value === 'string' && SESSIONLIST_PEER_ID_RE.test(value)
 }
 
+function isoptionalname(value: unknown): value is string | undefined {
+  return (
+    value === undefined || (typeof value === 'string' && value.length > 0)
+  )
+}
+
 function isentry(value: unknown): value is SESSIONLIST_ENTRY {
   if (!value || typeof value !== 'object') {
     return false
@@ -56,7 +65,8 @@ function isentry(value: unknown): value is SESSIONLIST_ENTRY {
   return (
     typeof entry.topic === 'string' &&
     typeof entry.players === 'number' &&
-    typeof entry.updated === 'number'
+    typeof entry.updated === 'number' &&
+    isoptionalname(entry.name)
   )
 }
 
@@ -72,7 +82,8 @@ export function issessionlistmessage(
       return (
         typeof msg.topic === 'string' &&
         msg.topic.length > 0 &&
-        typeof msg.players === 'number'
+        typeof msg.players === 'number' &&
+        isoptionalname(msg.name)
       )
     case 'sessionlist:unregister':
     case 'sessionlist:query':

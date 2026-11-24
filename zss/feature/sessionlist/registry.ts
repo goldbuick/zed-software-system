@@ -22,8 +22,18 @@ export function sessionlistupsert(
   topic: string,
   players: number,
   now: number,
+  name?: string,
 ) {
-  registry.set(connection, { connection, topic, players, updated: now })
+  const entry: SESSIONLIST_RECORD = {
+    connection,
+    topic,
+    players,
+    updated: now,
+  }
+  if (name) {
+    entry.name = name
+  }
+  registry.set(connection, entry)
 }
 
 export function sessionlistremovebyconnection(
@@ -56,11 +66,15 @@ export function sessionlistsnapshot(
   for (const record of registry.values()) {
     const existing = bytopic.get(record.topic)
     if (!existing || record.updated > existing.updated) {
-      bytopic.set(record.topic, {
+      const entry: SESSIONLIST_ENTRY = {
         topic: record.topic,
         players: record.players,
         updated: record.updated,
-      })
+      }
+      if (record.name) {
+        entry.name = record.name
+      }
+      bytopic.set(record.topic, entry)
     }
   }
   return [...bytopic.values()].sort(

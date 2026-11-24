@@ -18,7 +18,8 @@ import {
 } from 'zss/feature/netterminal'
 import { peerserveroptions } from 'zss/feature/peerserver'
 import { PEER_ID_RE } from 'zss/feature/url'
-import { MAYBE, ispresent } from 'zss/mapping/types'
+import { storagereadvars } from 'zss/feature/storage'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 import {
   SESSIONLIST_ENTRY,
@@ -56,6 +57,8 @@ let retrytimer: MAYBE<ReturnType<typeof setTimeout>>
 let heartbeattimer: MAYBE<ReturnType<typeof setInterval>>
 let hostingtopic = ''
 let hostingplayers = 0
+/** Host `#set session` display name for this tab's advertised game. */
+let hostingname = ''
 let didlistsessions = false
 let rosterhooked = false
 let pagehidehooked = false
@@ -68,10 +71,21 @@ function player() {
   return registerreadplayer()
 }
 
+function rowfromentry(entry: SESSIONLIST_ENTRY) {
+  const row: { topic: string; players: number; name?: string } = {
+    topic: entry.topic,
+    players: entry.players,
+  }
+  if (entry.name) {
+    row.name = entry.name
+  }
+  return row
+}
+
 function pushsim() {
   const rows = sessions
     .filter((entry) => entry.topic !== hostingtopic)
-    .map((entry) => ({ topic: entry.topic, players: entry.players }))
+    .map(rowfromentry)
   vmsessionlist(SOFTWARE, player(), rows)
   return rows
 }
@@ -129,11 +143,20 @@ function send(conn: DataConnection, message: SESSIONLIST_MESSAGE) {
 }
 
 function registermessage(): SESSIONLIST_MESSAGE {
-  return {
+  const msg: {
+    type: 'sessionlist:register'
+    topic: string
+    players: number
+    name?: string
+  } = {
     type: 'sessionlist:register',
     topic: hostingtopic,
     players: hostingplayers,
   }
+  if (hostingname) {
+    msg.name = hostingname
+  }
+  return msg
 }
 
 function listerpublish() {
@@ -153,6 +176,7 @@ function listerupsertself() {
       hostingtopic,
       hostingplayers,
       Date.now(),
+      hostingname || undefined,
     )
   }
 }
@@ -245,6 +269,7 @@ function acceptclient(conn: DataConnection, current: number) {
           data.topic,
           Math.max(0, Math.floor(data.players)),
           Date.now(),
+          data.name,
         )
         listerpublish()
         break
@@ -436,11 +461,7 @@ export function sessionlistsettoken(next: string) {
   claim()
 }
 
-/** List this tab's multiplayer session; player count comes from the peer roster. */
-export function sessionlistsethosting(topic: string) {
-  hookroster()
-  hostingtopic = topic
-  hostingplayers = Math.max(1, readpeerroster().length)
+function republishhosting() {
   switch (role) {
     case 'lister':
       listerupsertself()
@@ -458,6 +479,36 @@ export function sessionlistsethosting(topic: string) {
   }
 }
 
+/** List this tab's multiplayer session; player count comes from the peer roster. */
+export function sessionlistsethosting(topic: string) {
+  hookroster()
+  const topicchanged = hostingtopic !== topic
+  hostingtopic = topic
+  hostingplayers = Math.max(1, readpeerroster().length)
+  // Restore sticky `#set session` once when this tab starts (or switches) hosting.
+  // Roster recounts must not re-read storage (races with sticky clear / write).
+  if (topicchanged) {
+    void storagereadvars().then((vars) => {
+      if (isstring(vars.session) && vars.session.trim()) {
+        hostingname = vars.session.trim()
+      }
+      if (hostingtopic === topic) {
+        republishhosting()
+      }
+    })
+  }
+  republishhosting()
+}
+
+/** Update advertised `#set session` name while hosting (sticky / flag write). */
+export function sessionlistsethostingname(name: string) {
+  hostingname = name.trim()
+  if (!hostingtopic) {
+    return
+  }
+  republishhosting()
+}
+
 /** Stop browsing and listing (soft join into another session). */
 export function sessionlisthalt() {
   ++serial
@@ -469,5 +520,6 @@ export function sessionlisthalt() {
   retryattempt = 0
   hostingtopic = ''
   hostingplayers = 0
+  hostingname = ''
   pushsim()
 }

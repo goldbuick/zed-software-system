@@ -422,6 +422,14 @@ export function registerstickyvoice(
   device.emit(player, 'register:stickyvoice', value)
 }
 
+export function registerstickysession(
+  device: DEVICELIKE,
+  player: string,
+  value: string,
+) {
+  device.emit(player, 'register:stickysession', value)
+}
+
 export function registercopy(
   device: DEVICELIKE,
   player: string,

@@ -30,6 +30,22 @@ describe('sessionlist protocol', () => {
     expect(
       issessionlistmessage({
         type: 'sessionlist:register',
+        topic: 'abcd1234',
+        players: 2,
+        name: 'Cool Dungeon',
+      }),
+    ).toBe(true)
+    expect(
+      issessionlistmessage({
+        type: 'sessionlist:register',
+        topic: 'abcd1234',
+        players: 2,
+        name: '',
+      }),
+    ).toBe(false)
+    expect(
+      issessionlistmessage({
+        type: 'sessionlist:register',
         topic: '',
         players: 2,
       }),
@@ -40,6 +56,14 @@ describe('sessionlist protocol', () => {
       issessionlistmessage({
         type: 'sessionlist:list',
         sessions: [{ topic: 'abcd1234', players: 1, updated: 5 }],
+      }),
+    ).toBe(true)
+    expect(
+      issessionlistmessage({
+        type: 'sessionlist:list',
+        sessions: [
+          { topic: 'abcd1234', players: 1, updated: 5, name: 'Lobby' },
+        ],
       }),
     ).toBe(true)
     expect(
