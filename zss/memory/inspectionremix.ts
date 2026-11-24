@@ -61,6 +61,7 @@ export async function memoryinspectremixcommand(path: string, player: string) {
             p1,
             p2,
             'all',
+            '',
           )
         } finally {
           READ_CONTEXT.book = previousbook

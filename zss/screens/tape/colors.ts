@@ -428,8 +428,7 @@ function zssplaywordcolor(word: string) {
   return colors
 }
 
-const PLAY_COMMAND_RE =
-  /^(play|bgplay) /i
+const PLAY_COMMAND_RE = /^(play|bgplay) /i
 
 export function zsswordcolor(
   word: string,

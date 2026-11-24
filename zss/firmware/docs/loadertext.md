@@ -2,4 +2,4 @@
 title: loadertext.ts
 ---
 
-Repo-only stub. Published docs: [Loader](loader.md) (`#readline` / [`loader/text.ts`](../loader/text.ts)).
+Repo-only stub. Published docs: [Loader](loader.mdx) (`#readline` / [`loader/text.ts`](../loader/text.ts)).
