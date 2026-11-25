@@ -18,7 +18,7 @@ The book token (`BOOK.token`) is a PeerJS id: `sl_` plus a 20-character `createi
    - `open`: this tab is the **lister**. It keeps the registry in memory and accepts up to 64 client DataConnections.
    - `unavailable-id`: someone else is the lister. This tab opens an anonymous Peer and connects to the token as a **client**.
 3. Tabs hosting a non-hidden session (`#joincode` without the hidden flag, `#jointab`) register `{ topic, players, name? }`. Optional `name` is the hosting tab’s sticky `#set session` display name (joiners’ `session` flags are ignored). Clients repeat `register` every 30s; entries expire after 90s or when the connection closes.
-4. The lister pushes `sessionlist:list` to every client on each change. Each tab forwards the list (minus its own topic) to the sim with `vm:sessionlist`, stored by [`zss/memory/sessionlist.ts`](zss/memory/sessionlist.ts). The first list a client receives runs `#sessions`, and toasts when that list has other sessions.
+4. The lister pushes `sessionlist:list` to every client on each change. Each tab forwards the list (minus its own topic) to the sim with `vm:sessionlist`, stored by [`zss/memory/sessionlist.ts`](zss/memory/sessionlist.ts). The first list a client receives toasts when that list has other sessions; open the list with `#sessions` or `#admin`.
 5. `#admin` (last section, "active games") and `#sessions` (`cpu #sessions` scroll via CLI or RUNTIME) render one `!openit inline <join url>` link per session. Labels are `{n} player(s)  $GREY{topic}` and append `  {name}` when the host set one. Activating a row navigates this tab to `/join/#<topic>`.
 
 ## Failover and bounds

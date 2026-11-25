@@ -7,7 +7,6 @@ import {
   apierror,
   apilog,
   apitoast,
-  vmcli,
   vmsessionlist,
 } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
@@ -343,7 +342,6 @@ function connectclient() {
         const rows = pushsim()
         if (!didlistsessions) {
           didlistsessions = true
-          vmcli(SOFTWARE, player(), '#sessions')
           if (rows.length > 0) {
             apitoast(
               SOFTWARE,

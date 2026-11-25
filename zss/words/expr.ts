@@ -101,6 +101,33 @@ function listanycountmatch(
   return memorylistelement(board, { group: match.group, self })
 }
 
+/** When any matches kind player, aggro nearest player onto the querying element. */
+function maybefocusplayerfromanymatch(
+  board: MAYBE<BOARD>,
+  match: MAYBE<ANY_COUNT_MATCH>,
+  found: BOARD_ELEMENT[],
+) {
+  if (!ispresent(match) || match.type !== 'kind' || found.length === 0) {
+    return
+  }
+  if (NAME(readstrkindname(match.kind) ?? '') !== 'player') {
+    return
+  }
+  const element = READ_CONTEXT.element
+  if (!ispresent(element)) {
+    return
+  }
+  const focus = memoryfindplayerforelement(
+    board,
+    { x: element.x ?? -1, y: element.y ?? -1 },
+    READ_CONTEXT.elementfocus,
+  )
+  if (ispresent(focus?.id)) {
+    element.player = focus.id
+    READ_CONTEXT.elementfocus = focus.id
+  }
+}
+
 /** Match kind/color/group against the element at pt for a DIR layer (no reparse). */
 function readdirelementmatch(
   board: MAYBE<BOARD>,
@@ -335,6 +362,7 @@ export function readexpr(index: number, shouldresolve = true): [any, number] {
                 matchlist.push(found)
               }
             }
+            maybefocusplayerfromanymatch(board, match, matchlist)
             return [matchlist, iii]
           }
 
@@ -345,17 +373,22 @@ export function readexpr(index: number, shouldresolve = true): [any, number] {
             match,
             self,
           )
-          return [ispresent(found) ? [found] : [], iii]
+          const matchlist = ispresent(found) ? [found] : []
+          maybefocusplayerfromanymatch(board, match, matchlist)
+          return [matchlist, iii]
         }
 
         const [match, iii] = readanycountmatch(ii)
         if (!ispresent(match)) {
           return [[], iii]
         }
-        return [
-          listanycountmatch(READ_CONTEXT.board, match, READ_CONTEXT.elementid),
-          iii,
-        ]
+        const matchlist = listanycountmatch(
+          READ_CONTEXT.board,
+          match,
+          READ_CONTEXT.elementid,
+        )
+        maybefocusplayerfromanymatch(READ_CONTEXT.board, match, matchlist)
+        return [matchlist, iii]
       }
       case 'countof': {
         // COUNTOF <kind|group|color>
