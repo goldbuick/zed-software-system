@@ -3,12 +3,7 @@
  * PeerJS id runs the list; every other tab connects to it as a client.
  */
 import Peer, { DataConnection } from 'peerjs'
-import {
-  apierror,
-  apilog,
-  apitoast,
-  vmsessionlist,
-} from 'zss/device/api'
+import { apierror, apilog, apitoast, vmsessionlist } from 'zss/device/api'
 import { registerreadplayer } from 'zss/device/registerplayer'
 import { SOFTWARE } from 'zss/device/session'
 import {
@@ -16,8 +11,8 @@ import {
   readpeerroster,
 } from 'zss/feature/netterminal'
 import { peerserveroptions } from 'zss/feature/peerserver'
-import { PEER_ID_RE } from 'zss/feature/url'
 import { storagereadvars } from 'zss/feature/storage'
+import { PEER_ID_RE } from 'zss/feature/url'
 import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 
 import {

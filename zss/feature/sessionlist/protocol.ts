@@ -52,9 +52,7 @@ export function issessionlistpeerid(value: unknown): value is string {
 }
 
 function isoptionalname(value: unknown): value is string | undefined {
-  return (
-    value === undefined || (typeof value === 'string' && value.length > 0)
-  )
+  return value === undefined || (typeof value === 'string' && value.length > 0)
 }
 
 function isentry(value: unknown): value is SESSIONLIST_ENTRY {
