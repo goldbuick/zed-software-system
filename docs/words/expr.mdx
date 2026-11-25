@@ -54,6 +54,8 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 |------|-------------|
 | `any` kind/color/group | Registered kind name first (codepage / `empty`), else group or color |
 | `any` dir kind/color/group | Element at dir dest; kind matches `element.kind`, not `@isbreakable` |
+
+When `any` matches kind `player` and finds at least one match, it sets the querying element's `player` stat and `READ_CONTEXT.elementfocus` to the nearest player on the search board (`memoryfindplayerforelement`).
 | `countof` kind/color/group | Count of matching elements |
 | `countof` dir kind/color/group | 1/0 if element at dir matches |
 

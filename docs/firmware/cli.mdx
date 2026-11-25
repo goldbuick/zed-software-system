@@ -65,7 +65,7 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 | [`#save`](#save) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | and persist current state |
 | [`#search`](#search) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | codepage code for query |
 | [`#send`](#send) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message to target elements |
-| [`#sessions`](#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | list active multiplayer games for this book |
+| [`#sessions`](#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | list active multiplayer games for this book |
 | [`#share`](#share) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | share url |
 | [`#shortsend`](#shortsend) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message (short form, no target keyword needed) |
 | [`#stat`](#stat) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | text in a scroll window |
@@ -333,7 +333,7 @@ Join via tab.
 
 **Args:** —
 
-List active multiplayer games for this book.
+Open the `cpu #sessions` scroll of active multiplayer games for this book (same rows as `#admin`). Hosts can set a display name with `#set session <name>`.
 
 #### #chat
 

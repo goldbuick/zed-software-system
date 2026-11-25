@@ -1486,7 +1486,7 @@ Source: https://zed.cafe/docs/feature/sessionlist
 
 # Session list
 
-Lists active multiplayer sessions for the same book version, so players can soft-join each other from `#admin` or `#sessions`.
+Lists active multiplayer sessions for the same book version, so players can soft-join each other from `#admin` or the `cpu #sessions` scroll.
 
 ## Token
 
@@ -1498,9 +1498,9 @@ The book token (`BOOK.token`) is a PeerJS id: `sl_` plus a 20-character `createi
 2. The main-thread service ([`service.ts`](zss/feature/sessionlist/service.ts)) tries `new Peer(token)`.
    - `open`: this tab is the **lister**. It keeps the registry in memory and accepts up to 64 client DataConnections.
    - `unavailable-id`: someone else is the lister. This tab opens an anonymous Peer and connects to the token as a **client**.
-3. Tabs hosting a non-hidden session (`#joincode` without the hidden flag, `#jointab`) register `{ topic, players }`. Clients repeat `register` every 30s; entries expire after 90s or when the connection closes.
-4. The lister pushes `sessionlist:list` to every client on each change. Each tab forwards the list (minus its own topic) to the sim with `vm:sessionlist`, stored by [`zss/memory/sessionlist.ts`](zss/memory/sessionlist.ts). The first list a client receives runs `#sessions`, and toasts when that list has other sessions.
-5. `#admin` (last section, "active games") and `#sessions` render one `!openit inline <join url>` link per session. Activating it navigates this tab to `/join/#<topic>`.
+3. Tabs hosting a non-hidden session (`#joincode` without the hidden flag, `#jointab`) register `{ topic, players, name? }`. Optional `name` is the hosting tab’s sticky `#set session` display name (joiners’ `session` flags are ignored). Clients repeat `register` every 30s; entries expire after 90s or when the connection closes.
+4. The lister pushes `sessionlist:list` to every client on each change. Each tab forwards the list (minus its own topic) to the sim with `vm:sessionlist`, stored by [`zss/memory/sessionlist.ts`](zss/memory/sessionlist.ts). The first list a client receives toasts when that list has other sessions; open the list with `#sessions` or `#admin`.
+5. `#admin` (last section, "active games") and `#sessions` (`cpu #sessions` scroll via CLI or RUNTIME) render one `!openit inline <join url>` link per session. Labels are `{n} player(s)  $GREY{topic}` and append `  {name}` when the host set one. Activating a row navigates this tab to `/join/#<topic>`.
 
 ## Failover and bounds
 
@@ -1513,10 +1513,12 @@ The book token (`BOOK.token`) is a PeerJS id: `sl_` plus a 20-character `createi
 
 | Message | Sender | Payload |
 |---|---|---|
-| `sessionlist:register` | client | `topic`, `players` |
+| `sessionlist:register` | client | `topic`, `players`, optional non-empty `name` |
 | `sessionlist:unregister` | client | none |
 | `sessionlist:query` | client | none |
-| `sessionlist:list` | lister | `sessions: { topic, players, updated }[]` |
+| `sessionlist:list` | lister | `sessions: { topic, players, updated, name? }[]` |
+
+Host display name: `#set session <name>` writes the player flag bag, sticky-persists via `register:stickysession`, and re-registers while hosting. Same slur filter as `#set user`.
 
 ## Limits
 
@@ -2004,7 +2006,7 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 | [`#save`](/firmware/cli#save) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | and persist current state |
 | [`#search`](/firmware/cli#search) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | codepage code for query |
 | [`#send`](/firmware/cli#send) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message to target elements |
-| [`#sessions`](/firmware/cli#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | list active multiplayer games for this book |
+| [`#sessions`](/firmware/cli#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | list active multiplayer games for this book |
 | [`#set`](/firmware/element#set) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | variable to value; multiple words joined with spaces |
 | [`#share`](/firmware/cli#share) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | share url |
 | [`#shoot`](/firmware/board#shoot) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | projectile, with optional kind |
@@ -2590,7 +2592,7 @@ Firmware command signatures stay short. Longer inline help for autocomplete hint
 | [`#save`](#save) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | and persist current state |
 | [`#search`](#search) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | codepage code for query |
 | [`#send`](#send) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message to target elements |
-| [`#sessions`](#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | list active multiplayer games for this book |
+| [`#sessions`](#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | list active multiplayer games for this book |
 | [`#share`](#share) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | share url |
 | [`#shortsend`](#shortsend) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message (short form, no target keyword needed) |
 | [`#stat`](#stat) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | text in a scroll window |
@@ -2858,7 +2860,7 @@ Join via tab.
 
 **Args:** —
 
-List active multiplayer games for this book.
+Open the `cpu #sessions` scroll of active multiplayer games for this book (same rows as `#admin`). Hosts can set a display name with `#set session <name>`.
 
 #### #chat
 
@@ -3044,7 +3046,7 @@ Open read/write bag on the focused player (`BOOK_FLAGS`). Any name that is not a
 | Name | Access | Notes |
 |------|--------|-------|
 | `health` | Read/write | Player health; ≤ 0 ends the program (see Lifecycle) |
-| `user`, `voice` | Read/write | Sticky on the local tab (`register:stickyuser` / `register:stickyvoice`) |
+| `user`, `voice`, `session` | Read/write | Sticky on the local tab (`register:stickyuser` / `register:stickyvoice` / `register:stickysession`). `session` is the hosted game display name in `#sessions` (host tab only). `user` / `session` reject slur text. |
 | `camera`, `graphics` | Read/write | Display prefs (player flags; no board fallback on get) |
 | `facing` | Read/write | Degrees 0–359; get falls back to board facing if unset |
 
@@ -3685,7 +3687,7 @@ For the player-facing list of every `#command`, see [All commands](/firmware#all
 
 <a id="module-commands"></a>
 
-## All commands (7)
+## All commands (8)
 
 <p class="fw-where-legend"> <span class="fw-where fw-where-cli">C</span> CLI - terminal / operator <span class="fw-where fw-where-loader">L</span> Loader - import <span class="fw-where fw-where-runtime">R</span> Runtime - codepages </p>
 
@@ -3695,6 +3697,7 @@ For the player-facing list of every `#command`, see [All commands](/firmware#all
 | [`#help`](#help) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | help scroll |
 | [`#hyperlink`](#hyperlink) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | clickable link in scroll or log |
 | [`#send`](#send) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message to target elements |
+| [`#sessions`](#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | list active multiplayer games for this book |
 | [`#shortsend`](#shortsend) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message (short form, no target keyword needed) |
 | [`#stat`](#stat) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | text in a scroll window |
 | [`#text`](#text) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | text on element or in sidebar |
@@ -3723,6 +3726,12 @@ Example:
 **Args:** —
 
 Open reference scroll (vmrefscroll).
+
+#### #sessions
+
+**Args:** —
+
+Open the `cpu #sessions` scroll of active multiplayer games for this book. Same command as CLI; hosts set a display name with `#set session <name>`.
 
 #### #send
 
@@ -3762,6 +3771,7 @@ Example:
 #send all :touch
 #shortsend :ping
 #help
+#sessions
 ```
 
 ## Design Notes
@@ -11587,6 +11597,8 @@ If word maps to category/collision/color/dir → delegate to readcategory, readc
 |------|-------------|
 | `any` kind/color/group | Registered kind name first (codepage / `empty`), else group or color |
 | `any` dir kind/color/group | Element at dir dest; kind matches `element.kind`, not `@isbreakable` |
+
+When `any` matches kind `player` and finds at least one match, it sets the querying element's `player` stat and `READ_CONTEXT.elementfocus` to the nearest player on the search board (`memoryfindplayerforelement`).
 | `countof` kind/color/group | Count of matching elements |
 | `countof` dir kind/color/group | 1/0 if element at dir matches |
 

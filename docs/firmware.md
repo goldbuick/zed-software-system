@@ -146,7 +146,7 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 | [`#save`](/firmware/cli#save) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | and persist current state |
 | [`#search`](/firmware/cli#search) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | codepage code for query |
 | [`#send`](/firmware/cli#send) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message to target elements |
-| [`#sessions`](/firmware/cli#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | list active multiplayer games for this book |
+| [`#sessions`](/firmware/cli#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | list active multiplayer games for this book |
 | [`#set`](/firmware/element#set) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | variable to value; multiple words joined with spaces |
 | [`#share`](/firmware/cli#share) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | share url |
 | [`#shoot`](/firmware/board#shoot) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | projectile, with optional kind |

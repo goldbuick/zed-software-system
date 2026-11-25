@@ -84,16 +84,11 @@
 <td><code>any</code> dir kind/color/group</td>
 <td>Element at dir dest; kind matches <code>element.kind</code>, not <code>@isbreakable</code></td>
 </tr>
-<tr>
-<td><code>countof</code> kind/color/group</td>
-<td>Count of matching elements</td>
-</tr>
-<tr>
-<td><code>countof</code> dir kind/color/group</td>
-<td>1/0 if element at dir matches</td>
-</tr>
 </tbody>
 </table></div>
+<p>When <code>any</code> matches kind <code>player</code> and finds at least one match, it sets the querying element’s <code>player</code> stat and <code>READ_CONTEXT.elementfocus</code> to the nearest player on the search board (<code>memoryfindplayerforelement</code>).
+| <code>countof</code> kind/color/group | Count of matching elements |
+| <code>countof</code> dir kind/color/group | 1/0 if element at dir matches |</p>
 <p>When <code>breakable</code> is a loaded terrain kind, <code>any dir breakable</code> is ZZT <code>E_BREAKABLE</code> (kind name). A gem with <code>@isbreakable</code> does not match. If that kind is not loaded, <code>readkind</code> fails and group/stat matching still applies.</p>
 <h3 id="numeric"><a class="blume-heading-anchor" href="#numeric">Numeric</a></h3>
 <div class="blume-table-scroll" tabindex="0"><table>

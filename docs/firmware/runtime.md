@@ -18,7 +18,7 @@ For the player-facing list of every `#command`, see [All commands](/firmware#all
 
 <a id="module-commands"></a>
 
-## All commands (7)
+## All commands (8)
 
 <p class="fw-where-legend"> <span class="fw-where fw-where-cli">C</span> CLI - terminal / operator <span class="fw-where fw-where-loader">L</span> Loader - import <span class="fw-where fw-where-runtime">R</span> Runtime - codepages </p>
 
@@ -28,6 +28,7 @@ For the player-facing list of every `#command`, see [All commands](/firmware#all
 | [`#help`](#help) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | help scroll |
 | [`#hyperlink`](#hyperlink) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | clickable link in scroll or log |
 | [`#send`](#send) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message to target elements |
+| [`#sessions`](#sessions) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-runtime">R</span></span> | list active multiplayer games for this book |
 | [`#shortsend`](#shortsend) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | message (short form, no target keyword needed) |
 | [`#stat`](#stat) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | text in a scroll window |
 | [`#text`](#text) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | text on element or in sidebar |
@@ -56,6 +57,12 @@ Example:
 **Args:** —
 
 Open reference scroll (vmrefscroll).
+
+#### #sessions
+
+**Args:** —
+
+Open the `cpu #sessions` scroll of active multiplayer games for this book. Same command as CLI; hosts set a display name with `#set session <name>`.
 
 #### #send
 
@@ -95,6 +102,7 @@ Example:
 #send all :touch
 #shortsend :ping
 #help
+#sessions
 ```
 
 ## Design Notes
