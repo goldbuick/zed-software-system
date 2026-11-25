@@ -22,6 +22,7 @@ import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { maptostring } from 'zss/mapping/value'
 import { memorysendtoelements } from 'zss/memory/gamesend'
 import { memoryreadoperator } from 'zss/memory/session'
+import { memoryopensessionlistscroll } from 'zss/memory/sessionlist'
 import { BOARD, BOARD_ELEMENT } from 'zss/memory/types'
 import { READ_CONTEXT, readargsuntilend } from 'zss/words/reader'
 import { parsesend } from 'zss/words/send'
@@ -243,5 +244,9 @@ export const RUNTIME_FIRMWARE = createfirmware({
   })
   .command('help', ['help scroll'], () => {
     vmrefscroll(SOFTWARE, READ_CONTEXT.elementfocus)
+    return 0
+  })
+  .command('sessions', ['list active multiplayer games for this book'], () => {
+    memoryopensessionlistscroll(READ_CONTEXT.elementfocus)
     return 0
   })

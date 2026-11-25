@@ -74,7 +74,7 @@ Open read/write bag on the focused player (`BOOK_FLAGS`). Any name that is not a
 | Name | Access | Notes |
 |------|--------|-------|
 | `health` | Read/write | Player health; ≤ 0 ends the program (see Lifecycle) |
-| `user`, `voice` | Read/write | Sticky on the local tab (`register:stickyuser` / `register:stickyvoice`) |
+| `user`, `voice`, `session` | Read/write | Sticky on the local tab (`register:stickyuser` / `register:stickyvoice` / `register:stickysession`). `session` is the hosted game display name in `#sessions` (host tab only). `user` / `session` reject slur text. |
 | `camera`, `graphics` | Read/write | Display prefs (player flags; no board fallback on get) |
 | `facing` | Read/write | Degrees 0–359; get falls back to board facing if unset |
 

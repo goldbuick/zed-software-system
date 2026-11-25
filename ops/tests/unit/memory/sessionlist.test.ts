@@ -27,8 +27,24 @@ describe('memory sessionlist', () => {
     ])
     expect(memoryreadsessionlist()).toHaveLength(2)
     expect(memorysessionlistlines()).toEqual([
-      '!openit inline https://zed.cafe/join/#abcd1234;3 players $GREYabcd1234',
-      '!openit inline https://zed.cafe/join/#efgh5678;1 player $GREYefgh5678',
+      '!openit inline https://zed.cafe/join/#abcd1234;3 players  $GREYabcd1234',
+      '!openit inline https://zed.cafe/join/#efgh5678;1 player  $GREYefgh5678',
+    ])
+  })
+
+  it('appends host session name when set', () => {
+    ;(globalThis as { location?: { href: string; origin: string } }).location =
+      {
+        href: 'https://zed.cafe/',
+        origin: 'https://zed.cafe',
+      }
+    memorywritesessionlist([
+      { topic: 'abcd1234', players: 3, name: 'Cool Dungeon' },
+      { topic: 'efgh5678', players: 1 },
+    ])
+    expect(memorysessionlistlines()).toEqual([
+      '!openit inline https://zed.cafe/join/#abcd1234;3 players  $GREYabcd1234  Cool Dungeon',
+      '!openit inline https://zed.cafe/join/#efgh5678;1 player  $GREYefgh5678',
     ])
   })
 })

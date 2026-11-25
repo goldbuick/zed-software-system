@@ -1,5 +1,6 @@
 import { CHIP } from 'zss/chip'
 import {
+  registerstickysession,
   registerstickyuser,
   registerstickyvoice,
   vmlogout,
@@ -760,8 +761,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
     // fallback to player flags
     const flags = memoryreadflags(READ_CONTEXT.book, player)
     if (ispresent(flags)) {
-      if (name === 'user' && isstring(value) && chattextcontainsslur(value)) {
-        return [true, flags.user]
+      if (
+        (name === 'user' || name === 'session') &&
+        isstring(value) &&
+        chattextcontainsslur(value)
+      ) {
+        return [true, flags[name]]
       }
       flags[name] = value
       // sticky flags persist on the local register tab, not the host sim
@@ -775,6 +780,12 @@ export const ELEMENT_FIRMWARE = createfirmware({
         case 'voice': {
           if (isstring(value) || isnumber(value)) {
             registerstickyvoice(SOFTWARE, player, value)
+          }
+          break
+        }
+        case 'session': {
+          if (isstring(value)) {
+            registerstickysession(SOFTWARE, player, value)
           }
           break
         }

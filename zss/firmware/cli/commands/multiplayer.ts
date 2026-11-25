@@ -31,8 +31,6 @@ import {
 } from 'zss/feature/broadcast/webbroadcastwhipaliases'
 import { showbroadcastmenu } from 'zss/feature/broadcastmenu'
 import { ismediastreampeerid } from 'zss/feature/mediastream/protocol'
-import { terminalwritelines } from 'zss/feature/terminalwritelines'
-import { zssheaderlines, zsstexttape } from 'zss/feature/zsstextui'
 import { FIRMWARE } from 'zss/firmware'
 import {
   BRIDGE_SUBCOMMANDS,
@@ -44,7 +42,7 @@ import {
 } from 'zss/firmware/autocompleteconstants'
 import { ispresent } from 'zss/mapping/types'
 import { memoryreadplayerboard } from 'zss/memory/playermanagement'
-import { memorysessionlistlines } from 'zss/memory/sessionlist'
+import { memoryopensessionlistscroll } from 'zss/memory/sessionlist'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
 import { ARG_TYPE, NAME } from 'zss/words/types'
 
@@ -102,14 +100,7 @@ export function registermultiplayercommands(fw: FIRMWARE): FIRMWARE {
       'sessions',
       ['list active multiplayer games for this book'],
       () => {
-        terminalwritelines(
-          SOFTWARE,
-          READ_CONTEXT.elementfocus,
-          zsstexttape(
-            zssheaderlines('join active games'),
-            memorysessionlistlines(),
-          ),
-        )
+        memoryopensessionlistscroll(READ_CONTEXT.elementfocus)
         return 0
       },
     )

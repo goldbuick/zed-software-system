@@ -1,7 +1,13 @@
 const storagewritevar = jest.fn(() => Promise.resolve())
+const sessionlistsethostingname = jest.fn()
 
 jest.mock('zss/feature/storage', () => ({
   storagewritevar: (...args: unknown[]) => storagewritevar(...args),
+}))
+
+jest.mock('zss/feature/sessionlist/service', () => ({
+  sessionlistsethostingname: (...args: unknown[]) =>
+    sessionlistsethostingname(...args),
 }))
 
 jest.mock('zss/device/api', () => ({
@@ -19,7 +25,11 @@ jest.mock('zss/device/doasync', () => ({
 }))
 
 import type { DEVICE } from 'zss/device'
-import { handlestickyuser, handlestickyvoice } from 'zss/device/register/handlers/storage'
+import {
+  handlestickysession,
+  handlestickyuser,
+  handlestickyvoice,
+} from 'zss/device/register/handlers/storage'
 import type { MESSAGE } from 'zss/device/types'
 
 describe('handlestickyuser', () => {
@@ -87,6 +97,37 @@ describe('handlestickyvoice', () => {
       player: 'pid_join',
       data: { id: 'x' },
     } as MESSAGE)
+    expect(storagewritevar).not.toHaveBeenCalled()
+  })
+})
+
+describe('handlestickysession', () => {
+  const device = { emit: jest.fn() } as unknown as DEVICE
+
+  beforeEach(() => {
+    storagewritevar.mockClear()
+    sessionlistsethostingname.mockClear()
+  })
+
+  it('writes sticky session and republishes hosting name', () => {
+    handlestickysession(device, {
+      player: 'pid_host',
+      data: 'Cool Dungeon',
+    } as MESSAGE)
+    expect(sessionlistsethostingname).toHaveBeenCalledWith('Cool Dungeon')
+    expect(storagewritevar).toHaveBeenCalledWith('session', 'Cool Dungeon')
+  })
+
+  it('ignores non-string values', () => {
+    handlestickysession(device, {
+      player: 'pid_host',
+      data: 1,
+    } as MESSAGE)
+    handlestickysession(device, {
+      player: 'pid_host',
+      data: undefined,
+    } as MESSAGE)
+    expect(sessionlistsethostingname).not.toHaveBeenCalled()
     expect(storagewritevar).not.toHaveBeenCalled()
   })
 })
