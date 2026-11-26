@@ -11,6 +11,7 @@ import {
   ptapplydir,
 } from 'zss/words/dir'
 import { isstrgroup } from 'zss/words/group'
+import { normalizerect, recttargetpts } from 'zss/words/rect'
 import { DIR, PT } from 'zss/words/types'
 
 import {
@@ -177,17 +178,19 @@ export function memoryevaldir(
   startpt: PT,
 ): EVAL_DIR {
   const layer: DIR = DIR.MID
-  if (!ispresent(board) || !ispresent(element)) {
+  // Absolute dirs (INRECT, AT, …) and CLI commands may run with no element;
+  // only the board is required. Relative motion falls back to startpt.
+  if (!ispresent(board)) {
     return { dir, startpt, destpt: startpt, layer, targets: [] }
   }
 
   const pt: PT = {
-    x: element.x ?? -1,
-    y: element.y ?? -1,
+    x: element?.x ?? startpt.x,
+    y: element?.y ?? startpt.y,
   }
   const step: PT = {
-    x: pt.x + (element.stepx ?? 0),
-    y: pt.y + (element.stepy ?? 0),
+    x: pt.x + (element?.stepx ?? 0),
+    y: pt.y + (element?.stepy ?? 0),
   }
 
   const flow = dirfrompts(pt, step)
@@ -520,7 +523,7 @@ export function memoryevaldir(
           targets: floodtargets,
         }
       }
-      case DIR.BEAM: {
+      case DIR.INBEAM: {
         const [width] = dir.slice(i + 1)
         const modeval = memoryevaldir(
           board,
@@ -550,6 +553,25 @@ export function memoryevaldir(
           destpt: modeval.startpt,
           targets: beamtargets,
         }
+      }
+      case DIR.INRECT: {
+        const [x1, y1, x2, y2] = dir.slice(i + 1)
+        if (
+          isnumber(x1) &&
+          isnumber(y1) &&
+          isnumber(x2) &&
+          isnumber(y2)
+        ) {
+          const rect = normalizerect(x1, y1, x2, y2)
+          return {
+            dir,
+            startpt,
+            destpt: { x: rect.pt1.x, y: rect.pt1.y },
+            layer,
+            targets: recttargetpts(rect.pt1, rect.pt2),
+          }
+        }
+        return { dir, startpt, destpt: startpt, layer, targets: [] }
       }
       case DIR.SELECT: {
         const [selectmode, group] = dir.slice(i + 1)

@@ -308,7 +308,6 @@ Display commands `toast` and `ticker` are registered on **ELEMENT_FIRMWARE** in 
 | `revert` | Revert board to last snapshot |
 | `copy` | Copy board region from source board |
 | `remix` | Remix board with pattern and mirror settings |
-| `erase` | Erase board elements by filter (targetset / region; groups ok) |
 | `weave` | Weave board in direction |
 | `pivot` | Rotate board region by degrees |
 

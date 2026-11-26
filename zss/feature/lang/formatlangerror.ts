@@ -170,8 +170,8 @@ function tryincompletedirmod(
   if (DIR_NEED_SUBDIR.has(mod)) {
     return `${mod} needs a direction`
   }
-  if (mod === 'beam') {
-    return 'beam needs a length number and direction'
+  if (mod === 'inbeam') {
+    return 'inbeam needs a length number and direction'
   }
   if (mod === 'within' || mod === 'awayby') {
     return `${mod} needs a distance number`

@@ -162,18 +162,46 @@ describe('dir', () => {
       expect(nextindex).toBe(2)
     })
 
-    it('parses BEAM width followed by direction', () => {
-      READ_CONTEXT.words = ['BEAM', 1, 'NORTH']
+    it('parses INBEAM width followed by direction', () => {
+      READ_CONTEXT.words = ['INBEAM', 1, 'NORTH']
       const [strdir, nextindex] = readdir(0)
-      expect(strdir).toEqual(['BEAM', 1, 'NORTH'])
+      expect(strdir).toEqual(['INBEAM', 1, 'NORTH'])
       expect(nextindex).toBe(3)
     })
 
-    it('parses WITHIN 5 BEAM 1 NORTH for composition', () => {
-      READ_CONTEXT.words = ['WITHIN', 5, 'BEAM', 1, 'NORTH']
+    it('parses WITHIN 5 INBEAM 1 NORTH for composition', () => {
+      READ_CONTEXT.words = ['WITHIN', 5, 'INBEAM', 1, 'NORTH']
       const [strdir, nextindex] = readdir(0)
-      expect(strdir).toEqual(['WITHIN', 5, 'BEAM', 1, 'NORTH'])
+      expect(strdir).toEqual(['WITHIN', 5, 'INBEAM', 1, 'NORTH'])
       expect(nextindex).toBe(5)
+    })
+
+    it('parses INRECT with four numbers', () => {
+      READ_CONTEXT.words = ['INRECT', 0, 0, 5, 5]
+      const [strdir, nextindex] = readdir(0)
+      expect(strdir).toEqual(['INRECT', 0, 0, 5, 5])
+      expect(nextindex).toBe(5)
+    })
+
+    it('parses INRECT with one-word comma rect', () => {
+      READ_CONTEXT.words = ['INRECT', '0,0,5,5']
+      const [strdir, nextindex] = readdir(0)
+      expect(strdir).toEqual(['INRECT', 0, 0, 5, 5])
+      expect(nextindex).toBe(2)
+    })
+
+    it('parses lowercase inrect via mapstrdir path', () => {
+      READ_CONTEXT.words = ['inrect', 1, 2, 3, 4]
+      const [strdir, nextindex] = readdir(0)
+      expect(strdir).toEqual(['INRECT', 1, 2, 3, 4])
+      expect(nextindex).toBe(5)
+    })
+  })
+
+  describe('mapstrdir inrect', () => {
+    it('maps inrect to INRECT', () => {
+      expect(mapstrdir('inrect')).toBe('INRECT')
+      expect(DIR_CONSTS.inrect).toBe('INRECT')
     })
   })
 })

@@ -41,7 +41,7 @@ export const DIR_MOD_CONTINUES = new Set([
   'ground',
   'elements',
   'flood',
-  'beam',
+  'inbeam',
   'within',
   'awayby',
 ])
@@ -116,7 +116,7 @@ export function resolvedirphase(
     if (DIR_NEED_SUBDIR.has(w)) {
       return { kind: 'need_subdir' }
     }
-    if (w === 'beam') {
+    if (w === 'inbeam') {
       ii++
       if (ii <= cursortokenidx && isnumericword(words[ii])) {
         ii++
@@ -151,7 +151,7 @@ export function resolvedirphase(
   if (DIR_NEED_SUBDIR.has(cur)) {
     return { kind: 'need_subdir' }
   }
-  if (cur === 'beam') {
+  if (cur === 'inbeam') {
     return { kind: 'need_number' }
   }
   return { kind: 'mod_or_base' }
