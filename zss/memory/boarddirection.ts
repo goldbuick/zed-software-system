@@ -556,12 +556,7 @@ export function memoryevaldir(
       }
       case DIR.INRECT: {
         const [x1, y1, x2, y2] = dir.slice(i + 1)
-        if (
-          isnumber(x1) &&
-          isnumber(y1) &&
-          isnumber(x2) &&
-          isnumber(y2)
-        ) {
+        if (isnumber(x1) && isnumber(y1) && isnumber(x2) && isnumber(y2)) {
           const rect = normalizerect(x1, y1, x2, y2)
           return {
             dir,

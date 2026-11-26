@@ -1,12 +1,14 @@
-import { MAYBE, isarray, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 
 import { STR_GROUP } from './group'
 import { READ_CONTEXT, readargs } from './reader'
-import {
-  normalizerect,
-  parserectfromnumbers,
-  parserectoneword,
-} from './rect'
+import { normalizerect, parserectfromnumbers, parserectoneword } from './rect'
 import { ARG_TYPE, DIR, NAME, PT, WORD } from './types'
 
 export function ispt(value: any): value is PT {

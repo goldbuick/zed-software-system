@@ -750,10 +750,7 @@ export const BOARD_FIRMWARE = createfirmware()
       let ii = 0
       let scope: MAYBE<EVAL_DIR>
       const first = words[0]
-      if (
-        isstrdir(first) ||
-        (isstring(first) && ispresent(mapstrdir(first)))
-      ) {
+      if (isstrdir(first) || (isstring(first) && ispresent(mapstrdir(first)))) {
         const [dir, diri] = readargs(words, 0, [ARG_TYPE.DIR])
         scope = dir
         ii = diri
