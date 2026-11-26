@@ -682,34 +682,6 @@ Source: https://zed.cafe/docs/feature/boardcopy
 
 ---
 
-# boarderase.ts
-Source: https://zed.cafe/docs/feature/boarderase
-
-**Purpose**: Exports `boarderase` — delete matching board elements by filter targetset and region. Used by firmware `#erase`.
-
-## Dependencies
-
-- `zss/mapping/types` — ispresent
-- `zss/memory/boardlifecycle` — memoryreadgroup, memorysafedeleteelement
-- `zss/memory/boards` — memoryinitboard, memoryreadboardbyaddress
-- `zss/words/reader` — READ_CONTEXT
-- `zss/words/types` — PT
-
-## Exports
-
-| Function | Args | Description |
-|----------|------|-------------|
-| `boarderase` | `target`, `p1`, `p2`, `self`, `targetset` | Erase elements from `memoryreadgroup` whose cells lie in `[p1,p2]`; skips players |
-
-## Behavior
-
-- Resolves board by address; requires `READ_CONTEXT.book` for timestamp
-- Targetset matches weave/pivot (`all`, `terrain`, `object`, `self`, `others`, display name, or **group**)
-- Uses `memorysafedeleteelement` (objects marked removed; terrain cells cleared)
-- Returns `true` if at least one element was erased
-
----
-
 # boardpivot.ts
 Source: https://zed.cafe/docs/feature/boardpivot
 
@@ -1389,7 +1361,7 @@ The feature system provides domain-specific capabilities for the Zed Software Sy
 
 Feature modules are **stateless utilities** and **domain logic** that:
 
-- **Board operations** — Copy, erase, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`)
+- **Board operations** — Copy, pivot, snapshot, remix, weave (used by `zss/firmware/transforms`); delete via `#change … empty`
 - **Format** — Object serialization with msgpack for memory/gadget state
 - **Parse** — File format parsers (ZZT, ANSI, CHR, ZZM, markdown, etc.)
 - **tts** — Text-to-speech (Piper, Supertonic, Fish) in ttsspace worker
@@ -1404,7 +1376,6 @@ Feature modules are **stateless utilities** and **domain logic** that:
 | File / Folder | Purpose |
 |---------------|---------|
 | [boardcopy.md](boardcopy.md) | Copy board region, mapelementcopy |
-| [boarderase.md](boarderase.md) | Erase board elements by filter / group |
 | [boardpivot.md](boardpivot.md) | Rotate board region by degrees |
 | [boardsnapshot.md](boardsnapshot.md) | Snapshot/revert board state |
 | [boardremix.md](boardremix.md) | Wavefunction collapse remix |
@@ -1881,7 +1852,7 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 
 <a id="all-commands"></a>
 
-## All commands (164)
+## All commands (163)
 
 <p class="fw-where-legend"> <span class="fw-where fw-where-cli">C</span> CLI - terminal / operator <span class="fw-where fw-where-loader">L</span> Loader - import <span class="fw-where fw-where-runtime">R</span> Runtime - codepages </p>
 
@@ -1919,7 +1890,7 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 | [`#bridge`](/firmware/cli#bridge) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | bridge integrations (operator only) |
 | [`#broadcast`](/firmware/cli#broadcast) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | stream broadcast menu, stop, whip, or media-stream bind (operator only) |
 | [`#build`](/firmware/board#build) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | create board and link to stat. optional source board. |
-| [`#change`](/firmware/board#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | elements of a group to another kind |
+| [`#change`](/firmware/board#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | optional dir scope, then group to kind (use empty kind to delete; builtins all/terrain/object ok) |
 | [`#char`](/firmware/element#char) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | character (self or at direction) |
 | [`#chat`](/firmware/cli#chat) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span></span> | chat bridge: twitch / feeds (operator only) |
 | [`#clear`](/firmware/element#clear) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | variables (set to 0), or drop an array index |
@@ -1944,7 +1915,6 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 | [`#echo4`](/firmware/audio#echo1-echo4) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | for #tts |
 | [`#end`](/firmware/element#end) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | program (optionally set 'arg' variable) |
 | [`#endgame`](/firmware/cli#endgame) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | health to 0 |
-| [`#erase`](/firmware/transforms#erase) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | board elements by filter (targetset / region) |
 | [`#export`](/firmware/cli#export) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | export menu (operator only) |
 | [`#fcrush`](/firmware/audio#fcrush) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | frequency crush to all 4 channels of #play |
 | [`#fcrush1`](/firmware/audio#fcrush1-fcrush4) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | crush for first 2 channels of #play |
@@ -2359,7 +2329,7 @@ Source: https://zed.cafe/docs/firmware/board
 | Command | Where | Description |
 |--------|-------|-------------|
 | [`#build`](#build) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | create board and link to stat. optional source board. |
-| [`#change`](#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | elements of a group to another kind |
+| [`#change`](#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | optional dir scope, then group to kind (use empty kind to delete; builtins all/terrain/object ok) |
 | [`#dupe`](#duplicate-dupe) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | element at direction in given direction |
 | [`#dupewith`](#duplicatewith-dupewith) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | element with argument |
 | [`#duplicate`](#duplicate-dupe) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | element at direction in given direction |
@@ -2497,9 +2467,18 @@ First open cell along the shoot ray; an opposite-facing same-kind transporter ar
 
 #### #change
 
-**Args:** `target` `into`
+**Args:** `[dir]` `group` `into`
 
-Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind.
+Optional spatial **dir** (`rect`, `within`, `at`, …) then **`<group>`** (name, `@group`, or builtins `all` / `terrain` / `object`) and into kind. Into `empty` deletes matches (scoped when dir given). `#change empty <kind>` still fills empty cells (also dir-scoped).
+
+```
+#change slime empty
+#change terrain empty
+#change rect 10 5 20 12 all empty
+#change rect 0,0,5,5 terrain empty
+#change rect 4 4 12 10 slime gem
+#change within 3 i combat gem
+```
 
 #### #write
 
@@ -2514,6 +2493,7 @@ Example:
 #shove e n
 #push w e
 #change slime empty
+#change rect 0,0,5,5 all empty
 #write e yellow HELLO
 ```
 
@@ -3785,21 +3765,20 @@ Example:
 # Transforms
 Source: https://zed.cafe/docs/firmware/transforms
 
-**Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, erase, weave, and pivot. Used for level editing and procedural generation.
+**Purpose**: Defines `TRANSFORM_FIRMWARE` — commands for board-level transformations: snapshot/revert, copy, remix, weave, and pivot. Used for level editing and procedural generation. Delete matching elements with [`#change`](/firmware/board#change) (`… empty`), optionally scoped with a dir such as `rect`.
 
 {/* firmware-catalog:begin */}
 {/* Generated by `yarn task docs` (firmware command catalog). Do not edit by hand. */}
 
 <a id="module-commands"></a>
 
-## All commands (7)
+## All commands (6)
 
 <p class="fw-where-legend"> <span class="fw-where fw-where-cli">C</span> CLI - terminal / operator <span class="fw-where fw-where-loader">L</span> Loader - import <span class="fw-where fw-where-runtime">R</span> Runtime - codepages </p>
 
 | Command | Where | Description |
 |--------|-------|-------------|
 | [`#copy`](#copy) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | region from source to current board |
-| [`#erase`](#erase) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | board elements by filter (targetset / region) |
 | [`#pivot`](#pivot) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | board elements by degrees; optional shear keyword (taper_floor, taper_ceil, taper_trunc, mishin_floor, mishin_ceil, shear_soft, shear_hard) then region / targetset |
 | [`#remix`](#remix) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | from source with pattern size and mirror to current board |
 | [`#revert`](#revert) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | board to snapshot state |
@@ -3822,12 +3801,6 @@ Calls [`boardsnapshot`](../../feature/boardsnapshot.ts) on the sim — creates M
 **Args:** —
 
 Calls [`boardrevert`](../../feature/boardsnapshot.ts) on the sim — restores current board from snapshot codepage.
-
-#### #erase
-
-**Args:** [filter…]
-
-Erase matching elements; filter **`<group>`** (optional color) or builtins `all`/`terrain`/`object`.
 
 #### #weave
 
@@ -3861,7 +3834,7 @@ Example:
 
 ```
 #snapshot
-#erase terrain
+#change terrain empty
 #weave n object
 #pivot 90 all
 #copy otherboard
@@ -3871,7 +3844,7 @@ Example:
 
 ## Filter Grammar
 
-`readfilter` parses optional filter args after command-specific args (`#erase` takes only the filter; `#pivot` / `#weave` / `#copy` / `#remix` parse it after their own args):
+`readfilter` parses optional filter args after command-specific args (`#pivot` / `#weave` / `#copy` / `#remix` parse it after their own args). Region tokens use the shared RECT helper ([`zss/words/rect.ts`](../../words/rect.ts)) — same absolute AABB as `inrect` dirs.
 
 - **targetset** — default `all`
 - **region** — `x1 y1` (single cell) or `x1 y1 x2 y2` (inclusive corners)
@@ -3885,19 +3858,14 @@ Filter controls which elements are affected:
 ### Builtin targetsets
 
 ```
-#erase
-#erase all
-#erase terrain
-#erase object
 #pivot 90 terrain
 #weave n object
+#copy otherboard all
 ```
 
 ### Group / display name
 
 ```
-#erase slime
-#erase red key
 #pivot 90 wall
 #weave e doors
 #copy otherboard slime
@@ -3906,10 +3874,9 @@ Filter controls which elements are affected:
 ### Region as four numbers
 
 ```
-#erase 10 5 20 12
-#erase terrain 0 0 59 24
 #pivot 90 object 5 5 15 15
 #weave n all 2 2 8 8
+#copy otherboard terrain 0 0 59 24
 ```
 
 ### Region as one comma token
@@ -3917,10 +3884,9 @@ Filter controls which elements are affected:
 Needed when the rect is a single word (selection / paste paths):
 
 ```
-#erase 0,0,5,5
-#erase object 10,5,20,12
 #pivot 90 slime 0,0,30,20
 #copy otherboard all 0,0,59,24
+#remix otherboard 4 1 object 10,5,20,12
 ```
 
 ### Combined targetset + region
@@ -3928,9 +3894,18 @@ Needed when the rect is a single word (selection / paste paths):
 Order can mix; both are applied:
 
 ```
-#erase slime 4 4 12 10
-#erase 4 4 12 10 slime
 #remix otherboard 4 1 terrain 0,0,20,12
+#copy otherboard slime 4 4 12 10
+```
+
+Delete (former `#erase`) uses board `#change` with optional spatial dir:
+
+```
+#change slime empty
+#change terrain empty
+#change rect 10 5 20 12 all empty
+#change rect 0,0,5,5 object empty
+#change rect 4 4 12 10 slime empty
 ```
 
 ## pickcodepage
@@ -11494,13 +11469,14 @@ brown→DKYELLOW, dkwhite→LTGRAY, gray/grey→LTGRAY, dkgrey→DKGRAY, ltblack
 # dir.ts
 Source: https://zed.cafe/docs/words/dir
 
-**Purpose**: Parses direction values from word arrays. Supports cardinal directions, modifiers (cw, ccw, opp), pathfinding (away, toward, find, flee), and compound dirs with args (by x y, at x y, within n, awayby n). Used for movement and spatial queries.
+**Purpose**: Parses direction values from word arrays. Supports cardinal directions, modifiers (cw, ccw, opp), pathfinding (away, toward, find, flee), and compound dirs with args (by x y, at x y, within n, awayby n, inrect …). Used for movement and spatial queries. Absolute AABB regions share helpers in [`rect.ts`](rect.md).
 
 ## Dependencies
 
 - `zss/mapping/types` — MAYBE, isarray, ispresent, isstring
 - `./kind` — STR_KIND (for STR_DIR type)
 - `./reader` — ARG_TYPE, READ_CONTEXT, readargs
+- `./rect` — parserectoneword, parserectfromnumbers, normalizerect
 - `./types` — DIR, NAME, PT, WORD
 
 ## Exports
@@ -11525,20 +11501,26 @@ Array of STR_DIR_CONST, STR_KIND, numbers, and strings. Modifiers (CW, CCW, OPP,
 | Dir | Args |
 |-----|------|
 | BY, AT, AWAY, TOWARD | x, y (numbers) |
-| FIND, FLEE | kind |
+| FIND, FLEE | group |
 | TO | dir1, dir2 (combined dest) |
 | WITHIN, AWAYBY | amount (number) |
-| SELECT | selectmode (string), kind |
+| INBEAM | width (number) |
+| INRECT | absolute inclusive AABB: `x1 y1 [x2 y2]` or one word `x1,y1,x2,y2` |
+| SELECT | selectmode (string), group |
+
+`INRECT` fills `EVAL_DIR.targets` with every in-board cell in the AABB (`destpt` = corner `pt1`). Disk blast stays on `WITHIN`; inrect is axis-aligned only.
 
 ## readdir Logic
 
 1. Read dir const(s); mods (CW, CCW, OVER, etc.) allow more dirs
 2. For BY/AT/AWAY/TOWARD: read two numbers
-3. For FIND/FLEE: read kind
+3. For FIND/FLEE: read group
 4. For TO: read two dirs; combine destpts relative to element
 5. For WITHIN/AWAYBY: read number
-6. For SELECT: read selectmode (string) and kind
-7. Return STR_DIR or `[undefined, index]`
+6. For INBEAM: read width
+7. For INRECT: parse via shared rect helper (one-word or four numbers)
+8. For SELECT: read selectmode (string) and group
+9. Return STR_DIR or `[undefined, index]`
 
 ---
 
@@ -11779,7 +11761,8 @@ Domain-specific readers (`readcategory`, `readcolor`, `readdir`, `readkind`) con
 | [category.md](category.md) | Category parsing (isterrain, isobject) |
 | [collision.md](collision.md) | Collision parsing (iswalk, issolid, etc.) |
 | [color.md](color.md) | Color parsing and mapping |
-| [dir.md](dir.md) | Direction parsing with args (by, at, find, flee, etc.) |
+| [dir.md](dir.md) | Direction parsing with args (by, at, find, flee, rect, etc.) |
+| [rect.md](rect.md) | Absolute board AABB helpers shared by INRECT dirs and transform filters |
 | [kind.md](kind.md) | Kind parsing (name + optional color) |
 | [expr.md](expr.md) | Expression evaluation (aligned, any, countof, blocked, run, etc.) |
 | [send.md](send.md) | Send/message parsing (target:label args) |
@@ -11798,6 +11781,31 @@ command words
     → memory* (boardaccess, boardlifecycle, boards, spatialqueries, runtime, …)
     → evaluated values
 ```
+
+---
+
+# rect.ts
+Source: https://zed.cafe/docs/words/rect
+
+**Purpose**: Shared absolute board AABB helpers for `DIR.INRECT` and transform `readfilter` region parsing. Coords are inclusive board cells (same layout as former `#erase` / `0,0,5,5` selection paths).
+
+## Exports
+
+| Export | Description |
+|--------|-------------|
+| `BOARD_RECT` | `{ pt1, pt2 }` normalized min/max corners |
+| `normalizerect` | Two corners → inclusive min/max AABB |
+| `parserectoneword` | One token `x1,y1,x2,y2` → rect |
+| `parserectfromnumbers` | `words[i..]` as `x1 y1 [x2 y2]` → `{ rect, next }` |
+| `recttargetpts` | All in-board cells in inclusive AABB |
+| `fullboardrect` | Full board default region |
+| `ispresentrect` | Type guard |
+
+## Used by
+
+- [`dir.ts`](dir.md) — `readdir` `INRECT` args
+- [`zss/memory/boarddirection.ts`](../../memory/boarddirection.ts) — `DIR.INRECT` → `EVAL_DIR.targets`
+- [`zss/firmware/transforms.ts`](../../firmware/transforms.ts) — `readfilter` region tokens
 
 ---
 
@@ -12017,7 +12025,7 @@ Source: https://zed.cafe/docs/words/types
 | `COLOR` | BLACK, DKBLUE, … WHITE; ONBLACK … ONWHITE, ONCLEAR; BLBLACK … BLWHITE |
 | `COLLISION` | ISWALK, ISSOLID, ISSWIM, ISBULLET, ISGHOST |
 | `CATEGORY` | ISTERRAIN, ISOBJECT |
-| `DIR` | IDLE, NORTH, SOUTH, WEST, EAST, BY, AT, FLOW, SEEK, RNDNS, RNDNE, RND, CW, CCW, OPP, RNDP, AWAY, TOWARD, FIND, FLEE, TO, MID, OVER, UNDER, GROUND, WITHIN, AWAYBY, ELEMENTS, SELECT |
+| `DIR` | IDLE, NORTH, SOUTH, WEST, EAST, BY, AT, FLOW, SEEK, RNDNS, RNDNE, RND, CW, CCW, OPP, RNDP, AWAY, TOWARD, FIND, FLEE, TO, MID, OVER, UNDER, GROUND, WITHIN, AWAYBY, ELEMENTS, SELECT, FLOOD, INBEAM, INRECT |
 | `STAT_TYPE` | LOADER, BOARD, OBJECT, TERRAIN, CHARSET, PALETTE, CONST, RANGE, SELECT, NUMBER, TEXT, HOTKEY, COPYIT, OPENIT, VIEWIT, RUNIT, ZSSEDIT, CHAREDIT, COLOREDIT |
 
 ### Types

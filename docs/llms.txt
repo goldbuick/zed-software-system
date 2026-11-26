@@ -66,7 +66,6 @@
 ### Modules
 
 - [boardcopy.ts](https://zed.cafe/docs/feature/boardcopy)
-- [boarderase.ts](https://zed.cafe/docs/feature/boarderase)
 - [boardpivot.ts](https://zed.cafe/docs/feature/boardpivot)
 - [boardremix.ts](https://zed.cafe/docs/feature/boardremix)
 - [boardsnapshot.ts](https://zed.cafe/docs/feature/boardsnapshot)
@@ -154,6 +153,7 @@
 - [kind.ts](https://zed.cafe/docs/words/kind)
 - [printvalue.ts](https://zed.cafe/docs/words/printvalue)
 - [reader.ts](https://zed.cafe/docs/words/reader)
+- [rect.ts](https://zed.cafe/docs/words/rect)
 - [send.ts](https://zed.cafe/docs/words/send)
 - [stats.ts](https://zed.cafe/docs/words/stats)
 - [system.ts](https://zed.cafe/docs/words/system)

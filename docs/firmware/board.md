@@ -16,7 +16,7 @@ title: Board
 | Command | Where | Description |
 |--------|-------|-------------|
 | [`#build`](#build) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | create board and link to stat. optional source board. |
-| [`#change`](#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | elements of a group to another kind |
+| [`#change`](#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | optional dir scope, then group to kind (use empty kind to delete; builtins all/terrain/object ok) |
 | [`#dupe`](#duplicate-dupe) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | element at direction in given direction |
 | [`#dupewith`](#duplicatewith-dupewith) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | element with argument |
 | [`#duplicate`](#duplicate-dupe) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | element at direction in given direction |
@@ -154,9 +154,18 @@ First open cell along the shoot ray; an opposite-facing same-kind transporter ar
 
 #### #change
 
-**Args:** `target` `into`
+**Args:** `[dir]` `group` `into`
 
-Change all elements matching **`<group>`** (name or `@group`) to into kind (or empty→put). Into must be a real kind.
+Optional spatial **dir** (`rect`, `within`, `at`, …) then **`<group>`** (name, `@group`, or builtins `all` / `terrain` / `object`) and into kind. Into `empty` deletes matches (scoped when dir given). `#change empty <kind>` still fills empty cells (also dir-scoped).
+
+```
+#change slime empty
+#change terrain empty
+#change rect 10 5 20 12 all empty
+#change rect 0,0,5,5 terrain empty
+#change rect 4 4 12 10 slime gem
+#change within 3 i combat gem
+```
 
 #### #write
 
@@ -171,6 +180,7 @@ Example:
 #shove e n
 #push w e
 #change slime empty
+#change rect 0,0,5,5 all empty
 #write e yellow HELLO
 ```
 

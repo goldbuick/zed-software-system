@@ -7,7 +7,6 @@
   <url><loc>https://zed.cafe/docs/device/message-flow</loc></url>
   <url><loc>https://zed.cafe/docs/feature/README</loc></url>
   <url><loc>https://zed.cafe/docs/feature/boardcopy</loc></url>
-  <url><loc>https://zed.cafe/docs/feature/boarderase</loc></url>
   <url><loc>https://zed.cafe/docs/feature/boardpivot</loc></url>
   <url><loc>https://zed.cafe/docs/feature/boardremix</loc></url>
   <url><loc>https://zed.cafe/docs/feature/boardsnapshot</loc></url>
@@ -134,6 +133,7 @@
   <url><loc>https://zed.cafe/docs/words/kind</loc></url>
   <url><loc>https://zed.cafe/docs/words/printvalue</loc></url>
   <url><loc>https://zed.cafe/docs/words/reader</loc></url>
+  <url><loc>https://zed.cafe/docs/words/rect</loc></url>
   <url><loc>https://zed.cafe/docs/words/send</loc></url>
   <url><loc>https://zed.cafe/docs/words/stats</loc></url>
   <url><loc>https://zed.cafe/docs/words/system</loc></url>
