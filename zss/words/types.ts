@@ -106,7 +106,9 @@ export enum DIR {
   // multi-target sequences
   SELECT,
   FLOOD,
-  BEAM,
+  INBEAM,
+  /** Absolute inclusive AABB; fills EVAL_DIR.targets */
+  INRECT,
 }
 
 export enum STAT_TYPE {

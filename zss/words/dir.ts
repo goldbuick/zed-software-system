@@ -1,7 +1,14 @@
-import { MAYBE, isarray, ispresent, isstring } from 'zss/mapping/types'
+import {
+  MAYBE,
+  isarray,
+  isnumber,
+  ispresent,
+  isstring,
+} from 'zss/mapping/types'
 
 import { STR_GROUP } from './group'
 import { READ_CONTEXT, readargs } from './reader'
+import { normalizerect, parserectfromnumbers, parserectoneword } from './rect'
 import { ARG_TYPE, DIR, NAME, PT, WORD } from './types'
 
 export function ispt(value: any): value is PT {
@@ -102,7 +109,8 @@ export const DIR_CONSTS = {
   // multi-target sequences
   select: 'SELECT',
   flood: 'FLOOD',
-  beam: 'BEAM',
+  inbeam: 'INBEAM',
+  inrect: 'INRECT',
 } as const
 
 export type STR_DIR_TYPE = typeof DIR_CONSTS
@@ -231,10 +239,47 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
         ii = iii
         break
       }
-      case 'BEAM': {
+      case 'INBEAM': {
         const [width, iii] = readargs(READ_CONTEXT.words, ii, [ARG_TYPE.NUMBER])
         strdir.push(width)
         ii = iii
+        break
+      }
+      case 'INRECT': {
+        const oneword = parserectoneword(READ_CONTEXT.words[ii])
+        if (ispresent(oneword)) {
+          strdir.push(
+            oneword.pt1.x,
+            oneword.pt1.y,
+            oneword.pt2.x,
+            oneword.pt2.y,
+          )
+          ii += 1
+          break
+        }
+        const fromnums = parserectfromnumbers(READ_CONTEXT.words, ii)
+        if (ispresent(fromnums)) {
+          strdir.push(
+            fromnums.rect.pt1.x,
+            fromnums.rect.pt1.y,
+            fromnums.rect.pt2.x,
+            fromnums.rect.pt2.y,
+          )
+          ii = fromnums.next
+          break
+        }
+        // fall back: try four NUMBER args via readargs
+        const [x1, y1, x2, y2, iii] = readargs(READ_CONTEXT.words, ii, [
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+          ARG_TYPE.MAYBE_NUMBER,
+        ])
+        if (isnumber(x1) && isnumber(y1)) {
+          const rect = normalizerect(x1, y1, x2 ?? x1, y2 ?? y1)
+          strdir.push(rect.pt1.x, rect.pt1.y, rect.pt2.x, rect.pt2.y)
+          ii = iii
+        }
         break
       }
       case 'SELECT': {
@@ -263,7 +308,7 @@ export function readdir(index: number): [STR_DIR | undefined, number] {
       case 'AWAYBY':
       case 'ELEMENTS':
       case 'FLOOD':
-      case 'BEAM':
+      case 'INBEAM':
         break
       default:
         return [strdir, ii]

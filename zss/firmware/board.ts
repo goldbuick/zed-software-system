@@ -10,7 +10,7 @@ import { createfirmware } from 'zss/firmware'
 import { celltorendervalue } from 'zss/gadget/display/cellvalue'
 import { ispid } from 'zss/mapping/guid'
 import { clamp } from 'zss/mapping/number'
-import { deepcopy, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, deepcopy, ispresent, isstring } from 'zss/mapping/types'
 import {
   READ_LAYER,
   memorylistelement,
@@ -51,7 +51,14 @@ import {
   BOARD_WIDTH,
 } from 'zss/memory/types'
 import { mapcolortostrcolor, mapstrcolortoattributes } from 'zss/words/color'
-import { type EVAL_DIR, dirfrompts, ispt, ptapplydir } from 'zss/words/dir'
+import {
+  type EVAL_DIR,
+  dirfrompts,
+  ispt,
+  isstrdir,
+  mapstrdir,
+  ptapplydir,
+} from 'zss/words/dir'
 import { readstrgroupname } from 'zss/words/group'
 import {
   readstrkindbg,
@@ -731,15 +738,29 @@ export const BOARD_FIRMWARE = createfirmware()
   )
   .command(
     'change',
-    [ARG_TYPE.GROUP, ARG_TYPE.KIND, 'elements of a group to another kind'],
+    [
+      'optional dir scope, then group to kind (use empty kind to delete; builtins all/terrain/object ok)',
+    ],
     (chip, words) => {
       if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
         chip.set('didfail', 1)
         return 0
       }
 
+      let ii = 0
+      let scope: MAYBE<EVAL_DIR>
+      const first = words[0]
+      if (isstrdir(first) || (isstring(first) && ispresent(mapstrdir(first)))) {
+        const [dir, diri] = readargs(words, 0, [ARG_TYPE.DIR])
+        scope = dir
+        ii = diri
+      }
+
       // read: target is GROUP matcher; into is blueprint kind
-      const [target, into] = readargs(words, 0, [ARG_TYPE.GROUP, ARG_TYPE.KIND])
+      const [target, into] = readargs(words, ii, [
+        ARG_TYPE.GROUP,
+        ARG_TYPE.KIND,
+      ])
 
       // handle player case
       const [maybetargetname] = target
@@ -753,16 +774,51 @@ export const BOARD_FIRMWARE = createfirmware()
         return 0
       }
 
+      function ptsinscope(): PT[] | undefined {
+        if (!ispresent(scope)) {
+          return undefined
+        }
+        if (scope.targets.length > 0) {
+          return scope.targets
+        }
+        return [scope.destpt]
+      }
+
+      function elementinscope(element: BOARD_ELEMENT): boolean {
+        const pts = ptsinscope()
+        if (!ispresent(pts)) {
+          return true
+        }
+        const x = element.x ?? -1
+        const y = element.y ?? -1
+        for (let i = 0; i < pts.length; ++i) {
+          if (pts[i].x === x && pts[i].y === y) {
+            return true
+          }
+        }
+        return false
+      }
+
       // default to failure
       chip.set('didfail', 1)
 
       // begin filtering
       const targetname = readstrgroupname(target) ?? ''
       if (targetname === 'empty') {
-        // empty into something becomes a put
-        memorylistboardptsbyempty(READ_CONTEXT.board).forEach((pt) => {
+        // empty into something becomes a put (scoped when dir given)
+        const pts = ptsinscope()
+        const empties = memorylistboardptsbyempty(READ_CONTEXT.board)
+        for (let i = 0; i < empties.length; ++i) {
+          const pt = empties[i]
+          if (
+            ispresent(pts) &&
+            !pts.some((p) => p.x === pt.x && p.y === pt.y)
+          ) {
+            continue
+          }
           memorywriteelementfromkind(READ_CONTEXT.board, into, pt)
-        })
+          chip.set('didfail', 0)
+        }
       }
 
       // modify attrs
@@ -773,6 +829,9 @@ export const BOARD_FIRMWARE = createfirmware()
         group: target,
         self: READ_CONTEXT.elementid,
       }).forEach((element) => {
+        if (!elementinscope(element)) {
+          return
+        }
         // modify existing elements
         if (ispresent(intocolor)) {
           element.color = intocolor

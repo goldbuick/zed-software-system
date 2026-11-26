@@ -22,7 +22,8 @@ Domain-specific readers (`readcategory`, `readcolor`, `readdir`, `readkind`) con
 | [category.md](category.md) | Category parsing (isterrain, isobject) |
 | [collision.md](collision.md) | Collision parsing (iswalk, issolid, etc.) |
 | [color.md](color.md) | Color parsing and mapping |
-| [dir.md](dir.md) | Direction parsing with args (by, at, find, flee, etc.) |
+| [dir.md](dir.md) | Direction parsing with args (by, at, find, flee, rect, etc.) |
+| [rect.md](rect.md) | Absolute board AABB helpers shared by INRECT dirs and transform filters |
 | [kind.md](kind.md) | Kind parsing (name + optional color) |
 | [expr.md](expr.md) | Expression evaluation (aligned, any, countof, blocked, run, etc.) |
 | [send.md](send.md) | Send/message parsing (target:label args) |

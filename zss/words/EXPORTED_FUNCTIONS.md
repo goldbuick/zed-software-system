@@ -16,10 +16,17 @@
 - **dirfrompts(last, current)** - Converts two points to a direction based on their delta
 
 ### Direction Reading & Parsing
-- **readdir(index)** - Reads and parses direction expressions from word tokens, handles complex directions (AT, BY, WITHIN, AWAYBY, modifiers like CW, CCW, OPP, etc.)
+- **readdir(index)** - Reads and parses direction expressions from word tokens, handles complex directions (AT, BY, WITHIN, AWAYBY, INRECT, modifiers like CW, CCW, OPP, etc.)
 - **isstrdir(value)** - Type guard to check if value is a string direction array
 - **mapstrdir(value)** - Maps a string value to a direction constant
 - **mapstrdirtoconst(value)** - Maps a string direction to DIR enum value
+
+### Absolute rect helpers (`rect.ts`)
+- **normalizerect(x1, y1, x2?, y2?)** - Inclusive min/max AABB corners
+- **parserectoneword(word)** - Parse `x1,y1,x2,y2` token
+- **parserectfromnumbers(words, index)** - Parse `x1 y1 [x2 y2]` from a word list
+- **recttargetpts(pt1, pt2)** - All in-board cells in inclusive AABB
+- **fullboardrect()** - Full-board default region
 
 ### Direction Constants & Types
 - **dirconsts** (const) - Object mapping direction names to their constant string values

@@ -1,5 +1,4 @@
 import { boardcopy } from 'zss/feature/boardcopy'
-import { boarderase } from 'zss/feature/boarderase'
 import { boardpivot } from 'zss/feature/boardpivot'
 import {
   type PIVOTDISCRETIZATION,
@@ -10,40 +9,21 @@ import { boardrevert, boardsnapshot } from 'zss/feature/boardsnapshot'
 import { boardweave } from 'zss/feature/boardweave'
 import { createfirmware } from 'zss/firmware'
 import { PIVOT_SHEAR_KEYWORDS } from 'zss/firmware/autocompleteconstants'
-import { MAYBE, isnumber, ispresent, isstring } from 'zss/mapping/types'
+import { MAYBE, ispresent, isstring } from 'zss/mapping/types'
 import { memoryreadboardbyevaldir } from 'zss/memory/boards'
 import { memorypickcodepage } from 'zss/memory/codepages'
 import { memoryreadbooklist } from 'zss/memory/session'
-import { BOARD_HEIGHT, BOARD_WIDTH, CODE_PAGE_TYPE } from 'zss/memory/types'
+import { CODE_PAGE_TYPE } from 'zss/memory/types'
 import { isstrcolor } from 'zss/words/color'
 import { isstrdir } from 'zss/words/dir'
 import { isstrgroup, readgroup, readstrgroupname } from 'zss/words/group'
 import { READ_CONTEXT, readargs } from 'zss/words/reader'
+import {
+  fullboardrect,
+  parserectfromnumbers,
+  parserectoneword,
+} from 'zss/words/rect'
 import { ARG_TYPE, NAME, PT, WORD } from 'zss/words/types'
-/** Same shape as `ptstoarea` / batch paths: one token `x1,y1,x2,y2` (optional whitespace). */
-const FILTER_RECT_ONEWORD =
-  /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/
-
-function parsefilterrectoneword(word: WORD): { pt1: PT; pt2: PT } | undefined {
-  if (!isstring(word)) {
-    return undefined
-  }
-  const m = FILTER_RECT_ONEWORD.exec(word)
-  if (!m) {
-    return undefined
-  }
-  const x1 = Math.round(Number(m[1]))
-  const y1 = Math.round(Number(m[2]))
-  const x2 = Math.round(Number(m[3]))
-  const y2 = Math.round(Number(m[4]))
-  if (![x1, y1, x2, y2].every((n) => Number.isFinite(n))) {
-    return undefined
-  }
-  return {
-    pt1: { x: Math.min(x1, x2), y: Math.min(y1, y2) },
-    pt2: { x: Math.max(x1, x2), y: Math.max(y1, y2) },
-  }
-}
 
 type ReadFilterResult = {
   targetset: string
@@ -55,16 +35,26 @@ type ReadFilterResult = {
 function readfilter(words: WORD[], index: number): ReadFilterResult {
   let targetset = 'all'
   let dest: MAYBE<PT> = undefined
-  const pt1: PT = { x: 0, y: 0 }
-  const pt2: PT = { x: BOARD_WIDTH - 1, y: BOARD_HEIGHT - 1 }
+  const full = fullboardrect()
+  const pt1: PT = { x: full.pt1.x, y: full.pt1.y }
+  const pt2: PT = { x: full.pt2.x, y: full.pt2.y }
   for (let i = index; i < words.length; ) {
-    const onewordrect = parsefilterrectoneword(words[i])
+    const onewordrect = parserectoneword(words[i])
     if (ispresent(onewordrect)) {
       pt1.x = onewordrect.pt1.x
       pt1.y = onewordrect.pt1.y
       pt2.x = onewordrect.pt2.x
       pt2.y = onewordrect.pt2.y
       i += 1
+      continue
+    }
+    const fromnums = parserectfromnumbers(words, i)
+    if (ispresent(fromnums)) {
+      pt1.x = fromnums.rect.pt1.x
+      pt1.y = fromnums.rect.pt1.y
+      pt2.x = fromnums.rect.pt2.x
+      pt2.y = fromnums.rect.pt2.y
+      i = fromnums.next
       continue
     }
     const [checkarg, ii] = readargs(words, i, [ARG_TYPE.ANY])
@@ -102,18 +92,6 @@ function readfilter(words: WORD[], index: number): ReadFilterResult {
       } else {
         break
       }
-    } else if (isnumber(checkarg)) {
-      const [y1, x2, y2, iii] = readargs(words, ii, [
-        ARG_TYPE.NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
-        ARG_TYPE.MAYBE_NUMBER,
-      ])
-      pt1.x = Math.min(checkarg, x2 ?? checkarg)
-      pt1.y = Math.min(y1, y2 ?? y1)
-      pt2.x = Math.max(checkarg, x2 ?? checkarg)
-      pt2.y = Math.max(y1, y2 ?? y1)
-      // parse next set
-      i = iii
     } else {
       break
     }
@@ -231,30 +209,6 @@ export const TRANSFORM_FIRMWARE = createfirmware()
           filter.pt2,
           filter.targetset,
           READ_CONTEXT.elementid,
-        )
-          ? 0
-          : 1,
-      )
-      return 0
-    },
-  )
-  .command(
-    'erase',
-    ['board elements by filter (targetset / region)'],
-    (chip, words) => {
-      if (!ispresent(READ_CONTEXT.book) || !ispresent(READ_CONTEXT.board)) {
-        chip.set('didfail', 1)
-        return 0
-      }
-      const filter = readfilter(words, 0)
-      chip.set(
-        'didfail',
-        boarderase(
-          READ_CONTEXT.board.id,
-          filter.pt1,
-          filter.pt2,
-          READ_CONTEXT.elementid,
-          filter.targetset,
         )
           ? 0
           : 1,

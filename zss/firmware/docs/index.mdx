@@ -21,7 +21,7 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 
 <a id="all-commands"></a>
 
-## All commands (164)
+## All commands (163)
 
 <p class="fw-where-legend"> <span class="fw-where fw-where-cli">C</span> CLI - terminal / operator <span class="fw-where fw-where-loader">L</span> Loader - import <span class="fw-where fw-where-runtime">R</span> Runtime - codepages </p>
 
@@ -59,7 +59,7 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 | [`#bridge`](/firmware/cli#bridge) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | bridge integrations (operator only) |
 | [`#broadcast`](/firmware/cli#broadcast) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | stream broadcast menu, stop, whip, or media-stream bind (operator only) |
 | [`#build`](/firmware/board#build) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | create board and link to stat. optional source board. |
-| [`#change`](/firmware/board#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | elements of a group to another kind |
+| [`#change`](/firmware/board#change) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | optional dir scope, then group to kind (use empty kind to delete; builtins all/terrain/object ok) |
 | [`#char`](/firmware/element#char) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | character (self or at direction) |
 | [`#chat`](/firmware/cli#chat) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span></span> | chat bridge: twitch / feeds (operator only) |
 | [`#clear`](/firmware/element#clear) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | variables (set to 0), or drop an array index |
@@ -84,7 +84,6 @@ Module notes: [CLI](/firmware/cli) · [Runtime](/firmware/runtime) · [Loader](/
 | [`#echo4`](/firmware/audio#echo1-echo4) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | for #tts |
 | [`#end`](/firmware/element#end) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | program (optionally set 'arg' variable) |
 | [`#endgame`](/firmware/cli#endgame) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | health to 0 |
-| [`#erase`](/firmware/transforms#erase) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | board elements by filter (targetset / region) |
 | [`#export`](/firmware/cli#export) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span></span> | export menu (operator only) |
 | [`#fcrush`](/firmware/audio#fcrush) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | frequency crush to all 4 channels of #play |
 | [`#fcrush1`](/firmware/audio#fcrush1-fcrush4) | <span class="fw-where-cell"><span class="fw-where fw-where-cli">C</span><span class="fw-where fw-where-loader">L</span><span class="fw-where fw-where-runtime">R</span></span> | crush for first 2 channels of #play |
